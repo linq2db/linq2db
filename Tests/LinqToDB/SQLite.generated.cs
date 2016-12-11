@@ -15,7 +15,7 @@ namespace SQLiteDataContext
 	/// <summary>
 	/// Database       : TestData
 	/// Data Source    : TestData
-	/// Server Version : 3.8.5
+	/// Server Version : 3.14.2
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
@@ -90,7 +90,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor00")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor00")]
 		public Person FK_00 { get; set; }
 
 		#endregion
@@ -153,7 +153,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public Doctor Doctor00 { get; set; }
 
 		#endregion

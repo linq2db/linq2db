@@ -18,7 +18,7 @@ namespace AccessDataContext
 {
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : I:\linq2db\Data\TestData.mdb
+	/// Data Source    : F:\job\t4models\\Data\TestData.mdb
 	/// Server Version : 04.00.0000
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
@@ -151,22 +151,19 @@ namespace AccessDataContext
 		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10),          Nullable] public int?      BigIntValue    { get; set; } // Long
 	}
 
-	// View
-	[Table("LinqDataTypes Query")]
+	[Table("LinqDataTypes Query", IsView=true)]
 	public partial class LinqDataTypesQuery
 	{
 		[Column(DbType="DateTime", DataType=DataType.DateTime), Nullable] public DateTime? DateTimeValue { get; set; } // DateTime
 	}
 
-	// View
-	[Table("LinqDataTypes Query1")]
+	[Table("LinqDataTypes Query1", IsView=true)]
 	public partial class LinqDataTypesQuery1
 	{
 		[Column(DbType="Long", DataType=DataType.Int32, Precision=10), Nullable] public int? ID { get; set; } // Long
 	}
 
-	// View
-	[Table("LinqDataTypes Query2")]
+	[Table("LinqDataTypes Query2", IsView=true)]
 	public partial class LinqDataTypesQuery2
 	{
 		[Column(DbType="Long", DataType=DataType.Int32, Precision=10), Nullable] public int? ID { get; set; } // Long
@@ -186,8 +183,7 @@ namespace AccessDataContext
 		[Column(DbType="text(255)", DataType=DataType.NText, Length=255),   NotNull             ] public string Diagnosis { get; set; } // text(255)
 	}
 
-	// View
-	[Table("Patient_SelectAll")]
+	[Table("Patient_SelectAll", IsView=true)]
 	public partial class Patient_SelectAll
 	{
 		[Column(DbType="Long",      DataType=DataType.Int32, Precision=10), Identity] public int    PersonID   { get; set; } // Long
@@ -208,8 +204,7 @@ namespace AccessDataContext
 		[Column(DbType="text(1)",  DataType=DataType.NText, Length=1),     NotNull              ] public char   Gender     { get; set; } // text(1)
 	}
 
-	// View
-	[Table("Person_SelectAll")]
+	[Table("Person_SelectAll", IsView=true)]
 	public partial class Person_SelectAll
 	{
 		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10), Identity] public int    PersonID   { get; set; } // Long
@@ -219,8 +214,7 @@ namespace AccessDataContext
 		[Column(DbType="text(1)",  DataType=DataType.NText, Length=1),     Nullable] public char?  Gender     { get; set; } // text(1)
 	}
 
-	// View
-	[Table("Scalar_DataReader")]
+	[Table("Scalar_DataReader", IsView=true)]
 	public partial class Scalar_DataReader
 	{
 		[Column(DbType="Long",      DataType=DataType.Int32, Precision=10), Nullable] public int?   intField    { get; set; } // Long

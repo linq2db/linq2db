@@ -5,6 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -74,15 +75,15 @@ namespace PostreSQLDataContext
 		[Column,     Nullable] public DateTime?       timestampdatatype   { get; set; } // timestamp (6) without time zone
 		[Column,     Nullable] public DateTimeOffset? timestamptzdatatype { get; set; } // timestamp (6) with time zone
 		[Column,     Nullable] public DateTime?       datedatatype        { get; set; } // date
-		[Column,     Nullable] public object          timedatatype        { get; set; } // time without time zone(6)
-		[Column,     Nullable] public object          timetzdatatype      { get; set; } // time with time zone(6)
-		[Column,     Nullable] public object          intervaldatatype    { get; set; } // interval(6)
+		[Column,     Nullable] public object          timedatatype        { get; set; } // time without time zone
+		[Column,     Nullable] public object          timetzdatatype      { get; set; } // time with time zone
+		[Column,     Nullable] public object          intervaldatatype    { get; set; } // interval
 		[Column,     Nullable] public char?           chardatatype        { get; set; } // character(1)
 		[Column,     Nullable] public string          varchardatatype     { get; set; } // character varying(20)
 		[Column,     Nullable] public string          textdatatype        { get; set; } // text
 		[Column,     Nullable] public byte[]          binarydatatype      { get; set; } // bytea
 		[Column,     Nullable] public Guid?           uuiddatatype        { get; set; } // uuid
-		[Column,     Nullable] public object          bitdatatype         { get; set; } // bit(3)
+		[Column,     Nullable] public BitArray        bitdatatype         { get; set; } // bit(3)
 		[Column,     Nullable] public bool?           booleandatatype     { get; set; } // boolean
 		[Column,     Nullable] public object          colordatatype       { get; set; } // USER-DEFINED
 		[Column,     Nullable] public object          pointdatatype       { get; set; } // point
@@ -94,6 +95,7 @@ namespace PostreSQLDataContext
 		[Column,     Nullable] public object          inetdatatype        { get; set; } // inet
 		[Column,     Nullable] public object          macaddrdatatype     { get; set; } // macaddr
 		[Column,     Nullable] public string          xmldatatype         { get; set; } // xml
+		[Column,     Nullable] public object          varbitdatatype      { get; set; } // bit varying
 	}
 
 	[Table(Schema="public", Name="Child")]
@@ -114,7 +116,7 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="Doctor_PersonID_fkey", BackReferenceName="DoctorPersonIDfkeys")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="Doctor_PersonID_fkey", BackReferenceName="DoctorPersonIDfkeys")]
 		public Person PersonIDfkey { get; set; }
 
 		#endregion
@@ -167,7 +169,7 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// Patient_PersonID_fkey
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="Patient_PersonID_fkey", BackReferenceName="PatientPersonIDfkeys")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="Patient_PersonID_fkey", BackReferenceName="PatientPersonIDfkeys")]
 		public Person PersonIDfkey { get; set; }
 
 		#endregion
@@ -187,13 +189,13 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<Doctor> DoctorPersonIDfkeys { get; set; }
 
 		/// <summary>
 		/// Patient_PersonID_fkey_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<Patient> PatientPersonIDfkeys { get; set; }
 
 		#endregion

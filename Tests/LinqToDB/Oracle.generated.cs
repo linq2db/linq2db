@@ -27,6 +27,7 @@ namespace OracleDataContext
 		public ITable<BINARYDATA>            BINARYDATAs           { get { return this.GetTable<BINARYDATA>(); } }
 		public ITable<CHILD>                 Children              { get { return this.GetTable<CHILD>(); } }
 		public ITable<DATATYPETEST>          DATATYPETESTs         { get { return this.GetTable<DATATYPETEST>(); } }
+		public ITable<DECIMALOVERFLOW>       DECIMALOVERFLOWs      { get { return this.GetTable<DECIMALOVERFLOW>(); } }
 		public ITable<DOCTOR>                DOCTORs               { get { return this.GetTable<DOCTOR>(); } }
 		public ITable<GRANDCHILD>            GRANDCHILDs           { get { return this.GetTable<GRANDCHILD>(); } }
 		public ITable<LINQDATATYPE>          LINQDATATYPES         { get { return this.GetTable<LINQDATATYPE>(); } }
@@ -39,8 +40,6 @@ namespace OracleDataContext
 		public ITable<T_TEST_USER>           T_TEST_USER           { get { return this.GetTable<T_TEST_USER>(); } }
 		public ITable<T_TEST_USER_CONTRACT>  T_TEST_USER_CONTRACT  { get { return this.GetTable<T_TEST_USER_CONTRACT>(); } }
 		public ITable<TESTIDENTITY>          TESTIDENTITies        { get { return this.GetTable<TESTIDENTITY>(); } }
-		public ITable<TESTTABLE2>            TESTTABLE2            { get { return this.GetTable<TESTTABLE2>(); } }
-		public ITable<TESTTABLE3>            TESTTABLE3            { get { return this.GetTable<TESTTABLE3>(); } }
 
 		public TestDataDB()
 		{
@@ -130,6 +129,16 @@ namespace OracleDataContext
 		[Column(DbType="XMLTYPE",        DataType=DataType.Xml,      Length=2000),                         Nullable         ] public string    XML_       { get; set; } // XMLTYPE
 	}
 
+	[Table(Schema="TESTUSER", Name="DECIMALOVERFLOW")]
+	public partial class DECIMALOVERFLOW
+	{
+		[Column(DbType="NUMBER (38,20)", DataType=DataType.Decimal, Length=22, Precision=38, Scale=20), Nullable] public decimal? DECIMAL1 { get; set; } // NUMBER (38,20)
+		[Column(DbType="NUMBER (31,2)",  DataType=DataType.Decimal, Length=22, Precision=31, Scale=2),  Nullable] public decimal? DECIMAL2 { get; set; } // NUMBER (31,2)
+		[Column(DbType="NUMBER (38,36)", DataType=DataType.Decimal, Length=22, Precision=38, Scale=36), Nullable] public decimal? DECIMAL3 { get; set; } // NUMBER (38,36)
+		[Column(DbType="NUMBER (29,0)",  DataType=DataType.Decimal, Length=22, Precision=29, Scale=0),  Nullable] public decimal? DECIMAL4 { get; set; } // NUMBER (29,0)
+		[Column(DbType="NUMBER (38,38)", DataType=DataType.Decimal, Length=22, Precision=38, Scale=38), Nullable] public decimal? DECIMAL5 { get; set; } // NUMBER (38,38)
+	}
+
 	[Table(Schema="TESTUSER", Name="DOCTOR")]
 	public partial class DOCTOR
 	{
@@ -141,7 +150,7 @@ namespace OracleDataContext
 		/// <summary>
 		/// FK_DOCTOR_PERSON
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, KeyName="FK_DOCTOR_PERSON", BackReferenceName="DOCTOR")]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_DOCTOR_PERSON", BackReferenceName="DOCTOR")]
 		public PERSON PERSON { get; set; }
 
 		#endregion
@@ -188,7 +197,7 @@ namespace OracleDataContext
 		/// <summary>
 		/// FK_PATIENT_PERSON
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, KeyName="FK_PATIENT_PERSON", BackReferenceName="PATIENT")]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_PATIENT_PERSON", BackReferenceName="PATIENT")]
 		public PERSON PERSON { get; set; }
 
 		#endregion
@@ -208,13 +217,13 @@ namespace OracleDataContext
 		/// <summary>
 		/// FK_DOCTOR_PERSON_BackReference
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public DOCTOR DOCTOR { get; set; }
 
 		/// <summary>
 		/// FK_PATIENT_PERSON_BackReference
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public PATIENT PATIENT { get; set; }
 
 		#endregion
@@ -256,10 +265,10 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0037389_BackReference
+		/// SYS_C0037098_BackReference
 		/// </summary>
-		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=true, IsBackReference=true)]
-		public IEnumerable<T_TEST_USER_CONTRACT> SYSC0037389 { get; set; }
+		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<T_TEST_USER_CONTRACT> SYSC0037098 { get; set; }
 
 		#endregion
 	}
@@ -275,10 +284,10 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0037389
+		/// SYS_C0037098
 		/// </summary>
-		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=false, KeyName="SYS_C0037389", BackReferenceName="SYSC0037389")]
-		public T_TEST_USER SYSC0037389 { get; set; }
+		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C0037098", BackReferenceName="SYSC0037098")]
+		public T_TEST_USER SYSC0037098 { get; set; }
 
 		#endregion
 	}
@@ -287,22 +296,6 @@ namespace OracleDataContext
 	public partial class TESTIDENTITY
 	{
 		[Column(DbType="NUMBER", DataType=DataType.Decimal, Length=22), PrimaryKey, NotNull] public decimal ID { get; set; } // NUMBER
-	}
-
-	[Table(Schema="TESTUSER", Name="TESTTABLE2")]
-	public partial class TESTTABLE2
-	{
-		[Column(DbType="NUMBER",        DataType=DataType.Decimal,   Length=22, Scale=0), PrimaryKey,  NotNull] public decimal   ID          { get; set; } // NUMBER
-		[Column(DbType="VARCHAR2(50)",  DataType=DataType.VarChar,   Length=50),                       NotNull] public string    NAME        { get; set; } // VARCHAR2(50)
-		[Column(DbType="VARCHAR2(250)", DataType=DataType.VarChar,   Length=250),            Nullable         ] public string    DESCRIPTION { get; set; } // VARCHAR2(250)
-		[Column(DbType="TIMESTAMP(6)",  DataType=DataType.DateTime2, Length=11, Scale=6),    Nullable         ] public DateTime? CREATEDON   { get; set; } // TIMESTAMP(6)
-	}
-
-	[Table(Schema="TESTUSER", Name="TESTTABLE3")]
-	public partial class TESTTABLE3
-	{
-		[Column(DbType="NUMBER",       DataType=DataType.Decimal, Length=22, Scale=0), PrimaryKey, NotNull] public decimal ID   { get; set; } // NUMBER
-		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  NAME { get; set; } // VARCHAR2(50)
 	}
 
 	public static partial class TestDataDBStoredProcedures
@@ -431,18 +424,6 @@ namespace OracleDataContext
 		}
 
 		public static TESTIDENTITY Find(this ITable<TESTIDENTITY> table, decimal ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static TESTTABLE2 Find(this ITable<TESTTABLE2> table, decimal ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static TESTTABLE3 Find(this ITable<TESTTABLE3> table, decimal ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

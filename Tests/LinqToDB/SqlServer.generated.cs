@@ -107,8 +107,7 @@ namespace DataModel
 		#endregion
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Alphabetical list of products")]
+	[Table(Database="Northwind", Name="Alphabetical list of products", IsView=true)]
 	public partial class AlphabeticalListOfProduct
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      ProductID       { get; set; } // int
@@ -137,7 +136,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Products_Categories_BackReference
 		/// </summary>
-		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<Product> Products { get; set; }
 
 		#endregion
@@ -148,16 +147,14 @@ namespace DataModel
 	{
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Category Sales for 1997")]
+	[Table(Database="Northwind", Name="Category Sales for 1997", IsView=true)]
 	public partial class CategorySalesFor1997
 	{
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName  { get; set; } // nvarchar(15)
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? CategorySales { get; set; } // money
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Current Product List")]
+	[Table(Database="Northwind", Name="Current Product List", IsView=true)]
 	public partial class CurrentProductList
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               Identity] public int    ProductID   { get; set; } // int
@@ -184,20 +181,19 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<Order> Orders { get; set; }
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
 
 		#endregion
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Customer and Suppliers by City")]
+	[Table(Database="Northwind", Name="Customer and Suppliers by City", IsView=true)]
 	public partial class CustomerAndSuppliersByCity
 	{
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string City         { get; set; } // nvarchar(15)
@@ -215,16 +211,16 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_CustomerCustomerDemo
-		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
-		public CustomerDemographic FK_CustomerCustomerDemo { get; set; }
-
-		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
 		public Customer Customer { get; set; }
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
+		public CustomerDemographic FK_CustomerCustomerDemo { get; set; }
 
 		#endregion
 	}
@@ -240,7 +236,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
 
 		#endregion
@@ -273,25 +269,25 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, KeyName="FK_Employees_Employees", BackReferenceName="FK_Employees_Employees_BackReferences")]
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FK_Employees_Employees_BackReferences")]
 		public Employee FK_Employees_Employee { get; set; }
 
 		/// <summary>
 		/// FK_Employees_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<Employee> FK_Employees_Employees_BackReferences { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<Order> Orders { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		#endregion
@@ -308,20 +304,19 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
 		public Employee Employee { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
 		public Territory Territory { get; set; }
 
 		#endregion
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Invoices")]
+	[Table(Database="Northwind", Name="Invoices", IsView=true)]
 	public partial class Invoice
 	{
 		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40),    Nullable] public string    ShipName       { get; set; } // nvarchar(40)
@@ -373,27 +368,27 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Orders_Customers
+		/// FK_Orders_Shippers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public Customer Customer { get; set; }
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
+		public Shipper Shipper { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
 		public Employee Employee { get; set; }
 
 		/// <summary>
-		/// FK_Orders_Shippers
+		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
-		public Shipper Shipper { get; set; }
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
+		public Customer Customer { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<OrderDetail> OrderDetails { get; set; }
 
 		#endregion
@@ -413,13 +408,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
 		public Order OrderDetailsOrder { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products
 		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false, KeyName="FK_Order_Details_Products", BackReferenceName="OrderDetails")]
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Order_Details_Products", BackReferenceName="OrderDetails")]
 		public Product OrderDetailsProduct { get; set; }
 
 		#endregion
@@ -430,8 +425,7 @@ namespace DataModel
 	{
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Order Details Extended")]
+	[Table(Database="Northwind", Name="Order Details Extended", IsView=true)]
 	public partial class OrderDetailsExtended
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      OrderID       { get; set; } // int
@@ -443,8 +437,7 @@ namespace DataModel
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? ExtendedPrice { get; set; } // money
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Orders Qry")]
+	[Table(Database="Northwind", Name="Orders Qry", IsView=true)]
 	public partial class OrdersQry
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int       OrderID        { get; set; } // int
@@ -469,8 +462,7 @@ namespace DataModel
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    Country        { get; set; } // nvarchar(15)
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Order Subtotals")]
+	[Table(Database="Northwind", Name="Order Subtotals", IsView=true)]
 	public partial class OrderSubtotal
 	{
 		[Column(DbType="int",   DataType=DataType.Int32), NotNull    ] public int      OrderID  { get; set; } // int
@@ -496,34 +488,32 @@ namespace DataModel
 		/// <summary>
 		/// FK_Products_Categories
 		/// </summary>
-		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, KeyName="FK_Products_Categories", BackReferenceName="Products")]
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Products_Categories", BackReferenceName="Products")]
 		public Category Category { get; set; }
 
 		/// <summary>
 		/// FK_Products_Suppliers
 		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, KeyName="FK_Products_Suppliers", BackReferenceName="Products")]
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_Products_Suppliers", BackReferenceName="Products")]
 		public Supplier Supplier { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products_BackReference
 		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<OrderDetail> OrderDetails { get; set; }
 
 		#endregion
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Products Above Average Price")]
+	[Table(Database="Northwind", Name="Products Above Average Price", IsView=true)]
 	public partial class ProductsAboveAveragePrice
 	{
 		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string   ProductName { get; set; } // nvarchar(40)
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? UnitPrice   { get; set; } // money
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Product Sales for 1997")]
+	[Table(Database="Northwind", Name="Product Sales for 1997", IsView=true)]
 	public partial class ProductSalesFor1997
 	{
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName { get; set; } // nvarchar(15)
@@ -531,8 +521,7 @@ namespace DataModel
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Products by Category")]
+	[Table(Database="Northwind", Name="Products by Category", IsView=true)]
 	public partial class ProductsByCategory
 	{
 		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string CategoryName    { get; set; } // nvarchar(15)
@@ -542,8 +531,7 @@ namespace DataModel
 		[Column(DbType="bit",          DataType=DataType.Boolean),             NotNull    ] public bool   Discontinued    { get; set; } // bit
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Quarterly Orders")]
+	[Table(Database="Northwind", Name="Quarterly Orders", IsView=true)]
 	public partial class QuarterlyOrder
 	{
 		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),  Nullable] public string CustomerID  { get; set; } // nchar(5)
@@ -563,14 +551,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region_BackReference
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<Territory> Territories { get; set; }
 
 		#endregion
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Sales by Category")]
+	[Table(Database="Northwind", Name="Sales by Category", IsView=true)]
 	public partial class SalesByCategory
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      CategoryID   { get; set; } // int
@@ -579,8 +566,7 @@ namespace DataModel
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Sales Totals by Amount")]
+	[Table(Database="Northwind", Name="Sales Totals by Amount", IsView=true)]
 	public partial class SalesTotalsByAmount
 	{
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal?  SaleAmount  { get; set; } // money
@@ -601,14 +587,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers_BackReference
 		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<Order> Orders { get; set; }
 
 		#endregion
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Summary of Sales by Quarter")]
+	[Table(Database="Northwind", Name="Summary of Sales by Quarter", IsView=true)]
 	public partial class SummaryOfSalesByQuarter
 	{
 		[Column(DbType="datetime", DataType=DataType.DateTime),    Nullable] public DateTime? ShippedDate { get; set; } // datetime
@@ -616,8 +601,7 @@ namespace DataModel
 		[Column(DbType="money",    DataType=DataType.Money),       Nullable] public decimal?  Subtotal    { get; set; } // money
 	}
 
-	// View
-	[Table(Database="Northwind", Name="Summary of Sales by Year")]
+	[Table(Database="Northwind", Name="Summary of Sales by Year", IsView=true)]
 	public partial class SummaryOfSalesByYear
 	{
 		[Column(DbType="datetime", DataType=DataType.DateTime),    Nullable] public DateTime? ShippedDate { get; set; } // datetime
@@ -646,7 +630,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Products_Suppliers_BackReference
 		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<Product> Products { get; set; }
 
 		#endregion
@@ -664,13 +648,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
 		public Region Region { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories_BackReference
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		#endregion
@@ -680,21 +664,27 @@ namespace DataModel
 	{
 		#region CustOrderHist
 
-		public partial class CustOrderHistResult
-		{
-			public string ProductName { get; set; }
-			public int?   Total       { get; set; }
-		}
-
 		public static IEnumerable<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string @CustomerID)
 		{
 			return dataConnection.QueryProc<CustOrderHistResult>("[Northwind]..[CustOrderHist]",
 				new DataParameter("@CustomerID", @CustomerID, DataType.NChar));
 		}
 
+		public partial class CustOrderHistResult
+		{
+			public string ProductName { get; set; }
+			public int?   Total       { get; set; }
+		}
+
 		#endregion
 
 		#region CustOrdersDetail
+
+		public static IEnumerable<CustOrdersDetailResult> CustOrdersDetail(this DataConnection dataConnection, int? @OrderID)
+		{
+			return dataConnection.QueryProc<CustOrdersDetailResult>("[Northwind]..[CustOrdersDetail]",
+				new DataParameter("@OrderID", @OrderID, DataType.Int32));
+		}
 
 		public partial class CustOrdersDetailResult
 		{
@@ -705,15 +695,15 @@ namespace DataModel
 			public decimal? ExtendedPrice { get; set; }
 		}
 
-		public static IEnumerable<CustOrdersDetailResult> CustOrdersDetail(this DataConnection dataConnection, int? @OrderID)
-		{
-			return dataConnection.QueryProc<CustOrdersDetailResult>("[Northwind]..[CustOrdersDetail]",
-				new DataParameter("@OrderID", @OrderID, DataType.Int32));
-		}
-
 		#endregion
 
 		#region CustOrdersOrders
+
+		public static IEnumerable<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
+		{
+			return dataConnection.QueryProc<CustOrdersOrdersResult>("[Northwind]..[CustOrdersOrders]",
+				new DataParameter("@CustomerID", @CustomerID, DataType.NChar));
+		}
 
 		public partial class CustOrdersOrdersResult
 		{
@@ -723,15 +713,16 @@ namespace DataModel
 			public DateTime? ShippedDate  { get; set; }
 		}
 
-		public static IEnumerable<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
-		{
-			return dataConnection.QueryProc<CustOrdersOrdersResult>("[Northwind]..[CustOrdersOrders]",
-				new DataParameter("@CustomerID", @CustomerID, DataType.NChar));
-		}
-
 		#endregion
 
 		#region EmployeeSalesByCountry
+
+		public static IEnumerable<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		{
+			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Northwind]..[Employee Sales by Country]",
+				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
+				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime));
+		}
 
 		public partial class EmployeeSalesByCountryResult
 		{
@@ -743,16 +734,16 @@ namespace DataModel
 			public decimal?  SaleAmount  { get; set; }
 		}
 
-		public static IEnumerable<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
-		{
-			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Northwind]..[Employee Sales by Country]",
-				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime));
-		}
-
 		#endregion
 
 		#region SalesByYear
+
+		public static IEnumerable<SalesByYearResult> SalesByYear(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		{
+			return dataConnection.QueryProc<SalesByYearResult>("[Northwind]..[Sales by Year]",
+				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
+				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime));
+		}
 
 		public partial class SalesByYearResult
 		{
@@ -762,22 +753,9 @@ namespace DataModel
 			public string    Year        { get; set; }
 		}
 
-		public static IEnumerable<SalesByYearResult> SalesByYear(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
-		{
-			return dataConnection.QueryProc<SalesByYearResult>("[Northwind]..[Sales by Year]",
-				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime));
-		}
-
 		#endregion
 
 		#region SalesByCategory
-
-		public partial class SalesByCategoryResult
-		{
-			public string   ProductName   { get; set; }
-			public decimal? TotalPurchase { get; set; }
-		}
 
 		public static IEnumerable<SalesByCategoryResult> SalesByCategory(this DataConnection dataConnection, string @CategoryName, string @OrdYear)
 		{
@@ -786,19 +764,25 @@ namespace DataModel
 				new DataParameter("@OrdYear",      @OrdYear,      DataType.NVarChar));
 		}
 
+		public partial class SalesByCategoryResult
+		{
+			public string   ProductName   { get; set; }
+			public decimal? TotalPurchase { get; set; }
+		}
+
 		#endregion
 
 		#region TenMostExpensiveProducts
+
+		public static IEnumerable<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Northwind]..[Ten Most Expensive Products]");
+		}
 
 		public partial class TenMostExpensiveProductsResult
 		{
 			public string   TenMostExpensiveProducts { get; set; }
 			public decimal? UnitPrice                { get; set; }
-		}
-
-		public static IEnumerable<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Northwind]..[Ten Most Expensive Products]");
 		}
 
 		#endregion
@@ -891,7 +875,7 @@ namespace DataModel
 	/// <summary>
 	/// Database       : TestData
 	/// Data Source    : DBHost\SQLSERVER2008
-	/// Server Version : 10.50.4033
+	/// Server Version : 10.50.4042
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
@@ -900,8 +884,11 @@ namespace DataModel
 		public ITable<BinaryData>      BinaryData       { get { return this.GetTable<BinaryData>(); } }
 		public ITable<Child>           Children         { get { return this.GetTable<Child>(); } }
 		public ITable<DataTypeTest>    DataTypeTests    { get { return this.GetTable<DataTypeTest>(); } }
+		public ITable<DecimalOverflow> DecimalOverflows { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>          Doctors          { get { return this.GetTable<Doctor>(); } }
 		public ITable<GrandChild>      GrandChildren    { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GuidID>          GuidIDs          { get { return this.GetTable<GuidID>(); } }
+		public ITable<GuidID2>         GuidID2          { get { return this.GetTable<GuidID2>(); } }
 		public ITable<IndexTable>      IndexTables      { get { return this.GetTable<IndexTable>(); } }
 		public ITable<IndexTable2>     IndexTable2      { get { return this.GetTable<IndexTable2>(); } }
 		public ITable<LinqDataType>    LinqDataTypes    { get { return this.GetTable<LinqDataType>(); } }
@@ -914,28 +901,19 @@ namespace DataModel
 		public ITable<ParentView>      ParentViews      { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>         Patients         { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>          People           { get { return this.GetTable<Person>(); } }
+		public ITable<SqlType>         SqlTypes         { get { return this.GetTable<SqlType>(); } }
 		public ITable<TestIdentity>    TestIdentities   { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestTable2>      TestTable2       { get { return this.GetTable<TestTable2>(); } }
 		public ITable<TestTable3>      TestTable3       { get { return this.GetTable<TestTable3>(); } }
 
-		#region Schemas
-
-		public MySchemaSchema.DataContext MySchema { get; set; }
-
-		#endregion
-
 		public TestDataDB()
 		{
-			MySchema = new MySchemaSchema.DataContext(this);
-
 			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
-			MySchema = new MySchemaSchema.DataContext(this);
-
 			InitDataContext();
 		}
 
@@ -1093,6 +1071,16 @@ namespace DataModel
 		[Column(DbType="xml",              DataType=DataType.Xml),                              Nullable            ] public string    Xml_       { get; set; } // xml
 	}
 
+	[Table(Database="TestData", Name="DecimalOverflow")]
+	public partial class DecimalOverflow
+	{
+		[Column(DbType="decimal(38, 20)", DataType=DataType.Decimal, Precision=38, Scale=20), PrimaryKey,  NotNull] public decimal  Decimal1 { get; set; } // decimal(38, 20)
+		[Column(DbType="decimal(31, 2)",  DataType=DataType.Decimal, Precision=31, Scale=2),     Nullable         ] public decimal? Decimal2 { get; set; } // decimal(31, 2)
+		[Column(DbType="decimal(38, 36)", DataType=DataType.Decimal, Precision=38, Scale=36),    Nullable         ] public decimal? Decimal3 { get; set; } // decimal(38, 36)
+		[Column(DbType="decimal(29, 0)",  DataType=DataType.Decimal, Precision=29, Scale=0),     Nullable         ] public decimal? Decimal4 { get; set; } // decimal(29, 0)
+		[Column(DbType="decimal(38, 38)", DataType=DataType.Decimal, Precision=38, Scale=38),    Nullable         ] public decimal? Decimal5 { get; set; } // decimal(38, 38)
+	}
+
 	[Table(Database="TestData", Name="Doctor")]
 	public partial class Doctor
 	{
@@ -1104,7 +1092,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
 		public Person Person { get; set; }
 
 		#endregion
@@ -1117,6 +1105,19 @@ namespace DataModel
 		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID      { get; set; } // int
 		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? GrandChildID { get; set; } // int
 		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  _ID          { get; set; } // int
+	}
+
+	[Table(Database="TestData", Name="GuidID")]
+	public partial class GuidID
+	{
+		[Column(DbType="uniqueidentifier", DataType=DataType.Guid),  PrimaryKey,  NotNull] public Guid ID     { get; set; } // uniqueidentifier
+		[Column(DbType="int",              DataType=DataType.Int32),    Nullable         ] public int? Field1 { get; set; } // int
+	}
+
+	[Table(Database="TestData", Name="GuidID2")]
+	public partial class GuidID2
+	{
+		[Column(DbType="uniqueidentifier", DataType=DataType.Guid), PrimaryKey, NotNull] public Guid ID { get; set; } // uniqueidentifier
 	}
 
 	[Table(Database="TestData", Name="IndexTable")]
@@ -1132,7 +1133,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public IndexTable2 Patient2 { get; set; }
 
 		#endregion
@@ -1149,7 +1150,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient2")]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient2")]
 		public IndexTable Patient2IndexTable { get; set; }
 
 		#endregion
@@ -1188,8 +1189,7 @@ namespace DataModel
 		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  _ID      { get; set; } // int
 	}
 
-	// View
-	[Table(Database="TestData", Name="ParentChildView")]
+	[Table(Database="TestData", Name="ParentChildView", IsView=true)]
 	public partial class ParentChildView
 	{
 		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // int
@@ -1197,8 +1197,7 @@ namespace DataModel
 		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? ChildID  { get; set; } // int
 	}
 
-	// View
-	[Table(Database="TestData", Name="ParentView")]
+	[Table(Database="TestData", Name="ParentView", IsView=true)]
 	public partial class ParentView
 	{
 		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // int
@@ -1217,7 +1216,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
 		public Person Person { get; set; }
 
 		#endregion
@@ -1237,16 +1236,23 @@ namespace DataModel
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public Doctor Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public Patient Patient { get; set; }
 
 		#endregion
+	}
+
+	[Table(Database="TestData", Name="SqlTypes")]
+	public partial class SqlType
+	{
+		[Column(DbType="int",         DataType=DataType.Int32), PrimaryKey,  NotNull] public int    ID  { get; set; } // int
+		[Column(DbType="hierarchyid", DataType=DataType.Udt),      Nullable         ] public object HID { get; set; } // hierarchyid
 	}
 
 	[Table(Database="TestData", Name="TestIdentity")]
@@ -1262,16 +1268,6 @@ namespace DataModel
 		[Column(DbType="nvarchar(50)",  DataType=DataType.NVarChar,  Length=50),   NotNull              ] public string    Name        { get; set; } // nvarchar(50)
 		[Column(DbType="nvarchar(250)", DataType=DataType.NVarChar,  Length=250),     Nullable          ] public string    Description { get; set; } // nvarchar(250)
 		[Column(DbType="datetime2(7)",  DataType=DataType.DateTime2, Precision=7),    Nullable          ] public DateTime? CreatedOn   { get; set; } // datetime2(7)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Table2_TestTable2_BackReference
-		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
-		public MySchemaSchema.Table2 Table2 { get; set; }
-
-		#endregion
 	}
 
 	[Table(Database="TestData", Name="TestTable3")]
@@ -1279,31 +1275,21 @@ namespace DataModel
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, NotNull] public int    ID   { get; set; } // int
 		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50),             NotNull] public string Name { get; set; } // nvarchar(50)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_TestTable3_Table1
-		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_TestTable3_Table1", BackReferenceName="TestTable3")]
-		public MySchemaSchema.Table1 Table1 { get; set; }
-
-		#endregion
 	}
 
 	public static partial class TestDataDBStoredProcedures
 	{
 		#region Scalar_DataReader
 
+		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
+		}
+
 		public partial class Scalar_DataReaderResult
 		{
 			public int?   intField    { get; set; }
 			public string stringField { get; set; }
-		}
-
-		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
 		}
 
 		#endregion
@@ -1377,11 +1363,6 @@ namespace DataModel
 
 		#region Person_Insert
 
-		public partial class Person_InsertResult
-		{
-			public int? PersonID { get; set; }
-		}
-
 		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
 			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
@@ -1389,6 +1370,11 @@ namespace DataModel
 				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
 				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
 				new DataParameter("@Gender",     @Gender,     DataType.Char));
+		}
+
+		public partial class Person_InsertResult
+		{
+			public int? PersonID { get; set; }
 		}
 
 		#endregion
@@ -1437,6 +1423,11 @@ namespace DataModel
 
 		#region Patient_SelectAll
 
+		public static IEnumerable<Patient_SelectAllResult> Patient_SelectAll(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Patient_SelectAllResult>("[TestData]..[Patient_SelectAll]");
+		}
+
 		public partial class Patient_SelectAllResult
 		{
 			public int    PersonID   { get; set; }
@@ -1447,14 +1438,16 @@ namespace DataModel
 			public string Diagnosis  { get; set; }
 		}
 
-		public static IEnumerable<Patient_SelectAllResult> Patient_SelectAll(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Patient_SelectAllResult>("[TestData]..[Patient_SelectAll]");
-		}
-
 		#endregion
 
 		#region Patient_SelectByName
+
+		public static IEnumerable<Patient_SelectByNameResult> Patient_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		{
+			return dataConnection.QueryProc<Patient_SelectByNameResult>("[TestData]..[Patient_SelectByName]",
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+		}
 
 		public partial class Patient_SelectByNameResult
 		{
@@ -1464,13 +1457,6 @@ namespace DataModel
 			public string MiddleName { get; set; }
 			public char   Gender     { get; set; }
 			public string Diagnosis  { get; set; }
-		}
-
-		public static IEnumerable<Patient_SelectByNameResult> Patient_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Patient_SelectByNameResult>("[TestData]..[Patient_SelectByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
 		}
 
 		#endregion
@@ -1516,11 +1502,6 @@ namespace DataModel
 
 		#region SelectImplicitColumn
 
-		public partial class SelectImplicitColumnResult
-		{
-			[Column("")] public int Column1 { get; set; }
-		}
-
 		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
@@ -1533,15 +1514,14 @@ namespace DataModel
 				"[TestData]..[SelectImplicitColumn]");
 		}
 
+		public partial class SelectImplicitColumnResult
+		{
+			[Column("")] public int Column1 { get; set; }
+		}
+
 		#endregion
 
 		#region DuplicateColumnNames
-
-		public partial class DuplicateColumnNamesResult
-		{
-			               public int    id      { get; set; }
-			[Column("id")] public string Column2 { get; set; }
-		}
 
 		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
 		{
@@ -1554,6 +1534,12 @@ namespace DataModel
 					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
 				},
 				"[TestData]..[DuplicateColumnNames]");
+		}
+
+		public partial class DuplicateColumnNamesResult
+		{
+			               public int    id      { get; set; }
+			[Column("id")] public string Column2 { get; set; }
 		}
 
 		#endregion
@@ -1604,6 +1590,12 @@ namespace DataModel
 				t.DataTypeID == DataTypeID);
 		}
 
+		public static DecimalOverflow Find(this ITable<DecimalOverflow> table, decimal Decimal1)
+		{
+			return table.FirstOrDefault(t =>
+				t.Decimal1 == Decimal1);
+		}
+
 		public static Doctor Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
@@ -1614,6 +1606,18 @@ namespace DataModel
 		{
 			return table.FirstOrDefault(t =>
 				t._ID == _ID);
+		}
+
+		public static GuidID Find(this ITable<GuidID> table, Guid ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static GuidID2 Find(this ITable<GuidID2> table, Guid ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
 		}
 
 		public static IndexTable Find(this ITable<IndexTable> table, int PKField1, int PKField2)
@@ -1654,6 +1658,12 @@ namespace DataModel
 				t.PersonID == PersonID);
 		}
 
+		public static SqlType Find(this ITable<SqlType> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
 		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
@@ -1671,83 +1681,5 @@ namespace DataModel
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
-	}
-
-	public static partial class MySchemaSchema
-	{
-		public partial class DataContext
-		{
-			public ITable<Table1> Table1 { get { return _dataContext.GetTable<Table1>(); } }
-			public ITable<Table2> Table2 { get { return _dataContext.GetTable<Table2>(); } }
-
-			private readonly IDataContext _dataContext;
-
-			public DataContext(IDataContext dataContext)
-			{
-				_dataContext = dataContext;
-			}
-		}
-
-		[Table(Database="TestData", Schema="TestSchema", Name="Table1")]
-		public partial class Table1
-		{
-			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
-			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
-
-			#region Associations
-
-			/// <summary>
-			/// FK_TestTable3_Table1_BackReference
-			/// </summary>
-			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
-			public TestTable3 TestTable3 { get; set; }
-
-			/// <summary>
-			/// FK_Table2_Table1_BackReference
-			/// </summary>
-			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
-			public MySchemaSchema.Table2 Table2 { get; set; }
-
-			#endregion
-		}
-
-		[Table(Database="TestData", Schema="TestSchema", Name="Table2")]
-		public partial class Table2
-		{
-			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
-			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
-
-			#region Associations
-
-			/// <summary>
-			/// FK_Table2_TestTable2
-			/// </summary>
-			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_Table2_TestTable2", BackReferenceName="Table2")]
-			public TestTable2 TestTable2 { get; set; }
-
-			/// <summary>
-			/// FK_Table2_Table1
-			/// </summary>
-			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_Table2_Table1", BackReferenceName="Table2")]
-			public MySchemaSchema.Table1 Table1 { get; set; }
-
-			#endregion
-		}
-
-		#region Table Extensions
-
-		public static Table1 Find(this ITable<Table1> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static Table2 Find(this ITable<Table2> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		#endregion
 	}
 }

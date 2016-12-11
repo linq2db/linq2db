@@ -1,9 +1,9 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
-<#@ output extension=".generated.cs"                              #>
-<#@ include file="..\..\Templates\LinqToDB.MySql.ttinclude"       #>
-<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)packages\MySql.Data.6.9.6\lib\net40\MySql.Data.dll" #>
-<#@ assembly name="I:\linq2db\Source\bin\Debug.4.5\linq2db.dll" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                          #>
+<#@ output extension=".generated.cs"                                                 #>
+<#@ include file="..\..\Templates\LinqToDB.MySql.ttinclude"                          #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude"                    #>
+<#@ assembly name="$(SolutionDir)packages\MySql.Data.6.9.9\lib\net40\MySql.Data.dll" #>
+<#@ assembly name="$(SolutionDir)\packages\linq2db.1.7.5\lib\net40\linq2db.dll"      #>
 <#
 	NamespaceName = "MySqlDataContext";
 

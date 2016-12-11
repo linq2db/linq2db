@@ -5,6 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 using System;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -13,7 +14,7 @@ namespace SqlCeDataContext
 {
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : E:\Projects\Git\linq2db\Data\TestData.sdf
+	/// Data Source    : F:\job\t4models\\Data\TestData.sdf
 	/// Server Version : 4.0.8876.1
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
@@ -22,7 +23,7 @@ namespace SqlCeDataContext
 		public ITable<Child>        Children       { get { return this.GetTable<Child>(); } }
 		public ITable<DataType>     DataTypes      { get { return this.GetTable<DataType>(); } }
 		public ITable<Doctor>       Doctors        { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>   GrandChilds    { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GrandChild>   GrandChildren  { get { return this.GetTable<GrandChild>(); } }
 		public ITable<LinqDataType> LinqDataTypes  { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>       Parents        { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>      Patients       { get { return this.GetTable<Patient>(); } }
@@ -31,12 +32,16 @@ namespace SqlCeDataContext
 
 		public TestDataDB()
 		{
+			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
+			InitDataContext();
 		}
+
+		partial void InitDataContext();
 	}
 
 	[Table("AllTypes")]
@@ -44,12 +49,12 @@ namespace SqlCeDataContext
 	{
 		[PrimaryKey, NotNull    ] public int       ID                       { get; set; } // int
 		[Column,        Nullable] public long?     bigintDataType           { get; set; } // bigint
-		[Column,        Nullable] public decimal?  numericDataType          { get; set; } // numeric
+		[Column,        Nullable] public decimal?  numericDataType          { get; set; } // numeric(18, 0)
 		[Column,        Nullable] public bool?     bitDataType              { get; set; } // bit
 		[Column,        Nullable] public short?    smallintDataType         { get; set; } // smallint
-		[Column,        Nullable] public decimal?  decimalDataType          { get; set; } // numeric
+		[Column,        Nullable] public decimal?  decimalDataType          { get; set; } // numeric(18, 0)
 		[Column,        Nullable] public int?      intDataType              { get; set; } // int
-		[Column,        Nullable] public sbyte?    tinyintDataType          { get; set; } // tinyint
+		[Column,        Nullable] public byte?     tinyintDataType          { get; set; } // tinyint
 		[Column,        Nullable] public decimal?  moneyDataType            { get; set; } // money
 		[Column,        Nullable] public double?   floatDataType            { get; set; } // float
 		[Column,        Nullable] public float?    realDataType             { get; set; } // real
@@ -136,5 +141,38 @@ namespace SqlCeDataContext
 	public partial class TestIdentity
 	{
 		[PrimaryKey, NotNull] public int ID { get; set; } // int
+	}
+
+	public static partial class TableExtensions
+	{
+		public static AllType Find(this ITable<AllType> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static Patient Find(this ITable<Patient> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static Person Find(this ITable<Person> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
 	}
 }

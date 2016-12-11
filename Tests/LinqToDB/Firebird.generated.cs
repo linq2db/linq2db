@@ -19,7 +19,7 @@ namespace FirebirdDataContext
 	/// <summary>
 	/// Database       : TestData
 	/// Data Source    : DBHost
-	/// Server Version : WI-V2.5.1.26351 Firebird 2.5
+	/// Server Version : WI-V2.5.1.26351 Firebird 2.5/tcp (DBHost)/P12
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
@@ -38,6 +38,7 @@ namespace FirebirdDataContext
 		public ITable<PERSONVIEW>    PERSONVIEWs    { get { return this.GetTable<PERSONVIEW>(); } }
 		public ITable<SEQUENCETEST>  SEQUENCETESTs  { get { return this.GetTable<SEQUENCETEST>(); } }
 		public ITable<TESTIDENTITY>  TESTIDENTITies { get { return this.GetTable<TESTIDENTITY>(); } }
+		public ITable<TestTable>     TestTables     { get { return this.GetTable<TestTable>(); } }
 		public ITable<TESTTABLE2>    TESTTABLE2     { get { return this.GetTable<TESTTABLE2>(); } }
 		public ITable<TESTTABLE3>    TESTTABLE3     { get { return this.GetTable<TESTTABLE3>(); } }
 
@@ -138,7 +139,7 @@ namespace FirebirdDataContext
 		/// <summary>
 		/// FK_DOCTOR_PERSON
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, KeyName="FK_DOCTOR_PERSON", BackReferenceName="DOCTORs")]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_DOCTOR_PERSON", BackReferenceName="DOCTORs")]
 		public PERSON PERSON { get; set; }
 
 		#endregion
@@ -189,10 +190,10 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_8798
+		/// INTEG_7743
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, KeyName="INTEG_8798", BackReferenceName="INTEG8798")]
-		public PERSON INTEG8798 { get; set; }
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="INTEG_7743", BackReferenceName="INTEG7743")]
+		public PERSON INTEG7743 { get; set; }
 
 		#endregion
 	}
@@ -211,20 +212,19 @@ namespace FirebirdDataContext
 		/// <summary>
 		/// FK_DOCTOR_PERSON_BackReference
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<DOCTOR> DOCTORs { get; set; }
 
 		/// <summary>
-		/// INTEG_8798_BackReference
+		/// INTEG_7743_BackReference
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, IsBackReference=true)]
-		public IEnumerable<PATIENT> INTEG8798 { get; set; }
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<PATIENT> INTEG7743 { get; set; }
 
 		#endregion
 	}
 
-	// View
-	[Table("PERSONVIEW")]
+	[Table("PERSONVIEW", IsView=true)]
 	public partial class PERSONVIEW
 	{
 		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  Nullable] public int?   PERSONID   { get; set; } // integer
@@ -247,6 +247,15 @@ namespace FirebirdDataContext
 		[Column(DbType="integer", DataType=DataType.Int32, Length=4, Precision=0, Scale=0), PrimaryKey, NotNull] public int ID { get; set; } // integer
 	}
 
+	[Table("\"TestTable\"")]
+	public partial class TestTable
+	{
+		[Column(                 DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int       ID        { get; set; } // integer
+		[Column("\"Field1\"",    DbType="varchar(50)",  DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),     Nullable         ] public string    Field1    { get; set; } // varchar(50)
+		[Column("\"Field2\"",    DbType="varchar(255)", DataType=DataType.NVarChar, Length=255, Precision=0, Scale=0),    Nullable         ] public string    Field2    { get; set; } // varchar(255)
+		[Column("\"CreatedOn\"", DbType="timestamp",    DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),      Nullable         ] public DateTime? CreatedOn { get; set; } // timestamp
+	}
+
 	[Table("TESTTABLE2")]
 	public partial class TESTTABLE2
 	{
@@ -267,12 +276,6 @@ namespace FirebirdDataContext
 	{
 		#region OUTREFENUMTEST
 
-		public partial class OUTREFENUMTESTResult
-		{
-			public string INPUTOUTPUTSTR { get; set; }
-			public string OUTPUTSTR      { get; set; }
-		}
-
 		public static IEnumerable<OUTREFENUMTESTResult> OUTREFENUMTEST(this DataConnection dataConnection, string STR, string IN_INPUTOUTPUTSTR, out string INPUTOUTPUTSTR, out string OUTPUTSTR)
 		{
 			var ret = dataConnection.QueryProc<OUTREFENUMTESTResult>("OUTREFENUMTEST",
@@ -285,17 +288,15 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
+		public partial class OUTREFENUMTESTResult
+		{
+			public string INPUTOUTPUTSTR { get; set; }
+			public string OUTPUTSTR      { get; set; }
+		}
+
 		#endregion
 
 		#region OUTREFTEST
-
-		public partial class OUTREFTESTResult
-		{
-			public int?   INPUTOUTPUTID  { get; set; }
-			public string INPUTOUTPUTSTR { get; set; }
-			public int?   OUTPUTID       { get; set; }
-			public string OUTPUTSTR      { get; set; }
-		}
 
 		public static IEnumerable<OUTREFTESTResult> OUTREFTEST(this DataConnection dataConnection, int? ID, int? IN_INPUTOUTPUTID, string STR, string IN_INPUTOUTPUTSTR, out int? INPUTOUTPUTID, out string INPUTOUTPUTSTR, out int? OUTPUTID, out string OUTPUTSTR)
 		{
@@ -313,19 +314,17 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
+		public partial class OUTREFTESTResult
+		{
+			public int?   INPUTOUTPUTID  { get; set; }
+			public string INPUTOUTPUTSTR { get; set; }
+			public int?   OUTPUTID       { get; set; }
+			public string OUTPUTSTR      { get; set; }
+		}
+
 		#endregion
 
 		#region PATIENT_SELECTALL
-
-		public partial class PATIENT_SELECTALLResult
-		{
-			public int?   PERSONID   { get; set; }
-			public string FIRSTNAME  { get; set; }
-			public string LASTNAME   { get; set; }
-			public string MIDDLENAME { get; set; }
-			public string GENDER     { get; set; }
-			public string DIAGNOSIS  { get; set; }
-		}
 
 		public static IEnumerable<PATIENT_SELECTALLResult> PATIENT_SELECTALL(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
@@ -341,17 +340,19 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		#endregion
-
-		#region PATIENT_SELECTBYNAME
-
-		public partial class PATIENT_SELECTBYNAMEResult
+		public partial class PATIENT_SELECTALLResult
 		{
 			public int?   PERSONID   { get; set; }
+			public string FIRSTNAME  { get; set; }
+			public string LASTNAME   { get; set; }
 			public string MIDDLENAME { get; set; }
 			public string GENDER     { get; set; }
 			public string DIAGNOSIS  { get; set; }
 		}
+
+		#endregion
+
+		#region PATIENT_SELECTBYNAME
 
 		public static IEnumerable<PATIENT_SELECTBYNAMEResult> PATIENT_SELECTBYNAME(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, out int? PERSONID, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
@@ -365,6 +366,14 @@ namespace FirebirdDataContext
 			DIAGNOSIS  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
 
 			return ret;
+		}
+
+		public partial class PATIENT_SELECTBYNAMEResult
+		{
+			public int?   PERSONID   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
+			public string DIAGNOSIS  { get; set; }
 		}
 
 		#endregion
@@ -381,11 +390,6 @@ namespace FirebirdDataContext
 
 		#region PERSON_INSERT
 
-		public partial class PERSON_INSERTResult
-		{
-			public int? PERSONID { get; set; }
-		}
-
 		public static IEnumerable<PERSON_INSERTResult> PERSON_INSERT(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PERSON_INSERTResult>("PERSON_INSERT",
@@ -399,14 +403,14 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		#endregion
-
-		#region PERSON_INSERT_OUTPUTPARAMETER
-
-		public partial class PERSON_INSERT_OUTPUTPARAMETERResult
+		public partial class PERSON_INSERTResult
 		{
 			public int? PERSONID { get; set; }
 		}
+
+		#endregion
+
+		#region PERSON_INSERT_OUTPUTPARAMETER
 
 		public static IEnumerable<PERSON_INSERT_OUTPUTPARAMETERResult> PERSON_INSERT_OUTPUTPARAMETER(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
@@ -421,18 +425,14 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
+		public partial class PERSON_INSERT_OUTPUTPARAMETERResult
+		{
+			public int? PERSONID { get; set; }
+		}
+
 		#endregion
 
 		#region PERSON_SELECTALL
-
-		public partial class PERSON_SELECTALLResult
-		{
-			public int?   PERSONID   { get; set; }
-			public string FIRSTNAME  { get; set; }
-			public string LASTNAME   { get; set; }
-			public string MIDDLENAME { get; set; }
-			public string GENDER     { get; set; }
-		}
 
 		public static IEnumerable<PERSON_SELECTALLResult> PERSON_SELECTALL(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
@@ -447,11 +447,7 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		#endregion
-
-		#region PERSON_SELECTBYKEY
-
-		public partial class PERSON_SELECTBYKEYResult
+		public partial class PERSON_SELECTALLResult
 		{
 			public int?   PERSONID   { get; set; }
 			public string FIRSTNAME  { get; set; }
@@ -459,6 +455,10 @@ namespace FirebirdDataContext
 			public string MIDDLENAME { get; set; }
 			public string GENDER     { get; set; }
 		}
+
+		#endregion
+
+		#region PERSON_SELECTBYKEY
 
 		public static IEnumerable<PERSON_SELECTBYKEYResult> PERSON_SELECTBYKEY(this DataConnection dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
@@ -474,11 +474,7 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
-		#endregion
-
-		#region PERSON_SELECTBYNAME
-
-		public partial class PERSON_SELECTBYNAMEResult
+		public partial class PERSON_SELECTBYKEYResult
 		{
 			public int?   PERSONID   { get; set; }
 			public string FIRSTNAME  { get; set; }
@@ -486,6 +482,10 @@ namespace FirebirdDataContext
 			public string MIDDLENAME { get; set; }
 			public string GENDER     { get; set; }
 		}
+
+		#endregion
+
+		#region PERSON_SELECTBYNAME
 
 		public static IEnumerable<PERSON_SELECTBYNAMEResult> PERSON_SELECTBYNAME(this DataConnection dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
 		{
@@ -502,6 +502,15 @@ namespace FirebirdDataContext
 			return ret;
 		}
 
+		public partial class PERSON_SELECTBYNAMEResult
+		{
+			public int?   PERSONID   { get; set; }
+			public string FIRSTNAME  { get; set; }
+			public string LASTNAME   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
+		}
+
 		#endregion
 
 		#region PERSON_UPDATE
@@ -514,64 +523,6 @@ namespace FirebirdDataContext
 				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
 				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
 				new DataParameter("GENDER",     GENDER,     DataType.NChar));
-		}
-
-		#endregion
-
-		#region SCALAR_DATAREADER
-
-		public partial class SCALAR_DATAREADERResult
-		{
-			public int?   INTFIELD    { get; set; }
-			public string STRINGFIELD { get; set; }
-		}
-
-		public static IEnumerable<SCALAR_DATAREADERResult> SCALAR_DATAREADER(this DataConnection dataConnection, out int? INTFIELD, out string STRINGFIELD)
-		{
-			var ret = dataConnection.QueryProc<SCALAR_DATAREADERResult>("SCALAR_DATAREADER");
-
-			INTFIELD    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["INTFIELD"]).   Value);
-			STRINGFIELD = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["STRINGFIELD"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region SCALAR_OUTPUTPARAMETER
-
-		public partial class SCALAR_OUTPUTPARAMETERResult
-		{
-			public int?   OUTPUTINT    { get; set; }
-			public string OUTPUTSTRING { get; set; }
-		}
-
-		public static IEnumerable<SCALAR_OUTPUTPARAMETERResult> SCALAR_OUTPUTPARAMETER(this DataConnection dataConnection, out int? OUTPUTINT, out string OUTPUTSTRING)
-		{
-			var ret = dataConnection.QueryProc<SCALAR_OUTPUTPARAMETERResult>("SCALAR_OUTPUTPARAMETER");
-
-			OUTPUTINT    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTINT"]).   Value);
-			OUTPUTSTRING = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["OUTPUTSTRING"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region SCALAR_RETURNPARAMETER
-
-		public partial class SCALAR_RETURNPARAMETERResult
-		{
-			public int? RETURN_VALUE { get; set; }
-		}
-
-		public static IEnumerable<SCALAR_RETURNPARAMETERResult> SCALAR_RETURNPARAMETER(this DataConnection dataConnection, out int? RETURN_VALUE)
-		{
-			var ret = dataConnection.QueryProc<SCALAR_RETURNPARAMETERResult>("SCALAR_RETURNPARAMETER");
-
-			RETURN_VALUE = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["RETURN_VALUE"]).Value);
-
-			return ret;
 		}
 
 		#endregion
@@ -616,6 +567,12 @@ namespace FirebirdDataContext
 		}
 
 		public static TESTIDENTITY Find(this ITable<TESTIDENTITY> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable Find(this ITable<TestTable> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

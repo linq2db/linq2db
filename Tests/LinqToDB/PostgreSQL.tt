@@ -1,10 +1,10 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                     #>
-<#@ output extension=".generated.cs"                                            #>
-<#@ include file="..\..\Templates\LinqToDB.PostgreSQL.ttinclude"                #>
-<#@ include file="..\..\Templates\PluralizationService.ttinclude"               #>
-<#@ assembly name="$(SolutionDir)packages\Npgsql.2.2.5\lib\net40\Npgsql.dll" #>
-<#@ assembly name="$(SolutionDir)packages\Npgsql.2.2.5\lib\net40\Mono.Security.dll" #>
-<#@ assembly name="I:\linq2db\Source\bin\Debug.4.0\linq2db.dll"        #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                         #>
+<#@ output extension=".generated.cs"                                                #>
+<#@ include file="..\..\Templates\LinqToDB.PostgreSQL.ttinclude"                    #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude"                   #>
+<#@ assembly name="$(SolutionDir)packages\Npgsql.2.2.6\lib\net40\Npgsql.dll"        #>
+<#@ assembly name="$(SolutionDir)packages\Npgsql.2.2.6\lib\net40\Mono.Security.dll" #>
+<#@ assembly name="$(SolutionDir)\packages\linq2db.1.7.5\lib\net40\linq2db.dll"     #>
 <#
 	NamespaceName = "PostreSQLDataContext";
 

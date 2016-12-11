@@ -135,7 +135,7 @@ namespace MySqlDataContext
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Doctor_Person", BackReferenceName="DoctorPerson")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="DoctorPerson")]
 		public person DoctorPerson { get; set; }
 
 		#endregion
@@ -182,7 +182,7 @@ namespace MySqlDataContext
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Patient_Person", BackReferenceName="PatientPerson")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="PatientPerson")]
 		public person PatientPerson { get; set; }
 
 		#endregion
@@ -202,20 +202,19 @@ namespace MySqlDataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public doctor DoctorPerson { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public patient PatientPerson { get; set; }
 
 		#endregion
 	}
 
-	// View
-	[Table("personview")]
+	[Table("personview", IsView=true)]
 	public partial class personview
 	{
 		[Column, NotNull] public int ID { get; set; } // int(11)

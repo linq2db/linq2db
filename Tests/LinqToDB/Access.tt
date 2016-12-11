@@ -1,15 +1,16 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
-<#@ output extension=".generated.cs"                              #>
-<#@ include file="..\..\Templates\LinqToDB.Access.ttinclude"      #>
-<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="I:\linq2db\Source\bin\Debug.4.5\linq2db.dll"   #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ include file="..\..\Templates\LinqToDB.Access.ttinclude"                      #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude"                 #>
+<#@ assembly name="$(SolutionDir)\packages\linq2db.1.7.5\lib\net40\linq2db.dll"   #>
 <#
 	NamespaceName = "AccessDataContext";
 
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 
-	LoadAccessMetadata(@"I:\linq2db\Data\", "TestData.mdb");
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	LoadAccessMetadata(solutionsPath + @"\Data\", "TestData.mdb");
 
 	GenerateModel();
 #>

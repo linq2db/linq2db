@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -28,16 +29,24 @@ namespace InformixDataContext
 		public ITable<patient>      patients       { get { return this.GetTable<patient>(); } }
 		public ITable<person>       people         { get { return this.GetTable<person>(); } }
 		public ITable<personview>   personviews    { get { return this.GetTable<personview>(); } }
+		public ITable<testfkunique> testfkuniques  { get { return this.GetTable<testfkunique>(); } }
 		public ITable<testidentity> testidentities { get { return this.GetTable<testidentity>(); } }
+		public ITable<testtable2>   testtable2     { get { return this.GetTable<testtable2>(); } }
+		public ITable<testtable3>   testtable3     { get { return this.GetTable<testtable3>(); } }
+		public ITable<testunique>   testuniques    { get { return this.GetTable<testunique>(); } }
 
 		public TestDataDB()
 		{
+			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
+			InitDataContext();
 		}
+
+		partial void InitDataContext();
 	}
 
 	[Table("alltypes")]
@@ -83,7 +92,7 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_doctor_person
 		/// </summary>
-		[Association(ThisKey="personid", OtherKey="personid", CanBeNull=false)]
+		[Association(ThisKey="personid", OtherKey="personid", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_doctor_person", BackReferenceName="doctors")]
 		public person person { get; set; }
 
 		#endregion
@@ -140,14 +149,13 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_doctor_person_BackReference
 		/// </summary>
-		[Association(ThisKey="personid", OtherKey="personid", CanBeNull=false)]
+		[Association(ThisKey="personid", OtherKey="personid", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<doctor> doctors { get; set; }
 
 		#endregion
 	}
 
-	// View
-	[Table("personview")]
+	[Table("personview", IsView=true)]
 	public partial class personview
 	{
 		[Identity             ] public int    personid   { get; set; } // SERIAL
@@ -157,9 +165,115 @@ namespace InformixDataContext
 		[Column,   NotNull    ] public char   gender     { get; set; } // CHAR(1)
 	}
 
+	[Table("testfkunique")]
+	public partial class testfkunique
+	{
+		[Column, NotNull] public int id1 { get; set; } // INTEGER
+		[Column, NotNull] public int id2 { get; set; } // INTEGER
+		[Column, NotNull] public int id3 { get; set; } // INTEGER
+		[Column, NotNull] public int id4 { get; set; } // INTEGER
+
+		#region Associations
+
+		/// <summary>
+		/// FK_testfkunique_testunique
+		/// </summary>
+		[Association(ThisKey="id1, id2", OtherKey="id1, id2", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_testfkunique_testunique", BackReferenceName="testfkuniques")]
+		public testunique testunique { get; set; }
+
+		/// <summary>
+		/// FK_testfkunique_testunique_1
+		/// </summary>
+		[Association(ThisKey="id3, id4", OtherKey="id3, id4", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_testfkunique_testunique_1", BackReferenceName="testfkunique1")]
+		public testunique testunique1 { get; set; }
+
+		#endregion
+	}
+
 	[Table("testidentity")]
 	public partial class testidentity
 	{
 		[PrimaryKey, Identity] public int id { get; set; } // SERIAL
+	}
+
+	[Table("testtable2")]
+	public partial class testtable2
+	{
+		[PrimaryKey, Identity   ] public int       id          { get; set; } // SERIAL
+		[Column,     NotNull    ] public string    name        { get; set; } // NVARCHAR(50)
+		[Column,        Nullable] public string    description { get; set; } // NVARCHAR(250)
+		[Column,        Nullable] public DateTime? createdon   { get; set; } // DATETIME YEAR TO FRACTION(3)
+	}
+
+	[Table("testtable3")]
+	public partial class testtable3
+	{
+		[PrimaryKey, NotNull] public int    id   { get; set; } // INTEGER
+		[Column,     NotNull] public string name { get; set; } // NVARCHAR(50)
+	}
+
+	[Table("testunique")]
+	public partial class testunique
+	{
+		[PrimaryKey(0), NotNull] public int id1 { get; set; } // INTEGER
+		[PrimaryKey(1), NotNull] public int id2 { get; set; } // INTEGER
+		[Column,        NotNull] public int id3 { get; set; } // INTEGER
+		[Column,        NotNull] public int id4 { get; set; } // INTEGER
+
+		#region Associations
+
+		/// <summary>
+		/// FK_testfkunique_testunique_BackReference
+		/// </summary>
+		[Association(ThisKey="id1, id2", OtherKey="id1, id2", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<testfkunique> testfkuniques { get; set; }
+
+		/// <summary>
+		/// FK_testfkunique_testunique_1_BackReference
+		/// </summary>
+		[Association(ThisKey="id3, id4", OtherKey="id3, id4", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<testfkunique> testfkunique1 { get; set; }
+
+		#endregion
+	}
+
+	public static partial class TableExtensions
+	{
+		public static alltype Find(this ITable<alltype> table, int id)
+		{
+			return table.FirstOrDefault(t =>
+				t.id == id);
+		}
+
+		public static person Find(this ITable<person> table, int personid)
+		{
+			return table.FirstOrDefault(t =>
+				t.personid == personid);
+		}
+
+		public static testidentity Find(this ITable<testidentity> table, int id)
+		{
+			return table.FirstOrDefault(t =>
+				t.id == id);
+		}
+
+		public static testtable2 Find(this ITable<testtable2> table, int id)
+		{
+			return table.FirstOrDefault(t =>
+				t.id == id);
+		}
+
+		public static testtable3 Find(this ITable<testtable3> table, int id)
+		{
+			return table.FirstOrDefault(t =>
+				t.id == id);
+		}
+
+		public static testunique Find(this ITable<testunique> table, int id1, int id2)
+		{
+			return table.FirstOrDefault(t =>
+				t.id1 == id1 &&
+				t.id2 == id2);
+		}
 	}
 }

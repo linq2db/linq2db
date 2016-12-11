@@ -5,29 +5,24 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Data;
+using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 namespace SybaseDataContext
 {
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : DBHost2008
-	/// Server Version : 15.7.0
+	/// Data Source    : DBHost
+	/// Server Version : 16.0.0
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>        AllTypes        { get { return this.GetTable<AllType>(); } }
-		public ITable<BinaryData>     BinaryDatas     { get { return this.GetTable<BinaryData>(); } }
 		public ITable<Child>          Children        { get { return this.GetTable<Child>(); } }
-		public ITable<DataTypeTest>   DataTypeTests   { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<Doctor>         Doctors         { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>     GrandChilds     { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GrandChild>     GrandChildren   { get { return this.GetTable<GrandChild>(); } }
 		public ITable<LinqDataType>   LinqDataTypes   { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>         Parents         { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>        Patients        { get { return this.GetTable<Patient>(); } }
@@ -38,54 +33,50 @@ namespace SybaseDataContext
 
 		public TestDataDB()
 		{
+			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
+			InitDataContext();
 		}
+
+		partial void InitDataContext();
 	}
 
 	[Table(Schema="dbo", Name="AllTypes")]
 	public partial class AllType
 	{
-		[Identity                                             ] public int      ID                    { get; set; } // int
-		[Column,                                       NotNull] public long     bigintDataType        { get; set; } // bigint
-		[Column,                                       NotNull] public object   uBigintDataType       { get; set; } // ubigint
-		[Column,                                       NotNull] public decimal  numericDataType       { get; set; } // numeric
-		[Column,                                       NotNull] public bool     bitDataType           { get; set; } // bit
-		[Column,                                       NotNull] public short    smallintDataType      { get; set; } // smallint
-		[Column,                                       NotNull] public object   uSmallintDataType     { get; set; } // usmallint
-		[Column,                                       NotNull] public decimal  decimalDataType       { get; set; } // decimal
-		[Column,                                       NotNull] public decimal  smallmoneyDataType    { get; set; } // smallmoney
-		[Column,                                       NotNull] public int      intDataType           { get; set; } // int
-		[Column,                                       NotNull] public object   uIntDataType          { get; set; } // uint
-		[Column,                                       NotNull] public sbyte    tinyintDataType       { get; set; } // tinyint
-		[Column,                                       NotNull] public decimal  moneyDataType         { get; set; } // money
-		[Column,                                       NotNull] public double   floatDataType         { get; set; } // float
-		[Column,                                       NotNull] public float    realDataType          { get; set; } // real
-		[Column,                                       NotNull] public DateTime datetimeDataType      { get; set; } // datetime
-		[Column,                                       NotNull] public DateTime smalldatetimeDataType { get; set; } // smalldatetime
-		[Column,                                       NotNull] public object   dateDataType          { get; set; } // date
-		[Column,                                       NotNull] public object   timeDataType          { get; set; } // time
-		[Column,                                       NotNull] public char     charDataType          { get; set; } // char(1)
-		[Column,                                       NotNull] public string   varcharDataType       { get; set; } // varchar(20)
-		[Column,                                       NotNull] public string   textDataType          { get; set; } // text
-		[Column,                                       NotNull] public string   ncharDataType         { get; set; } // nchar(20)
-		[Column,                                       NotNull] public string   nvarcharDataType      { get; set; } // nvarchar(20)
-		[Column,                                       NotNull] public object   ntextDataType         { get; set; } // unitext
-		[Column,                                       NotNull] public byte[]   binaryDataType        { get; set; } // binary(1)
-		[Column,                                       NotNull] public byte[]   varbinaryDataType     { get; set; } // varbinary(1)
-		[Column,                                       NotNull] public byte[]   imageDataType         { get; set; } // image
-		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull] public byte[]   timestampDataType     { get; set; } // timestamp
-	}
-
-	[Table(Schema="dbo", Name="BinaryData")]
-	public partial class BinaryData
-	{
-		[PrimaryKey,                                   Identity] public int    BinaryDataID { get; set; } // int
-		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull ] public byte[] Stamp        { get; set; } // timestamp
-		[Column,                                       NotNull ] public byte[] Data         { get; set; } // varbinary(1024)
+		[Identity                                                 ] public int       ID                    { get; set; } // int
+		[Column,                                          Nullable] public long?     bigintDataType        { get; set; } // bigint
+		[Column,                                          Nullable] public object    uBigintDataType       { get; set; } // ubigint
+		[Column,                                          Nullable] public decimal?  numericDataType       { get; set; } // numeric(18, 0)
+		[Column,                                       NotNull    ] public bool      bitDataType           { get; set; } // bit
+		[Column,                                          Nullable] public short?    smallintDataType      { get; set; } // smallint
+		[Column,                                          Nullable] public object    uSmallintDataType     { get; set; } // usmallint
+		[Column,                                          Nullable] public decimal?  decimalDataType       { get; set; } // decimal(18, 0)
+		[Column,                                          Nullable] public decimal?  smallmoneyDataType    { get; set; } // smallmoney
+		[Column,                                          Nullable] public int?      intDataType           { get; set; } // int
+		[Column,                                          Nullable] public object    uIntDataType          { get; set; } // uint
+		[Column,                                          Nullable] public sbyte?    tinyintDataType       { get; set; } // tinyint
+		[Column,                                          Nullable] public decimal?  moneyDataType         { get; set; } // money
+		[Column,                                          Nullable] public double?   floatDataType         { get; set; } // float
+		[Column,                                          Nullable] public float?    realDataType          { get; set; } // real
+		[Column,                                          Nullable] public DateTime? datetimeDataType      { get; set; } // datetime
+		[Column,                                          Nullable] public DateTime? smalldatetimeDataType { get; set; } // smalldatetime
+		[Column,                                          Nullable] public object    dateDataType          { get; set; } // date
+		[Column,                                          Nullable] public object    timeDataType          { get; set; } // time
+		[Column,                                          Nullable] public char?     charDataType          { get; set; } // char(1)
+		[Column,                                          Nullable] public string    varcharDataType       { get; set; } // varchar(20)
+		[Column,                                          Nullable] public string    textDataType          { get; set; } // text
+		[Column,                                          Nullable] public string    ncharDataType         { get; set; } // nchar(60)
+		[Column,                                          Nullable] public string    nvarcharDataType      { get; set; } // nvarchar(60)
+		[Column,                                          Nullable] public object    ntextDataType         { get; set; } // unitext
+		[Column,                                          Nullable] public byte[]    binaryDataType        { get; set; } // binary(1)
+		[Column,                                          Nullable] public byte[]    varbinaryDataType     { get; set; } // varbinary(1)
+		[Column,                                          Nullable] public byte[]    imageDataType         { get; set; } // image
+		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public byte[]    timestampDataType     { get; set; } // timestamp
 	}
 
 	[Table(Schema="dbo", Name="Child")]
@@ -95,45 +86,18 @@ namespace SybaseDataContext
 		[Column, NotNull] public int ChildID  { get; set; } // int
 	}
 
-	[Table(Schema="dbo", Name="DataTypeTest")]
-	public partial class DataTypeTest
-	{
-		[PrimaryKey, Identity] public int      DataTypeID { get; set; } // int
-		[Column,     NotNull ] public byte[]   Binary_    { get; set; } // binary(50)
-		[Column,     NotNull ] public bool     Boolean_   { get; set; } // bit
-		[Column,     NotNull ] public sbyte    Byte_      { get; set; } // tinyint
-		[Column,     NotNull ] public byte[]   Bytes_     { get; set; } // varbinary(50)
-		[Column,     NotNull ] public char     Char_      { get; set; } // char(1)
-		[Column,     NotNull ] public DateTime DateTime_  { get; set; } // datetime
-		[Column,     NotNull ] public decimal  Decimal_   { get; set; } // decimal(20, 2)
-		[Column,     NotNull ] public double   Double_    { get; set; } // float
-		[Column,     NotNull ] public byte[]   Guid_      { get; set; } // varbinary(16)
-		[Column,     NotNull ] public short    Int16_     { get; set; } // smallint
-		[Column,     NotNull ] public int      Int32_     { get; set; } // int
-		[Column,     NotNull ] public long     Int64_     { get; set; } // bigint
-		[Column,     NotNull ] public decimal  Money_     { get; set; } // money
-		[Column,     NotNull ] public sbyte    SByte_     { get; set; } // tinyint
-		[Column,     NotNull ] public float    Single_    { get; set; } // real
-		[Column,     NotNull ] public byte[]   Stream_    { get; set; } // varbinary(50)
-		[Column,     NotNull ] public string   String_    { get; set; } // nvarchar(50)
-		[Column,     NotNull ] public short    UInt16_    { get; set; } // smallint
-		[Column,     NotNull ] public int      UInt32_    { get; set; } // int
-		[Column,     NotNull ] public long     UInt64_    { get; set; } // bigint
-		[Column,     NotNull ] public string   Xml_       { get; set; } // nvarchar(1000)
-	}
-
 	[Table(Schema="dbo", Name="Doctor")]
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
+		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(150)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
 		public Person Person { get; set; }
 
 		#endregion
@@ -150,37 +114,37 @@ namespace SybaseDataContext
 	[Table(Schema="dbo", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
-		[Column, NotNull] public int      ID             { get; set; } // int
-		[Column, NotNull] public decimal  MoneyValue     { get; set; } // decimal(10, 4)
-		[Column, NotNull] public DateTime DateTimeValue  { get; set; } // datetime
-		[Column, NotNull] public DateTime DateTimeValue2 { get; set; } // datetime
-		[Column, NotNull] public bool     BoolValue      { get; set; } // bit
-		[Column, NotNull] public string   GuidValue      { get; set; } // char(36)
-		[Column, NotNull] public byte[]   BinaryValue    { get; set; } // binary(500)
-		[Column, NotNull] public short    SmallIntValue  { get; set; } // smallint
-		[Column, NotNull] public int      IntValue       { get; set; } // int
-		[Column, NotNull] public long     BigIntValue    { get; set; } // bigint
+		[Column, NotNull    ] public int       ID             { get; set; } // int
+		[Column,    Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
+		[Column,    Nullable] public DateTime? DateTimeValue  { get; set; } // datetime
+		[Column,    Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime
+		[Column, NotNull    ] public bool      BoolValue      { get; set; } // bit
+		[Column,    Nullable] public string    GuidValue      { get; set; } // char(36)
+		[Column,    Nullable] public byte[]    BinaryValue    { get; set; } // binary(500)
+		[Column,    Nullable] public short?    SmallIntValue  { get; set; } // smallint
+		[Column,    Nullable] public int?      IntValue       { get; set; } // int
+		[Column,    Nullable] public long?     BigIntValue    { get; set; } // bigint
 	}
 
 	[Table(Schema="dbo", Name="Parent")]
 	public partial class Parent
 	{
-		[Column, NotNull] public int ParentID { get; set; } // int
-		[Column, NotNull] public int Value1   { get; set; } // int
+		[Column, NotNull    ] public int  ParentID { get; set; } // int
+		[Column,    Nullable] public int? Value1   { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="Patient")]
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(256)
+		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(768)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
 		public Person Person { get; set; }
 
 		#endregion
@@ -189,24 +153,24 @@ namespace SybaseDataContext
 	[Table(Schema="dbo", Name="Person")]
 	public partial class Person
 	{
-		[PrimaryKey, Identity] public int    PersonID   { get; set; } // int
-		[Column,     NotNull ] public string FirstName  { get; set; } // nvarchar(50)
-		[Column,     NotNull ] public string LastName   { get; set; } // nvarchar(50)
-		[Column,     NotNull ] public string MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull ] public char   Gender     { get; set; } // char(1)
+		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // int
+		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(150)
+		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(150)
+		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(150)
+		[Column,     NotNull    ] public char   Gender     { get; set; } // char(1)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public Doctor Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
 		public Patient Patient { get; set; }
 
 		#endregion
@@ -238,30 +202,29 @@ namespace SybaseDataContext
 		[Column, NotNull    ] public string   loginame  { get; set; } // varchar
 	}
 
-	// View
-	[Table(Schema="dbo", Name="sysquerymetrics")]
+	[Table(Schema="dbo", Name="sysquerymetrics", IsView=true)]
 	public partial class sysquerymetric
 	{
-		[Column, NotNull] public int    uid       { get; set; } // int
-		[Column, NotNull] public int    gid       { get; set; } // int
-		[Column, NotNull] public int    hashkey   { get; set; } // int
-		[Column, NotNull] public int    id        { get; set; } // int
-		[Column, NotNull] public short  sequence  { get; set; } // smallint
-		[Column, NotNull] public int    exec_min  { get; set; } // int
-		[Column, NotNull] public int    exec_max  { get; set; } // int
-		[Column, NotNull] public int    exec_avg  { get; set; } // int
-		[Column, NotNull] public int    elap_min  { get; set; } // int
-		[Column, NotNull] public int    elap_max  { get; set; } // int
-		[Column, NotNull] public int    elap_avg  { get; set; } // int
-		[Column, NotNull] public int    lio_min   { get; set; } // int
-		[Column, NotNull] public int    lio_max   { get; set; } // int
-		[Column, NotNull] public int    lio_avg   { get; set; } // int
-		[Column, NotNull] public int    pio_min   { get; set; } // int
-		[Column, NotNull] public int    pio_max   { get; set; } // int
-		[Column, NotNull] public int    pio_avg   { get; set; } // int
-		[Column, NotNull] public int    cnt       { get; set; } // int
-		[Column, NotNull] public int    abort_cnt { get; set; } // int
-		[Column, NotNull] public string qtext     { get; set; } // varchar(255)
+		[Column, NotNull    ] public int    uid       { get; set; } // int
+		[Column, NotNull    ] public int    gid       { get; set; } // int
+		[Column, NotNull    ] public int    hashkey   { get; set; } // int
+		[Column, NotNull    ] public int    id        { get; set; } // int
+		[Column, NotNull    ] public short  sequence  { get; set; } // smallint
+		[Column,    Nullable] public object exec_min  { get; set; } // ubigint
+		[Column,    Nullable] public object exec_max  { get; set; } // ubigint
+		[Column,    Nullable] public object exec_avg  { get; set; } // ubigint
+		[Column,    Nullable] public object elap_min  { get; set; } // ubigint
+		[Column,    Nullable] public object elap_max  { get; set; } // ubigint
+		[Column,    Nullable] public object elap_avg  { get; set; } // ubigint
+		[Column,    Nullable] public object lio_min   { get; set; } // ubigint
+		[Column,    Nullable] public object lio_max   { get; set; } // ubigint
+		[Column,    Nullable] public object lio_avg   { get; set; } // ubigint
+		[Column,    Nullable] public object pio_min   { get; set; } // ubigint
+		[Column,    Nullable] public object pio_max   { get; set; } // ubigint
+		[Column,    Nullable] public object pio_avg   { get; set; } // ubigint
+		[Column,    Nullable] public object cnt       { get; set; } // ubigint
+		[Column,    Nullable] public object abort_cnt { get; set; } // ubigint
+		[Column,    Nullable] public string qtext     { get; set; } // varchar(510)
 	}
 
 	[Table(Schema="dbo", Name="TestIdentity")]
@@ -270,227 +233,30 @@ namespace SybaseDataContext
 		[PrimaryKey, Identity] public int ID { get; set; } // int
 	}
 
-	public static partial class TestDataDBStoredProcedures
+	public static partial class TableExtensions
 	{
-		#region OutRefEnumTest
-
-		public static int OutRefEnumTest(this DataConnection dataConnection, string str, out string outputStr, out string inputOutputStr)
+		public static Doctor Find(this ITable<Doctor> table, int PersonID)
 		{
-			var ret = dataConnection.ExecuteProc("[dbo].[OutRefEnumTest]",
-				new DataParameter("str", str));
-
-			outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputStr"]).     Value);
-			inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["inputOutputStr"]).Value);
-
-			return ret;
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
 		}
 
-		#endregion
-
-		#region OutRefTest
-
-		public static int OutRefTest(this DataConnection dataConnection, int? ID, out int? outputID, out int? inputOutputID, string str, out string outputStr, out string inputOutputStr)
+		public static Patient Find(this ITable<Patient> table, int PersonID)
 		{
-			var ret = dataConnection.ExecuteProc("[dbo].[OutRefTest]",
-				new DataParameter("ID",  ID),
-				new DataParameter("str", str));
-
-			outputID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["outputID"]).      Value);
-			inputOutputID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["inputOutputID"]). Value);
-			outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputStr"]).     Value);
-			inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["inputOutputStr"]).Value);
-
-			return ret;
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
 		}
 
-		#endregion
-
-		#region Patient_SelectAll
-
-		public partial class Patient_SelectAllResult
+		public static Person Find(this ITable<Person> table, int PersonID)
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-			public string Diagnosis  { get; set; }
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
 		}
 
-		public static IEnumerable<Patient_SelectAllResult> Patient_SelectAll(this DataConnection dataConnection)
+		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
 		{
-			return dataConnection.QueryProc<Patient_SelectAllResult>("[dbo].[Patient_SelectAll]");
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
 		}
-
-		#endregion
-
-		#region Patient_SelectByName
-
-		public partial class Patient_SelectByNameResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-			public string Diagnosis  { get; set; }
-		}
-
-		public static IEnumerable<Patient_SelectByNameResult> Patient_SelectByName(this DataConnection dataConnection, string firstName, string lastName)
-		{
-			return dataConnection.QueryProc<Patient_SelectByNameResult>("[dbo].[Patient_SelectByName]",
-				new DataParameter("firstName", firstName),
-				new DataParameter("lastName",  lastName));
-		}
-
-		#endregion
-
-		#region Person_Delete
-
-		public static int Person_Delete(this DataConnection dataConnection, int? PersonID)
-		{
-			return dataConnection.ExecuteProc("[dbo].[Person_Delete]",
-				new DataParameter("PersonID", PersonID));
-		}
-
-		#endregion
-
-		#region Person_Insert
-
-		public partial class Person_InsertResult
-		{
-			public int? PersonID { get; set; }
-		}
-
-		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string FirstName, string LastName, string MiddleName, string Gender)
-		{
-			return dataConnection.QueryProc<Person_InsertResult>("[dbo].[Person_Insert]",
-				new DataParameter("FirstName",  FirstName),
-				new DataParameter("LastName",   LastName),
-				new DataParameter("MiddleName", MiddleName),
-				new DataParameter("Gender",     Gender));
-		}
-
-		#endregion
-
-		#region Person_SelectAll
-
-		public partial class Person_SelectAllResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Person_SelectAllResult> Person_SelectAll(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Person_SelectAllResult>("[dbo].[Person_SelectAll]");
-		}
-
-		#endregion
-
-		#region Person_SelectByKey
-
-		public partial class Person_SelectByKeyResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Person_SelectByKeyResult> Person_SelectByKey(this DataConnection dataConnection, int? id)
-		{
-			return dataConnection.QueryProc<Person_SelectByKeyResult>("[dbo].[Person_SelectByKey]",
-				new DataParameter("id", id));
-		}
-
-		#endregion
-
-		#region Person_SelectByName
-
-		public partial class Person_SelectByNameResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Person_SelectByNameResult> Person_SelectByName(this DataConnection dataConnection, string firstName, string lastName)
-		{
-			return dataConnection.QueryProc<Person_SelectByNameResult>("[dbo].[Person_SelectByName]",
-				new DataParameter("firstName", firstName),
-				new DataParameter("lastName",  lastName));
-		}
-
-		#endregion
-
-		#region Person_SelectListByName
-
-		public partial class Person_SelectListByNameResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Person_SelectListByNameResult> Person_SelectListByName(this DataConnection dataConnection, string firstName, string lastName)
-		{
-			return dataConnection.QueryProc<Person_SelectListByNameResult>("[dbo].[Person_SelectListByName]",
-				new DataParameter("firstName", firstName),
-				new DataParameter("lastName",  lastName));
-		}
-
-		#endregion
-
-		#region Person_Update
-
-		public static int Person_Update(this DataConnection dataConnection, int? PersonID, string FirstName, string LastName, string MiddleName, string Gender)
-		{
-			return dataConnection.ExecuteProc("[dbo].[Person_Update]",
-				new DataParameter("PersonID",   PersonID),
-				new DataParameter("FirstName",  FirstName),
-				new DataParameter("LastName",   LastName),
-				new DataParameter("MiddleName", MiddleName),
-				new DataParameter("Gender",     Gender));
-		}
-
-		#endregion
-
-		#region Scalar_DataReader
-
-		public partial class Scalar_DataReaderResult
-		{
-			public int    intField    { get; set; }
-			public string stringField { get; set; }
-		}
-
-		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Scalar_DataReaderResult>("[dbo].[Scalar_DataReader]");
-		}
-
-		#endregion
-
-		#region Scalar_OutputParameter
-
-		public static int Scalar_OutputParameter(this DataConnection dataConnection, out int? outputInt, out string outputString)
-		{
-			var ret = dataConnection.ExecuteProc("[dbo].[Scalar_OutputParameter]");
-
-			outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["outputInt"]).   Value);
-			outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputString"]).Value);
-
-			return ret;
-		}
-
-		#endregion
 	}
 }

@@ -21,13 +21,13 @@ build:
   verbosity: minimal
 
 after_build:
-  cmd: cd NuGet
-  cmd: Pack.bat
-  cmd: cd ..
+- cmd: cd NuGet
+- cmd: Pack.bat
+- cmd: cd ..
 
 
 artifacts:
-- path: \**\linq2db*.nupkg
+- path: NuGet\*.nupkg
 
 
 deploy:

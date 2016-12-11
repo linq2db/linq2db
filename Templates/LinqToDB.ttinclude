@@ -208,7 +208,7 @@ void GenerateTypesFromMetadata()
 		var allNullable    = t.Columns.Values.All  (c => c.IsNullable || c.IsIdentity);
 		var nameMaxLen     = t.Columns.Values.Max  (c => (int?)(c.MemberName == c.ColumnName ? 0 : c.ColumnName.Length)) ?? 0;
 		var dbTypeMaxLen   = t.Columns.Values.Max  (c => (int?)(c.ColumnType.Length)) ?? 0;
-		var dataTypeMaxLen = t.Columns.Values.Max  (c => (int?)(c.DataType.Length)) ?? 0;
+		var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => (int?)(c.DataType.Length)) ?? 0;
 		var dataTypePrefix = t.Columns.Values.Any  (c => c.MemberName == "DataType") ? "LinqToDB." : "";
 
 		foreach (var c in t.Columns.Values)

@@ -3,10 +3,11 @@
 <#@ include file="..\..\Templates\LinqToDB.SqlCe.ttinclude"       #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
 <#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" #>
-<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
+<#@ assembly name="$(SolutionDir)\packages\linq2db.1.7.5\lib\net40\linq2db.dll"   #>
 <#
 	NamespaceName = "SqlCeDataContext";
 
-	LoadSqlCeMetadata(@"E:\Projects\Git\linq2db\Data\", "TestData.sdf");
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	LoadSqlCeMetadata(solutionsPath + @"\Data\", "TestData.sdf");
 	GenerateModel();
 #>

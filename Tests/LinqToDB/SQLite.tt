@@ -1,13 +1,14 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
-<#@ output extension=".generated.cs"                              #>
-<#@ include file="..\..\Templates\LinqToDB.SQLite.ttinclude"      #>
-<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ include file="..\..\Templates\LinqToDB.SQLite.ttinclude"                      #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude"                 #>
 <#@ assembly name="$(SolutionDir)Tests\LinqToDB\bin\Debug\System.Data.SQLite.dll" #>
-<#@ assembly name="I:\linq2db\Source\bin\Debug.4.0\linq2db.dll" #>
+<#@ assembly name="$(SolutionDir)\packages\linq2db.1.7.5\lib\net40\linq2db.dll"   #>
 <#
 	NamespaceName = "SQLiteDataContext";
 
-	LoadSQLiteMetadata(@"I:\linq2db\Data\", "TestData.sqlite");
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");
 
 	foreach (var t in Tables.Values)
 		foreach (var fk in t.ForeignKeys.Values)

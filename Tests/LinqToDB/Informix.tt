@@ -1,9 +1,9 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"                  #>
-<#@ output extension=".generated.cs"                                         #>
-<#@ include file="..\..\Templates\LinqToDB.Informix.ttinclude"               #>
-<#@ include file="..\..\Templates\PluralizationService.ttinclude"            #>
-<#@ assembly name="E:\Projects\Git\linq2db\Redist\IBM\IBM.Data.Informix.dll" #>
-<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll"     #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                     #>
+<#@ output extension=".generated.cs"                                            #>
+<#@ include file="..\..\Templates\LinqToDB.Informix.ttinclude"                  #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude"               #>
+<#@ assembly name="$(SolutionDir)\Redist\IBM\IBM.Data.Informix.dll"             #>
+<#@ assembly name="$(SolutionDir)\packages\linq2db.1.7.5\lib\net40\linq2db.dll" #>
 <#
 	NamespaceName = "InformixDataContext";
 
