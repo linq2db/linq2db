@@ -1,9 +1,9 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.0.8.0
+  packageVersion: 1.7.5
 
-version: $(packageVersion)
+version: $(packageVersion).{build}
 
 
 cache:
@@ -70,3 +70,10 @@ deploy:
   api_key:
     secure: LDw0jeA1Yo3R4/TKv2kmlgJR8dTT6Wun2MONq3uDvtVQJG4LOU9LjvVTAc7IgRfm
   skip_symbols: true
+
+deploy:
+- provider: NuGet
+  api_key:
+    secure: oTYw2IwTnz4qMD8c/MR/6mo+Nx3wa5Pp8MYfsKBCKCVuU6QCHlj+6QMXpnQses8G
+  on:
+    branch: release
