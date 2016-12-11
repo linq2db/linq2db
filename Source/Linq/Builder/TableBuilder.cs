@@ -250,7 +250,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.NextLoadWith.Count > 0)
 					{
-						var table = FindTable(ma, 1, false);
+						var table = FindTable(ma, 1, false, true);
 						table.Table.LoadWith = member.NextLoadWith;
 					}
 
@@ -592,7 +592,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// Build table.
 				//
-				var table = FindTable(expression, level, false);
+				var table = FindTable(expression, level, false, false);
 
 				if (table == null)
 				{
@@ -632,7 +632,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ConvertFlags.All   :
 						{
-							var table = FindTable(expression, level, false);
+							var table = FindTable(expression, level, false, true);
 
 							if (table.Field == null)
 								return table.Table.SqlTable.Fields.Values
@@ -644,7 +644,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ConvertFlags.Key   :
 						{
-							var table = FindTable(expression, level, false);
+							var table = FindTable(expression, level, false, true);
 
 							if (table.Field == null)
 							{
@@ -664,7 +664,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ConvertFlags.Field :
 						{
-							var table = FindTable(expression, level, true);
+							var table = FindTable(expression, level, true, true);
 
 							if (table.Field != null)
 								return new[]
@@ -744,14 +744,14 @@ namespace LinqToDB.Linq.Builder
 				{
 					case RequestFor.Field      :
 						{
-							var table = FindTable(expression, level, false);
+							var table = FindTable(expression, level, false, false);
 							return new IsExpressionResult(table != null && table.Field != null);
 						}
 
 					case RequestFor.Table       :
 					case RequestFor.Object      :
 						{
-							var table   = FindTable(expression, level, false);
+							var table   = FindTable(expression, level, false, false);
 							var isTable =
 								table       != null &&
 								table.Field == null &&
@@ -773,7 +773,7 @@ namespace LinqToDB.Linq.Builder
 								case ExpressionType.Parameter    :
 								case ExpressionType.Call         :
 
-									var table = FindTable(expression, level, false);
+									var table = FindTable(expression, level, false, false);
 									return new IsExpressionResult(table == null);
 							}
 
@@ -784,7 +784,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (EntityDescriptor.Associations.Count > 0)
 							{
-								var table = FindTable(expression, level, false);
+								var table = FindTable(expression, level, false, false);
 								var isat  =
 									table       != null &&
 									table.Table is AssociatedTableContext &&
@@ -1168,12 +1168,14 @@ namespace LinqToDB.Linq.Builder
 				public bool         IsNew;
 			}
 
-			TableLevel FindTable(Expression expression, int level, bool throwException)
+			TableLevel FindTable(Expression expression, int level, bool throwException, bool throwExceptionForNull)
 			{
 				if (expression == null)
 					return new TableLevel { Table = this };
 
 				var levelExpression = expression.GetLevelExpression(level);
+
+				TableLevel result = null;
 
 				switch (levelExpression.NodeType)
 				{
@@ -1185,11 +1187,15 @@ namespace LinqToDB.Linq.Builder
 							if (field != null || (level == 0 && levelExpression == expression))
 								return new TableLevel { Table = this, Field = field, Level = level };
 
-							return GetAssociation(expression, level);
+							result = GetAssociation(expression, level);
+							break;
 						}
 				}
 
-				return null;
+				if (throwExceptionForNull && result == null)
+					throw new LinqException("Expression '{0}' ({1}) is not a table.".Args(expression, levelExpression));
+
+				return result;
 			}
 
 			TableLevel GetAssociation(Expression expression, int level)
