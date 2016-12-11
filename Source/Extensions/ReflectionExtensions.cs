@@ -614,7 +614,7 @@ namespace LinqToDB.Extensions
 
 #region Attributes cache
 
-		static readonly Dictionary<Type, object[]> _typeAttributesTopInternal = new Dictionary<Type, object[]>(10);
+		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ConcurrentDictionary<Type, object[]>();
 
 		static void GetAttributesInternal(List<object> list, Type type)
 		{
@@ -627,7 +627,7 @@ namespace LinqToDB.Extensions
 			else
 			{
 				GetAttributesTreeInternal(list, type);
-				_typeAttributesTopInternal.Add(type, list.ToArray());
+				_typeAttributesTopInternal.TryAdd(type, list.ToArray());
 			}
 		}
 
