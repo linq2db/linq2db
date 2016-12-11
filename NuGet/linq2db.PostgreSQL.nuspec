@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.PostgreSQL</id>
-		<version>1.7.5</version>
+		<version>1.7.0.5</version>
 		<title>LINQ to PostgreSQL</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -23,9 +23,9 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\packages\Npgsql.2.2.5\lib\net40\Npgsql.dll"        target="tools" />
-		<file src="..\packages\Npgsql.2.2.5\lib\net40\Mono.Security.dll" target="tools" />
-		<file src="LinqToDB.PostgreSQL.Tools.ttinclude"                  target="content\LinqToDB.Templates" />
+		<file src="..\packages\Npgsql.2.2.6\lib\net40\Npgsql.dll"        target="tools" />
+		<file src="..\packages\Npgsql.2.2.6\lib\net40\Mono.Security.dll" target="tools" />
+		<file src="..\Templates\LinqToDB.PostgreSQL.ttinclude"           target="content\LinqToDB.Templates" />
 		<file src="CopyMe.PostgreSQL.tt.txt"                             target="content\LinqToDB.Templates" />
 	</files>
 </package>

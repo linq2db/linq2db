@@ -1,0 +1,44 @@
+configuration: Release
+
+environment:
+  packageVersion: 1.0.7.5
+
+version: $(packageVersion).{build}
+
+cache:
+- packages -> **\packages.config
+
+init:
+- cmd: git config --global core.autocrlf true
+
+nuget:
+  account_feed: false
+  project_feed: false
+
+build:
+  project: T4Models.sln
+  publish_nuget: false
+  verbosity: minimal
+
+after_build:
+  cmd: cd NuGet
+  cmd: Pack.bat
+  cmd: cd ..
+
+
+artifacts:
+- path: \**\linq2db*.nupkg
+
+
+deploy:
+- provider: NuGet
+  server: https://www.myget.org/F/linq2db/api/v2
+  api_key:
+    secure: LDw0jeA1Yo3R4/TKv2kmlgJR8dTT6Wun2MONq3uDvtVQJG4LOU9LjvVTAc7IgRfm
+  skip_symbols: true
+
+- provider: NuGet
+  api_key:
+    secure: oTYw2IwTnz4qMD8c/MR/6mo+Nx3wa5Pp8MYfsKBCKCVuU6QCHlj+6QMXpnQses8G
+  on:
+    branch: release

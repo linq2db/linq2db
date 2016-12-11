@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.SqlServer</id>
-		<version>1.7.5</version>
+		<version>1.7.0.5</version>
 		<title>LINQ to SqlServer</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -23,8 +23,8 @@
 	</metadata>
 	<files>
 		<file src="..\packages\Microsoft.SqlServer.Types.11.0.2\lib\Net20\Microsoft.SqlServer.Types.dll" target="tools" />
-		<file src="LinqToDB.SqlServer.SqlTypes.Tools.ttinclude"                                          target="content\LinqToDB.Templates" />
-		<file src="LinqToDB.SqlServer.Tools.ttinclude"                                                   target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.SqlServer.SqlTypes.ttinclude"                                   target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.SqlServer.ttinclude"                                            target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SqlServer.tt.txt"                                                              target="content\LinqToDB.Templates" />
 	</files>
 </package>
