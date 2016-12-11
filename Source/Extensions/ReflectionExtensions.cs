@@ -627,7 +627,7 @@ namespace LinqToDB.Extensions
 			else
 			{
 				GetAttributesTreeInternal(list, type);
-				_typeAttributesTopInternal.TryAdd(type, list.ToArray());
+				_typeAttributesTopInternal[type] = list.ToArray();
 			}
 		}
 
