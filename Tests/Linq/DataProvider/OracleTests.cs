@@ -511,37 +511,38 @@ namespace Tests.DataProvider
 			}
 		}
 
-	    [Test, OracleDataContext]
-	    public void TestTreatEmptyStringsAsNulls(string context)
-	    {
-	        using (var db = new TestDataConnection(context))
-	        {
-	            const string personToken = "TestTreatEmptyStringsAsNulls";
-	            db.Person.Delete(x => x.FirstName == personToken);
-	            var id = (int) (decimal) db.InsertWithIdentity(new Person
-	            {
-	                FirstName = personToken,
-	                LastName = "b",
-	                Gender = Gender.Male,
-	                MiddleName = ""
-	            });
-	            Assert.That(db.Person.Single(x => x.ID == id).MiddleName, Is.Null);
-	            Assert.That(db.Person.Single(x => x.FirstName == personToken && x.MiddleName == GetNullString()).ID,
-	                Is.EqualTo(id));
-	            Assert.That(db.Person.Single(x => x.FirstName == personToken && x.MiddleName == GetEmptyString()).ID,
-	                Is.EqualTo(id));
-	        }
-	    }
+		[Test, OracleDataContext]
+		public void TestTreatEmptyStringsAsNulls(string context)
+		{
+			const string personToken = "TestTreatEmptyStringsAsNulls";
+			using (var db = new TestDataConnection(context))
+			{
+				try
+				{
+					db.Person.Delete(x => x.FirstName == personToken);
+					var id = (int) (decimal) db.InsertWithIdentity(new Person
+					{
+						FirstName  = personToken,
+						LastName   = "b",
+						Gender     = Gender.Male,
+						MiddleName = ""
+					});
 
-	    private static string GetNullString()
-	    {
-	        return null;
-	    }
+					Assert.IsNull(db.Person.Single(x => x.ID == id).MiddleName);
 
-	    private static string GetEmptyString()
-	    {
-	        return "";
-	    }
+					string nullStr  = null;
+					string emptyStr = "";
+
+					Assert.AreEqual(id, db.Person.Single(x => x.FirstName == personToken && string.IsNullOrEmpty(x.MiddleName)).ID);
+					Assert.AreEqual(id, db.Person.Single(x => x.FirstName == personToken && x.MiddleName == nullStr)           .ID);
+					Assert.AreEqual(id, db.Person.Single(x => x.FirstName == personToken && x.MiddleName == emptyStr)          .ID);
+				}
+				finally
+				{
+					db.Person.Delete(x => x.FirstName == personToken);
+				}
+			}
+		}
 
 		#region DateTime Tests
 
