@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -10,6 +9,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Configuration;
+
 	using Data;
 
 	public static class SqlServerTools
@@ -37,9 +38,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(ConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (DataConnection.IsMachineConfig(css))
+			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
 
 			switch (css.ProviderName)
@@ -75,9 +76,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						try
 						{
-							var connectionString = css.ConnectionString;
+							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-							using (var conn = new SqlConnection(connectionString))
+							using (var conn = new SqlConnection(cs))
 							{
 								conn.Open();
 

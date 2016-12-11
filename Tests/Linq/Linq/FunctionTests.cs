@@ -290,14 +290,17 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Equals4(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					   Customer.Where(c => !c.Address.Equals(null)),
+					dd.Customer.Where(c => !c.Address.Equals(null)),
 					db.Customer.Where(c => !c.Address.Equals(null)));
+			}
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+			ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void NewGuid1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -306,7 +309,7 @@ namespace Tests.Linq
 					from p in db.Types where p.GuidValue != Sql.NewGuid() select p.GuidValue);
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void NewGuid2(string context)
 		{
 			using (var db = GetDataContext(context))

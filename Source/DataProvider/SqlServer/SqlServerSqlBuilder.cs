@@ -276,11 +276,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 #endif
 
+#if !NETSTANDARD
 		protected override string GetUdtTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).UdtTypeName;
 		}
-
+#endif
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).SqlDbType.ToString();

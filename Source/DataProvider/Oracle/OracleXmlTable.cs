@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -167,13 +168,17 @@ namespace LinqToDB.DataProvider.Oracle
 			return converter(data);
 		}
 
+		private static MethodInfo OracleXmlTableIEnumerableT;
+		private static MethodInfo OracleXmlTableString;
+		private static MethodInfo OracleXmlTableFuncString;
+
 		[OracleXmlTable]
 		public static ITable<T> OracleXmlTable<T>(this IDataContext dataContext, IEnumerable<T> data)
 			where T : class
 		{
 			return dataContext.GetTable<T>(
 				null,
-				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)),
+				OracleXmlTableIEnumerableT.MakeGenericMethod(typeof(T)),
 				dataContext,
 				data);
 		}
@@ -184,7 +189,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return dataContext.GetTable<T>(
 				null,
-				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)),
+				OracleXmlTableString.MakeGenericMethod(typeof(T)),
 				dataContext,
 				xmlData);
 		}
@@ -195,7 +200,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return dataContext.GetTable<T>(
 				null,
-				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)),
+				OracleXmlTableFuncString.MakeGenericMethod(typeof(T)),
 				dataContext,
 				xmlData);
 		}

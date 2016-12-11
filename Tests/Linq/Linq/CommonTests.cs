@@ -204,7 +204,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void ExecuteTest(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var emp = db.Employee;
 
@@ -557,8 +557,10 @@ namespace Tests.Linq
 
 		class User
 		{
+#pragma warning disable 0649
 			public string FirstName;
 			public int?   Status;
+#pragma warning restore 0649
 		}
 
 		// https://github.com/linq2db/linq2db/issues/191

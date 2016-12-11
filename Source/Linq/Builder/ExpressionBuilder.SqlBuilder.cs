@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-#if !SILVERLIGHT && !NETFX_CORE
+#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD
 using System.Data.SqlTypes;
 #endif
 
@@ -747,7 +747,7 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method == null && e.IsLifted)
 							return o;
 
-#if !SILVERLIGHT && !NETFX_CORE
+#if !SILVERLIGHT && !NETFX_CORE  || NETSTANDARD
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return o;
 #endif
@@ -1360,7 +1360,7 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-#if !SILVERLIGHT && !NETFX_CORE
+#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e);
 #endif
@@ -1442,10 +1442,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression AddEqualTrue(Expression expr)
 		{
-			if (expr.Type != typeof(bool))
-				expr = Expression.Convert(expr, typeof(bool));
-
-			return Expression.Equal(expr, Expression.Constant(true));
+			return Equal(MappingSchema, Expression.Constant(true), expr);
 		}
 
 		#region ConvertCompare

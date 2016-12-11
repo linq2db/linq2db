@@ -501,12 +501,14 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ParentChildVie
 BEGIN DROP VIEW ParentChildView END
 GO
 
-
-DROP TABLE Parent
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Parent') AND type in (N'U'))
+BEGIN DROP TABLE Parent END
 GO
-DROP TABLE Child
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Child') AND type in (N'U'))
+BEGIN DROP TABLE Child END
 GO
-DROP TABLE GrandChild
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('GrandChild') AND type in (N'U'))
+BEGIN DROP TABLE GrandChild END
 GO
 
 CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
@@ -602,7 +604,8 @@ GO
 -- SKIP SqlServer.2014 END
 -- SKIP SqlServer.2008 END
 
-DROP TABLE TestIdentity
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
+BEGIN DROP TABLE TestIdentity END
 GO
 
 CREATE TABLE TestIdentity (

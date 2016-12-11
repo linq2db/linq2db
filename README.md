@@ -13,7 +13,17 @@ Code examples and demos can be found [here] (https://github.com/linq2db/examples
 
 Project Build Status
 --------------------
-[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)
+||linq2db|linq2db.core
+---|-------|--------
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)|[![Build status](https://ci.appveyor.com/api/projects/status/au06kbyxx8imhrf6/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db-8c54d/branch/master)|
+|latest|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)|[![Build status](https://ci.appveyor.com/api/projects/status/au06kbyxx8imhrf6?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db-8c54d)|
+
+Feeds
+----------
+* Release builds can be found on [NuGet](https://nuget.org)
+* [MyGet](https://www.myget.org/gallery/linq2db)
+ * V2 `https://www.myget.org/F/linq2db/api/v2`
+ * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
 
 Let's get started
 -----------------

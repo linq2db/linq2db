@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -39,9 +40,9 @@ namespace LinqToDB.DataProvider.Oracle
 				if (_bulkCopyCreator == null)
 				{
 					var clientNamespace    = ((OracleDataProvider)dataConnection.DataProvider).AssemblyName + ".Client.";
-					var bulkCopyType       = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopy",              false);
-					var bulkCopyOptionType = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyOptions",       false);
-					var columnMappingType  = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyColumnMapping", false);
+					var bulkCopyType       = _connectionType.AssemblyEx().GetType(clientNamespace + "OracleBulkCopy",              false);
+					var bulkCopyOptionType = _connectionType.AssemblyEx().GetType(clientNamespace + "OracleBulkCopyOptions",       false);
+					var columnMappingType  = _connectionType.AssemblyEx().GetType(clientNamespace + "OracleBulkCopyColumnMapping", false);
 
 					if (bulkCopyType != null)
 					{
@@ -143,7 +144,7 @@ namespace LinqToDB.DataProvider.Oracle
 				helper.StringBuilder.Length -= 2;
 
 				helper.StringBuilder.Append(") VALUES (");
-				helper.BuildColumns(item);
+				helper.BuildColumns(item, _ => _.DataType == DataType.Text || _.DataType == DataType.NText);
 				helper.StringBuilder.AppendLine(")");
 
 				helper.RowsCopied.RowsCopied++;
@@ -185,6 +186,8 @@ namespace LinqToDB.DataProvider.Oracle
 			for (var i = 0; i < helper.Columns.Length; i++)
 				helper.StringBuilder.Append(":p" + ( i + 1)).Append(", ");
 
+			helper.StringBuilder.Length -= 2;
+
 			helper.StringBuilder.AppendLine(")");
 			helper.SetHeader();
 
@@ -201,6 +204,8 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					if (!Execute(dataConnection, helper, list))
 						return helper.RowsCopied;
+
+					list.Clear();
 				}
 			}
 

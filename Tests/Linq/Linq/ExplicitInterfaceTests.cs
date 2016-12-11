@@ -28,7 +28,9 @@ namespace Tests.Linq
 			[Column("GuidValue")] Guid? GuidValue { get; set; }
 			[Column("BoolValue")] public bool? Bit { get; set; }
 
+#pragma warning disable 0649
 			private DateTime? _date;
+#pragma warning restore 0649
 
 			[Column("DateTimeValue", Storage = "_date")]
 			DateTime? IDate.Date
@@ -43,7 +45,9 @@ namespace Tests.Linq
 			[Column("GuidValue")] Guid?  GuidValue { get; set; }
 			[Column("BoolValue")] public bool? Bit { get; set; }
 
+#pragma warning disable 0649
 			private DateTime? _date;
+#pragma warning restore 0649
 
 			[Column("DateTimeValue", Storage = "_date")]
 			DateTime? IDate.Date

@@ -24,7 +24,7 @@ namespace LinqToDB.Common
 			try
 			{
 				return Convert.ChangeType(value, conversionType
-#if !NETFX_CORE
+#if !NETFX_CORE && !NETSTANDARD
 					, Thread.CurrentThread.CurrentCulture
 #endif
 					);
@@ -168,7 +168,7 @@ namespace LinqToDB.Common
 				{
 					var val = values.GetValue(i);
 					var lv  = (long)Convert.ChangeType(val, typeof(long)
-#if !NETFX_CORE
+#if !NETFX_CORE && !NETSTANDARD
 						, Thread.CurrentThread.CurrentCulture
 #endif
 						);
@@ -461,6 +461,11 @@ namespace LinqToDB.Common
 			if (lex != null)
 				return Tuple.Create(lex.GetBody(expr), true);
 
+			var cex = mappingSchema.GetConvertExpression(from, to, false, false);
+
+			if (cex != null)
+				return Tuple.Create(cex.GetBody(expr), true);
+
 			var ex =
 				GetFromEnum  (from, to, expr, mappingSchema) ??
 				GetToEnum    (from, to, expr, mappingSchema);
@@ -617,7 +622,10 @@ namespace LinqToDB.Common
 			}
 
 			if (defaultType == null)
-				defaultType = Enum.GetUnderlyingType(type);
+				defaultType = 
+					   mappingSchema.GetDefaultFromEnumType(enumType)
+					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
+					?? Enum.GetUnderlyingType(type);
 
 			if (enumType.IsNullable() && !defaultType.IsClassEx() && !defaultType.IsNullable())
 				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);

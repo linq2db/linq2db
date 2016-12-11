@@ -9,7 +9,9 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
+#if !NETSTANDARD
 	using System.Configuration;
+#endif
 
 	using Model;
 
@@ -19,9 +21,10 @@ namespace Tests.Data
 		[Test, NorthwindDataContext]
 		public void Test1(string context)
 		{
-			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
+			var connectionString = DataConnection.GetConnectionString(context);
+			var dataProvider = DataConnection.GetDataProvider(context);
 
-			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), connectionString))
+			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
 				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.Null);

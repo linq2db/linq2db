@@ -24,7 +24,7 @@ namespace Tests.DataProvider
 		class MySqlDataContextAttribute : IncludeDataContextSourceAttribute
 		{
 			public MySqlDataContextAttribute()
-				: base(ProviderName.MySql, TestProvName.MariaDB)
+				: base(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)
 			{
 			}
 		}
@@ -66,7 +66,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<DateTime?>     (conn, "timestampDataType", DataType.Timestamp),           Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 				Assert.That(TestType<TimeSpan?>     (conn, "timeDataType",      DataType.Time),                Is.EqualTo(new TimeSpan(12, 12, 12)));
 				Assert.That(TestType<int?>          (conn, "yearDataType",      DataType.Int32),               Is.EqualTo(1998));
-				Assert.That(TestType<int?>          (conn, "year2DataType",     DataType.Int32),               Is.EqualTo(97));
+				Assert.That(TestType<int?>          (conn, "year2DataType",     DataType.Int32),               Is.EqualTo(context == TestProvName.MySql57 ? 1997 : 97));
 				Assert.That(TestType<int?>          (conn, "year4DataType",     DataType.Int32),               Is.EqualTo(2012));
 
 				Assert.That(TestType<char?>         (conn, "charDataType",      DataType.Char),                Is.EqualTo('1'));
@@ -316,7 +316,7 @@ namespace Tests.DataProvider
 
 				//var list = conn.GetTable<ALLTYPE>().ToList();
 
-				conn.GetTable<DB2Tests.ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
 			}
 		}
 

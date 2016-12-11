@@ -3,6 +3,7 @@ using System.Diagnostics;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
@@ -28,8 +29,8 @@ namespace Tests.DataProvider
 			bool     skipDefault       = false,
 			bool     skipUndefined     = false)
 		{
-			var type = typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>) ?
-				typeof(T).GetGenericArguments()[0] : typeof(T);
+			var type = typeof(T).IsGenericTypeEx() && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>) ?
+				typeof(T).GetGenericArgumentsEx()[0] : typeof(T);
 
 			// Get NULL value.
 			//

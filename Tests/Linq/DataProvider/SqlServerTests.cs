@@ -4,6 +4,7 @@ using System.Data.Linq;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -14,7 +15,9 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
+#if !NETSTANDARD
 using Microsoft.SqlServer.Types;
+#endif
 
 using NUnit.Framework;
 
@@ -107,9 +110,11 @@ namespace Tests.DataProvider
 				Assert.That(TestType<DateTime?>      (conn, "datetime2DataType",      DataType.DateTime2,      "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 				Assert.That(TestType<TimeSpan?>      (conn, "timeDataType",           DataType.Time,           "AllTypes2"), Is.EqualTo(new TimeSpan(0, 12, 12, 12, 12)));
 
+#if !NETSTANDARD
 				Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType",              tableName:"AllTypes2"),            Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
 				Assert.That(TestType<SqlGeography>   (conn, "geographyDataType", skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
 				Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
+#endif
 			}
 		}
 
@@ -137,7 +142,7 @@ namespace Tests.DataProvider
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
 
-				var sql = string.Format("SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
+				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
@@ -276,7 +281,8 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var dto = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0));
+				var dto = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan( 5, 0, 0));
+				var lto = new DateTimeOffset(2012, 12, 12, 13, 12, 12, 12, new TimeSpan(-4, 0, 0));
 
 				Assert.That(conn.Execute<DateTimeOffset>(
 					"SELECT Cast('2012-12-12 12:12:12.012' as datetime2)"),
@@ -288,11 +294,11 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<DateTime>(
 					"SELECT Cast('2012-12-12 13:12:12.012 -04:00' as datetimeoffset)"),
-					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+					Is.EqualTo(lto.LocalDateTime));
 
 				Assert.That(conn.Execute<DateTime?>(
 					"SELECT Cast('2012-12-12 13:12:12.012 -04:00' as datetimeoffset)"),
-					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+					Is.EqualTo(lto.LocalDateTime));
 
 				Assert.That(conn.Execute<DateTimeOffset>(
 					"SELECT Cast('2012-12-12 12:12:12.012 +05:00' as datetimeoffset)"),
@@ -561,6 +567,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void TestHierarchyID(string context)
 		{
@@ -614,6 +621,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlGeography>("SELECT @p", DataParameter.Udt("p", id)).ToString(),               Is.EqualTo(id.ToString()));
 			}
 		}
+#endif
 
 		[Test, SqlServerDataContext]
 		public void TestXml(string context)
@@ -675,9 +683,10 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table(Schema="dbo", Name="LinqDataTypes")]
+		[Table(Schema = "dbo", Name = "LinqDataTypes")]
 		class DataTypes
 		{
+#pragma warning disable 0649
 			[Column] public int      ID;
 			[Column] public decimal  MoneyValue;
 			[Column] public DateTime DateTimeValue;
@@ -685,6 +694,7 @@ namespace Tests.DataProvider
 			[Column] public Guid     GuidValue;
 			[Column] public Binary   BinaryValue;
 			[Column] public short    SmallIntValue;
+#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
@@ -815,7 +825,7 @@ namespace Tests.DataProvider
 
 		static readonly AllTypes[] _allTypeses =
 		{
-			#region data
+#region data
 			new AllTypes
 			{
 				ID                       = 700,
@@ -864,7 +874,7 @@ namespace Tests.DataProvider
 			{
 				ID                       = 701,
 			},
-			#endregion
+#endregion
 		};
 
 		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)
@@ -960,7 +970,9 @@ namespace Tests.DataProvider
 		[Table("#TempTable")]
 		class TempTable
 		{
+#pragma warning disable 0649
 			[PrimaryKey] public int ID;
+#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
@@ -988,24 +1000,30 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow
 		{
+#pragma warning disable 0649
 			[Column] public decimal Decimal1;
 			[Column] public decimal Decimal2;
 			[Column] public decimal Decimal3;
+#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
 		public void OverflowTest(string context)
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
-
-			SqlServerTools.DataReaderGetDecimal = GetDecimal;
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow>().ToList();
-			}
+				SqlServerTools.DataReaderGetDecimal = GetDecimal;
 
-			SqlServerTools.DataReaderGetDecimal = func;
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow>().ToList();
+				}
+			}
+			finally
+			{
+				SqlServerTools.DataReaderGetDecimal = func;
+			}
 		}
 
 		const int ClrPrecision = 29;
@@ -1019,7 +1037,7 @@ namespace Tests.DataProvider
 				if (value.Precision > ClrPrecision)
 				{
 					var str = value.ToString();
-					var val = decimal.Parse(str);
+					var val = decimal.Parse(str, CultureInfo.InvariantCulture);
 
 					return val;
 				}
@@ -1037,9 +1055,11 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow2
 		{
+#pragma warning disable 0649
 			[Column] public SqlDecimal Decimal1;
 			[Column] public SqlDecimal Decimal2;
 			[Column] public SqlDecimal Decimal3;
+#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
@@ -1047,14 +1067,19 @@ namespace Tests.DataProvider
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
 
-			SqlServerTools.DataReaderGetDecimal = (rd,idx) => { throw new Exception(); };
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow2>().ToList();
-			}
+				SqlServerTools.DataReaderGetDecimal = (rd, idx) => { throw new Exception(); };
 
-			SqlServerTools.DataReaderGetDecimal = func;
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow2>().ToList();
+				}
+			}
+			finally
+			{
+				SqlServerTools.DataReaderGetDecimal = func;
+			}
 		}
 	}
 }

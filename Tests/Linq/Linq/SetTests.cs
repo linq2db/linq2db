@@ -219,7 +219,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Contains10(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var arr = new[]
 				{
@@ -245,7 +245,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Contains11(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from e in db.EmployeeTerritory
@@ -264,7 +264,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Contains12(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from e in db.EmployeeTerritory
@@ -283,7 +283,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Contains13(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var arr = new[]
 				{
@@ -318,7 +318,8 @@ namespace Tests.Linq
 			var ps = Parent1.OrderBy(p => p.ParentID).Take(2).ToArray();
 
 			using (var db = GetDataContext(context))
-				Array.ForEach(ps, p => TestContains(db, p));
+				foreach (var p in ps)
+					TestContains(db, p);
 		}
 
 		[Test, DataContextSource]

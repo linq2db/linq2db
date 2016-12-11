@@ -73,6 +73,10 @@
   <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\LinqToDBConvertException.cs" />
+    <Compile Include="Configuration\IConnectionStringSettings.cs" />
+    <Compile Include="Configuration\IDataProviderSettings.cs" />
+    <Compile Include="Configuration\ILinqToDBSettings.cs" />
+    <Compile Include="Configuration\NamedValue.cs" />
     <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
     <Compile Include="KeepConnectionAliveScope.cs" />
@@ -392,6 +396,7 @@
     <Compile Include="Linq\ReflectionHelper.cs" />
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
+    <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
@@ -474,6 +479,7 @@
   <ItemGroup>
     <None Include="Compile.bat" />
     <None Include="linq2db.snk" />
+    <None Include="LinqToDB.project.json" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

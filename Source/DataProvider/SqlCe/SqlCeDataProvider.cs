@@ -5,6 +5,7 @@ using System.Data.SqlTypes;
 using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -65,7 +66,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		static Action<IDbDataParameter> GetSetParameter(Type connectionType, SqlDbType value)
 		{
-			var pType  = connectionType.Assembly.GetType(connectionType.Namespace + ".SqlCeParameter", true);
+			var pType  = connectionType.AssemblyEx().GetType(connectionType.Namespace + ".SqlCeParameter", true);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
 			var l = Expression.Lambda<Action<IDbDataParameter>>(
@@ -93,10 +94,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			return _sqlOptimizer;
 		}
 
+#if !NETSTANDARD
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SqlCeSchemaProvider();
 		}
+#endif
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
@@ -138,6 +141,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.Binary     : _setBinary   (parameter); break;
 				case DataType.VarBinary  : _setVarBinary(parameter); break;
 				case DataType.Image      : _setImage    (parameter); break;
+				case DataType.Date       :
 				case DataType.DateTime   :
 				case DataType.DateTime2  : _setDateTime (parameter); break;
 				case DataType.Money      : _setMoney    (parameter); break;
@@ -148,7 +152,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		#endregion
+#endregion
 
 		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
 		{
@@ -159,7 +163,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				dbName =>
 				{
 					dynamic eng = Activator.CreateInstance(
-						GetConnectionType().Assembly.GetType("System.Data.SqlServerCe.SqlCeEngine"),
+						GetConnectionType().AssemblyEx().GetType("System.Data.SqlServerCe.SqlCeEngine"),
 						"Data Source=" + dbName);
 
 					eng.CreateDatabase();
@@ -177,7 +181,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			DropFileDatabase(databaseName, ".sdf");
 		}
-		#region BulkCopy
+#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -189,6 +193,6 @@ namespace LinqToDB.DataProvider.SqlCe
 				source);
 		}
 
-		#endregion
+#endregion
 	}
 }
