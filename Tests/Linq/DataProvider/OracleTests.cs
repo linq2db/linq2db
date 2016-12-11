@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Globalization;
 using System.Collections.Generic;
 
 using LinqToDB;
@@ -17,8 +18,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Globalization;
-
 	using Model;
 
 	[TestFixture]
@@ -529,7 +528,7 @@ namespace Tests.DataProvider
 			[Column(DataType=DataType.Decimal,        Length=22),                           Nullable         ] public decimal?        MONEYDATATYPE          { get; set; } // NUMBER
 			[Column(DataType=DataType.Double,         Length=8),                            Nullable         ] public double?         FLOATDATATYPE          { get; set; } // BINARY_DOUBLE
 			[Column(DataType=DataType.Single,         Length=4),                            Nullable         ] public float?          REALDATATYPE           { get; set; } // BINARY_FLOAT
-			[Column(/*DataType=DataType.DateTime,       Length=7*/),                            Nullable         ] public DateTime?       DATETIMEDATATYPE       { get; set; } // DATE
+			[Column(DataType=DataType.Date),                                                Nullable         ] public DateTime?       DATETIMEDATATYPE       { get; set; } // DATE
 			[Column(DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       DATETIME2DATATYPE      { get; set; } // TIMESTAMP(6)
 			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? DATETIMEOFFSETDATATYPE { get; set; } // TIMESTAMP(6) WITH TIME ZONE
 			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? LOCALZONEDATATYPE      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
@@ -676,6 +675,45 @@ namespace Tests.DataProvider
 
 					stringBuilder.AppendFormat(format, value);
 				});
+		}
+
+		[Test, OracleDataContext]
+		public void ClauseDateTimeWithoutJointure(string context)
+		{
+			var date = DateTime.Today;
+			using (var db = new DataConnection(context))
+			{
+				var query = from a in db.GetTable<ALLTYPE>()
+							where a.DATETIMEDATATYPE == date
+							select a;
+
+				query.FirstOrDefault();
+
+				Assert.That(db.Command.Parameters.Count, Is.EqualTo(1));
+
+				var parm = (IDbDataParameter)db.Command.Parameters[0];
+				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
+			}
+		}
+
+		[Test, OracleDataContext]
+		public void ClauseDateTimeWithJointure(string context)
+		{
+			var date = DateTime.Today;
+			using (var db = new DataConnection(context))
+			{
+				var query = from a in db.GetTable<ALLTYPE>()
+							join b in db.GetTable<ALLTYPE>() on a.ID equals b.ID
+							where a.DATETIMEDATATYPE == date
+							select a;
+
+				query.FirstOrDefault();
+
+				Assert.That(db.Command.Parameters.Count, Is.EqualTo(1));
+
+				var parm = (IDbDataParameter)db.Command.Parameters[0];
+				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
+			}
 		}
 
 		#endregion
