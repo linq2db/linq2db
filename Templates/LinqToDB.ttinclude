@@ -22,7 +22,7 @@ bool? GeneratePrecisionProperty = null;
 bool? GenerateScaleProperty     = null;
 bool  GenerateDbTypes           = false;
 bool  GenerateSchemaAsType      = false;
-
+bool  GenerateViews              = true;
 string SchemaNameSuffix          = "Schema";
 string SchemaDataContextTypeName = "DataContext";
 
@@ -124,6 +124,10 @@ void GenerateTypesFromMetadata()
 		var props             = defProps;
 		var aliases           = defAliases;
 		var tableExtensions   = defTableExtensions;
+
+		if (t.IsView && !GenerateViews){
+			continue;
+		}
 
 		var schema = t.Schema != null && schemas.ContainsKey(t.Schema) ? schemas[t.Schema] : null;
 
