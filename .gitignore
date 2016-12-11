@@ -33,3 +33,4 @@ NuGet/*.nupkg
 !*.exe
 !*.dll
 !*.pdb
+.vs/*
