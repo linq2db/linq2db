@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.SQLite
 #if !NETSTANDARD
 			try
 			{
-				var path = typeof(SQLiteTools).AssemblyEx().CodeBase.Replace("file:///", "");
+				var path = typeof(SQLiteTools).AssemblyEx().CodeBase.Replace("file://", "");
 
 				path = Path.GetDirectoryName(path);
 
