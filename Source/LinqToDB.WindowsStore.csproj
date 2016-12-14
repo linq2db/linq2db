@@ -103,6 +103,12 @@
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />

@@ -477,11 +477,16 @@
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="Compile.bat" />
     <None Include="linq2db.snk" />
     <None Include="LinqToDB.project.json" />
-  </ItemGroup>
-  <ItemGroup />
+  </ItemGroup> 
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

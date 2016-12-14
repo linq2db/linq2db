@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote)
 							return '"' + name + '"';
 
-						if (ReservedWords.ReservedWordsDictionary.ContainsKey(name.ToUpper()))
+						if (ReservedWords.ReservedWordsDictionaryPostgres.ContainsKey(name.ToUpper()))
 							return '"' + name + '"';
 
 						if (name
