@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using LinqToDB.Common;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SQLite
@@ -30,9 +31,7 @@ namespace LinqToDB.DataProvider.SQLite
 #if !NETSTANDARD
 			try
 			{
-				var path = typeof(SQLiteTools).AssemblyEx().CodeBase.Replace("file://", "");
-
-				path = Path.GetDirectoryName(path);
+				var path = typeof(SQLiteTools).AssemblyEx().GetLocation();
 
 				if (!File.Exists(Path.Combine(path, AssemblyName + ".dll")) &&
 					(Type.GetType("Mono.Runtime") != null || File.Exists(Path.Combine(path, "Mono.Data.Sqlite.dll"))))
