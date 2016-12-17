@@ -36,8 +36,6 @@ namespace LinqToDB.Common
 			return assembly.CodeBase.GetPathFromUri();
 		}
 
-#endif
-
 		public static string GetPathFromUri(this string uriString)
 		{
 			try
@@ -55,5 +53,7 @@ namespace LinqToDB.Common
 				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
 			}
 		}
+
+#endif
 	}
 }
