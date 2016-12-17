@@ -1,0 +1,57 @@
+configuration: Release
+
+environment:
+  packageVersion: 1.7.6
+
+version: $(packageVersion).{build}
+
+cache:
+- packages -> **\packages.config
+
+services:
+- mssql2012sp1
+- mysql
+- postgresql
+
+init:
+- cmd: git config --global core.autocrlf true
+- ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
+- ps: |
+    if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
+    {
+        $env:nugetVersion = "$env:packageVersion"
+    }
+    else
+    {
+        $env:nugetVersion = "$env:packageVersion-rc$env:appveyor_build_number"
+    }
+- ps: Update-AppveyorBuild -Version $env:buildVersion
+
+nuget:
+  account_feed: false
+  project_feed: false
+
+before_build:
+- cmd: nuget restore linq2db.4.5.sln
+
+build_script:
+- cmd: '"c:\Program Files (x86)\Mono\bin\xbuild" linq2db.mono.sln /p:Configuration=ReleaseMono'
+
+after_build:
+- cmd: cd Source
+- cmd: Compile.bat
+- cmd: cd ..
+- ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
+
+test: 
+  assemblies:
+    - \Tests\**\linq2db.Tests.dll
+
+before_test:
+- ps: |
+      Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
+      cd $env:appveyor_build_folder
+      . ".\Av-InitDatabases.ps1"
+
+after_test:
+- ps: Pop-Location
