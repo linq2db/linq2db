@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Linq;
+using LinqToDB.Common;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -93,7 +94,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			try
 			{
-				var path = typeof(OracleTools).AssemblyEx().CodeBase.Replace("file:///", "");
+				var path = typeof(OracleTools).AssemblyEx().GetFileName();
 
 				path = Path.GetDirectoryName(path);
 

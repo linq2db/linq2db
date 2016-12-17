@@ -24,10 +24,20 @@ namespace LinqToDB.Common
 			return string.IsNullOrEmpty(str);
 		}
 
-		public static string GetLocation(this Assembly assembly)
+		public static string GetPath(this Assembly assembly)
 		{
-			var path = new Uri(assembly.EscapedCodeBase).LocalPath;
-			return Path.GetDirectoryName(path);
+			return Path.GetDirectoryName(assembly.GetFileName());
+		}
+
+		public static string GetFileName(this Assembly assembly)
+		{
+			return assembly.CodeBase.GetPathFromUri();
+		}
+
+		public static string GetPathFromUri(this string uriString)
+		{
+			var uri = new Uri(Uri.EscapeUriString(uriString));
+			return "{0}{1}".Args(Uri.UnescapeDataString(uri.PathAndQuery), Uri.UnescapeDataString(uri.Fragment));
 		}
 	}
 }

@@ -61,9 +61,7 @@ namespace Tests
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
-			var assemblyPath = typeof(TestBase).AssemblyEx().CodeBase;
-
-			assemblyPath = Path.GetDirectoryName(assemblyPath.Substring("file:///".Length));
+			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
 			ProjectPath = FindProjectPath(assemblyPath);
 

@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SQLite
 #if !NETSTANDARD
 			try
 			{
-				var path = typeof(SQLiteTools).AssemblyEx().GetLocation();
+				var path = typeof(SQLiteTools).AssemblyEx().GetPath();
 
 				if (!File.Exists(Path.Combine(path, AssemblyName + ".dll")) &&
 					(Type.GetType("Mono.Runtime") != null || File.Exists(Path.Combine(path, "Mono.Data.Sqlite.dll"))))

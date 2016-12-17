@@ -222,6 +222,7 @@
     <Compile Include="Common\ChangeTypeTests.cs" />
     <Compile Include="Common\ConvertTests.cs" />
     <Compile Include="Common\DefaultValueTests.cs" />
+    <Compile Include="Common\ToolsTest.cs" />
     <Compile Include="DataProvider\ALLTYPE.cs" />
     <Compile Include="DataProvider\SapHanaTests.cs" />
     <Compile Include="DataProvider\InformixTests.cs" />
