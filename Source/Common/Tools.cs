@@ -40,8 +40,20 @@ namespace LinqToDB.Common
 
 		public static string GetPathFromUri(this string uriString)
 		{
-			var uri = new Uri(Uri.EscapeUriString(uriString));
-			return "{0}{1}".Args(Uri.UnescapeDataString(uri.PathAndQuery), Uri.UnescapeDataString(uri.Fragment));
+			try
+			{
+				var uri = new Uri(Uri.EscapeUriString(uriString));
+				var path = 
+					  Uri.UnescapeDataString(uri.AbsolutePath)
+					+ Uri.UnescapeDataString(uri.Query)
+					+ Uri.UnescapeDataString(uri.Fragment);
+
+				return Path.GetFullPath(path);
+			}
+			catch (Exception ex)
+			{
+				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
+			}
 		}
 	}
 }
