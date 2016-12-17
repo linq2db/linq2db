@@ -53,30 +53,32 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		//private static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
-		//{
-		//	var sqlParameter = expr as SqlParameter;
-		//	if (sqlParameter == null)
-		//		return;
+		private static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
+		{
+			var sqlParameter = expr as SqlParameter;
+			var sqlValue     = expr as SqlValue;
 
-		//	if (sqlParameter.Value is string && sqlParameter.Value.ToString() == "")
-		//		sqlParameter.Value = null;
-		//}
+			if (sqlParameter != null && sqlParameter.Value is string && sqlParameter.Value.ToString() == "")
+				sqlParameter.Value = null;
 
-		//protected override void BuildPredicate(ISqlPredicate predicate)
-		//{
-		//	if (predicate.ElementType == QueryElementType.ExprExprPredicate)
-		//	{
-		//		var expr = (SelectQuery.Predicate.ExprExpr) predicate;
-		//		if (expr.Operator == SelectQuery.Predicate.Operator.Equal ||
-		//		    expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
-		//		{
-		//			ConvertEmptyStringToNullIfNeeded(expr.Expr1);
-		//			ConvertEmptyStringToNullIfNeeded(expr.Expr2);
-		//		}
-		//	}
-		//	base.BuildPredicate(predicate);
-		//}
+			if (sqlValue != null && sqlValue.Value is string && sqlValue.Value.ToString() == "")
+				sqlValue.Value = null;
+		}
+
+		protected override void BuildPredicate(ISqlPredicate predicate)
+		{
+			if (predicate.ElementType == QueryElementType.ExprExprPredicate)
+			{
+				var expr = (SelectQuery.Predicate.ExprExpr)predicate;
+				if (expr.Operator == SelectQuery.Predicate.Operator.Equal ||
+					expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
+				{
+					ConvertEmptyStringToNullIfNeeded(expr.Expr1);
+					ConvertEmptyStringToNullIfNeeded(expr.Expr2);
+				}
+			}
+			base.BuildPredicate(predicate);
+		}
 
 		protected override bool BuildWhere()
 		{
