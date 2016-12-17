@@ -27,9 +27,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			try
 			{
-				var path = typeof(SapHanaTools).AssemblyEx().GetFileName();
-
-				path = Path.GetDirectoryName(path);
+				var path = typeof(SapHanaTools).AssemblyEx().GetPath();
 
 				if (!String.IsNullOrEmpty(path))
 				{

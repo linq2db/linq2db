@@ -94,9 +94,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			try
 			{
-				var path = typeof(OracleTools).AssemblyEx().GetFileName();
-
-				path = Path.GetDirectoryName(path);
+				var path = typeof(OracleTools).AssemblyEx().GetPath();
 
 				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
 					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))

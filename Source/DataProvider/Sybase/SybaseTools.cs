@@ -20,9 +20,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			try
 			{
-				var path = typeof(SybaseTools).AssemblyEx().GetFileName();
-
-				path = Path.GetDirectoryName(path);
+				var path = typeof(SybaseTools).AssemblyEx().GetPath();
 
 				var _ =
 					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet45.AseClient") + ".dll")) ||
