@@ -1,11 +1,12 @@
-﻿using System;
+﻿#if !MONO
+
+using System;
 using System.Linq;
 
 using LinqToDB;
 
 using NUnit.Framework;
 
-#if !MONO
 
 namespace Tests.Linq
 {

@@ -79,7 +79,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMono|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\DebugMono\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FW4</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FW4;MONO;NOFSHARP</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisLogFile>bin\Debug\UnitTests.Linq.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
@@ -97,7 +97,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseMono|AnyCPU'">
     <OutputPath>bin\ReleaseMono\</OutputPath>
-    <DefineConstants>TRACE;FW4</DefineConstants>
+    <DefineConstants>TRACE;FW4;MONO;NOFSHARP</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
