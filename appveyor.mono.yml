@@ -1,4 +1,4 @@
-configuration: Release
+configuration: ReleaseMono
 
 environment:
   packageVersion: 1.7.6
@@ -36,12 +36,6 @@ before_build:
 
 build_script:
 - cmd: '"c:\Program Files (x86)\Mono\bin\xbuild" linq2db.mono.sln /p:Configuration=ReleaseMono'
-
-after_build:
-- cmd: cd Source
-- cmd: Compile.bat
-- cmd: cd ..
-- ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
 
 test: 
   assemblies:
