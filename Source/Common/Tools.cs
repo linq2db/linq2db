@@ -24,6 +24,8 @@ namespace LinqToDB.Common
 			return string.IsNullOrEmpty(str);
 		}
 
+#if !NETFX_CORE
+
 		public static string GetPath(this Assembly assembly)
 		{
 			return Path.GetDirectoryName(assembly.GetFileName());
@@ -33,6 +35,8 @@ namespace LinqToDB.Common
 		{
 			return assembly.CodeBase.GetPathFromUri();
 		}
+
+#endif
 
 		public static string GetPathFromUri(this string uriString)
 		{
