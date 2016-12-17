@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using LinqToDB.Common;
+using LinqToDB.Extensions;
 using NUnit.Framework;
 
 namespace Tests.Common
@@ -23,7 +24,7 @@ namespace Tests.Common
 		[Test]
 		public void AssemblyPathTest()
 		{
-			var asm = Assembly.GetExecutingAssembly();
+			var asm = typeof(ToolsTest).AssemblyEx();
 
 			var path = asm.GetPath();
 			var file = asm.GetFileName();
