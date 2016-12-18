@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".doc", ".doc", "{751CE0BA-6
 		appveyor.mono.yml = appveyor.mono.yml
 		MIT-LICENSE.txt = MIT-LICENSE.txt
 		README.md = README.md
+		.travis.yml = .travis.yml
+		travis.sh = travis.sh
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{BAE16247-BCCD-4C39-B714-39CDF10904E9}"

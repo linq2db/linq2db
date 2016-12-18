@@ -155,10 +155,14 @@ namespace Tests
 
 		protected static string FindProjectPath(string basePath)
 		{
-			while (!File.Exists(Path.Combine(basePath, "DefaultDataProviders.txt")))
+			var fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
+			while (!File.Exists(fileName))
 			{
-				basePath = Path.Combine(basePath, @"..\");
+				Console.WriteLine("File not found: " + fileName);
+				basePath = Path.GetFullPath(Path.Combine(basePath, @"..\"));
+				fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
 			}
+			Console.WriteLine("Base path found: " + basePath);
 
 			return basePath;
 		}
