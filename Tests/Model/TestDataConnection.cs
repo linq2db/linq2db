@@ -18,14 +18,11 @@ namespace Tests.Model
 		}
 
 		public TestDataConnection()
-#if MONO
-			: base(ProviderName.SqlServer2008)
-#else
+
 #if NETSTANDARD
 			: base("SQLiteMs")
 #else
 			: base(ProviderName.SQLite)
-#endif
 #endif
 		{
 		}
