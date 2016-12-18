@@ -159,7 +159,7 @@ namespace Tests
 			while (!File.Exists(fileName))
 			{
 				Console.WriteLine("File not found: " + fileName);
-				basePath = Path.GetFullPath(Path.Combine(basePath, @"..\"));
+				basePath = Path.GetDirectoryName(basePath);
 				fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
 			}
 			Console.WriteLine("Base path found: " + basePath);
