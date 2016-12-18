@@ -1,0 +1,9 @@
+language: csharp
+script:
+  - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
+before_install:
+  - sudo apt-get install nunit-console
+before_script:
+  - nuget restore linq2db.Mono.sln
+after_script:
+  - nunit-console Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll
