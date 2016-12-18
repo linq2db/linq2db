@@ -14,5 +14,5 @@ before_script:
   - nuget restore linq2db.Mono.sln
 
 after_script:
-  - ./travis.sh
+  - ./build/linq2db/linq2db/travis.sh
   - nunit-console Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll

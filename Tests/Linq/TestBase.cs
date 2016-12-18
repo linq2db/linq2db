@@ -88,11 +88,10 @@ namespace Tests
 
 			Directory.CreateDirectory(dataPath);
 
-			var databasePath     = Path.GetFullPath(Path.Combine(@"Database"));
-			var databaseDataPath = Path.GetFullPath(Path.Combine(databasePath, "Data"));
+			var databasePath = Path.GetFullPath(Path.Combine(@"Database"));
 
 			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
-				File.Copy(file, Path.Combine(databaseDataPath, Path.GetFileName(file)), true);
+				File.Copy(file, Path.Combine(dataPath, Path.GetFileName(file)), true);
 
 			UserProviders =
 				File.ReadAllLines(providerListFile)
