@@ -14,7 +14,7 @@ namespace Tests.Common
 	[TestFixture]
 	public class ToolsTest
 	{
-		[Test]
+		[Test, Category("WindowsOnly")]
 		public void GetPathFromUriTest()
 		{
 			Assert.AreEqual(@"C:\Test\Space( )(h#)(p%20){[a&],t@,p%,+}.,\Release", @"file:///C:/Test/Space( )(h#)(p%20){[a&],t@,p%,+}.,/Release".GetPathFromUri());

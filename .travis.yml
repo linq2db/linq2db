@@ -6,8 +6,10 @@ services:
 
 script:
   - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
-  - preparetravis.sh
-  - nunit-console Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll
+  - mv Tests/Linq/TravisDataPtoviders.txt Tests/Linq/UserDataProviders.txt
+  - mysql -e 'CREATE DATABASE TestData;'
+  - psql -c 'create database TestData;' -U postgres
+  - nunit-console Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll -exclude WindowsOnly
 
 before_install:
   - sudo apt-get install nunit-console
