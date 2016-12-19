@@ -215,7 +215,8 @@ namespace LinqToDB.DataProvider.MySql
 			bool           checkParentheses,
 			string         alias,
 			ref bool       addAlias,
-			bool           throwExceptionIfTableNotFound = true)
+			bool           throwExceptionIfTableNotFound = true,
+			bool           wrapWithCastIfParameter = false)
 		{
 			return base.BuildExpression(
 				expr,
@@ -223,7 +224,8 @@ namespace LinqToDB.DataProvider.MySql
 				checkParentheses,
 				alias,
 				ref addAlias,
-				throwExceptionIfTableNotFound);
+				throwExceptionIfTableNotFound,
+			    wrapWithCastIfParameter);
 		}
 
 		protected override void BuildInsertOrUpdateQuery()

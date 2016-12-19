@@ -825,7 +825,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					;
 
 				var body    = func.Body.Unwrap();
@@ -843,7 +843,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					;
 
 				var body    = func.Body.Unwrap();
@@ -861,7 +861,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					.Select (resParam => r)
 					;
 
@@ -881,7 +881,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					.Select (resParam => r)
 					;
 
@@ -1349,10 +1349,10 @@ namespace LinqToDB.Linq.Builder
 					left = Expression.Convert(left, right.Type);
 				else
 				{
-					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left. Type);
-					var leftConvert  = ConvertBuilder.GetConverter(mappringSchema, left. Type, right.Type);
+					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left.Type);
+					var leftConvert = ConvertBuilder.GetConverter(mappringSchema, left.Type, right.Type);
 
-					var leftIsPrimitive  = left. Type.IsPrimitiveEx();
+					var leftIsPrimitive = left.Type.IsPrimitiveEx();
 					var rightIsPrimitive = right.Type.IsPrimitiveEx();
 
 					if (leftIsPrimitive == true && rightIsPrimitive == false && rightConvert.Item2 != null)

@@ -361,7 +361,7 @@ namespace LinqToDB.Mapping
 				var li   = info.GetConvertInfo(@from, to);
 
 				if (li != null && (i == 0 || !li.IsSchemaSpecific))
-					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
+					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.CheckNullLambda, null, false);
 			}
 
 			var isFromGeneric = from.IsGenericTypeEx() && !from.IsGenericTypeDefinitionEx();
@@ -655,8 +655,18 @@ namespace LinqToDB.Mapping
 		public T GetAttribute<T>(MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
+			var specific = GetSpecificAttributes<T>(memberInfo);
+			if (specific != default(T))
+				return specific;
+
 			var attrs = GetAttributes(memberInfo, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
+		}
+
+		protected virtual T GetSpecificAttributes<T>(MemberInfo memberInfo) 
+			where T : Attribute
+		{
+			return default(T);
 		}
 
 		public FluentMappingBuilder GetFluentMappingBuilder()

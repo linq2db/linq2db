@@ -71,6 +71,11 @@ namespace LinqToDB.DataProvider
 
 		public static Func<IDataProvider,IDbConnection,IDbConnection> OnConnectionCreated { get; set; }
 
+		public virtual string DummyTableName
+		{
+			get { return ""; }
+		}
+
 		public IDbConnection CreateConnection(string connectionString)
 		{
 			var connection = CreateConnectionInternal(connectionString);

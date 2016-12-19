@@ -22,6 +22,8 @@ namespace LinqToDB.SqlProvider
 			BaseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
 		}
 
+		public Func<SqlDataType, string, string> ParameterValueExpression = (type, value) => value;
+
 		internal void SetDefauls()
 		{
 			SetConverter(typeof(Boolean),    (sb,dt,v) => sb.Append((bool)v       ? "1" : "0"));
@@ -147,7 +149,7 @@ namespace LinqToDB.SqlProvider
 #endif
 				)
 			{
-				stringBuilder.Append("NULL");
+				stringBuilder.Append(ParameterValueExpression(null, "NULL"));
 				return true;
 			}
 
@@ -167,7 +169,7 @@ namespace LinqToDB.SqlProvider
 #endif
 				)
 			{
-				stringBuilder.Append("NULL");
+				stringBuilder.Append(ParameterValueExpression(dataType, "NULL"));
 				return true;
 			}
 
@@ -179,11 +181,7 @@ namespace LinqToDB.SqlProvider
 			{
 				switch (type.GetTypeCodeEx())
 				{
-#if NETSTANDARD
-					case (TypeCode)2       : stringBuilder.Append("NULL");   return true;
-#else
 					case TypeCode.DBNull   : stringBuilder.Append("NULL");   return true;
-#endif
 					case TypeCode.Boolean  : converter = _booleanConverter;  break;
 					case TypeCode.Char     : converter = _charConverter;     break;
 					case TypeCode.SByte    : converter = _sByteConverter;    break;
