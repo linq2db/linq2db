@@ -196,8 +196,9 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime   : StringBuilder.Append("timestamp");    break;
-				case DataType.DateTime2  : StringBuilder.Append("timestamp");    break;
+				case DataType.DateTime       : StringBuilder.Append("timestamp");    break;
+				case DataType.DateTime2      : StringBuilder.Append("timestamp");    break;
+                case DataType.DateTimeOffset : StringBuilder.Append("timestamp with time zone");  break;
 				case DataType.UInt32     :
 				case DataType.Int64      : StringBuilder.Append("Number(19)");   break;
 				case DataType.SByte      :
