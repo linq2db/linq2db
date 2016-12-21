@@ -17,7 +17,6 @@ namespace LinqToDB.DataProvider
 		Type               DataReaderType        { get; }
 		MappingSchema      MappingSchema         { get; }
 		SqlProviderFlags   SqlProviderFlags      { get; }
-		string             DummyTableName        { get; }
 		IDbConnection      CreateConnection      (string connectionString);
 		ISqlBuilder        CreateSqlBuilder      ();
 		ISqlOptimizer      GetSqlOptimizer       ();

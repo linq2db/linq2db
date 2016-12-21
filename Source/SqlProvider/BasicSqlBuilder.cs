@@ -495,7 +495,7 @@ namespace LinqToDB.SqlProvider
 
 			for (var i = 0; i < keys.Count; i++)
 			{
-				BuildExpression(keys[i].Expression, false, false, wrapWithCastIfParameter: true);
+				BuildExpression(keys[i].Expression, false, false);
 				StringBuilder.Append(" AS ");
 				BuildExpression(keys[i].Column, false, false);
 
@@ -550,7 +550,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Length--;
 		}
 
-		static readonly char[] _endLine = { ' ', '\r', '\n' };
+		protected static readonly char[] _endLine = { ' ', '\r', '\n' };
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert()
 		{
@@ -1742,8 +1742,7 @@ namespace LinqToDB.SqlProvider
 			bool checkParentheses,
 			string alias,
 			ref bool addAlias,
-			bool throwExceptionIfTableNotFound = true,
-			bool wrapWithCastIfParameter = false)
+			bool throwExceptionIfTableNotFound = true)
 		{
 			// TODO: check the necessity.
 			//
@@ -1902,9 +1901,6 @@ namespace LinqToDB.SqlProvider
 						{
 							var name = Convert(parm.Name, ConvertType.NameToQueryParameter);
 
-							if (wrapWithCastIfParameter)
-								name = ValueToSqlConverter.ParameterValueExpression(new SqlDataType(parm.SystemType), (string)name);
-
 							StringBuilder.Append(name);
 						}
 						else
@@ -1945,10 +1941,10 @@ namespace LinqToDB.SqlProvider
 			return BuildExpression(expr, true, true, null, ref dummy);
 		}
 
-		protected void BuildExpression(ISqlExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound = true, bool wrapWithCastIfParameter = false)
+		protected void BuildExpression(ISqlExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound = true)
 		{
 			var dummy = false;
-			BuildExpression(expr, buildTableName, checkParentheses, null, ref dummy, throwExceptionIfTableNotFound, wrapWithCastIfParameter);
+			BuildExpression(expr, buildTableName, checkParentheses, null, ref dummy, throwExceptionIfTableNotFound);
 		}
 
 		protected void BuildExpression(int precedence, ISqlExpression expr)
