@@ -61,9 +61,7 @@ namespace Tests
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
-			var assemblyPath = typeof(TestBase).AssemblyEx().CodeBase;
-
-			assemblyPath = Path.GetDirectoryName(assemblyPath.Substring("file:///".Length));
+			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
@@ -83,13 +81,17 @@ namespace Tests
 			var providerListFile =
 				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
 
-			if (Directory.Exists(@"Database\Data"))
-				Directory.Delete(@"Database\Data", true);
+			var dataPath = Path.GetFullPath(@"Database\Data");
 
-			Directory.CreateDirectory(@"Database\Data");
+			if (Directory.Exists(dataPath))
+				Directory.Delete(dataPath, true);
 
-			foreach (var file in Directory.GetFiles(@"Database", "*.*"))
-				File.Copy(file, Path.Combine(@"Database\Data\",  Path.GetFileName(file)), true);
+			Directory.CreateDirectory(dataPath);
+
+			var databasePath = Path.GetFullPath(Path.Combine(@"Database"));
+
+			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
+				File.Copy(file, Path.Combine(dataPath, Path.GetFileName(file)), true);
 
 			UserProviders =
 				File.ReadAllLines(providerListFile)
@@ -157,10 +159,14 @@ namespace Tests
 
 		protected static string FindProjectPath(string basePath)
 		{
-			while (!File.Exists(Path.Combine(basePath, "DefaultDataProviders.txt")))
+			var fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
+			while (!File.Exists(fileName))
 			{
-				basePath = Path.Combine(basePath, @"..\");
+				Console.WriteLine("File not found: " + fileName);
+				basePath = Path.GetDirectoryName(basePath);
+				fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
 			}
+			Console.WriteLine("Base path found: " + basePath);
 
 			return basePath;
 		}

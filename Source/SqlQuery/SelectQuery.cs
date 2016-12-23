@@ -3561,7 +3561,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var s = alias.ToUpper();
 
-				if (!_aliases.ContainsKey(s) && !ReservedWords.ReservedWordsDictionary.ContainsKey(s))
+				if (!_aliases.ContainsKey(s) && !ReservedWords.IsReserved(s))
 				{
 					_aliases.Add(s, s);
 					break;

@@ -511,6 +511,59 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test, OracleDataContext]
+		public void TestTreatEmptyStringsAsNulls(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var table    = db.GetTable<OracleSpecific.StringTest>();
+				var expected = table.Where(_ => _.KeyValue == "NullValues").ToList();
+
+
+				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue1)));
+				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue2)));
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == ""));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == ""));
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == null));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == null));
+
+				string emptyString = string.Empty;
+				string nullString  = null;
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == emptyString));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == emptyString));
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == nullString));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == nullString));
+
+				AreEqual(expected, GetStringTest1(db, emptyString));
+				AreEqual(expected, GetStringTest1(db, emptyString));
+
+				AreEqual(expected, GetStringTest2(db, emptyString));
+				AreEqual(expected, GetStringTest2(db, emptyString));
+
+				AreEqual(expected, GetStringTest1(db, nullString));
+				AreEqual(expected, GetStringTest1(db, nullString));
+
+				AreEqual(expected, GetStringTest2(db, nullString));
+				AreEqual(expected, GetStringTest2(db, nullString));
+			}
+		}
+
+		private IEnumerable<OracleSpecific.StringTest> GetStringTest1(IDataContext db, string value)
+		{
+			return db.GetTable<OracleSpecific.StringTest>()
+				.Where(_ => value == _.StringValue1);
+		}
+
+		private IEnumerable<OracleSpecific.StringTest> GetStringTest2(IDataContext db, string value)
+		{
+			return db.GetTable<OracleSpecific.StringTest>()
+				.Where(_ => value == _.StringValue2);
+		}
+
 		#region DateTime Tests
 
 		[Table(Schema="TESTUSER", Name="ALLTYPES")]

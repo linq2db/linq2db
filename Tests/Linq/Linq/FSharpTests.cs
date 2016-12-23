@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NOFSHARP
+using System;
 
 using NUnit.Framework;
 
@@ -64,3 +65,4 @@ namespace Tests.Linq
 		}
 	}
 }
+#endif
