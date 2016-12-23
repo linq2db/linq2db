@@ -652,21 +652,11 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 		
-		public T GetAttribute<T>(MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
+		public virtual T GetAttribute<T>(MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
-			var specific = GetSpecificAttributes<T>(memberInfo);
-			if (specific != default(T))
-				return specific;
-
 			var attrs = GetAttributes(memberInfo, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
-		}
-
-		protected virtual T GetSpecificAttributes<T>(MemberInfo memberInfo) 
-			where T : Attribute
-		{
-			return default(T);
 		}
 
 		public FluentMappingBuilder GetFluentMappingBuilder()
