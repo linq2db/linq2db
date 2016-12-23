@@ -362,7 +362,8 @@ CREATE COLUMN TABLE "Parent" (
 
 CREATE COLUMN TABLE "Child" (
 	"ParentID" INTEGER,
-	"ChildID" INTEGER
+	"ChildID" INTEGER,
+	"TypeDiscriminator" INTEGER NULL
 );;
 
 CREATE COLUMN TABLE "GrandChild" (

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Tests.UserTests
@@ -13,13 +14,22 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue513Tests : TestBase
 	{
-		System.Threading.Semaphore _semaphore = new System.Threading.Semaphore(0, 10);
-
-		[Table ("Child")]
-		[Column("ParentId", "Parent.ParentId")]
-		public class Child513
+		[Table("Child")]
+		[InheritanceMapping(Code = 1,    Type = typeof(Child513Base))]
+		[InheritanceMapping(Code = null, Type = typeof(Child513))]
+		public class Child513Base
 		{
-			[Association(ThisKey = "Parent.ParentId", OtherKey = "ParentId")]
+			[Column, PrimaryKey, NotNull]
+			public int? ChildId { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public string TypeDiscriminator { get; set; }
+		}
+
+		[Column("ParentId", "Parent.ParentId")]
+		public class Child513 : Child513Base
+		{
+			[Association(ThisKey = "Parent.ParentId", OtherKey = "ParentId", CanBeNull = true)]
 			public Parent513 Parent;
 		}
 
@@ -33,26 +43,36 @@ namespace Tests.UserTests
 		[DataContextSource(false)]
 		public void Test(string context)
 		{
-			var tasks = new Task[10];
-			for (var i = 0; i < 10; i++)
-				tasks[i] = new Task(() => TestInternal(context));
+			using (var semaphore = new Semaphore(0, 10))
+			{
+				var tasks = new Task[10];
+				for (var i = 0; i < 10; i++)
+					tasks[i] = new Task(() => TestInternal(context, semaphore));
 
-			for (var i = 0; i < 10; i++)
-				tasks[i].Start();
+				for (var i = 0; i < 10; i++)
+					tasks[i].Start();
 
-			System.Threading.Thread.Sleep(1000);
-			_semaphore.Release(10);
+				Thread   .Sleep(100);
+				semaphore.Release(10);
 
-			Task.WaitAll(tasks);
+				Task.WaitAll(tasks);
+			}
 		}
 
-		public void TestInternal(string context)
+		public void TestInternal(string context, Semaphore semaphore)
 		{
-			using (var db = GetDataContext(context))
+			try
 			{
-				_semaphore.WaitOne();
-				var r = db.GetTable<Child513>().Select(_ => _.Parent).Distinct();
-				Assert.IsNotEmpty(r);
+				using (var db = GetDataContext(context))
+				{
+					semaphore.WaitOne();
+					var r = db.GetTable<Child513>().Select(_ => _.Parent).Distinct();
+					Assert.IsNotEmpty(r);
+				}
+			}
+			finally
+			{
+				semaphore.Release();
 			}
 		}
 	}
