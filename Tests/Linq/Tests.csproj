@@ -211,9 +211,7 @@
     </Reference>
   </ItemGroup>
 
-	<Choose>
-		<When Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
-		  <ItemGroup Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
+		  <ItemGroup>
 		    <Reference Include="System.Data.SQLite, Version=1.0.101.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
 		      <HintPath>..\..\packages\System.Data.SQLite.Core.1.0.101.0\lib\net45\System.Data.SQLite.dll</HintPath>
 		      <Private>True</Private>
@@ -227,15 +225,6 @@
 		      <Name>Tests.VisualBasic</Name>
 		    </ProjectReference>
 		  </ItemGroup>
-	  </When>
-	<Otherwise>
-		  <ItemGroup>
-		    <Reference Include="Mono.Data.Sqlite" >
-		      <Private>True</Private>
-		    </Reference>
-		  </ItemGroup>
- 	 </Otherwise>
-  </Choose>
   
   <ItemGroup>
     <Compile Include="Common\ChangeTypeTests.cs" />

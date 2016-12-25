@@ -6,7 +6,7 @@ services:
 
 script:
   - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
-  - mv Tests/Linq/TravisDataPtoviders.txt Tests/Linq/UserDataProviders.txt
+  - mv Tests/Linq/TravisDataProviders.txt Tests/Linq/UserDataProviders.txt
   - mysql -e 'CREATE DATABASE TestData;'
   - psql -c 'create database TestData;' -U postgres
   - nunit-console Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll -exclude WindowsOnly
