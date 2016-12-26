@@ -144,9 +144,10 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info1 == null)
 					{
+						var type = members.First(m => m.Info1 != null).Info1.Members.First().GetMemberType();
 						member.Info1 = new SqlInfo(member.Info2.Members)
 						{
-							Sql   = new SqlValue(null),
+							Sql   = new SqlValue(type, null),
 							Query = _sequence1.SelectQuery,
 						};
 
@@ -155,9 +156,12 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info2 == null)
 					{
+						var spam = members.First(m => m.Info2 != null).Info2.Members.First();
+						var type = spam.GetMemberType();
+
 						member.Info2 = new SqlInfo(member.Info1.Members)
 						{
-							Sql   = new SqlValue(null),
+							Sql   = new SqlValue(type, null),
 							Query = _sequence2.SelectQuery,
 						};
 					}
