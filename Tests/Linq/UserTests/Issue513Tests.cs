@@ -16,10 +16,10 @@ namespace Tests.UserTests
 		System.Threading.Semaphore _semaphore = new System.Threading.Semaphore(0, 10);
 
 		[Table ("Child")]
-		[Column("ParentId", "Parent.ParentId")]
+		[Column("ParentID", "Parent.ParentID")]
 		public class Child513
 		{
-			[Association(ThisKey = "Parent.ParentId", OtherKey = "ParentId")]
+			[Association(ThisKey = "Parent.ParentID", OtherKey = "ParentID")]
 			public Parent513 Parent;
 		}
 
@@ -27,7 +27,7 @@ namespace Tests.UserTests
 		public class Parent513
 		{
 			[Column]
-			public int ParentId;
+			public int ParentID;
 		}
 
 		[DataContextSource(false)]
