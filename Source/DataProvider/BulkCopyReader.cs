@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider
 {
 	using Mapping;
 
-	class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
+	public class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
 	{
 		public BulkCopyReader(IDataProvider dataProvider, List<ColumnDescriptor> columns, IEnumerable collection)
 		{
@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider
 		readonly IEnumerator            _enumerator;
 		readonly Parameter              _valueConverter = new Parameter();
 
-		internal class Parameter : IDbDataParameter
+		public class Parameter : IDbDataParameter
 		{
 			public DbType             DbType        { get; set; }
 			public ParameterDirection Direction     { get; set; }

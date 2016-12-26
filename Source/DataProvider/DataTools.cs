@@ -3,7 +3,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider
 {
-	class DataTools
+	public class DataTools
 	{
 		static readonly char[] _escapes = { '\x0', '\'' };
 

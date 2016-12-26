@@ -686,7 +686,7 @@ namespace LinqToDB
 			Millisecond = 10,
 		}
 
-		class DatePartAttribute : Sql.ExpressionAttribute
+		public class DatePartAttribute : Sql.ExpressionAttribute
 		{
 			public DatePartAttribute(string sqlProvider, string expression, int datePartIndex, params int[] argIndices)
 				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, false, null, datePartIndex, argIndices)

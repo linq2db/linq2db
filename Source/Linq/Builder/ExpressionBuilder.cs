@@ -825,7 +825,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					;
 
 				var body    = func.Body.Unwrap();
@@ -843,7 +843,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					;
 
 				var body    = func.Body.Unwrap();
@@ -861,7 +861,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					.Select (resParam => r)
 					;
 
@@ -881,7 +881,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					.Select (resParam => r)
 					;
 

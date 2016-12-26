@@ -180,9 +180,9 @@ namespace LinqToDB.SqlProvider
 				switch (type.GetTypeCodeEx())
 				{
 #if NETSTANDARD
-					case (TypeCode)2       : stringBuilder.Append("NULL");   return true;
+					case (TypeCode)2       : stringBuilder.Append("NULL"); return true;
 #else
-					case TypeCode.DBNull   : stringBuilder.Append("NULL");   return true;
+					case TypeCode.DBNull   : stringBuilder.Append("NULL"); return true;
 #endif
 					case TypeCode.Boolean  : converter = _booleanConverter;  break;
 					case TypeCode.Char     : converter = _charConverter;     break;
