@@ -1,8 +1,8 @@
 ﻿--Access
 --SqlCe
-SQLite
-NorthwindSqlite
+--SQLite
+--NorthwindSqlite
 
-MySql57        * Server=localhost;Database=TestData;Uid=root;Pwd=;charset=utf8;                                            * MySql.Data.MySqlClient
-PostgreSQL     * Server=localhost;Database=TestData;User Id=postgres;Password=;Pooling=true;MinPoolSize=10;MaxPoolSize=100 * Npgsql
+MySql57         * Server=localhost;Database=TestData;Uid=root;Pwd=;charset=utf8;                                            * MySql.Data.MySqlClient
+!PostgreSQL     * Server=localhost;Database=TestData;User Id=postgres;Password=;Pooling=true;MinPoolSize=10;MaxPoolSize=100 * Npgsql
 

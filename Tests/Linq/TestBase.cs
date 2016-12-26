@@ -99,13 +99,17 @@ namespace Tests
 					.Where (s => s.Length > 0 && !s.StartsWith("--"))
 					.Select(s =>
 					{
+						var isDefault = s.StartsWith("!");
+						if (isDefault)
+							s = s.Substring(1);
+
 						var ss = s.Split('*');
 						switch (ss.Length)
 						{
 							case 0 : return null;
-							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0]        };
-							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0]        };
-							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim() };
+							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0],        IsDefault = isDefault };
+							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0],        IsDefault = isDefault };
+							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim(), IsDefault = isDefault };
 						}
 					})
 					.ToDictionary(i => i.Name);
@@ -120,7 +124,7 @@ namespace Tests
 			//DataConnection.SetConnectionStrings(config);
 
 #if NETSTANDARD
-			DataConnection.DefaultSettings = TxtSettings.Instance;
+			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
 			foreach (var provider in UserProviders.Values)
@@ -139,6 +143,14 @@ namespace Tests
 					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
 #endif
 
+			var defaultConfiguration = UserProviders.Where(_ => _.Value.IsDefault).Select(_ => _.Key).FirstOrDefault();
+			if (!string.IsNullOrEmpty(defaultConfiguration))
+			{
+				DataConnection.DefaultConfiguration       = defaultConfiguration;
+#if NETSTANDARD
+				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
+#endif
+			}
 
 			DataConnection.TurnTraceSwitchOn();
 
@@ -212,6 +224,7 @@ namespace Tests
 			public string Name;
 			public string ConnectionString;
 			public string ProviderName;
+			public bool   IsDefault;
 		}
 
 		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
@@ -702,10 +715,10 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
 
-		#region Northwind
+#region Northwind
 
 		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
@@ -892,7 +905,7 @@ namespace Tests
 				}
 			}
 		}
-		#endregion
+#endregion
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
