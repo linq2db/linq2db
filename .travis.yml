@@ -2,7 +2,6 @@ language: csharp
 
 install:
   - nuget install NUnit.Runners -Version 3.5.0 -OutputDirectory testrunner
-  - travis_wait 30 mvn install
 
 services:
   - mysql
