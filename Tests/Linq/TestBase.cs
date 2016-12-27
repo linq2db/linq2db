@@ -53,10 +53,18 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
-				Console.WriteLine("{0}: {1}", s2, s1);
-				Debug.WriteLine(s1, s2);
+				if (traceCount < 1000)
+				{
+					Console.WriteLine("{0}: {1}", s2, s1);
+					Debug.WriteLine(s1, s2);
+				}
+#if MONO
+				else
+					Console.Write("z");
+#else
 				if (traceCount++ > 1000)
 					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+#endif
 			};
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
@@ -319,9 +327,6 @@ namespace Tests
 						}
 
 						hasTest = true;
-#if MONO
-						Console.WriteLine(test.MethodName);
-#endif
 						yield return test;
 
 					}
@@ -341,9 +346,6 @@ namespace Tests
 							test.Properties.Set(PropertyNames.Category, provider);
 							SetName(test, method, provider, true);
 
-#if MONO
-							Console.WriteLine(test.MethodName);
-#endif
 							yield return test;
 						}
 					}
@@ -352,9 +354,6 @@ namespace Tests
 
 				if (!hasTest)
 				{
-#if MONO
-					Console.WriteLine(test.MethodName);
-#endif
 					yield return test;
 				}
 			}

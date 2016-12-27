@@ -32,7 +32,7 @@ nuget:
   project_feed: false
 
 before_build:
-- cmd: nuget restore linq2db.4.5.sln
+- cmd: nuget restore linq2db.mono.sln
 
 build_script:
 - cmd: '"c:\Program Files (x86)\Mono\bin\xbuild" linq2db.mono.sln /p:Configuration=ReleaseMono'
@@ -43,7 +43,7 @@ test:
 
 before_test:
 - ps: |
-      Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
+      Push-Location -Path Tests\Linq\bin\ReleaseMono
       cd $env:appveyor_build_folder
       . ".\Av-InitDatabases.ps1"
 
