@@ -26,7 +26,7 @@ namespace Tests._Create
 		{
 			Console.WriteLine("=== " + name + " === \n");
 
-			var sqlFileName = Path.GetFullPath(@"Database\Create Scripts\" + name + ".sql");
+			var sqlFileName = Path.GetFullPath(Path.Combine(@"Database\Create Scripts\",  name + ".sql"));
 
 			Console.WriteLine("Sql file exists: {1}; {0}", sqlFileName, File.Exists(sqlFileName));
 
