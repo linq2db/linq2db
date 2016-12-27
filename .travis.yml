@@ -13,7 +13,7 @@ script:
   - mysql -e 'CREATE DATABASE TestData;'
   - psql -c 'create database TestData;' -U postgres
   - nunit3-console 
-  - mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll -exclude WindowsOnly
+  - mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll --where cat != WindowsOnly
 
 #before_install:
 #  - sudo apt-get install nunit3-console
