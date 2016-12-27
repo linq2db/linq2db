@@ -12,7 +12,7 @@ script:
   - nunit3-console Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll -exclude WindowsOnly
 
 before_install:
-  - sudo apt-get install nunit-console
+  - sudo apt-get install nunit3-console
 
 before_script:
   - nuget restore linq2db.Mono.sln
