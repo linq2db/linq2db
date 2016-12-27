@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.IO;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -25,7 +26,11 @@ namespace Tests._Create
 		{
 			Console.WriteLine("=== " + name + " === \n");
 
-			var text = File.ReadAllText(Path.GetFullPath(@"Database\Create Scripts\" + name + ".sql"));
+			var sqlFileName = Path.GetFullPath(@"Database\Create Scripts\" + name + ".sql");
+
+			Console.WriteLine("Sql file exists: {1}; {0}", sqlFileName, File.Exists(sqlFileName));
+
+			var text = File.ReadAllText(sqlFileName);
 
 			while (true)
 			{
@@ -37,7 +42,15 @@ namespace Tests._Create
 					break;
 			}
 
-			var cmds = text.Replace("\r", "").Replace(divider, "\x1").Split('\x1');
+			var cmds = text
+				.Replace("\r",    "")
+				.Replace(divider, "\x1")
+				.Split  ('\x1')
+				.Select (c => c.Trim())
+				.Where  (c => !string.IsNullOrEmpty(c))
+				.ToArray();
+
+			Console.WriteLine("Commands count: {0}", cmds.Length);
 
 			Exception exception = null;
 
@@ -45,13 +58,8 @@ namespace Tests._Create
 			{
 				//db.CommandTimeout = 20;
 
-				foreach (var cmd in cmds)
+				foreach (var command in cmds)
 				{
-					var command = cmd.Trim();
-
-					if (command.Length == 0)
-						continue;
-
 					try 
 					{
 						Console.WriteLine(command);
