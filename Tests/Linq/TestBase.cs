@@ -319,7 +319,9 @@ namespace Tests
 						}
 
 						hasTest = true;
-
+#if MONO
+						Console.WriteLine(test.MethodName);
+#endif
 						yield return test;
 
 					}
@@ -339,6 +341,9 @@ namespace Tests
 							test.Properties.Set(PropertyNames.Category, provider);
 							SetName(test, method, provider, true);
 
+#if MONO
+							Console.WriteLine(test.MethodName);
+#endif
 							yield return test;
 						}
 					}
@@ -346,7 +351,12 @@ namespace Tests
 				}
 
 				if (!hasTest)
+				{
+#if MONO
+					Console.WriteLine(test.MethodName);
+#endif
 					yield return test;
+				}
 			}
 		}
 
