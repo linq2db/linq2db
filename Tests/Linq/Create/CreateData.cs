@@ -70,11 +70,12 @@ namespace Tests._Create
 					}
 					catch (Exception ex)
 					{
+						Console.WriteLine(ex.Message);
+
 						if (command.TrimStart().StartsWith("DROP"))
 							Console.WriteLine("\nnot too OK\n");
 						else
 						{
-							Console.WriteLine(ex.Message);
 							Console.WriteLine("\nFAILED\n");
 
 							if (exception == null)

@@ -11,7 +11,7 @@ script:
   - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
   - mv Tests/Linq/TravisDataProviders.txt Tests/Linq/UserDataProviders.txt
   - mysql -e 'CREATE DATABASE TestData;'
-  - psql -c 'create database TestData;' -U postgres
+  - psql -c 'create database testdata;' -U postgres
   - mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll --where "cat != WindowsOnly"
 
 #before_install:
