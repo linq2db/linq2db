@@ -208,14 +208,14 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void TestDataParameterMapping2()
+		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void TestDataParameterMapping2(string context)
 		{
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
 
-			using (var conn = new DataConnection().AddMappingSchema(ms))
+			using (var conn = (DataConnection)GetDataContext(context, ms))
 			{
 				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues)null });
 
@@ -223,8 +223,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void TestDataParameterMapping3()
+		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void TestDataParameterMapping3(string context)
 		{
 			var ms = new MappingSchema();
 
@@ -236,7 +236,7 @@ namespace Tests.Data
 				},
 				false);
 
-			using (var conn = new DataConnection().AddMappingSchema(ms))
+			using (var conn = (DataConnection)GetDataContext(context, ms))
 			{
 				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues)null });
 

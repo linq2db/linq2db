@@ -12,18 +12,18 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class GenericsFilterTests
 	{
-		[Test]
-		public void WhenPredicateFactoryIsGeneric()
+		[Test, TestBase.IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void WhenPredicateFactoryIsGeneric(string context)
 		{
 			var predicate = ById<Firm>(0);
-			Assert.DoesNotThrow(() => CheckPredicate(predicate));
+			Assert.DoesNotThrow(() => CheckPredicate(context, predicate));
 		}
 
-		[Test]
-		public void WhenPredicateFactoryIsNotGeneric()
+		[Test, TestBase.IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void WhenPredicateFactoryIsNotGeneric(string context)
 		{
 			var predicate = ById(0);
-			Assert.DoesNotThrow(() => CheckPredicate(predicate));
+			Assert.DoesNotThrow(() => CheckPredicate(context, predicate));
 		}
 
 		Expression<Func<T, bool>> ById<T>(int foobar)
@@ -37,9 +37,9 @@ namespace Tests.UserTests
 			return identifiable => identifiable.Id == foobar;
 		}
 
-		void CheckPredicate(Expression<Func<Firm, bool>> predicate)
+		void CheckPredicate(string context, Expression<Func<Firm, bool>> predicate)
 		{
-			using (var db = new DataConnection(ProviderName.SQLite,
+			using (var db = new DataConnection(context,
 #if NETSTANDARD
 				"Data Source=:memory:;"
 #else
