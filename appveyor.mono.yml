@@ -1,4 +1,4 @@
-configuration: Release
+configuration: ReleaseMono
 
 environment:
   packageVersion: 1.7.6
