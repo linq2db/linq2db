@@ -46,7 +46,15 @@ namespace LinqToDB.Mapping
 			return _entity.Property(func);
 		}
 
-		public PropertyMappingBuilder<T> IsPrimaryKey(int order = -1)
+        public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
+            Expression<Func<T, S>> prop,
+            Expression<Func<T, ID1>> thisKey,
+            Expression<Func<S, ID2>> otherKey )
+        {
+            return _entity.Association( prop, thisKey, otherKey );
+        }
+
+        public PropertyMappingBuilder<T> IsPrimaryKey(int order = -1)
 		{
 			_entity.HasPrimaryKey(_memberGetter, order);
 			return this;
