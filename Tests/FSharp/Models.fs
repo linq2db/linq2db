@@ -63,3 +63,21 @@ type DeeplyComplexPerson =
 //      Diagnosis : string
 //      [<Association(ThisKey = "PersonID", OtherKey = "ID", CanBeNull = false)>]
 //      Person : Person }
+
+
+
+// Remember to apply these to make option types work
+// .AddScalarType(typeof<string option>,          None, LinqToDB.DataType.NVarChar)
+// .SetConvertExpression<Option<_>,_>( fun x -> if x.IsSome then x.Value else None )
+[<Table("Person", IsColumnAttributeRequired=false)>]
+type PersonWithOptions = 
+    { [<SequenceName(ProviderName.Firebird, "PersonID")>]
+      [<Column("PersonID"); Identity; PrimaryKey>]
+      ID : int 
+      [<NotNull>] 
+      FirstName : string
+      [<Nullable>]
+      LastName : string option
+      [<Nullable>]
+      MiddleName : string option
+      Gender : Gender }
