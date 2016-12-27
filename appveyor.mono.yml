@@ -31,15 +31,27 @@ nuget:
   account_feed: false
   project_feed: false
 
-before_build:
-- cmd: nuget restore linq2db.mono.sln
+#before_build:
+#- cmd: nuget restore linq2db.mono.sln
 
 build_script:
 - cmd: '"c:\Program Files (x86)\Mono\bin\xbuild" linq2db.mono.sln /p:Configuration=ReleaseMono'
 
-test: 
-  assemblies:
-    - \Tests\**\linq2db.Tests.dll
+#test: 
+#  assemblies:
+#    - \Tests\**\linq2db.Tests.dll
+
+test_script:
+- ps: |
+    # try nunit3 
+    nunit3-console.exe (Resolve-Path Tests\Linq\bin\ReleaseMono\linq2db.Tests.dll) --x86 --framework=mono
+    $test1res = $LASTEXITCODE 
+    # upload results to AppVeyor
+    $wc = New-Object 'System.Net.WebClient'
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
+    Push-AppveyorArtifact (Resolve-Path .\TestResult.xml)
+    IF ($test1res -ne 0) { exit -1 }
+
 
 before_test:
 - ps: |
