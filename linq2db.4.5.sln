@@ -23,6 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".doc", ".doc", "{751CE0BA-6
 		appveyor.mono.yml = appveyor.mono.yml
 		appveyor.yml = appveyor.yml
 		Av-InitDatabases.ps1 = Av-InitDatabases.ps1
+		build.sh = build.sh
 		MIT-LICENSE.txt = MIT-LICENSE.txt
 		README.md = README.md
 	EndProjectSection

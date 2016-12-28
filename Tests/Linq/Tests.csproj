@@ -501,6 +501,7 @@
       <Link>Sybase.AdoNet45.AseClient.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="AppveyorDataProviders.Core.txt" />
     <Content Include="AppveyorDataProviders.txt" />
     <Content Include="DefaultDataProviders.txt" />
     <Content Include="SqlServerTypes\readme.htm" />
@@ -508,6 +509,7 @@
       <Link>Database\Northwind.sqlite</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TravisDataProviders.Core.txt" />
     <Content Include="TravisDataProviders.txt" />
     <None Include="..\..\Data\TestData.sqlite">
       <Link>Database\TestData.sqlite</Link>
