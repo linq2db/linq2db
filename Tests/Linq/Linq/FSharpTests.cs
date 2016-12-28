@@ -16,6 +16,16 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void LoadSingleWithOptions(string context)
+		{
+
+			var ms = Tests.FSharp.MappingSchema.Initialize();
+
+			using (var db = GetDataContext(context, ms))
+				FSharp.WhereTest.LoadSingleWithOptions(db);
+		}
+
+		[Test, DataContextSource]
 		public void LoadSingleComplexPerson(string context)
 		{
 			using (var db = GetDataContext(context))
