@@ -115,7 +115,20 @@ namespace LinqToDB.Mapping
 			return new PropertyMappingBuilder<T>(this, func);
 		}
 
-		public EntityMappingBuilder<T> HasPrimaryKey(Expression<Func<T,object>> func, int order = -1)
+        public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
+            Expression<Func<T, S>> prop,
+            Expression<Func<T, ID1>> thisKey,
+            Expression<Func<S, ID2>> otherKey )
+        {
+            var thisKeyName = ((MemberExpression)thisKey.Body).Member.Name;
+            var otherKeyName = ((MemberExpression)otherKey.Body).Member.Name;
+
+            var objProp = Expression.Lambda<Func<T, object>>( prop.Body, prop.Parameters );
+
+            return Property( objProp ).IsNotColumn().HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName } );
+        }
+
+        public EntityMappingBuilder<T> HasPrimaryKey(Expression<Func<T,object>> func, int order = -1)
 		{
 			var n = 0;
 
