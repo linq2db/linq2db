@@ -153,9 +153,7 @@ namespace Tests
 				}
 			};
 #endif
-
-            Tests.FSharp.MappingSchema.Initialize();
-        }
+		}
 
 		protected static readonly string ProjectPath;
 
