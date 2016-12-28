@@ -44,7 +44,7 @@ build_script:
 test_script:
 - ps: |
     # try nunit3 
-    nunit3-console.exe (Resolve-Path Tests\Linq\bin\ReleaseMono\linq2db.Tests.dll) --x86 --framework=mono-4.0
+    nunit3-console.exe (Resolve-Path Tests\Linq\bin\ReleaseMono\linq2db.Tests.dll) --x86
     $test1res = $LASTEXITCODE 
     # upload results to AppVeyor
     $wc = New-Object 'System.Net.WebClient'

@@ -7,10 +7,10 @@ mono:
 os:  
   - linux
   - osx
-osx_image: xcode7.1
+osx_image: xcode7.3
 
-before_install:  
-  - if test "$TRAVIS_OS_NAME" == "osx"; then brew update; brew install openssl; ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/; ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/; fiopenssl; fi
+before_install:
+  - if test "$TRAVIS_OS_NAME" == "osx"; then brew update; brew install openssl; ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/; ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/; fi
 
 install:
   - nuget install NUnit.Runners -Version 3.5.0 -OutputDirectory testrunner
@@ -30,6 +30,9 @@ script:
 
 #before_install:
 #  - sudo apt-get install nunit3-console
+
+before_install:
+ - chmod +x build.sh
 
 before_script:
   - nuget restore linq2db.Mono.sln
