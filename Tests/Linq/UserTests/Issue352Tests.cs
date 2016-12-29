@@ -13,7 +13,7 @@ namespace Tests.UserTests
 		[Test, NorthwindDataContext]
 		public void Test(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var zz =
 					from e in db.Employee

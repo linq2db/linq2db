@@ -311,6 +311,12 @@
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Compatibility\System\Security\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />

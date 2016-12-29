@@ -47,7 +47,7 @@
 				"MySql.Data": "7.0.5-IR21",
 				"Npgsql": "3.1.8",
 
-				"dotnet-test-nunit": "3.4.0-*",
+				"dotnet-test-nunit": "3.4.0-beta-2",
 				"xunit.core": "2.1.0"
 			},
 			"buildOptions": {

@@ -2594,6 +2594,11 @@ namespace LinqToDB.SqlProvider
 			return Add<int>(expr1, new SqlValue(value));
 		}
 
+		protected virtual bool IsReserved(string word)
+		{
+			return ReservedWords.IsReserved(word);
+		}
+
 		#endregion
 
 		#region ISqlProvider Members

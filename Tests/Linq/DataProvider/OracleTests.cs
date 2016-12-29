@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Globalization;
 using System.Collections.Generic;
 
 using LinqToDB;
@@ -105,7 +106,7 @@ namespace Tests.DataProvider
 				TestType(conn, "datetimeDataType",       new DateTime(2012, 12, 12, 12, 12, 12));
 				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
 				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
-				TestType(conn, "localZoneDataType",      new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-4, 0, 0)));
+				TestType(conn, "localZoneDataType",      new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow) /* new TimeSpan(-4, 0, 0)*/));
 
 				TestType(conn, "charDataType",           '1');
 				TestType(conn, "varcharDataType",        "234");
@@ -143,7 +144,7 @@ namespace Tests.DataProvider
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
 
-				var sql = string.Format("SELECT Cast({0} as {1}) FROM sys.dual", sqlValue ?? "NULL", sqlType);
+				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM sys.dual", sqlValue ?? "NULL", sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
@@ -510,6 +511,59 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test, OracleDataContext]
+		public void TestTreatEmptyStringsAsNulls(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var table    = db.GetTable<OracleSpecific.StringTest>();
+				var expected = table.Where(_ => _.KeyValue == "NullValues").ToList();
+
+
+				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue1)));
+				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue2)));
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == ""));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == ""));
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == null));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == null));
+
+				string emptyString = string.Empty;
+				string nullString  = null;
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == emptyString));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == emptyString));
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == nullString));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == nullString));
+
+				AreEqual(expected, GetStringTest1(db, emptyString));
+				AreEqual(expected, GetStringTest1(db, emptyString));
+
+				AreEqual(expected, GetStringTest2(db, emptyString));
+				AreEqual(expected, GetStringTest2(db, emptyString));
+
+				AreEqual(expected, GetStringTest1(db, nullString));
+				AreEqual(expected, GetStringTest1(db, nullString));
+
+				AreEqual(expected, GetStringTest2(db, nullString));
+				AreEqual(expected, GetStringTest2(db, nullString));
+			}
+		}
+
+		private IEnumerable<OracleSpecific.StringTest> GetStringTest1(IDataContext db, string value)
+		{
+			return db.GetTable<OracleSpecific.StringTest>()
+				.Where(_ => value == _.StringValue1);
+		}
+
+		private IEnumerable<OracleSpecific.StringTest> GetStringTest2(IDataContext db, string value)
+		{
+			return db.GetTable<OracleSpecific.StringTest>()
+				.Where(_ => value == _.StringValue2);
+		}
+
 		#region DateTime Tests
 
 		[Table(Schema="TESTUSER", Name="ALLTYPES")]
@@ -527,7 +581,7 @@ namespace Tests.DataProvider
 			[Column(DataType=DataType.Decimal,        Length=22),                           Nullable         ] public decimal?        MONEYDATATYPE          { get; set; } // NUMBER
 			[Column(DataType=DataType.Double,         Length=8),                            Nullable         ] public double?         FLOATDATATYPE          { get; set; } // BINARY_DOUBLE
 			[Column(DataType=DataType.Single,         Length=4),                            Nullable         ] public float?          REALDATATYPE           { get; set; } // BINARY_FLOAT
-			[Column(/*DataType=DataType.DateTime,       Length=7*/),                            Nullable         ] public DateTime?       DATETIMEDATATYPE       { get; set; } // DATE
+			[Column(DataType=DataType.Date),                                                Nullable         ] public DateTime?       DATETIMEDATATYPE       { get; set; } // DATE
 			[Column(DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       DATETIME2DATATYPE      { get; set; } // TIMESTAMP(6)
 			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? DATETIMEOFFSETDATATYPE { get; set; } // TIMESTAMP(6) WITH TIME ZONE
 			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? LOCALZONEDATATYPE      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
@@ -674,6 +728,45 @@ namespace Tests.DataProvider
 
 					stringBuilder.AppendFormat(format, value);
 				});
+		}
+
+		[Test, OracleDataContext]
+		public void ClauseDateTimeWithoutJointure(string context)
+		{
+			var date = DateTime.Today;
+			using (var db = new DataConnection(context))
+			{
+				var query = from a in db.GetTable<ALLTYPE>()
+							where a.DATETIMEDATATYPE == date
+							select a;
+
+				query.FirstOrDefault();
+
+				Assert.That(db.Command.Parameters.Count, Is.EqualTo(1));
+
+				var parm = (IDbDataParameter)db.Command.Parameters[0];
+				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
+			}
+		}
+
+		[Test, OracleDataContext]
+		public void ClauseDateTimeWithJointure(string context)
+		{
+			var date = DateTime.Today;
+			using (var db = new DataConnection(context))
+			{
+				var query = from a in db.GetTable<ALLTYPE>()
+							join b in db.GetTable<ALLTYPE>() on a.ID equals b.ID
+							where a.DATETIMEDATATYPE == date
+							select a;
+
+				query.FirstOrDefault();
+
+				Assert.That(db.Command.Parameters.Count, Is.EqualTo(1));
+
+				var parm = (IDbDataParameter)db.Command.Parameters[0];
+				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
+			}
 		}
 
 		#endregion
@@ -1345,15 +1438,19 @@ namespace Tests.DataProvider
 		public void OverflowTest(string context)
 		{
 			var func = OracleTools.DataReaderGetDecimal;
-
-			OracleTools.DataReaderGetDecimal = GetDecimal;
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow>().ToList();
-			}
+				OracleTools.DataReaderGetDecimal = GetDecimal;
 
-			OracleTools.DataReaderGetDecimal = func;
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow>().ToList();
+				}
+			}
+			finally
+			{
+				OracleTools.DataReaderGetDecimal = func;
+			}
 		}
 
 		const int ClrPrecision = 29;
