@@ -57,7 +57,7 @@ before_test:
 - ps: |
       Push-Location -Path Tests\Linq\bin\ReleaseMono
       cd $env:appveyor_build_folder
-      . ".\Av-InitDatabases.ps1"
+      . ".\Av-InitDatabases.ps1" -conf mono
 
 after_test:
 - ps: Pop-Location

@@ -504,6 +504,7 @@
     <Content Include="AppveyorDataProviders.Core.txt" />
     <Content Include="AppveyorDataProviders.txt" />
     <Content Include="DefaultDataProviders.txt" />
+    <Content Include="MonoAppveyorDataProviders.txt" />
     <Content Include="SqlServerTypes\readme.htm" />
     <Content Include="..\..\Data\Northwind.sqlite">
       <Link>Database\Northwind.sqlite</Link>
