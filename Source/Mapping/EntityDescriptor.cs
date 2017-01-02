@@ -197,9 +197,14 @@ namespace LinqToDB.Mapping
 					};
 
 					var ed = _mappingSchema.GetEntityDescriptor(mapping.Type);
+					var columnsList =
+						this.Columns.Union(ed.Columns.Where(x => !this.Columns.Any(y => y.MemberName == x.MemberName))).ToList();
+					ed.Columns.Clear();
+					ed.Columns.AddRange(columnsList);
 
 					foreach (var column in ed.Columns)
 					{
+
 						if (Columns.All(f => f.MemberName != column.MemberName))
 							Columns.Add(column);
 
