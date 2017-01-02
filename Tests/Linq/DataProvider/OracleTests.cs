@@ -1628,5 +1628,31 @@ namespace Tests.DataProvider
 
 			}
 		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class DateTimeOffsetTable
+		{
+			public DateTimeOffset DateTimeOffsetValue;
+		}
+
+		[Test, OracleDataContext]
+		public void Issue515Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var now = new DateTimeOffset(2000, 1, 1, 10, 11, 12, TimeSpan.FromHours(5));
+					db.CreateTable<DateTimeOffsetTable>();
+					db.Insert(new DateTimeOffsetTable() {DateTimeOffsetValue = now});
+					Assert.AreEqual(now, db.GetTable<DateTimeOffsetTable>().Select(_ => _.DateTimeOffsetValue).Single()); 
+				}
+				finally
+				{
+					db.DropTable<DateTimeOffsetTable>();
+				}
+			}
+
+		}
 	}
 }
