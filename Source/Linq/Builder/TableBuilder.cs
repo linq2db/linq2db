@@ -361,6 +361,8 @@ namespace LinqToDB.Linq.Builder
 						Builder.MappingSchema.GetAttributes<Attribute>(m.MemberInfo).Any(IsRecordAttribute)) :
 					typeAccessor.Members;
 
+                var loadWith = GetLoadWith();
+                var loadWithItems = loadWith == null ? new List<LoadWithItem>() : GetLoadWith(loadWith);
 				foreach (var member in members)
 				{
 					var column = columns.FirstOrDefault(c => !c.IsComplex && c.Name == member.Name);
@@ -368,6 +370,24 @@ namespace LinqToDB.Linq.Builder
 					if (column != null)
 					{
 						yield return column.Expression;
+                    }
+                    else
+                    {
+                        var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(member.MemberInfo).FirstOrDefault();
+                        bool isAssociation = assocAttr != null;
+                        if (isAssociation)
+                        {
+                            var loadWithItem = loadWithItems.FirstOrDefault(_ => _.MemberInfo == member.MemberInfo);
+                            if (loadWithItem != null)
+                            {
+                                var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
+                                if (loadWithItem.NextLoadWith.Count > 0)
+                                {
+                                    var table = FindTable(ma, 1, false, true);
+                                    table.Table.LoadWith = loadWithItem.NextLoadWith;
+                                }
+                                yield return BuildExpression(ma, 1);
+                            }
 					}
 					else
 					{
@@ -421,6 +441,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 			}
+			}
 
 			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
 			{
@@ -445,7 +466,7 @@ namespace LinqToDB.Linq.Builder
 					join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
 					from e in j.DefaultIfEmpty()
 					select
-						e.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+						e?.e ?? Expression.Constant(Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
 				).ToList();
 
 				var expr = Expression.New(ctor, parms);
