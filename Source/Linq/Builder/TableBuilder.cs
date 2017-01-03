@@ -361,8 +361,8 @@ namespace LinqToDB.Linq.Builder
 						Builder.MappingSchema.GetAttributes<Attribute>(m.MemberInfo).Any(IsRecordAttribute)) :
 					typeAccessor.Members;
 
-                var loadWith = GetLoadWith();
-                var loadWithItems = loadWith == null ? new List<LoadWithItem>() : GetLoadWith(loadWith);
+				var loadWith = GetLoadWith();
+				var loadWithItems = loadWith == null ? new List<LoadWithItem>() : GetLoadWith(loadWith);
 				foreach (var member in members)
 				{
 					var column = columns.FirstOrDefault(c => !c.IsComplex && c.Name == member.Name);
@@ -370,77 +370,77 @@ namespace LinqToDB.Linq.Builder
 					if (column != null)
 					{
 						yield return column.Expression;
-                    }
-                    else
-                    {
-                        var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(member.MemberInfo).FirstOrDefault();
-                        bool isAssociation = assocAttr != null;
-                        if (isAssociation)
-                        {
-                            var loadWithItem = loadWithItems.FirstOrDefault(_ => _.MemberInfo == member.MemberInfo);
-                            if (loadWithItem != null)
-                            {
-                                var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
-                                if (loadWithItem.NextLoadWith.Count > 0)
-                                {
-                                    var table = FindTable(ma, 1, false, true);
-                                    table.Table.LoadWith = loadWithItem.NextLoadWith;
-                                }
-                                yield return BuildExpression(ma, 1);
-                            }
 					}
 					else
 					{
-						var name = member.Name + '.';
-						var cols = columns.Where(c => c.IsComplex && c.Name.StartsWith(name)).ToList();
-
-						if (cols.Count == 0)
+						var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(member.MemberInfo).FirstOrDefault();
+						bool isAssociation = assocAttr != null;
+						if (isAssociation)
 						{
-							yield return null;
+							var loadWithItem = loadWithItems.FirstOrDefault(_ => _.MemberInfo == member.MemberInfo);
+							if (loadWithItem != null)
+							{
+								var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
+								if (loadWithItem.NextLoadWith.Count > 0)
+								{
+									var table = FindTable(ma, 1, false, true);
+									table.Table.LoadWith = loadWithItem.NextLoadWith;
+								}
+								yield return BuildExpression(ma, 1);
+							}
 						}
 						else
 						{
-							foreach (var col in cols)
+							var name = member.Name + '.';
+							var cols = columns.Where(c => c.IsComplex && c.Name.StartsWith(name)).ToList();
+
+							if (cols.Count == 0)
 							{
-								col.Name      = col.Name.Substring(name.Length);
-								col.IsComplex = col.Name.Contains(".");
-							}
-
-							var typeAcc = TypeAccessor.GetAccessor(member.Type);
-							var isRec   = Builder.MappingSchema.GetAttributes<Attribute>(member.Type).Any(IsRecordAttribute);
-
-							var exprs = GetExpressions(typeAcc, isRec, cols).ToList();
-
-							if (isRec)
-							{
-								var ctor      = member.Type.GetConstructorsEx().Single();
-								var ctorParms = ctor.GetParameters();
-
-								var parms =
-								(
-									from p in ctorParms.Select((p,i) => new { p, i })
-									join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
-									from e in j.DefaultIfEmpty()
-									select
-										e.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
-								).ToList();
-
-								yield return Expression.New(ctor, parms);
+								yield return null;
 							}
 							else
 							{
-								var expr = Expression.MemberInit(
-									Expression.New(member.Type),
-									from m in typeAcc.Members.Zip(exprs, (m,e) => new { m, e })
-									where m.e != null
-									select (MemberBinding)Expression.Bind(m.m.MemberInfo, m.e));
+								foreach (var col in cols)
+								{
+									col.Name      = col.Name.Substring(name.Length);
+									col.IsComplex = col.Name.Contains(".");
+								}
 
-								yield return expr;
+								var typeAcc = TypeAccessor.GetAccessor(member.Type);
+								var isRec   = Builder.MappingSchema.GetAttributes<Attribute>(member.Type).Any(IsRecordAttribute);
+
+								var exprs = GetExpressions(typeAcc, isRec, cols).ToList();
+
+								if (isRec)
+								{
+									var ctor      = member.Type.GetConstructorsEx().Single();
+									var ctorParms = ctor.GetParameters();
+
+									var parms =
+									(
+										from p in ctorParms.Select((p,i) => new { p, i })
+										join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
+										from e in j.DefaultIfEmpty()
+										select
+											e.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+									).ToList();
+
+									yield return Expression.New(ctor, parms);
+								}
+								else
+								{
+									var expr = Expression.MemberInit(
+										Expression.New(member.Type),
+										from m in typeAcc.Members.Zip(exprs, (m,e) => new { m, e })
+										where m.e != null
+										select (MemberBinding)Expression.Bind(m.m.MemberInfo, m.e));
+
+									yield return expr;
+								}
 							}
 						}
 					}
 				}
-			}
 			}
 
 			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
