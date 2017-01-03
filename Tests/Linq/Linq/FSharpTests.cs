@@ -29,7 +29,7 @@ namespace Tests.Linq
         public void LoadSingleCLIMutable(string context)
         {
             using (var db = GetDataContext(context))
-                FSharp.WhereTest.LoadSingleCLIMutable(db);
+                FSharp.WhereTest.LoadSingleCLIMutable(db, null);
         }
 
         [Test, DataContextSource]

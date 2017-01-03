@@ -87,13 +87,25 @@ let LoadSingleWithOptions (db : IDataContext) =
 
 
 
-let LoadSingleCLIMutable (db : IDataContext) =
+let LoadSingleCLIMutable (db : IDataContext)  (nullPatient : PatientCLIMutable)  =
     let persons = db.GetTable<PersonCLIMutable>().LoadWith( fun x -> x.Patient :> Object )
     let john = query {
         for p in persons do
-        where (p.ID = TestMethod())
+        where (p.ID = 1)
         exactlyOne
     }
 
-    Assert.IsNotNull( john.Patient )
-    Assert.AreEqual( john.Patient.PersonID, 1 )
+    Assert.IsNotNull( john )
+    Assert.AreEqual( john.ID, 1 )
+    Assert.IsNull( john.Patient )
+
+    let tester = query {
+        for p in persons do
+        where (p.ID = 2)
+        exactlyOne
+    }
+
+    Assert.IsNotNull( tester )
+    Assert.AreEqual( tester.ID, 2 )
+    Assert.IsNotNull( tester.Patient )
+    Assert.AreEqual( tester.Patient.PersonID, 2 )
