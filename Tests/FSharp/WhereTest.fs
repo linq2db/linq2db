@@ -1,5 +1,7 @@
 ﻿module Tests.FSharp.WhereTest
 
+open System
+
 open Tests.FSharp.Models
 
 open LinqToDB
@@ -27,6 +29,33 @@ let LoadSingle (db : IDataContext) =
         where (p.ID = TestMethod())
         select p
     })
+
+
+let LoadSinglesWithPatient (db : IDataContext) = 
+    let persons = db.GetTable<Person>().LoadWith( fun x -> x.Patient :> Object )
+    let johnId = 1
+    let john = query {
+        for p in persons do
+        where (p.ID = johnId)
+        exactlyOne
+    }
+
+    Assert.AreEqual(johnId, john.ID)
+    Assert.AreEqual("John", john.FirstName)
+    Assert.IsNull( john.Patient)
+
+    let testerId = 2
+    let tester = query {
+        for p in persons do
+        where (p.ID = testerId)
+        exactlyOne
+    }
+
+    Assert.AreEqual(testerId, tester.ID)
+    Assert.AreEqual("Tester", tester.FirstName)
+    Assert.IsNotNull( tester.Patient)
+    Assert.AreEqual( tester.Patient.PersonID, testerId )
+
 
 let LoadSingleComplexPerson (db : IDataContext) = 
     let persons = db.GetTable<ComplexPerson>()

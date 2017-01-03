@@ -16,6 +16,13 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void LoadSinglesWithPatient( string context)
+		{
+			using (var db = GetDataContext(context))
+				FSharp.WhereTest.LoadSinglesWithPatient( db);
+		}
+
+		[Test, DataContextSource]
 		public void LoadSingleWithOptions(string context)
 		{
 
