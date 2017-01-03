@@ -267,9 +267,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			static bool IsRecordAttribute(Attribute attr)
+            static bool IsRecord( Attribute[] attrs )
 			{
-				return attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute";
+                return attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute")
+                    &&!attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
 			}
 
 			ParameterExpression _variable;
@@ -281,9 +282,9 @@ namespace LinqToDB.Linq.Builder
 
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
-				var attr = Builder.MappingSchema.GetAttributes<Attribute>(objectType).FirstOrDefault(IsRecordAttribute);
+                bool isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType));
 
-				var expr = attr == null ?
+                var expr = !isRecord ?
 					BuildDefaultConstructor(entityDescriptor, objectType, index) :
 					BuildRecordConstructor (entityDescriptor, objectType, index);
 
@@ -358,7 +359,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var members = isRecordType ?
 					typeAccessor.Members.Where(m =>
-						Builder.MappingSchema.GetAttributes<Attribute>(m.MemberInfo).Any(IsRecordAttribute)) :
+						IsRecord( Builder.MappingSchema.GetAttributes<Attribute>(m.MemberInfo))) :
 					typeAccessor.Members;
 
 				foreach (var member in members)
@@ -387,7 +388,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							var typeAcc = TypeAccessor.GetAccessor(member.Type);
-							var isRec   = Builder.MappingSchema.GetAttributes<Attribute>(member.Type).Any(IsRecordAttribute);
+                                var isRec = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(member.Type));
 
 							var exprs = GetExpressions(typeAcc, isRec, cols).ToList();
 
@@ -445,7 +446,7 @@ namespace LinqToDB.Linq.Builder
 					join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
 					from e in j.DefaultIfEmpty()
 					select
-						e.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+						e?.e ?? Expression.Constant(Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
 				).ToList();
 
 				var expr = Expression.New(ctor, parms);

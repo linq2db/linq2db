@@ -25,7 +25,14 @@ namespace Tests.Linq
 				FSharp.WhereTest.LoadSingleWithOptions(db);
 		}
 
-		[Test, DataContextSource]
+        [Test, DataContextSource]
+        public void LoadSingleCLIMutable(string context)
+        {
+            using (var db = GetDataContext(context))
+                FSharp.WhereTest.LoadSingleCLIMutable(db);
+        }
+
+        [Test, DataContextSource]
 		public void LoadSingleComplexPerson(string context)
 		{
 			using (var db = GetDataContext(context))
