@@ -53,6 +53,33 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
+		private static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
+		{
+			var sqlParameter = expr as SqlParameter;
+			var sqlValue     = expr as SqlValue;
+
+			if (sqlParameter != null && sqlParameter.Value is string && sqlParameter.Value.ToString() == "")
+				sqlParameter.Value = null;
+
+			if (sqlValue != null && sqlValue.Value is string && sqlValue.Value.ToString() == "")
+				sqlValue.Value = null;
+		}
+
+		protected override void BuildPredicate(ISqlPredicate predicate)
+		{
+			if (predicate.ElementType == QueryElementType.ExprExprPredicate)
+			{
+				var expr = (SelectQuery.Predicate.ExprExpr)predicate;
+				if (expr.Operator == SelectQuery.Predicate.Operator.Equal ||
+					expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
+				{
+					ConvertEmptyStringToNullIfNeeded(expr.Expr1);
+					ConvertEmptyStringToNullIfNeeded(expr.Expr2);
+				}
+			}
+			base.BuildPredicate(predicate);
+		}
+
 		protected override bool BuildWhere()
 		{
 			return base.BuildWhere() || !NeedSkip && NeedTake && SelectQuery.OrderBy.IsEmpty && SelectQuery.Having.IsEmpty;
@@ -169,23 +196,24 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime   : StringBuilder.Append("timestamp");    break;
-				case DataType.DateTime2  : StringBuilder.Append("timestamp");    break;
-				case DataType.UInt32     :
-				case DataType.Int64      : StringBuilder.Append("Number(19)");   break;
-				case DataType.SByte      :
-				case DataType.Byte       : StringBuilder.Append("Number(3)");    break;
-				case DataType.Money      : StringBuilder.Append("Number(19,4)"); break;
-				case DataType.SmallMoney : StringBuilder.Append("Number(10,4)"); break;
-				case DataType.NVarChar   :
+				case DataType.DateTime       : StringBuilder.Append("timestamp");                 break;
+				case DataType.DateTime2      : StringBuilder.Append("timestamp");                 break;
+				case DataType.DateTimeOffset : StringBuilder.Append("timestamp with time zone");  break;
+				case DataType.UInt32         :
+				case DataType.Int64          : StringBuilder.Append("Number(19)");                break;
+				case DataType.SByte          :
+				case DataType.Byte           : StringBuilder.Append("Number(3)");                 break;
+				case DataType.Money          : StringBuilder.Append("Number(19,4)");              break;
+				case DataType.SmallMoney     : StringBuilder.Append("Number(10,4)");              break;
+				case DataType.NVarChar       :
 					StringBuilder.Append("VarChar2");
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length).Append(')');
 					break;
-				case DataType.Boolean    : StringBuilder.Append("Char(1)");      break;
-				case DataType.NText      : StringBuilder.Append("NClob");        break;
-				case DataType.Text       : StringBuilder.Append("Clob");         break;
-				default                  : base.BuildDataType(type);             break;
+				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
+				case DataType.NText          : StringBuilder.Append("NClob");                     break;
+				case DataType.Text           : StringBuilder.Append("Clob");                      break;
+				default                      : base.BuildDataType(type);                          break;
 			}
 		}
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NOFSHARP
+using System;
 
 using NUnit.Framework;
 
@@ -12,6 +13,16 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				FSharp.WhereTest.LoadSingle(db);
+		}
+
+		[Test, DataContextSource]
+		public void LoadSingleWithOptions(string context)
+		{
+
+			var ms = Tests.FSharp.MappingSchema.Initialize();
+
+			using (var db = GetDataContext(context, ms))
+				FSharp.WhereTest.LoadSingleWithOptions(db);
 		}
 
 		[Test, DataContextSource]
@@ -64,3 +75,4 @@ namespace Tests.Linq
 		}
 	}
 }
+#endif

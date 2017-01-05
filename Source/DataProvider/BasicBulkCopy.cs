@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 
-	class BasicBulkCopy
+	public class BasicBulkCopy
 	{
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
@@ -123,16 +123,18 @@ namespace LinqToDB.DataProvider
 			var argsParameter   = Expression.Parameter(eventParams[1].ParameterType, eventParams[1].Name);
 
 #if !NETSTANDARD
-			var del = Delegate.CreateDelegate(typeof(string), (object) null, "", false);
+			var mi = MemberHelper.MethodOf(() =>Delegate.CreateDelegate(typeof(string), (object) null, "", false));
 #else
-			Func<string> func = () => null;
-			var del = func.GetMethodInfo().CreateDelegate(typeof(string));
+			MethodInfo mi = null;
+			throw new NotImplementedException("This is not implemented for .Net Core");
+			//Func<string> func = () => null;
+			//var del = func.GetMethodInfo().CreateDelegate(typeof(string));
 #endif
 
 			var lambda = Expression.Lambda<Func<Action<object>, Delegate>>(
 				Expression.Call(
 					null,
-					//MemberHelper.MethodOf(() => del),
+					mi,
 					new Expression[]
 					{
 						Expression.Constant(handlerType, typeof(Type)),
@@ -200,9 +202,9 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-#endregion
+		#endregion
 
-#region MultipleRows Support
+		#region MultipleRows Support
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
 			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source)
@@ -267,7 +269,7 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-		protected  BulkCopyRowsCopied MultipleRowsCopy2<T>(
+		protected virtual BulkCopyRowsCopied MultipleRowsCopy2<T>(
 			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source, string from)
 		{
 			return MultipleRowsCopy2<T>(
@@ -387,6 +389,6 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-#endregion
+		#endregion
 	}
 }

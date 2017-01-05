@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider
 	using SqlQuery;
 	using SqlProvider;
 
-	class BasicMerge
+	public class BasicMerge
 	{
 		protected class ColumnInfo
 		{

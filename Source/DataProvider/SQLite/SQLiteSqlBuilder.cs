@@ -121,6 +121,40 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 		}
 
+		protected override void BuildPredicate(ISqlPredicate predicate)
+		{
+			var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
+
+			if (exprExpr != null)
+			{
+				var leftType  = exprExpr.Expr1.SystemType;
+				var rightType = exprExpr.Expr2.SystemType;
+
+				if (IsDateTime(leftType) || IsDateTime(rightType))
+				{
+
+					var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
+						SqlDataType.GetDataType(leftType), exprExpr.Expr1);
+
+					var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
+						SqlDataType.GetDataType(rightType), exprExpr.Expr2);
+
+					exprExpr.Expr1 = l;
+					exprExpr.Expr2 = r;
+				}
+			}
+
+			base.BuildPredicate(predicate);
+		}
+
+		private static bool IsDateTime(Type type)
+		{
+			return    type == typeof(DateTime)
+				   || type == typeof(DateTimeOffset)
+				   || type == typeof(DateTime?)
+				   || type == typeof(DateTimeOffset?);
+		}
+
 		protected override void BuildUnion(int commandNumber, IList<SelectQuery.Union> unions, System.Text.StringBuilder sb, bool skipAlias)
 		{
 			sb.AppendLine("SELECT * FROM ");

@@ -156,10 +156,13 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Concat7(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					   Customer.Where(c => c.Orders.Count <= 1).Concat(   Customer.Where(c => c.Orders.Count > 1)),
+					dd.Customer.Where(c => c.Orders.Count <= 1).Concat(dd.Customer.Where(c => c.Orders.Count > 1)),
 					db.Customer.Where(c => c.Orders.Count <= 1).Concat(db.Customer.Where(c => c.Orders.Count > 1)));
+			}
 		}
 
 		[Test, DataContextSource]
@@ -567,7 +570,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void ObjectUnion(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q1 =
 					from p in db.Product

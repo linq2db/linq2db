@@ -141,6 +141,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.Binary     : _setBinary   (parameter); break;
 				case DataType.VarBinary  : _setVarBinary(parameter); break;
 				case DataType.Image      : _setImage    (parameter); break;
+				case DataType.Date       :
 				case DataType.DateTime   :
 				case DataType.DateTime2  : _setDateTime (parameter); break;
 				case DataType.Money      : _setMoney    (parameter); break;

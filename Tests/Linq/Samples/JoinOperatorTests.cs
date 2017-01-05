@@ -13,7 +13,7 @@ namespace Tests.Samples
 		[Test, NorthwindDataContext]
 		public void InnerJoinOnSingleColumn(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var query =
 					from c in db.Category
@@ -29,7 +29,7 @@ namespace Tests.Samples
 		[Test, NorthwindDataContext]
 		public void InnerJoinOnMultipleColumns(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var query =
 					from p in db.Product

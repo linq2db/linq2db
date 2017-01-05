@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Linq;
+using LinqToDB.Common;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -45,7 +46,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		static IDataProvider ProviderDetector(IConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
@@ -93,9 +94,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			try
 			{
-				var path = typeof(OracleTools).AssemblyEx().CodeBase.Replace("file:///", "");
-
-				path = Path.GetDirectoryName(path);
+				var path = typeof(OracleTools).AssemblyEx().GetPath();
 
 				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
 					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))

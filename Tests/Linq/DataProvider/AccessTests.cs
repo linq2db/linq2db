@@ -151,6 +151,8 @@ namespace Tests.DataProvider
 				TestNumeric(conn,  1.79E+308d,       DataType.Double,     "cbool cbyte clng cint ccur csng");
 				TestNumeric(conn, decimal.MinValue,  DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
 				TestNumeric(conn, decimal.MaxValue,  DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn,  1.123456789m,     DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn, -1.123456789m,     DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
 				TestNumeric(conn, -922337203685477m, DataType.Money,      "cbool cbyte clng cint csng");
 				TestNumeric(conn, +922337203685477m, DataType.Money,      "cbool cbyte clng cint csng");
 				TestNumeric(conn, -214748m,          DataType.SmallMoney, "cbool cbyte cint");

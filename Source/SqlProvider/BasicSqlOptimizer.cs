@@ -783,17 +783,46 @@ namespace LinqToDB.SqlProvider
 					{
 						var expr = (SelectQuery.Predicate.ExprExpr)predicate;
 
-						if (expr.Expr1 is SqlField && expr.Expr2 is SqlParameter)
+						//if (expr.Expr1 is SqlField && expr.Expr2 is SqlParameter)
+						//{
+						//	if (((SqlParameter)expr.Expr2).DataType == DataType.Undefined)
+						//		((SqlParameter)expr.Expr2).DataType = ((SqlField)expr.Expr1).DataType;
+						//}
+						//else if (expr.Expr2 is SqlField && expr.Expr1 is SqlParameter)
+						//{
+						//	if (((SqlParameter)expr.Expr1).DataType == DataType.Undefined)
+						//		((SqlParameter)expr.Expr1).DataType = ((SqlField)expr.Expr2).DataType;
+						//}
+						var parameterExpr2 = expr.Expr2 as SqlParameter;
+						if (parameterExpr2 != null && parameterExpr2.DataType == DataType.Undefined)
 						{
-							if (((SqlParameter)expr.Expr2).DataType == DataType.Undefined)
-								((SqlParameter)expr.Expr2).DataType = ((SqlField)expr.Expr1).DataType;
-						}
-						else if (expr.Expr2 is SqlField && expr.Expr1 is SqlParameter)
-						{
-							if (((SqlParameter)expr.Expr1).DataType == DataType.Undefined)
-								((SqlParameter)expr.Expr1).DataType = ((SqlField)expr.Expr2).DataType;
+							var innerExpr = expr.Expr1;
+							while (innerExpr != null && innerExpr is SelectQuery.Column)
+							{
+								innerExpr = ((SelectQuery.Column)innerExpr).Expression;
+							}
+							if (innerExpr != null && innerExpr is SqlField)
+							{
+								parameterExpr2.DataType = ((SqlField) innerExpr).DataType;
+							}
 						}
 
+						var parameterExpr1 = expr.Expr1 as SqlParameter;
+						if (parameterExpr1 != null && parameterExpr1.DataType == DataType.Undefined)
+						{
+							var innerExpr = expr.Expr2;
+							while (innerExpr != null && innerExpr is SelectQuery.Column)
+							{
+								innerExpr = ((SelectQuery.Column)innerExpr).Expression;
+							}
+
+							if (innerExpr != null && innerExpr is SqlField)
+							{
+								parameterExpr1.DataType = ((SqlField)innerExpr).DataType;
+							}
+						}
+
+						
 						if (expr.Operator == SelectQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
 						{
 							var value = Equals(((SqlValue)expr.Expr1).Value, ((SqlValue)expr.Expr2).Value);
