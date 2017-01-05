@@ -146,6 +146,14 @@ namespace LinqToDB.DataProvider.SQLite
 
 			base.BuildPredicate(predicate);
 		}
+		
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+		    if (database != null)
+			sb.Append(database).Append(".");
+
+		    return sb.Append(table);
+		}
 
 		private static bool IsDateTime(Type type)
 		{
