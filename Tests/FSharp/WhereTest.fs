@@ -63,3 +63,23 @@ let LoadColumnOfDeeplyComplexPerson (db : IDataContext) =
         exactlyOne
     }
     Assert.AreEqual("Pupkin", lastName)
+
+let LoadSingleWithOptions (db : IDataContext) = 
+    let persons = db.GetTable<PersonWithOptions>()
+    let john = query {
+        for p in persons do
+        where (p.ID = TestMethod())
+        exactlyOne
+    }
+    Assert.AreEqual(
+        { PersonWithOptions.ID=1
+          FirstName = "John"
+          MiddleName = None
+          LastName = Some("Pupkin")
+          Gender= Gender.Male
+          }
+        , john)
+
+    Assert.IsTrue( match john.MiddleName with |None -> true;  |Some _ -> false );
+    Assert.IsTrue( match john.LastName   with |None -> false; |Some _ -> true );
+

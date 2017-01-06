@@ -178,5 +178,19 @@ namespace Tests.Mapping
 
 			Assert.That(ed["Class3"], Is.Not.Null);
 		}
-	}
+
+        [Test]
+        public void FluentAssociation()
+        {
+            var ms = new MappingSchema();
+            var mb = ms.GetFluentMappingBuilder();
+
+            mb.Entity<MyClass>()
+                .Association( e => e.Parent, e => e.ID, o => o.ID1 );
+
+            var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+            Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+        }
+    }
 }
