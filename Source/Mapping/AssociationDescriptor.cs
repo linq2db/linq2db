@@ -6,6 +6,7 @@ using JNotNull = JetBrains.Annotations.NotNullAttribute;
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Extensions;
 
 	public class AssociationDescriptor
 	{
@@ -15,7 +16,8 @@ namespace LinqToDB.Mapping
 			[JNotNull] string[]   thisKey,
 			[JNotNull] string[]   otherKey,
 			           string     storage,
-			           bool       canBeNull)
+			           bool       canBeNull,
+			           Type       concreteType)
 		{
 			if (memberInfo == null) throw new ArgumentNullException("memberInfo");
 			if (thisKey    == null) throw new ArgumentNullException("thisKey");
@@ -37,6 +39,7 @@ namespace LinqToDB.Mapping
 			OtherKey   = otherKey;
 			Storage    = storage;
 			CanBeNull  = canBeNull;
+			ConcreteType = concreteType ?? memberInfo.GetMemberType();
 		}
 
 		public MemberInfo MemberInfo { get; set; }
@@ -44,6 +47,7 @@ namespace LinqToDB.Mapping
 		public string[]   OtherKey   { get; set; }
 		public string     Storage    { get; set; }
 		public bool       CanBeNull  { get; set; }
+		public Type       ConcreteType { get; set; }
 
 		public static string[] ParseKeys(string keys)
 		{

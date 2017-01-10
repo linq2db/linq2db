@@ -22,6 +22,7 @@ namespace LinqToDB.Mapping
 		public string       BackReferenceName { get; set; }
 		public bool         IsBackReference   { get; set; }
 		public Relationship Relationship      { get; set; }
+		public Type         ConcreteType      { get; set; }
 
 		public string[] GetThisKeys () { return AssociationDescriptor.ParseKeys(ThisKey);  }
 		public string[] GetOtherKeys() { return AssociationDescriptor.ParseKeys(OtherKey); }
