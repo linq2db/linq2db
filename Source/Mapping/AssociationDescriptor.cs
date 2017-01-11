@@ -34,19 +34,19 @@ namespace LinqToDB.Mapping
 						"Association '{0}.{1}' has different number of keys for parent and child objects.",
 						type.Name, memberInfo.Name));
 
-			MemberInfo = memberInfo;
-			ThisKey    = thisKey;
-			OtherKey   = otherKey;
-			Storage    = storage;
-			CanBeNull  = canBeNull;
+			MemberInfo   = memberInfo;
+			ThisKey      = thisKey;
+			OtherKey     = otherKey;
+			Storage      = storage;
+			CanBeNull    = canBeNull;
 			ConcreteType = concreteType ?? memberInfo.GetMemberType();
 		}
 
-		public MemberInfo MemberInfo { get; set; }
-		public string[]   ThisKey    { get; set; }
-		public string[]   OtherKey   { get; set; }
-		public string     Storage    { get; set; }
-		public bool       CanBeNull  { get; set; }
+		public MemberInfo MemberInfo   { get; set; }
+		public string[]   ThisKey      { get; set; }
+		public string[]   OtherKey     { get; set; }
+		public string     Storage      { get; set; }
+		public bool       CanBeNull    { get; set; }
 		public Type       ConcreteType { get; set; }
 
 		public static string[] ParseKeys(string keys)
