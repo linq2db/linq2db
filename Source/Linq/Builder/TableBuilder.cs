@@ -1276,7 +1276,7 @@ namespace LinqToDB.Linq.Builder
 			public AssociatedTableContext(ExpressionBuilder builder, TableContext parent, AssociationDescriptor association)
 				: base(builder, parent.SelectQuery)
 			{
-				var type = association.ConcreteType;
+				var type = association.OtherType;
 				var left = association.CanBeNull;
 
 				if (typeof(IEnumerable).IsSameOrParentOf(type))

@@ -17,7 +17,7 @@ namespace LinqToDB.Mapping
 			[JNotNull] string[]   otherKey,
 			           string     storage,
 			           bool       canBeNull,
-			           Type       concreteType)
+			           Type       otherType)
 		{
 			if (memberInfo == null) throw new ArgumentNullException("memberInfo");
 			if (thisKey    == null) throw new ArgumentNullException("thisKey");
@@ -34,20 +34,20 @@ namespace LinqToDB.Mapping
 						"Association '{0}.{1}' has different number of keys for parent and child objects.",
 						type.Name, memberInfo.Name));
 
-			MemberInfo   = memberInfo;
-			ThisKey      = thisKey;
-			OtherKey     = otherKey;
-			Storage      = storage;
-			CanBeNull    = canBeNull;
-			ConcreteType = concreteType ?? memberInfo.GetMemberType();
+			MemberInfo = memberInfo;
+			ThisKey    = thisKey;
+			OtherKey   = otherKey;
+			Storage    = storage;
+			CanBeNull  = canBeNull;
+			OtherType  = otherType ?? memberInfo.GetMemberType();
 		}
 
-		public MemberInfo MemberInfo   { get; set; }
-		public string[]   ThisKey      { get; set; }
-		public string[]   OtherKey     { get; set; }
-		public string     Storage      { get; set; }
-		public bool       CanBeNull    { get; set; }
-		public Type       ConcreteType { get; set; }
+		public MemberInfo MemberInfo { get; set; }
+		public string[]   ThisKey    { get; set; }
+		public string[]   OtherKey   { get; set; }
+		public string     Storage    { get; set; }
+		public bool       CanBeNull  { get; set; }
+		public Type       OtherType  { get; set; }
 
 		public static string[] ParseKeys(string keys)
 		{
