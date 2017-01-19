@@ -5,6 +5,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using LinqToDB.Linq;
 	using LinqToDB.SqlQuery;
 
@@ -153,7 +154,7 @@ namespace Tests.Linq
 				Assert.AreEqual(q, q2);
 
 				var ts = GeTableSource(q);
-				Assert.AreEqual(3, ts.Joins.Count);
+				Assert.AreEqual(1, ts.Joins.Count);
 			}
 		}
 
