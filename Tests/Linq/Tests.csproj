@@ -256,6 +256,7 @@
     <Compile Include="Data\TransactionTests.cs" />
     <Compile Include="Data\ProcedureTests.cs" />
     <Compile Include="Linq\InterfaceTests.cs" />
+    <Compile Include="Linq\JoinOptimizeTests.cs" />
     <Compile Include="TestProvName.cs" />
     <Compile Include="Update\CreateTableTests.cs" />
     <Compile Include="Linq\QueryHintsTests.cs" />

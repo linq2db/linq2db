@@ -1438,58 +1438,6 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		bool MatchExpressions(SelectQuery.TableSource manySource, SelectQuery.TableSource oneSource, ISqlExpression expr1, ISqlExpression expr2, Dictionary<int, SelectQuery.TableSource> map, FoundEquality equality)
-		{
-			if (expr1.ElementType == expr2.ElementType)
-			{
-				switch (expr1.ElementType)
-				{
-					case QueryElementType.Column:
-					{
-						return MatchExpressions(manySource, oneSource, ((SelectQuery.Column) expr1).Expression, ((SelectQuery.Column) expr2).Expression, map, equality);
-					}
-					case QueryElementType.SqlField:
-					{
-						var field1 = (SqlField) expr1;
-						var field2 = (SqlField) expr2;
-
-						if (field1.Name == field2.Name)
-						{
-							var table1 = field1.Table as SqlTable;
-							var table2 = field2.Table as SqlTable;
-
-							if (CompareSources(field1.Table.SourceID, field2.Table.SourceID, map) || IsEqualTables(table1, table2))
-							{
-								if (CompareSources(manySource.Source.SourceID, field1.Table.SourceID, map))
-								{
-									equality.ManyField = field1;
-									return true;
-								}
-
-								if (CompareSources(oneSource.SourceID, field2.Table.SourceID, map))
-								{
-									equality.OneField = field1;
-									return true;
-								}
-							}
-						}
-						break;
-					}
-					case QueryElementType.SqlDataType:
-					{
-						var dataType1 = (SqlDataType)expr1;
-						var dataType2 = (SqlDataType)expr2;
-
-						var res = dataType1.DataType == dataType2.DataType && dataType1.Length == dataType2.Length;
-						return res;
-					}
-					default:
-						return false;
-				}
-			}
-			return false;
-		}
-
 		class FoundEquality
 		{
 			public SqlField ManyField;
@@ -1497,185 +1445,635 @@ namespace LinqToDB.SqlProvider
 			public SelectQuery.Condition OneCondition;
 		}
 
-		private bool CompareEqualExpressions(SelectQuery.TableSource manySource, SelectQuery.TableSource oneSource, SelectQuery.Predicate.ExprExpr expr1, SelectQuery.Predicate.ExprExpr expr2, 
-			Dictionary<int, SelectQuery.TableSource> map, out FoundEquality found)
+		class OptimizationContext
 		{
-			FoundEquality equality = new FoundEquality();
+			private readonly Dictionary<int, SelectQuery.TableSource> Map = new Dictionary<int, SelectQuery.TableSource>();
+			private Dictionary<SqlField, HashSet<SqlField>> _equalityMap;
+			private Dictionary<SelectQuery.SearchCondition, SelectQuery.SearchCondition> _additionalFilter;
 
-			var res = MatchExpressions(manySource, oneSource, expr1.Expr1, expr2.Expr1, map, equality) 
-				   && MatchExpressions(manySource, oneSource, expr1.Expr2, expr2.Expr2, map, equality);
+			public readonly Dictionary<Tuple<SelectQuery.TableSource, SelectQuery.JoinedTable>, List<FoundEquality>>
+				FieldPairCache = new Dictionary<Tuple<SelectQuery.TableSource, SelectQuery.JoinedTable>, List<FoundEquality>>();
 
-			if (!res || equality.ManyField == null || equality.OneField == null)
+			public bool IsDependent(IQueryElement element, IQueryElement testedElement, int sourceId)
 			{
-				equality.ManyField = null;
-				equality.OneField = null;
-				res = MatchExpressions(manySource, oneSource, expr1.Expr1, expr2.Expr2, map, equality)
-				      && MatchExpressions(manySource, oneSource, expr1.Expr2, expr2.Expr1, map, equality);
+				var sources = new HashSet<int>();
+				sources.Add(sourceId);
+				return IsDependent(element, testedElement, sources);
 			}
 
-			found = res && equality.ManyField != null && equality.OneField != null ? equality : null;
-			
-			return found != null;
-		}
+			public bool IsDependent(IQueryElement element, IQueryElement testedElement, HashSet<int> sources)
+			{
+				var dependent = false;
 
-		bool? CompareConditions(SelectQuery.Condition cond1, SelectQuery.Condition cond2, Dictionary<int, SelectQuery.TableSource> map)
-		{
-			if (cond1.ElementType != cond2.ElementType)
-				return false;
-			if (cond1.Predicate.ElementType != cond2.Predicate.ElementType)
-				return false;
+				//sourceId = GetCurrentSourceId(sourceId);
+		
+				// check everyting that can be dependent on specific table
+				new QueryVisitor().VisitParentFirst(element, e =>
+				{
+					if (dependent)
+						return false;
 
-			if (cond1.Predicate.ElementType != QueryElementType.ExprExprPredicate)
+					// do not check tested join
+					if (e == testedElement)
+						return false;
+
+					if (e.ElementType == QueryElementType.SqlField)
+					{
+						var sqlField = (SqlField) e;
+						dependent = sources.Contains(GetCurrentSourceId(sqlField.Table.SourceID));
+					}
+
+					return !dependent;
+				});
+
+				return dependent;
+			}
+
+			public int GetCurrentSourceId(int id)
+			{
+				SelectQuery.TableSource table;
+				while (Map.TryGetValue(id, out table))
+				{
+					id = table.SourceID;
+				}
+				return id;
+			}
+
+			public SelectQuery.TableSource GetNewSource(int id)
+			{
+				SelectQuery.TableSource table;
+				if (Map.TryGetValue(id, out table))
+				{
+					SelectQuery.TableSource tableOther;
+					while (Map.TryGetValue(table.SourceID, out tableOther))
+					{
+						table = tableOther;
+					}
+				}
+				return table;
+			}
+
+			private SqlField MapToSourceInternal(SqlField field, int sourceId, HashSet<SqlField> visited)
+			{
+				if (visited.Contains(field))
+					return null;
+
+				if (field.Table.SourceID == sourceId)
+					return field;
+
+				visited.Add(field);
+
+				if (_equalityMap == null)
+					return null;
+
+				HashSet<SqlField> sameFields;
+				if (_equalityMap.TryGetValue(field, out sameFields))
+				{
+					foreach (var sqlField in sameFields)
+					{
+						var newField = MapToSourceInternal(sqlField, sourceId, visited);
+						if (newField != null)
+							return sqlField;
+					}
+				}
+
 				return null;
-
-			var expr1 = (SelectQuery.Predicate.ExprExpr) cond1.Predicate;
-			var expr2 = (SelectQuery.Predicate.ExprExpr) cond2.Predicate;
-
-			return CompareExpressions(expr1, expr2, map);
-		}
-
-		bool? CompareExpressions(SelectQuery.Predicate.ExprExpr expr1, SelectQuery.Predicate.ExprExpr expr2, Dictionary<int, SelectQuery.TableSource> map)
-		{
-			if (expr1.Operator != expr2.Operator)
-			{
-				//TODO: we can commpare more wisely
-				return false;
 			}
 
-			if (expr1.ElementType != expr2.ElementType)
-				return false;
 
-			switch (expr1.ElementType)
+			public SqlField MapToSource(SqlField field, int sourceId)
 			{
-				case QueryElementType.ExprExprPredicate:
+				var visited = new HashSet<SqlField>();
+				return MapToSourceInternal(field, sourceId, visited);
+			}
+
+			public bool CompareSources(int id1, int id2)
+			{
+				return GetCurrentSourceId(id1) == GetCurrentSourceId(id2);
+			}
+
+			public void AddEqualFields(SqlField field1, SqlField field2)
+			{
+				if (_equalityMap == null)
 				{
-					return CompareExpressions(expr1.Expr1, expr2.Expr1, map) == true && CompareExpressions(expr1.Expr2, expr2.Expr2, map) == true
-					       || CompareExpressions(expr1.Expr1, expr2.Expr2, map) == true && CompareExpressions(expr1.Expr2, expr2.Expr1, map) == true;
+					_equalityMap = new Dictionary<SqlField, HashSet<SqlField>>();
 				}
-			}
-			return null;
-		}
 
-		int GetCurrentSourceId(int id, Dictionary<int, SelectQuery.TableSource> map)
-		{
-			SelectQuery.TableSource table;
-			while (map.TryGetValue(id, out table))
-			{
-				id = table.SourceID;
-			}
-			return id;
-		}
-
-		SelectQuery.TableSource GetNewSource(int id, Dictionary<int, SelectQuery.TableSource> map)
-		{
-			SelectQuery.TableSource table;
-			if (map.TryGetValue(id, out table))
-			{
-				SelectQuery.TableSource tableOther;
-				while (map.TryGetValue(table.SourceID, out tableOther))
+				HashSet<SqlField> set;
+				if (!_equalityMap.TryGetValue(field1, out set))
 				{
-					table = tableOther;
+					set = new HashSet<SqlField>();
+					_equalityMap.Add(field1, set);
 				}
+				set.Add(field2);
+
+				if (!_equalityMap.TryGetValue(field2, out set))
+				{
+					set = new HashSet<SqlField>();
+					_equalityMap.Add(field2, set);
+				}
+				set.Add(field1);
 			}
-			return table;
-		}
 
-		bool CompareSources(int id1, int id2, Dictionary<int, SelectQuery.TableSource> map)
-		{
-			return GetCurrentSourceId(id1, map) == GetCurrentSourceId(id2, map);
-		}
 
-		bool? CompareExpressions(ISqlExpression expr1, ISqlExpression expr2, Dictionary<int, SelectQuery.TableSource> map)
-		{
-			if (expr1.ElementType != expr2.ElementType)
-				return false;
-
-			switch (expr1.ElementType)
+			bool CompareExpressions(SelectQuery.Predicate.ExprExpr expr1, SelectQuery.Predicate.ExprExpr expr2)
 			{
+				if (expr1.Operator != expr2.Operator)
+				{
+					//TODO: we can commpare more wisely
+					return false;
+				}
+
+				if (expr1.ElementType != expr2.ElementType)
+					return false;
+
+				switch (expr1.ElementType)
+				{
+					case QueryElementType.ExprExprPredicate:
+					{
+						return CompareExpressions(expr1.Expr1, expr2.Expr1) == true && CompareExpressions(expr1.Expr2, expr2.Expr2) == true
+							   || CompareExpressions(expr1.Expr1, expr2.Expr2) == true && CompareExpressions(expr1.Expr2, expr2.Expr1) == true;
+					}
+				}
+				return false;
+			}
+
+			bool? CompareExpressions(ISqlExpression expr1, ISqlExpression expr2)
+			{
+				if (expr1.ElementType != expr2.ElementType)
+					return null;
+
+				switch (expr1.ElementType)
+				{
 					case QueryElementType.Column:
 					{
-						return CompareExpressions(((SelectQuery.Column) expr1).Expression, ((SelectQuery.Column) expr2).Expression, map);
+						return CompareExpressions(((SelectQuery.Column) expr1).Expression, ((SelectQuery.Column) expr2).Expression);
 					}
 
 					case QueryElementType.SqlField:
-				{
-					var field1 = (SqlField) expr1;
-					var field2 = (SqlField) expr2;
+					{
+						var field1 = (SqlField) expr1;
+						var field2 = (SqlField) expr2;
 
-					return CompareSources(field1.Table.SourceID, field2.Table.SourceID, map) && field1.Name == field2.Name;
+						return CompareSources(field1.Table.SourceID, field2.Table.SourceID) && field1.Name == field2.Name;
+					}
 				}
+
+				return null;
+			}
+
+			bool CompareConditions(SelectQuery.Condition cond1, SelectQuery.Condition cond2)
+			{
+				if (cond1.ElementType != cond2.ElementType)
+					return false;
+				if (cond1.Predicate.ElementType != cond2.Predicate.ElementType)
+					return false;
+
+				switch (cond1.Predicate.ElementType)
+				{
+					case QueryElementType.IsNullPredicate:
+					{
+						var isNull1 = (SelectQuery.Predicate.IsNull) cond1.Predicate;
+						var isNull2 = (SelectQuery.Predicate.IsNull) cond2.Predicate;
+						return isNull1.IsNot == isNull2.IsNot && CompareExpressions(isNull1.Expr1, isNull2.Expr1) == true;
+					}
+					case QueryElementType.ExprExprPredicate:
+					{
+						var expr1 = (SelectQuery.Predicate.ExprExpr) cond1.Predicate;
+						var expr2 = (SelectQuery.Predicate.ExprExpr) cond2.Predicate;
+
+						return CompareExpressions(expr1, expr2);
+					}
+				}
+				return false;
+			}
+
+			public bool? EvaluateLogical(SelectQuery.Condition condition)
+			{
+				switch (condition.ElementType)
+				{
+					case QueryElementType.Condition:
+					{
+						var expr = condition.Predicate as SelectQuery.Predicate.ExprExpr;
+						if (expr != null && expr.Operator == SelectQuery.Predicate.Operator.Equal)
+						{
+							return CompareExpressions(expr.Expr1, expr.Expr2);
+						}
+						break;
+					}
+				}
+
+				return null;
+			}
+
+			public void OptimizeSearchCondition(SelectQuery.SearchCondition searchCondition)
+			{
+				var items = searchCondition.Conditions;
+
+				if (items.Any(c => c.IsOr))
+					return;
+
+				for (int i1 = 0; i1 < items.Count; i1++)
+				{
+					var c1 = items[i1];
+					var cmp = EvaluateLogical(c1);
+
+					if (cmp != null)
+					{
+						if (cmp.Value)
+						{
+							items.RemoveAt(i1);
+							--i1;
+							continue;
+						}
+					}
+
+					switch (c1.ElementType)
+					{
+						case QueryElementType.Condition:
+						case QueryElementType.SearchCondition:
+						{
+							var search = c1.Predicate as SelectQuery.SearchCondition;
+							if (search != null)
+							{
+								OptimizeSearchCondition(search);
+								if (search.Conditions.Count == 0)
+								{
+									items.RemoveAt(i1);
+									--i1;
+									continue;
+								}
+							}
+							break;
+						}
+					}
+
+					for (int i2 = i1 + 1; i2 < items.Count; i2++)
+					{
+						var c2 = items[i2];
+						if (CompareConditions(c2, c1))
+						{
+							searchCondition.Conditions.RemoveAt(i2);
+							--i2;
+						}
+					}
+				}
+			}
+			
+			public void AddSearchCondition(SelectQuery.SearchCondition search, SelectQuery.Condition condition)
+			{
+				AddSearchConditions(search, new[] {condition});
+			}
+
+			public void AddSearchConditions(SelectQuery.SearchCondition search, IEnumerable<SelectQuery.Condition> conditions)
+			{
+				if (_additionalFilter == null)
+					_additionalFilter = new Dictionary<SelectQuery.SearchCondition, SelectQuery.SearchCondition>();
+
+				SelectQuery.SearchCondition value;
+				if (!_additionalFilter.TryGetValue(search, out value))
+				{
+					if (search.Conditions.Count > 0 && search.Precedence < Precedence.LogicalConjunction)
+					{
+						value = new SelectQuery.SearchCondition();
+
+						var prev = new SelectQuery.SearchCondition();
+						prev.Conditions.AddRange(search.Conditions);
+						search.Conditions.Clear();
+
+						search.Conditions.Add(new SelectQuery.Condition(false, value, false));
+						search.Conditions.Add(new SelectQuery.Condition(false, prev, false));
+					}
+					else
+					{
+						value = search;
+					}
+
+					_additionalFilter.Add(search, value);
+				}
+
+				value.Conditions.AddRange(conditions);
+			}
+
+			public void OptimizeFilters()
+			{
+				if (_additionalFilter == null)
+					return;
+
+				foreach (var pair in _additionalFilter)
+				{
+					OptimizeSearchCondition(pair.Value);
+
+					if (!ReferenceEquals(pair.Key, pair.Value) && pair.Value.Conditions.Count == 1)
+					{
+						// conditions can be optimized so we have to remove empty SearchCondition
+						var searchCondition = pair.Value.Conditions[0].Predicate as SelectQuery.SearchCondition;
+						if (searchCondition != null && searchCondition.Conditions.Count == 0)
+						{
+							pair.Key.Conditions.Remove(pair.Value.Conditions[0]);
+						}
+					}
+				}
+			}
+
+			public void AddSourceMap(int oldId, SelectQuery.TableSource newSource)
+			{
+				Map.Add(oldId, newSource);
+			}
+
+			public T OptimizeMappings<T>(T root)
+				where T : class, IQueryElement
+			{
+				if (Map.Count > 0)
+				{
+					// correct fields
+					root = new QueryVisitor().Convert(root, element =>
+					{
+						var field = element as SqlField;
+						if (field != null)
+						{
+							var newSource = GetNewSource(field.Table.SourceID);
+							if (newSource != null)
+							{
+								var table = newSource.Source as SqlTable;
+								if (table != null)
+								{
+									var newField = newSource.All.Name == field.Name ? table.All : table.Fields[field.Name];
+									return newField;
+								}
+							}
+						}
+						return element;
+					});
+				}
+
+				return root;
+			}
+		}
+
+		IEnumerable<SelectQuery.JoinedTable> EnumFlattenedJoins(SelectQuery.JoinedTable join)
+		{
+			yield return join;
+			foreach (var child in join.Table.Joins)
+			{
+				foreach (var other in EnumFlattenedJoins(child))
+				{
+					yield return other;
+				}
+			}
+		}
+
+		bool IsDependedOnJoins(IQueryElement element, SelectQuery.JoinedTable testedJoin, OptimizationContext context)
+		{
+			var hash = new HashSet<int>(EnumFlattenedJoins(testedJoin).Select(j => j.Table.SourceID));
+			return context.IsDependent(element, testedJoin, hash);
+		}
+
+		static SqlField GetUnderlayingField(ISqlExpression expr)
+		{
+			switch (expr.ElementType)
+			{
+				case QueryElementType.SqlField: return (SqlField)expr;
+				case QueryElementType.Column  : return GetUnderlayingField(((SelectQuery.Column)expr).Expression);
 			}
 
 			return null;
 		}
 
-		void OptimizeConditions(List<SelectQuery.Condition> conditions, Dictionary<int, SelectQuery.TableSource> map)
+		void DetectField(SelectQuery.TableSource manySource, SelectQuery.TableSource oneSource, SqlField field,
+			FoundEquality equality, OptimizationContext context)
 		{
-			for (int i1 = 0; i1 < conditions.Count; i1++)
+			if (oneSource.Source.SourceID == field.Table.SourceID)
 			{
-				var c1 = conditions[i1];
-				for (int i2 = i1 + 1; i2 < conditions.Count; i2++)
-				{
-					var c2 = conditions[i2];
-					if (CompareConditions(c1, c2, map) == true)
-					{
-						conditions.RemoveAt(i2);
-						--i2;
-					}
-				}
+				equality.OneField = field;
+			}
+			else
+			if (context.CompareSources(manySource.Source.SourceID, field.Table.SourceID))
+			{
+				equality.ManyField = field;
+			}
+			else
+			if (context.MapToSource(field, manySource.Source.SourceID) != null)
+			{
+				equality.ManyField = field;
 			}
 		}
 
-		bool TryMerge(SelectQuery selectQuery, SelectQuery.TableSource manySource, SelectQuery.JoinedTable join1, SelectQuery.JoinedTable join2,
-			List<List<string>> uniqueKeys, Dictionary<int, SelectQuery.TableSource> map)
+		bool MatchFields(SelectQuery.TableSource manySource, SelectQuery.TableSource oneSource, SqlField field1,
+			SqlField field2, FoundEquality equality, OptimizationContext context)
 		{
+			if (field1 == null || field2 == null)
+				return false;
+
+			DetectField(manySource, oneSource, field1, equality, context);
+			DetectField(manySource, oneSource, field2, equality, context);
+
+			return equality.OneField != null && equality.ManyField != null;
+		}
+
+		void CollectEqualFields(SelectQuery.JoinedTable join, OptimizationContext context)
+		{
+			if (join.JoinType != SelectQuery.JoinType.Inner)
+				return;
+
+			if (join.Condition.Conditions.Any(c => c.IsOr))
+				return;
+
+			for (int i1 = 0; i1 < join.Condition.Conditions.Count; i1++)
+			{
+				var c = join.Condition.Conditions[i1];
+
+				if (c.ElementType != QueryElementType.Condition
+					|| c.Predicate.ElementType != QueryElementType.ExprExprPredicate
+					|| ((SelectQuery.Predicate.ExprExpr) c.Predicate).Operator != SelectQuery.Predicate.Operator.Equal)
+				{
+					continue;
+				}
+
+				var predicate = (SelectQuery.Predicate.ExprExpr) c.Predicate;
+
+				var field1 = GetUnderlayingField(predicate.Expr1);
+				if (field1 == null)
+					continue;
+
+				var field2 = GetUnderlayingField(predicate.Expr2);
+				if (field2 == null)
+					continue;
+
+				if (ReferenceEquals(field1, field2))
+					continue;
+
+				context.AddEqualFields(field1, field2);
+			}
+
+		}
+
+		void ResetFieldSearchCache(SelectQuery.JoinedTable join, OptimizationContext context)
+		{
+			var keys = context.FieldPairCache.Keys.Where(k => k.Item2 == join).ToArray();
+			foreach (var key in keys)
+			{
+				context.FieldPairCache.Remove(key);
+			}
+		}
+
+		List<FoundEquality> SearchForFields(SelectQuery.TableSource manySource, SelectQuery.JoinedTable join, OptimizationContext context)
+		{
+			var key = Tuple.Create(manySource, join);
+			List<FoundEquality> found;
+			if (context.FieldPairCache.TryGetValue(key, out found))
+				return found;
+
+			for (int i1 = 0; i1 < join.Condition.Conditions.Count; i1++)
+			{
+				var c = join.Condition.Conditions[i1];
+
+				if (c.IsOr)
+				{
+					found = null;
+					break;
+				}
+
+				if (c.ElementType != QueryElementType.Condition
+					|| c.Predicate.ElementType != QueryElementType.ExprExprPredicate
+					|| ((SelectQuery.Predicate.ExprExpr) c.Predicate).Operator != SelectQuery.Predicate.Operator.Equal)
+				{
+					continue;
+				}
+
+				var predicate = (SelectQuery.Predicate.ExprExpr) c.Predicate;
+				var equality = new FoundEquality();
+				if (!MatchFields(manySource, join.Table, 
+						GetUnderlayingField(predicate.Expr1), 
+						GetUnderlayingField(predicate.Expr2),
+						equality, context))
+				{
+					continue;
+				}
+
+				equality.OneCondition = c;
+				if (found == null)
+					found = new List<FoundEquality>();
+				found.Add(equality);
+			}
+
+			context.FieldPairCache.Add(key, found);
+
+			return found;
+		}
+
+		bool TryMergeWithTable(SelectQuery selectQuery, SelectQuery.TableSource manySource, SelectQuery.JoinedTable join,
+			List<List<string>> uniqueKeys, OptimizationContext context)
+		{
+			if (join.Table.Joins.Count != 0)
+				return false;
+
+			var hasLeftJoin = join.JoinType == SelectQuery.JoinType.Left;
+
+			var found = SearchForFields(manySource, join, context);
+
+			if (found == null)
+				return false;
+
+			if (hasLeftJoin)
+			{
+				if (join.Condition.Conditions.Count != found.Count)
+					return false;
+
+				// currently no dependecies in search condition allowed for left join
+				if (IsDependedOnJoins(selectQuery.Where, join, context))
+					return false;
+			}
+
+			var foundFields = new HashSet<string>(found.Select(f => f.OneField.Name));
+			HashSet<string> uniqueFields = null;
+
+			for (int i = 0; i < uniqueKeys.Count; i++)
+			{
+				var keys = uniqueKeys[i];
+				if (keys.All(k => foundFields.Contains(k)))
+				{
+					if (uniqueFields == null)
+						uniqueFields = new HashSet<string>();
+					foreach (var key in keys)
+					{
+						uniqueFields.Add(key);
+					}
+				}
+			}
+
+			if (uniqueFields != null)
+			{
+				foreach (var item in found)
+				{
+					if (uniqueFields.Contains(item.OneField.Name))
+					{
+						// remove unique key conditions
+						join.Condition.Conditions.Remove(item.OneCondition);
+					}
+				}
+
+				// move rest conditions to the Where section
+				if (join.Condition.Conditions.Count > 0)
+				{
+					context.AddSearchConditions(selectQuery.Where.SearchCondition, join.Condition.Conditions);
+					join.Condition.Conditions.Clear();
+				}
+
+				// add check that previously joined fields is not null
+				foreach (var item in found)
+				{
+					if (item.OneField.CanBeNull)
+						context.AddSearchCondition(selectQuery.Where.SearchCondition, new SelectQuery.Condition(false, new SelectQuery.Predicate.IsNull(item.OneField, true)));
+				} 
+
+				// add mapping to new source
+				context.AddSourceMap(join.Table.SourceID, manySource);
+
+				return true;
+			}
+
+			return false;
+		}
+
+		bool TryMergeJoins(SelectQuery selectQuery, SelectQuery.TableSource manySource, SelectQuery.JoinedTable join1, SelectQuery.JoinedTable join2,
+			List<List<string>> uniqueKeys, OptimizationContext context)
+		{
+			var found1 = SearchForFields(manySource, join1, context);
+			if (found1 == null)
+				return false;
+			var found2 = SearchForFields(manySource, join2, context);
+			if (found2 == null)
+				return false;
+
 			var hasLeftJoin = join1.JoinType == SelectQuery.JoinType.Left || join2.JoinType == SelectQuery.JoinType.Left;
+
 			// left join should match exactly
 			if (hasLeftJoin)
 			{
 				if (join1.Condition.Conditions.Count != join2.Condition.Conditions.Count)
 					return false;
+				if (found1.Count != found2.Count)
+					return false;
 				if (join1.Table.Joins.Count != 0 || join2.Table.Joins.Count != 0)
 					return false;
 			}
 
-			if (join1.Condition.Conditions.Any(c => c.IsOr) || join2.Condition.Conditions.Any(c => c.IsOr))
-				return false;
-
 			List<FoundEquality> found = null;
 
-			for (int i1 = 0; i1 < join1.Condition.Conditions.Count; i1++)
+			for (int i1 = 0; i1 < found1.Count; i1++)
 			{
-				var c1 = join1.Condition.Conditions[i1];
-				if (c1.ElementType != QueryElementType.Condition
-					|| c1.Predicate.ElementType != QueryElementType.ExprExprPredicate
-					|| ((SelectQuery.Predicate.ExprExpr) c1.Predicate).Operator != SelectQuery.Predicate.Operator.Equal)
-				{
-					if (hasLeftJoin)
-						return false;
-					continue;
-				}
+				var f1 = found1[i1];
 
-				for (int i2 = 0; i2 < join2.Condition.Conditions.Count; i2++)
+				for (int i2 = 0; i2 < found2.Count; i2++)
 				{
-					var c2 = join2.Condition.Conditions[i2];
-					if (c2.ElementType != QueryElementType.Condition
-						|| c2.Predicate.ElementType != QueryElementType.ExprExprPredicate
-						|| ((SelectQuery.Predicate.ExprExpr) c2.Predicate).Operator != SelectQuery.Predicate.Operator.Equal)
-					{
-						if (hasLeftJoin)
-							return false;
-						continue;
-					}
+					var f2 = found2[i2];
 
-					FoundEquality equality;
-					if (CompareEqualExpressions(manySource, join2.Table, (SelectQuery.Predicate.ExprExpr) c1.Predicate,
-						(SelectQuery.Predicate.ExprExpr) c2.Predicate, map, out equality))
+					if (f1.OneField.Name == f2.OneField.Name)
 					{
-						equality.OneCondition = c2;
 						if (found == null)
 							found = new List<FoundEquality>();
-						found.Add(equality);
+						found.Add(f2);
 					}
 				}
 			}
@@ -1690,7 +2088,7 @@ namespace LinqToDB.SqlProvider
 					return false;
 
 				// currently no dependecies in search condition allowed for left join
-				if (IsDependent(selectQuery.Where, join1.Table, join1.Table.SourceID, map) || IsDependent(selectQuery.Where, join2.Table, join2.Table.SourceID, map))
+				if (IsDependedOnJoins(selectQuery.Where, join1, context) || IsDependedOnJoins(selectQuery.Where, join2, context))
 					return false;
 			}
 
@@ -1725,17 +2123,17 @@ namespace LinqToDB.SqlProvider
 				// move rest conditions to first
 				if (join2.Condition.Conditions.Count > 0)
 				{
-					join1.Condition.Conditions.AddRange(join2.Condition.Conditions);
+					context.AddSearchConditions(join1.Condition, join2.Condition.Conditions);
 					join2.Condition.Conditions.Clear();
+
+					// condition changed - reset cache 
+					ResetFieldSearchCache(join1, context);
 				}
 
 				join1.Table.Joins.AddRange(join2.Table.Joins);
 
 				// add mapping to new source
-				map.Add(join2.Table.SourceID, join1.Table);
-
-				// additionally remove duplicates
-				OptimizeConditions(join1.Condition.Conditions, map);
+				context.AddSourceMap(join2.Table.SourceID, join1.Table);
 
 				return true;
 			}
@@ -1743,47 +2141,44 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		bool IsDependent(IQueryElement element, IQueryElement testedElement, int sourceId, Dictionary<int, SelectQuery.TableSource> map)
+		// here we can only deal with LEFT JOIN
+		bool TryToRemoveIndepended(SelectQuery selectQuery, SelectQuery.TableSource manySource, SelectQuery.JoinedTable join,
+			List<List<string>> uniqueKeys, OptimizationContext context)
 		{
-			var dependent = false;
 
-			sourceId = GetCurrentSourceId(sourceId, map);
-		
-			// check everyting that can be dependent on specific table
-			new QueryVisitor().VisitParentFirst(element, e =>
+			var found = SearchForFields(manySource, join, context);
+
+			if (found == null)
+				return false;
+
+			var foundFields = new HashSet<string>(found.Select(f => f.OneField.Name));
+
+			for (int i = 0; i < uniqueKeys.Count; i++)
 			{
-				if (dependent)
-					return false;
-
-				// do not check tested join
-				if (e == testedElement)
-					return false;
-
-				if (e.ElementType == QueryElementType.SqlField)
+				var keys = uniqueKeys[i];
+				if (keys.All(k => foundFields.Contains(k)))
 				{
-					var sqlField = (SqlField) e;
-					dependent = GetCurrentSourceId(sqlField.Table.SourceID, map) == sourceId;
+					return true;
 				}
+			}
 
-				return !dependent;
-			});
-
-			return dependent;
+			return false;
 		}
 
-		void FlattenJoins(SelectQuery.TableSource table, Dictionary<int, SelectQuery.TableSource> map)
+		void FlattenJoins(SelectQuery.TableSource table, OptimizationContext context)
 		{
 			for (int i = 0; i < table.Joins.Count; i++)
 			{
 				var j = table.Joins[i];
-				FlattenJoins(j.Table, map);
+				FlattenJoins(j.Table, context);
 
 				if (j.JoinType == SelectQuery.JoinType.Inner)
 				{
 					for (int si = 0; si < j.Table.Joins.Count; si++)
 					{
 						var sj = j.Table.Joins[si];
-						if ((sj.JoinType == SelectQuery.JoinType.Inner || sj.JoinType == SelectQuery.JoinType.Left) && table != j.Table && !IsDependent(j, sj, sj.Table.SourceID, map))
+						if ((sj.JoinType == SelectQuery.JoinType.Inner || sj.JoinType == SelectQuery.JoinType.Left) 
+							&& table != j.Table && !context.IsDependent(j, sj, sj.Table.SourceID))
 						{
 							table.Joins.Add(sj);
 							j.Table.Joins.RemoveAt(si);
@@ -1796,40 +2191,20 @@ namespace LinqToDB.SqlProvider
 
 		public SelectQuery OptimizeJoins(SelectQuery selectQuery)
 		{
+			var context = new OptimizationContext();
 			var keysCache = new Dictionary<int, List<List<string>>>();
-			var map = new Dictionary<int, SelectQuery.TableSource>();
 
 			new QueryVisitor().Visit(selectQuery, element =>
 			{
 				var select = element as SelectQuery;
 				if (select != null)
 				{
-					OptimizeJoinsInternal(select, keysCache, map);
+					OptimizeJoinsInternal(select, context, keysCache);
 				}
 			});
 
-			if (map.Count > 0)
-			{
-				// correct fields
-				selectQuery = new QueryVisitor().Convert(selectQuery, element =>
-				{
-					var field = element as SqlField;
-					if (field != null)
-					{
-						var newSource = GetNewSource(field.Table.SourceID, map);
-						if (newSource != null)
-						{
-							var table = newSource.Source as SqlTable;
-							if (table != null)
-							{
-								var newField = newSource.All.Name == field.Name ? table.All : table.Fields[field.Name];
-								return newField;
-							}
-						}
-					}
-					return element;
-				});
-			}
+			context.OptimizeFilters();
+			selectQuery = context.OptimizeMappings(selectQuery);
 
 			return selectQuery;
 		}
@@ -1838,7 +2213,7 @@ namespace LinqToDB.SqlProvider
 		{
 			//TODO: needed mechanism to define unique indexes. Currently only primary key is used
 			var keys = tableSource.GetKeys(false);
-			if (keys.Count == 0)
+			if (keys == null || keys.Count == 0)
 				return null;
 
 			var knownKeys = new List<List<string>>();
@@ -1846,68 +2221,121 @@ namespace LinqToDB.SqlProvider
 			return knownKeys;
 		}
 
-		void OptimizeJoinsInternal(SelectQuery selectQuery, Dictionary<int, List<List<string>>> keysCache, Dictionary<int, SelectQuery.TableSource> map)
+		List<List<string>> GetKeysCached(ISqlTableSource tableSource, Dictionary<int, List<List<string>>> keysCache)
+		{
+			List<List<string>> keys;
+			if (!keysCache.TryGetValue(tableSource.SourceID, out keys))
+			{
+				keys = GetKeys(tableSource);
+				keysCache.Add(tableSource.SourceID, keys);
+			}
+
+			return keys;
+		}
+
+		void OptimizeJoinsInternal(SelectQuery selectQuery, OptimizationContext context, Dictionary<int, List<List<string>>> keysCache)
 		{
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var table = selectQuery.From.Tables[i];
-				FlattenJoins(table, map);
-
-				if (table.Joins.Count > 1)
+				FlattenJoins(table, context);
+				for (int i1 = 0; i1 < table.Joins.Count; i1++)
 				{
-					for (int i1 = 0; i1 < table.Joins.Count; i1++)
-					{
-						var j1 = table.Joins[i1];
+					var j1 = table.Joins[i1];
+					CollectEqualFields(j1, context);
 
-						// supported only INNER and LEFT joins
-						if (j1.JoinType != SelectQuery.JoinType.Inner && j1.JoinType != SelectQuery.JoinType.Left)
+					// supported only INNER and LEFT joins
+					if (j1.JoinType != SelectQuery.JoinType.Inner && j1.JoinType != SelectQuery.JoinType.Left)
+						continue;
+
+					// trying to remove join that is equal to FROM table
+					if (IsEqualTables(table.Source as SqlTable, j1.Table.Source as SqlTable))
+					{
+						var keys = GetKeysCached(j1.Table.Source, keysCache);
+						if (keys != null && TryMergeWithTable(selectQuery, table, j1, keys, context))
+						{
+							table.Joins.RemoveAt(i1);
+							--i1;
+							continue;
+						}
+					}
+
+					for (int i2 = i1 + 1; i2 < table.Joins.Count; i2++)
+					{
+						var j2 = table.Joins[i2];
+
+						// we can merge LEFT and INNER joins together
+						if (j2.JoinType != SelectQuery.JoinType.Inner && j2.JoinType != SelectQuery.JoinType.Left)
 							continue;
 
-						for (int i2 = i1 + 1; i2 < table.Joins.Count; i2++)
+						if (!IsEqualTables(j1.Table.Source as SqlTable, j2.Table.Source as SqlTable))
+							continue;
+
+						var keys = GetKeysCached(j2.Table.Source, keysCache);
+
+						if (keys != null)
 						{
-							var j2 = table.Joins[i2];
-
-							// we can merge LEFT and INNER joins together
-							if (j2.JoinType != SelectQuery.JoinType.Inner && j2.JoinType != SelectQuery.JoinType.Left)
-								continue;
-
-							if (!IsEqualTables(j1.Table.Source as SqlTable, j2.Table.Source as SqlTable))
-								continue;
-
-							List<List<string>> keys;
-							if (!keysCache.TryGetValue(j2.Table.Source.SourceID, out keys))
+							// try merge if joins are the same
+							var merged = TryMergeJoins(selectQuery, table, j1, j2, keys, context);
+							if (!merged)
 							{
-								keys = GetKeys(j2.Table.Source);
-								keysCache.Add(j2.Table.Source.SourceID, keys);
-							}
-
-							if (keys != null)
-							{
-								// try merge if joins are the same
-								var merged = TryMerge(selectQuery, table, j1, j2, keys, map);
-								if (!merged)
+								// try with each previous joins
+								for (int im = 0; im < i2; im++)
 								{
-									// try with each previous joins
-									for (int im = 0; im < i2; im++)
+									if (table.Joins[im].JoinType == SelectQuery.JoinType.Inner || j2.JoinType != SelectQuery.JoinType.Left)
 									{
-										if (table.Joins[im].JoinType == SelectQuery.JoinType.Inner)
-										{
-											merged = TryMerge(selectQuery, table.Joins[im].Table, j1, j2, keys, map);
-											if (merged)
-												break;
-										}
+										merged = TryMergeJoins(selectQuery, table.Joins[im].Table, j1, j2, keys, context);
+										if (merged)
+											break;
 									}
 								}
-								if (merged)
-								{
-									table.Joins.RemoveAt(i2);
-									--i2;
-								}
+							}
+							if (merged)
+							{
+								table.Joins.RemoveAt(i2);
+								--i2;
 							}
 						}
 					}
 				}
-			}
+
+				// trying to remove joins that are not in projection
+				for (int i1 = 0; i1 < table.Joins.Count; i1++)
+				{
+					var j1 = table.Joins[i1];
+
+					// we can nonly remove LEFT joins. Removing INNER may broke filtering
+					if (j1.JoinType == SelectQuery.JoinType.Left) 
+					{
+						var keys = GetKeysCached(j1.Table.Source, keysCache);
+
+						if (keys != null && !IsDependedOnJoins(selectQuery, j1, context))
+						{
+							// try merge if joins are the same
+							var removed = TryToRemoveIndepended(selectQuery, table, j1, keys, context);
+							if (!removed)
+							{
+								// try with each previous joins
+								for (int im = 0; im < i1; im++)
+								{
+									var jm = table.Joins[im];
+									if (jm.JoinType == SelectQuery.JoinType.Inner || jm.JoinType != SelectQuery.JoinType.Left)
+									{
+										removed = TryToRemoveIndepended(selectQuery, jm.Table, j1, keys, context);
+										if (removed)
+											break;
+									}
+								}
+							}
+							if (removed)
+							{
+								table.Joins.RemoveAt(i1);
+								--i1;
+							}
+						}
+					}
+				} // independed joins loop
+			} // table loop
 		}
 
 		#endregion
