@@ -80,6 +80,8 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    
 COMMIT;
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M');
 COMMIT;
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
+COMMIT;
 
 -- Doctor Table Extension
 
