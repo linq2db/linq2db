@@ -470,6 +470,8 @@ namespace Tests
 			}
 		}
 
+		protected const int MaxPersonID = 3;
+
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
 		{
@@ -968,12 +970,12 @@ namespace Tests
 		}
 	}
 
-    public static class Helpers
-    {
-        public static string ToInvariantString<T>(this T data)
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0}", data)
-                .Replace(',', '.').Trim(' ', '.', '0');
-        }
-    }
+	public static class Helpers
+	{
+		public static string ToInvariantString<T>(this T data)
+		{
+			return string.Format(CultureInfo.InvariantCulture, "{0}", data)
+				.Replace(',', '.').Trim(' ', '.', '0');
+		}
+	}
 }
