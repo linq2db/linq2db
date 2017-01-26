@@ -1237,7 +1237,13 @@ namespace LinqToDB.Linq.Builder
 
 		public readonly HashSet<Expression> AsParameters = new HashSet<Expression>();
 
-		ParameterAccessor BuildParameter(Expression expr)
+		internal enum BuildParameterType
+		{
+			Default,
+			InPredicate
+		}
+
+		ParameterAccessor BuildParameter(Expression expr, BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
 			ParameterAccessor p;
 
@@ -1249,7 +1255,7 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
 			p = CreateParameterAccessor(
-				DataContextInfo.DataContext, newExpr, expr, ExpressionParam, ParametersParam, name);
+				DataContextInfo.DataContext, newExpr, expr, ExpressionParam, ParametersParam, name, buildParameterType);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1878,7 +1884,8 @@ namespace LinqToDB.Linq.Builder
 			Expression          expression,
 			ParameterExpression expressionParam,
 			ParameterExpression parametersParam,
-			string              name)
+			string              name,
+			BuildParameterType  buildParameterType = BuildParameterType.Default)
 		{
 			var type        = accessorExpression.Type;
 			var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
@@ -1889,7 +1896,18 @@ namespace LinqToDB.Linq.Builder
 				accessorExpression = enumMapExpr.GetBody(accessorExpression);
 			}
 
-			var expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
+			LambdaExpression expr = null;
+			if (buildParameterType != BuildParameterType.InPredicate 
+				&& type != typeof(IEnumerable<string>) && type != typeof(IEnumerable<char>)
+				&& type != typeof(IEnumerable<sbyte>) && type != typeof(IEnumerable<byte>)
+				&& type != typeof(IEnumerable<short>) && type != typeof(IEnumerable<ushort>)
+				&& type != typeof(IEnumerable<int>) && type != typeof(IEnumerable<uint>)
+				&& type != typeof(IEnumerable<long>) && type != typeof(IEnumerable<ulong>)
+				&& type != typeof(IEnumerable<decimal>)
+				&& type != typeof(IEnumerable<float>)
+				&& type != typeof(IEnumerable<double>)
+				&& type != typeof(IEnumerable<decimal>))
+				expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
 
 			if (expr != null)
 				accessorExpression = Expression.PropertyOrField(expr.GetBody(accessorExpression), "Value");
@@ -1990,7 +2008,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (CanBeCompiled(arr))
 					{
-						var p = BuildParameter(arr).SqlParameter;
+						var p = BuildParameter(arr, BuildParameterType.InPredicate).SqlParameter;
 						p.IsQueryParameter = false;
 						return new SelectQuery.Predicate.InList(expr, false, p);
 					}
