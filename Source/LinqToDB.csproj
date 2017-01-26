@@ -322,6 +322,7 @@
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="SqlProvider\BasicSqlOptimizer.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
+    <Compile Include="SqlProvider\JoinOptimizer.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />
