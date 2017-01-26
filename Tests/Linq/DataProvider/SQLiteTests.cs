@@ -404,12 +404,27 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table(Name = "CreateTableTest", Schema = "IgnoreSchema")]
+		public class CreateTableTest
+		{
+			[PrimaryKey, Identity]
+			public int Id;
+		}
+
 		[Test, IncludeDataContextSource(ProviderName.SQLite)]
 		public void CreateDatabase(string context)
 		{
 			SQLiteTools.CreateDatabase("TestDatabase");
 			Assert.IsTrue(File.Exists ("TestDatabase.sqlite"));
-			SQLiteTools.DropDatabase  ("TestDatabase");
+
+			using (var db = new DataConnection(SQLiteTools.GetDataProvider(), "Data Source=TestDatabase.sqlite"))
+			{
+				db.CreateTable<CreateTableTest>();
+				db.DropTable  <CreateTableTest>();
+			}
+
+			SQLiteTools.DropDatabase   ("TestDatabase");
+			Assert.IsFalse(File.Exists ("TestDatabase.sqlite"));
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
