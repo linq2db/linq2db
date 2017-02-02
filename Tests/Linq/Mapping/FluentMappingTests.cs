@@ -1,8 +1,9 @@
-﻿using System;
-using LinqToDB.Data;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Mapping
 {
@@ -20,6 +21,7 @@ namespace Tests.Mapping
 #pragma warning restore 0649
 		}
 
+		[Table(IsColumnAttributeRequired = true)]
 		class MyClass2
 		{
 			public int ID { get; set; }
@@ -179,18 +181,61 @@ namespace Tests.Mapping
 			Assert.That(ed["Class3"], Is.Not.Null);
 		}
 
-        [Test]
-        public void FluentAssociation()
-        {
-            var ms = new MappingSchema();
-            var mb = ms.GetFluentMappingBuilder();
+		[Test]
+		public void FluentAssociation()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
 
-            mb.Entity<MyClass>()
-                .Association( e => e.Parent, e => e.ID, o => o.ID1 );
+			mb.Entity<MyClass>()
+				.Association( e => e.Parent, e => e.ID, o => o.ID1 );
 
-            var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-            Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
-        }
-    }
+			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+		}
+
+		[Table("Person", IsColumnAttributeRequired = false)]
+		public class TestInheritancePerson
+		{
+			public int PersonID  { get; set; }
+			public Gender Gender { get; set; }
+		}
+
+		public class TestInheritanceMale : TestInheritancePerson
+		{
+			public string FirstName { get; set; }
+		}
+
+		public class TestInheritanceFemale : TestInheritancePerson
+		{
+			public string FirstName { get; set; }
+			public string LastName  { get; set; }
+		}
+
+		[Test, DataContextSource]
+		public void FluentInheritance(string context)
+		{
+			var ms = MappingSchema.Default; // new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<TestInheritancePerson>()
+				.Inheritance(e => e.Gender, Gender.Male,   typeof(TestInheritanceMale))
+				.Inheritance(e => e.Gender, Gender.Female, typeof(TestInheritanceFemale));
+
+			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson));
+
+			Assert.That(ed.InheritanceMapping, Is.Not.EqualTo(0));
+
+			using (var db = GetDataContext(context, ms))
+			{
+				var john = db.GetTable<TestInheritancePerson>().Where(_ => _.PersonID == 1).First();
+				Assert.That(john, Is.TypeOf<TestInheritanceMale>());
+
+				var jane = db.GetTable<TestInheritancePerson>().Where(_ => _.PersonID == 3).First();
+				Assert.That(jane, Is.TypeOf<TestInheritanceFemale>());
+
+			}
+		}
+	}
 }

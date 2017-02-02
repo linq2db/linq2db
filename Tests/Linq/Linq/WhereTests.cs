@@ -229,7 +229,11 @@ namespace Tests.Linq
 		public void BinaryOr(string context)
 		{
 			using (var db = GetDataContext(context))
-				TestOneJohn(from p in db.Person where (p.ID | 2) == 3 select p);
+			{
+				AreEqual(
+					   Person.Where(p => (p.ID | 2) == 3),
+					db.Person.Where(p => (p.ID | 2) == 3));
+			}
 		}
 
 		[Test, DataContextSource]
