@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -16,33 +17,21 @@ namespace Tests.UserTests
 	{
 		System.Threading.Semaphore _semaphore = new System.Threading.Semaphore(0, 10);
 
-		[Table ("Child")]
-		[InheritanceMapping(Code = 1,    Type = typeof(Child513Base))]
-		[InheritanceMapping(Code = null, Type = typeof(Child513))]
-		public class Child513Base
+		[DataContextSource]
+		public void Simple(string context)
 		{
-			[Column, PrimaryKey, NotNull]
-			public int? ChildId { get; set; }
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
+				Assert.AreEqual(typeof(InheritanceParent1),    InheritanceParent[1].GetType());
+				Assert.AreEqual(typeof(InheritanceParent2),    InheritanceParent[2].GetType());
 
-			[Column(IsDiscriminator = true)]
-			public string TypeDiscriminator { get; set; }
+				AreEqual(InheritanceParent, db.InheritanceParent);
+				AreEqual(InheritanceChild,  db.InheritanceChild);
+			}
 		}
 
-		[Column("ParentId", "Parent.ParentId")]
-		public class Child513 : Child513Base
-		{
-			[Association(ThisKey = "Parent.ParentID", OtherKey = "ParentID")]
-			public Parent513 Parent;
-		}
-
-		[Table("Parent")]
-		public class Parent513
-		{
-			[Column]
-			public int ParentID;
-		}
-
-		[DataContextSource(false)]
+		[DataContextSource]
 		public void Test(string context)
 		{
 			using (var semaphore = new Semaphore(0, 10))
@@ -61,14 +50,14 @@ namespace Tests.UserTests
 			}
 		}
 
-		public void TestInternal(string context, Semaphore semaphore)
+		private void TestInternal(string context, Semaphore semaphore)
 		{
 			try
 			{
 				using (var db = GetDataContext(context))
 				{
 					semaphore.WaitOne();
-					var r = db.GetTable<Child513>().Select(_ => _.Parent).Distinct();
+					var r = db.InheritanceChild.Select(_ => _.Parent).Distinct();
 					Assert.IsNotEmpty(r);
 				}
 			}

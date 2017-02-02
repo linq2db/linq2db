@@ -523,7 +523,7 @@ namespace Tests
 			}
 		}
 
-#region Parent/Child Model
+		#region Parent/Child Model
 
 		private          List<Parent> _parent;
 		protected IEnumerable<Parent>  Parent
@@ -706,6 +706,39 @@ namespace Tests
 
 		#endregion
 
+		#region Inheritance Parent/Child Model
+
+		private   List<InheritanceParentBase> _inheritanceParent;
+		protected List<InheritanceParentBase>  InheritanceParent
+		{
+			get
+			{
+				if (_inheritanceParent == null)
+				{
+					using (var db = new TestDataConnection())
+						_inheritanceParent = db.InheritanceParent.ToList();
+				}
+
+				return _inheritanceParent;
+			}
+		}
+
+		private   List<InheritanceChildBase> _inheritanceChild;
+		protected List<InheritanceChildBase>  InheritanceChild
+		{
+			get
+			{
+				if (_inheritanceChild == null)
+				{
+					using (var db = new TestDataConnection())
+						_inheritanceChild = db.InheritanceChild.ToList();
+				}
+
+				return _inheritanceChild;
+			}
+		}
+		
+		#endregion
 
 		#region Northwind
 

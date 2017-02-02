@@ -173,6 +173,25 @@ namespace Tests._Create
 						new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 424 }
 					});
 
+
+				db.BulkCopy(
+					options,
+					new[]
+					{
+						new InheritanceParent2() {InheritanceParentId = 1, TypeDiscriminator = null, Name = null },
+						new InheritanceParent2() {InheritanceParentId = 2, TypeDiscriminator = 1,    Name = null },
+						new InheritanceParent2() {InheritanceParentId = 3, TypeDiscriminator = 2,    Name = "InheritanceParent2" }
+					});
+
+				db.BulkCopy(
+					options,
+					new[]
+					{
+						new InheritanceChild2() {InheritanceChildId = 1, TypeDiscriminator = null, InheritanceParentId = 1, Name = null },
+						new InheritanceChild2() {InheritanceChildId = 2, TypeDiscriminator = 1,    InheritanceParentId = 2, Name = null },
+						new InheritanceChild2() {InheritanceChildId = 3, TypeDiscriminator = 2,    InheritanceParentId = 3, Name = "InheritanceParent2" }
+					});
+
 				if (action != null)
 					action(db.Connection);
 			}

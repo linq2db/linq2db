@@ -5,6 +5,22 @@ DROP TABLE IF EXISTS Dual;
 CREATE TABLE Dual (Dummy  VARCHAR(10));
 INSERT INTO  Dual (Dummy) VALUES ('X');
 
+DROP TABLE IF EXISTS InheritanceParent;
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId integer      NOT NULL CONSTRAINT PK_InheritanceParent,
+	TypeDiscriminator   integer          NULL,
+	Name                nvarchar(50)     NULL
+);
+
+DROP TABLE IF EXISTS InheritanceChild;
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  integer      NOT NULL CONSTRAINT PK_InheritanceChild,
+	InheritanceParentId integer      NOT NULL,
+	TypeDiscriminator   integer          NULL,
+	Name                nvarchar(50)     NULL
+);
 --
 -- Person Table
 --
