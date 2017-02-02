@@ -14,7 +14,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue513Tests : TestBase
 	{
-		[Table("Child")]
 		System.Threading.Semaphore _semaphore = new System.Threading.Semaphore(0, 10);
 
 		[Table ("Child")]
