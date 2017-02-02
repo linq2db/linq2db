@@ -54,7 +54,7 @@ DROP TABLE IF EXISTS Child;
 DROP TABLE IF EXISTS GrandChild;
 
 CREATE TABLE Parent      (ParentID int, Value1 int);
-CREATE TABLE Child       (ParentID int, ChildID int, TypeDiscriminator int NULL);
+CREATE TABLE Child       (ParentID int, ChildID int);
 CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int);
 
 DROP TABLE IF EXISTS LinqDataTypes;

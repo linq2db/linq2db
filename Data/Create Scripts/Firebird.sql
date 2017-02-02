@@ -185,9 +185,9 @@ DROP TABLE Parent     COMMIT;
 DROP TABLE Child      COMMIT;
 DROP TABLE GrandChild COMMIT;
 
-CREATE TABLE Parent      (ParentID int, Value1 int)                         COMMIT;
-CREATE TABLE Child       (ParentID int, ChildID int, TypeDiscriminator int) COMMIT;
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)      COMMIT;
+CREATE TABLE Parent      (ParentID int, Value1 int)                    COMMIT;
+CREATE TABLE Child       (ParentID int, ChildID int)                   COMMIT;
+CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int) COMMIT;
 
 
 DROP TABLE LinqDataTypes COMMIT;

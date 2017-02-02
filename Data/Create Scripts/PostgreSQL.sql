@@ -75,7 +75,7 @@ GO
 
 CREATE TABLE "Parent"      ("ParentID" int, "Value1" int)
 GO
-CREATE TABLE "Child"       ("ParentID" int, "ChildID" int, TypeDiscriminator int NULL)
+CREATE TABLE "Child"       ("ParentID" int, "ChildID" int)
 GO
 CREATE TABLE "GrandChild"  ("ParentID" int, "ChildID" int, "GrandChildID" int)
 GO
