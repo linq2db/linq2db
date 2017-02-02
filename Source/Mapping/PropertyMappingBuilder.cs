@@ -20,8 +20,6 @@ namespace LinqToDB.Mapping
 			_entity       = entity;
 			_memberGetter = memberGetter;
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
-			
-			SetColumn(a => a.IsColumn = true);
 		}
 
 		readonly Expression<Func<T,object>> _memberGetter;
@@ -44,6 +42,14 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<T> Property(Expression<Func<T,object>> func)
 		{
 			return _entity.Property(func);
+		}
+
+		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
+			Expression<Func<T, S>> prop,
+			Expression<Func<T, ID1>> thisKey,
+			Expression<Func<S, ID2>> otherKey )
+		{
+			return _entity.Association( prop, thisKey, otherKey );
 		}
 
 		public PropertyMappingBuilder<T> IsPrimaryKey(int order = -1)
@@ -124,6 +130,11 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<T> IsNotColumn()
 		{
 			return SetColumn(a => a.IsColumn = false);
+		}
+
+		public PropertyMappingBuilder<T> IsColumn()
+		{
+			return SetColumn(a => a.IsColumn = true);
 		}
 
 		public PropertyMappingBuilder<T> HasLength(int length)

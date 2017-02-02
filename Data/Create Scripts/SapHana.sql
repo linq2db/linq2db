@@ -79,6 +79,7 @@ CREATE COLUMN TABLE "Person" (
 
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('John',   'Pupkin',    'M');;
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Tester', 'Testerson', 'M');;
+INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Jane',   'Doe',       'F');;
 
 
 CREATE COLUMN TABLE "Doctor"

@@ -406,12 +406,27 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table(Name = "CreateTableTest", Schema = "IgnoreSchema", Database = "TestDatabase")]
+		public class CreateTableTest
+		{
+			[PrimaryKey, Identity]
+			public int Id;
+		}
+
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
 		public void CreateDatabase(string context)
 		{
-			SqlCeTools.CreateDatabase("TestDatabase");
-			Assert.IsTrue(File.Exists("TestDatabase.sdf"));
-			SqlCeTools.DropDatabase  ("TestDatabase");
+			SqlCeTools.CreateDatabase ("TestDatabase");
+			Assert.IsTrue(File.Exists ("TestDatabase.sdf"));
+
+			using (var db = new DataConnection(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf"))
+			{
+				db.CreateTable<CreateTableTest>();
+				db.DropTable  <CreateTableTest>();
+			}
+
+			SqlCeTools.DropDatabase   ("TestDatabase");
+			Assert.IsFalse(File.Exists("TestDatabase.sdf"));
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]

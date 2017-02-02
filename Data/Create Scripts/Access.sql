@@ -68,6 +68,8 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ("John",   "Pupkin",    
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Tester", "Testerson", "M")
 GO
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Jane",   "Doe",       "F")
+GO
 INSERT INTO Doctor (PersonID, Taxonomy)   VALUES (1, "Psychiatry")
 GO
 INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, "Hallucination with Paranoid Bugs' Delirium of Persecution")

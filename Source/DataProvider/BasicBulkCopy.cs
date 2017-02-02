@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 
-	class BasicBulkCopy
+	public class BasicBulkCopy
 	{
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
@@ -202,9 +202,9 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-#endregion
+		#endregion
 
-#region MultipleRows Support
+		#region MultipleRows Support
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
 			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source)
@@ -269,7 +269,7 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-		protected  BulkCopyRowsCopied MultipleRowsCopy2<T>(
+		protected virtual BulkCopyRowsCopied MultipleRowsCopy2<T>(
 			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source, string from)
 		{
 			return MultipleRowsCopy2<T>(
@@ -389,6 +389,6 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-#endregion
+		#endregion
 	}
 }

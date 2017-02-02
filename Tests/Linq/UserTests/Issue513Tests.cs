@@ -15,6 +15,9 @@ namespace Tests.UserTests
 	public class Issue513Tests : TestBase
 	{
 		[Table("Child")]
+		System.Threading.Semaphore _semaphore = new System.Threading.Semaphore(0, 10);
+
+		[Table ("Child")]
 		[InheritanceMapping(Code = 1,    Type = typeof(Child513Base))]
 		[InheritanceMapping(Code = null, Type = typeof(Child513))]
 		public class Child513Base
@@ -29,7 +32,7 @@ namespace Tests.UserTests
 		[Column("ParentId", "Parent.ParentId")]
 		public class Child513 : Child513Base
 		{
-			[Association(ThisKey = "Parent.ParentId", OtherKey = "ParentId", CanBeNull = true)]
+			[Association(ThisKey = "Parent.ParentID", OtherKey = "ParentID")]
 			public Parent513 Parent;
 		}
 
@@ -37,7 +40,7 @@ namespace Tests.UserTests
 		public class Parent513
 		{
 			[Column]
-			public int ParentId;
+			public int ParentID;
 		}
 
 		[DataContextSource(false)]
