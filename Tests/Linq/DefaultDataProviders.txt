@@ -5,6 +5,7 @@
 Access
 SqlCe
 SQLite
+NorthwindSqlite
 
 --DB2
 --Firebird

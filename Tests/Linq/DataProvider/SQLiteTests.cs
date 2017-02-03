@@ -362,11 +362,13 @@ namespace Tests.DataProvider
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
 
-				Assert.That(conn.Execute<string>     ("SELECT @p", DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
-				Assert.That(conn.Execute<XDocument>  ("SELECT @p", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XmlDocument>("SELECT @p", DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>  ("SELECT @p", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>  ("SELECT @p", new DataParameter("p", xml)). ToString(), Is.EqualTo("<xml />"));
+				//TODO this test fails in Core because provider can read Int64 from string column
+
+				Assert.That(conn.Execute<string>     ("SELECT  @p", DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
+				Assert.That(conn.Execute<XDocument>  ("SELECT  @p", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XmlDocument>("SELECT  @p", DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XDocument>  ("SELECT  @p", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XDocument>  ("SELECT  @p", new DataParameter("p", xml)). ToString(), Is.EqualTo("<xml />"));
 			}
 		}
 
@@ -402,12 +404,27 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table(Name = "CreateTableTest", Schema = "IgnoreSchema")]
+		public class CreateTableTest
+		{
+			[PrimaryKey, Identity]
+			public int Id;
+		}
+
 		[Test, IncludeDataContextSource(ProviderName.SQLite)]
 		public void CreateDatabase(string context)
 		{
 			SQLiteTools.CreateDatabase("TestDatabase");
 			Assert.IsTrue(File.Exists ("TestDatabase.sqlite"));
-			SQLiteTools.DropDatabase  ("TestDatabase");
+
+			using (var db = new DataConnection(SQLiteTools.GetDataProvider(), "Data Source=TestDatabase.sqlite"))
+			{
+				db.CreateTable<CreateTableTest>();
+				db.DropTable  <CreateTableTest>();
+			}
+
+			SQLiteTools.DropDatabase   ("TestDatabase");
+			Assert.IsFalse(File.Exists ("TestDatabase.sqlite"));
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]

@@ -22,6 +22,8 @@ DROP TABLE Child
 /
 DROP TABLE Parent
 /
+DROP TABLE StringTest
+/
 DROP TABLE LinqDataTypes
 /
 DROP SEQUENCE SequenceTestSeq
@@ -41,7 +43,18 @@ DROP sequence sq_test_user_contract
 DROP table t_entity
 /
 
+--StringTest Table
+CREATE TABLE StringTest
+	( StringValue1                VARCHAR2(50) NULL
+	, StringValue2                CHAR(50)     NULL
+	, KeyValue                    VARCHAR2(50) NOT NULL
+	)
+/
 
+INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES ('Value1', 'Value2', 'HasValues')
+/
+INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES (null,     null,     'NullValues')
+/
 -- Person Table
 
 CREATE SEQUENCE PersonSeq
@@ -102,9 +115,11 @@ INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',   
 /
 INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 /
-INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (PersonSeq.CURRVAL, 'Psychiatry')
+INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 /
-INSERT INTO Patient (PersonID,  Diagnosis) VALUES (PersonSeq.CURRVAL, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
+INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (1, 'Psychiatry')
+/
+INSERT INTO Patient (PersonID,  Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 /
 
 -- Person_Delete

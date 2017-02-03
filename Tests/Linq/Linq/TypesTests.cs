@@ -481,7 +481,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 
 					var id =
 						db.Person
@@ -503,7 +503,7 @@ namespace Tests.Linq
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}

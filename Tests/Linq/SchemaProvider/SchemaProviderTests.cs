@@ -44,6 +44,8 @@ namespace Tests.SchemaProvider
 					{
 						if(columnNames.Contains(schemaColumm.ColumnName))
 							Assert.Fail("Not unique column {0} for table {1}.{2}", schemaColumm.ColumnName, schemaTable.SchemaName, schemaTable.TableName);
+
+						columnNames.Add(schemaColumm.ColumnName);
 					}
 				}
 

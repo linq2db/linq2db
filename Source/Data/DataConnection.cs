@@ -294,10 +294,10 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly List<Func<IConnectionStringSettings,IDataProvider>> _providerDetectors =
-			new List<Func<IConnectionStringSettings,IDataProvider>>();
+		static readonly List<Func<IConnectionStringSettings,string,IDataProvider>> _providerDetectors =
+			new List<Func<IConnectionStringSettings,string,IDataProvider>>();
 
-		public static void AddProviderDetector(Func<IConnectionStringSettings,IDataProvider> providerDetector)
+		public static void AddProviderDetector(Func<IConnectionStringSettings,string,IDataProvider> providerDetector)
 		{
 			_providerDetectors.Add(providerDetector);
 		}
@@ -317,12 +317,19 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static int _isInitialized;
+		static readonly object _initSyncRoot = new object();
+		static          bool   _initialized  = false;
 
 		static void InitConfig()
 		{
-			if (Interlocked.Exchange(ref _isInitialized, 1) == 0)
-				InitConnectionStrings();
+			lock (_initSyncRoot)
+			{
+				if (!_initialized)
+				{
+					_initialized = true;
+					InitConnectionStrings();
+				}
+			}
 		}
 
 		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders =
@@ -355,10 +362,12 @@ namespace LinqToDB.Data
 
 		class ConfigurationInfo
 		{
+			private readonly bool _dataProviderSetted = false;
 			public ConfigurationInfo(string connectionString, IDataProvider dataProvider)
 			{
-				ConnectionString = connectionString;
-				DataProvider     = dataProvider;
+				ConnectionString    = connectionString;
+				_dataProvider       = dataProvider;
+				_dataProviderSetted = dataProvider != null;
 			}
 
 			public ConfigurationInfo(IConnectionStringSettings connectionStringSettings)
@@ -368,22 +377,32 @@ namespace LinqToDB.Data
 				_connectionStringSettings = connectionStringSettings;
 			}
 
-			public  string ConnectionString;
+			private string _connectionString;
+			public  string ConnectionString
+			{
+				get { return _connectionString; }
+				set
+				{
+					if (!_dataProviderSetted)
+						_dataProvider = null;
+
+					_connectionString = value;
+				}
+			}
 
 			private readonly IConnectionStringSettings _connectionStringSettings;
 
 			private IDataProvider _dataProvider;
 			public  IDataProvider  DataProvider
 			{
-				get { return _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings)); }
-				set { _dataProvider = value; }
+				get { return _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings, ConnectionString)); }
 			}
 
-			static IDataProvider GetDataProvider(IConnectionStringSettings css)
+			static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
 				var configuration = css.Name;
 				var providerName  = css.ProviderName;
-				var dataProvider  = _providerDetectors.Select(d => d(css)).FirstOrDefault(dp => dp != null);
+				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
 
 				if (dataProvider == null)
 				{

@@ -361,7 +361,7 @@ namespace LinqToDB.Mapping
 				var li   = info.GetConvertInfo(@from, to);
 
 				if (li != null && (i == 0 || !li.IsSchemaSpecific))
-					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.CheckNullLambda, null, false);
+					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
 			}
 
 			var isFromGeneric = from.IsGenericTypeEx() && !from.IsGenericTypeDefinitionEx();

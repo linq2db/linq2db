@@ -151,6 +151,8 @@ namespace Tests.DataProvider
 				TestNumeric(conn,  1.79E+308d,       DataType.Double,     "cbool cbyte clng cint ccur csng");
 				TestNumeric(conn, decimal.MinValue,  DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
 				TestNumeric(conn, decimal.MaxValue,  DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn,  1.123456789m,     DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn, -1.123456789m,     DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
 				TestNumeric(conn, -922337203685477m, DataType.Money,      "cbool cbyte clng cint csng");
 				TestNumeric(conn, +922337203685477m, DataType.Money,      "cbool cbyte clng cint csng");
 				TestNumeric(conn, -214748m,          DataType.SmallMoney, "cbool cbyte cint");
@@ -317,12 +319,27 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table(Name = "CreateTableTest", Schema = "IgnoreSchema", Database = "TestDatabase")]
+		public class CreateTableTest
+		{
+			[PrimaryKey, Identity]
+			public int Id;
+		}
+
 		[Test, IncludeDataContextSource(ProviderName.Access)]
 		public void CreateDatabase(string context)
 		{
 			AccessTools.CreateDatabase("TestDatabase", deleteIfExists:true);
-			Assert.IsTrue(File.Exists("TestDatabase.mdb"));
+			Assert.IsTrue(File.Exists ("TestDatabase.mdb"));
+
+			using (var db = new DataConnection(AccessTools.GetDataProvider(), "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=TestDatabase.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True"))
+			{
+				db.CreateTable<SqlCeTests.CreateTableTest>();
+				db.DropTable  <SqlCeTests.CreateTableTest>();
+			}
+
 			AccessTools.DropDatabase  ("TestDatabase");
+			Assert.IsFalse(File.Exists("TestDatabase.mdb"));
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.Access)]

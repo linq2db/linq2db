@@ -1237,7 +1237,13 @@ namespace LinqToDB.Linq.Builder
 
 		public readonly HashSet<Expression> AsParameters = new HashSet<Expression>();
 
-		ParameterAccessor BuildParameter(Expression expr)
+		internal enum BuildParameterType
+		{
+			Default,
+			InPredicate
+		}
+
+		ParameterAccessor BuildParameter(Expression expr, BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
 			ParameterAccessor p;
 
@@ -1249,7 +1255,7 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
 			p = CreateParameterAccessor(
-				DataContextInfo.DataContext, newExpr, expr, ExpressionParam, ParametersParam, name);
+				DataContextInfo.DataContext, newExpr, expr, ExpressionParam, ParametersParam, name, buildParameterType);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1442,10 +1448,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression AddEqualTrue(Expression expr)
 		{
-			if (expr.Type != typeof(bool))
-				expr = Expression.Convert(expr, typeof(bool));
-
-			return Expression.Equal(expr, Expression.Constant(true));
+			return Equal(MappingSchema, Expression.Constant(true), expr);
 		}
 
 		#region ConvertCompare
@@ -1881,7 +1884,8 @@ namespace LinqToDB.Linq.Builder
 			Expression          expression,
 			ParameterExpression expressionParam,
 			ParameterExpression parametersParam,
-			string              name)
+			string              name,
+			BuildParameterType  buildParameterType = BuildParameterType.Default)
 		{
 			var type        = accessorExpression.Type;
 			var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
@@ -1892,7 +1896,9 @@ namespace LinqToDB.Linq.Builder
 				accessorExpression = enumMapExpr.GetBody(accessorExpression);
 			}
 
-			var expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
+			LambdaExpression expr = null;
+			if (buildParameterType != BuildParameterType.InPredicate)
+				expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
 
 			if (expr != null)
 				accessorExpression = Expression.PropertyOrField(expr.GetBody(accessorExpression), "Value");
@@ -1993,7 +1999,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (CanBeCompiled(arr))
 					{
-						var p = BuildParameter(arr).SqlParameter;
+						var p = BuildParameter(arr, BuildParameterType.InPredicate).SqlParameter;
 						p.IsQueryParameter = false;
 						return new SelectQuery.Predicate.InList(expr, false, p);
 					}

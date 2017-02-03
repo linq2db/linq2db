@@ -55,6 +55,7 @@
     <Compile Include="InsertTest.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
+    <Compile Include="MappingSchema.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

@@ -204,7 +204,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void ExecuteTest(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var emp = db.Employee;
 
