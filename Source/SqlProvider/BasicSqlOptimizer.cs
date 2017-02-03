@@ -37,6 +37,9 @@ namespace LinqToDB.SqlProvider
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
 
+			if (Common.Configuration.Linq.OptimizeJoins)
+				selectQuery = OptimizeJoins(selectQuery);
+
 			return selectQuery;
 		}
 
@@ -1419,6 +1422,16 @@ namespace LinqToDB.SqlProvider
 		public ISqlExpression Div(ISqlExpression expr1, int value)
 		{
 			return Div<int>(expr1, new SqlValue(value));
+		}
+
+		#endregion
+
+		#region Optimizing Joins
+
+		public SelectQuery OptimizeJoins(SelectQuery selectQuery)
+		{
+			var optimizer = new JoinOptimizer();
+			return optimizer.OptimizeJoins(selectQuery);
 		}
 
 		#endregion
