@@ -7,6 +7,8 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System.Reflection;
+
 	using Data;
 	using Expressions;
 	using Mapping;
@@ -163,11 +165,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				var p = Expression.Parameter(_npgsqlDateTime, "p");
 
+				PropertyInfo pi = p.Type.GetProperty("DateTime",
+					BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy);
+				Expression expr;
+				if (pi != null)
+					expr = Expression.Property(p, pi);
+				else
+					expr = Expression.Call(p, "ToDateTime", null);
+
 				MappingSchema.SetConvertExpression(_npgsqlDateTime, typeof(DateTimeOffset),
 					Expression.Lambda(
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
-							Expression.PropertyOrField(p, "DateTime")),p));
+							expr),p));
 			}
 		}
 
