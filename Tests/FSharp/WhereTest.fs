@@ -1,12 +1,14 @@
 ﻿module Tests.FSharp.WhereTest
 
+open System
+
 open Tests.FSharp.Models
 
 open LinqToDB
 open LinqToDB.Mapping
 open NUnit.Framework
 
-let private TestOnePerson id firstName persons = 
+let private TestOnePerson id firstName persons =
     let list = persons :> Person System.Linq.IQueryable |> Seq.toList
     Assert.AreEqual(1, list |> List.length )
 
@@ -17,10 +19,10 @@ let private TestOnePerson id firstName persons =
 
 let TestOneJohn = TestOnePerson 1 "John"
 
-let TestMethod() = 
+let TestMethod() =
     1
 
-let LoadSingle (db : IDataContext) = 
+let LoadSingle (db : IDataContext) =
     let persons = db.GetTable<Person>()
     TestOneJohn(query {
         for p in persons do
@@ -28,7 +30,7 @@ let LoadSingle (db : IDataContext) =
         select p
     })
 
-let LoadSingleComplexPerson (db : IDataContext) = 
+let LoadSingleComplexPerson (db : IDataContext) =
     let persons = db.GetTable<ComplexPerson>()
     let john = query {
         for p in persons do
@@ -41,7 +43,7 @@ let LoadSingleComplexPerson (db : IDataContext) =
           Gender="M" }
         , john)
 
-let LoadSingleDeeplyComplexPerson (db : IDataContext) = 
+let LoadSingleDeeplyComplexPerson (db : IDataContext) =
     let persons = db.GetTable<DeeplyComplexPerson>()
     let john = query {
         for p in persons do
@@ -54,7 +56,7 @@ let LoadSingleDeeplyComplexPerson (db : IDataContext) =
           Gender="M" }
         , john)
 
-let LoadColumnOfDeeplyComplexPerson (db : IDataContext) = 
+let LoadColumnOfDeeplyComplexPerson (db : IDataContext) =
     let persons = db.GetTable<DeeplyComplexPerson>()
     let lastName = query {
         for p in persons do
@@ -64,7 +66,7 @@ let LoadColumnOfDeeplyComplexPerson (db : IDataContext) =
     }
     Assert.AreEqual("Pupkin", lastName)
 
-let LoadSingleWithOptions (db : IDataContext) = 
+let LoadSingleWithOptions (db : IDataContext) =
     let persons = db.GetTable<PersonWithOptions>()
     let john = query {
         for p in persons do
@@ -83,3 +85,27 @@ let LoadSingleWithOptions (db : IDataContext) =
     Assert.IsTrue( match john.MiddleName with |None -> true;  |Some _ -> false );
     Assert.IsTrue( match john.LastName   with |None -> false; |Some _ -> true );
 
+
+
+let LoadSingleCLIMutable (db : IDataContext)  (nullPatient : PatientCLIMutable)  =
+    let persons = db.GetTable<PersonCLIMutable>().LoadWith( fun x -> x.Patient :> Object )
+    let john = query {
+        for p in persons do
+        where (p.ID = 1)
+        exactlyOne
+    }
+
+    Assert.IsNotNull( john )
+    Assert.AreEqual( john.ID, 1 )
+    Assert.IsNull( john.Patient )
+
+    let tester = query {
+        for p in persons do
+        where (p.ID = 2)
+        exactlyOne
+    }
+
+    Assert.IsNotNull( tester )
+    Assert.AreEqual( tester.ID, 2 )
+    Assert.IsNotNull( tester.Patient )
+    Assert.AreEqual( tester.Patient.PersonID, 2 )
