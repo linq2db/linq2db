@@ -54,6 +54,30 @@ COMMIT;
 INSERT INTO  Dual (Dummy) VALUES ('X');
 COMMIT;
 
+DROP TABLE InheritanceParent;
+COMMIT;
+
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId INTEGER     NOT NULL PRIMARY KEY,
+	TypeDiscriminator   INTEGER         NULL,
+	Name                VARCHAR(50)     NULL
+);
+COMMIT;
+
+DROP TABLE InheritanceChild;
+COMMIT;
+
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  INTEGER     NOT NULL PRIMARY KEY,
+	InheritanceParentId INTEGER     NOT NULL,
+	TypeDiscriminator   INTEGER         NULL,
+	Name                VARCHAR(50)     NULL
+);
+COMMIT;
+
+
 -- Person Table
 
 CREATE TABLE Person
