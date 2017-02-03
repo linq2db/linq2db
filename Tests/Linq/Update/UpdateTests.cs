@@ -673,14 +673,22 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
+				db.Parent.Delete(_ => _.ParentID > 1000);
+
+				var res =
 				(
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
-					where p.ParentID < 10000
+					where p.ParentID == 1
 					select p
 				)
-				.Set(p => p.ParentID, p => db.Child.SingleOrDefault(c => c.ChildID == 11).ParentID)
+				.Set(p => p.ParentID, p => db.Child.SingleOrDefault(c => c.ChildID == 11).ParentID + 1000)
 				.Update();
+
+				Assert.AreEqual(1, res);
+
+				res = db.Parent.Where(_ => _.ParentID == 1001).Set(_ => _.ParentID, 1).Update();
+				Assert.AreEqual(1, res);
 			}
 		}
 

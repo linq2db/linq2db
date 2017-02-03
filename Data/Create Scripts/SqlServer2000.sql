@@ -19,7 +19,8 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
-
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+GO
 -- Doctor Table Extension
 
 CREATE TABLE Doctor
