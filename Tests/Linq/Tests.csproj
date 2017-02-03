@@ -210,33 +210,31 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
-
-	<Choose>
-		<When Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
-		  <ItemGroup Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
-		    <Reference Include="System.Data.SQLite, Version=1.0.101.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-		      <HintPath>..\..\packages\System.Data.SQLite.Core.1.0.101.0\lib\net45\System.Data.SQLite.dll</HintPath>
-		      <Private>True</Private>
-		    </Reference>
-		    <ProjectReference Include="..\FSharp\Tests.FSharp.fsproj">
-		      <Project>{56109866-4005-4852-9f9a-19a7a8d3b369}</Project>
-		      <Name>Tests.FSharp</Name>
-		    </ProjectReference>
-		    <ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj">
-		      <Project>{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}</Project>
-		      <Name>Tests.VisualBasic</Name>
-		    </ProjectReference>
-		  </ItemGroup>
-	  </When>
-	<Otherwise>
-		  <ItemGroup>
-		    <Reference Include="Mono.Data.Sqlite" >
-		      <Private>True</Private>
-		    </Reference>
-		  </ItemGroup>
- 	 </Otherwise>
+  <Choose>
+    <When Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
+      <ItemGroup Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
+        <Reference Include="System.Data.SQLite, Version=1.0.101.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+          <HintPath>..\..\packages\System.Data.SQLite.Core.1.0.101.0\lib\net45\System.Data.SQLite.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
+        <ProjectReference Include="..\FSharp\Tests.FSharp.fsproj">
+          <Project>{56109866-4005-4852-9f9a-19a7a8d3b369}</Project>
+          <Name>Tests.FSharp</Name>
+        </ProjectReference>
+        <ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj">
+          <Project>{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}</Project>
+          <Name>Tests.VisualBasic</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Mono.Data.Sqlite">
+          <Private>True</Private>
+        </Reference>
+      </ItemGroup>
+    </Otherwise>
   </Choose>
-  
   <ItemGroup>
     <Compile Include="Common\ChangeTypeTests.cs" />
     <Compile Include="Common\ConvertTests.cs" />
@@ -355,6 +353,7 @@
     <Compile Include="UserTests\FirstOrDefaultNullReferenceExceptionTests.cs" />
     <Compile Include="UserTests\GenericsFilterTests.cs" />
     <Compile Include="UserTests\GroupBySubqueryTests.cs" />
+    <Compile Include="UserTests\Issue531Tests.cs" />
     <Compile Include="UserTests\Issue357Tests.cs" />
     <Compile Include="UserTests\Issue352Tests.cs" />
     <Compile Include="UserTests\Issue475Tests.cs" />
@@ -581,15 +580,13 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  
-	  <Import Project="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets') AND '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono'" />
-	  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-	    <PropertyGroup>
-	      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-	    </PropertyGroup>
-	    <Error Condition="!Exists('..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets'))" />
-	  </Target>
-  
+  <Import Project="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets') AND '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono'" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets'))" />
+  </Target>
   <PropertyGroup>
     <PostBuildEvent />
   </PropertyGroup>
