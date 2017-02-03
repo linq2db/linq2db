@@ -26,6 +26,29 @@ GO
 DROP TABLE Person
 GO
 
+DROP TABLE InheritanceParent
+GO
+
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId Int      NOT NULL CONSTRAINT PK_InheritanceParent PRIMARY KEY,
+	TypeDiscriminator   Int          NULL,
+	Name                Text(50)     NULL
+)
+GO
+
+DROP TABLE InheritanceChild
+GO
+
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  Int      NOT NULL CONSTRAINT PK_InheritanceChild PRIMARY KEY,
+	InheritanceParentId Int      NOT NULL,
+	TypeDiscriminator   Int          NULL,
+	Name                Text(50)     NULL
+)
+GO
+
 CREATE TABLE Person
 (
 	PersonID   Int IDENTITY,

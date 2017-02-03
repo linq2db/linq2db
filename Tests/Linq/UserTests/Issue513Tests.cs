@@ -57,8 +57,10 @@ namespace Tests.UserTests
 				using (var db = GetDataContext(context))
 				{
 					semaphore.WaitOne();
-					var r = db.InheritanceChild.Select(_ => _.Parent).Distinct();
-					Assert.IsNotEmpty(r);
+
+					AreEqual(
+						   InheritanceChild.Select(_ => _.Parent).Distinct(),
+						db.InheritanceChild.Select(_ => _.Parent).Distinct());
 				}
 			}
 			finally

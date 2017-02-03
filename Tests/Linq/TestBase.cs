@@ -731,7 +731,7 @@ namespace Tests
 				if (_inheritanceChild == null)
 				{
 					using (var db = new TestDataConnection())
-						_inheritanceChild = db.InheritanceChild.ToList();
+						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
 				}
 
 				return _inheritanceChild;
