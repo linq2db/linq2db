@@ -1146,7 +1146,12 @@ namespace LinqToDB.SqlProvider
 
 			public ISqlExpression Element
 			{
-				get { return Field as ISqlExpression ?? Column; }
+				get
+				{
+					if (Field != null)
+						return Field;
+					return Column;
+				}
 			}
 
 			protected bool Equals(VirtualField other)
