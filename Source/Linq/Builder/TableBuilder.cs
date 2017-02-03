@@ -407,24 +407,24 @@ namespace LinqToDB.Linq.Builder
 									col.IsComplex = col.Name.Contains(".");
 								}
 
-							var typeAcc  = TypeAccessor.GetAccessor(member.Type);
-							var isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(member.Type));
+								var typeAcc  = TypeAccessor.GetAccessor(member.Type);
+								var isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(member.Type));
 
-							var exprs = GetExpressions(typeAcc, isRecord, cols).ToList();
+								var exprs = GetExpressions(typeAcc, isRecord, cols).ToList();
 
-							if (isRecord)
+								if (isRecord)
 								{
 									var ctor      = member.Type.GetConstructorsEx().Single();
 									var ctorParms = ctor.GetParameters();
 
 									var parms =
-									(
-									from p in ctorParms.Select((p, i) => new { p, i })
-									join e in exprs.Select((e, i) => new { e, i }) on p.i equals e.i into j
-										from e in j.DefaultIfEmpty()
-										select
-										(e == null ? null : e.e) ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
-									).ToList();
+										(
+										from p in ctorParms.Select((p, i) => new { p, i })
+										join e in exprs.Select((e, i) => new { e, i }) on p.i equals e.i into j
+											from e in j.DefaultIfEmpty()
+											select
+											(e == null ? null : e.e) ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+										).ToList();
 
 									yield return Expression.New(ctor, parms);
 								}
