@@ -1897,7 +1897,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			LambdaExpression expr = null;
-			if (buildParameterType != BuildParameterType.InPredicate && type != typeof(IEnumerable))
+			if (buildParameterType != BuildParameterType.InPredicate)
 				expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
 
 			if (expr != null)
