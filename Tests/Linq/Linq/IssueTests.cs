@@ -107,5 +107,38 @@ namespace Tests.Linq
 					select t);
 			}
 		}
+
+		// https://github.com/linq2db/linq2db/issues/461
+		//
+		[Test, DataContextSource()]
+		public void Issue461Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 = from sep in db.Parent
+					select new
+					{
+						Child =
+						(from l in db.Child
+							select new
+							{
+								Id = l.ParentID + 1
+							}).FirstOrDefault()
+					};
+				
+				var q2 = from sep in Parent
+					select new
+					{
+						Child =
+						(from l in Child
+							select new
+							{
+								Id = l.ParentID + 1
+							}).FirstOrDefault()
+					};
+
+				AreEqual(q1, q2);
+			}
+		}
 	}
 }
