@@ -1897,16 +1897,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			LambdaExpression expr = null;
-			if (buildParameterType != BuildParameterType.InPredicate 
-				&& type != typeof(IEnumerable<string>) && type != typeof(IEnumerable<char>)
-				&& type != typeof(IEnumerable<sbyte>) && type != typeof(IEnumerable<byte>)
-				&& type != typeof(IEnumerable<short>) && type != typeof(IEnumerable<ushort>)
-				&& type != typeof(IEnumerable<int>) && type != typeof(IEnumerable<uint>)
-				&& type != typeof(IEnumerable<long>) && type != typeof(IEnumerable<ulong>)
-				&& type != typeof(IEnumerable<decimal>)
-				&& type != typeof(IEnumerable<float>)
-				&& type != typeof(IEnumerable<double>)
-				&& type != typeof(IEnumerable<decimal>))
+			if (buildParameterType != BuildParameterType.InPredicate && type != typeof(IEnumerable))
 				expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
 
 			if (expr != null)
