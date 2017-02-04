@@ -3,16 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System.Reflection;
-
 	using Data;
 	using Expressions;
 	using Mapping;
 	using SqlProvider;
+	using Extensions;
 
 	public class PostgreSQLDataProvider : DynamicDataProviderBase
 	{
@@ -163,11 +162,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (_npgsqlDateTime != null)
 			{
-				var p = Expression.Parameter(_npgsqlDateTime, "p");
+				var p  = Expression.Parameter(_npgsqlDateTime, "p");
+				var pi = p.Type.GetPropertyEx("DateTime");
 
-				PropertyInfo pi = p.Type.GetProperty("DateTime",
-					BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy);
 				Expression expr;
+
 				if (pi != null)
 					expr = Expression.Property(p, pi);
 				else

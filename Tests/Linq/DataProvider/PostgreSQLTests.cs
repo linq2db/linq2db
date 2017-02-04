@@ -12,6 +12,7 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
 
 using NpgsqlTypes;
@@ -658,6 +659,23 @@ namespace Tests.DataProvider
 				Assert.That(list.Count,                       Is.EqualTo(1));
 				Assert.That(list[0].cdni_cd_cod_numero_item1, Is.EqualTo("1"));
 			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void NpgsqlDateTimeTest(string context)
+		{
+			PostgreSQLTools.GetDataProvider().CreateConnection(DataConnection.GetConnectionString(context));
+				
+			var d  = new NpgsqlDateTime(DateTime.Today);
+			var o  = new DateTimeOffset(DateTime.Today);
+			var c1 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset>();
+			var c2 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset?>();
+
+			Assert.IsNotNull(c1);
+			Assert.IsNotNull(c2);
+
+			Assert.AreEqual(o, c1.Compile()(d));
+			Assert.AreEqual(o, c2.Compile()(d).Value);
 		}
 	}
 }
