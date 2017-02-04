@@ -60,8 +60,8 @@ COMMIT;
 CREATE TABLE InheritanceParent
 (
 	InheritanceParentId INTEGER     NOT NULL PRIMARY KEY,
-	TypeDiscriminator   INTEGER         NULL,
-	Name                VARCHAR(50)     NULL
+	TypeDiscriminator   INTEGER,
+	Name                VARCHAR(50)
 );
 COMMIT;
 
@@ -72,8 +72,8 @@ CREATE TABLE InheritanceChild
 (
 	InheritanceChildId  INTEGER     NOT NULL PRIMARY KEY,
 	InheritanceParentId INTEGER     NOT NULL,
-	TypeDiscriminator   INTEGER         NULL,
-	Name                VARCHAR(50)     NULL
+	TypeDiscriminator   INTEGER,
+	Name                VARCHAR(50)
 );
 COMMIT;
 

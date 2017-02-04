@@ -1,23 +1,17 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Tests.Model;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using Model;
+
 	[TestFixture]
 	public class Issue513Tests : TestBase
 	{
-		System.Threading.Semaphore _semaphore = new System.Threading.Semaphore(0, 10);
-
-		[DataContextSource]
+		[Test, DataContextSource]
 		public void Simple(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -31,7 +25,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[DataContextSource]
+		[Test, DataContextSource]
 		public void Test(string context)
 		{
 			using (var semaphore = new Semaphore(0, 10))
