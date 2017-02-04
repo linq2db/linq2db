@@ -4,6 +4,31 @@ GO
 DROP TABLE IF EXISTS Patient
 GO
 
+DROP TABLE IF EXISTS InheritanceParent
+GO
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId int          NOT NULL,
+	TypeDiscriminator   int              NULL,
+	Name                varchar(50)      NULL,
+
+	 CONSTRAINT PK_InheritanceParent PRIMARY KEY CLUSTERED (InheritanceParentId)
+)
+GO
+
+DROP TABLE IF EXISTS InheritanceChild
+GO
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  int          NOT NULL,
+	InheritanceParentId int          NOT NULL,
+	TypeDiscriminator   int              NULL,
+	Name                varchar(50)      NULL,
+
+	 CONSTRAINT PK_InheritanceChild PRIMARY KEY CLUSTERED (InheritanceChildId)
+)
+GO
+
 -- Person Table
 
 DROP TABLE IF EXISTS Person
