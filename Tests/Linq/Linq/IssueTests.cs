@@ -37,7 +37,7 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/42
 		//
-		[Test, DataContextSource()]
+		[Test, DataContextSource]
 		public void Issue42Test(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -89,7 +89,7 @@ namespace Tests.Linq
 #endif
 		// https://github.com/linq2db/linq2db/issues/67
 		//
-		[Test, DataContextSource()]
+		[Test, DataContextSource]
 		public void Issue67Test(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -108,36 +108,130 @@ namespace Tests.Linq
 			}
 		}
 
+		public class ValueHolder
+		{
+			public int Id;
+
+			public override bool Equals(object obj)
+			{
+				var vh = obj as ValueHolder;
+				if (vh == null)
+					return false;
+
+				if (ReferenceEquals(this, vh))
+					return true;
+
+				return Id == vh.Id;
+			}
+
+			public override int GetHashCode()
+			{
+				return Id;
+			}
+		}
+		public class ValueValueHolder
+		{
+			public ValueHolder Child;
+
+			public override bool Equals(object obj)
+			{
+				var vvh = obj as ValueValueHolder;
+				if (vvh == null)
+					return false;
+
+				if (ReferenceEquals(this, vvh))
+					return true;
+
+				if (Child != null)
+					return Child.Equals(vvh.Child);
+
+				return vvh.Child == null;
+			}
+
+			public override int GetHashCode()
+			{
+				return Child != null ? Child.GetHashCode() : 0;
+			}
+		}
+
 		// https://github.com/linq2db/linq2db/issues/461
 		//
-		[Test, DataContextSource()]
-		public void Issue461Test(string context)
+		[Test, DataContextSource]
+		public void Issue461Test1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q1 = from sep in db.Parent
-					select new
+				var result = (from sep in db.Parent
+						 select new 
+						 {
+							 Child =
+							 (from l in db.Child
+							  select new 
+							  {
+								  Id = l.ParentID + 1
+							  }).FirstOrDefault()
+						 }).ToList();
+
+				if (db is DataConnection)
+					Console.WriteLine(((DataConnection) db).LastQuery);
+
+				var expected = from sep in Parent
+						 select new 
+						 {
+							 Child =
+							 (from l in Child
+							  select new 
+							  {
+								  Id = l.ParentID + 1
+							  }).FirstOrDefault()
+						 };
+
+				AreEqual(expected, result);
+			}
+		}
+		[Test, DataContextSource]
+		public void Issue461Test2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = (from sep in db.Parent
+					select new ValueValueHolder
 					{
 						Child =
 						(from l in db.Child
-							select new
+							select new ValueHolder
 							{
 								Id = l.ParentID + 1
 							}).FirstOrDefault()
-					};
-				
-				var q2 = from sep in Parent
-					select new
+					}).ToList();
+
+				if (db is DataConnection)
+					Console.WriteLine(((DataConnection)db).LastQuery);
+
+				var expected = from sep in Parent
+					select new ValueValueHolder
 					{
 						Child =
 						(from l in Child
-							select new
+							select new ValueHolder
 							{
 								Id = l.ParentID + 1
 							}).FirstOrDefault()
 					};
 
-				AreEqual(q1, q2);
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void SimpleSelect(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Parent.Select(_ => new ValueValueHolder {Child = new ValueHolder {Id = _.ParentID + 1}}),
+					db.Parent.Select(_ => new ValueValueHolder {Child = new ValueHolder {Id = _.ParentID + 1}})
+				);
 			}
 		}
 	}
