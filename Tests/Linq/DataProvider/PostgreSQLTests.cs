@@ -661,6 +661,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NPGSQL226
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void NpgsqlDateTimeTest(string context)
 		{
@@ -677,5 +678,6 @@ namespace Tests.DataProvider
 			Assert.AreEqual(o, c1.Compile()(d));
 			Assert.AreEqual(o, c2.Compile()(d).Value);
 		}
+#endif
 	}
 }

@@ -507,12 +507,11 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
-		protected string ToValidName(string name)
+		internal static string ToValidName(string name)
 		{
-			if (name.Contains(" "))
+			if (name.Contains(" ") || name.Contains("\t"))
 			{
-				var ss = name.Split(' ')
-					.Where (s => s.Trim().Length > 0)
+				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
 					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
 
 				name = string.Join("", ss.ToArray());
@@ -522,10 +521,11 @@ namespace LinqToDB.SchemaProvider
 				name = "_" + name;
 
 			return name
-				.Replace('$', '_')
-				.Replace('#', '_')
-				.Replace('-', '_')
-				.Replace('/', '_')
+				.Replace('$',  '_')
+				.Replace('#',  '_')
+				.Replace('-',  '_')
+				.Replace('/',  '_')
+				.Replace('\\', '_')
 				;
 		}
 
@@ -614,7 +614,7 @@ namespace LinqToDB.SchemaProvider
 						name = schemaOptions.GetAssociationMemberName(key);
 
 						if (name != null)
-							key.MemberName = name;
+							key.MemberName = ToValidName(name);
 					}
 
 					if (name == null)
@@ -655,7 +655,7 @@ namespace LinqToDB.SchemaProvider
 							t.Columns.    Select(_ => _.MemberName)).Concat(
 								new[] { t.TypeName }).All(_ => _ != name))
 						{
-							key.MemberName = name;
+							key.MemberName = ToValidName(name);
 						}
 					}
 				}
