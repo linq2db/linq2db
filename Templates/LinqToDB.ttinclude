@@ -409,7 +409,7 @@ void GenerateTypesFromMetadata()
 					{
 						if (!string.IsNullOrEmpty(key.KeyName))
 							aa.Parameters.Add("KeyName=\"" + key.KeyName + "\"");
-						if (GenerateBackReferences && !string.IsNullOrEmpty(key.BackReference.KeyName))
+						if (GenerateBackReferences && !string.IsNullOrEmpty(key.BackReference.MemberName))
 							aa.Parameters.Add("BackReferenceName=\"" + key.BackReference.MemberName + "\"");
 					}
 					else
