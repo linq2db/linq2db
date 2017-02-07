@@ -545,11 +545,11 @@ namespace LinqToDB.SqlProvider
 			BuildInsertClause("INSERT", false);
 			Indent--;
 
-			while (_endLine.Contains(StringBuilder[StringBuilder.Length - 1]))
+			while (EndLine.Contains(StringBuilder[StringBuilder.Length - 1]))
 				StringBuilder.Length--;
 		}
 
-		protected static readonly char[] _endLine = { ' ', '\r', '\n' };
+		protected static readonly char[] EndLine = { ' ', '\r', '\n' };
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert()
 		{

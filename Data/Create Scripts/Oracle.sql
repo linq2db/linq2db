@@ -55,6 +55,32 @@ INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES ('Value1', 
 /
 INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES (null,     null,     'NullValues')
 /
+
+-- Inheritance Parent/Child
+
+DROP TABLE InheritanceParent
+/
+
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId NUMBER        NOT NULL PRIMARY KEY,
+	TypeDiscriminator   NUMBER            NULL,
+	Name                NVARCHAR2(50)     NULL
+)
+/
+
+DROP TABLE InheritanceChild
+/
+
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  NUMBER        NOT NULL PRIMARY KEY,
+	InheritanceParentId NUMBER        NOT NULL,
+	TypeDiscriminator   NUMBER            NULL,
+	Name                NVARCHAR2(50)     NULL
+)
+/
+
 -- Person Table
 
 CREATE SEQUENCE PersonSeq

@@ -48,10 +48,8 @@ namespace Tests.Data
 
 		class QueryObject
 		{
-#pragma warning disable 0649
 			public int      Column1;
 			public DateTime Column2;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
@@ -151,10 +149,8 @@ namespace Tests.Data
 		[ScalarType(false)]
 		struct QueryStruct
 		{
-#pragma warning disable 0649
 			public int      Column1;
 			public DateTime Column2;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
