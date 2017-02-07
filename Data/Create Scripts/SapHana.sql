@@ -64,6 +64,31 @@ IF (:MYROWID > 0 ) THEN
 END IF;
 END;;
 
+
+CALL DROPEXISTINGTABLE('InheritanceParent', CURRENT_SCHEMA);;
+
+CREATE TABLE "InheritanceParent"
+(
+	"InheritanceParentId" INTEGER        NOT NULL,
+	"TypeDiscriminator"   INTEGER            NULL,
+	"Name"                NVARCHAR(50)       NULL,
+	
+	PRIMARY KEY ("InheritanceParentId")
+);;
+
+CALL DROPEXISTINGTABLE('InheritanceChild', CURRENT_SCHEMA);;
+
+CREATE TABLE "InheritanceChild"
+(
+	"InheritanceChildId"  INTEGER       NOT NULL,
+	"InheritanceParentId" INTEGER       NOT NULL,
+	"TypeDiscriminator"   INTEGER           NULL,
+	"Name"                NVARCHAR(50)      NULL,
+	
+	PRIMARY KEY ("InheritanceChildId")
+);;
+
+
 CALL DROPEXISTINGTABLE('Doctor', CURRENT_SCHEMA);;
 CALL DROPEXISTINGTABLE('Patient', CURRENT_SCHEMA);;
 CALL DROPEXISTINGTABLE('Person', CURRENT_SCHEMA);;

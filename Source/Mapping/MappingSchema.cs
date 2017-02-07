@@ -995,19 +995,16 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors;
+		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors
+			= new ConcurrentDictionary<Type, EntityDescriptor>();
 
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
-			if (_entityDescriptors == null)
-				_entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
-
 			EntityDescriptor ed;
 
 			if (!_entityDescriptors.TryGetValue(type, out ed))
 			{
-				_entityDescriptors[type] = ed = new EntityDescriptor(this, type);
-				ed.InitInheritanceMapping();
+				ed = _entityDescriptors.GetOrAdd(type, new EntityDescriptor(this, type));
 			}
 
 			return ed;

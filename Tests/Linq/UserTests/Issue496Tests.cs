@@ -7,7 +7,6 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 #pragma warning disable 0108
-#pragma warning disable 0649
 
 namespace Tests.UserTests
 {
@@ -255,4 +254,3 @@ namespace Tests.UserTests
 }
 
 #pragma warning restore 0108
-#pragma warning restore 0649

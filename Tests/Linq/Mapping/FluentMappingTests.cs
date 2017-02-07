@@ -12,13 +12,11 @@ namespace Tests.Mapping
 		[Table]
 		class MyClass
 		{
-#pragma warning disable 0649
 			public int ID;
 			public int ID1 { get; set; }
 
 			[NotColumn]
 			public MyClass Parent;
-#pragma warning restore 0649
 		}
 
 		[Table(IsColumnAttributeRequired = true)]

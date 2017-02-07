@@ -48,6 +48,8 @@ namespace Tests.Model
 		public ITable<LinqDataTypes>          Types                  { get { return GetTable<LinqDataTypes>();          } }
 		public ITable<LinqDataTypes2>         Types2                 { get { return GetTable<LinqDataTypes2>();         } }
 		public ITable<TestIdentity>           TestIdentity           { get { return GetTable<TestIdentity>();           } }
+		public ITable<InheritanceParentBase>  InheritanceParent      { get { return GetTable<InheritanceParentBase>();  } }
+		public ITable<InheritanceChildBase>   InheritanceChild       { get { return GetTable<InheritanceChildBase>();   } }
 
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)

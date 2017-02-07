@@ -170,10 +170,8 @@ namespace Tests.SchemaProvider
 
 		class PKTest
 		{
-#pragma warning disable 0649
 			[PrimaryKey(1)] public int ID1;
 			[PrimaryKey(2)] public int ID2;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
@@ -208,6 +206,14 @@ namespace Tests.SchemaProvider
 				Assert.That(table.Columns.Single(c => c.ColumnName == "BINARYDATATYPE").   ColumnType, Is.EqualTo("CHAR (5) FOR BIT DATA"));
 				Assert.That(table.Columns.Single(c => c.ColumnName == "VARBINARYDATATYPE").ColumnType, Is.EqualTo("VARCHAR (5) FOR BIT DATA"));
 			}
+		}
+
+		[Test]
+		public void ToValidNameTest()
+		{
+			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("1"));
+			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("    1   "));
+			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("\t1\t"));
 		}
 	}
 }
