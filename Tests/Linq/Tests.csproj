@@ -361,6 +361,7 @@
     <Compile Include="UserTests\Issue488Tests.cs" />
     <Compile Include="UserTests\Issue496Tests.cs" />
     <Compile Include="UserTests\Issue513Tests.cs" />
+    <Compile Include="UserTests\Issue548Tests.cs" />
     <Compile Include="UserTests\LetTests.cs" />
     <Compile Include="UserTests\MultiPartIdentifierTests.cs" />
     <Compile Include="UserTests\SelectManyDeleteTests.cs" />
