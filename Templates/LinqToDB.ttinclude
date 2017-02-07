@@ -12,17 +12,17 @@ Action AfterGenerateLinqToDBModel  = () => {};
 
 Func<Table,MemberBase> GenerateProviderSpecificTable = t => null;
 
-bool  GenerateObsoleteAttributeForAliases = false;
-bool  GenerateFindExtensions    = true;
-bool  IsCompactColumns          = true;
-bool  IsCompactColumnAliases    = true;
-bool  GenerateDataTypes         = false;
-bool? GenerateLengthProperty    = null;
-bool? GeneratePrecisionProperty = null;
-bool? GenerateScaleProperty     = null;
-bool  GenerateDbTypes           = false;
-bool  GenerateSchemaAsType      = false;
-bool  GenerateViews              = true;
+bool   GenerateObsoleteAttributeForAliases = false;
+bool   GenerateFindExtensions    = true;
+bool   IsCompactColumns          = true;
+bool   IsCompactColumnAliases    = true;
+bool   GenerateDataTypes         = false;
+bool?  GenerateLengthProperty    = null;
+bool?  GeneratePrecisionProperty = null;
+bool?  GenerateScaleProperty     = null;
+bool   GenerateDbTypes           = false;
+bool   GenerateSchemaAsType      = false;
+bool   GenerateViews             = true;
 string SchemaNameSuffix          = "Schema";
 string SchemaDataContextTypeName = "DataContext";
 
