@@ -48,6 +48,15 @@ namespace LinqToDB.DataProvider.Informix
 				BuildColumns();
 				AppendIndent().Append("FROM SYSTABLES").AppendLine();
 			}
+			else if (SelectQuery.Select.IsDistinct)
+			{
+				AppendIndent();
+				StringBuilder.Append("SELECT");
+				BuildSkipFirst();
+				StringBuilder.Append(" DISTINCT");
+				StringBuilder.AppendLine();
+				BuildColumns();
+			}
 			else
 				base.BuildSelectClause();
 		}

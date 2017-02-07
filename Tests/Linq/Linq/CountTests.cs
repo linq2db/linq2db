@@ -636,13 +636,11 @@ namespace Tests.Linq
 		[Table("Child")]
 		class Child2
 		{
-#pragma warning disable 0649
 			[Column] public int? ParentID;
 			[Column] public int  ChildID;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 			public Parent Parent;
-#pragma warning restore 0649
 		}
 
 		[Test, DataContextSource]

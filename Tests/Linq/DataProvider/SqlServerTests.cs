@@ -686,7 +686,6 @@ namespace Tests.DataProvider
 		[Table(Schema = "dbo", Name = "LinqDataTypes")]
 		class DataTypes
 		{
-#pragma warning disable 0649
 			[Column] public int      ID;
 			[Column] public decimal  MoneyValue;
 			[Column] public DateTime DateTimeValue;
@@ -694,7 +693,6 @@ namespace Tests.DataProvider
 			[Column] public Guid     GuidValue;
 			[Column] public Binary   BinaryValue;
 			[Column] public short    SmallIntValue;
-#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
@@ -970,9 +968,7 @@ namespace Tests.DataProvider
 		[Table("#TempTable")]
 		class TempTable
 		{
-#pragma warning disable 0649
 			[PrimaryKey] public int ID;
-#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
@@ -1000,11 +996,9 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow
 		{
-#pragma warning disable 0649
 			[Column] public decimal Decimal1;
 			[Column] public decimal Decimal2;
 			[Column] public decimal Decimal3;
-#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
@@ -1055,11 +1049,9 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow2
 		{
-#pragma warning disable 0649
 			[Column] public SqlDecimal Decimal1;
 			[Column] public SqlDecimal Decimal2;
 			[Column] public SqlDecimal Decimal3;
-#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]

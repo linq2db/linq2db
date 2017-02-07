@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Linq;
@@ -21,6 +22,9 @@ namespace Tests.Exceptions
 			[PrimaryKey]
 			public int ParentID;
 			public int Value;
+
+			[Association(ThisKey ="ParentID", OtherKey = "ParentID")]
+			public IEnumerable<Childs> Childs;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
@@ -29,6 +33,9 @@ namespace Tests.Exceptions
 			[PrimaryKey]
 			public int ChildID;
 			public int ParentID;
+
+			[Association(ThisKey ="ParentID", OtherKey = "ParentID")]
+			public Parents Parent;
 		}
 
 		[Test, DataContextSource]
@@ -96,5 +103,33 @@ namespace Tests.Exceptions
 				AreEqual(expected, result);
 			}
 		}
+
+		[Test, DataContextSource]
+		public void Issue498Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected1 = from x in Parent
+							    from y in x.Children
+							    select x.ParentID;
+
+				var result1 = from x in db.GetTable<Parents>()
+							  from y in x.Childs
+							  select x.ParentID;
+
+				AreEqual(expected1, result1);
+
+				var expected2 = from  x in expected1
+							    group x by x into g
+							    select g.Key;
+
+				var result2 = from  x in result1
+							  group x by x into g
+							  select g.Key;
+
+				AreEqual(expected2, result2);
+			}
+		}
+
 	}
 }

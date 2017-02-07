@@ -89,7 +89,7 @@ namespace Tests.Linq
 #endif
 		// https://github.com/linq2db/linq2db/issues/67
 		//
-		[Test, DataContextSource()]
+		[Test, DataContextSource]
 		public void Issue67Test(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -108,6 +108,29 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource]
+		public void Issue424Test1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Parent.Distinct().OrderBy(_ => _.ParentID).Take(1),
+					db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1)
+					);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue424Test2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1),
+					db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1)
+					);
+			}
+		}
 		// https://github.com/linq2db/linq2db/issues/498
 		//
 		[Test, DataContextSource()]

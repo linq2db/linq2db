@@ -766,10 +766,8 @@ namespace Tests.xUpdate
 
 		class GuidID
 		{
-#pragma warning disable 0649
 			[Identity] public Guid ID;
 			           public int  Field1;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(
@@ -784,9 +782,7 @@ namespace Tests.xUpdate
 
 		class GuidID2
 		{
-#pragma warning disable 0649
 			[Identity] public Guid ID;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(
