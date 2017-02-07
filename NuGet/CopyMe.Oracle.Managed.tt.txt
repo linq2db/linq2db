@@ -1,6 +1,6 @@
 <#@ template language="C#" debug="True" hostSpecific="True"                                #>
 <#@ output extension=".generated.cs"                                                       #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Oracle.ttinclude"               #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Oracle.Managed.Tools.ttinclude" #>
 <#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"          #>
 <#
 	/*

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.SapHana</id>
-		<version>1.0.7.5</version>
+		<version>1.7.5</version>
 		<title>LINQ to SAP HANA</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -12,10 +12,11 @@
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>
 			LINQ to SAP HANA is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+		</description>
+		<summary>
 			This package includes a T4 template to generate data models for Sybase database and a reference to the linq2db nugets.
 			SapHana data provider for .NET will still need to be installed on the production or development machine in order to connect to Sybase.
-		</description>
-		<summary />
+		</summary>
 		<tags>linq linq2db SapHana LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="linq2db"          />
@@ -24,7 +25,7 @@
 	</metadata>
 	<files>
 		<file src="..\Redist\SapHana\Sap.Data.Hana.v4.5.dll" target="tools" />
-		<file src="..\Templates\LinqToDB.SapHana.ttinclude"  target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.SapHana.Tools.ttinclude"         target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SapHana.tt.txt"                    target="content\LinqToDB.Templates" />
 	</files>
 </package>

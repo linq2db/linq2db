@@ -1,11 +1,11 @@
 @rem cd ..\..\linq2db\Source
 @rem call Compile.bat
 
-@rem cd ..\..\linq2db.t4models\ToolsGenerator
+cd ..\..\linq2db.t4models\ToolsGenerator
 
-@rem %windir%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe ToolsGenerator.csproj /property:Configuration=Release
+%windir%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe ToolsGenerator.csproj /property:Configuration=Release
 
-@rem cd ..\NuGet
+cd ..\NuGet
 
 del *.nupkg
 

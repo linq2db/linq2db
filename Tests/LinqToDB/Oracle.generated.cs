@@ -36,6 +36,7 @@ namespace OracleDataContext
 		public ITable<PERSON>                People                { get { return this.GetTable<PERSON>(); } }
 		public ITable<SEQUENCETEST>          SEQUENCETESTs         { get { return this.GetTable<SEQUENCETEST>(); } }
 		public ITable<STG_TRADE_INFORMATION> STG_TRADE_INFORMATION { get { return this.GetTable<STG_TRADE_INFORMATION>(); } }
+		public ITable<STRINGTEST>            STRINGTESTs           { get { return this.GetTable<STRINGTEST>(); } }
 		public ITable<T_ENTITY>              T_ENTITY              { get { return this.GetTable<T_ENTITY>(); } }
 		public ITable<T_TEST_USER>           T_TEST_USER           { get { return this.GetTable<T_TEST_USER>(); } }
 		public ITable<T_TEST_USER_CONTRACT>  T_TEST_USER_CONTRACT  { get { return this.GetTable<T_TEST_USER_CONTRACT>(); } }
@@ -248,6 +249,14 @@ namespace OracleDataContext
 		[Column(DbType="DATE",           DataType=DataType.DateTime, Length=7),       Nullable] public DateTime? VALUE_AS_DATE         { get; set; } // DATE
 	}
 
+	[Table(Schema="TESTUSER", Name="STRINGTEST")]
+	public partial class STRINGTEST
+	{
+		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),    Nullable] public string STRINGVALUE1 { get; set; } // VARCHAR2(50)
+		[Column(DbType="CHAR(50)",     DataType=DataType.Char,    Length=50),    Nullable] public string STRINGVALUE2 { get; set; } // CHAR(50)
+		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50), NotNull    ] public string KEYVALUE     { get; set; } // VARCHAR2(50)
+	}
+
 	[Table(Schema="TESTUSER", Name="T_ENTITY")]
 	public partial class T_ENTITY
 	{
@@ -265,10 +274,10 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0037098_BackReference
+		/// SYS_C0039603_BackReference
 		/// </summary>
 		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<T_TEST_USER_CONTRACT> SYSC0037098 { get; set; }
+		public IEnumerable<T_TEST_USER_CONTRACT> SYSC0039603 { get; set; }
 
 		#endregion
 	}
@@ -284,10 +293,10 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0037098
+		/// SYS_C0039603
 		/// </summary>
-		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C0037098", BackReferenceName="SYSC0037098")]
-		public T_TEST_USER SYSC0037098 { get; set; }
+		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="SYS_C0039603", BackReferenceName="SYSC0039603")]
+		public T_TEST_USER SYSC0039603 { get; set; }
 
 		#endregion
 	}
