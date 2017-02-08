@@ -24,7 +24,7 @@ namespace Tests.DataProvider
 		class MySqlDataContextAttribute : IncludeDataContextSourceAttribute
 		{
 			public MySqlDataContextAttribute()
-				: this(true)
+				: this(false)
 			{
 			}
 			public MySqlDataContextAttribute(bool includeLinqService)
