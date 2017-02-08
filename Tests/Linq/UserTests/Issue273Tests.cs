@@ -23,7 +23,7 @@ namespace Tests.UserTests
 			public TestFieldEnum TestField;
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
 		public void EnumInTest(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -32,8 +32,15 @@ namespace Tests.UserTests
 				db.GetTable<ContainEnumTest>().Where(x => data.Contains(new { TestField = x.TestField })).ToList();
 			}
 		}
-	}
 
-	
-	
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void EnumInTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var data = new[] { ContainEnumTest.TestFieldEnum.Value1 };
+				db.GetTable<ContainEnumTest>().Where(x => data.Contains(x.TestField)).ToList();
+			}
+		}
+	}
 }
