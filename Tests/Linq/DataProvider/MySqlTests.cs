@@ -401,6 +401,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, MySqlDataContext(false)]
 		public void SchemaProviderTest(string context)
 		{
@@ -417,6 +418,6 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, views.Count);
 			}
 		}
-
+#endif
 	}
 }

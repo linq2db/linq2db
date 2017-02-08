@@ -377,12 +377,16 @@ namespace LinqToDB.ServiceModel
 			if (ctx.Query.SelectQuery.Parameters != null && ctx.Query.SelectQuery.Parameters.Count > 0)
 			{
 				foreach (var p in ctx.Query.SelectQuery.Parameters)
+				{
+					var value = p.Value;
+
 					sb
 						.Append("-- DECLARE ")
 						.Append(p.Name)
 						.Append(' ')
-						.Append(p.Value == null ? p.SystemType.ToString() : p.Value.GetType().Name)
+						.Append(value == null ? p.SystemType.ToString() : value.GetType().Name)
 						.AppendLine();
+				}
 
 				sb.AppendLine();
 
