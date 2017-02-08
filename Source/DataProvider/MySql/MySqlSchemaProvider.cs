@@ -36,25 +36,29 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
+			var restrictions = string.IsNullOrEmpty(dataConnection.Connection.Database) ? new [] { (string)null} : new[] { null, dataConnection.Connection.Database };
+
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
-			var views  = ((DbConnection)dataConnection.Connection).GetSchema("Views");
+			var views  = ((DbConnection)dataConnection.Connection).GetSchema("Views", restrictions);
 
 			return
 			(
 				from t in tables.AsEnumerable()
 				let catalog = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
+				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
 				select new TableInfo
 				{
-					TableID         = catalog + ".." + name,
-					CatalogName     = catalog,
-					SchemaName      = "",
-					TableName       = name,
-					IsDefaultSchema = true,
-					IsView          = false,
+					TableID            = catalog + ".." + name,
+					CatalogName        = catalog,
+					SchemaName         = "",
+					TableName          = name,
+					IsDefaultSchema    = true,
+					IsView             = false,
+					IsProviderSpecific = system || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase)
 				}
 			).Concat(
-                from t in views.AsEnumerable().Where(t => t.Field<string>("TABLE_SCHEMA") != "sys")
+				from t in views.AsEnumerable()
 				let catalog = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
 				select new TableInfo
@@ -65,6 +69,7 @@ namespace LinqToDB.DataProvider.MySql
 					TableName       = name,
 					IsDefaultSchema = true,
 					IsView          = true,
+					IsProviderSpecific = catalog.Equals("sys", StringComparison.OrdinalIgnoreCase)
 				}
 			).ToList();
 		}

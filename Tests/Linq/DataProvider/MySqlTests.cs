@@ -24,7 +24,11 @@ namespace Tests.DataProvider
 		class MySqlDataContextAttribute : IncludeDataContextSourceAttribute
 		{
 			public MySqlDataContextAttribute()
-				: base(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)
+				: this(true)
+			{
+			}
+			public MySqlDataContextAttribute(bool includeLinqService)
+				: base(includeLinqService, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)
 			{
 			}
 		}
@@ -396,5 +400,23 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		[Test, MySqlDataContext(false)]
+		public void SchemaProviderTest(string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var sp = db.DataProvider.GetSchemaProvider();
+				var schema = sp.GetSchema(db);
+
+				var systemTables = schema.Tables.Where(_ => _.CatalogName.Equals("sys", StringComparison.OrdinalIgnoreCase)).ToList();
+
+				Assert.That(systemTables.All(_ => _.IsProviderSpecific));
+
+				var views = schema.Tables.Where(_ => _.IsView).ToList();
+				Assert.AreEqual(1, views.Count);
+			}
+		}
+
 	}
 }
