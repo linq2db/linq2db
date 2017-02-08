@@ -249,5 +249,30 @@ namespace Tests.Linq
 
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
+
+		[Test, DataContextSource(ProviderName.Access)]
+		public void LoadWith11(string context)
+		{
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent.LoadWith(p => p.Children).LoadWith(p => p.GrandChildren)
+					where p.ParentID < 2
+					select p;
+
+				foreach (var parent in q)
+				{
+					Assert.IsNotNull (parent.Children);
+					Assert.IsNotNull (parent.GrandChildren);
+					Assert.IsNotEmpty(parent.Children);
+					Assert.IsNotEmpty(parent.GrandChildren);
+					Assert.IsNull    (parent.Children3);
+				}
+			}
+
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+		}
 	}
 }

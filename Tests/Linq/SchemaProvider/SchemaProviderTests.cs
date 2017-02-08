@@ -132,6 +132,8 @@ namespace Tests.SchemaProvider
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
+
+				Assert.IsNotNull(dbSchema);
 			}
 		}
 
@@ -170,10 +172,8 @@ namespace Tests.SchemaProvider
 
 		class PKTest
 		{
-#pragma warning disable 0649
 			[PrimaryKey(1)] public int ID1;
 			[PrimaryKey(2)] public int ID2;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
@@ -208,6 +208,54 @@ namespace Tests.SchemaProvider
 				Assert.That(table.Columns.Single(c => c.ColumnName == "BINARYDATATYPE").   ColumnType, Is.EqualTo("CHAR (5) FOR BIT DATA"));
 				Assert.That(table.Columns.Single(c => c.ColumnName == "VARBINARYDATATYPE").ColumnType, Is.EqualTo("VARCHAR (5) FOR BIT DATA"));
 			}
+		}
+
+		[Test]
+		public void ToValidNameTest()
+		{
+			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("1"));
+			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("    1   "));
+			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("\t1\t"));
+		}
+
+		[Test, DataContextSource(false)]
+		public void IncludeExcludeCatalogTest(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var exclude = conn.DataProvider.GetSchemaProvider().GetSchema(conn).Tables.Select(_ => _.CatalogName).Distinct().ToList();
+				exclude.Add(null);
+				exclude.Add("");
+
+				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedCatalogs = exclude.ToArray()});
+				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedCatalogs = new []{ "IncludeExcludeCatalogTest" }});
+
+				Assert.IsEmpty(schema1.Tables);
+				Assert.IsEmpty(schema2.Tables);
+			}
+
+		}
+
+		[Test, DataContextSource(false)]
+		public void IncludeExcludeSchemaTest(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var exclude = conn.DataProvider.GetSchemaProvider()
+						.GetSchema(conn, new GetSchemaOptions() {ExcludedSchemas = new string[] {null}})
+						.Tables.Select(_ => _.SchemaName)
+						.Distinct()
+						.ToList();
+				exclude.Add(null);
+				exclude.Add("");
+
+				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()});
+				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } });
+
+				Assert.IsEmpty(schema1.Tables);
+				Assert.IsEmpty(schema2.Tables);
+			}
+
 		}
 	}
 }

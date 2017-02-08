@@ -55,6 +55,32 @@ INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES ('Value1', 
 /
 INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES (null,     null,     'NullValues')
 /
+
+-- Inheritance Parent/Child
+
+DROP TABLE InheritanceParent
+/
+
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId NUMBER        NOT NULL PRIMARY KEY,
+	TypeDiscriminator   NUMBER            NULL,
+	Name                NVARCHAR2(50)     NULL
+)
+/
+
+DROP TABLE InheritanceChild
+/
+
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  NUMBER        NOT NULL PRIMARY KEY,
+	InheritanceParentId NUMBER        NOT NULL,
+	TypeDiscriminator   NUMBER            NULL,
+	Name                NVARCHAR2(50)     NULL
+)
+/
+
 -- Person Table
 
 CREATE SEQUENCE PersonSeq
@@ -115,9 +141,11 @@ INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',   
 /
 INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 /
-INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (PersonSeq.CURRVAL, 'Psychiatry')
+INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 /
-INSERT INTO Patient (PersonID,  Diagnosis) VALUES (PersonSeq.CURRVAL, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
+INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (1, 'Psychiatry')
+/
+INSERT INTO Patient (PersonID,  Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 /
 
 -- Person_Delete

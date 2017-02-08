@@ -35,6 +35,15 @@ namespace LinqToDB.DataProvider.Firebird
 				AppendIndent();
 				StringBuilder.Append("FROM rdb$database").AppendLine();
 			}
+			else if (SelectQuery.Select.IsDistinct)
+			{
+				AppendIndent();
+				StringBuilder.Append("SELECT");
+				BuildSkipFirst();
+				StringBuilder.Append(" DISTINCT");
+				StringBuilder.AppendLine();
+				BuildColumns();
+			}
 			else
 				base.BuildSelectClause();
 		}

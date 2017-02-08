@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Expressions;
 	using Mapping;
 	using SqlProvider;
+	using Extensions;
 
 	public class PostgreSQLDataProvider : DynamicDataProviderBase
 	{
@@ -161,13 +162,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (_npgsqlDateTime != null)
 			{
-				var p = Expression.Parameter(_npgsqlDateTime, "p");
+				var p  = Expression.Parameter(_npgsqlDateTime, "p");
+				var pi = p.Type.GetPropertyEx("DateTime");
+
+				Expression expr;
+
+				if (pi != null)
+					expr = Expression.Property(p, pi);
+				else
+					expr = Expression.Call(p, "ToDateTime", null);
 
 				MappingSchema.SetConvertExpression(_npgsqlDateTime, typeof(DateTimeOffset),
 					Expression.Lambda(
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
-							Expression.PropertyOrField(p, "DateTime")),p));
+							expr),p));
 			}
 		}
 

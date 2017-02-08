@@ -13,7 +13,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class LetTests : TestBase
 	{
-#pragma warning disable 0649
 		class Table1
 		{
 			public int  Field3;
@@ -55,7 +54,6 @@ namespace Tests.UserTests
 			public int    Field4;
 			public string Field8;
 		}
-#pragma warning restore 0649
 
 		[Test]
 		public void LetTest1()
