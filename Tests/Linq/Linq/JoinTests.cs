@@ -261,8 +261,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void GroupJoin5(string context)
 		{
-			Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -274,15 +273,12 @@ namespace Tests.Linq
 						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select lj1.First());
-
-			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void GroupJoin51(string context)
 		{
-			Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var result =
@@ -304,8 +300,6 @@ namespace Tests.Linq
 				Assert.AreEqual(expected.Count, result.Count);
 				AreEqual(expected[0].p1, result[0].p1);
 			}
-
-			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
@@ -343,8 +337,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void GroupJoin54(string context)
 		{
-			Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -356,8 +349,6 @@ namespace Tests.Linq
 						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select new { p1 = lj1.Count(), p2 = lj1.First() });
-
-			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
@@ -433,8 +424,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void GroupJoin8(string context)
 		{
-			Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -444,8 +434,6 @@ namespace Tests.Linq
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into g
 					select new { Child = g.FirstOrDefault() });
-
-			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
@@ -667,8 +655,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void LeftJoin4(string context)
 		{
-			Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					Parent
@@ -692,8 +679,6 @@ namespace Tests.Linq
 							(x4, y4) => new { x4.Parent, Child = x4.Child.FirstOrDefault() })
 						.Where(x5 => x5.Parent.ParentID == 1 && x5.Parent.Value1 != null)
 						.OrderBy(x6 => x6.Parent.ParentID));
-
-			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Table("Child")]

@@ -1694,8 +1694,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void FirstGroupBy(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(
