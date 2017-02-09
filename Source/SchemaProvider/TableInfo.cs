@@ -13,5 +13,6 @@ namespace LinqToDB.SchemaProvider
 		public string Description;
 		public bool   IsDefaultSchema;
 		public bool   IsView;
+		public bool   IsProviderSpecific;
 	}
 }
