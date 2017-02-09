@@ -1011,4 +1011,17 @@ namespace Tests
 				.Replace(',', '.').Trim(' ', '.', '0');
 		}
 	}
+
+	public class AllowMultipleQuery : IDisposable
+	{
+		public AllowMultipleQuery()
+		{
+			Configuration.Linq.AllowMultipleQuery = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
 }

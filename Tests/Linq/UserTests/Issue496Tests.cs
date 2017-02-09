@@ -117,22 +117,14 @@ namespace Tests.UserTests
 		[Test, DataContextSource]
 		public void Test2(string context)
 		{
-			try
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
 			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+				var children = db.GetTable<Parent1>()
+					.Select(_ => new {_.Children})
+					.ToList();
 
-				using (var db = GetDataContext(context))
-				{
-					var children = db.GetTable<Parent1>()
-						.Select(_ => new { _.Children })
-						.ToList();
-
-					Assert.IsNotEmpty(children);
-				}
-			}
-			finally
-			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+				Assert.IsNotEmpty(children);
 			}
 		}
 
@@ -158,22 +150,14 @@ namespace Tests.UserTests
 		[Test, DataContextSource]
 		public void Test4(string context)
 		{
-			try
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
 			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+				var children = db.GetTable<Parent2>()
+					.Select(_ => new {_.Children})
+					.ToList();
 
-				using (var db = GetDataContext(context))
-				{
-					var children = db.GetTable<Parent2>()
-						.Select(_ => new { _.Children })
-						.ToList();
-
-					Assert.IsNotEmpty(children);
-				}
-			}
-			finally
-			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+				Assert.IsNotEmpty(children);
 			}
 		}
 
