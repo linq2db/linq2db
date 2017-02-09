@@ -108,6 +108,33 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource()]
+ 		public void Test(string context)
+ 		{
+ 			using (var db = GetDataContext(context))
+ 			{
+ 				var childs = db.Child.Select(c => new
+				{
+					HasChildren = db.Child.Any(c2 => c2.ParentID == c.ChildID),
+ 					c.ChildID,
+					c.ParentID,
+ 				});
+
+//				 var s = childs.ToString();
+ 				childs =
+ 					from child in childs
+ 					join parent in db.Parent on child.ParentID equals parent.ParentID
+ 					where parent.Value1 == 1
+ 					select child;
+
+//				 var list = childs.ToList();
+ 
+ 				var sql = childs.ToString();
+ 				Assert.That(sql, Contains.Substring("HasChildren"));
+ 				Assert.That(childs.ToList().Count, Is.GreaterThan(0));
+ 			}
+		}
+
 		[Test, DataContextSource]
 		public void Issue424Test1(string context)
 		{
