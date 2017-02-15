@@ -102,7 +102,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression expression, int level)
 			{
-				return BuildExpression(ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index);
+				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
+				if (Parent != null)
+					ConvertToParentIndex(index, Parent);
+				return BuildExpression(index);
 			}
 
 			Expression BuildExpression(int fieldIndex)

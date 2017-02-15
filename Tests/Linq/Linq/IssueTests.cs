@@ -122,6 +122,7 @@ namespace Tests.Linq
 					HasChildren = db.Child.Any(c2 => c2.ParentID == c.ParentID),
 					HasChildren2 = db.Child.Where(c2 => c2.ParentID == c.ParentID).Any(),
 					AllChildren = db.Child.All(c2 => c2.ParentID == c.ParentID),
+					AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
  				});
 
  				childs =
@@ -139,6 +140,7 @@ namespace Tests.Linq
 					HasChildren = Child.Any(c2 => c2.ParentID == c.ParentID),
 					HasChildren2 = Child.Where(c2 => c2.ParentID == c.ParentID).Any(),
 					AllChildren = Child.All(c2 => c2.ParentID == c.ParentID),
+					AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
  				});
 
  				childs_list =
