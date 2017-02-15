@@ -24,8 +24,7 @@
 			{
 				if (selectQuery.IsUpdate)
 				{
-					var table  = selectQuery.From.Tables[0];
-					var source = table.Source as SqlTable;
+					var source = selectQuery.From.Tables[0].Source as SqlTable;
 					if (source != null)
 					{
 						var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
@@ -36,8 +35,30 @@
 							if (rowVersion != null)
 							{
 								var newQuery = selectQuery.Clone();
-								table        = newQuery.From.Tables[0];
-								source       = table.Source as SqlTable;
+
+								// Something wrong with parameters after cloning - workaround !!!
+								var pairs = from o in selectQuery.Parameters
+									join n in newQuery.Parameters on o.Name equals n.Name
+									select new {Old = o, New = n};
+
+								var dic = pairs.ToDictionary(p => p.New, p => p.Old);
+
+								newQuery = new QueryVisitor().Convert(newQuery, e =>
+								{
+									var param = e as SqlParameter;
+									SqlParameter newParam;
+									if (param != null && dic.TryGetValue(param, out newParam))
+									{
+										return newParam;
+									}
+									return e;
+								});
+
+								newQuery.Parameters.Clear();
+								newQuery.Parameters.AddRange(selectQuery.Parameters);
+								// end of woraround
+
+								source = newQuery.From.Tables[0].Source as SqlTable;
 
 								var field = source.Fields[rowVersion.MemberName];
 
