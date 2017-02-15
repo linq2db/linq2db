@@ -285,6 +285,8 @@ namespace LinqToDB.Linq.Builder
 		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr)
 		{
 			var info = GetSubQueryContext(context, expr);
+			var index = info.Context.ConvertToIndex(null, 0, ConvertFlags.Field)[0].Index;
+			context.ConvertToParentIndex(index, context);
 			return info.Expression ?? (info.Expression = info.Context.BuildExpression(null, 0));
 		}
 

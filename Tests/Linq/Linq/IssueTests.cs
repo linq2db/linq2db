@@ -109,29 +109,45 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource()]
- 		public void Test(string context)
+ 		public void Issue75Test(string context)
  		{
  			using (var db = GetDataContext(context))
  			{
  				var childs = db.Child.Select(c => new
 				{
-					HasChildren = db.Child.Any(c2 => c2.ParentID == c.ChildID),
  					c.ChildID,
 					c.ParentID,
+					CountChildren = db.Child.Count(c2 => c2.ParentID == c.ParentID),
+					CountChildren2 = db.Child.Where(c2 => c2.ParentID == c.ParentID).Count(),
+					HasChildren = db.Child.Any(c2 => c2.ParentID == c.ParentID),
+					HasChildren2 = db.Child.Where(c2 => c2.ParentID == c.ParentID).Any(),
+					AllChildren = db.Child.All(c2 => c2.ParentID == c.ParentID),
  				});
 
-//				 var s = childs.ToString();
  				childs =
  					from child in childs
  					join parent in db.Parent on child.ParentID equals parent.ParentID
- 					where parent.Value1 == 1
+ 					where parent.Value1 < 7
  					select child;
 
-//				 var list = childs.ToList();
- 
- 				var sql = childs.ToString();
- 				Assert.That(sql, Contains.Substring("HasChildren"));
- 				Assert.That(childs.ToList().Count, Is.GreaterThan(0));
+ 				var childs_list = Child.Select(c => new
+				{
+ 					c.ChildID,
+					c.ParentID,
+					CountChildren = Child.Count(c2 => c2.ParentID == c.ParentID),
+					CountChildren2 = Child.Where(c2 => c2.ParentID == c.ParentID).Count(),
+					HasChildren = Child.Any(c2 => c2.ParentID == c.ParentID),
+					HasChildren2 = Child.Where(c2 => c2.ParentID == c.ParentID).Any(),
+					AllChildren = Child.All(c2 => c2.ParentID == c.ParentID),
+ 				});
+
+ 				childs_list =
+ 					from child in childs_list
+ 					join parent in Parent on child.ParentID equals parent.ParentID
+ 					where parent.Value1 < 7
+ 					select child;
+
+				AreEqual(childs_list, childs);
  			}
 		}
 
