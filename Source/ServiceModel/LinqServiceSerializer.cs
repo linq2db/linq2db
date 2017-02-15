@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace LinqToDB.ServiceModel
@@ -106,9 +107,9 @@ namespace LinqToDB.ServiceModel
 						foreach (var val in (IEnumerable)value)
 						{
 							if (val == null)
-								Append((string)null);
+								Append(elementType, null);
 							else
-								Append(ConvertToString(val.GetType(), val));
+								Append(val.GetType(), val); //Append(ConvertToString(val.GetType(), val));
 							cnt++;
 						}
 
@@ -328,6 +329,38 @@ namespace LinqToDB.ServiceModel
 				return idx == 0 ? null : (T)Dic[idx];
 			}
 
+			protected Type ReadType()
+			{
+				var idx = ReadInt();
+				object type;
+				if (!Dic.TryGetValue(idx, out type))
+				{
+					Pos++;
+					var typecode = ReadInt();
+					Pos++;
+
+					switch (typecode)
+					{
+						case TypeIndex     : type = ResolveType(ReadString());  break;
+						case TypeArrayIndex: type = GetArrayType(Read<Type>()); break;
+
+						default:
+							throw new SerializationException("TypeIndex or TypeArrayIndex ({0} or {1}) expected, but was {2}".Args(TypeIndex, TypeArrayIndex, typecode));
+					}
+
+					
+					Dic.Add(idx, type);
+
+					NextLine();
+
+					var idx2 = ReadInt();
+					if (idx2 != idx)
+						throw new SerializationException("Wrong type reading, expected index is {0} but was {1}".Args(idx, idx2));
+				}
+
+				return (Type) type;
+			}
+
 			protected T[] ReadArray<T>()
 				where T : class
 			{
@@ -381,10 +414,12 @@ namespace LinqToDB.ServiceModel
 						return null;
 
 					var arr   = new T[count.Value];
-					var type  = typeof(T);
 
 					for (var i = 0; i < count.Value; i++)
-						arr[i] = (T)deserializer.ReadValue(type);
+					{
+						var elementType = deserializer.ReadType();
+						arr[i] = (T) deserializer.ReadValue(elementType);
+					}
 
 					return arr;
 				}

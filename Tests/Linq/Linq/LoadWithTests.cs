@@ -52,8 +52,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void LoadWith3(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 #if !NOIMMUTABLE
@@ -73,8 +72,6 @@ namespace Tests.Linq
 
 				Assert.IsNotNull(ch);
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		class EnumerableToImmutableListConvertProvider<T> : IGenericInfoProvider
@@ -91,10 +88,9 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void LoadWith4(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
 			MappingSchema.Default.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -109,15 +105,12 @@ namespace Tests.Linq
 
 				Assert.IsNotNull(ch);
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void LoadWith5(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -134,15 +127,12 @@ namespace Tests.Linq
 				Assert.IsNotNull(ch.Child);
 				Assert.IsNotNull(ch.Child.Parent);
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void LoadWith6(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -159,15 +149,12 @@ namespace Tests.Linq
 				Assert.IsNotNull(ch.Child);
 				Assert.IsNotNull(ch.Child.Parent);
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void LoadWith7(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -184,15 +171,12 @@ namespace Tests.Linq
 				Assert.IsNotNull(ch.Child);
 				Assert.IsNotNull(ch.Child.Parent);
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource(ProviderName.Access)]
 		public void LoadWith8(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -205,15 +189,12 @@ namespace Tests.Linq
 				Assert.IsNotNull(ch.Child);
 				Assert.IsNotNull(ch.Child.Parent);
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource(ProviderName.Access)]
 		public void LoadWith9(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -225,15 +206,12 @@ namespace Tests.Linq
 				Assert.IsNotNull(ch);
 				Assert.IsNull   (ch.Child);
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource(ProviderName.Access)]
 		public void LoadWith10(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -246,8 +224,6 @@ namespace Tests.Linq
 					var list = q.ToList();
 				}
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource(ProviderName.Access)]

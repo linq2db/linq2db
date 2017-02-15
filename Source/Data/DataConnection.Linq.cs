@@ -139,19 +139,19 @@ namespace LinqToDB.Data
 
 		void AddParameter(ICollection<IDbDataParameter> parms, string name, SqlParameter parm)
 		{
-			var p = Command.CreateParameter();
-
-			var dataType = parm.DataType;
+			var p         = Command.CreateParameter();
+			var dataType  = parm.DataType;
+			var parmValue = parm.Value;
 
 			if (dataType == DataType.Undefined)
 			{
 				dataType = MappingSchema.GetDataType(
-					parm.SystemType == typeof(object) && parm.Value != null ?
-						parm.Value.GetType() :
+					parm.SystemType == typeof(object) && parmValue != null ?
+						parmValue.GetType() :
 						parm.SystemType).DataType;
 			}
 
-			DataProvider.SetParameter(p, name, dataType, parm.Value);
+			DataProvider.SetParameter(p, name, dataType, parmValue);
 
 			parms.Add(p);
 		}

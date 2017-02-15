@@ -1973,9 +1973,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql.Length == 1 && sql[0].Members.Count == 0)
 					expr = sql[0].Sql;
 				else
-					expr = new SqlExpression(
-						"\x1" + string.Join(",", sql.Select(s => s.Members[s.Members.Count - 1].Name).ToArray()),
-						sql.Select(s => s.Sql).ToArray());
+					expr = new ObjectSqlExpression(MappingSchema, sql);
 			}
 
 			switch (arr.NodeType)

@@ -269,8 +269,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void LetTest4(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -296,15 +295,12 @@ namespace Tests.Linq
 						First2 = ch2.FirstOrDefault()
 					});
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void LetTest5(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
@@ -330,16 +326,14 @@ namespace Tests.Linq
 						First2 = ch2.FirstOrDefault()
 					});
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void LetTest6(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery     = true;
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
@@ -369,15 +363,12 @@ namespace Tests.Linq
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0));
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void LetTest7(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
@@ -407,15 +398,12 @@ namespace Tests.Linq
 							First2 = ch2.FirstOrDefault()
 						}
 					).Where(t => t.ParentID > 0).Take(5000));
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void LetTest8(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -441,15 +429,12 @@ namespace Tests.Linq
 						Count  = ch2.Count(),
 						First2 = ch2.FirstOrDefault()
 					});
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void LetTest9(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(
@@ -469,15 +454,12 @@ namespace Tests.Linq
 							First = ch1.FirstOrDefault()
 						}
 					).Take(10));
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void LetTest10(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
 					(
@@ -497,15 +479,12 @@ namespace Tests.Linq
 							First = ch1.FirstOrDefault()
 						}
 					).Any());
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void LetTest11(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -525,8 +504,6 @@ namespace Tests.Linq
 						First1 = ch1 == null ? 0 : ch1.ParentID,
 						First2 = ch2.FirstOrDefault()
 					});
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 	}
 }

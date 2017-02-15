@@ -8,8 +8,8 @@
 	"buildOptions": {
 		"outputName": "linq2db.Tests",
 		"publicSign": true,
-    "keyFile": "linq2db.Tests.snk",
-    "nowarn": [ "CS0649", "CS0429" ]
+		"keyFile": "linq2db.Tests.snk",
+		"nowarn": [ "CS0649", "CS0429" ]
 	},
 
 	"dependencies": {

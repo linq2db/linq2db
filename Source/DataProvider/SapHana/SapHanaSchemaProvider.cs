@@ -659,8 +659,10 @@ namespace LinqToDB.DataProvider.SapHana
 				join p in GetParametersForViews(dataConnection) on v.TableID equals p.ProcedureID
 				into pgroup
 				where
-					(IncludedSchemas.Length == 0 || IncludedSchemas.Contains(v.SchemaName)) &&
-					(ExcludedSchemas.Length == 0 || !ExcludedSchemas.Contains(v.SchemaName))
+					(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(v.SchemaName)) &&
+					(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(v.SchemaName)) &&
+					(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(v.SchemaName)) &&
+					(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(v.SchemaName))
 				select new ViewWithParametersTableSchema
 				{
 					ID              = v.TableID,
