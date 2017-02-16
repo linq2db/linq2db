@@ -608,6 +608,31 @@ namespace LinqToDB.Linq.Builder
 							.SelectMany(si => si)
 							.ToArray();
 					}
+
+				case ExpressionType.MemberAccess :
+					{
+						if (queryConvertFlag == ConvertFlags.All)
+						{
+							var expr = (MemberExpression) expression;
+							if (!MappingSchema.IsScalarType(expr.Type) && !expr.Type.IsNullable())
+							{
+								var descriptor = MappingSchema.GetEntityDescriptor(expr.Type);
+								if (descriptor.Columns.Count > 0)
+								{
+									return descriptor.Columns
+										.Where (c => c.MemberInfo.DeclaringType == expr.Type) // filtering inheritance columns
+										.Select(c =>
+										{
+											return ConvertExpressions(context, Expression.MakeMemberAccess(expr, c.MemberInfo), ConvertFlags.Field)
+												.Select(si => si.Clone(c.MemberInfo));
+										})
+										.SelectMany(si => si)
+										.ToArray();
+								}
+							}
+						}
+						break;
+					}
 			}
 
 			var ctx = GetContext(context, expression);
