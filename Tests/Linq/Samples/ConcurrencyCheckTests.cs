@@ -19,9 +19,41 @@ namespace Tests.Samples
 			{
 			}
 
+			/// <summary>
+			/// We need to use same paremeters as for original query
+			/// </summary>
+			/// <param name="original"></param>
+			private SelectQuery Clone(SelectQuery original)
+			{
+				var clone = original.Clone();
+
+				var pairs = from o in original.Parameters
+							join n in clone.Parameters on o.Name equals n.Name
+							select new { Old = o, New = n };
+
+				var dic = pairs.ToDictionary(p => p.New, p => p.Old);
+
+				clone = new QueryVisitor().Convert(clone, e =>
+							  {
+								  var param = e as SqlParameter;
+								  SqlParameter newParam;
+								  if (param != null && dic.TryGetValue(param, out newParam))
+								  {
+									  return newParam;
+								  }
+								  return e;
+							  });
+
+				clone.Parameters.Clear();
+				clone.Parameters.AddRange(original.Parameters);
+
+				return clone;
+			}
+
 			protected override SelectQuery ProcessQuery(SelectQuery selectQuery)
 			{
 				#region Update
+
 				if (selectQuery.IsUpdate)
 				{
 					var source = selectQuery.From.Tables[0].Source as SqlTable;
@@ -36,7 +68,7 @@ namespace Tests.Samples
 					if (rowVersion == null)
 						return selectQuery;
 
-					var newQuery = selectQuery.Clone();
+					var newQuery = Clone(selectQuery);
 					source       = newQuery.From.Tables[0].Source as SqlTable;
 					var field    = source.Fields[rowVersion.ColumnName];
 
@@ -60,23 +92,29 @@ namespace Tests.Samples
 
 				else if (selectQuery.IsInsert)
 				{
-					var source = selectQuery.Insert.Into;
+					var source     = selectQuery.Insert.Into;
 					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 
 					if (rowVersion == null)
 						return selectQuery;
 
-					var field = source[rowVersion.ColumnName];
+					
+					var newQuery = Clone(selectQuery);
 
-					var versionColumn = (from i in selectQuery.Insert.Items
+					var field = newQuery.Insert.Into[rowVersion.ColumnName];
+
+					var versionColumn = (from i in newQuery.Insert.Items
 										 let f = i.Column as SqlField
 										 where f != null && f.PhysicalName == field.PhysicalName
 										 select i).FirstOrDefault();
 
 					// if we do not try to insert version, lets suppose it should be done in database
 					if (versionColumn != null)
+					{
 						versionColumn.Expression = new SqlValue(1);
+						return newQuery;
+					}
 				}
 				#endregion Insert
 				return selectQuery;

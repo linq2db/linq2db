@@ -129,7 +129,7 @@ namespace LinqToDB.Data
 			{
 				foreach (var parm in parameters)
 				{
-					if (parm.IsQueryParameter && pq.SqlParameters.Any(p => p.Name == parm.Name))
+					if (parm.IsQueryParameter && pq.SqlParameters.Contains(parm))
 						AddParameter(parms, parm.Name, parm);
 				}
 			}
