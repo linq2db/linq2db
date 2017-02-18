@@ -109,6 +109,38 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void Issue115Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var qs = (from c in db.Child
+						join r in db.Parent on c.ParentID equals r.ParentID
+						where r.ParentID > 4
+						select c
+					)
+					.Union(from c in db.Child
+						join r in db.Parent on c.ParentID equals r.ParentID
+						where r.ParentID <= 4
+						select c
+					);
+
+				var ql = (from c in Child
+						join r in Parent on c.ParentID equals r.ParentID
+						where r.ParentID > 4
+						select c
+					)
+					.Union(from c in Child
+						join r in Parent on c.ParentID equals r.ParentID
+						where r.ParentID <= 4
+						select c
+					);
+
+				AreEqual(ql, qs);
+			}
+		}
+
+
+		[Test, DataContextSource]
 		public void Issue424Test1(string context)
 		{
 			using (var db = GetDataContext(context))
