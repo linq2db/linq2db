@@ -27,8 +27,8 @@ namespace Tests.Samples
 			{
 				var clone = original.Clone();
 
-				var pairs = from o in original.Parameters
-							join n in clone.Parameters on o.Name equals n.Name
+				var pairs = from o in original.Parameters.Distinct()
+							join n in clone.Parameters.Distinct() on o.Name equals n.Name
 							select new { Old = o, New = n };
 
 				var dic = pairs.ToDictionary(p => p.New, p => p.Old);
@@ -210,8 +210,8 @@ namespace Tests.Samples
 			db.Insert(new TestTable { ID = 1000, Description = "Delete Candidate 1000" });
 			db.Insert(new TestTable { ID = 1001, Description = "Delete Candidate 1001" });
 
-			var obj1000 = db.GetTable<TestTable>().First(_ => _.ID == 1000);
-			var obj1001 = db.GetTable<TestTable>().First(_ => _.ID == 1001);
+			var obj1000 = table.First(_ => _.ID == 1000);
+			var obj1001 = table.First(_ => _.ID == 1001);
 
 			Assert.IsNotNull(obj1000);
 			Assert.IsNotNull(obj1001);
@@ -222,6 +222,26 @@ namespace Tests.Samples
 
 			Assert.AreEqual(0, db.Delete(obj1000));
 			Assert.AreEqual(1, db.Delete(obj1001));
+		}
+
+		[Test]
+		public void CheckInsertOrUpdate()
+		{
+			var db     = _connection;
+			var table  = db.GetTable<TestTable>();
+
+			var result = db.InsertOrReplace(new TestTable {ID = 3, Description = "Row 3"});
+
+			Assert.AreEqual(1, result);
+			Assert.AreEqual(3, table.Count());
+
+			var newval = table.First(t => t.ID == 3);
+
+			newval.Description = "Row 3 New description";
+
+			result = db.InsertOrReplace(newval);
+			Assert.AreEqual(1, result);
+			Assert.AreEqual(3, table.Count());
 		}
 	}
 }
