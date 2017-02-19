@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Linq;
@@ -21,6 +22,9 @@ namespace Tests.Exceptions
 			[PrimaryKey]
 			public int ParentID;
 			public int Value;
+
+			[Association(ThisKey ="ParentID", OtherKey = "ParentID")]
+			public IEnumerable<Childs> Childs;
 		}
 
 		[Table("Child", IsColumnAttributeRequired = false)]
@@ -29,6 +33,9 @@ namespace Tests.Exceptions
 			[PrimaryKey]
 			public int ChildID;
 			public int ParentID;
+
+			[Association(ThisKey ="ParentID", OtherKey = "ParentID")]
+			public Parents Parent;
 		}
 
 		[Test, DataContextSource]
@@ -46,57 +53,83 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, DataContextSource, Ignore("https://github.com/linq2db/linq2db/pull/485")]
-		public void MultiJoin0(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var expected = from p in Parent
-					join c1 in Child on p.ParentID equals c1.ParentID
-					//join c2 in Child on p.ParentID equals c2.ParentID
-					select c1;
-
-				var result = from p in db.GetTable<Parents>()
-					join c1 in db.GetTable<Childs>() on p.ParentID equals c1.ParentID
-					join c2 in db.GetTable<Childs>() on p.ParentID equals c2.ParentID
-					select
-					new Child()
-					{
-						ChildID  = c1.ChildID,
-						ParentID = c1.ParentID
-					};
-
-				AreEqual(expected, result);
-			}
-		}
-
-		[Test, DataContextSource, Ignore("https://github.com/linq2db/linq2db/pull/485")]
+		[Test, DataContextSource]
 		public void MultiJoin1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var expected = from p in Parent
-					join c1 in Child on p.ParentID equals c1.ParentID
-					select c1;
-					//join c2 in Child on p.ParentID equals c2.ParentID
-					//select new Child()
-					//{
-					//	ChildID = c1.ChildID,
-					//	ParentID = c2.ParentID
-					//};
+				var expected = from p  in Parent
+							   join c1 in Child on p.ParentID equals c1.ParentID
+							   join c2 in Child on p.ParentID equals c2.ParentID
+							   select new Child()
+							   {
+							   	ChildID = c1.ChildID,
+							   	ParentID = c2.ParentID
+							   };
 
-				var result = from p in db.GetTable<Parents>()
-					join c1 in db.GetTable<Childs>() on p.ParentID equals c1.ParentID
-					join c2 in db.GetTable<Childs>() on p.ParentID equals c2.ParentID
-					select new Child()
-					{
-						ChildID  = c1.ChildID,
-						ParentID = c2.ParentID
-					};
+				var result = from p  in db.GetTable<Parents>()
+							 join c1 in db.GetTable<Childs>() on p.ParentID equals c1.ParentID
+							 join c2 in db.GetTable<Childs>() on p.ParentID equals c2.ParentID
+							 select new Child()
+							 {
+							 	ChildID  = c1.ChildID,
+							 	ParentID = c2.ParentID
+							 };
 
 				AreEqual(expected, result);
 			}
 			
 		}
+
+		[Test, DataContextSource]
+		public void MultiJoin2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected = from c in Child
+							   join p1 in Parent on c.ParentID equals p1.ParentID
+							   select c;
+
+				var result = from c  in db.GetTable<Childs>()
+							 join p1 in db.GetTable<Parents>() on c.ParentID equals p1.ParentID
+							 join p2 in db.GetTable<Parents>() on c.ParentID equals p2.ParentID
+							 select
+							 new Child()
+							 {
+								 ChildID  = c.ChildID,
+								 ParentID = c.ParentID
+							 };
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue498Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected1 = from x in Parent
+							    from y in x.Children
+							    select x.ParentID;
+
+				var result1 = from x in db.GetTable<Parents>()
+							  from y in x.Childs
+							  select x.ParentID;
+
+				AreEqual(expected1, result1);
+
+				var expected2 = from  x in expected1
+							    group x by x into g
+							    select g.Key;
+
+				var result2 = from  x in result1
+							  group x by x into g
+							  select g.Key;
+
+				AreEqual(expected2, result2);
+			}
+		}
+
 	}
 }

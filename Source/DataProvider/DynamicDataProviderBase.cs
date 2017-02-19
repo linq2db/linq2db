@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider
 			return _createConnection(connectionString);
 		}
 
-		internal static Expression<Func<string,IDbConnection>> CreateConnectionExpression(Type connectionType)
+		public static Expression<Func<string,IDbConnection>> CreateConnectionExpression(Type connectionType)
 		{
 			var p = Expression.Parameter(typeof(string));
 			var l = Expression.Lambda<Func<string,IDbConnection>>(

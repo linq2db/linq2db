@@ -20,7 +20,7 @@ Project Build Status
 
 Feeds
 ----------
-* Release builds can be found on [NuGet](https://nuget.org)
+* Release builds can be found on [NuGet](https://www.nuget.org/packages?q=linq2db)
 * [MyGet](https://www.myget.org/gallery/linq2db)
  * V2 `https://www.myget.org/F/linq2db/api/v2`
  * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`

@@ -1,7 +1,7 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.7.5
+  packageVersion: 1.7.6
 
 version: $(packageVersion).{build}
 
@@ -70,6 +70,8 @@ deploy:
   api_key:
     secure: LDw0jeA1Yo3R4/TKv2kmlgJR8dTT6Wun2MONq3uDvtVQJG4LOU9LjvVTAc7IgRfm
   skip_symbols: true
+  on:
+    branch: master
 
 - provider: NuGet
   api_key:

@@ -253,7 +253,7 @@ namespace Tests.xUpdate
 						db.Child
 							.Where(c => c.ChildID == 11)
 							.Into(db.Parent)
-								.Value(p => p.ParentID, c => c.ParentID)
+								.Value(p => p.ParentID, c => c.ParentID + 1000)
 								.Value(p => p.Value1,   c => (int?)c.ChildID)
 							.Insert());
 					Assert.AreEqual(1, db.Parent.Count(p => p.Value1 == 11));
@@ -610,7 +610,7 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 
 					var id =
 						db.Person
@@ -630,7 +630,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
@@ -642,7 +642,7 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 
 					var id = db
 						.Into(db.Person)
@@ -660,7 +660,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
@@ -672,7 +672,7 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 
 					var id = db
 						.Into(db.Person)
@@ -690,7 +690,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
@@ -704,7 +704,7 @@ namespace Tests.xUpdate
 				{
 					for (var i = 0; i < 2; i++)
 					{
-						db.Person.Delete(p => p.ID > 2);
+						db.Person.Delete(p => p.ID > MaxPersonID);
 
 						var id = db.InsertWithIdentity(
 							new Person
@@ -724,7 +724,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
@@ -738,7 +738,7 @@ namespace Tests.xUpdate
 				{
 					for (var i = 0; i < 2; i++)
 					{
-						db.Person.Delete(p => p.ID > 2);
+						db.Person.Delete(p => p.ID > MaxPersonID);
 
 						var person = new Person
 						{
@@ -759,17 +759,15 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
 
 		class GuidID
 		{
-#pragma warning disable 0649
 			[Identity] public Guid ID;
 			           public int  Field1;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(
@@ -784,9 +782,7 @@ namespace Tests.xUpdate
 
 		class GuidID2
 		{
-#pragma warning disable 0649
 			[Identity] public Guid ID;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(

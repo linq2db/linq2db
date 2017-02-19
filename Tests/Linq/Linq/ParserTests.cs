@@ -886,12 +886,12 @@ namespace Tests.Linq
 
 				CompareSql(sql, @"
 					SELECT
-						[g].[ParentID],
-						[g].[ChildID],
-						[g].[GrandChildID]
+						[g1].[ParentID],
+						[g1].[ChildID],
+						[g1].[GrandChildID]
 					FROM
-						[GrandChild] [g]
-							LEFT JOIN [Child] [t1] ON [g].[ParentID] = [t1].[ParentID] AND [g].[ChildID] = [t1].[ChildID]
+						[GrandChild] [g1]
+							LEFT JOIN [Child] [t1] ON [g1].[ParentID] = [t1].[ParentID] AND [g1].[ChildID] = [t1].[ChildID]
 							INNER JOIN [Parent] [p] ON [t1].[ParentID] = [p].[ParentID]");
 			}
 		}

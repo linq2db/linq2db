@@ -266,28 +266,28 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		static MemberInfo M<T>(Expression<Func<T,object>> func)
+		public static MemberInfo M<T>(Expression<Func<T,object>> func)
 		{
 			return MemberHelper.GetMemberInfo(func);
 		}
 
-		static MemberInfo M<T>(Expression<Func<T>> func)
+		public static MemberInfo M<T>(Expression<Func<T>> func)
 		{
 			return MemberHelper.GetMemberInfo(func);
 		}
 
-		static LambdaExpression L<TR>                   (Expression<Func<TR>>                   func) { return func; }
-		static LambdaExpression L<T1,TR>                (Expression<Func<T1,TR>>                func) { return func; }
-		static LambdaExpression L<T1,T2,TR>             (Expression<Func<T1,T2,TR>>             func) { return func; }
-		static LambdaExpression L<T1,T2,T3,TR>          (Expression<Func<T1,T2,T3,TR>>          func) { return func; }
-		static LambdaExpression L<T1,T2,T3,T4,TR>       (Expression<Func<T1,T2,T3,T4,TR>>       func) { return func; }
-		static LambdaExpression L<T1,T2,T3,T4,T5,TR>    (Expression<Func<T1,T2,T3,T4,T5,TR>>    func) { return func; }
-		static LambdaExpression L<T1,T2,T3,T4,T5,T6,TR> (Expression<Func<T1,T2,T3,T4,T5,T6,TR>> func) { return func; }
-		static LazyExpressionInfo N (Func<LambdaExpression> func) { return new LazyExpressionInfo { Lambda = func }; }
+		public static LambdaExpression L<TR>                   (Expression<Func<TR>>                   func) { return func; }
+		public static LambdaExpression L<T1,TR>                (Expression<Func<T1,TR>>                func) { return func; }
+		public static LambdaExpression L<T1,T2,TR>             (Expression<Func<T1,T2,TR>>             func) { return func; }
+		public static LambdaExpression L<T1,T2,T3,TR>          (Expression<Func<T1,T2,T3,TR>>          func) { return func; }
+		public static LambdaExpression L<T1,T2,T3,T4,TR>       (Expression<Func<T1,T2,T3,T4,TR>>       func) { return func; }
+		public static LambdaExpression L<T1,T2,T3,T4,T5,TR>    (Expression<Func<T1,T2,T3,T4,T5,TR>>    func) { return func; }
+		public static LambdaExpression L<T1,T2,T3,T4,T5,T6,TR> (Expression<Func<T1,T2,T3,T4,T5,T6,TR>> func) { return func; }
+		public static LazyExpressionInfo N (Func<LambdaExpression> func) { return new LazyExpressionInfo { Lambda = func }; }
 
 		#endregion
 
-		class LazyExpressionInfo : IExpressionInfo
+		public class LazyExpressionInfo : IExpressionInfo
 		{
 			public Func<LambdaExpression> Lambda;
 
@@ -421,8 +421,8 @@ namespace LinqToDB.Linq
 					{ M(() => string.Compare       ("",0,"",0,0)),                                    N(() => L<String,Int32,String,Int32,Int32,Int32>                 ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)                     => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
 #if !SILVERLIGHT && !NETFX_CORE										                                 														           															            
 					{ M(() => string.Compare       ("","",true)),                                     N(() => L<String,String,Boolean,Int32>                           ((String s1,String s2,Boolean b)                                     => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
-#endif																								 
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD														 
+#endif						
+#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
 					{ M(() => string.Compare       ("",0,"",0,0,true)),                               N(() => L<String,Int32,String,Int32,Int32,Boolean,Int32>         ((String s1,Int32 i1,String s2,Int32 i2,Int32 l,Boolean b)           => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 #endif
 					{ M(() => string.Compare       ("",0,"",0,0,StringComparison.OrdinalIgnoreCase)), N(() => L<String,Int32,String,Int32,Int32,StringComparison,Int32>((String s1,Int32 i1,String s2,Int32 i2,Int32 l,StringComparison sc) => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
@@ -519,7 +519,7 @@ namespace LinqToDB.Linq
 					{ M(() => Convert.ToBoolean((Byte)    0)  ), N(() => L<Byte,    Boolean>((Byte     p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 	#if !NETSTANDARD
 					{ M(() => Convert.ToBoolean((Char)   '0') ), N(() => L<Char,    Boolean>((Char     p0) => Sql.ConvertTo<Boolean>.From(p0))) },
-	#if !SILVERLIGHT  
+	#if !SILVERLIGHT
 					{ M(() => Convert.ToBoolean(DateTime.Now) ), N(() => L<DateTime,Boolean>((DateTime p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 	#endif
 	#endif
@@ -991,7 +991,7 @@ namespace LinqToDB.Linq
 
 					#region SqlTypes
 
-#if !SILVERLIGHT && !NETFX_CORE 
+#if !SILVERLIGHT && !NETFX_CORE
 					{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj))          },
 					{ M(() => new SqlBoolean().IsFalse), N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == false)) },
 					{ M(() => new SqlBoolean().IsTrue),  N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == true))  },
@@ -1464,7 +1464,7 @@ namespace LinqToDB.Linq
 		#region Provider specific functions
 
 		[Sql.Function]
-		static int? ConvertToCaseCompareTo(string str, string value)
+		public static int? ConvertToCaseCompareTo(string str, string value)
 		{
 			return str == null || value == null ? (int?)null : str.CompareTo(value);
 		}
@@ -1472,7 +1472,7 @@ namespace LinqToDB.Linq
 		// Access, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite
 		//
 		[Sql.Function]
-		static string AltStuff(string str, int? startLocation, int? length, string value)
+		public static string AltStuff(string str, int? startLocation, int? length, string value)
 		{
 			return Sql.Stuff(str, startLocation, length, value);
 		}
@@ -1480,7 +1480,7 @@ namespace LinqToDB.Linq
 		// DB2
 		//
 		[Sql.Function]
-		static string VarChar(object obj, int? size)
+		public static string VarChar(object obj, int? size)
 		{
 			return obj.ToString();
 		}
@@ -1488,7 +1488,7 @@ namespace LinqToDB.Linq
 		// DB2
 		//
 		[Sql.Function]
-		static string Hex(Guid? guid)
+		public static string Hex(Guid? guid)
 		{
 			return guid == null ? null : guid.ToString();
 		}
@@ -1502,7 +1502,7 @@ namespace LinqToDB.Linq
 		[Sql.Function(ProviderName.DB2,        "Repeat")]
 		[Sql.Function(ProviderName.PostgreSQL, "Repeat")]
 		[Sql.Function(ProviderName.Access,     "String", 1, 0)]
-		static string Replicate(string str, int? count)
+		public static string Replicate(string str, int? count)
 		{
 			if (str == null || count == null)
 				return null;
@@ -1520,7 +1520,7 @@ namespace LinqToDB.Linq
 		[Sql.Function(ProviderName.DB2,        "Repeat")]
 		[Sql.Function(ProviderName.PostgreSQL, "Repeat")]
 		[Sql.Function(ProviderName.Access,     "String", 1, 0)]
-		static string Replicate(char? ch, int? count)
+		public static string Replicate(char? ch, int? count)
 		{
 			if (ch == null || count == null)
 				return null;
@@ -1536,20 +1536,22 @@ namespace LinqToDB.Linq
 		// SqlServer
 		//
 		[Sql.Function]
-		static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
+		public static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
 		{
 			return days == null ? null : Sql.DateAdd(part, number, new DateTime(1900, 1, days.Value + 1));
 		}
 
 		// MSSQL
 		//
-		[Sql.Function] static Decimal? Round(Decimal? value, int precision, int mode) { return 0; }
-		[Sql.Function] static Double?  Round(Double?  value, int precision, int mode) { return 0; }
+		[Sql.Function]
+		public static Decimal? Round(Decimal? value, int precision, int mode) { return 0; }
+		[Sql.Function]
+		public static Double?  Round(Double?  value, int precision, int mode) { return 0; }
 
 		// Access
 		//
 		[Sql.Function(ProviderName.Access, "DateSerial")]
-		static DateTime? MakeDateTime2(int? year, int? month, int? day)
+		public static DateTime? MakeDateTime2(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null?
 				(DateTime?)null :
@@ -1560,7 +1562,7 @@ namespace LinqToDB.Linq
 		//
 		[CLSCompliant(false)]
 		[Sql.Function("Int", 0)]
-		static T AccessInt<T>(T value)
+		public static T AccessInt<T>(T value)
 		{
 			return value;
 		}
@@ -1569,17 +1571,19 @@ namespace LinqToDB.Linq
 		//
 		[CLSCompliant(false)]
 		[Sql.Function("Round", 0, 1)]
-		static T AccessRound<T>(T value, int? precision) { return value; }
+		public static T AccessRound<T>(T value, int? precision) { return value; }
 
 		// Firebird
 		//
-		[Sql.Function("PI", ServerSideOnly = true)] static decimal DecimalPI() { return (decimal)Math.PI; }
-		[Sql.Function("PI", ServerSideOnly = true)] static double  DoublePI () { return          Math.PI; }
+		[Sql.Function("PI", ServerSideOnly = true)]
+		public static decimal DecimalPI() { return (decimal)Math.PI; }
+		[Sql.Function("PI", ServerSideOnly = true)]
+		public static double  DoublePI () { return          Math.PI; }
 
 		// Informix
 		//
 		[Sql.Function]
-		static DateTime? Mdy(int? month, int? day, int? year)
+		public static DateTime? Mdy(int? month, int? day, int? year)
 		{
 			return year == null || month == null || day == null ?
 				(DateTime?)null :

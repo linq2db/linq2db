@@ -25,7 +25,7 @@ namespace Tests._Create
 		{
 			Console.WriteLine("=== " + name + " === \n");
 
-			var text = File.ReadAllText(@"Database\Create Scripts\" + name + ".sql");
+			var text = File.ReadAllText(Path.GetFullPath(@"Database\Create Scripts\" + name + ".sql"));
 
 			while (true)
 			{
@@ -173,6 +173,25 @@ namespace Tests._Create
 						new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 424 }
 					});
 
+
+				db.BulkCopy(
+					options,
+					new[]
+					{
+						new InheritanceParent2() {InheritanceParentId = 1, TypeDiscriminator = null, Name = null },
+						new InheritanceParent2() {InheritanceParentId = 2, TypeDiscriminator = 1,    Name = null },
+						new InheritanceParent2() {InheritanceParentId = 3, TypeDiscriminator = 2,    Name = "InheritanceParent2" }
+					});
+
+				db.BulkCopy(
+					options,
+					new[]
+					{
+						new InheritanceChild2() {InheritanceChildId = 1, TypeDiscriminator = null, InheritanceParentId = 1, Name = null },
+						new InheritanceChild2() {InheritanceChildId = 2, TypeDiscriminator = 1,    InheritanceParentId = 2, Name = null },
+						new InheritanceChild2() {InheritanceChildId = 3, TypeDiscriminator = 2,    InheritanceParentId = 3, Name = "InheritanceParent2" }
+					});
+
 				if (action != null)
 					action(db.Connection);
 			}
@@ -180,8 +199,7 @@ namespace Tests._Create
 
 		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2          (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
 		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix     (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
-		[Test, IncludeDataContextSource(ProviderName.OracleNative)]  public void Oracle       (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void OracleManaged(string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
+		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void Oracle       (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
 		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");      }
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL   (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
 		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql        (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }

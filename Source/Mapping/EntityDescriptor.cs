@@ -4,8 +4,6 @@ using System.Linq;
 
 namespace LinqToDB.Mapping
 {
-	using System.Threading;
-
 	using Common;
 	using Extensions;
 	using Linq;
@@ -22,6 +20,7 @@ namespace LinqToDB.Mapping
 			Columns      = new List<ColumnDescriptor>();
 
 			Init();
+			InitInheritanceMapping();
 		}
 
 		readonly MappingSchema _mappingSchema;
@@ -35,19 +34,11 @@ namespace LinqToDB.Mapping
 		public List<AssociationDescriptor> Associations              { get; private set; }
 		public Dictionary<string,string>   Aliases                   { get; private set; }
 
-		readonly ManualResetEvent _mre = new ManualResetEvent(false);
-
 		private List<InheritanceMapping> _inheritanceMappings;
 		public  List<InheritanceMapping>  InheritanceMapping
 		{
 			get
 			{
-				if (_inheritanceMappings == null)
-				{
-					_mre.WaitOne();
-					_mre.Close();
-				}
-
 				return _inheritanceMappings;
 			}
 		}
@@ -196,7 +187,15 @@ namespace LinqToDB.Mapping
 						Type      = m.Type,
 					};
 
-					var ed = _mappingSchema.GetEntityDescriptor(mapping.Type);
+					var ed = mapping.Type.Equals(ObjectType)
+						? this
+						: _mappingSchema.GetEntityDescriptor(mapping.Type);
+
+					//foreach (var column in this.Columns)
+					//{
+					//	if (ed.Columns.All(f => f.MemberName != column.MemberName))
+					//		ed.Columns.Add(column);
+					//}
 
 					foreach (var column in ed.Columns)
 					{
@@ -206,6 +205,8 @@ namespace LinqToDB.Mapping
 						if (column.IsDiscriminator)
 							mapping.Discriminator = column;
 					}
+
+					mapping.Discriminator = mapping.Discriminator ?? this.Columns.FirstOrDefault(x => x.IsDiscriminator);
 
 					result.Add(mapping);
 				}
@@ -220,11 +221,7 @@ namespace LinqToDB.Mapping
 						mapping.Discriminator = discriminator;
 			}
 
-			if (_inheritanceMappings == null)
-			{
-				_inheritanceMappings = result;
-				_mre.Set();
-			}
+			_inheritanceMappings = result;
 		}
 	}
 }

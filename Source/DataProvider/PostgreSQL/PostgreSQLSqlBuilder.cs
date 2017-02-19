@@ -84,6 +84,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				base.BuildFromClause();
 		}
 
+		protected sealed override bool IsReserved(string word)
+		{
+			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);
+		}
+
 		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
 
 		public override object Convert(object value, ConvertType convertType)
@@ -106,7 +111,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote)
 							return '"' + name + '"';
 
-						if (ReservedWords.ReservedWordsDictionary.ContainsKey(name.ToUpper()))
+						if (IsReserved(name))
 							return '"' + name + '"';
 
 						if (name

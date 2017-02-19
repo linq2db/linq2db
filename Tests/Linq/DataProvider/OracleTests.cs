@@ -511,6 +511,59 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test, OracleDataContext]
+		public void TestTreatEmptyStringsAsNulls(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var table    = db.GetTable<OracleSpecific.StringTest>();
+				var expected = table.Where(_ => _.KeyValue == "NullValues").ToList();
+
+
+				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue1)));
+				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue2)));
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == ""));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == ""));
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == null));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == null));
+
+				string emptyString = string.Empty;
+				string nullString  = null;
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == emptyString));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == emptyString));
+
+				AreEqual(expected, table.Where(_ => _.StringValue1 == nullString));
+				AreEqual(expected, table.Where(_ => _.StringValue2 == nullString));
+
+				AreEqual(expected, GetStringTest1(db, emptyString));
+				AreEqual(expected, GetStringTest1(db, emptyString));
+
+				AreEqual(expected, GetStringTest2(db, emptyString));
+				AreEqual(expected, GetStringTest2(db, emptyString));
+
+				AreEqual(expected, GetStringTest1(db, nullString));
+				AreEqual(expected, GetStringTest1(db, nullString));
+
+				AreEqual(expected, GetStringTest2(db, nullString));
+				AreEqual(expected, GetStringTest2(db, nullString));
+			}
+		}
+
+		private IEnumerable<OracleSpecific.StringTest> GetStringTest1(IDataContext db, string value)
+		{
+			return db.GetTable<OracleSpecific.StringTest>()
+				.Where(_ => value == _.StringValue1);
+		}
+
+		private IEnumerable<OracleSpecific.StringTest> GetStringTest2(IDataContext db, string value)
+		{
+			return db.GetTable<OracleSpecific.StringTest>()
+				.Where(_ => value == _.StringValue2);
+		}
+
 		#region DateTime Tests
 
 		[Table(Schema="TESTUSER", Name="ALLTYPES")]
@@ -1124,11 +1177,9 @@ namespace Tests.DataProvider
 
 		class XmlData
 		{
-#pragma warning disable 0649
 			public int    Field1;
 			[Column(Length = 2)]
 			public string Field2;
-#pragma warning restore 0649
 		}
 
 		[Test, OracleDataContext]
@@ -1374,11 +1425,9 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow
 		{
-#pragma warning disable 0649
 			[Column] public decimal Decimal1;
 			[Column] public decimal Decimal2;
 			[Column] public decimal Decimal3;
-#pragma warning restore 0649
 		}
 
 		[Test, OracleDataContext]
@@ -1423,11 +1472,9 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow2
 		{
-#pragma warning disable 0649
 			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal1;
 			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal2;
 			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal3;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]
@@ -1574,6 +1621,32 @@ namespace Tests.DataProvider
 				}
 
 			}
+		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class DateTimeOffsetTable
+		{
+			public DateTimeOffset DateTimeOffsetValue;
+		}
+
+		[Test, OracleDataContext]
+		public void Issue515Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var now = new DateTimeOffset(2000, 1, 1, 10, 11, 12, TimeSpan.FromHours(5));
+					db.CreateTable<DateTimeOffsetTable>();
+					db.Insert(new DateTimeOffsetTable() {DateTimeOffsetValue = now});
+					Assert.AreEqual(now, db.GetTable<DateTimeOffsetTable>().Select(_ => _.DateTimeOffsetValue).Single()); 
+				}
+				finally
+				{
+					db.DropTable<DateTimeOffsetTable>();
+				}
+			}
+
 		}
 	}
 }

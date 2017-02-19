@@ -6,7 +6,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-#pragma warning disable 0649
 
 namespace Tests.Linq
 {
