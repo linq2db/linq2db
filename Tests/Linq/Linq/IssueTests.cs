@@ -113,43 +113,43 @@ namespace Tests.Linq
  		{
  			using (var db = GetDataContext(context))
  			{
- 				var childs = db.Child.Select(c => new
+ 				var result = db.Child.Select(c => new
 				{
  					c.ChildID,
 					c.ParentID,
-					CountChildren = db.Child.Count(c2 => c2.ParentID == c.ParentID),
-					CountChildren2 = db.Child.Where(c2 => c2.ParentID == c.ParentID).Count(),
-					HasChildren = db.Child.Any(c2 => c2.ParentID == c.ParentID),
-					HasChildren2 = db.Child.Where(c2 => c2.ParentID == c.ParentID).Any(),
-					AllChildren = db.Child.All(c2 => c2.ParentID == c.ParentID),
+					CountChildren  = db.Child.Count(c2 => c2.ParentID == c.ParentID),
+					CountChildren2 = db.Child.Count(c2 => c2.ParentID == c.ParentID),
+					HasChildren    = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
+					HasChildren2   = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
+					AllChildren    = db.Child.All  (c2 => c2.ParentID == c.ParentID),
 					AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
  				});
 
- 				childs =
- 					from child in childs
+ 				result =
+ 					from child in result
  					join parent in db.Parent on child.ParentID equals parent.ParentID
  					where parent.Value1 < 7
  					select child;
 
- 				var childs_list = Child.Select(c => new
+ 				var expected = Child.Select(c => new
 				{
  					c.ChildID,
 					c.ParentID,
-					CountChildren = Child.Count(c2 => c2.ParentID == c.ParentID),
-					CountChildren2 = Child.Where(c2 => c2.ParentID == c.ParentID).Count(),
-					HasChildren = Child.Any(c2 => c2.ParentID == c.ParentID),
-					HasChildren2 = Child.Where(c2 => c2.ParentID == c.ParentID).Any(),
-					AllChildren = Child.All(c2 => c2.ParentID == c.ParentID),
+					CountChildren  = Child.Count(c2 => c2.ParentID == c.ParentID),
+					CountChildren2 = Child.Count(c2 => c2.ParentID == c.ParentID),
+					HasChildren    = Child.Any  (c2 => c2.ParentID == c.ParentID),
+					HasChildren2   = Child.Any  (c2 => c2.ParentID == c.ParentID),
+					AllChildren    = Child.All  (c2 => c2.ParentID == c.ParentID),
 					AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
  				});
 
- 				childs_list =
- 					from child in childs_list
+ 				expected =
+ 					from child in expected
  					join parent in Parent on child.ParentID equals parent.ParentID
  					where parent.Value1 < 7
  					select child;
 
-				AreEqual(childs_list, childs);
+				AreEqual(expected, result);
  			}
 		}
 
