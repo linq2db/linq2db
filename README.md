@@ -40,6 +40,9 @@ IsCompactColumnAliases              = true;    // If true, column alias compact 
 
 GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" }; // Defines excluded schemas.
 GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines only included schemas.
+
+GetSchemaOptions.ExcludedCatalogs = new[] { "TestUser", "SYSSTAT" }; // Defines excluded catalogs.
+GetSchemaOptions.IncludedCatalogs = new[] { "TestUser", "SYS" };     // Defines only included catalogs.
 ```
 
 * Use the following code to modify your model befor you call the GenerateModel() method.
