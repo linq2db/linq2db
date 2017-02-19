@@ -1,8 +1,8 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.7.5
-  linq2dbVersion: 1.7.5
+  packageVersion: 1.7.6
+  linq2dbVersion: 1.7.6
 
 version: $(packageVersion).{build}
 
