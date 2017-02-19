@@ -5,14 +5,18 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using System.Collections.Generic;
+	using System.Linq;
+	using Configuration;
+
 	[UsedImplicitly]
 	class SybaseFactory : IDataProviderFactory
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)
+		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			for (var i = 0; i < attributes.Count; i++)
-				if (attributes.GetKey(i) == "assemblyName")
-					SybaseTools.AssemblyName = attributes.Get(i);
+			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
+			if (assemblyName != null)
+				SybaseTools.AssemblyName = assemblyName.Value;
 
 			return new SybaseDataProvider();
 		}

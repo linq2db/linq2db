@@ -12,7 +12,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets a value that returns the number of rows copied during the current bulk copy operation.
 		/// </summary>
-		public long RowsCopied { get; internal set; }
+		public long RowsCopied { get; set; }
 
 		readonly DateTime _startTime = DateTime.Now;
 

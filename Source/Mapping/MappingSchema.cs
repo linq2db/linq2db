@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 using JetBrains.Annotations;
 
-#if !SILVERLIGHT && !NETFX_CORE
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
 using System.Xml;
 #endif
 
@@ -361,7 +361,7 @@ namespace LinqToDB.Mapping
 				var li   = info.GetConvertInfo(@from, to);
 
 				if (li != null && (i == 0 || !li.IsSchemaSpecific))
-					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.CheckNullLambda, null, false);
+					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
 			}
 
 			var isFromGeneric = from.IsGenericTypeEx() && !from.IsGenericTypeDefinitionEx();
@@ -545,19 +545,43 @@ namespace LinqToDB.Mapping
 
 		#region MetadataReader
 
+		readonly object _metadataReadersSyncRoot = new object();
+
+		void InitMetadataReaders()
+		{
+			var list = new List   <IMetadataReader>(Schemas.Length);
+			var hash = new HashSet<IMetadataReader>();
+
+			for (var i = 0; i < Schemas.Length; i++)
+			{
+				var s = Schemas[i];
+				if (s.MetadataReader != null && hash.Add(s.MetadataReader))
+					list.Add(s.MetadataReader);
+			}
+
+			_metadataReaders = list.ToArray();
+		}
+
 		public IMetadataReader MetadataReader
 		{
 			get { return Schemas[0].MetadataReader; }
 			set
 			{
-				Schemas[0].MetadataReader = value;
-				_metadataReaders = null;
+				lock (_metadataReadersSyncRoot)
+				{
+					Schemas[0].MetadataReader = value;
+					InitMetadataReaders();
+				}
 			}
 		}
 
 		public void AddMetadataReader(IMetadataReader reader)
 		{
-			MetadataReader = MetadataReader == null ? reader : new MetadataReader(reader, MetadataReader);
+			lock (_metadataReadersSyncRoot)
+			{
+				var currentReader = MetadataReader;
+				MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
+			}
 		}
 
 		IMetadataReader[] _metadataReaders;
@@ -566,16 +590,9 @@ namespace LinqToDB.Mapping
 			get
 			{
 				if (_metadataReaders == null)
-				{
-					var hash = new HashSet<IMetadataReader>();
-					var list = new List<IMetadataReader>();
-
-					foreach (var s in Schemas)
-						if (s.MetadataReader != null && hash.Add(s.MetadataReader))
-							list.Add(s.MetadataReader);
-
-					_metadataReaders = list.ToArray();
-				}
+					lock (_metadataReadersSyncRoot)
+						if (_metadataReaders == null)
+							InitMetadataReaders();
 
 				return _metadataReaders;
 			}
@@ -729,7 +746,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(Guid),            DataType.Guid);
 				AddScalarType(typeof(Guid?),           DataType.Guid);
 				AddScalarType(typeof(object),          DataType.Variant);
-#if !SILVERLIGHT && !NETFX_CORE
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
 				AddScalarType(typeof(XmlDocument),     DataType.Xml);
 #endif
 				AddScalarType(typeof(XDocument),       DataType.Xml);
@@ -995,19 +1012,16 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors;
+		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors
+			= new ConcurrentDictionary<Type, EntityDescriptor>();
 
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
-			if (_entityDescriptors == null)
-				_entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
-
 			EntityDescriptor ed;
 
 			if (!_entityDescriptors.TryGetValue(type, out ed))
 			{
-				_entityDescriptors[type] = ed = new EntityDescriptor(this, type);
-				ed.InitInheritanceMapping();
+				ed = _entityDescriptors.GetOrAdd(type, new EntityDescriptor(this, type));
 			}
 
 			return ed;
@@ -1021,5 +1035,26 @@ namespace LinqToDB.Mapping
 		//}
 
 		#endregion
+
+		#region Enum
+
+		public Type GetDefaultFromEnumType(Type enumType)
+		{
+			foreach (var info in Schemas)
+			{
+				var type = info.GetDefaultFromEnumType(enumType);
+				if (type != null)
+					return type;
+			}
+			return null;
+		}
+
+		public void SetDefaultFromEnumType(Type enumType, Type defaultFromType)
+		{
+			Schemas[0].SetDefaultFromEnumType(enumType, defaultFromType);
+		}
+
+		#endregion
+
 	}
 }

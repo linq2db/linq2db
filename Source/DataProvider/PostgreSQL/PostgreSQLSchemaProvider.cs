@@ -62,16 +62,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var sql = (@"
 				SELECT
-					table_catalog || '.' || table_schema || '.' || table_name as TableID,
-					table_catalog                                             as CatalogName,
-					table_schema                                              as SchemaName,
-					table_name                                                as TableName,
-					table_schema = 'public'                                   as IsDefaultSchema,
-					table_type = 'VIEW'                                       as IsView
+					table_catalog || '.' || table_schema || '.' || table_name            as TableID,
+					table_catalog                                                        as CatalogName,
+					table_schema                                                         as SchemaName,
+					table_name                                                           as TableName,
+					table_schema = 'public'                                              as IsDefaultSchema,
+					table_type = 'VIEW'                                                  as IsView,
+					left(table_schema, 3) = 'pg_' OR table_schema = 'information_schema' as IsProviderSpecific
 				FROM
 					information_schema.tables");
 
-			if (ExcludedSchemas.Length == 0 && IncludedSchemas.Length == 0)
+			if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				sql += @"
 				WHERE
 					table_schema NOT IN ('pg_catalog','information_schema')";
@@ -119,7 +120,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					FROM
 						information_schema.columns";
 
-			if (ExcludedSchemas.Length == 0 || IncludedSchemas.Length == 0)
+			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)
 				sql += @"
 					WHERE
 						table_schema NOT IN ('pg_catalog','information_schema')";

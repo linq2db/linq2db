@@ -1084,7 +1084,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void GrooupByAssociation3(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result = 
 					from p in db.Product
@@ -1100,7 +1100,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void GrooupByAssociation4(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result = 
 					from p in db.Product
@@ -1160,16 +1160,19 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void GroupByAggregate2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
 					(
-						from c in Customer
+						from c in dd.Customer
 						group c by c.Orders.Count > 0 && c.Orders.Average(o => o.Freight) >= 80
 					).ToList().Select(k => k.Key),
 					(
 						from c in db.Customer
 						group c by c.Orders.Average(o => o.Freight) >= 80
 					).ToList().Select(k => k.Key));
+			}
 		}
 
 		[Test, DataContextSource(ProviderName.SqlCe)]
@@ -1691,8 +1694,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void FirstGroupBy(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(

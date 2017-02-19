@@ -236,8 +236,10 @@ namespace Tests.xUpdate
 			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL, 
 			ProviderName.MySql,
-			TestProvName.MariaDB,
-			ProviderName.SQLite,
+			TestProvName.MariaDB, 
+			TestProvName.MySql57,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
 			ProviderName.Access,
 			ProviderName.SapHana)]
 		public void Update9(string context)
@@ -277,8 +279,10 @@ namespace Tests.xUpdate
 			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
-			TestProvName.MariaDB,
-			ProviderName.SQLite,
+			TestProvName.MariaDB, 
+			TestProvName.MySql57,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
 			ProviderName.Access,
 			ProviderName.SapHana)]
 		public void Update10(string context)
@@ -325,7 +329,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
 			ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
 		public void Update12(string context)
 		{
@@ -342,7 +346,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
 			ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
 		public void Update13(string context)
 		{
@@ -528,6 +532,7 @@ namespace Tests.xUpdate
 			ProviderName.PostgreSQL, 
 			ProviderName.SqlCe, 
 			ProviderName.SQLite, 
+			TestProvName.SQLiteMs, 
 			ProviderName.SapHana)]
 		public void UpdateAssociation5(string context)
 		{
@@ -612,7 +617,8 @@ namespace Tests.xUpdate
 			ProviderName.Firebird,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana
@@ -665,20 +671,28 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
+				db.Parent.Delete(_ => _.ParentID > 1000);
+
+				var res =
 				(
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
-					where p.ParentID < 10000
+					where p.ParentID == 1
 					select p
 				)
-				.Set(p => p.ParentID, p => db.Child.SingleOrDefault(c => c.ChildID == 11).ParentID)
+				.Set(p => p.ParentID, p => db.Child.SingleOrDefault(c => c.ChildID == 11).ParentID + 1000)
 				.Update();
+
+				Assert.AreEqual(1, res);
+
+				res = db.Parent.Where(_ => _.ParentID == 1001).Set(_ => _.ParentID, 1).Update();
+				Assert.AreEqual(1, res);
 			}
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SQLite, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
-			ProviderName.MySql, TestProvName.MariaDB, ProviderName.Sybase)]
+			ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase)]
 		public void UpdateIssue319Regression(string context)
 		{
 			using (var db = GetDataContext(context))

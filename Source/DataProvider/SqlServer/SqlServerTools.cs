@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Configuration;
+
 	using Data;
 
 	public static class SqlServerTools
@@ -36,9 +38,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(ConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (DataConnection.IsMachineConfig(css))
+			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
 
 			switch (css.ProviderName)
@@ -74,9 +76,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						try
 						{
-							var connectionString = css.ConnectionString;
+							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-							using (var conn = new SqlConnection(connectionString))
+							using (var conn = new SqlConnection(cs))
 							{
 								conn.Open();
 
@@ -150,9 +152,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static void ResolveSqlTypes([NotNull] Assembly assembly)
 		{
-			SqlHierarchyIdType = assembly.GetType("SqlHierarchyId", true);
-			SqlGeographyType   = assembly.GetType("SqlGeography",   true);
-			SqlGeometryType    = assembly.GetType("SqlGeometry",    true);
+			var types = assembly.GetTypes();
+
+			SqlHierarchyIdType = types.First(t => t.Name == "SqlHierarchyId");
+			SqlGeographyType   = types.First(t => t.Name == "SqlGeography");
+			SqlGeometryType    = types.First(t => t.Name == "SqlGeometry");
 		}
 
 		internal static Type SqlHierarchyIdType;

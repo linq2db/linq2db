@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using LinqToDB.Common;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -10,9 +12,15 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static class SQLiteTools
 	{
+#if !NETSTANDARD
 		public static string AssemblyName   = "System.Data.SQLite";
 		public static string ConnectionName = "SQLiteConnection";
 		public static string DataReaderName = "SQLiteDataReader";
+#else
+		public static string AssemblyName   = "Microsoft.Data.Sqlite";
+		public static string ConnectionName = "SqliteConnection";
+		public static string DataReaderName = "SqliteDataReader";
+#endif
 
 		static readonly SQLiteDataProvider _SQLiteDataProvider = new SQLiteDataProvider();
 
@@ -20,13 +28,12 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static SQLiteTools()
 		{
+#if !NETSTANDARD
 			try
 			{
-				var path = typeof(SQLiteTools).Assembly.CodeBase.Replace("file:///", "");
+				var path = typeof(SQLiteTools).AssemblyEx().GetPath();
 
-				path = Path.GetDirectoryName(path);
-
-				if (!File.Exists(Path.Combine(path, "System.Data.SQLite.dll")) &&
+				if (!File.Exists(Path.Combine(path, AssemblyName + ".dll")) &&
 					(Type.GetType("Mono.Runtime") != null || File.Exists(Path.Combine(path, "Mono.Data.Sqlite.dll"))))
 				{
 					AssemblyName   = "Mono.Data.Sqlite";
@@ -37,7 +44,7 @@ namespace LinqToDB.DataProvider.SQLite
 			catch (Exception)
 			{
 			}
-
+#endif
 			DataConnection.AddDataProvider(_SQLiteDataProvider);
 		}
 
@@ -48,17 +55,21 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static void ResolveSQLite(string path)
 		{
-			new AssemblyResolver(path, "System.Data.SQLite");
+			new AssemblyResolver(path, AssemblyName);
+#if !NETSTANDARD
 			new AssemblyResolver(path, "Mono.Data.Sqlite");
+#endif
 		}
 
 		public static void ResolveSQLite(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, "System.Data.SQLite");
+			new AssemblyResolver(assembly, AssemblyName);
+#if !NETSTANDARD
 			new AssemblyResolver(assembly, "Mono.Data.Sqlite");
+#endif
 		}
 
-		#region CreateDataConnection
+#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
@@ -75,7 +86,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return new DataConnection(_SQLiteDataProvider, transaction);
 		}
 
-		#endregion
+#endregion
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
@@ -87,7 +98,7 @@ namespace LinqToDB.DataProvider.SQLite
 			_SQLiteDataProvider.DropDatabase(databaseName);
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
 		public  static BulkCopyType  DefaultBulkCopyType
@@ -111,6 +122,6 @@ namespace LinqToDB.DataProvider.SQLite
 				}, source);
 		}
 
-		#endregion
+#endregion
 	}
 }

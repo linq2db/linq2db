@@ -124,27 +124,21 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void NestedFirstOrDefault1(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select    Child.FirstOrDefault(),
 					from p in db.Parent select db.Child.FirstOrDefault());
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void NestedFirstOrDefault2(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children.FirstOrDefault(),
 					from p in db.Parent select p.Children.FirstOrDefault());
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.SapHana)]
@@ -159,27 +153,21 @@ namespace Tests.Linq
 		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL)]
 		public void NestedFirstOrDefault4(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children.Where(c => c.ParentID > 0).Distinct().FirstOrDefault(),
 					from p in db.Parent select p.Children.Where(c => c.ParentID > 0).Distinct().FirstOrDefault());
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void NestedFirstOrDefault5(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    GrandChild select p.Child.Parent.Children.FirstOrDefault(),
 					from p in db.GrandChild select p.Child.Parent.Children.FirstOrDefault());
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
@@ -194,10 +182,12 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void FirstOrDefaultEntitySet(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (new AllowMultipleQuery())
+			using (var db = new NorthwindDB(context))
 			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					   Customer.Select(c => c.Orders.FirstOrDefault()),
+					dd.Customer.Select(c => c.Orders.FirstOrDefault()),
 					db.Customer.Select(c => c.Orders.FirstOrDefault()));
 			}
 		}
@@ -205,10 +195,12 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void NestedSingleOrDefaultTest(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (new AllowMultipleQuery())
+			using (var db = new NorthwindDB(context))
 			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					   Customer.Select(c => c.Orders.Take(1).SingleOrDefault()),
+					dd.Customer.Select(c => c.Orders.Take(1).SingleOrDefault()),
 					db.Customer.Select(c => c.Orders.Take(1).SingleOrDefault()));
 			}
 		}
@@ -216,7 +208,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void MultipleQuery(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from p in db.Product

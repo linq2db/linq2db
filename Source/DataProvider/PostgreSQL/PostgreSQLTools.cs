@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,6 +9,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Configuration;
+
 	using Data;
 
 	[PublicAPI]
@@ -32,9 +33,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(ConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (DataConnection.IsMachineConfig(css))
+			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
 
 			switch (css.ProviderName)
@@ -73,8 +74,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						{
 							var connectionType    = Type.GetType("Npgsql.NpgsqlConnection, Npgsql", true);
 							var connectionCreator = DynamicDataProviderBase.CreateConnectionExpression(connectionType).Compile();
+							var cs                = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-							using (var conn = connectionCreator(css.ConnectionString))
+							using (var conn = connectionCreator(cs))
 							{
 								conn.Open();
 
@@ -86,6 +88,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						}
 						catch (Exception)
 						{
+							return _postgreSQLDataProvider;
 						}
 					}
 

@@ -1,7 +1,7 @@
-configuration: Debug
+configuration: Release
 
 environment:
-  packageVersion: 1.7.4
+  packageVersion: 1.7.6
 
 version: $(packageVersion).{build}
 
@@ -10,16 +10,25 @@ cache:
 
 services:
 - mssql2012sp1
-- mysql56
+- mysql
+- postgresql
 
 init:
 - cmd: git config --global core.autocrlf true
 - ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
-- ps: $env:nugetVersion = "$env:packageVersion-alpha$env:appveyor_build_number"
+- ps: |
+    if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
+    {
+        $env:nugetVersion = "$env:packageVersion"
+    }
+    else
+    {
+        $env:nugetVersion = "$env:packageVersion-rc$env:appveyor_build_number"
+    }
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 
 assembly_info:
-  patch: true
+  patch: false
   file: '**\AssemblyInfo.*'
   assembly_version: '$(buildVersion)'
   assembly_file_version: '$(buildVersion)'
@@ -41,14 +50,35 @@ after_build:
 - cmd: cd Source
 - cmd: Compile.bat
 - cmd: cd ..
-- ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion"
-- ps: Push-AppveyorArtifact linq2db.$env:nugetVersion.nupkg
+- ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
 
-test: off
+artifacts:
+- path: \**\linq2db*.nupkg
+
+test: 
+  assemblies:
+    - \Tests\**\linq2db.Tests.dll
 
 before_test:
-- ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
-- ps: Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
+- ps: |
+      Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
+      cd $env:appveyor_build_folder
+      . ".\Av-InitDatabases.ps1"
 
 after_test:
 - ps: Pop-Location
+
+deploy:
+- provider: NuGet
+  server: https://www.myget.org/F/linq2db/api/v2
+  api_key:
+    secure: LDw0jeA1Yo3R4/TKv2kmlgJR8dTT6Wun2MONq3uDvtVQJG4LOU9LjvVTAc7IgRfm
+  skip_symbols: true
+  on:
+    branch: master
+
+- provider: NuGet
+  api_key:
+    secure: oTYw2IwTnz4qMD8c/MR/6mo+Nx3wa5Pp8MYfsKBCKCVuU6QCHlj+6QMXpnQses8G
+  on:
+    branch: release

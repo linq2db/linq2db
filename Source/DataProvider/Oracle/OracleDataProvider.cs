@@ -60,22 +60,22 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var typesNamespace  = AssemblyName + ".Types.";
 
-			_oracleBFile        = connectionType.Assembly.GetType(typesNamespace + "OracleBFile",        true);
-			_oracleBinary       = connectionType.Assembly.GetType(typesNamespace + "OracleBinary",       true);
-			_oracleBlob         = connectionType.Assembly.GetType(typesNamespace + "OracleBlob",         true);
-			_oracleClob         = connectionType.Assembly.GetType(typesNamespace + "OracleClob",         true);
-			_oracleDate         = connectionType.Assembly.GetType(typesNamespace + "OracleDate",         true);
-			_oracleDecimal      = connectionType.Assembly.GetType(typesNamespace + "OracleDecimal",      true);
-			_oracleIntervalDS   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalDS",   true);
-			_oracleIntervalYM   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalYM",   true);
-			_oracleRefCursor    = connectionType.Assembly.GetType(typesNamespace + "OracleRefCursor",    true);
-			_oracleString       = connectionType.Assembly.GetType(typesNamespace + "OracleString",       true);
-			_oracleTimeStamp    = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStamp",    true);
-			_oracleTimeStampLTZ = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampLTZ", true);
-			_oracleTimeStampTZ  = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampTZ",  true);
-			_oracleRef          = connectionType.Assembly.GetType(typesNamespace + "OracleRef",          false);
-			_oracleXmlType      = connectionType.Assembly.GetType(typesNamespace + "OracleXmlType",      false);
-			_oracleXmlStream    = connectionType.Assembly.GetType(typesNamespace + "OracleXmlStream",    false);
+			_oracleBFile        = connectionType.AssemblyEx().GetType(typesNamespace + "OracleBFile",        true);
+			_oracleBinary       = connectionType.AssemblyEx().GetType(typesNamespace + "OracleBinary",       true);
+			_oracleBlob         = connectionType.AssemblyEx().GetType(typesNamespace + "OracleBlob",         true);
+			_oracleClob         = connectionType.AssemblyEx().GetType(typesNamespace + "OracleClob",         true);
+			_oracleDate         = connectionType.AssemblyEx().GetType(typesNamespace + "OracleDate",         true);
+			_oracleDecimal      = connectionType.AssemblyEx().GetType(typesNamespace + "OracleDecimal",      true);
+			_oracleIntervalDS   = connectionType.AssemblyEx().GetType(typesNamespace + "OracleIntervalDS",   true);
+			_oracleIntervalYM   = connectionType.AssemblyEx().GetType(typesNamespace + "OracleIntervalYM",   true);
+			_oracleRefCursor    = connectionType.AssemblyEx().GetType(typesNamespace + "OracleRefCursor",    true);
+			_oracleString       = connectionType.AssemblyEx().GetType(typesNamespace + "OracleString",       true);
+			_oracleTimeStamp    = connectionType.AssemblyEx().GetType(typesNamespace + "OracleTimeStamp",    true);
+			_oracleTimeStampLTZ = connectionType.AssemblyEx().GetType(typesNamespace + "OracleTimeStampLTZ", true);
+			_oracleTimeStampTZ  = connectionType.AssemblyEx().GetType(typesNamespace + "OracleTimeStampTZ",  true);
+			_oracleRef          = connectionType.AssemblyEx().GetType(typesNamespace + "OracleRef",          false);
+			_oracleXmlType      = connectionType.AssemblyEx().GetType(typesNamespace + "OracleXmlType",      false);
+			_oracleXmlStream    = connectionType.AssemblyEx().GetType(typesNamespace + "OracleXmlStream",    false);
 
 			SetProviderField(_oracleBFile,        _oracleBFile,        "GetOracleBFile");
 			SetProviderField(_oracleBinary,       _oracleBinary,       "GetOracleBinary");
@@ -184,7 +184,7 @@ namespace LinqToDB.DataProvider.Oracle
 							Expression.PropertyOrField(
 								Expression.Convert(
 									Expression.PropertyOrField(p, "Command"),
-									connectionType.Assembly.GetType(AssemblyName + ".Client.OracleCommand", true)),
+									connectionType.AssemblyEx().GetType(AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
 							Expression.Constant(true)),
 							p
@@ -201,7 +201,7 @@ namespace LinqToDB.DataProvider.Oracle
 					Expression.Lambda<Func<DateTimeOffset,string,object>>(
 						Expression.Convert(
 							Expression.New(
-								_oracleTimeStampTZ.GetConstructor(new[]
+								_oracleTimeStampTZ.GetConstructorEx(new []
 								{
 									typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(string)
 								}),
@@ -323,10 +323,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return _sqlOptimizer;
 		}
 
+#if !NETSTANDARD
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new OracleSchemaProvider(Name);
 		}
+#endif 
 
 		Action<DataConnection> _setBindByName;
 
@@ -472,7 +474,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		OracleBulkCopy _bulkCopy;
 
@@ -488,9 +490,9 @@ namespace LinqToDB.DataProvider.Oracle
 				source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -501,6 +503,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		#endregion
+#endregion
 	}
 }

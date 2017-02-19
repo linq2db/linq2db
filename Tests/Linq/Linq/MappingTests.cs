@@ -8,7 +8,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-#pragma warning disable 0649
 
 namespace Tests.Linq
 {
@@ -248,7 +247,8 @@ namespace Tests.Linq
 		{
 			public MyMappingSchema()
 			{
-				SetConvertExpression<int,MyInt>          (n => new MyInt { MyValue = n });
+				SetConvertExpression<Int64,MyInt>        (n => new MyInt { MyValue = (int)n });
+				SetConvertExpression<Int32,MyInt>        (n => new MyInt { MyValue =      n });
 				SetConvertExpression<MyInt,DataParameter>(n => new DataParameter { Value = n.MyValue });
 			}
 		}

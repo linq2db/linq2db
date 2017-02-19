@@ -112,7 +112,20 @@ namespace LinqToDB.Mapping
 
 		public PropertyMappingBuilder<T> Property(Expression<Func<T,object>> func)
 		{
-			return new PropertyMappingBuilder<T>(this, func);
+			return (new PropertyMappingBuilder<T>(this, func)).IsColumn();
+		}
+
+		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
+			Expression<Func<T, S>> prop,
+			Expression<Func<T, ID1>> thisKey,
+			Expression<Func<S, ID2>> otherKey )
+		{
+			var thisKeyName = ((MemberExpression)thisKey.Body).Member.Name;
+			var otherKeyName = ((MemberExpression)otherKey.Body).Member.Name;
+
+			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+
+			return Property( objProp ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName } );
 		}
 
 		public EntityMappingBuilder<T> HasPrimaryKey(Expression<Func<T,object>> func, int order = -1)
@@ -170,6 +183,15 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<T> HasDatabaseName(string databaseName)
 		{
 			return SetTable(a => a.Database = databaseName);
+		}
+
+		public EntityMappingBuilder<T> Inheritance<S>(Expression<Func<T, S>> key, S value, Type type, bool isDefault = false)
+		{
+			HasAttribute(new InheritanceMappingAttribute() {Code = value, Type = type, IsDefault = isDefault});
+			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(key.Body, typeof(object)), key.Parameters);
+			Property(objProp).IsDiscriminator();
+
+			return this;
 		}
 
 		EntityMappingBuilder<T> SetTable(Action<TableAttribute> setColumn)

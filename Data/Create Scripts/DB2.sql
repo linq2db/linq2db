@@ -7,6 +7,29 @@ GO
 DROP TABLE "Person"
 GO
 
+DROP TABLE "InheritanceParent"
+GO
+
+CREATE TABLE "InheritanceParent"
+(
+	"InheritanceParentId" INTEGER       PRIMARY KEY NOT NULL,
+	"TypeDiscriminator"   INTEGER                       NULL,
+	"Name"                VARCHAR(50)                   NULL
+)
+GO
+
+DROP TABLE "InheritanceChild"
+GO
+
+CREATE TABLE "InheritanceChild"
+(
+	"InheritanceChildId"  INTEGER      PRIMARY KEY NOT NULL,
+	"InheritanceParentId" INTEGER                  NOT NULL,
+	"TypeDiscriminator"   INTEGER                      NULL,
+	"Name"                VARCHAR(50)                  NULL
+)
+GO
+
 CREATE TABLE "Person"
 ( 
 	"PersonID"   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
@@ -20,6 +43,8 @@ GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('John',   'Pupkin',    'M')
 GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Testerson', 'M')
+GO
+INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jane',   'Doe',       'F')
 GO
 
 -- Doctor Table Extension

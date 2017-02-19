@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -155,6 +156,10 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
 		{
 			StringBuilder.Append("IDENTITY");
+		}
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			return sb.Append(table);
 		}
 
 #if !SILVERLIGHT

@@ -6,7 +6,11 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
+#if !NOFSHARP
 using Tests.FSharp.Models;
+#else
+using Tests.Model;
+#endif
 
 namespace Tests.Linq
 {
@@ -43,7 +47,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLite, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.DB2)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.DB2)]
 		public void CharAsSqlParameter1(string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -55,7 +59,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLite, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2)]
 		public void CharAsSqlParameter2(string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -67,7 +71,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, TestProvName.SQLiteMs)]
 		public void CharAsSqlParameter3(string context)
 		{
 			using (var  db = GetDataContext(context))

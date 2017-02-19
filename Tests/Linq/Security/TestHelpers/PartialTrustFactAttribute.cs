@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
+using LinqToDB.Extensions;
 using Xunit;
 using Xunit.Sdk;
 

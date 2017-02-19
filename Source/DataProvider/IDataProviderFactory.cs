@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Specialized;
+﻿using System.Collections.Generic;
+using LinqToDB.Configuration;
 
 namespace LinqToDB.DataProvider
 {
+
 	public interface IDataProviderFactory
 	{
-		IDataProvider GetDataProvider (NameValueCollection attributes);
+		IDataProvider GetDataProvider (IEnumerable<NamedValue> attributes);
 	}
 }

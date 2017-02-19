@@ -17,23 +17,6 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Init
 
-		static readonly Dictionary<string,object> _reservedWords = new Dictionary<string,object>();
-
-		static SelectQuery()
-		{
-#if NETFX_CORE
-			using (var stream = typeof(SelectQuery).AssemblyEx().GetManifestResourceStream("ReservedWords.txt"))
-#else
-			using (var stream = typeof(SelectQuery).AssemblyEx().GetManifestResourceStream(typeof(SelectQuery), "ReservedWords.txt"))
-#endif
-			using (var reader = new StreamReader(stream))
-			{
-				string s;
-				while ((s = reader.ReadLine()) != null)
-					_reservedWords.Add(s, s);
-			}
-		}
-
 		public SelectQuery()
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
@@ -3419,63 +3402,53 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (p.Expr1 is SqlExpression)
+					if (p.Expr1 is ObjectSqlExpression)
 					{
-						var expr = (SqlExpression)p.Expr1;
+						var expr = (ObjectSqlExpression)p.Expr1;
 
-						if (expr.Expr.Length > 1 && expr.Expr[0] == '\x1')
+						if (expr.Parameters.Length == 1)
 						{
-							var type  = items.GetListItemType();
-							var ta    = TypeAccessor.GetAccessor(type);
-							var names = expr.Expr.Substring(1).Split(',');
+							var values = new List<ISqlExpression>();
 
-							if (expr.Parameters.Length == 1)
+							foreach (var item in items)
 							{
-								var values = new List<ISqlExpression>();
-
-								foreach (var item in items)
-								{
-									var ma    = ta[names[0]];
-									var value = ma.GetValue(item);
-									values.Add(new SqlValue(value));
-								}
-
-								if (values.Count == 0)
-									return new Predicate.Expr(new SqlValue(p.IsNot));
-
-								return new Predicate.InList(expr.Parameters[0], p.IsNot, values);
+								var value = expr.GetValue(item, 0);
+								values.Add(new SqlValue(value));
 							}
 
-							{
-								var sc = new SearchCondition();
+							if (values.Count == 0)
+								return new Predicate.Expr(new SqlValue(p.IsNot));
 
-								foreach (var item in items)
-								{
-									var itemCond = new SearchCondition();
-
-									for (var i = 0; i < expr.Parameters.Length; i++)
-									{
-										var sql   = expr.Parameters[i];
-										var value = ta[names[i]].GetValue(item);
-										var cond  = value == null ?
-											new Condition(false, new Predicate.IsNull  (sql, false)) :
-											new Condition(false, new Predicate.ExprExpr(sql, Predicate.Operator.Equal, new SqlValue(value)));
-
-										itemCond.Conditions.Add(cond);
-									}
-
-									sc.Conditions.Add(new Condition(false, new Predicate.Expr(itemCond), true));
-								}
-
-								if (sc.Conditions.Count == 0)
-									return new Predicate.Expr(new SqlValue(p.IsNot));
-
-								if (p.IsNot)
-									return new Predicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
-
-								return new Predicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
-							}
+							return new Predicate.InList(expr.Parameters[0], p.IsNot, values);
 						}
+
+						var sc = new SearchCondition();
+
+						foreach (var item in items)
+						{
+							var itemCond = new SearchCondition();
+
+							for (var i = 0; i < expr.Parameters.Length; i++)
+							{
+								var sql   = expr.Parameters[i];
+								var value = expr.GetValue(item, i);
+								var cond  = value == null ?
+									new Condition(false, new Predicate.IsNull  (sql, false)) :
+									new Condition(false, new Predicate.ExprExpr(sql, Predicate.Operator.Equal, new SqlValue(value)));
+
+								itemCond.Conditions.Add(cond);
+							}
+
+							sc.Conditions.Add(new Condition(false, new Predicate.Expr(itemCond), true));
+						}
+
+						if (sc.Conditions.Count == 0)
+							return new Predicate.Expr(new SqlValue(p.IsNot));
+
+						if (p.IsNot)
+							return new Predicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
+
+						return new Predicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
 					}
 				}
 			}
@@ -3578,7 +3551,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var s = alias.ToUpper();
 
-				if (!_aliases.ContainsKey(s) && !_reservedWords.ContainsKey(s))
+				if (!_aliases.ContainsKey(s) && !ReservedWords.IsReserved(s))
 				{
 					_aliases.Add(s, s);
 					break;

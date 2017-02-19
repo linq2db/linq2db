@@ -4,10 +4,36 @@ BEGIN DROP TABLE Doctor END
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Patient') AND type in (N'U'))
 BEGIN DROP TABLE Patient END
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('InheritanceParent') AND type in (N'U'))
+BEGIN DROP TABLE InheritanceParent END
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('InheritanceChild') AND type in (N'U'))
+BEGIN DROP TABLE InheritanceChild END
+
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId int          NOT NULL CONSTRAINT PK_InheritanceParent PRIMARY KEY CLUSTERED,
+	TypeDiscriminator   int              NULL,
+	Name                nvarchar(50)     NULL
+)
+ON [PRIMARY]
+GO
+
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  int          NOT NULL CONSTRAINT PK_InheritanceChild PRIMARY KEY CLUSTERED,
+	InheritanceParentId int          NOT NULL,
+	TypeDiscriminator   int              NULL,
+	Name                nvarchar(50)     NULL
+)
+ON [PRIMARY]
+GO
+
 -- Person Table
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Person') AND type in (N'U'))
 BEGIN DROP TABLE Person END
+
 
 CREATE TABLE Person
 (
@@ -24,7 +50,8 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
-
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+GO
 -- Doctor Table Extension
 
 CREATE TABLE Doctor
@@ -501,12 +528,14 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ParentChildVie
 BEGIN DROP VIEW ParentChildView END
 GO
 
-
-DROP TABLE Parent
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Parent') AND type in (N'U'))
+BEGIN DROP TABLE Parent END
 GO
-DROP TABLE Child
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Child') AND type in (N'U'))
+BEGIN DROP TABLE Child END
 GO
-DROP TABLE GrandChild
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('GrandChild') AND type in (N'U'))
+BEGIN DROP TABLE GrandChild END
 GO
 
 CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
@@ -602,7 +631,8 @@ GO
 -- SKIP SqlServer.2014 END
 -- SKIP SqlServer.2008 END
 
-DROP TABLE TestIdentity
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
+BEGIN DROP TABLE TestIdentity END
 GO
 
 CREATE TABLE TestIdentity (

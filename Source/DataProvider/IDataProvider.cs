@@ -17,7 +17,6 @@ namespace LinqToDB.DataProvider
 		Type               DataReaderType        { get; }
 		MappingSchema      MappingSchema         { get; }
 		SqlProviderFlags   SqlProviderFlags      { get; }
-
 		IDbConnection      CreateConnection      (string connectionString);
 		ISqlBuilder        CreateSqlBuilder      ();
 		ISqlOptimizer      GetSqlOptimizer       ();
@@ -30,7 +29,9 @@ namespace LinqToDB.DataProvider
 		Type               ConvertParameterType  (Type type, DataType dataType);
 		bool               IsCompatibleConnection(IDbConnection connection);
 
+#if !NETSTANDARD
 		ISchemaProvider    GetSchemaProvider     ();
+#endif
 
 		BulkCopyRowsCopied BulkCopy<T>           (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
 		int                Merge<T>              (DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,

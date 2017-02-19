@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using LinqToDB.Common;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -18,9 +20,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			try
 			{
-				var path = typeof(SybaseTools).Assembly.CodeBase.Replace("file:///", "");
-
-				path = Path.GetDirectoryName(path);
+				var path = typeof(SybaseTools).AssemblyEx().GetPath();
 
 				var _ =
 					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet45.AseClient") + ".dll")) ||

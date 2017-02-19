@@ -229,7 +229,11 @@ namespace Tests.Linq
 		public void BinaryOr(string context)
 		{
 			using (var db = GetDataContext(context))
-				TestOneJohn(from p in db.Person where (p.ID | 2) == 3 select p);
+			{
+				AreEqual(
+					   Person.Where(p => (p.ID | 2) == 3),
+					db.Person.Where(p => (p.ID | 2) == 3));
+			}
 		}
 
 		[Test, DataContextSource]
@@ -909,10 +913,13 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void SelectNestedCalculatedTest(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from r in from o in    Order select o.Freight * 1000 where r > 100000 select r / 1000,
+					from r in from o in dd.Order select o.Freight * 1000 where r > 100000 select r / 1000,
 					from r in from o in db.Order select o.Freight * 1000 where r > 100000 select r / 1000);
+			}
 		}
 
 		[Test, DataContextSource]
@@ -1105,6 +1112,98 @@ namespace Tests.Linq
 						.Where  (c => c.Key > 1 && c.Count() > 1)
 						.Having (c => c.Key > 1)
 						.Select (g => g.Count()));
+			}
+		}
+
+
+		[Test, DataContextSource]
+		public void WhereDateTimeTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Types
+						.Where(_ => _.DateTimeValue > new DateTime(2009, 1, 1))
+						.Select(_ => _),
+					db.Types
+						.Where(_ => _.DateTimeValue > new DateTime(2009, 1, 1))
+						.Select(_ => _));
+			}
+		}
+
+
+		[Test, DataContextSource]
+		public void WhereDateTimeTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Types
+						.Where(_ => _.DateTimeValue > new DateTime(2009, 1, 1))
+						.Select(_ => _),
+					db.Types
+						.Where(_ => _.DateTimeValue > new DateTime(2009, 1, 1))
+						.Select(_ => _));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void WhereDateTimeTest3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Types
+						.Where(_ => _.DateTimeValue == new DateTime(2009, 9, 27))
+						.Select(_ => _),
+					db.Types
+						.Where(_ => _.DateTimeValue == new DateTime(2009, 9, 27))
+						.Select(_ => _));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void WhereDateTimeTest4(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Types2
+						.Where(_ => _.DateTimeValue == new DateTime(2009, 9, 27))
+						.Select(_ => _),
+					db.Types2
+						.Where(_ => _.DateTimeValue == new DateTime(2009, 9, 27))
+						.Select(_ => _));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void WhereDateTimeTest5(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Types
+						.Where(_ => _.DateTimeValue.Date == new DateTime(2009, 9, 20).Date)
+						.Select(_ => _),
+					db.Types
+						.Where(_ => _.DateTimeValue.Date == new DateTime(2009, 9, 20).Date)
+						.Select(_ => _));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void WhereDateTimeTest6(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Types2
+						.Where(_ => _.DateTimeValue.Value.Date == new DateTime(2009, 9, 20).Date)
+						.Select(_ => _),
+					db.Types2
+						.Where(_ => _.DateTimeValue.Value.Date == new DateTime(2009, 9, 20).Date)
+						.Select(_ => _));
 			}
 		}
 	}
