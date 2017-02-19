@@ -81,6 +81,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DECC80B7-6CC6-4BF6-A365-1220B37D5396}"
 	ProjectSection(SolutionItems) = preProject
 		appveyor.yml = appveyor.yml
+		NuGet\PackAV.bat = NuGet\PackAV.bat
 	EndProjectSection
 EndProject
 Global

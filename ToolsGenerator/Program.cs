@@ -9,6 +9,9 @@ namespace ToolsGenerator
 	{
 		static int Main(string[] args)
 		{
+			if (args != null && args.Length > 0)
+				DefaultVersion = args[0];
+
 			var nugetDir = Environment.CurrentDirectory;
 
 			while (!Directory.Exists(Path.Combine(nugetDir, "NuGet")))
@@ -61,6 +64,8 @@ namespace ToolsGenerator
 			using (var tf = File.CreateText(Path.Combine(nugetDir, toolsFile)))
 				foreach (var tool in tools)
 					tf.WriteLine(tool, version);
+
+			Console.WriteLine("{0}...OK", toolsFile);
 		}
 
 		static void CreateProviderFile3(string nugetDir, string nuspec, string provider, string baseProvider, params string[] tools)
@@ -102,8 +107,12 @@ namespace ToolsGenerator
 			CreateProviderFile2(nugetDir, provider, provider, tools);
 		}
 
+		private static string DefaultVersion = null;
 		static string GetVersion(string specFile)
 		{
+			if (!string.IsNullOrEmpty(DefaultVersion))
+				return DefaultVersion;
+
 			var version =
 			(
 				from e in XDocument.Load(specFile).Root.Elements()
