@@ -17,6 +17,8 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
+using Microsoft.SqlServer.Types;
+
 namespace DataModel
 {
 	/// <summary>
@@ -1020,9 +1022,9 @@ namespace DataModel
 		[Column(DbType="datetimeoffset(7)", DataType=DataType.DateTimeOffset, Precision=7), Nullable            ] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset(7)
 		[Column(DbType="datetime2(7)",      DataType=DataType.DateTime2,      Precision=7), Nullable            ] public DateTime?       datetime2DataType      { get; set; } // datetime2(7)
 		[Column(DbType="time(7)",           DataType=DataType.Time,           Precision=7), Nullable            ] public TimeSpan?       timeDataType           { get; set; } // time(7)
-		[Column(DbType="hierarchyid",       DataType=DataType.Udt),                         Nullable            ] public object          hierarchyidDataType    { get; set; } // hierarchyid
-		[Column(DbType="geography",         DataType=DataType.Udt),                         Nullable            ] public object          geographyDataType      { get; set; } // geography
-		[Column(DbType="geometry",          DataType=DataType.Udt),                         Nullable            ] public object          geometryDataType       { get; set; } // geometry
+		[Column(DbType="hierarchyid",       DataType=DataType.Udt),                         Nullable            ] public SqlHierarchyId? hierarchyidDataType    { get; set; } // hierarchyid
+		[Column(DbType="geography",         DataType=DataType.Udt),                         Nullable            ] public SqlGeography    geographyDataType      { get; set; } // geography
+		[Column(DbType="geometry",          DataType=DataType.Udt),                         Nullable            ] public SqlGeometry     geometryDataType       { get; set; } // geometry
 	}
 
 	[Table(Database="TestData", Name="BinaryData")]
@@ -1251,8 +1253,8 @@ namespace DataModel
 	[Table(Database="TestData", Name="SqlTypes")]
 	public partial class SqlType
 	{
-		[Column(DbType="int",         DataType=DataType.Int32), PrimaryKey,  NotNull] public int    ID  { get; set; } // int
-		[Column(DbType="hierarchyid", DataType=DataType.Udt),      Nullable         ] public object HID { get; set; } // hierarchyid
+		[Column(DbType="int",         DataType=DataType.Int32), PrimaryKey,  NotNull] public int             ID  { get; set; } // int
+		[Column(DbType="hierarchyid", DataType=DataType.Udt),      Nullable         ] public SqlHierarchyId? HID { get; set; } // hierarchyid
 	}
 
 	[Table(Database="TestData", Name="TestIdentity")]

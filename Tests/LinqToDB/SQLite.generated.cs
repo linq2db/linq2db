@@ -15,7 +15,7 @@ namespace SQLiteDataContext
 	/// <summary>
 	/// Database       : TestData
 	/// Data Source    : TestData
-	/// Server Version : 3.14.2
+	/// Server Version : 3.9.2
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{

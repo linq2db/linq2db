@@ -190,10 +190,10 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_7743
+		/// INTEG_8333
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="INTEG_7743", BackReferenceName="INTEG7743")]
-		public PERSON INTEG7743 { get; set; }
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="INTEG_8333", BackReferenceName="INTEG8333")]
+		public PERSON INTEG8333 { get; set; }
 
 		#endregion
 	}
@@ -216,10 +216,10 @@ namespace FirebirdDataContext
 		public IEnumerable<DOCTOR> DOCTORs { get; set; }
 
 		/// <summary>
-		/// INTEG_7743_BackReference
+		/// INTEG_8333_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
-		public IEnumerable<PATIENT> INTEG7743 { get; set; }
+		public IEnumerable<PATIENT> INTEG8333 { get; set; }
 
 		#endregion
 	}
@@ -454,75 +454,6 @@ namespace FirebirdDataContext
 			public string LASTNAME   { get; set; }
 			public string MIDDLENAME { get; set; }
 			public string GENDER     { get; set; }
-		}
-
-		#endregion
-
-		#region PERSON_SELECTBYKEY
-
-		public static IEnumerable<PERSON_SELECTBYKEYResult> PERSON_SELECTBYKEY(this DataConnection dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
-		{
-			var ret = dataConnection.QueryProc<PERSON_SELECTBYKEYResult>("PERSON_SELECTBYKEY",
-				new DataParameter("ID", ID, DataType.Int32));
-
-			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
-
-			return ret;
-		}
-
-		public partial class PERSON_SELECTBYKEYResult
-		{
-			public int?   PERSONID   { get; set; }
-			public string FIRSTNAME  { get; set; }
-			public string LASTNAME   { get; set; }
-			public string MIDDLENAME { get; set; }
-			public string GENDER     { get; set; }
-		}
-
-		#endregion
-
-		#region PERSON_SELECTBYNAME
-
-		public static IEnumerable<PERSON_SELECTBYNAMEResult> PERSON_SELECTBYNAME(this DataConnection dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
-		{
-			var ret = dataConnection.QueryProc<PERSON_SELECTBYNAMEResult>("PERSON_SELECTBYNAME",
-				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME, DataType.NVarChar),
-				new DataParameter("IN_LASTNAME",  IN_LASTNAME,  DataType.NVarChar));
-
-			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
-			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
-			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
-			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
-
-			return ret;
-		}
-
-		public partial class PERSON_SELECTBYNAMEResult
-		{
-			public int?   PERSONID   { get; set; }
-			public string FIRSTNAME  { get; set; }
-			public string LASTNAME   { get; set; }
-			public string MIDDLENAME { get; set; }
-			public string GENDER     { get; set; }
-		}
-
-		#endregion
-
-		#region PERSON_UPDATE
-
-		public static int PERSON_UPDATE(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
-		{
-			return dataConnection.ExecuteProc("PERSON_UPDATE",
-				new DataParameter("PERSONID",   PERSONID,   DataType.Int32),
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  DataType.NVarChar),
-				new DataParameter("LASTNAME",   LASTNAME,   DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",     GENDER,     DataType.NChar));
 		}
 
 		#endregion

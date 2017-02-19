@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.MySql</id>
-		<version>1.0.7.5</version>
+		<version>1.7.5</version>
 		<title>LINQ to MySql</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -12,9 +12,10 @@
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>
 			LINQ to MySql is a data access technology that provides a run-time infrastructure for managing relational data as objects.
-			This package includes a T4 template to generate data models for MySql database and references to the linq2db and MySql.Data nugets.
 		</description>
-		<summary />
+		<summary>
+			This package includes a T4 template to generate data models for MySql database and references to the linq2db and MySql.Data nugets.
+		</summary>
 		<tags>linq linq2db MySql LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="MySql.Data"       />
@@ -24,7 +25,7 @@
 	</metadata>
 	<files>
 		<file src="..\packages\MySql.Data.6.9.9\lib\net40\MySql.Data.dll" target="tools" />
-		<file src="..\Templates\LinqToDB.MySql.ttinclude"                 target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.MySql.Tools.ttinclude"                        target="content\LinqToDB.Templates" />
 		<file src="CopyMe.MySql.tt.txt"                                   target="content\LinqToDB.Templates" />
 	</files>
 </package>

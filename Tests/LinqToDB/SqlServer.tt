@@ -2,6 +2,7 @@
 <#@ output extension=".generated.cs"                                                                                 #>
 <#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude"                                                      #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude"                                                    #>
+<#@ include file="..\..\Templates\ObsoleteAttributes.ttinclude"                                                      #>
 <#@ assembly name="$(SolutionDir)\packages\Microsoft.SqlServer.Types.11.0.2\lib\Net20\Microsoft.SqlServer.Types.dll" #>
 <#@ assembly name="$(SolutionDir)\packages\linq2db.1.7.5\lib\net40\linq2db.dll"                                      #>
 <#

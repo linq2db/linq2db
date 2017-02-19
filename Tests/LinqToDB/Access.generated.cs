@@ -18,7 +18,7 @@ namespace AccessDataContext
 {
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : F:\job\t4models\\Data\TestData.mdb
+	/// Data Source    : I:\linq2db.t4models\\Data\TestData.mdb
 	/// Server Version : 04.00.0000
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection

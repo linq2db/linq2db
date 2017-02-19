@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.Sybase</id>
-		<version>1.0.7.5</version>
+		<version>1.7.5</version>
 		<title>LINQ to Sybase ASE</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -12,10 +12,11 @@
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>
 			LINQ to Sybase ASE is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+		</description>
+		<summary>
 			This package includes a T4 template to generate data models for Sybase database and a reference to the linq2db nugets.
 			Sybase data provider for .NET will still need to be installed on the production or development machine in order to connect to Sybase.
-		</description>
-		<summary />
+		</summary>
 		<tags>linq linq2db Sybase LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="linq2db"          />
@@ -25,7 +26,7 @@
 	<files>
 		<file src="..\Redist\Sybase\Sybase.AdoNet2.AseClient.dll" target="tools" />
 		<file src="..\Redist\Sybase\sybdrvado20.dll"              target="tools" />
-		<file src="..\Templates\LinqToDB.Sybase.ttinclude"        target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.Sybase.Tools.ttinclude"               target="content\LinqToDB.Templates" />
 		<file src="CopyMe.Sybase.tt.txt"                          target="content\LinqToDB.Templates" />
 	</files>
 </package>

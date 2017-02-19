@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.Informix</id>
-		<version>1.0.7.5</version>
+		<version>1.7.5</version>
 		<title>LINQ to Informix</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -12,10 +12,11 @@
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>
 			LINQ to Informix is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+		</description>
+		<summary>
 			This package includes a T4 template to generate data models for Informix database and a reference to the linq2db nugets.
 			IBM Data Server Provider for .NET will still need to be installed on the production or development machine in order to connect to Informix.
-		</description>
-		<summary />
+		</summary>
 		<tags>linq linq2db Informix LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="linq2db"          />
@@ -23,8 +24,8 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\Redist\IBM\IBM.Data.Informix.dll"      target="tools" />
-		<file src="..\Templates\LinqToDB.Informix.ttinclude" target="content\LinqToDB.Templates" />
-		<file src="CopyMe.Informix.tt.txt"                   target="content\LinqToDB.Templates" />
+		<file src="..\Redist\IBM\IBM.Data.Informix.dll" target="tools" />
+		<file src="LinqToDB.Informix.Tools.ttinclude"   target="content\LinqToDB.Templates" />
+		<file src="CopyMe.Informix.tt.txt"              target="content\LinqToDB.Templates" />
 	</files>
 </package>

@@ -14,7 +14,7 @@ namespace SqlCeDataContext
 {
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : F:\job\t4models\\Data\TestData.sdf
+	/// Data Source    : I:\linq2db.t4models\\Data\TestData.sdf
 	/// Server Version : 4.0.8876.1
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
