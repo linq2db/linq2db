@@ -487,7 +487,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					switch (flags)
 					{
-						case ConvertFlags.Field : throw new NotImplementedException();
+						case ConvertFlags.Field : 
 						case ConvertFlags.Key   :
 						case ConvertFlags.All   :
 							{
