@@ -108,6 +108,83 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource()]
+ 		public void Issue75Test(string context)
+ 		{
+ 			using (var db = GetDataContext(context))
+ 			{
+ 				var result = db.Child.Select(c => new
+				{
+ 					c.ChildID,
+					c.ParentID,
+					CountChildren  = db.Child.Count(c2 => c2.ParentID == c.ParentID),
+					CountChildren2 = db.Child.Count(c2 => c2.ParentID == c.ParentID),
+					HasChildren    = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
+					HasChildren2   = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
+					AllChildren    = db.Child.All  (c2 => c2.ParentID == c.ParentID),
+					AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
+ 				});
+
+ 				result =
+ 					from child in result
+ 					join parent in db.Parent on child.ParentID equals parent.ParentID
+ 					where parent.Value1 < 7
+ 					select child;
+
+ 				var expected = Child.Select(c => new
+				{
+ 					c.ChildID,
+					c.ParentID,
+					CountChildren  = Child.Count(c2 => c2.ParentID == c.ParentID),
+					CountChildren2 = Child.Count(c2 => c2.ParentID == c.ParentID),
+					HasChildren    = Child.Any  (c2 => c2.ParentID == c.ParentID),
+					HasChildren2   = Child.Any  (c2 => c2.ParentID == c.ParentID),
+					AllChildren    = Child.All  (c2 => c2.ParentID == c.ParentID),
+					AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
+ 				});
+
+ 				expected =
+ 					from child in expected
+ 					join parent in Parent on child.ParentID equals parent.ParentID
+ 					where parent.Value1 < 7
+ 					select child;
+
+				AreEqual(expected, result);
+ 			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue115Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var qs = (from c in db.Child
+						join r in db.Parent on c.ParentID equals r.ParentID
+						where r.ParentID > 4
+						select c
+					)
+					.Union(from c in db.Child
+						join r in db.Parent on c.ParentID equals r.ParentID
+						where r.ParentID <= 4
+						select c
+					);
+
+				var ql = (from c in Child
+						join r in Parent on c.ParentID equals r.ParentID
+						where r.ParentID > 4
+						select c
+					)
+					.Union(from c in Child
+						join r in Parent on c.ParentID equals r.ParentID
+						where r.ParentID <= 4
+						select c
+					);
+
+				AreEqual(ql, qs);
+			}
+		}
+
+
 		[Test, DataContextSource]
 		public void Issue424Test1(string context)
 		{
