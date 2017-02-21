@@ -214,6 +214,7 @@ namespace Tests.Linq
 		[Test, DataContextSource()]
 		public void Issue498Test(string context)
 		{
+			using (new WithoutJoinOptimization())
 			using (var db = GetDataContext(context))
 			{
 				var q = from x in db.Child
@@ -236,34 +237,9 @@ namespace Tests.Linq
 					select new { g.Key, Cghildren = g.Count() };
 
 				AreEqual(rr, r);
-			}
-		}
-		// https://github.com/linq2db/linq2db/issues/498
-		//
-		[Test, DataContextSource()]
-		public void Issue498Test(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var q = from x in db.Child
-					from y in x.GrandChildren1
-					select x.ParentID;
 
-				var r = from x in q
-					group x by x
-					into g
-					select new { g.Key, Cghildren = g.Count() };
-
-				var qq = from x in Child
-					from y in x.GrandChildren
-					select x.ParentID;
-
-				var rr = from x in qq
-					group x by x
-					into g
-					select new { g.Key, Cghildren = g.Count() };
-
-				AreEqual(rr, r);
+				var sql = r.ToString();
+				Assert.Less(0, sql.IndexOf("INNER", 1), sql);
 			}
 		}
 	}
