@@ -268,6 +268,7 @@
     <Compile Include="Linq\AllAnyTests.cs" />
     <Compile Include="Linq\FSharpTests.cs" />
     <Compile Include="Mapping\FluentMappingTests.cs" />
+    <Compile Include="Samples\ConcurrencyCheckTests.cs" />
     <Compile Include="Samples\JoinOperatorTests.cs" />
     <Compile Include="SchemaProvider\SchemaProviderTests.cs" />
     <Compile Include="DataProvider\SybaseTests.cs" />
@@ -353,6 +354,7 @@
     <Compile Include="UserTests\FirstOrDefaultNullReferenceExceptionTests.cs" />
     <Compile Include="UserTests\GenericsFilterTests.cs" />
     <Compile Include="UserTests\GroupBySubqueryTests.cs" />
+    <Compile Include="UserTests\Issue273Tests.cs" />
     <Compile Include="UserTests\Issue531Tests.cs" />
     <Compile Include="UserTests\Issue357Tests.cs" />
     <Compile Include="UserTests\Issue352Tests.cs" />
@@ -361,6 +363,7 @@
     <Compile Include="UserTests\Issue488Tests.cs" />
     <Compile Include="UserTests\Issue496Tests.cs" />
     <Compile Include="UserTests\Issue513Tests.cs" />
+    <Compile Include="UserTests\Issue548Tests.cs" />
     <Compile Include="UserTests\LetTests.cs" />
     <Compile Include="UserTests\MultiPartIdentifierTests.cs" />
     <Compile Include="UserTests\SelectManyDeleteTests.cs" />

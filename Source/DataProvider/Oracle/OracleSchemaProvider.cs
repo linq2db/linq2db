@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			_currentUser = dataConnection.Execute<string>("select user from dual");
 
-			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
+			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow
 				return dataConnection.Query<TableInfo>(
@@ -110,7 +110,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
+			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow
 				return dataConnection.Query<ColumnInfo>(@"
@@ -161,7 +161,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
+			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow
 				return
@@ -230,7 +230,7 @@ namespace LinqToDB.DataProvider.Oracle
 				from p in ps.AsEnumerable()
 				let schema  = p.Field<string>("OWNER")
 				let name    = p.Field<string>("OBJECT_NAME")
-				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
+				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureInfo
 				{
 					ProcedureID     = schema + "." + name,
@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider.Oracle
 				let schema    = pp.Field<string>("OWNER")
 				let name      = pp.Field<string>("OBJECT_NAME")
 				let direction = pp.Field<string>("IN_OUT")
-				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
+				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureParameterInfo
 				{
 					ProcedureID   = schema + "." + name,

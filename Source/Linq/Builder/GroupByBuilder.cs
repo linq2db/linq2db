@@ -80,6 +80,16 @@ namespace LinqToDB.Linq.Builder
 			foreach (var sql in groupSql)
 				sequence.SelectQuery.GroupBy.Expr(sql.Sql);
 
+//			new QueryVisitor().Visit(sequence.SelectQuery.From, e =>
+//			{
+//				if (e.ElementType == QueryElementType.JoinedTable)
+//				{
+//					var jt = (SelectQuery.JoinedTable)e;
+//					if (jt.JoinType == SelectQuery.JoinType.Inner)
+//						jt.IsWeak = false;
+//				}
+//			});
+
 			var element = new SelectContext (buildInfo.Parent, elementSelector, sequence/*, key*/);
 			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element);
 

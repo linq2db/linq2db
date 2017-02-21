@@ -430,27 +430,7 @@ namespace LinqToDB.Linq
 								var valueType = v.GetType();
 
 								if (valueType.ToNullableUnderlying().IsEnumEx())
-								{
-									if (_enumConverters == null)
-										_enumConverters = new ConcurrentDictionary<Type,Func<object,object>>();
-
-									Func<object,object> converter;
-
-									if (!_enumConverters.TryGetValue(valueType, out converter))
-									{
-										var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
-										var convExpr  = MappingSchema.GetConvertExpression(valueType, toType);
-										var convParam = Expression.Parameter(typeof(object));
-
-										var lex = Expression.Lambda<Func<object,object>>(
-											Expression.Convert(convExpr.GetBody(Expression.Convert(convParam, valueType)), typeof(object)),
-											convParam);
-
-										converter = lex.Compile();
-									}
-
-									value = converter(v);
-								}
+									value = GetConvertedEnum(valueType, value);
 							}
 
 							values.Add(value);
@@ -462,6 +442,29 @@ namespace LinqToDB.Linq
 
 				p.SqlParameter.Value = value;
 			}
+		}
+
+		private object GetConvertedEnum(Type valueType, object value)
+		{
+			if (_enumConverters == null)
+				_enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
+
+			Func<object, object> converter;
+
+			if (!_enumConverters.TryGetValue(valueType, out converter))
+			{
+				var toType = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
+				var convExpr = MappingSchema.GetConvertExpression(valueType, toType);
+				var convParam = Expression.Parameter(typeof(object));
+
+				var lex = Expression.Lambda<Func<object, object>>(
+					Expression.Convert(convExpr.GetBody(Expression.Convert(convParam, valueType)), typeof(object)),
+					convParam);
+
+				converter = lex.Compile();
+			}
+
+			return converter(value);
 		}
 
 		#endregion

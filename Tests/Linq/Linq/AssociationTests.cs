@@ -504,31 +504,23 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void Issue148Test(string context)
 		{
-			try
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
 			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+				var q =
+					from n in db.Parent
+					select new
+					{
+						n.ParentID,
+						Children = n.Children.ToList(),
+						//Children = n.Children//.Select(t => t).ToList(),
+						//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
+					};
 
-				using (var db = GetDataContext(context))
-				{
-					var q =
-						from n in db.Parent
-						select new
-						{
-							n.ParentID,
-							Children = n.Children.ToList(),
-							//Children = n.Children//.Select(t => t).ToList(),
-							//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
-						};
+				var list = q.ToList();
 
-					var list = q.ToList();
-
-					Assert.That(list.Count,       Is.GreaterThan(0));
-					Assert.That(list[0].Children, Is.Not.Null);
-				}
-			}
-			finally
-			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+				Assert.That(list.Count,       Is.GreaterThan(0));
+				Assert.That(list[0].Children, Is.Not.Null);
 			}
 		}
 

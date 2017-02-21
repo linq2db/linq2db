@@ -102,10 +102,12 @@ namespace LinqToDB.Linq.Builder
 					if (info.Members.Count == 0)
 						throw new InvalidOperationException();
 
+					var mi = info.Members.First(m => m.DeclaringType.IsSameOrParentOf(_unionParameter.Type));
+
 					var member = new Member
 					{
 						SequenceInfo     = info,
-						MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.Members[0])
+						MemberExpression = Expression.MakeMemberAccess(_unionParameter, mi)
 					};
 
 					members.Add(new UnionMember { Member = member, Info1 = info });
