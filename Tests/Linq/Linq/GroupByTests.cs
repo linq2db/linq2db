@@ -1786,5 +1786,43 @@ namespace Tests.Linq
 					});
 			}
 		}
+
+		[Test, DataContextSource(ProviderName.Access)]
+		public void JoinGroupBy1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from c in Child
+					from g in c.GrandChildren
+					group c by g.ParentID into gc
+					select gc.Key
+					,
+					from c in db.Child
+					from g in c.GrandChildren
+					group c by g.ParentID into gc
+					select gc.Key
+				);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.Access)]
+		public void JoinGroupBy2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from c in Child
+					from g in c.Parent.Children
+					group g by g.ParentID into gc
+					select gc.Key
+					,
+					from c in db.Child
+					from g in c.Parent.Children
+					group g by g.ParentID into gc
+					select gc.Key
+				);
+			}
+		}
 	}
 }

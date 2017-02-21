@@ -1024,4 +1024,17 @@ namespace Tests
 			Configuration.Linq.AllowMultipleQuery = false;
 		}
 	}
+
+	public class WithoutJoinOptimization : IDisposable
+	{
+		public WithoutJoinOptimization()
+		{
+			Configuration.Linq.OptimizeJoins = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.OptimizeJoins = true;
+		}
+	}
 }
