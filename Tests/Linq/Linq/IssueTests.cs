@@ -131,5 +131,35 @@ namespace Tests.Linq
 					);
 			}
 		}
+
+		// https://github.com/linq2db/linq2db/issues/498
+		//
+		[Test, DataContextSource()]
+		public void Issue498Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from x in db.Child
+					//join y in db.GrandChild on new { x.ParentID, x.ChildID } equals new { ParentID = (int)y.ParentID, ChildID = (int)y.ChildID }
+					from y in x.GrandChildren1
+					select x.ParentID;
+
+				var r = from x in q
+					group x by x
+					into g
+					select new { g.Key, Cghildren = g.Count() };
+
+				var qq = from x in Child
+					from y in x.GrandChildren
+					select x.ParentID;
+
+				var rr = from x in qq
+					group x by x
+					into g
+					select new { g.Key, Cghildren = g.Count() };
+
+				AreEqual(rr, r);
+			}
+		}
 	}
 }
