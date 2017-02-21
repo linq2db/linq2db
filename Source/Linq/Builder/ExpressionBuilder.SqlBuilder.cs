@@ -2269,6 +2269,36 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 
+				case BinaryAggregateExpression.AggregateExpressionType :
+					{
+						var e = (BinaryAggregateExpression)expression;
+
+						var aggregateCondition = new SelectQuery.SearchCondition();
+						var isOr = e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse;
+
+						foreach (var expr in e.Expressions)
+						{
+							var currentItems = new SelectQuery.SearchCondition();
+							BuildSearchCondition(context, expr,  currentItems.Conditions);
+
+							if (currentItems.Conditions.Count > 0 && currentItems.Precedence < Precedence.LogicalConjunction)
+							{
+								aggregateCondition.Conditions.Add(new SelectQuery.Condition(false, currentItems, isOr));
+							}
+							else
+							{
+								if (isOr)
+									currentItems.Conditions.ForEach(c => c.IsOr = true);
+
+								aggregateCondition.Conditions.AddRange(currentItems.Conditions);
+							}
+						}
+
+						conditions.Add(new SelectQuery.Condition(false, aggregateCondition));
+
+						break;
+					}
+
 				case ExpressionType.Or     :
 				case ExpressionType.OrElse :
 					{

@@ -232,8 +232,9 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertExpressionTree(Expression expression)
 		{
-			var expr = ConvertParameters(expression);
+			var expr = AggregateExpression(expression);
 
+			expr = ConvertParameters (expr);
 			expr = ExposeExpression  (expr);
 			expr = OptimizeExpression(expr);
 
@@ -291,6 +292,48 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#region ConvertParameters
+
+		Expression AggregateExpression(Expression expression)
+		{
+			return expression.Transform(expr =>
+			{
+				switch (expr.NodeType)
+				{
+					case ExpressionType.Or      :
+					case ExpressionType.And     :
+					case ExpressionType.OrElse  :
+					case ExpressionType.AndAlso :
+						{
+							var stack  = new Stack<Expression>();
+							var items  = new List<Expression>();
+							var binary = (BinaryExpression) expr;
+
+							stack.Push(binary.Right);
+							stack.Push(binary.Left);
+							while (stack.Count > 0)
+							{
+								var item = stack.Pop();
+								if (item.NodeType == expr.NodeType)
+								{
+									binary  = (BinaryExpression) item;
+									stack.Push(binary.Right);
+									stack.Push(binary.Left);
+								}
+								else
+									items.Add(item);
+							}
+
+							if (items.Count > 2)
+							{
+								return new BinaryAggregateExpression(expr.NodeType, expr.Type, items.ToArray());
+							}
+							break;
+						}
+				}
+
+				return expr;
+			});
+		}
 
 		Expression ConvertParameters(Expression expression)
 		{

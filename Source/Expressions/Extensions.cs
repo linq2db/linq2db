@@ -294,6 +294,13 @@ namespace LinqToDB.Expressions
 							Visit(expr.Reduce(), func);
 						break;
 					}
+
+				case BinaryAggregateExpression.AggregateExpressionType:
+					{
+						var e = (BinaryAggregateExpression)expr;
+						Visit(e.Expressions, func);
+						break;
+					}
 			}
 
 			func(expr);
@@ -570,6 +577,13 @@ namespace LinqToDB.Expressions
 					{
 						if (expr.CanReduce)
 							Visit(expr.Reduce(), func);
+						break;
+					}
+
+				case BinaryAggregateExpression.AggregateExpressionType:
+					{
+						var e = (BinaryAggregateExpression)expr;
+						Visit(e.Expressions, func);
 						break;
 					}
 			}
@@ -849,6 +863,13 @@ namespace LinqToDB.Expressions
 					if (expr.CanReduce)
 						return Find(expr.Reduce(), func);
 					break;
+
+				case BinaryAggregateExpression.AggregateExpressionType:
+					{
+						var e = (BinaryAggregateExpression)expr;
+
+						return Find(e.Expressions, func);
+					}
 			}
 
 			return null;
@@ -1231,6 +1252,17 @@ namespace LinqToDB.Expressions
 
 						return e.Update(b, c, f, t);
 					}
+
+				case BinaryAggregateExpression.AggregateExpressionType:
+					{
+						var e = (BinaryAggregateExpression)expr;
+						var a = Transform(e.Expressions, func);
+						if (!ReferenceEquals(e.Expressions, a))
+						{
+							return e.Update(a.ToArray());
+						}
+						return e;
+					}
 			}
 
 			throw new InvalidOperationException();
@@ -1603,6 +1635,17 @@ namespace LinqToDB.Expressions
 						var t = Transform (e.Fault,    func);
 
 						return e.Update(b, c, f, t);
+					}
+
+				case BinaryAggregateExpression.AggregateExpressionType:
+					{
+						var e = (BinaryAggregateExpression)expr;
+						var a = Transform2(e.Expressions, func);
+						if (!ReferenceEquals(e.Expressions, a))
+						{
+							return e.Update(a.ToArray());
+						}
+						return e;
 					}
 			}
 
