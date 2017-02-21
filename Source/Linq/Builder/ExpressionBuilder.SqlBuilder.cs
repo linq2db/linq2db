@@ -2281,14 +2281,15 @@ namespace LinqToDB.Linq.Builder
 							var currentItems = new SelectQuery.SearchCondition();
 							BuildSearchCondition(context, expr,  currentItems.Conditions);
 
-							if (currentItems.Conditions.Count > 0 && currentItems.Precedence < Precedence.LogicalConjunction)
+							if (currentItems.Conditions.Count > 0 && 
+								(currentItems.Precedence < Precedence.LogicalConjunction || isOr && currentItems.Precedence == Precedence.LogicalConjunction))
 							{
 								aggregateCondition.Conditions.Add(new SelectQuery.Condition(false, currentItems, isOr));
 							}
 							else
 							{
-								if (isOr)
-									currentItems.Conditions.ForEach(c => c.IsOr = true);
+								foreach (var c in currentItems.Conditions)
+									c.IsOr = true;
 
 								aggregateCondition.Conditions.AddRange(currentItems.Conditions);
 							}
