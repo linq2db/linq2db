@@ -1,7 +1,7 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.7.6
+  packageVersion: 1.7.7
 
 version: $(packageVersion).{build}
 
