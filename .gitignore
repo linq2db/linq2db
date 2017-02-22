@@ -38,3 +38,4 @@ linq2db.sln.ide/
 !packages/**
 .vs/*
 *.lock.json
+/Source/LinqToDB.sln

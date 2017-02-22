@@ -845,21 +845,21 @@ namespace LinqToDB.Linq
 
 		#region Update
 
-		public static int Update(IDataContextInfo dataContextInfo, T obj)
+		public static int Update(IDataContextInfo dataContextInfo, T obj, bool overrideConcurrency)
 		{
 			if (Equals(default(T), obj))
 				return 0;
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID, overrideConcurrency };
 
 			if (!ObjectOperation<T>.Update.TryGetValue(key, out ei))
 				lock (_sync)
 					if (!ObjectOperation<T>.Update.TryGetValue(key, out ei))
 					{
 						var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
-						var sqlQuery = new SelectQuery { QueryType = QueryType.Update };
+						var sqlQuery = new SelectQuery { QueryType = QueryType.Update, OverrideConcurrencyCheck = overrideConcurrency };
 
 						sqlQuery.From.Table(sqlTable);
 
@@ -911,8 +911,13 @@ namespace LinqToDB.Linq
 
 						ObjectOperation<T>.Update.Add(key, ei);
 					}
+			
+			var rowcount = (int)ei.GetElement(null, dataContextInfo, Expression.Constant(obj), null);
 
-			return (int)ei.GetElement(null, dataContextInfo, Expression.Constant(obj), null);
+
+			dataContextInfo.DataContext.QueryExecuted(rowcount, "UPDATE");
+
+			return rowcount;
 		}
 
 		#endregion

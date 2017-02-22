@@ -384,6 +384,12 @@ namespace LinqToDB.Data
 			return dp.GetSqlOptimizer;
 		}
 
+		public void QueryExecuted(int count, string action)
+		{
+			
+		}
+
+
 		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer
 		{
 			get { return GetGetSqlOptimizer(DataProvider); }

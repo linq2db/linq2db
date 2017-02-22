@@ -110,6 +110,7 @@ namespace LinqToDB.SqlQuery
 		public bool IsInsertOrUpdate { get { return _queryType == QueryType.InsertOrUpdate; } }
 		public bool IsInsert         { get { return _queryType == QueryType.Insert || _queryType == QueryType.InsertOrUpdate; } }
 		public bool IsUpdate         { get { return _queryType == QueryType.Update || _queryType == QueryType.InsertOrUpdate; } }
+		public bool OverrideConcurrencyCheck { get; set; }
 
 		#endregion
 

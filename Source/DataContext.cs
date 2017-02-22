@@ -275,5 +275,10 @@ namespace LinqToDB
 
 			return dct;
 		}
+
+		public void QueryExecuted(int count, string action)
+		{
+			((IDataContext)_dataConnection).QueryExecuted(count, action);
+		}
 	}
 }
