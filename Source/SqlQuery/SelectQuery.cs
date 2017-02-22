@@ -170,7 +170,27 @@ namespace LinqToDB.SqlQuery
 
 			public bool Equals(Column other)
 			{
-				return Expression.Equals(other.Expression) && object.Equals(Parent, other.Parent);
+				//var found = Expression.Equals(other.Expression);
+				var found =
+					new QueryVisitor().Find(other, e =>
+						{
+							switch(e.ElementType)
+							{
+								case QueryElementType.Column: return ((Column)e).Expression.Equals(Expression);
+							}
+							return false;
+						}) != null
+					|| new QueryVisitor().Find(Expression, e =>
+						{
+							switch (e.ElementType)
+							{
+								case QueryElementType.Column: return ((Column)e).Expression.Equals(other.Expression);
+							}
+							return false;
+						}) != null;
+
+
+				return found && object.Equals(Parent, other.Parent);
 			}
 
 			public override string ToString()
