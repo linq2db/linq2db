@@ -298,5 +298,34 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource]
+		public void Issue508Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = (
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					where c.ChildID == 11
+					select p.ParentID
+							 ).Union(
+					from c in db.Child
+					where c.ChildID == 11
+					select c.ParentID
+								   );
+				var expected = (
+					from c in Child
+					join p in Parent on c.ParentID equals p.ParentID
+					where c.ChildID == 11
+					select p.ParentID
+							 ).Union(
+					from c in Child
+					where c.ChildID == 11
+					select c.ParentID
+								   );
+
+				AreEqual(expected, query);
+			}
+		}
 	}
 }
