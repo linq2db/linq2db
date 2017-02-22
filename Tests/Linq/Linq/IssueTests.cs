@@ -242,5 +242,61 @@ namespace Tests.Linq
 				Assert.Less(0, sql.IndexOf("INNER", 1), sql);
 			}
 		}
+
+
+		[Test, DataContextSource]
+		public void Issue528Test1(string context)
+		{
+			//using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
+				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
+
+				foreach(var re in result)
+				{
+					var ex = expected.Single(_ => _.Key == re.Key);
+
+					AreEqual(ex.Data, re.Data);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue528Test2(string context)
+		{
+			//using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
+				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
+
+				foreach(var re in result)
+				{
+					var ex = expected.Single(_ => _.Key == re.Key);
+
+					AreEqual(ex.Data, re.Data);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue528Test3(string context)
+		{
+			//using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
+				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
+
+				foreach(var re in result)
+				{
+					var ex = expected.Single(_ => _.Key == re.Key);
+
+					AreEqual(ex.Data.ToList(), re.Data.ToList());
+				}
+			}
+		}
+
 	}
 }
