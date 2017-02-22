@@ -1070,6 +1070,35 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test, DataContextSource]
+		public void Insert15(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
+
+				try
+				{
+					db.Insert(new ComplexPerson
+						{
+							Name = new FullName
+							{
+								FirstName = "Insert15",
+								LastName  = "Insert15"
+							},
+							Gender = Gender.Male,
+						});
+
+					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Count();
+					Assert.AreEqual(1, cnt);
+				}
+				finally
+				{
+					db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
+				}
+			}
+		}
+
 		[Test, DataContextSource(ProviderName.Informix, ProviderName.SqlCe, ProviderName.SapHana)]
 		public void InsertSingleIdentity(string context)
 		{
