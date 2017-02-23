@@ -13,11 +13,11 @@ namespace Tests.UserTests
 		[Test, NorthwindDataContext]
 		public void Test(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
-				var first = db.Order.Where(x => x.ShipVia == 1).Select(x => new {x.ShipCountry, Via1 = x.Freight, Via2 = 0M, Via3 = 0M});
-				var second = db.Order.Where(x => x.ShipVia == 2).Select(x => new {x.ShipCountry, Via1 = 0M, Via2 = x.Freight, Via3 = 0M});
-				var third = db.Order.Where(x => x.ShipVia == 3).Select(x => new {x.ShipCountry, Via1 = 0M, Via2 = 0M, Via3 = x.Freight});
+				var first  = db.Order.Where(x => x.ShipVia == 1).Select(x => new {x.ShipCountry, Via1 = x.Freight, Via2 = 0M,        Via3 = 0M});
+				var second = db.Order.Where(x => x.ShipVia == 2).Select(x => new {x.ShipCountry, Via1 = 0M,        Via2 = x.Freight, Via3 = 0M});
+				var third  = db.Order.Where(x => x.ShipVia == 3).Select(x => new {x.ShipCountry, Via1 = 0M,        Via2 = 0M,        Via3 = x.Freight});
 
 				var allData = first.Union(second).Union(third)
 					.GroupBy(x => x.ShipCountry)
