@@ -170,9 +170,12 @@ namespace LinqToDB.SqlQuery
 
 			public bool Equals(Column other)
 			{
-				//var found = Expression.Equals(other.Expression);
+				if (!object.Equals(Parent, other.Parent))
+					return false;
+
 				var found =
-					new QueryVisitor().Find(other, e =>
+					Expression.Equals(other.Expression)
+					|| new QueryVisitor().Find(other, e =>
 						{
 							switch(e.ElementType)
 							{
@@ -189,8 +192,7 @@ namespace LinqToDB.SqlQuery
 							return false;
 						}) != null;
 
-
-				return found && object.Equals(Parent, other.Parent);
+				return found;
 			}
 
 			public override string ToString()
