@@ -1037,4 +1037,17 @@ namespace Tests
 			Configuration.Linq.OptimizeJoins = true;
 		}
 	}
+
+	public class AllowMultipleQuery : IDisposable
+	{
+		public AllowMultipleQuery()
+		{
+			Configuration.Linq.AllowMultipleQuery = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
 }

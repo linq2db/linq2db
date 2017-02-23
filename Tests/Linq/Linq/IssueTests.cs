@@ -37,7 +37,7 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/42
 		//
-		[Test, DataContextSource()]
+		[Test, DataContextSource]
 		public void Issue42Test(string context)
 		{
 			using (var db = GetDataContext(context))
