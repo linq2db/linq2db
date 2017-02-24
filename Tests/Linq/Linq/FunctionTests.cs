@@ -290,10 +290,13 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Equals4(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					   Customer.Where(c => !c.Address.Equals(null)),
+					dd.Customer.Where(c => !c.Address.Equals(null)),
 					db.Customer.Where(c => !c.Address.Equals(null)));
+			}
 		}
 
 		[Test, DataContextSource(

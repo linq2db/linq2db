@@ -7,6 +7,30 @@ GO
 DROP TABLE IF EXISTS "Person"
 GO
 
+DROP TABLE IF EXISTS "InheritanceParent"
+GO
+
+CREATE TABLE "InheritanceParent"
+(
+	"InheritanceParentId" INTEGER       PRIMARY KEY,
+	"TypeDiscriminator"   INTEGER                       NULL,
+	"Name"                VARCHAR(50)                   NULL
+)
+GO
+
+DROP TABLE IF EXISTS "InheritanceChild"
+GO
+
+CREATE TABLE "InheritanceChild"
+(
+	"InheritanceChildId"  INTEGER      PRIMARY KEY,
+	"InheritanceParentId" INTEGER                  NOT NULL,
+	"TypeDiscriminator"   INTEGER                      NULL,
+	"Name"                VARCHAR(50)                  NULL
+)
+GO
+
+
 CREATE TABLE "Person"
 ( 
 	--PersonID   INTEGER PRIMARY KEY DEFAULT NEXTVAL('Seq'),
@@ -22,7 +46,8 @@ INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('John',   'Pupk
 GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Testerson', 'M')
 GO
-
+INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jane',   'Doe',       'F')
+GO
 -- Doctor Table Extension
 
 CREATE TABLE "Doctor"

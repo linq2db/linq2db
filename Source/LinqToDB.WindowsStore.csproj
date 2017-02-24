@@ -103,6 +103,12 @@
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
@@ -305,9 +311,11 @@
     <Compile Include="SqlProvider\ConvertType.cs" />
     <Compile Include="SqlProvider\ISqlBuilder.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
+    <Compile Include="SqlProvider\JoinOptimizer.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
+    <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\Extensions.cs" />
     <Compile Include="SqlQuery\ICloneableElement.cs" />
     <Compile Include="SqlQuery\IQueryElement.cs" />
@@ -341,6 +349,7 @@
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
+    <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.snk" />

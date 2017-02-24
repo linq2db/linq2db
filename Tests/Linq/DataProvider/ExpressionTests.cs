@@ -5,7 +5,9 @@ using System.Linq.Expressions;
 using NUnit.Framework;
 
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.SQLite;
 
 namespace Tests.DataProvider
 {
@@ -15,16 +17,14 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class ExpressionTests : TestBase
 	{
-		[Test, NorthwindDataContext]
+		[Test, NorthwindDataContext(true)] // SQLite returns Int64 for column instead of Int32
 		public void Test1(string context)
 		{
-#if !NETSTANDARD
-			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
-#else
-			var connectionString = "TODO";
-#endif
+			var connectionString = DataConnection.GetConnectionString(context);
+			var dataProvider     = DataConnection.GetDataProvider(context);
 
-			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), connectionString))
+
+			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
 				conn.InitCommand(CommandType.Text, "SELECT 1", null, null);
 

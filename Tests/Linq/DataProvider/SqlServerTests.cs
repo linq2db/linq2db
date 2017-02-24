@@ -686,7 +686,6 @@ namespace Tests.DataProvider
 		[Table(Schema = "dbo", Name = "LinqDataTypes")]
 		class DataTypes
 		{
-#pragma warning disable 0649
 			[Column] public int      ID;
 			[Column] public decimal  MoneyValue;
 			[Column] public DateTime DateTimeValue;
@@ -694,7 +693,6 @@ namespace Tests.DataProvider
 			[Column] public Guid     GuidValue;
 			[Column] public Binary   BinaryValue;
 			[Column] public short    SmallIntValue;
-#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
@@ -970,9 +968,7 @@ namespace Tests.DataProvider
 		[Table("#TempTable")]
 		class TempTable
 		{
-#pragma warning disable 0649
 			[PrimaryKey] public int ID;
-#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
@@ -1000,26 +996,28 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow
 		{
-#pragma warning disable 0649
 			[Column] public decimal Decimal1;
 			[Column] public decimal Decimal2;
 			[Column] public decimal Decimal3;
-#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
 		public void OverflowTest(string context)
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
-
-			SqlServerTools.DataReaderGetDecimal = GetDecimal;
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow>().ToList();
-			}
+				SqlServerTools.DataReaderGetDecimal = GetDecimal;
 
-			SqlServerTools.DataReaderGetDecimal = func;
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow>().ToList();
+				}
+			}
+			finally
+			{
+				SqlServerTools.DataReaderGetDecimal = func;
+			}
 		}
 
 		const int ClrPrecision = 29;
@@ -1033,7 +1031,7 @@ namespace Tests.DataProvider
 				if (value.Precision > ClrPrecision)
 				{
 					var str = value.ToString();
-					var val = decimal.Parse(str);
+					var val = decimal.Parse(str, CultureInfo.InvariantCulture);
 
 					return val;
 				}
@@ -1051,11 +1049,9 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow2
 		{
-#pragma warning disable 0649
 			[Column] public SqlDecimal Decimal1;
 			[Column] public SqlDecimal Decimal2;
 			[Column] public SqlDecimal Decimal3;
-#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]
@@ -1063,14 +1059,19 @@ namespace Tests.DataProvider
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
 
-			SqlServerTools.DataReaderGetDecimal = (rd,idx) => { throw new Exception(); };
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow2>().ToList();
-			}
+				SqlServerTools.DataReaderGetDecimal = (rd, idx) => { throw new Exception(); };
 
-			SqlServerTools.DataReaderGetDecimal = func;
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow2>().ToList();
+				}
+			}
+			finally
+			{
+				SqlServerTools.DataReaderGetDecimal = func;
+			}
 		}
 	}
 }

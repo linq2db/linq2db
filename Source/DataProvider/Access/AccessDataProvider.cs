@@ -16,6 +16,7 @@ namespace LinqToDB.DataProvider.Access
 
 	public class AccessDataProvider : DataProviderBase
 	{
+		private readonly OleDbType _decimalType = OleDbType.Decimal;
 		public AccessDataProvider()
 			: this(ProviderName.Access, new AccessMappingSchema())
 		{
@@ -35,6 +36,9 @@ namespace LinqToDB.DataProvider.Access
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
 
 			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
+
+			if (System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != ".")
+				_decimalType = OleDbType.VarChar;
 		}
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
@@ -88,7 +92,7 @@ namespace LinqToDB.DataProvider.Access
 				//
 				case DataType.Decimal    :
 				case DataType.VarNumeric : 
-					((OleDbParameter)parameter).OleDbType = OleDbType.Decimal; return;
+					((OleDbParameter)parameter).OleDbType = _decimalType; return;
 
 				// OleDbType.DBTimeStamp is locale aware, OleDbType.Date is locale neutral.
 				//

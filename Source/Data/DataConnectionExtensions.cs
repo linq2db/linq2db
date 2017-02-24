@@ -140,6 +140,11 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).Execute<T>();
 		}
 
+		public static T ExecuteProc<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProc<T>();
+		}
+
 		public static T Execute<T>(this DataConnection connection, string sql, DataParameter parameter)
 		{
 			return new CommandInfo(connection, sql, parameter).Execute<T>();

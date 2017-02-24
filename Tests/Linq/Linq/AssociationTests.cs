@@ -204,37 +204,49 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void EqualsNull1(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in    Employee where employee.ReportsToEmployee != null select employee.EmployeeID,
+					from employee in dd.Employee where employee.ReportsToEmployee != null select employee.EmployeeID,
 					from employee in db.Employee where employee.ReportsToEmployee != null select employee.EmployeeID);
+			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void EqualsNull2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in    Employee where employee.ReportsToEmployee != null select employee, 
+					from employee in dd.Employee where employee.ReportsToEmployee != null select employee, 
 					from employee in db.Employee where employee.ReportsToEmployee != null select employee);
+			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void EqualsNull3(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in    Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee },
+					from employee in dd.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee },
 					from employee in db.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee });
+			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void StackOverflow1(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				Assert.AreEqual(
-					(from employee in    Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(),
+					(from employee in dd.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(),
 					(from employee in db.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault());
+			}
 		}
 
 		[Test, DataContextSource(ProviderName.SqlCe)]
@@ -492,44 +504,34 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void Issue148Test(string context)
 		{
-			try
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
 			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+				var q =
+					from n in db.Parent
+					select new
+					{
+						n.ParentID,
+						Children = n.Children.ToList(),
+						//Children = n.Children//.Select(t => t).ToList(),
+						//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
+					};
 
-				using (var db = GetDataContext(context))
-				{
-					var q =
-						from n in db.Parent
-						select new
-						{
-							n.ParentID,
-							Children = n.Children.ToList(),
-							//Children = n.Children//.Select(t => t).ToList(),
-							//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
-						};
+				var list = q.ToList();
 
-					var list = q.ToList();
-
-					Assert.That(list.Count,       Is.GreaterThan(0));
-					Assert.That(list[0].Children, Is.Not.Null);
-				}
-			}
-			finally
-			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+				Assert.That(list.Count,       Is.GreaterThan(0));
+				Assert.That(list[0].Children, Is.Not.Null);
 			}
 		}
 
 		[Table("Parent")]
 		class Parent170
 		{
-#pragma warning disable 0649
 			[Column] public int ParentID;
 			[Column] public int Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
 			public Parent170 Parent;
-#pragma warning restore 0649
 		}
 
 		[Test, DataContextSource]
@@ -546,12 +548,10 @@ namespace Tests.Linq
 		[Table("Child")]
 		class StorageTestClass
 		{
-#pragma warning disable 0649
 			[Column] public int ParentID;
 			[Column] public int ChildID;
 
 			Parent _parent;
-#pragma warning restore 0649
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false, Storage = "_parent")]
 			public Parent Parent

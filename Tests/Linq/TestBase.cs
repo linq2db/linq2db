@@ -61,9 +61,7 @@ namespace Tests
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
-			var assemblyPath = typeof(TestBase).AssemblyEx().CodeBase;
-
-			assemblyPath = Path.GetDirectoryName(assemblyPath.Substring("file:///".Length));
+			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
@@ -83,13 +81,17 @@ namespace Tests
 			var providerListFile =
 				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
 
-			if (Directory.Exists(@"Database\Data"))
-				Directory.Delete(@"Database\Data", true);
+			var dataPath = Path.GetFullPath(@"Database\Data");
 
-			Directory.CreateDirectory(@"Database\Data");
+			if (Directory.Exists(dataPath))
+				Directory.Delete(dataPath, true);
 
-			foreach (var file in Directory.GetFiles(@"Database", "*.*"))
-				File.Copy(file, Path.Combine(@"Database\Data\",  Path.GetFileName(file)), true);
+			Directory.CreateDirectory(dataPath);
+
+			var databasePath = Path.GetFullPath(Path.Combine(@"Database"));
+
+			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
+				File.Copy(file, Path.Combine(dataPath, Path.GetFileName(file)), true);
 
 			UserProviders =
 				File.ReadAllLines(providerListFile)
@@ -157,10 +159,14 @@ namespace Tests
 
 		protected static string FindProjectPath(string basePath)
 		{
-			while (!File.Exists(Path.Combine(basePath, "DefaultDataProviders.txt")))
+			var fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
+			while (!File.Exists(fileName))
 			{
-				basePath = Path.Combine(basePath, @"..\");
+				Console.WriteLine("File not found: " + fileName);
+				basePath = Path.GetDirectoryName(basePath);
+				fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
 			}
+			Console.WriteLine("Base path found: " + basePath);
 
 			return basePath;
 		}
@@ -368,7 +374,14 @@ namespace Tests
 		[AttributeUsage(AttributeTargets.Method)]
 		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public NorthwindDataContextAttribute() : base("Northwind")
+			public NorthwindDataContextAttribute(bool excludeSqlite) : base(
+				excludeSqlite
+				? new[] { "Northwind" }
+				: new[] { "Northwind", "NorthwindSqlite" })
+			{
+			}
+
+			public NorthwindDataContextAttribute() : this(false)
 			{
 			}
 		}
@@ -457,6 +470,8 @@ namespace Tests
 			}
 		}
 
+		protected const int MaxPersonID = 3;
+
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
 		{
@@ -508,7 +523,7 @@ namespace Tests
 			}
 		}
 
-#region Parent/Child Model
+		#region Parent/Child Model
 
 		private          List<Parent> _parent;
 		protected IEnumerable<Parent>  Parent
@@ -689,182 +704,230 @@ namespace Tests
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Northwind
+		#region Inheritance Parent/Child Model
 
-		private List<Northwind.Category> _category;
-		public  List<Northwind.Category>  Category
+		private   List<InheritanceParentBase> _inheritanceParent;
+		protected List<InheritanceParentBase>  InheritanceParent
 		{
 			get
 			{
-				if (_category == null)
-					using (var db = new NorthwindDB())
-						_category = db.Category.ToList();
-				return _category;
-			}
-		}
-
-		private List<Northwind.Customer> _customer;
-		public  List<Northwind.Customer>  Customer
-		{
-			get
-			{
-				if (_customer == null)
+				if (_inheritanceParent == null)
 				{
-					using (var db = new NorthwindDB())
-						_customer = db.Customer.ToList();
-
-					foreach (var c in _customer)
-						c.Orders = (from o in Order where o.CustomerID == c.CustomerID select o).ToList();
+					using (var db = new TestDataConnection())
+						_inheritanceParent = db.InheritanceParent.ToList();
 				}
 
-				return _customer;
+				return _inheritanceParent;
 			}
 		}
 
-		private List<Northwind.Employee> _employee;
-		public  List<Northwind.Employee>  Employee
+		private   List<InheritanceChildBase> _inheritanceChild;
+		protected List<InheritanceChildBase>  InheritanceChild
 		{
 			get
 			{
-				if (_employee == null)
+				if (_inheritanceChild == null)
 				{
-					using (var db = new NorthwindDB())
-					{
-						_employee = db.Employee.ToList();
+					using (var db = new TestDataConnection())
+						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
+				}
 
-						foreach (var employee in _employee)
+				return _inheritanceChild;
+			}
+		}
+		
+		#endregion
+
+		#region Northwind
+
+		public TestBaseNorthwind GetNorthwindAsList(string context)
+		{
+			return new TestBaseNorthwind(context);
+		}
+
+		public class TestBaseNorthwind
+		{
+			private string _context;
+
+			public TestBaseNorthwind(string context)
+			{
+				_context = context;
+			}
+
+			private List<Northwind.Category> _category;
+			public  List<Northwind.Category>  Category
+			{
+				get
+				{
+					if (_category == null)
+						using (var db = new NorthwindDB(_context))
+							_category = db.Category.ToList();
+					return _category;
+				}
+			}
+
+			private List<Northwind.Customer> _customer;
+			public  List<Northwind.Customer>  Customer
+			{
+				get
+				{
+					if (_customer == null)
+					{
+						using (var db = new NorthwindDB(_context))
+							_customer = db.Customer.ToList();
+
+						foreach (var c in _customer)
+							c.Orders = (from o in Order where o.CustomerID == c.CustomerID select o).ToList();
+					}
+
+					return _customer;
+				}
+			}
+
+			private List<Northwind.Employee> _employee;
+			public  List<Northwind.Employee>  Employee
+			{
+				get
+				{
+					if (_employee == null)
+					{
+						using (var db = new NorthwindDB(_context))
 						{
-							employee.Employees         = (from e in _employee where e.ReportsTo  == employee.EmployeeID select e).ToList();
-							employee.ReportsToEmployee = (from e in _employee where e.EmployeeID == employee.ReportsTo  select e).SingleOrDefault();
+							_employee = db.Employee.ToList();
+
+							foreach (var employee in _employee)
+							{
+								employee.Employees         = (from e in _employee where e.ReportsTo  == employee.EmployeeID select e).ToList();
+								employee.ReportsToEmployee = (from e in _employee where e.EmployeeID == employee.ReportsTo  select e).SingleOrDefault();
+							}
 						}
 					}
+
+					return _employee;
 				}
-
-				return _employee;
 			}
-		}
 
-		private List<Northwind.EmployeeTerritory> _employeeTerritory;
-		public  List<Northwind.EmployeeTerritory>  EmployeeTerritory
-		{
-			get
+			private List<Northwind.EmployeeTerritory> _employeeTerritory;
+			public  List<Northwind.EmployeeTerritory>  EmployeeTerritory
 			{
-				if (_employeeTerritory == null)
-					using (var db = new NorthwindDB())
-						_employeeTerritory = db.EmployeeTerritory.ToList();
-				return _employeeTerritory;
-			}
-		}
-
-		private List<Northwind.OrderDetail> _orderDetail;
-		public  List<Northwind.OrderDetail>  OrderDetail
-		{
-			get
-			{
-				if (_orderDetail == null)
-					using (var db = new NorthwindDB())
-						_orderDetail = db.OrderDetail.ToList();
-				return _orderDetail;
-			}
-		}
-
-		private List<Northwind.Order> _order;
-		public  List<Northwind.Order>  Order
-		{
-			get
-			{
-				if (_order == null)
+				get
 				{
-					using (var db = new NorthwindDB())
-						_order = db.Order.ToList();
-
-					foreach (var o in _order)
-					{
-						o.Customer = Customer.Single(c => o.CustomerID == c.CustomerID);
-						o.Employee = Employee.Single(e => o.EmployeeID == e.EmployeeID);
-					}
+					if (_employeeTerritory == null)
+						using (var db = new NorthwindDB(_context))
+							_employeeTerritory = db.EmployeeTerritory.ToList();
+					return _employeeTerritory;
 				}
-
-				return _order;
 			}
-		}
 
-		private IEnumerable<Northwind.Product> _product;
-		public  IEnumerable<Northwind.Product>  Product
-		{
-			get
+			private List<Northwind.OrderDetail> _orderDetail;
+			public  List<Northwind.OrderDetail>  OrderDetail
 			{
-				if (_product == null)
-					using (var db = new NorthwindDB())
-						_product = db.Product.ToList();
-
-				foreach (var product in _product)
-					yield return product;
+				get
+				{
+					if (_orderDetail == null)
+						using (var db = new NorthwindDB(_context))
+							_orderDetail = db.OrderDetail.ToList();
+					return _orderDetail;
+				}
 			}
-		}
 
-		private List<Northwind.ActiveProduct> _activeProduct;
-		public  List<Northwind.ActiveProduct>  ActiveProduct
-		{
-			get { return _activeProduct ?? (_activeProduct = Product.OfType<Northwind.ActiveProduct>().ToList()); }
-		}
-
-		public  IEnumerable<Northwind.DiscontinuedProduct>  DiscontinuedProduct
-		{
-			get { return Product.OfType<Northwind.DiscontinuedProduct>(); }
-		}
-
-		private List<Northwind.Region> _region;
-		public  List<Northwind.Region>  Region
-		{
-			get
+			private List<Northwind.Order> _order;
+			public  List<Northwind.Order>  Order
 			{
-				if (_region == null)
-					using (var db = new NorthwindDB())
-						_region = db.Region.ToList();
-				return _region;
-			}
-		}
+				get
+				{
+					if (_order == null)
+					{
+						using (var db = new NorthwindDB(_context))
+							_order = db.Order.ToList();
 
-		private List<Northwind.Shipper> _shipper;
-		public  List<Northwind.Shipper>  Shipper
-		{
-			get
+						foreach (var o in _order)
+						{
+							o.Customer = Customer.Single(c => o.CustomerID == c.CustomerID);
+							o.Employee = Employee.Single(e => o.EmployeeID == e.EmployeeID);
+						}
+					}
+
+					return _order;
+				}
+			}
+
+			private IEnumerable<Northwind.Product> _product;
+			public  IEnumerable<Northwind.Product>  Product
 			{
-				if (_shipper == null)
-					using (var db = new NorthwindDB())
-						_shipper = db.Shipper.ToList();
-				return _shipper;
-			}
-		}
+				get
+				{
+					if (_product == null)
+						using (var db = new NorthwindDB(_context))
+							_product = db.Product.ToList();
 
-		private List<Northwind.Supplier> _supplier;
-		public  List<Northwind.Supplier>  Supplier
-		{
-			get
+					foreach (var product in _product)
+						yield return product;
+				}
+			}
+
+			private List<Northwind.ActiveProduct> _activeProduct;
+			public  List<Northwind.ActiveProduct>  ActiveProduct
 			{
-				if (_supplier == null)
-					using (var db = new NorthwindDB())
-						_supplier = db.Supplier.ToList();
-				return _supplier;
+				get { return _activeProduct ?? (_activeProduct = Product.OfType<Northwind.ActiveProduct>().ToList()); }
 			}
-		}
 
-		private List<Northwind.Territory> _territory;
-		public  List<Northwind.Territory>  Territory
-		{
-			get
+			public  IEnumerable<Northwind.DiscontinuedProduct>  DiscontinuedProduct
 			{
-				if (_territory == null)
-					using (var db = new NorthwindDB())
-						_territory = db.Territory.ToList();
-				return _territory;
+				get { return Product.OfType<Northwind.DiscontinuedProduct>(); }
+			}
+
+			private List<Northwind.Region> _region;
+			public  List<Northwind.Region>  Region
+			{
+				get
+				{
+					if (_region == null)
+						using (var db = new NorthwindDB(_context))
+							_region = db.Region.ToList();
+					return _region;
+				}
+			}
+
+			private List<Northwind.Shipper> _shipper;
+			public  List<Northwind.Shipper>  Shipper
+			{
+				get
+				{
+					if (_shipper == null)
+						using (var db = new NorthwindDB(_context))
+							_shipper = db.Shipper.ToList();
+					return _shipper;
+				}
+			}
+
+			private List<Northwind.Supplier> _supplier;
+			public  List<Northwind.Supplier>  Supplier
+			{
+				get
+				{
+					if (_supplier == null)
+						using (var db = new NorthwindDB(_context))
+							_supplier = db.Supplier.ToList();
+					return _supplier;
+				}
+			}
+
+			private List<Northwind.Territory> _territory;
+			public  List<Northwind.Territory>  Territory
+			{
+				get
+				{
+					if (_territory == null)
+						using (var db = new NorthwindDB(_context))
+							_territory = db.Territory.ToList();
+					return _territory;
+				}
 			}
 		}
-
-#endregion
+		#endregion
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
@@ -940,12 +1003,38 @@ namespace Tests
 		}
 	}
 
-    public static class Helpers
-    {
-        public static string ToInvariantString<T>(this T data)
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0}", data)
-                .Replace(',', '.').Trim(' ', '.', '0');
-        }
-    }
+	public static class Helpers
+	{
+		public static string ToInvariantString<T>(this T data)
+		{
+			return string.Format(CultureInfo.InvariantCulture, "{0}", data)
+				.Replace(',', '.').Trim(' ', '.', '0');
+		}
+	}
+
+	public class AllowMultipleQuery : IDisposable
+	{
+		public AllowMultipleQuery()
+		{
+			Configuration.Linq.AllowMultipleQuery = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
+
+	public class WithoutJoinOptimization : IDisposable
+	{
+		public WithoutJoinOptimization()
+		{
+			Configuration.Linq.OptimizeJoins = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.OptimizeJoins = true;
+		}
+	}
 }

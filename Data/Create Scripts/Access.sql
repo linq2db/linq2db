@@ -26,6 +26,29 @@ GO
 DROP TABLE Person
 GO
 
+DROP TABLE InheritanceParent
+GO
+
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId Int      NOT NULL CONSTRAINT PK_InheritanceParent PRIMARY KEY,
+	TypeDiscriminator   Int          NULL,
+	Name                Text(50)     NULL
+)
+GO
+
+DROP TABLE InheritanceChild
+GO
+
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  Int      NOT NULL CONSTRAINT PK_InheritanceChild PRIMARY KEY,
+	InheritanceParentId Int      NOT NULL,
+	TypeDiscriminator   Int          NULL,
+	Name                Text(50)     NULL
+)
+GO
+
 CREATE TABLE Person
 (
 	PersonID   Int IDENTITY,
@@ -67,6 +90,8 @@ GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ("John",   "Pupkin",    "M")
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Tester", "Testerson", "M")
+GO
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Jane",   "Doe",       "F")
 GO
 INSERT INTO Doctor (PersonID, Taxonomy)   VALUES (1, "Psychiatry")
 GO

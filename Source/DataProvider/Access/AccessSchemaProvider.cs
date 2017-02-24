@@ -67,14 +67,16 @@ namespace LinqToDB.DataProvider.Access
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
+				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE" || t.Field<string>("TABLE_TYPE") == "ACCESS TABLE"
 				select new TableInfo
 				{
-					TableID         = catalog + '.' + schema + '.' + name,
-					CatalogName     = catalog,
-					SchemaName      = schema,
-					TableName       = name,
-					IsDefaultSchema = schema.IsNullOrEmpty(),
-					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW"
+					TableID            = catalog + '.' + schema + '.' + name,
+					CatalogName        = catalog,
+					SchemaName         = schema,
+					TableName          = name,
+					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
+					IsProviderSpecific = system
 				}
 			).ToList();
 #else

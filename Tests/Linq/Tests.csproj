@@ -44,8 +44,7 @@
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn>649 429</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -79,7 +78,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMono|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\DebugMono\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FW4</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FW4;MONO;NOFSHARP</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisLogFile>bin\Debug\UnitTests.Linq.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
@@ -97,7 +96,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseMono|AnyCPU'">
     <OutputPath>bin\ReleaseMono\</OutputPath>
-    <DefineConstants>TRACE;FW4</DefineConstants>
+    <DefineConstants>TRACE;FW4;MONO;NOFSHARP</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -184,16 +183,10 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data.Services" />
-    <Reference Include="System.Data.SQLite, Version=1.0.101.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Data.SQLite.Core.1.0.101.0\lib\net45\System.Data.SQLite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <Private>True</Private>
       <HintPath>..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
@@ -202,10 +195,8 @@
     <Reference Include="System.Transactions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -218,10 +209,37 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
+  <Choose>
+    <When Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
+      <ItemGroup Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
+        <Reference Include="System.Data.SQLite, Version=1.0.101.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+          <HintPath>..\..\packages\System.Data.SQLite.Core.1.0.101.0\lib\net45\System.Data.SQLite.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
+        <ProjectReference Include="..\FSharp\Tests.FSharp.fsproj">
+          <Project>{56109866-4005-4852-9f9a-19a7a8d3b369}</Project>
+          <Name>Tests.FSharp</Name>
+        </ProjectReference>
+        <ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj">
+          <Project>{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}</Project>
+          <Name>Tests.VisualBasic</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Mono.Data.Sqlite">
+          <Private>True</Private>
+        </Reference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
     <Compile Include="Common\ChangeTypeTests.cs" />
     <Compile Include="Common\ConvertTests.cs" />
     <Compile Include="Common\DefaultValueTests.cs" />
+    <Compile Include="Common\ReservedWordTest.cs" />
+    <Compile Include="Common\ToolsTest.cs" />
     <Compile Include="DataProvider\ALLTYPE.cs" />
     <Compile Include="DataProvider\SapHanaTests.cs" />
     <Compile Include="DataProvider\InformixTests.cs" />
@@ -235,6 +253,7 @@
     <Compile Include="Data\TransactionTests.cs" />
     <Compile Include="Data\ProcedureTests.cs" />
     <Compile Include="Linq\InterfaceTests.cs" />
+    <Compile Include="Linq\JoinOptimizeTests.cs" />
     <Compile Include="TestProvName.cs" />
     <Compile Include="Update\CreateTableTests.cs" />
     <Compile Include="Linq\QueryHintsTests.cs" />
@@ -249,6 +268,7 @@
     <Compile Include="Linq\AllAnyTests.cs" />
     <Compile Include="Linq\FSharpTests.cs" />
     <Compile Include="Mapping\FluentMappingTests.cs" />
+    <Compile Include="Samples\ConcurrencyCheckTests.cs" />
     <Compile Include="Samples\JoinOperatorTests.cs" />
     <Compile Include="SchemaProvider\SchemaProviderTests.cs" />
     <Compile Include="DataProvider\SybaseTests.cs" />
@@ -335,9 +355,18 @@
     <Compile Include="UserTests\GenericsFilterTests.cs" />
     <Compile Include="UserTests\GroupBySubqueryTests.cs" />
     <Compile Include="UserTests\Issue358Tests.cs" />
+    <Compile Include="UserTests\Issue395Tests.cs" />
+    <Compile Include="UserTests\Issue273Tests.cs" />
+    <Compile Include="UserTests\Issue461Tests.cs" />
+    <Compile Include="UserTests\Issue531Tests.cs" />
     <Compile Include="UserTests\Issue357Tests.cs" />
     <Compile Include="UserTests\Issue352Tests.cs" />
+    <Compile Include="UserTests\Issue475Tests.cs" />
     <Compile Include="UserTests\Issue464Tests.cs" />
+    <Compile Include="UserTests\Issue488Tests.cs" />
+    <Compile Include="UserTests\Issue496Tests.cs" />
+    <Compile Include="UserTests\Issue513Tests.cs" />
+    <Compile Include="UserTests\Issue548Tests.cs" />
     <Compile Include="UserTests\LetTests.cs" />
     <Compile Include="UserTests\MultiPartIdentifierTests.cs" />
     <Compile Include="UserTests\SelectManyDeleteTests.cs" />
@@ -406,6 +435,70 @@
       <Link>Database\TestData.sdf</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\Microsoft.VC90.CRT\msvcr90.dll">
+      <Link>amd64\Microsoft.VC90.CRT\msvcr90.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\Microsoft.VC90.CRT\README_ENU.txt">
+      <Link>amd64\Microsoft.VC90.CRT\README_ENU.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\sqlceca40.dll">
+      <Link>amd64\sqlceca40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\sqlcecompact40.dll">
+      <Link>amd64\sqlcecompact40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\sqlceer40EN.dll">
+      <Link>amd64\sqlceer40EN.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\sqlceme40.dll">
+      <Link>amd64\sqlceme40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\sqlceqp40.dll">
+      <Link>amd64\sqlceqp40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\sqlcese40.dll">
+      <Link>amd64\sqlcese40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\Microsoft.VC90.CRT\msvcr90.dll">
+      <Link>x86\Microsoft.VC90.CRT\msvcr90.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\Microsoft.VC90.CRT\README_ENU.txt">
+      <Link>x86\Microsoft.VC90.CRT\README_ENU.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\sqlceca40.dll">
+      <Link>x86\sqlceca40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\sqlcecompact40.dll">
+      <Link>x86\sqlcecompact40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\sqlceer40EN.dll">
+      <Link>x86\sqlceer40EN.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\sqlceme40.dll">
+      <Link>x86\sqlceme40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\sqlceqp40.dll">
+      <Link>x86\sqlceqp40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\sqlcese40.dll">
+      <Link>x86\sqlcese40.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\packages\Microsoft.SqlServer.Types.11.0.2\nativeBinaries\x64\msvcr100.dll">
       <Link>SqlServerTypes\x64\msvcr100.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -422,11 +515,27 @@
       <Link>SqlServerTypes\x86\SqlServerSpatial110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll">
+      <Link>Sybase.AdoNet45.AseClient.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="AppveyorDataProviders.txt" />
     <Content Include="DefaultDataProviders.txt" />
     <Content Include="SqlServerTypes\readme.htm" />
+    <Content Include="..\..\Data\Northwind.sqlite">
+      <Link>Database\Northwind.sqlite</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="..\..\Data\TestData.sqlite">
       <Link>Database\TestData.sqlite</Link>
+    </None>
+    <None Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest">
+      <Link>amd64\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest">
+      <Link>x86\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="App.config">
       <SubType>Designer</SubType>
@@ -443,14 +552,6 @@
     <ProjectReference Include="..\Model\Tests.Model.csproj">
       <Project>{D527524F-EC92-465E-9CAE-86278121675A}</Project>
       <Name>Tests.Model</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\FSharp\Tests.FSharp.fsproj">
-      <Project>{56109866-4005-4852-9f9a-19a7a8d3b369}</Project>
-      <Name>Tests.FSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj">
-      <Project>{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}</Project>
-      <Name>Tests.VisualBasic</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -483,21 +584,18 @@
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>if not exist "$(TargetDir)x86" md "$(TargetDir)x86"
-xcopy /s /y "$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\*.*" "$(TargetDir)x86"
-if not exist "$(TargetDir)amd64" md "$(TargetDir)amd64"
-xcopy /s /y "$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\*.*" "$(TargetDir)amd64"
-if not exist "$(TargetDir)sybdrvado20.dll" xcopy /d /c /y "$(SolutionDir)Redist\Sybase\*.*" "$(TargetDir)"</PostBuildEvent>
-  </PropertyGroup>
-  <Import Project="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets')" />
+  <Import Project="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets') AND '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono'" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets'))" />
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent />
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

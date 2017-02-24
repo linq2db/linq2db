@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
+using LinqToDB.Common;
+
 #if NETSTANDARD
 using System.Runtime.Loader;
 using System.Linq;
@@ -24,8 +26,8 @@ namespace LinqToDB.DataProvider
 			_path        = path;
 			_resolveName = resolveName;
 
-			if (_path.StartsWith("file:///"))
-				_path = _path.Substring("file:///".Length);
+			if (_path.StartsWith("file://"))
+				_path = _path.GetPathFromUri();
 
 			SetResolver();
 		}

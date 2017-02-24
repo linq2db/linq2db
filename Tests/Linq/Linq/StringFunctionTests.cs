@@ -478,12 +478,13 @@ namespace Tests.Linq
 			}
 		}
 
-#pragma warning disable 0649
+#pragma warning disable 0109
 		new class Category
 		{
 			[PrimaryKey, Identity] public int    Id;
 			[Column, NotNull]      public string Name;
 		}
+#pragma warning restore 0109
 
 		class Task
 		{
@@ -497,7 +498,6 @@ namespace Tests.Linq
 			[Column, NotNull] public int TaskId;
 			[Column, NotNull] public int CategoryId;
 		}
-#pragma warning restore 0649
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
 		public void Stuff2(string context)

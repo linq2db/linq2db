@@ -461,6 +461,11 @@ namespace LinqToDB.Common
 			if (lex != null)
 				return Tuple.Create(lex.GetBody(expr), true);
 
+			var cex = mappingSchema.GetConvertExpression(from, to, false, false);
+
+			if (cex != null)
+				return Tuple.Create(cex.GetBody(expr), true);
+
 			var ex =
 				GetFromEnum  (from, to, expr, mappingSchema) ??
 				GetToEnum    (from, to, expr, mappingSchema);
