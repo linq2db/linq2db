@@ -1920,6 +1920,15 @@ namespace LinqToDB.SqlQuery
 				return Columns.IndexOf(AddOrGetColumn(new Column(SelectQuery, expr)));
 			}
 
+			public int AddNew(ISqlExpression expr)
+			{
+				if (expr is Column && ((Column)expr).Parent == SelectQuery)
+					throw new InvalidOperationException();
+
+				Columns.Add(new Column(SelectQuery, expr));
+				return Columns.Count - 1;
+			}
+
 			public int Add(ISqlExpression expr, string alias)
 			{
 				return Columns.IndexOf(AddOrGetColumn(new Column(SelectQuery, expr, alias)));
