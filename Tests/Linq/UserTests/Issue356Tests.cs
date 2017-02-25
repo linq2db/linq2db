@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -7,62 +6,64 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-    using LinqToDB.Data;
+	[TestFixture]
+	public class Issue356Tests : TestBase
+	{
+		[Test, DataContextSource]
+		public void Test1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var resultUnion = db.Child.Union(db.Child).Distinct();
+				var result = db.Parent
+					.SelectMany(x => resultUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.Take(10);
 
-    [TestFixture]
-    public class Issue356Tests : TestBase
-    {
-        public class Foo
-        {
-            public long Id { get; set; }
-            public string Value { get; set; }
-        }
+				var expectedUnion = Child.Union(Child).Distinct();
+				var expected = Parent
+					.SelectMany(x => expectedUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.Take(10);
 
-        public class Bar
-        {
-            public long Key { get; set; }
-        }
+				AreEqual(expected, result);
+			}
+		}
 
-        public void SetUp(string context)
-        {
-            using (var db = new DataConnection(context))
-            {
-                db.CreateTable<Foo>();
-                db.CreateTable<Bar>();
-            }
-        }
+		[Test, DataContextSource]
+		public void Test2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var resultUnion = db.Child.Union(db.Child).Take(10);
+				var result = db.Parent
+					.SelectMany(x => resultUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.Take(10);
 
-        public void TearDown(string context)
-        {
-            using (var db = new DataConnection(context))
-            {
-                db.DropTable<Foo>();
-                db.DropTable<Bar>();
-            }
-        }
+				var expectedUnion = Child.Union(Child).Take(10);
+				var expected = Parent
+					.SelectMany(x => expectedUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.Take(10);
 
-        [Test, IncludeDataContextSource(ProviderName.SqlServer2014, ProviderName.SQLite, ProviderName.SqlCe)]
-        public void Test(string context)
-        {
-            SetUp(context);
-            try
-            {
-                using (var db = new DataConnection(context))
-                {
-                    var union = db.GetTable<Foo>()
-                        .Union(db.GetTable<Foo>())
-                        .Distinct();
+				AreEqual(expected, result);
+			}
+		}
 
-                    var result = db.GetTable<Bar>()
-                        .SelectMany(x => union.Where(date => date.Id == x.Key).Select(z => new {x.Key, z.Value}));
+		[Test, DataContextSource(true, ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase)]
+		public void Test3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var resultUnion = db.Child.Union(db.Child).Skip(10).Take(10);
+				var result = db.Parent
+					.SelectMany(x => resultUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.Take(10);
 
-                    Assert.That(() => result.Take(10).ToArray(), Throws.Nothing);
-                }
-            }
-            finally
-            {
-                TearDown(context);
-            }
-        }
-    }
+				var expectedUnion = Child.Union(Child).Skip(10).Take(10);
+				var expected = Parent
+					.SelectMany(x => expectedUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.Take(10);
+
+				AreEqual(expected, result);
+			}
+		}
+	}
 }
