@@ -1,0 +1,19 @@
+language: csharp
+
+services:
+  - mysql
+  - postgresql
+
+script:
+  - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
+  - mv Tests/Linq/TravisDataPtoviders.txt Tests/Linq/UserDataProviders.txt
+  - mysql -e 'CREATE DATABASE TestData;'
+  - psql -c 'create database TestData;' -U postgres
+  - nunit-console Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll -exclude WindowsOnly
+
+before_install:
+  - sudo apt-get install nunit-console
+
+before_script:
+  - nuget restore linq2db.Mono.sln
+

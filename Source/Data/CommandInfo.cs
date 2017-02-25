@@ -582,7 +582,7 @@ namespace LinqToDB.Data
 				var dataParameter = parameters[i];
 
 				if (dataParameter.Direction.HasValue &&
-					(dataParameter.Direction == ParameterDirection.Output || dataParameter.Direction == ParameterDirection.InputOutput))
+					(dataParameter.Direction == ParameterDirection.Output || dataParameter.Direction == ParameterDirection.InputOutput || dataParameter.Direction == ParameterDirection.ReturnValue))
 				{
 					var dbParameter = (IDbDataParameter)dbParameters[i];
 
@@ -851,7 +851,7 @@ namespace LinqToDB.Data
 
 				expr = null;
 
-				var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
+				var ctors = typeof(T).GetConstructorsEx().Select(c => new { c, ps = c.GetParameters() }).ToList();
 
 				if (ctors.Count > 0 && ctors.All(c => c.ps.Length > 0))
 				{

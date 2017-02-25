@@ -213,5 +213,31 @@ namespace LinqToDB.Mapping
 		public StringComparison? ColumnComparisonOption;
 
 		#endregion
+
+		#region Enum
+
+		volatile ConcurrentDictionary<Type, Type> _defaultFromEnumTypes;
+
+		public Type GetDefaultFromEnumType(Type enumType)
+		{
+			if (_defaultFromEnumTypes == null)
+				return null;
+
+			Type defaultFromType;
+			_defaultFromEnumTypes.TryGetValue(enumType, out defaultFromType);
+			return defaultFromType;
+		}
+
+		public void SetDefaultFromEnumType(Type enumType, Type defaultFromType)
+		{
+			if (_defaultFromEnumTypes == null)
+				lock (this)
+					if (_defaultFromEnumTypes == null)
+						_defaultFromEnumTypes = new ConcurrentDictionary<Type, Type>();
+
+			_defaultFromEnumTypes[enumType] = defaultFromType;
+		}
+
+		#endregion
 	}
 }

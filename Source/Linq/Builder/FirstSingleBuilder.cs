@@ -35,7 +35,13 @@ namespace LinqToDB.Linq.Builder
 					case "Single"          :
 					case "SingleOrDefault" :
 						if (!buildInfo.IsSubQuery)
-							take = 2;
+						{
+							var takeValue = buildInfo.SelectQuery.Select.TakeValue as SqlValue;
+							if (takeValue != null && (int) takeValue.Value >= 2)
+							{
+								take = 2;
+							}
+						}
 						break;
 				}
 

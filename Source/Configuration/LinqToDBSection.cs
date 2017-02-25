@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Security;
 
 namespace LinqToDB.Configuration
@@ -7,7 +9,7 @@ namespace LinqToDB.Configuration
 	/// <summary>
 	/// Implementation of custom configuration section.
 	/// </summary>
-	public class LinqToDBSection : ConfigurationSection
+	public class LinqToDBSection : ConfigurationSection, ILinqToDBSettings
 	{
 		static readonly ConfigurationPropertyCollection _properties               = new ConfigurationPropertyCollection();
 		static readonly ConfigurationProperty           _propDataProviders        = new ConfigurationProperty("dataProviders",        typeof(DataProviderElementCollection), new DataProviderElementCollection(), ConfigurationPropertyOptions.None);
@@ -30,7 +32,8 @@ namespace LinqToDB.Configuration
 				{
 					try
 					{
-						_instance = (LinqToDBSection)ConfigurationManager.GetSection("linq2db");
+						_instance = (LinqToDBSection)ConfigurationManager.GetSection("linq2db")
+							?? new LinqToDBSection();
 					}
 					catch (SecurityException)
 					{
@@ -54,5 +57,50 @@ namespace LinqToDB.Configuration
 
 		public string DefaultConfiguration { get { return (string)base[_propDefaultConfiguration]; } }
 		public string DefaultDataProvider  { get { return (string)base[_propDefaultDataProvider];  } }
+
+		IEnumerable<IConnectionStringSettings> ILinqToDBSettings.ConnectionStrings
+		{
+			get
+			{
+				foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
+					yield return new ConnectionStringEx(css);
+			}
+		}
+
+		IEnumerable<IDataProviderSettings> ILinqToDBSettings.DataProviders
+		{
+			get { return DataProviders.OfType<DataProviderElement>(); }
+		}
+
+		class ConnectionStringEx : IConnectionStringSettings
+		{
+			private readonly ConnectionStringSettings _css;
+
+			public ConnectionStringEx(ConnectionStringSettings css)
+			{
+				_css = css;
+			}
+
+			public string ConnectionString { get { return _css.ConnectionString; } }
+			public string Name { get { return _css.Name; } }
+			public string ProviderName { get { return _css.ProviderName; } }
+			public bool IsGlobal { get { return IsMachineConfig(_css); } }
+		}
+
+		internal static bool IsMachineConfig(ConnectionStringSettings css)
+		{
+			string source;
+
+			try
+			{
+				source = css.ElementInformation.Source;
+			}
+			catch (Exception)
+			{
+				source = "";
+			}
+
+			return source == null || source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase);
+		}
 	}
 }

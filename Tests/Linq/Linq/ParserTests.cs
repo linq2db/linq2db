@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.SqlQuery;
@@ -884,17 +886,31 @@ namespace Tests.Linq
 
 				CompareSql(sql, @"
 					SELECT
-						[g].[ParentID],
-						[g].[ChildID],
-						[g].[GrandChildID]
+						[g1].[ParentID],
+						[g1].[ChildID],
+						[g1].[GrandChildID]
 					FROM
-						[GrandChild] [g]
-							LEFT JOIN [Child] [t1] ON [g].[ParentID] = [t1].[ParentID] AND [g].[ChildID] = [t1].[ChildID]
+						[GrandChild] [g1]
+							LEFT JOIN [Child] [t1] ON [g1].[ParentID] = [t1].[ParentID] AND [g1].[ChildID] = [t1].[ChildID]
 							INNER JOIN [Parent] [p] ON [t1].[ParentID] = [p].[ParentID]");
 			}
 		}
 
 		#endregion
+
+		[Test]
+		public void OracleXmlTable()
+		{
+			using (var db = new TestDataConnection())
+			{
+				Assert.IsNotNull(db.OracleXmlTable<Person>(() => "<xml/>"));
+				Assert.IsNotNull(db.OracleXmlTable<Person>("<xml/>"));
+				Assert.IsNotNull(db.OracleXmlTable<Person>(new [] {new Person(), }));
+
+			}
+
+		}
+
 	}
 
 	class MyContextParser : ISequenceBuilder
@@ -940,12 +956,20 @@ namespace Tests.Linq
 	{
 		public static MyContextParser.Context GetMyContext<T>(this IQueryable<T> source)
 		{
+
 			if (source == null) throw new ArgumentNullException("source");
+
+			var methodInfo = typeof(Extensions).GetMethods()
+				.Single(method => method.Name == "GetMyContext" 
+				&& method.GetParameters()
+				.ElementAt(0)
+				.ParameterType
+				.GetGenericTypeDefinition() == typeof(IQueryable<>));
 
 			return source.Provider.Execute<MyContextParser.Context>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					methodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression }));
 		}
 	}

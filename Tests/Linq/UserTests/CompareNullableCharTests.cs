@@ -28,7 +28,9 @@ namespace Tests.UserTests
 			public ITable<Table1> Table1 { get { return this.GetTable<Table1>(); } }
 		}
 
+#if !NETSTANDARD
 		[Test]
+#endif
 		public void Test()
 		{
 			using (var db = new Repository(ProviderName.Access))

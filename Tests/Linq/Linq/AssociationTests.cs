@@ -204,37 +204,49 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void EqualsNull1(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in    Employee where employee.ReportsToEmployee != null select employee.EmployeeID,
+					from employee in dd.Employee where employee.ReportsToEmployee != null select employee.EmployeeID,
 					from employee in db.Employee where employee.ReportsToEmployee != null select employee.EmployeeID);
+			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void EqualsNull2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in    Employee where employee.ReportsToEmployee != null select employee, 
+					from employee in dd.Employee where employee.ReportsToEmployee != null select employee, 
 					from employee in db.Employee where employee.ReportsToEmployee != null select employee);
+			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void EqualsNull3(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in    Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee },
+					from employee in dd.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee },
 					from employee in db.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee });
+			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void StackOverflow1(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				Assert.AreEqual(
-					(from employee in    Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(),
+					(from employee in dd.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(),
 					(from employee in db.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault());
+			}
 		}
 
 		[Test, DataContextSource(ProviderName.SqlCe)]
@@ -326,7 +338,7 @@ namespace Tests.Linq
 			public int GrandChildID;
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
 		public void TestTernary1(string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -346,7 +358,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
 		public void TestTernary2(string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -492,31 +504,23 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void Issue148Test(string context)
 		{
-			try
+			using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
 			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+				var q =
+					from n in db.Parent
+					select new
+					{
+						n.ParentID,
+						Children = n.Children.ToList(),
+						//Children = n.Children//.Select(t => t).ToList(),
+						//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
+					};
 
-				using (var db = GetDataContext(context))
-				{
-					var q =
-						from n in db.Parent
-						select new
-						{
-							n.ParentID,
-							Children = n.Children.ToList(),
-							//Children = n.Children//.Select(t => t).ToList(),
-							//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
-						};
+				var list = q.ToList();
 
-					var list = q.ToList();
-
-					Assert.That(list.Count,       Is.GreaterThan(0));
-					Assert.That(list[0].Children, Is.Not.Null);
-				}
-			}
-			finally
-			{
-				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+				Assert.That(list.Count,       Is.GreaterThan(0));
+				Assert.That(list[0].Children, Is.Not.Null);
 			}
 		}
 

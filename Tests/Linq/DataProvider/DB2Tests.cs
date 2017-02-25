@@ -18,6 +18,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Globalization;
+
 	using Model;
 
 	[TestFixture]
@@ -110,7 +112,7 @@ namespace Tests.DataProvider
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
 
-				var sql = string.Format("SELECT Cast({0} as {1}) FROM SYSIBM.SYSDUMMY1", sqlValue ?? "NULL", sqlType);
+				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM SYSIBM.SYSDUMMY1", sqlValue ?? "NULL", sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
@@ -379,31 +381,6 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
 			}
-		}
-
-		[Table(Name="ALLTYPES")]
-		public class ALLTYPE
-		{
-			[PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
-			[Column,     Nullable] public long?     BIGINTDATATYPE    { get; set; } // BIGINT
-			[Column,     Nullable] public int?      INTDATATYPE       { get; set; } // INTEGER
-			[Column,     Nullable] public short?    SMALLINTDATATYPE  { get; set; } // SMALLINT
-			[Column,     Nullable] public decimal?  DECIMALDATATYPE   { get; set; } // DECIMAL
-			[Column,     Nullable] public decimal?  DECFLOATDATATYPE  { get; set; } // DECFLOAT
-			[Column,     Nullable] public float?    REALDATATYPE      { get; set; } // REAL
-			[Column,     Nullable] public double?   DOUBLEDATATYPE    { get; set; } // DOUBLE
-			[Column,     Nullable] public char      CHARDATATYPE      { get; set; } // CHARACTER
-			[Column,     Nullable] public string    VARCHARDATATYPE   { get; set; } // VARCHAR(20)
-			[Column,     Nullable] public string    CLOBDATATYPE      { get; set; } // CLOB(1048576)
-			[Column,     Nullable] public string    DBCLOBDATATYPE    { get; set; } // DBCLOB(100)
-			[Column,     Nullable] public object    BINARYDATATYPE    { get; set; } // CHARACTER
-			[Column,     Nullable] public string    VARBINARYDATATYPE { get; set; } // VARCHAR(5)
-			[Column,     Nullable] public byte[]    BLOBDATATYPE      { get; set; } // BLOB(10)
-			[Column,     Nullable] public string    GRAPHICDATATYPE   { get; set; } // GRAPHIC(10)
-			[Column,     Nullable] public DateTime? DATEDATATYPE      { get; set; } // DATE
-			[Column,     Nullable] public TimeSpan? TIMEDATATYPE      { get; set; } // TIME
-			[Column,     Nullable] public DateTime? TIMESTAMPDATATYPE { get; set; } // TIMESTAMP
-			[Column,     Nullable] public string    XMLDATATYPE       { get; set; } // XML
 		}
 
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)

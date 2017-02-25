@@ -250,7 +250,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.NextLoadWith.Count > 0)
 					{
-						var table = FindTable(ma, 1, false);
+						var table = FindTable(ma, 1, false, true);
 						table.Table.LoadWith = member.NextLoadWith;
 					}
 
@@ -267,9 +267,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			static bool IsRecordAttribute(Attribute attr)
+			static bool IsRecord(IEnumerable<Attribute> attrs)
 			{
-				return attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute";
+				return  attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute")
+					&& !attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
 			}
 
 			ParameterExpression _variable;
@@ -281,11 +282,11 @@ namespace LinqToDB.Linq.Builder
 
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
-				var attr = Builder.MappingSchema.GetAttributes<Attribute>(objectType).FirstOrDefault(IsRecordAttribute);
+				bool isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType));
 
-				var expr = attr == null ?
-					BuildDefaultConstructor(entityDescriptor, objectType, index) :
-					BuildRecordConstructor (entityDescriptor, objectType, index);
+				var expr = isRecord == false
+					? BuildDefaultConstructor(entityDescriptor, objectType, index)
+					: BuildRecordConstructor (entityDescriptor, objectType, index);
 
 				expr = ProcessExpression(expr);
 
@@ -309,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 					select new
 					{
 						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
+						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
 					}
 				).ToList();
 
@@ -317,11 +318,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.New(objectType),
 					members
 						.Where (m => !m.Column.MemberAccessor.IsComplex)
-						.Select(m => (MemberBinding)Expression.Bind(
-							m.Column.Storage == null ?
-								m.Column.MemberAccessor.MemberInfo :
-								Expression.PropertyOrField(Expression.Constant(null, objectType), m.Column.Storage).Member,
-							m.Expr)));
+						.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
 				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
 				var loadWith   = GetLoadWith();
@@ -362,9 +359,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				var members = isRecordType ?
 					typeAccessor.Members.Where(m =>
-						Builder.MappingSchema.GetAttributes<Attribute>(m.MemberInfo).Any(IsRecordAttribute)) :
+						IsRecord( Builder.MappingSchema.GetAttributes<Attribute>(m.MemberInfo))) :
 					typeAccessor.Members;
 
+				var loadWith = GetLoadWith();
+				var loadWithItems = loadWith == null ? new List<LoadWithItem>() : GetLoadWith(loadWith);
 				foreach (var member in members)
 				{
 					var column = columns.FirstOrDefault(c => !c.IsComplex && c.Name == member.Name);
@@ -375,51 +374,70 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var name = member.Name + '.';
-						var cols = columns.Where(c => c.IsComplex && c.Name.StartsWith(name)).ToList();
-
-						if (cols.Count == 0)
+						var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(member.MemberInfo).FirstOrDefault();
+						bool isAssociation = assocAttr != null;
+						if (isAssociation)
 						{
-							yield return null;
+							var loadWithItem = loadWithItems.FirstOrDefault(_ => _.MemberInfo == member.MemberInfo);
+							if (loadWithItem != null)
+							{
+								var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
+								if (loadWithItem.NextLoadWith.Count > 0)
+								{
+									var table = FindTable(ma, 1, false, true);
+									table.Table.LoadWith = loadWithItem.NextLoadWith;
+								}
+								yield return BuildExpression(ma, 1);
+							}
 						}
 						else
 						{
-							foreach (var col in cols)
+							var name = member.Name + '.';
+							var cols = columns.Where(c => c.IsComplex && c.Name.StartsWith(name)).ToList();
+
+							if (cols.Count == 0)
 							{
-								col.Name      = col.Name.Substring(name.Length);
-								col.IsComplex = col.Name.Contains(".");
-							}
-
-							var typeAcc = TypeAccessor.GetAccessor(member.Type);
-							var isRec   = Builder.MappingSchema.GetAttributes<Attribute>(member.Type).Any(IsRecordAttribute);
-
-							var exprs = GetExpressions(typeAcc, isRec, cols).ToList();
-
-							if (isRec)
-							{
-								var ctor      = member.Type.GetConstructorsEx().Single();
-								var ctorParms = ctor.GetParameters();
-
-								var parms =
-								(
-									from p in ctorParms.Select((p,i) => new { p, i })
-									join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
-									from e in j.DefaultIfEmpty()
-									select
-										e.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
-								).ToList();
-
-								yield return Expression.New(ctor, parms);
+								yield return null;
 							}
 							else
 							{
-								var expr = Expression.MemberInit(
-									Expression.New(member.Type),
-									from m in typeAcc.Members.Zip(exprs, (m,e) => new { m, e })
-									where m.e != null
-									select (MemberBinding)Expression.Bind(m.m.MemberInfo, m.e));
+								foreach (var col in cols)
+								{
+									col.Name      = col.Name.Substring(name.Length);
+									col.IsComplex = col.Name.Contains(".");
+								}
 
-								yield return expr;
+								var typeAcc  = TypeAccessor.GetAccessor(member.Type);
+								var isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(member.Type));
+
+								var exprs = GetExpressions(typeAcc, isRecord, cols).ToList();
+
+								if (isRecord)
+								{
+									var ctor      = member.Type.GetConstructorsEx().Single();
+									var ctorParms = ctor.GetParameters();
+
+									var parms =
+										(
+										from p in ctorParms.Select((p, i) => new { p, i })
+										join e in exprs.Select((e, i) => new { e, i }) on p.i equals e.i into j
+											from e in j.DefaultIfEmpty()
+											select
+											(e == null ? null : e.e) ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+										).ToList();
+
+									yield return Expression.New(ctor, parms);
+								}
+								else
+								{
+									var expr = Expression.MemberInit(
+										Expression.New(member.Type),
+										from m in typeAcc.Members.Zip(exprs, (m,e) => new { m, e })
+										where m.e != null
+										select (MemberBinding)Expression.Bind(m.m.MemberInfo, m.e));
+
+									yield return expr;
+								}
 							}
 						}
 					}
@@ -449,7 +467,7 @@ namespace LinqToDB.Linq.Builder
 					join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
 					from e in j.DefaultIfEmpty()
 					select
-						e.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+						(e == null ? null : e.e) ?? Expression.Constant(Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
 				).ToList();
 
 				var expr = Expression.New(ctor, parms);
@@ -560,9 +578,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						var codeType = mapping.m.Code.GetType();
 
-						testExpr = Expression.Equal(
-							Expression.Constant(mapping.m.Code),
-							Builder.BuildSql(codeType, dindex));
+						testExpr = ExpressionBuilder.Equal(
+							Builder.MappingSchema,
+							Builder.BuildSql(codeType, dindex),
+							Expression.Constant(mapping.m.Code));
 					}
 
 					expr = Expression.Condition(
@@ -595,7 +614,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// Build table.
 				//
-				var table = FindTable(expression, level, false);
+				var table = FindTable(expression, level, false, false);
 
 				if (table == null)
 				{
@@ -635,7 +654,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ConvertFlags.All   :
 						{
-							var table = FindTable(expression, level, false);
+							var table = FindTable(expression, level, false, true);
 
 							if (table.Field == null)
 								return table.Table.SqlTable.Fields.Values
@@ -647,7 +666,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ConvertFlags.Key   :
 						{
-							var table = FindTable(expression, level, false);
+							var table = FindTable(expression, level, false, true);
 
 							if (table.Field == null)
 							{
@@ -667,7 +686,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ConvertFlags.Field :
 						{
-							var table = FindTable(expression, level, true);
+							var table = FindTable(expression, level, true, true);
 
 							if (table.Field != null)
 								return new[]
@@ -747,14 +766,14 @@ namespace LinqToDB.Linq.Builder
 				{
 					case RequestFor.Field      :
 						{
-							var table = FindTable(expression, level, false);
+							var table = FindTable(expression, level, false, false);
 							return new IsExpressionResult(table != null && table.Field != null);
 						}
 
 					case RequestFor.Table       :
 					case RequestFor.Object      :
 						{
-							var table   = FindTable(expression, level, false);
+							var table   = FindTable(expression, level, false, false);
 							var isTable =
 								table       != null &&
 								table.Field == null &&
@@ -776,7 +795,7 @@ namespace LinqToDB.Linq.Builder
 								case ExpressionType.Parameter    :
 								case ExpressionType.Call         :
 
-									var table = FindTable(expression, level, false);
+									var table = FindTable(expression, level, false, false);
 									return new IsExpressionResult(table == null);
 							}
 
@@ -787,7 +806,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (EntityDescriptor.Associations.Count > 0)
 							{
-								var table = FindTable(expression, level, false);
+								var table = FindTable(expression, level, false, false);
 								var isat  =
 									table       != null &&
 									table.Table is AssociatedTableContext &&
@@ -864,17 +883,8 @@ namespace LinqToDB.Linq.Builder
 							p = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
 						}
 
-						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo) as Expression;
-
-						Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
-
-						if (e1.Type != e2.Type)
-						{
-							if (e1.Type.CanConvertTo(e2.Type))
-								e1  = Expression.Convert(e1,  e2.Type);
-							else if (e2.Type.CanConvertTo(e1.Type))
-								e2 = Expression.Convert(e2, e1. Type);
-						}
+						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
+						var e2 = Expression.MakeMemberAccess(param,  ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
 
 //						while (e1.Type != e2.Type)
 //						{
@@ -893,7 +903,7 @@ namespace LinqToDB.Linq.Builder
 //							e2 = Expression.Convert(e2, e1.Type);
 //						}
 
-						var ex = Expression.Equal(e1, e2);
+						var ex = ExpressionBuilder.Equal(association.Builder.MappingSchema, e1, e2);
 							
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
@@ -1098,9 +1108,9 @@ namespace LinqToDB.Linq.Builder
 								{
 									foreach (var field in SqlTable.Fields.Values)
 									{
+										var name = levelMember.Member.Name;
 										if (field.Name.IndexOf('.') >= 0)
 										{
-											var name = levelMember.Member.Name;
 
 											for (var ex = (MemberExpression)expression; ex != levelMember; ex = (MemberExpression)ex.Expression)
 												name += "." + ex.Member.Name;
@@ -1108,6 +1118,8 @@ namespace LinqToDB.Linq.Builder
 											if (field.Name == name)
 												return field;
 										}
+										else if (field.Name == name)
+											return field;
 									}
 								}
 							}
@@ -1149,6 +1161,7 @@ namespace LinqToDB.Linq.Builder
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
+
 							}
 
 							if (throwException &&
@@ -1177,12 +1190,14 @@ namespace LinqToDB.Linq.Builder
 				public bool         IsNew;
 			}
 
-			TableLevel FindTable(Expression expression, int level, bool throwException)
+			TableLevel FindTable(Expression expression, int level, bool throwException, bool throwExceptionForNull)
 			{
 				if (expression == null)
 					return new TableLevel { Table = this };
 
 				var levelExpression = expression.GetLevelExpression(level);
+
+				TableLevel result = null;
 
 				switch (levelExpression.NodeType)
 				{
@@ -1194,11 +1209,15 @@ namespace LinqToDB.Linq.Builder
 							if (field != null || (level == 0 && levelExpression == expression))
 								return new TableLevel { Table = this, Field = field, Level = level };
 
-							return GetAssociation(expression, level);
+							result = GetAssociation(expression, level);
+							break;
 						}
 				}
 
-				return null;
+				if (throwExceptionForNull && result == null)
+					throw new LinqException("Expression '{0}' ({1}) is not a table.".Args(expression, levelExpression));
+
+				return result;
 			}
 
 			TableLevel GetAssociation(Expression expression, int level)
@@ -1442,18 +1461,10 @@ namespace LinqToDB.Linq.Builder
 
 						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
 						{
-							Expression thisProp  = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
-							Expression otherProp = Expression.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
+							var thisProp  = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
+							var otherProp = Expression.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
 
-							if (otherProp.Type != thisProp.Type)
-							{
-								if (otherProp.Type.CanConvertTo(thisProp.Type))
-									otherProp  = Expression.Convert(otherProp,  thisProp.Type);
-								else if (thisProp.Type.CanConvertTo(otherProp.Type))
-									thisProp = Expression.Convert(thisProp, otherProp. Type);
-							}
-
-							var ex = Expression.Equal(otherProp, thisProp);
+							var ex = ExpressionBuilder.Equal(tableContext.Builder.MappingSchema, otherProp, thisProp);
 
 							expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 						}

@@ -17,23 +17,6 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Init
 
-		static readonly Dictionary<string,object> _reservedWords = new Dictionary<string,object>();
-
-		static SelectQuery()
-		{
-#if NETFX_CORE
-			using (var stream = typeof(SelectQuery).AssemblyEx().GetManifestResourceStream("ReservedWords.txt"))
-#else
-			using (var stream = typeof(SelectQuery).AssemblyEx().GetManifestResourceStream(typeof(SelectQuery), "ReservedWords.txt"))
-#endif
-			using (var reader = new StreamReader(stream))
-			{
-				string s;
-				while ((s = reader.ReadLine()) != null)
-					_reservedWords.Add(s, s);
-			}
-		}
-
 		public SelectQuery()
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
@@ -187,19 +170,44 @@ namespace LinqToDB.SqlQuery
 
 			public bool Equals(Column other)
 			{
-				return Expression.Equals(other.Expression) && object.Equals(Parent, other.Parent);
-			}
+				if (!object.Equals(Parent, other.Parent))
+					return false;
 
-#if OVERRIDETOSTRING
+				var found =
+					Expression.Equals(other.Expression)
+					|| new QueryVisitor().Find(other, e =>
+						{
+							switch(e.ElementType)
+							{
+								case QueryElementType.Column: return ((Column)e).Expression.Equals(Expression);
+							}
+							return false;
+						}) != null
+					|| new QueryVisitor().Find(Expression, e =>
+						{
+							switch (e.ElementType)
+							{
+								case QueryElementType.Column: return ((Column)e).Expression.Equals(other.Expression);
+							}
+							return false;
+						}) != null;
+
+				return found;
+			}
 
 			public override string ToString()
 			{
+#if OVERRIDETOSTRING
 				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+#else
+				if (Expression is SqlField)
+					return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+
+				return base.ToString();
+#endif
 			}
 
-#endif
-
-			#region ISqlExpression Members
+#region ISqlExpression Members
 
 			public bool CanBeNull
 			{
@@ -245,9 +253,9 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			#endregion
+#endregion
 
-			#region IEquatable<ISqlExpression> Members
+#region IEquatable<ISqlExpression> Members
 
 			bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
 			{
@@ -257,9 +265,9 @@ namespace LinqToDB.SqlQuery
 				return other is Column && Equals((Column)other);
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -269,9 +277,9 @@ namespace LinqToDB.SqlQuery
 				return func(this);
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.Column; } }
 
@@ -309,12 +317,12 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 
-		#region TableSource
+#region TableSource
 
 		public class TableSource : ISqlTableSource
 		{
@@ -433,16 +441,16 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#region IEquatable<ISqlExpression> Members
+#region IEquatable<ISqlExpression> Members
 
 			bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
 			{
 				return this == other;
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -454,9 +462,9 @@ namespace LinqToDB.SqlQuery
 				return this;
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlTableSource Members
+#region ISqlTableSource Members
 
 			public int       SourceID { get { return Source.SourceID; } }
 			public SqlField  All      { get { return Source.All;      } }
@@ -466,9 +474,9 @@ namespace LinqToDB.SqlQuery
 				return Source.GetKeys(allIfEmpty);
 			}
 
-			#endregion
+#endregion
 
-			#region ICloneableElement Members
+#region ICloneableElement Members
 
 			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -489,9 +497,9 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.TableSource; } }
 
@@ -528,9 +536,9 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlExpression Members
+#region ISqlExpression Members
 
 			public bool CanBeNull
 			{
@@ -545,12 +553,12 @@ namespace LinqToDB.SqlQuery
 			public int  Precedence { get { return Source.Precedence; } }
 			public Type SystemType { get { return Source.SystemType; } }
 
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 
-		#region TableJoin
+#region TableJoin
 
 		public enum JoinType
 		{
@@ -614,7 +622,7 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> action)
 			{
@@ -625,9 +633,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.JoinedTable; } }
 
@@ -656,12 +664,12 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 
-		#region Predicate
+#region Predicate
 
 		public abstract class Predicate : ISqlPredicate
 		{
@@ -1160,7 +1168,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			#region Overrides
+#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -1171,14 +1179,14 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#endregion
+#endregion
 
 			protected Predicate(int precedence)
 			{
 				Precedence = precedence;
 			}
 
-			#region IPredicate Members
+#region IPredicate Members
 
 			public int Precedence { get; private set; }
 
@@ -1200,9 +1208,9 @@ namespace LinqToDB.SqlQuery
 				return Clone(objectTree, doClone);
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public abstract QueryElementType ElementType { get; }
 
@@ -1220,12 +1228,12 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 
-		#region Condition
+#region Condition
 
 		public class Condition : IQueryElement, ICloneableElement
 		{
@@ -1284,7 +1292,7 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.Condition; } }
 
@@ -1307,12 +1315,12 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 
-		#region SearchCondition
+#region SearchCondition
 
 		public class SearchCondition : ConditionBase<SearchCondition, SearchCondition.Next>, ISqlPredicate, ISqlExpression
 		{
@@ -1361,7 +1369,7 @@ namespace LinqToDB.SqlQuery
 				return new Next(this);
 			}
 
-			#region Overrides
+#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -1372,9 +1380,9 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#endregion
+#endregion
 
-			#region IPredicate Members
+#region IPredicate Members
 
 			public int Precedence
 			{
@@ -1403,18 +1411,18 @@ namespace LinqToDB.SqlQuery
 				return func(this);
 			}
 
-			#endregion
+#endregion
 
-			#region IEquatable<ISqlExpression> Members
+#region IEquatable<ISqlExpression> Members
 
 			bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
 			{
 				return this == other;
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlExpression Members
+#region ISqlExpression Members
 
 			public bool CanBeNull
 			{
@@ -1433,9 +1441,9 @@ namespace LinqToDB.SqlQuery
 				return this == other;
 			}
 
-			#endregion
+#endregion
 
-			#region ICloneableElement Members
+#region ICloneableElement Members
 
 			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -1456,9 +1464,9 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.SearchCondition; } }
 
@@ -1480,12 +1488,12 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 
-		#region ConditionBase
+#region ConditionBase
 
 		interface IConditionExpr<T>
 		{
@@ -1517,7 +1525,7 @@ namespace LinqToDB.SqlQuery
 					return _condition.GetNext();
 				}
 
-				#region Predicate.ExprExpr
+#region Predicate.ExprExpr
 
 				public class Op_ : IConditionExpr<T2>
 				{
@@ -1549,32 +1557,32 @@ namespace LinqToDB.SqlQuery
 				public Op_ LessOrEqual    { get { return new Op_(this, Predicate.Operator.LessOrEqual);    } }
 				public Op_ NotLess        { get { return new Op_(this, Predicate.Operator.NotLess);        } }
 
-				#endregion
+#endregion
 
-				#region Predicate.Like
+#region Predicate.Like
 
 				public T2 Like(ISqlExpression expression, SqlValue escape) { return Add(new Predicate.Like(_expr, false, expression, escape)); }
 				public T2 Like(ISqlExpression expression)                  { return Like(expression, null); }
 				public T2 Like(string expression,         SqlValue escape) { return Like(new SqlValue(expression), escape); }
 				public T2 Like(string expression)                          { return Like(new SqlValue(expression), null);   }
 
-				#endregion
+#endregion
 
-				#region Predicate.Between
+#region Predicate.Between
 
 				public T2 Between   (ISqlExpression expr1, ISqlExpression expr2) { return Add(new Predicate.Between(_expr, false, expr1, expr2)); }
 				public T2 NotBetween(ISqlExpression expr1, ISqlExpression expr2) { return Add(new Predicate.Between(_expr, true,  expr1, expr2)); }
 
-				#endregion
+#endregion
 
-				#region Predicate.IsNull
+#region Predicate.IsNull
 
 				public T2 IsNull    { get { return Add(new Predicate.IsNull(_expr, false)); } }
 				public T2 IsNotNull { get { return Add(new Predicate.IsNull(_expr, true));  } }
 
-				#endregion
+#endregion
 
-				#region Predicate.In
+#region Predicate.In
 
 				public T2 In   (SelectQuery subQuery) { return Add(new Predicate.InSubQuery(_expr, false, subQuery)); }
 				public T2 NotIn(SelectQuery subQuery) { return Add(new Predicate.InSubQuery(_expr, true,  subQuery)); }
@@ -1603,7 +1611,7 @@ namespace LinqToDB.SqlQuery
 				public T2 In   (params object[] exprs) { return Add(CreateInList(false, exprs)); }
 				public T2 NotIn(params object[] exprs) { return Add(CreateInList(true,  exprs)); }
 
-				#endregion
+#endregion
 			}
 
 			public class Not_ : IConditionExpr<Expr_>
@@ -1650,9 +1658,9 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region OrderByItem
+#region OrderByItem
 
 		public class OrderByItem : IQueryElement, ICloneableElement
 		{
@@ -1683,7 +1691,7 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			#region Overrides
+#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -1694,9 +1702,9 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType
 			{
@@ -1713,12 +1721,12 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 
-		#region ClauseBase
+#region ClauseBase
 
 		public abstract class ClauseBase
 		{
@@ -1766,13 +1774,13 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region SelectClause
+#region SelectClause
 
 		public class SelectClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 		{
-			#region Init
+#region Init
 
 			internal SelectClause(SelectQuery selectQuery) : base(selectQuery)
 			{
@@ -1800,9 +1808,9 @@ namespace LinqToDB.SqlQuery
 				_columns.AddRange(columns);
 			}
 
-			#endregion
+#endregion
 
-			#region Columns
+#region Columns
 
 			public SelectClause Field(SqlField field)
 			{
@@ -1912,6 +1920,15 @@ namespace LinqToDB.SqlQuery
 				return Columns.IndexOf(AddOrGetColumn(new Column(SelectQuery, expr)));
 			}
 
+			public int AddNew(ISqlExpression expr)
+			{
+				if (expr is Column && ((Column)expr).Parent == SelectQuery)
+					throw new InvalidOperationException();
+
+				Columns.Add(new Column(SelectQuery, expr));
+				return Columns.Count - 1;
+			}
+
 			public int Add(ISqlExpression expr, string alias)
 			{
 				return Columns.IndexOf(AddOrGetColumn(new Column(SelectQuery, expr, alias)));
@@ -1976,18 +1993,18 @@ namespace LinqToDB.SqlQuery
 				get { return _columns; }
 			}
 
-			#endregion
+#endregion
 
-			#region HasModifier
+#region HasModifier
 
 			public bool HasModifier
 			{
 				get { return IsDistinct || SkipValue != null || TakeValue != null; }
 			}
 
-			#endregion
+#endregion
 
-			#region Distinct
+#region Distinct
 
 			public SelectClause Distinct
 			{
@@ -1996,9 +2013,9 @@ namespace LinqToDB.SqlQuery
 
 			public bool IsDistinct { get; set; }
 
-			#endregion
+#endregion
 
-			#region Take
+#region Take
 
 			public SelectClause Take(int value)
 			{
@@ -2014,9 +2031,9 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression TakeValue { get; set; }
 
-			#endregion
+#endregion
 
-			#region Skip
+#region Skip
 
 			public SelectClause Skip(int value)
 			{
@@ -2032,9 +2049,9 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression SkipValue { get; set; }
 
-			#endregion
+#endregion
 
-			#region Overrides
+#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -2045,9 +2062,9 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#endregion
+#endregion
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -2068,9 +2085,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.SelectClause; } }
 
@@ -2121,7 +2138,7 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
 		private SelectClause _select;
@@ -2130,9 +2147,9 @@ namespace LinqToDB.SqlQuery
 			get { return _select; }
 		}
 
-		#endregion
+#endregion
 
-		#region CreateTableStatement
+#region CreateTableStatement
 
 		public class CreateTableStatement : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 		{
@@ -2142,7 +2159,7 @@ namespace LinqToDB.SqlQuery
 			public string         StatementFooter { get; set; }
 			public DefaulNullable DefaulNullable  { get; set; }
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.CreateTableStatement; } }
 
@@ -2158,9 +2175,9 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -2170,9 +2187,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region ICloneableElement Members
+#region ICloneableElement Members
 
 			public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -2189,7 +2206,7 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			#endregion
+#endregion
 		}
 
 		private CreateTableStatement _createTable;
@@ -2198,9 +2215,9 @@ namespace LinqToDB.SqlQuery
 			get { return _createTable ?? (_createTable = new CreateTableStatement()); }
 		}
 
-		#endregion
+#endregion
 
-		#region InsertClause
+#region InsertClause
 
 		public class SetExpression : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 		{
@@ -2232,7 +2249,7 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression Column     { get; set; }
 			public ISqlExpression Expression { get; set; }
 
-			#region Overrides
+#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -2243,9 +2260,9 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#endregion
+#endregion
 
-			#region ICloneableElement Members
+#region ICloneableElement Members
 
 			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -2264,9 +2281,9 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -2275,9 +2292,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.SetExpression; } }
 
@@ -2290,7 +2307,7 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
 		public class InsertClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
@@ -2304,7 +2321,7 @@ namespace LinqToDB.SqlQuery
 			public SqlTable            Into         { get; set; }
 			public bool                WithIdentity { get; set; }
 
-			#region Overrides
+#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -2315,9 +2332,9 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#endregion
+#endregion
 
-			#region ICloneableElement Members
+#region ICloneableElement Members
 
 			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -2337,9 +2354,9 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -2352,9 +2369,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.InsertClause; } }
 
@@ -2377,7 +2394,7 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
 		private InsertClause _insert;
@@ -2391,9 +2408,9 @@ namespace LinqToDB.SqlQuery
 			_insert = null;
 		}
 
-		#endregion
+#endregion
 
-		#region UpdateClause
+#region UpdateClause
 
 		public class UpdateClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 		{
@@ -2407,7 +2424,7 @@ namespace LinqToDB.SqlQuery
 			public List<SetExpression> Keys  { get; private set; }
 			public SqlTable            Table { get; set; }
 
-			#region Overrides
+#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -2418,9 +2435,9 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#endregion
+#endregion
 
-			#region ICloneableElement Members
+#region ICloneableElement Members
 
 			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -2443,9 +2460,9 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -2461,9 +2478,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.UpdateClause; } }
 
@@ -2486,7 +2503,7 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
 		private UpdateClause _update;
@@ -2500,15 +2517,15 @@ namespace LinqToDB.SqlQuery
 			_update = null;
 		}
 
-		#endregion
+#endregion
 
-		#region DeleteClause
+#region DeleteClause
 
 		public class DeleteClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 		{
 			public SqlTable Table { get; set; }
 
-			#region Overrides
+#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -2519,9 +2536,9 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#endregion
+#endregion
 
-			#region ICloneableElement Members
+#region ICloneableElement Members
 
 			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -2538,9 +2555,9 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			#endregion
+#endregion
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
@@ -2551,9 +2568,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.DeleteClause; } }
 
@@ -2569,7 +2586,7 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
 		private DeleteClause _delete;
@@ -2583,13 +2600,13 @@ namespace LinqToDB.SqlQuery
 			_delete = null;
 		}
 
-		#endregion
+#endregion
 
-		#region FromClause
+#region FromClause
 
 		public class FromClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 		{
-			#region Join
+#region Join
 
 			public class Join : ConditionBase<Join,Join.Next>
 			{
@@ -2633,7 +2650,7 @@ namespace LinqToDB.SqlQuery
 				public JoinedTable JoinedTable { get; private set; }
 			}
 
-			#endregion
+#endregion
 
 			internal FromClause(SelectQuery selectQuery) : base(selectQuery)
 			{
@@ -2787,7 +2804,7 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#region Overrides
+#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -2798,9 +2815,9 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#endregion
+#endregion
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -2810,9 +2827,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.FromClause; } }
 
@@ -2836,7 +2853,7 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
 		public static FromClause.Join InnerJoin    (ISqlTableSource table,               params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Inner,      table, null,  false, joins); }
@@ -2863,9 +2880,9 @@ namespace LinqToDB.SqlQuery
 			get { return _from; }
 		}
 
-		#endregion
+#endregion
 
-		#region WhereClause
+#region WhereClause
 
 		public class WhereClause : ClauseBase<WhereClause,WhereClause.Next>, IQueryElement, ISqlExpressionWalkable
 		{
@@ -2934,7 +2951,7 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> action)
 			{
@@ -2942,9 +2959,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType
 			{
@@ -2960,7 +2977,7 @@ namespace LinqToDB.SqlQuery
 				return ((IQueryElement)Search).ToString(sb, dic);
 			}
 
-			#endregion
+#endregion
 		}
 
 		private WhereClause _where;
@@ -2969,9 +2986,9 @@ namespace LinqToDB.SqlQuery
 			get { return _where; }
 		}
 
-		#endregion
+#endregion
 
-		#region GroupByClause
+#region GroupByClause
 
 		public class GroupByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 		{
@@ -3034,7 +3051,7 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -3044,9 +3061,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.GroupByClause; } }
 
@@ -3069,7 +3086,7 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
 		private GroupByClause _groupBy;
@@ -3078,9 +3095,9 @@ namespace LinqToDB.SqlQuery
 			get { return _groupBy; }
 		}
 
-		#endregion
+#endregion
 
-		#region HavingClause
+#region HavingClause
 
 		private WhereClause _having;
 		public  WhereClause  Having
@@ -3088,9 +3105,9 @@ namespace LinqToDB.SqlQuery
 			get { return _having; }
 		}
 
-		#endregion
+#endregion
 
-		#region OrderByClause
+#region OrderByClause
 
 		public class OrderByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 		{
@@ -3160,7 +3177,7 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-			#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -3169,9 +3186,9 @@ namespace LinqToDB.SqlQuery
 				return null;
 			}
 
-			#endregion
+#endregion
 
-			#region IQueryElement Members
+#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.OrderByClause; } }
 
@@ -3194,7 +3211,7 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-			#endregion
+#endregion
 		}
 
 		private OrderByClause _orderBy;
@@ -3203,9 +3220,9 @@ namespace LinqToDB.SqlQuery
 			get { return _orderBy; }
 		}
 
-		#endregion
+#endregion
 
-		#region Union
+#region Union
 
 		public class Union : IQueryElement
 		{
@@ -3256,9 +3273,9 @@ namespace LinqToDB.SqlQuery
 			Unions.Add(new Union(union, isAll));
 		}
 
-		#endregion
+#endregion
 
-		#region ProcessParameters
+#region ProcessParameters
 
 		public SelectQuery ProcessParameters()
 		{
@@ -3419,63 +3436,53 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (p.Expr1 is SqlExpression)
+					if (p.Expr1 is ObjectSqlExpression)
 					{
-						var expr = (SqlExpression)p.Expr1;
+						var expr = (ObjectSqlExpression)p.Expr1;
 
-						if (expr.Expr.Length > 1 && expr.Expr[0] == '\x1')
+						if (expr.Parameters.Length == 1)
 						{
-							var type  = items.GetListItemType();
-							var ta    = TypeAccessor.GetAccessor(type);
-							var names = expr.Expr.Substring(1).Split(',');
+							var values = new List<ISqlExpression>();
 
-							if (expr.Parameters.Length == 1)
+							foreach (var item in items)
 							{
-								var values = new List<ISqlExpression>();
-
-								foreach (var item in items)
-								{
-									var ma    = ta[names[0]];
-									var value = ma.GetValue(item);
-									values.Add(new SqlValue(value));
-								}
-
-								if (values.Count == 0)
-									return new Predicate.Expr(new SqlValue(p.IsNot));
-
-								return new Predicate.InList(expr.Parameters[0], p.IsNot, values);
+								var value = expr.GetValue(item, 0);
+								values.Add(new SqlValue(value));
 							}
 
-							{
-								var sc = new SearchCondition();
+							if (values.Count == 0)
+								return new Predicate.Expr(new SqlValue(p.IsNot));
 
-								foreach (var item in items)
-								{
-									var itemCond = new SearchCondition();
-
-									for (var i = 0; i < expr.Parameters.Length; i++)
-									{
-										var sql   = expr.Parameters[i];
-										var value = ta[names[i]].GetValue(item);
-										var cond  = value == null ?
-											new Condition(false, new Predicate.IsNull  (sql, false)) :
-											new Condition(false, new Predicate.ExprExpr(sql, Predicate.Operator.Equal, new SqlValue(value)));
-
-										itemCond.Conditions.Add(cond);
-									}
-
-									sc.Conditions.Add(new Condition(false, new Predicate.Expr(itemCond), true));
-								}
-
-								if (sc.Conditions.Count == 0)
-									return new Predicate.Expr(new SqlValue(p.IsNot));
-
-								if (p.IsNot)
-									return new Predicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
-
-								return new Predicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
-							}
+							return new Predicate.InList(expr.Parameters[0], p.IsNot, values);
 						}
+
+						var sc = new SearchCondition();
+
+						foreach (var item in items)
+						{
+							var itemCond = new SearchCondition();
+
+							for (var i = 0; i < expr.Parameters.Length; i++)
+							{
+								var sql   = expr.Parameters[i];
+								var value = expr.GetValue(item, i);
+								var cond  = value == null ?
+									new Condition(false, new Predicate.IsNull  (sql, false)) :
+									new Condition(false, new Predicate.ExprExpr(sql, Predicate.Operator.Equal, new SqlValue(value)));
+
+								itemCond.Conditions.Add(cond);
+							}
+
+							sc.Conditions.Add(new Condition(false, new Predicate.Expr(itemCond), true));
+						}
+
+						if (sc.Conditions.Count == 0)
+							return new Predicate.Expr(new SqlValue(p.IsNot));
+
+						if (p.IsNot)
+							return new Predicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
+
+						return new Predicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
 					}
 				}
 			}
@@ -3494,9 +3501,9 @@ namespace LinqToDB.SqlQuery
 			throw new InvalidOperationException();
 		}
 
-		#endregion
+#endregion
 
-		#region Clone
+#region Clone
 
 		SelectQuery(SelectQuery clone, Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
@@ -3545,9 +3552,9 @@ namespace LinqToDB.SqlQuery
 			return (SelectQuery)Clone(new Dictionary<ICloneableElement,ICloneableElement>(), doClone);
 		}
 
-		#endregion
+#endregion
 
-		#region Aliases
+#region Aliases
 
 		IDictionary<string,object> _aliases;
 
@@ -3578,7 +3585,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var s = alias.ToUpper();
 
-				if (!_aliases.ContainsKey(s) && !_reservedWords.ContainsKey(s))
+				if (!_aliases.ContainsKey(s) && !ReservedWords.IsReserved(s))
 				{
 					_aliases.Add(s, s);
 					break;
@@ -3690,9 +3697,9 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		#endregion
+#endregion
 
-		#region Helpers
+#region Helpers
 
 		public void ForEachTable(Action<TableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
@@ -3740,9 +3747,9 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		#endregion
+#endregion
 
-		#region Overrides
+#region Overrides
 
 		public string SqlText { get { return ToString(); } }
 
@@ -3755,9 +3762,9 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-		#endregion
+#endregion
 
-		#region ISqlExpression Members
+#region ISqlExpression Members
 
 		public bool CanBeNull
 		{
@@ -3788,9 +3795,9 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region ICloneableElement Members
+#region ICloneableElement Members
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
@@ -3805,9 +3812,9 @@ namespace LinqToDB.SqlQuery
 			return clone;
 		}
 
-		#endregion
+#endregion
 
-		#region ISqlExpressionWalkable Members
+#region ISqlExpressionWalkable Members
 
 		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
@@ -3829,18 +3836,18 @@ namespace LinqToDB.SqlQuery
 			return func(this);
 		}
 
-		#endregion
+#endregion
 
-		#region IEquatable<ISqlExpression> Members
+#region IEquatable<ISqlExpression> Members
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
 		{
 			return this == other;
 		}
 
-		#endregion
+#endregion
 
-		#region ISqlTableSource Members
+#region ISqlTableSource Members
 
 		public static int SourceIDCounter;
 
@@ -3881,9 +3888,9 @@ namespace LinqToDB.SqlQuery
 			return _keys;
 		}
 
-		#endregion
+#endregion
 
-		#region IQueryElement Members
+#region IQueryElement Members
 
 		public QueryElementType ElementType { get { return QueryElementType.SqlQuery; } }
 
@@ -3915,6 +3922,6 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		#endregion
+#endregion
 	}
 }

@@ -12,6 +12,7 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
 
 using NpgsqlTypes;
@@ -155,8 +156,10 @@ namespace Tests.DataProvider
 						new TypeTestData("pointDataType",       (n,t,c) => t.TestTypeEx<NpgsqlPoint?>      (c, n, skipNull:true, skipNotNull:true), new NpgsqlPoint(1, 2)),
 						new TypeTestData("lsegDataType",        (n,t,c) => t.TestTypeEx<NpgsqlLSeg?>       (c, n, skipDefaultNull:true),            new NpgsqlLSeg   (new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4))),
 						new TypeTestData("boxDataType",         (n,t,c) => t.TestTypeEx<NpgsqlBox?>        (c, n, skipDefaultNull:true).ToString(), new NpgsqlBox    (new NpgsqlPoint(3, 4), new NpgsqlPoint(1, 2)).ToString()),
+#if !NPGSQL226
 						new TypeTestData("pathDataType",        (n,t,c) => t.TestTypeEx<NpgsqlPath?>       (c, n, skipDefaultNull:true),            new NpgsqlPath   (new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4))),
 						new TypeTestData("polygonDataType",     (n,t,c) => t.TestTypeEx<NpgsqlPolygon?>    (c, n, skipNull:true, skipNotNull:true), new NpgsqlPolygon(new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4))),
+#endif
 						new TypeTestData("circleDataType",      (n,t,c) => t.TestTypeEx<NpgsqlCircle?>     (c, n, skipDefaultNull:true),            new NpgsqlCircle (new NpgsqlPoint(1, 2), 3)),
 
 						new TypeTestData("inetDataType",        (n,t,c) => t.TestTypeEx<NpgsqlInet?>       (c, n, skipDefaultNull:true),            new NpgsqlInet(new IPAddress(new byte[] { 192, 168, 1, 1 }))),
@@ -657,5 +660,24 @@ namespace Tests.DataProvider
 				Assert.That(list[0].cdni_cd_cod_numero_item1, Is.EqualTo("1"));
 			}
 		}
+
+#if !NPGSQL226
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void NpgsqlDateTimeTest(string context)
+		{
+			PostgreSQLTools.GetDataProvider().CreateConnection(DataConnection.GetConnectionString(context));
+				
+			var d  = new NpgsqlDateTime(DateTime.Today);
+			var o  = new DateTimeOffset(DateTime.Today);
+			var c1 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset>();
+			var c2 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset?>();
+
+			Assert.IsNotNull(c1);
+			Assert.IsNotNull(c2);
+
+			Assert.AreEqual(o, c1.Compile()(d));
+			Assert.AreEqual(o, c2.Compile()(d).Value);
+		}
+#endif
 	}
 }

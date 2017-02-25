@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using System.Linq;
+using LinqToDB.Common;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Configuration;
+
 	using Data;
 
 	public static partial class OracleTools
@@ -25,11 +29,26 @@ namespace LinqToDB.DataProvider.Oracle
 			DataConnection.AddDataProvider(_oracleManagedDataProvider);
 
 			DataConnection.AddProviderDetector(ProviderDetector);
+
+			foreach (var method in typeof(OracleTools).GetMethodsEx().Where(_ => _.Name == "OracleXmlTable" && _.IsGenericMethod))
+			{
+				var parameters = method.GetParameters();
+
+				if (parameters[1].ParameterType == typeof(string))
+					OracleXmlTableString = method;
+				else if (parameters[1].ParameterType == typeof(Func<string>))
+					OracleXmlTableFuncString = method;
+				else if (parameters[1].ParameterType.IsGenericTypeEx() &&
+				         parameters[1].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+					OracleXmlTableIEnumerableT = method;
+				else
+					throw new InvalidOperationException("Overload method for OracleXmlTable is unknown");
+			}
 		}
 
-		static IDataProvider ProviderDetector(ConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (DataConnection.IsMachineConfig(css))
+			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
 
 			switch (css.ProviderName)
@@ -75,9 +94,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			try
 			{
-				var path = typeof(OracleTools).Assembly.CodeBase.Replace("file:///", "");
-
-				path = Path.GetDirectoryName(path);
+				var path = typeof(OracleTools).AssemblyEx().GetPath();
 
 				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
 					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))

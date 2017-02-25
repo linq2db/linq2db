@@ -17,6 +17,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Globalization;
+
 	using Model;
 
 	[TestFixture]
@@ -91,7 +93,7 @@ namespace Tests.DataProvider
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
 
-				var sql = string.Format("SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
+				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
@@ -404,12 +406,27 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table(Name = "CreateTableTest", Schema = "IgnoreSchema", Database = "TestDatabase")]
+		public class CreateTableTest
+		{
+			[PrimaryKey, Identity]
+			public int Id;
+		}
+
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
 		public void CreateDatabase(string context)
 		{
-			SqlCeTools.CreateDatabase("TestDatabase");
-			Assert.IsTrue(File.Exists("TestDatabase.sdf"));
-			SqlCeTools.DropDatabase  ("TestDatabase");
+			SqlCeTools.CreateDatabase ("TestDatabase");
+			Assert.IsTrue(File.Exists ("TestDatabase.sdf"));
+
+			using (var db = new DataConnection(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf"))
+			{
+				db.CreateTable<CreateTableTest>();
+				db.DropTable  <CreateTableTest>();
+			}
+
+			SqlCeTools.DropDatabase   ("TestDatabase");
+			Assert.IsFalse(File.Exists("TestDatabase.sdf"));
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]

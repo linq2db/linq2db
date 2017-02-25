@@ -240,7 +240,7 @@ namespace Tests.xUpdate
 
 		class TestCreateFormat
 		{
-			[Column(CreateFormat="{0}{1}{2}{3}/* test */"), NotNull]
+			[Column(CreateFormat = "{0}{1}{2}{3}/* test */"), NotNull]
 			public int Field1;
 			[Column]
 			public int Field2;

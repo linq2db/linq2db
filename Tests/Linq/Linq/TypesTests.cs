@@ -8,6 +8,7 @@ using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
@@ -167,7 +168,7 @@ namespace Tests.Linq
 									Expression.PropertyOrField(parm, "GuidValue"),
 									Expression.Constant(guid3),
 									false,
-									typeof(Guid).GetMethod("op_Equality")),
+									typeof(Guid).GetMethodEx("op_Equality")),
 								new[] { parm }))
 						.Single().GuidValue,
 					db.Types
@@ -177,7 +178,7 @@ namespace Tests.Linq
 									Expression.PropertyOrField(parm, "GuidValue"),
 									Expression.Constant(guid4),
 									false,
-									typeof(Guid).GetMethod("op_Equality")),
+									typeof(Guid).GetMethodEx("op_Equality")),
 								new[] { parm }))
 						.Single().GuidValue);
 		}
@@ -194,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access, ProviderName.SapHana)]
+			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access, ProviderName.SapHana)]
 		public void NewGuid(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -241,7 +242,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void InsertBinary1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -311,7 +312,7 @@ namespace Tests.Linq
 					from t in db.Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite)]
+		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
 		public void DateTime21(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -332,7 +333,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql,
-				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB)]
+				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void DateTime22(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -353,7 +354,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql,
-				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB)]
+				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void DateTime23(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -377,7 +378,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, TestProvName.MariaDB,
-				TestProvName.MariaDB, ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana)]
+				TestProvName.MariaDB, TestProvName.MySql57, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana)]
 		public void DateTime24(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -480,7 +481,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 
 					var id =
 						db.Person
@@ -502,11 +503,12 @@ namespace Tests.Linq
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, DataContextSource(
 			ProviderName.Informix
 			)]
@@ -523,6 +525,7 @@ namespace Tests.Linq
 
 			Thread.CurrentThread.CurrentCulture = current;
 		}
+#endif
 
 		[Test, DataContextSource]
 		public void SmallInt(string context)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -119,6 +120,48 @@ namespace LinqToDB.DataProvider.SQLite
 				StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 				StringBuilder.Append(")");
 			}
+		}
+
+		protected override void BuildPredicate(ISqlPredicate predicate)
+		{
+			var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
+
+			if (exprExpr != null)
+			{
+				var leftType  = exprExpr.Expr1.SystemType;
+				var rightType = exprExpr.Expr2.SystemType;
+
+				if (IsDateTime(leftType) || IsDateTime(rightType))
+				{
+
+					var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
+						SqlDataType.GetDataType(leftType), exprExpr.Expr1);
+
+					var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
+						SqlDataType.GetDataType(rightType), exprExpr.Expr2);
+
+					exprExpr.Expr1 = l;
+					exprExpr.Expr2 = r;
+				}
+			}
+
+			base.BuildPredicate(predicate);
+		}
+
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			if (database != null)
+				sb.Append(database).Append(".");
+
+			return sb.Append(table);
+		}
+
+		private static bool IsDateTime(Type type)
+		{
+			return    type == typeof(DateTime)
+				   || type == typeof(DateTimeOffset)
+				   || type == typeof(DateTime?)
+				   || type == typeof(DateTimeOffset?);
 		}
 	}
 }

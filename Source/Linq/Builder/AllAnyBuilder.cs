@@ -88,8 +88,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression expression, int level)
 			{
-				var idx = ConvertToIndex(expression, level, ConvertFlags.Field);
-				return Builder.BuildSql(typeof(bool), idx[0].Index);
+				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
+				if (Parent != null)
+					ConvertToParentIndex(index, Parent);
+				return Builder.BuildSql(typeof(bool), index);
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)

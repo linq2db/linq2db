@@ -117,7 +117,7 @@ namespace Tests.Linq
 			return value ?? 777;
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void Contains3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -160,7 +160,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void Contains4(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -290,7 +290,7 @@ namespace Tests.Linq
 					Expression.Invoke(pred2, param)
 				), param);
 
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var count = db.Customer.Count(final);
 			}

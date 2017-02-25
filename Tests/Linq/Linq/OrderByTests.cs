@@ -159,6 +159,146 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void OrderBy7(string context)
+		{
+			try
+			{
+				LinqToDB.Common.Configuration.Linq.DoNotClearOrderBys = true;
+
+				using (var db = GetDataContext(context))
+				{
+
+					var expected =
+						from ch in Child
+						orderby ch.ChildID%2, ch.ChildID
+						select ch;
+
+					var qry =
+						from ch in db.Child
+						orderby ch.ChildID%2
+						select new {ch};
+
+					var result = qry.OrderBy(x => x.ch.ChildID).Select(x => x.ch);
+
+					AreEqual(expected, result);
+				}
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.Linq.DoNotClearOrderBys = false;
+			}
+		}
+
+		[Test, DataContextSource]
+		public void OrderBy8(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var expected =
+					from ch in Child
+					orderby ch.ChildID%2, ch.ChildID
+					select ch;
+
+				var qry =
+					from ch in db.Child
+					orderby ch.ChildID%2
+					select new {ch};
+
+				var result = qry.ThenOrBy(x => x.ch.ChildID).Select(x => x.ch);
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void OrderBy9(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var expected =
+					from ch in Child
+					orderby ch.ChildID%2, ch.ChildID descending 
+					select ch;
+
+				var qry =
+					from ch in db.Child
+					orderby ch.ChildID%2 descending
+					select new {ch};
+
+				var result = qry.ThenOrByDescending(x => x.ch.ChildID).Select(x => x.ch);
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void OrderBy10(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var expected =
+					(from ch in Child
+					orderby ch.ChildID%2
+					select ch).ThenByDescending(ch => ch.ChildID);
+
+				var qry =
+					from ch in db.Child
+					orderby ch.ChildID%2 
+					select new {ch};
+
+				var result = qry.ThenOrByDescending(x => x.ch.ChildID).Select(x => x.ch);
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void OrderBy11(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var expected =
+					(from ch in Child
+					orderby ch.ChildID%2
+					select ch).ThenByDescending(ch => ch.ChildID);
+
+				var qry =
+					from ch in db.Child
+					orderby ch.ChildID%2 
+					select ch;
+
+				var result = qry.ThenOrByDescending(x => x.ChildID).Select(x => x);
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void OrderBy12(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var expected =
+					from ch in Child
+					orderby ch.ChildID%2 descending
+					select ch;
+
+				var qry =
+					from ch in db.Child
+					select ch;
+
+				var result = qry.ThenOrByDescending(x => x.ChildID%2);
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource]
 		public void OrderBySelf1(string context)
 		{
 			using (var db = GetDataContext(context))

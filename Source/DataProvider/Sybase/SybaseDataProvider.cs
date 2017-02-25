@@ -106,10 +106,12 @@ namespace LinqToDB.DataProvider.Sybase
 			return _sqlOptimizer;
 		}
 
+#if !NETSTANDARD
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SybaseSchemaProvider();
 		}
+#endif
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
@@ -179,9 +181,9 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region BulkCopy
+#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -193,6 +195,6 @@ namespace LinqToDB.DataProvider.Sybase
 				source);
 		}
 
-		#endregion
+#endregion
 	}
 }
