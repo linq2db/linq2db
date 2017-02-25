@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -30,6 +31,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				base.BuildSql();
 		}
 
+		StringBuilder AppendOutputTableVariable(SqlTable table)
+		{
+			StringBuilder.Append("@").Append(table.PhysicalName).Append("Output");
+			return StringBuilder;
+		}
+
 		protected override void BuildInsertQuery()
 		{
 			if (SelectQuery.Insert.WithIdentity)
@@ -39,7 +46,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (identityField != null)
 				{
 					AppendIndent()
-						.Append("DECLARE @TableOutput TABLE (")
+						.Append("DECLARE ");
+					AppendOutputTableVariable(SelectQuery.Insert.Into)
+						.Append(" TABLE (")
 						.Append(identityField.PhysicalName)
 						.Append(" ");
 					BuildCreateTableFieldType(identityField);
@@ -66,7 +75,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						.Append("]")
 						.AppendLine();
 					AppendIndent()
-						.Append("INTO @TableOutput")
+						.Append("INTO ");
+					AppendOutputTableVariable(SelectQuery.Insert.Into)
 						.AppendLine();
 				}
 			}
@@ -75,25 +85,23 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildGetIdentity()
 		{
 			var identityField = SelectQuery.Insert.Into.GetIdentityField();
-			if (identityField == null) return;
 
-			StringBuilder
-				.AppendLine();
-			AppendIndent()
-				.Append("SELECT ")
-				.Append(identityField.PhysicalName)
-				.Append(" FROM @TableOutput")
-				.AppendLine();
-			if (SqlServerConfiguration.GenerateScopeIdentity)
+			if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 			{
-				var identityField = SelectQuery.Insert.Into.GetIdentityField();
-
-				if (identityField == null || identityField.DataType != DataType.Guid)
-				{
-					StringBuilder
-						.AppendLine()
-						.AppendLine("SELECT SCOPE_IDENTITY()");
-				}
+				StringBuilder
+					.AppendLine();
+				AppendIndent()
+					.Append("SELECT ")
+					.Append(identityField.PhysicalName)
+					.Append(" FROM ");
+				AppendOutputTableVariable(SelectQuery.Insert.Into)
+					.AppendLine();
+			}
+			else if (identityField == null || identityField.DataType != DataType.Guid)
+			{
+				StringBuilder
+					.AppendLine()
+					.AppendLine("SELECT SCOPE_IDENTITY()");
 			}
 		}
 
