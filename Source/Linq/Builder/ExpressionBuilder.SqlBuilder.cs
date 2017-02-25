@@ -2337,6 +2337,9 @@ namespace LinqToDB.Linq.Builder
 
 		private static SelectQuery.Condition CheckIsNull(ISqlPredicate predicate, bool isNot)
 		{
+			if (Configuration.Linq.CheckNullForNotEquals == false)
+				return null;
+
 			if (predicate.CanBeNull && predicate is SelectQuery.Predicate.ExprExpr || predicate is SelectQuery.Predicate.InList)
 			{
 				var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
