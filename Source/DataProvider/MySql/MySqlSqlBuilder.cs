@@ -61,14 +61,17 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32         :
-				case DataType.UInt16        :
 				case DataType.Int16         :
+				case DataType.Int32         :
+				case DataType.Int64         :
 					if (createDbType) goto default;
 					StringBuilder.Append("Signed");
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          :
+				case DataType.UInt16        :
+				case DataType.UInt32        :
+				case DataType.UInt64        :
 					if (createDbType) goto default;
 					StringBuilder.Append("Unsigned");
 					break;
@@ -85,7 +88,7 @@ namespace LinqToDB.DataProvider.MySql
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length).Append(')');
 					break;
-				default                     : base.BuildDataType(type); break;
+				default: base.BuildDataType(type); break;
 			}
 		}
 

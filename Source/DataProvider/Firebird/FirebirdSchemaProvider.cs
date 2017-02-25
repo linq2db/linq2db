@@ -170,13 +170,14 @@ namespace LinqToDB.DataProvider.Firebird
 
 				select new ColumnSchema
 				{
-					ColumnType = GetDbType(columnType, dataType, length, precision, scale),
-					ColumnName = columnName,
-					IsNullable = isNullable,
-					MemberName = ToValidName(columnName),
-					MemberType = ToTypeName(systemType, isNullable),
-					SystemType = systemType ?? typeof(object),
-					DataType   = GetDataType(columnType, null),
+					ColumnType           = GetDbType(columnType, dataType, length, precision, scale),
+					ColumnName           = columnName,
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = systemType ?? typeof(object),
+					DataType             = GetDataType(columnType, null, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(columnType),
 				}
 			).ToList();
 		}
@@ -213,7 +214,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return dataTypes;
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{
@@ -235,6 +236,11 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return null;
 		}
 	}
 }

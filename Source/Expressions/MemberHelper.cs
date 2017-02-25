@@ -8,7 +8,7 @@ namespace LinqToDB.Expressions
 
 	public static class MemberHelper
 	{
-		public static MemberInfo GetMemeberInfo(LambdaExpression func)
+		public static MemberInfo GetMemberInfo(LambdaExpression func)
 		{
 			var ex = func.Body;
 
@@ -26,39 +26,39 @@ namespace LinqToDB.Expressions
 
 		public static MemberInfo MemberOf<T>(Expression<Func<T,object>> func)
 		{
-			return GetMemeberInfo(func);
+			return GetMemberInfo(func);
 		}
 
 		public static FieldInfo FieldOf<T>(Expression<Func<T,object>> func)
 		{
-			return (FieldInfo)GetMemeberInfo(func);
+			return (FieldInfo)GetMemberInfo(func);
 		}
 
 		public static PropertyInfo PropertyOf<T>(Expression<Func<T,object>> func)
 		{
-			return (PropertyInfo)GetMemeberInfo(func);
+			return (PropertyInfo)GetMemberInfo(func);
 		}
 
 		public static MethodInfo MethodOf<T>(Expression<Func<T,object>> func)
 		{
-			var mi = GetMemeberInfo(func);
+			var mi = GetMemberInfo(func);
 			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethodEx() : (MethodInfo)mi;
 		}
 
 		public static MethodInfo MethodOf(Expression<Func<object>> func)
 		{
-			var mi = GetMemeberInfo(func);
+			var mi = GetMemberInfo(func);
 			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethodEx() : (MethodInfo)mi;
 		}
 
 		public static ConstructorInfo ConstructorOf<T>(Expression<Func<T,object>> func)
 		{
-			return (ConstructorInfo)GetMemeberInfo(func);
+			return (ConstructorInfo)GetMemberInfo(func);
 		}
 
 		public static ConstructorInfo ConstructorOf(Expression<Func<object>> func)
 		{
-			return (ConstructorInfo)GetMemeberInfo(func);
+			return (ConstructorInfo)GetMemberInfo(func);
 		}
 	}
 }

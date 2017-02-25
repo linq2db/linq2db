@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider
 	using SqlQuery;
 	using SqlProvider;
 
-	class BasicMerge
+	public class BasicMerge
 	{
 		protected class ColumnInfo
 		{
@@ -56,10 +56,10 @@ namespace LinqToDB.DataProvider
 				.ToList();
 
 			StringBuilder.Append("MERGE INTO ");
-			sqlBuilder.BuildTableName(StringBuilder,
-				(string)sqlBuilder.Convert(databaseName ?? table.DatabaseName, ConvertType.NameToDatabase),
-				(string)sqlBuilder.Convert(schemaName   ?? table.SchemaName,   ConvertType.NameToOwner),
-				(string)sqlBuilder.Convert(tableName    ?? table.TableName,    ConvertType.NameToQueryTable));
+			sqlBuilder.ConvertTableName(StringBuilder,
+				databaseName ?? table.DatabaseName,
+				schemaName   ?? table.SchemaName,
+				tableName    ?? table.TableName);
 
 			StringBuilder
 				.AppendLine(" Target")

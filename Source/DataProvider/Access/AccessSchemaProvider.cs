@@ -57,6 +57,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
+#if !NETSTANDARD
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 
 			return
@@ -66,20 +67,26 @@ namespace LinqToDB.DataProvider.Access
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
+				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE" || t.Field<string>("TABLE_TYPE") == "ACCESS TABLE"
 				select new TableInfo
 				{
-					TableID         = catalog + '.' + schema + '.' + name,
-					CatalogName     = catalog,
-					SchemaName      = schema,
-					TableName       = name,
-					IsDefaultSchema = schema.IsNullOrEmpty(),
-					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW"
+					TableID            = catalog + '.' + schema + '.' + name,
+					CatalogName        = catalog,
+					SchemaName         = schema,
+					TableName          = name,
+					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
+					IsProviderSpecific = system
 				}
 			).ToList();
+#else
+			return new List<TableInfo>();
+#endif
 		}
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
+#if !NETSTANDARD
 			var idxs = ((DbConnection)dataConnection.Connection).GetSchema("Indexes");
 
 			return
@@ -94,10 +101,14 @@ namespace LinqToDB.DataProvider.Access
 					Ordinal        = ConvertTo<int>.From(idx["ORDINAL_POSITION"]),
 				}
 			).ToList();
+#else
+			return new List<PrimaryKeyInfo>();
+#endif
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
+#if !NETSTANDARD
 			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
 			return
@@ -119,6 +130,9 @@ namespace LinqToDB.DataProvider.Access
 					IsIdentity = Converter.ChangeTypeTo<int>  (c["COLUMN_FLAGS"]) == 90,
 				}
 			).ToList();
+#else 
+			return new List<ColumnInfo>();
+#endif
 		}
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
@@ -126,10 +140,16 @@ namespace LinqToDB.DataProvider.Access
 			return new List<ForeingKeyInfo>();
 		}
 
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return null;
+		}
+
 		List<ProcedureInfo> _procedures;
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
+#if !NETSTANDARD
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 
 			return _procedures =
@@ -148,6 +168,9 @@ namespace LinqToDB.DataProvider.Access
 					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION")
 				}
 			).ToList();
+#else
+			return new List<ProcedureInfo>();
+#endif
 		}
 
 		static Regex _paramsExp;
@@ -218,7 +241,7 @@ namespace LinqToDB.DataProvider.Access
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{

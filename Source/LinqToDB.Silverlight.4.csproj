@@ -72,9 +72,21 @@
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
     <Compile Include="Common\Option.cs" />
-    <Compile Include="Common\Silverlight4Compatibility.cs" />
-    <Compile Include="Common\Silverlight5Compatibility.cs" />
+    <Compile Include="Compatibility\System\Security\AllowPartiallyTrustedCallersAttribute.cs" />
+    <Compile Include="Compatibility\System\Collections\Concurrent\ConcurrentDictionary.cs" />
+    <Compile Include="Compatibility\System\Data\DataRowVersion.cs" />
+    <Compile Include="Compatibility\System\Data\DataTable.cs" />
+    <Compile Include="Compatibility\System\Data\DbType.cs" />
+    <Compile Include="Compatibility\System\Data\IDataParameter.cs" />
+    <Compile Include="Compatibility\System\Data\IDataReader.cs" />
+    <Compile Include="Compatibility\System\Data\IDataRecord.cs" />
+    <Compile Include="Compatibility\System\Data\IDbDataParameter.cs" />
+    <Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+    <Compile Include="Compatibility\System\Data\ParameterDirection.cs" />
+    <Compile Include="Compatibility\System\Data\SqlDbType.cs" />
+    <Compile Include="Compatibility\System\SerializableAttribute.cs" />
     <Compile Include="Common\LinqToDBConvertException.cs" />
+    <Compile Include="Mapping\DataTypeAttribute.cs" />
     <Compile Include="Common\Tools.cs" />
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="DataExtensions.cs" />
@@ -100,6 +112,7 @@
     <Compile Include="DataProvider\SqlServer\SqlServer2008SqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2012SqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerSqlBuilder.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlBuilder.cs" />
     <Compile Include="DataType.cs" />
     <Compile Include="Data\DataParameter.cs" />
@@ -142,6 +155,8 @@
     <Compile Include="Linq\Builder\ExpressionHoder.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\Builder\FirstSingleBuilder.cs" />
+    <Compile Include="Mapping\Relationship.cs" />
+    <Compile Include="Mapping\StoredProcedure.cs" />
     <Compile Include="Linq\Builder\GroupByBuilder.cs" />
     <Compile Include="Linq\Builder\IBuildContext.cs" />
     <Compile Include="Linq\Builder\InsertBuilder.cs" />
@@ -253,9 +268,11 @@
     <Compile Include="SqlProvider\ConvertType.cs" />
     <Compile Include="SqlProvider\ISqlBuilder.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
+    <Compile Include="SqlProvider\JoinOptimizer.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
+    <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\Extensions.cs" />
     <Compile Include="SqlQuery\ICloneableElement.cs" />
     <Compile Include="SqlQuery\IQueryElement.cs" />
@@ -274,6 +291,7 @@
     <Compile Include="SqlQuery\SqlDataType.cs" />
     <Compile Include="SqlQuery\SqlException.cs" />
     <Compile Include="SqlQuery\SqlExpression.cs" />
+    <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
     <Compile Include="SqlQuery\SqlField.cs" />
     <Compile Include="SqlQuery\SqlFunction.cs" />
     <Compile Include="SqlQuery\SqlParameter.cs" />
@@ -295,6 +313,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>

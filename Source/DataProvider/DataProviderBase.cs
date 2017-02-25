@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
+using System.Diagnostics;
 using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -120,6 +121,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(T) }] = expr;
 		}
 
+		protected void SetField<TP,T>(string dataTypeName, Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
+		}
+
 		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
@@ -130,11 +136,14 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
 		}
 
+		protected void SetToType<TP,T,TF>(Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(TF) }] = expr;
+		}
+
 		#endregion
 
 		#region GetReaderExpression
-
-		static readonly MethodInfo _getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
@@ -150,30 +159,79 @@ namespace LinqToDB.DataProvider
 					((DbDataReader)reader).GetName(idx)));
 			}
 
+#if DEBUG1
+			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
+			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
+			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}".Args(
+				toType       == null ? "(null)" : toType.Name,
+				providerType == null ? "(null)" : providerType.Name,
+				fieldType.Name,
+				typeName ?? "(null)"));
+			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
+
+			foreach (var ex in ReaderExpressions)
+			{
+				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}"
+					.Args(
+						ex.Key.ToType            == null ? null : ex.Key.ToType.Name,
+						ex.Key.ProviderFieldType == null ? null : ex.Key.ProviderFieldType.Name,
+						ex.Key.FieldType         == null ? null : ex.Key.FieldType.Name,
+						ex.Key.DataTypeName,
+						ex.Value));
+			}
+#endif
+
 			Expression expr;
 
-			if (ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
+			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
+			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
+			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
+			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
 
+			var getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
-				Expression.Call(readerExpression, _getValueMethodInfo, Expression.Constant(idx)),
+				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
 				fieldType);
+		}
+
+		protected bool FindExpression(ReaderInfo info, out Expression expr)
+		{
+#if DEBUG1
+				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}"
+					.Args(
+						info.ToType            == null ? null : info.ToType.Name,
+						info.ProviderFieldType == null ? null : info.ProviderFieldType.Name,
+						info.FieldType         == null ? null : info.FieldType.Name,
+						info.DataTypeName));
+#endif
+
+			if (ReaderExpressions.TryGetValue(info, out expr))
+			{
+#if DEBUG1
+				Debug.WriteLine("ReaderExpression found: {0}".Args(expr));
+#endif
+				return true;
+			}
+			
+			return false;
 		}
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
+#if !NETSTANDARD
 			var st = ((DbDataReader)reader).GetSchemaTable();
 			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
+#else
+			return true;
+#endif
 		}
 
 		#endregion
@@ -265,7 +323,9 @@ namespace LinqToDB.DataProvider
 		}
 
 		public abstract bool            IsCompatibleConnection(IDbConnection connection);
+#if !NETSTANDARD
 		public abstract ISchemaProvider GetSchemaProvider     ();
+#endif
 
 		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
@@ -305,9 +365,9 @@ namespace LinqToDB.DataProvider
 			parameter.DbType = dbType;
 		}
 
-		#endregion
+#endregion
 
-		#region Create/Drop Database
+#region Create/Drop Database
 
 		internal static void CreateFileDatabase(
 			string databaseName,
@@ -350,18 +410,18 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region BulkCopy
+#region BulkCopy
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -370,6 +430,6 @@ namespace LinqToDB.DataProvider
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		#endregion
+#endregion
 	}
 }

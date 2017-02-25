@@ -42,7 +42,19 @@ namespace LinqToDB.Mapping
 
 			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
-			if (columnAttribute.HasScale    ()) Scale     =  columnAttribute.Scale;
+			if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
+
+			if (Storage == null)
+			{
+				StorageType = MemberType;
+				StorageInfo = MemberInfo;
+			}
+			else
+			{
+				var expr = Expression.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType), Storage);
+				StorageType = expr.Type;
+				StorageInfo = expr.Member;
+			}
 
 			var defaultCanBeNull = false;
 
@@ -90,12 +102,28 @@ namespace LinqToDB.Mapping
 					PrimaryKeyOrder = a.Order;
 				}
 			}
+
+			if (DbType == null || DataType == DataType.Undefined)
+			{
+				var a = mappingSchema.GetAttribute<DataTypeAttribute>(MemberInfo, attr => attr.Configuration);
+
+				if (a != null)
+				{
+					if (DbType == null)
+						DbType = a.DbType;
+
+					if (DataType == DataType.Undefined && a.DataType.HasValue)
+						DataType = a.DataType.Value;
+				}
+			}
 		}
 
 		public MappingSchema  MappingSchema   { get; private set; }
 		public MemberAccessor MemberAccessor  { get; private set; }
 		public MemberInfo     MemberInfo      { get; private set; }
+		public MemberInfo     StorageInfo     { get; private set; }
 		public Type           MemberType      { get; private set; }
+		public Type           StorageType     { get; private set; }
 		public string         MemberName      { get; private set; }
 		public string         ColumnName      { get; private set; }
 		public string         Storage         { get; private set; }
@@ -126,7 +154,7 @@ namespace LinqToDB.Mapping
 
 				if (expr != null)
 				{
-					getterExpr = expr.GetBody(getterExpr);
+					getterExpr = Expression.PropertyOrField(expr.GetBody(getterExpr), "Value");
 				}
 				else
 				{

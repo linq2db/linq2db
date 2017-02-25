@@ -74,12 +74,12 @@ namespace LinqToDB.Linq.Builder
 		readonly Dictionary<Expression,Expression> _expressionAccessors;
 		private  HashSet<Expression>               _subQueryExpressions;
 
-		readonly public List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
+		public readonly List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
 
 #if FW4 || SILVERLIGHT || NETFX_CORE
 
-		readonly public List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
-		readonly public List<Expression>           BlockExpressions     = new List<Expression>();
+		public readonly List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
+		public readonly List<Expression>           BlockExpressions     = new List<Expression>();
 		         public bool                       IsBlockDisable;
 		         public int                        VarIndex;
 
@@ -825,7 +825,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					;
 
 				var body    = func.Body.Unwrap();
@@ -843,7 +843,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					;
 
 				var body    = func.Body.Unwrap();
@@ -861,7 +861,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					.Select (resParam => r)
 					;
 
@@ -881,7 +881,7 @@ namespace LinqToDB.Linq.Builder
 						Key     = key,
 						Element = selectParam
 					})
-					.GroupBy(_ => _.Key, elemParam => e)
+					.GroupBy(underscore => underscore.Key, elemParam => e)
 					.Select (resParam => r)
 					;
 
@@ -1011,7 +1011,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess   :
 					{
 						var ma   = (MemberExpression)ex;
-						var attr = GetFunctionAttribute(ma.Member);
+						var attr = GetExpressionAttribute(ma.Member);
 
 						if (attr != null)
 							return true;
@@ -1326,6 +1326,48 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
+
+		#endregion
+
+		#region Helpers
+
+		/// <summary>
+		/// Gets Expression.Equal if <see cref="left"/> and <see cref="right"/> expression types are not same
+		/// <see cref="right"/> would be converted to <see cref="left"/>
+		/// </summary>
+		/// <param name="mappringSchema"></param>
+		/// <param name="left"></param>
+		/// <param name="right"></param>
+		/// <returns></returns>
+		internal static BinaryExpression Equal(MappingSchema mappringSchema, Expression left, Expression right)
+		{
+			if (left.Type != right.Type)
+			{
+				if (right.Type.CanConvertTo(left.Type))
+					right = Expression.Convert(right, left.Type);
+				else if (left.Type.CanConvertTo(right.Type))
+					left = Expression.Convert(left, right.Type);
+				else
+				{
+					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left. Type);
+					var leftConvert  = ConvertBuilder.GetConverter(mappringSchema, left. Type, right.Type);
+
+					var leftIsPrimitive  = left. Type.IsPrimitiveEx();
+					var rightIsPrimitive = right.Type.IsPrimitiveEx();
+
+					if (leftIsPrimitive == true && rightIsPrimitive == false && rightConvert.Item2 != null)
+						right = rightConvert.Item2.GetBody(right);
+					else if (leftIsPrimitive == false && rightIsPrimitive == true && leftConvert.Item2 != null)
+						left = leftConvert.Item2.GetBody(left);
+					else if (rightConvert.Item2 != null)
+						right = rightConvert.Item2.GetBody(right);
+					else if (leftConvert.Item2 != null)
+						left = leftConvert.Item2.GetBody(left);
+				}
+			}
+
+			return Expression.Equal(left, right);
+		}
 
 		#endregion
 	}

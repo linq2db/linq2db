@@ -22,6 +22,8 @@ DROP TABLE Child
 /
 DROP TABLE Parent
 /
+DROP TABLE StringTest
+/
 DROP TABLE LinqDataTypes
 /
 DROP SEQUENCE SequenceTestSeq
@@ -41,6 +43,43 @@ DROP sequence sq_test_user_contract
 DROP table t_entity
 /
 
+--StringTest Table
+CREATE TABLE StringTest
+	( StringValue1                VARCHAR2(50) NULL
+	, StringValue2                CHAR(50)     NULL
+	, KeyValue                    VARCHAR2(50) NOT NULL
+	)
+/
+
+INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES ('Value1', 'Value2', 'HasValues')
+/
+INSERT INTO StringTest (StringValue1, StringValue2, KeyValue) VALUES (null,     null,     'NullValues')
+/
+
+-- Inheritance Parent/Child
+
+DROP TABLE InheritanceParent
+/
+
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId NUMBER        NOT NULL PRIMARY KEY,
+	TypeDiscriminator   NUMBER            NULL,
+	Name                NVARCHAR2(50)     NULL
+)
+/
+
+DROP TABLE InheritanceChild
+/
+
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  NUMBER        NOT NULL PRIMARY KEY,
+	InheritanceParentId NUMBER        NOT NULL,
+	TypeDiscriminator   NUMBER            NULL,
+	Name                NVARCHAR2(50)     NULL
+)
+/
 
 -- Person Table
 
@@ -102,9 +141,11 @@ INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',   
 /
 INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 /
-INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (PersonSeq.CURRVAL, 'Psychiatry')
+INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
 /
-INSERT INTO Patient (PersonID,  Diagnosis) VALUES (PersonSeq.CURRVAL, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
+INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (1, 'Psychiatry')
+/
+INSERT INTO Patient (PersonID,  Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 /
 
 -- Person_Delete
@@ -825,4 +866,29 @@ create table t_entity
 	time      date,
 	duration  interval day(3) to second(2)
 )
+/
+
+DROP TABLE DecimalOverflow
+/
+
+CREATE TABLE DecimalOverflow
+(
+	Decimal1 numeric(38,20),
+	Decimal2 numeric(31,2),
+	Decimal3 numeric(38,36),
+	Decimal4 numeric(29,0),
+	Decimal5 numeric(38,38)
+)
+/
+
+INSERT INTO DecimalOverflow
+SELECT  123456789012345.12345678901234567890,  1234567890123456789.91,  12.345678901234512345678901234567890,  1234567890123456789,  .12345678901234512345678901234567890 FROM dual UNION ALL
+SELECT -123456789012345.12345678901234567890, -1234567890123456789.91, -12.345678901234512345678901234567890, -1234567890123456789, -.12345678901234512345678901234567890 FROM dual UNION ALL
+SELECT  12345678901234.567890123456789,                          NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT -12345678901234.567890123456789,                          NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT  12345678901234.56789012345678,                           NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT -12345678901234.56789012345678,                           NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual
+
 /

@@ -16,12 +16,12 @@ namespace LinqToDB.DataProvider.Oracle
 	public class OracleDataProvider : DynamicDataProviderBase
 	{
 		public OracleDataProvider()
-			: this(ProviderName.Oracle, new OracleMappingSchema())
+			: this(OracleTools.DetectedProviderName)
 		{
 		}
 
-		protected OracleDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+		public OracleDataProvider(string name)
+			: base(name, null)
 		{
 			//SqlProviderFlags.IsCountSubQuerySupported    = false;
 			SqlProviderFlags.IsIdentityParameterRequired = true;
@@ -35,6 +35,8 @@ namespace LinqToDB.DataProvider.Oracle
 //				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));
 
 			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
+
+			SetField<IDataReader,decimal>((r,i) => OracleTools.DataReaderGetDecimal(r, i));
 		}
 
 		Type _oracleBFile;
@@ -56,24 +58,24 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			var typesNamespace  = OracleTools.AssemblyName + ".Types.";
+			var typesNamespace  = AssemblyName + ".Types.";
 
-			_oracleBFile        = connectionType.Assembly.GetType(typesNamespace + "OracleBFile",        true);
-			_oracleBinary       = connectionType.Assembly.GetType(typesNamespace + "OracleBinary",       true);
-			_oracleBlob         = connectionType.Assembly.GetType(typesNamespace + "OracleBlob",         true);
-			_oracleClob         = connectionType.Assembly.GetType(typesNamespace + "OracleClob",         true);
-			_oracleDate         = connectionType.Assembly.GetType(typesNamespace + "OracleDate",         true);
-			_oracleDecimal      = connectionType.Assembly.GetType(typesNamespace + "OracleDecimal",      true);
-			_oracleIntervalDS   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalDS",   true);
-			_oracleIntervalYM   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalYM",   true);
-			_oracleRefCursor    = connectionType.Assembly.GetType(typesNamespace + "OracleRefCursor",    true);
-			_oracleString       = connectionType.Assembly.GetType(typesNamespace + "OracleString",       true);
-			_oracleTimeStamp    = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStamp",    true);
-			_oracleTimeStampLTZ = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampLTZ", true);
-			_oracleTimeStampTZ  = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampTZ",  true);
-			_oracleRef          = connectionType.Assembly.GetType(typesNamespace + "OracleRef",          false);
-			_oracleXmlType      = connectionType.Assembly.GetType(typesNamespace + "OracleXmlType",      false);
-			_oracleXmlStream    = connectionType.Assembly.GetType(typesNamespace + "OracleXmlStream",    false);
+			_oracleBFile        = connectionType.AssemblyEx().GetType(typesNamespace + "OracleBFile",        true);
+			_oracleBinary       = connectionType.AssemblyEx().GetType(typesNamespace + "OracleBinary",       true);
+			_oracleBlob         = connectionType.AssemblyEx().GetType(typesNamespace + "OracleBlob",         true);
+			_oracleClob         = connectionType.AssemblyEx().GetType(typesNamespace + "OracleClob",         true);
+			_oracleDate         = connectionType.AssemblyEx().GetType(typesNamespace + "OracleDate",         true);
+			_oracleDecimal      = connectionType.AssemblyEx().GetType(typesNamespace + "OracleDecimal",      true);
+			_oracleIntervalDS   = connectionType.AssemblyEx().GetType(typesNamespace + "OracleIntervalDS",   true);
+			_oracleIntervalYM   = connectionType.AssemblyEx().GetType(typesNamespace + "OracleIntervalYM",   true);
+			_oracleRefCursor    = connectionType.AssemblyEx().GetType(typesNamespace + "OracleRefCursor",    true);
+			_oracleString       = connectionType.AssemblyEx().GetType(typesNamespace + "OracleString",       true);
+			_oracleTimeStamp    = connectionType.AssemblyEx().GetType(typesNamespace + "OracleTimeStamp",    true);
+			_oracleTimeStampLTZ = connectionType.AssemblyEx().GetType(typesNamespace + "OracleTimeStampLTZ", true);
+			_oracleTimeStampTZ  = connectionType.AssemblyEx().GetType(typesNamespace + "OracleTimeStampTZ",  true);
+			_oracleRef          = connectionType.AssemblyEx().GetType(typesNamespace + "OracleRef",          false);
+			_oracleXmlType      = connectionType.AssemblyEx().GetType(typesNamespace + "OracleXmlType",      false);
+			_oracleXmlStream    = connectionType.AssemblyEx().GetType(typesNamespace + "OracleXmlStream",    false);
 
 			SetProviderField(_oracleBFile,        _oracleBFile,        "GetOracleBFile");
 			SetProviderField(_oracleBinary,       _oracleBinary,       "GetOracleBinary");
@@ -128,21 +130,9 @@ namespace LinqToDB.DataProvider.Oracle
 							new Expression[]
 							{
 								Expression.Assign(tstz, Expression.Call(dataReaderParameter, "GetOracleTimeStampTZ", null, indexParameter)),
-								Expression.New(
-									MemberHelper.ConstructorOf(() => new DateTimeOffset(0,0,0,0,0,0,0,new TimeSpan())),
-									Expression.PropertyOrField(tstz, "Year"),
-									Expression.PropertyOrField(tstz, "Month"),
-									Expression.PropertyOrField(tstz, "Day"),
-									Expression.PropertyOrField(tstz, "Hour"),
-									Expression.PropertyOrField(tstz, "Minute"),
-									Expression.PropertyOrField(tstz, "Second"),
-									Expression.Convert(Expression.PropertyOrField(tstz, "Millisecond"), typeof(int)),
-									Expression.Call(
-										MemberHelper.MethodOf(() => TimeSpan.Parse("")),
-										Expression.Call(
-											Expression.PropertyOrField(tstz, "TimeZone"),
-											MemberHelper.MethodOf(() => "".TrimStart(' ')),
-											Expression.NewArrayInit(typeof(char), Expression.Constant('+'))))
+								Expression.Call(
+									MemberHelper.MethodOf(() => ToDateTimeOffset(null)),
+									Expression.Convert(tstz, typeof(object))
 								)
 							}),
 						dataReaderParameter,
@@ -174,21 +164,9 @@ namespace LinqToDB.DataProvider.Oracle
 										"ToOracleTimeStampTZ",
 										null,
 										null)),
-								Expression.New(
-									MemberHelper.ConstructorOf(() => new DateTimeOffset(0,0,0,0,0,0,0,new TimeSpan())),
-									Expression.PropertyOrField(tstz, "Year"),
-									Expression.PropertyOrField(tstz, "Month"),
-									Expression.PropertyOrField(tstz, "Day"),
-									Expression.PropertyOrField(tstz, "Hour"),
-									Expression.PropertyOrField(tstz, "Minute"),
-									Expression.PropertyOrField(tstz, "Second"),
-									Expression.Convert(Expression.PropertyOrField(tstz, "Millisecond"), typeof(int)),
-									Expression.Call(
-										MemberHelper.MethodOf(() => TimeSpan.Parse("")),
-										Expression.Call(
-											Expression.PropertyOrField(tstz, "TimeZone"),
-											MemberHelper.MethodOf(() => "".TrimStart(' ')),
-											Expression.NewArrayInit(typeof(char), Expression.Constant('+'))))
+								Expression.Call(
+									MemberHelper.MethodOf(() => ToDateTimeOffset(null)),
+									Expression.Convert(tstz, typeof(object))
 								)
 							}),
 						dataReaderParameter,
@@ -206,7 +184,7 @@ namespace LinqToDB.DataProvider.Oracle
 							Expression.PropertyOrField(
 								Expression.Convert(
 									Expression.PropertyOrField(p, "Command"),
-									connectionType.Assembly.GetType(OracleTools.AssemblyName + ".Client.OracleCommand", true)),
+									connectionType.AssemblyEx().GetType(AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
 							Expression.Constant(true)),
 							p
@@ -223,7 +201,7 @@ namespace LinqToDB.DataProvider.Oracle
 					Expression.Lambda<Func<DateTimeOffset,string,object>>(
 						Expression.Convert(
 							Expression.New(
-								_oracleTimeStampTZ.GetConstructor(new[]
+								_oracleTimeStampTZ.GetConstructorEx(new []
 								{
 									typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(string)
 								}),
@@ -278,6 +256,17 @@ namespace LinqToDB.DataProvider.Oracle
 				MappingSchema.AddScalarType(_oracleXmlStream, GetNullValue(_oracleXmlStream), true, DataType.Xml); // ?
 		}
 
+		static DateTimeOffset ToDateTimeOffset(object value)
+		{
+			dynamic tstz        = value;
+			double  millisecond = tstz.Millisecond;
+
+			return new DateTimeOffset(
+				tstz.Year, tstz.Month,  tstz.Day, 
+				tstz.Hour, tstz.Minute, tstz.Second, (int)millisecond,
+				tstz.GetTimeZoneOffset());
+		}
+
 		static object GetNullValue(Type type)
 		{
 			var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
@@ -291,9 +280,14 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		public    override string ConnectionNamespace { get { return OracleTools.AssemblyName + ".Client"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(OracleTools.AssemblyName, "Client.OracleConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(OracleTools.AssemblyName, "Client.OracleDataReader"); } }
+		public string AssemblyName
+		{
+			get { return Name == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess"; }
+		}
+
+		public    override string ConnectionNamespace { get { return AssemblyName + ".Client"; } }
+		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(AssemblyName, "Client.OracleConnection"); } }
+		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(AssemblyName, "Client.OracleDataReader"); } }
 
 		public bool IsXmlTypeSupported
 		{
@@ -305,6 +299,23 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
+
+		static class MappingSchemaInstance
+		{
+			public static readonly OracleMappingSchema.NativeMappingSchema  NativeMappingSchema  = new OracleMappingSchema.NativeMappingSchema();
+			public static readonly OracleMappingSchema.ManagedMappingSchema ManagedMappingSchema = new OracleMappingSchema.ManagedMappingSchema();
+		}
+
+		public override MappingSchema MappingSchema
+		{
+			get
+			{
+				return Name == ProviderName.OracleNative
+					? MappingSchemaInstance.NativeMappingSchema as MappingSchema
+					: MappingSchemaInstance.ManagedMappingSchema;
+			}
+		}
+
 		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
@@ -312,10 +323,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return _sqlOptimizer;
 		}
 
+#if !NETSTANDARD
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new OracleSchemaProvider();
+			return new OracleSchemaProvider(Name);
 		}
+#endif 
 
 		Action<DataConnection> _setBindByName;
 
@@ -329,6 +342,24 @@ namespace LinqToDB.DataProvider.Oracle
 			_setBindByName(dataConnection);
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters);
+
+			if (parameters != null)
+				foreach (var parameter in parameters)
+				{
+					if (parameter.IsArray && parameter.Value is object[])
+					{
+						var value = (object[])parameter.Value;
+
+						if (value.Length != 0)
+						{
+							dynamic command = dataConnection.Command;
+						
+							command.ArrayBindCount = value.Length;
+
+							break;
+						}
+					}
+				}
 		}
 
 		public override void DisposeCommand(DataConnection dataConnection)
@@ -401,18 +432,18 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		static Action<IDbDataParameter> _setSingle;
-		static Action<IDbDataParameter> _setDouble;
-		static Action<IDbDataParameter> _setText;
-		static Action<IDbDataParameter> _setNText;
-		static Action<IDbDataParameter> _setImage;
-		static Action<IDbDataParameter> _setBinary;
-		static Action<IDbDataParameter> _setVarBinary;
-		static Action<IDbDataParameter> _setDate;
-		static Action<IDbDataParameter> _setSmallDateTime;
-		static Action<IDbDataParameter> _setDateTime2;
-		static Action<IDbDataParameter> _setDateTimeOffset;
-		static Action<IDbDataParameter> _setGuid;
+		Action<IDbDataParameter> _setSingle;
+		Action<IDbDataParameter> _setDouble;
+		Action<IDbDataParameter> _setText;
+		Action<IDbDataParameter> _setNText;
+		Action<IDbDataParameter> _setImage;
+		Action<IDbDataParameter> _setBinary;
+		Action<IDbDataParameter> _setVarBinary;
+		Action<IDbDataParameter> _setDate;
+		Action<IDbDataParameter> _setSmallDateTime;
+		Action<IDbDataParameter> _setDateTime2;
+		Action<IDbDataParameter> _setDateTimeOffset;
+		Action<IDbDataParameter> _setGuid;
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
@@ -443,7 +474,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		OracleBulkCopy _bulkCopy;
 
@@ -459,9 +490,9 @@ namespace LinqToDB.DataProvider.Oracle
 				source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -472,6 +503,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		#endregion
+#endregion
 	}
 }

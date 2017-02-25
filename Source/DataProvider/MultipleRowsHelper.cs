@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider
 	using SqlProvider;
 	using SqlQuery;
 
-	class MultipleRowsHelper<T>
+	public class MultipleRowsHelper<T>
 	{
 		public MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity)
 		{
@@ -52,14 +52,16 @@ namespace LinqToDB.DataProvider
 			HeaderSize = StringBuilder.Length;
 		}
 
-		public void BuildColumns(object item)
+		public virtual void BuildColumns(object item, Func<ColumnDescriptor, bool> skipConvert = null)
 		{
+			skipConvert = skipConvert ?? (_ => false);
+
 			for (var i = 0; i < Columns.Length; i++)
 			{
 				var column = Columns[i];
 				var value  = column.GetValue(item);
 
-				if (!ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
+				if (skipConvert(column) || !ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 

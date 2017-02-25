@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = SelectQuery.Insert.Into.GetIdentityField();
 
-				if (identityField != null)
+				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].[")
@@ -84,6 +84,17 @@ namespace LinqToDB.DataProvider.SqlServer
 				.Append(identityField.PhysicalName)
 				.Append(" FROM @TableOutput")
 				.AppendLine();
+			if (SqlServerConfiguration.GenerateScopeIdentity)
+			{
+				var identityField = SelectQuery.Insert.Into.GetIdentityField();
+
+				if (identityField == null || identityField.DataType != DataType.Guid)
+				{
+					StringBuilder
+						.AppendLine()
+						.AppendLine("SELECT SCOPE_IDENTITY()");
+				}
+			}
 		}
 
 		protected override void BuildOrderByClause()
@@ -203,8 +214,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (name.Length > 0 && name[0] == '[')
 							return value;
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
+//						if (name.IndexOf('.') > 0)
+//							value = string.Join("].[", name.Split('.'));
 
 						return "[" + value + "]";
 					}
@@ -300,11 +311,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 #endif
 
+#if !NETSTANDARD
 		protected override string GetUdtTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).UdtTypeName;
 		}
-
+#endif
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).SqlDbType.ToString();

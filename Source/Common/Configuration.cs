@@ -13,6 +13,14 @@ namespace LinqToDB.Common
 			public static bool IgnoreEmptyUpdate;
 			public static bool AllowMultipleQuery;
 			public static bool GenerateExpressionTest;
+			public static bool DoNotClearOrderBys;
+			public static bool OptimizeJoins = true;
+		}
+
+		public static class LinqService
+		{
+			public static bool SerializeAssemblyQualifiedName;
+			public static bool ThrowUnresolvedTypeException;
 		}
 	}
 }

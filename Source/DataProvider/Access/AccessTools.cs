@@ -49,7 +49,6 @@ namespace LinqToDB.DataProvider.Access
 			_accessDataProvider.DropDatabase(databaseName);
 		}
 
-
 		#region BulkCopy
 
 		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;

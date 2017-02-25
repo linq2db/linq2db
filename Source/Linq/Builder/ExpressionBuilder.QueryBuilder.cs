@@ -9,8 +9,12 @@ using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
+
 	using LinqToDB.Expressions;
 	using Extensions;
+
+	using Mapping;
 
 	partial class ExpressionBuilder
 	{
@@ -95,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 										var table = (TableBuilder.AssociatedTableContext)res.Context;
 										if (table.IsList)
 										{
-											var mexpr = GetMultipleQueryExpression(context, ma, new HashSet<ParameterExpression>());
+											var mexpr = GetMultipleQueryExpression(context, MappingSchema, ma, new HashSet<ParameterExpression>());
 											return new TransformInfo(BuildExpression(context, mexpr));
 										}
 									}
@@ -296,7 +300,7 @@ namespace LinqToDB.Linq.Builder
 		Expression BuildSql(IBuildContext context, Expression expression)
 		{
 			var sqlex = ConvertToSqlExpression(context, expression);
-			var idx   = context.SelectQuery.Select.Add(sqlex);
+			var idx   = context.SelectQuery.Select.AddNew(sqlex);
 
 			idx = context.ConvertToParentIndex(idx, context);
 
@@ -373,7 +377,7 @@ namespace LinqToDB.Linq.Builder
 							return info.Find(PreferServerSide) != null;
 						}
 
-						var attr = GetFunctionAttribute(pi.Member);
+						var attr = GetExpressionAttribute(pi.Member);
 						return attr != null && attr.PreferServerSide && !CanBeCompiled(expr);
 					}
 
@@ -386,7 +390,7 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 							return l.Body.Unwrap().Find(PreferServerSide) != null;
 
-						var attr = GetFunctionAttribute(e.Method);
+						var attr = GetExpressionAttribute(e.Method);
 						return attr != null && attr.PreferServerSide && !CanBeCompiled(expr);
 					}
 			}
@@ -505,7 +509,7 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _whereMethodInfo =
 			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
 
-		static Expression GetMultipleQueryExpression(IBuildContext context, Expression expression, HashSet<ParameterExpression> parameters)
+		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappringSchema, Expression expression, HashSet<ParameterExpression> parameters)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
@@ -557,9 +561,10 @@ namespace LinqToDB.Linq.Builder
 											var field1 = table.ParentAssociation.SqlTable.Fields[table.Association.ThisKey [i]];
 											var field2 = table.                  SqlTable.Fields[table.Association.OtherKey[i]];
 
-											var ee = Expression.Equal(
-												Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo),
-												Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo));
+											var ma1 = Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo);
+											var ma2 = Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo);
+
+											var ee = Equal(mappringSchema, ma1, ma2);
 
 											ex = ex == null ? ee : Expression.AndAlso(ex, ee);
 										}
@@ -592,7 +597,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var parameters = new HashSet<ParameterExpression>();
 
-			expression = GetMultipleQueryExpression(context, expression, parameters);
+			expression = GetMultipleQueryExpression(context, MappingSchema, expression, parameters);
 
 			var paramex = Expression.Parameter(typeof(object[]), "ps");
 			var parms   = new List<Expression>();

@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
@@ -83,6 +85,11 @@ namespace LinqToDB.Linq.Builder
 				if (_expressionIndex.TryGetValue(key, out info))
 				{
 					var idx  = Parent == null ? info[0].Index : Parent.ConvertToParentIndex(info[0].Index, this);
+
+					var expr = (expression ?? Body);
+					if (IsExpression(expr, level, RequestFor.Object).Result)
+						return Builder.BuildExpression(this, expr);
+
 					return Builder.BuildSql((expression ?? Body).Type, idx);
 				}
 			}
@@ -140,7 +147,8 @@ namespace LinqToDB.Linq.Builder
 							var memberExpression = GetMemberExpression(
 								((MemberExpression)levelExpression).Member,
 								ReferenceEquals(levelExpression, expression),
-								levelExpression.Type);
+								levelExpression.Type,
+								expression);
 
 							if (ReferenceEquals(levelExpression, expression))
 							{
@@ -318,7 +326,7 @@ namespace LinqToDB.Linq.Builder
 											if (!_sql.TryGetValue(member, out sql))
 											{
 												var memberExpression = GetMemberExpression(
-													member, levelExpression == expression, levelExpression.Type);
+													member, levelExpression == expression, levelExpression.Type, expression);
 
 												sql = ConvertExpressions(memberExpression, flags)
 													.Select(si => si.Clone(member)).ToArray();
@@ -484,7 +492,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					switch (flags)
 					{
-						case ConvertFlags.Field : throw new NotImplementedException();
+						case ConvertFlags.Field : 
 						case ConvertFlags.Key   :
 						case ConvertFlags.All   :
 							{
@@ -781,7 +789,8 @@ namespace LinqToDB.Linq.Builder
 								var memberExpression = GetMemberExpression(
 									((MemberExpression)levelExpression).Member,
 									levelExpression == expression,
-									levelExpression.Type);
+									levelExpression.Type,
+									expression);
 
 								return GetContext(memberExpression, 0, new BuildInfo(this, memberExpression, buildInfo.SelectQuery));
 							}
@@ -1085,7 +1094,7 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
-		protected Expression GetMemberExpression(MemberInfo member, bool add, Type type)
+		protected Expression GetMemberExpression(MemberInfo member, bool add, Type type, Expression sourceExpression)
 		{
 			Expression memberExpression;
 
@@ -1111,7 +1120,7 @@ namespace LinqToDB.Linq.Builder
 							string value;
 
 							if (ed.Aliases.TryGetValue(member.Name, out value))
-								return GetMemberExpression(ed.TypeAccessor[value].MemberInfo, add, type);
+								return GetMemberExpression(ed.TypeAccessor[value].MemberInfo, add, type, sourceExpression);
 
 							foreach (var a in ed.Aliases)
 							{
@@ -1136,7 +1145,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new InvalidOperationException();
+				throw new LinqToDBException("'{0}' cannot be converted to SQL.".Args(sourceExpression));
 			}
 
 			return memberExpression;

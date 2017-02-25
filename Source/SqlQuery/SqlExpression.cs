@@ -76,13 +76,22 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		private bool? _canBeNull;
+		public  bool   CanBeNull
 		{
-			foreach (var value in Parameters)
-				if (value.CanBeNull())
-					return true;
+			get
+			{
+				if (_canBeNull.HasValue)
+					return _canBeNull.Value;
 
-			return false;
+				foreach (var value in Parameters)
+					if (value.CanBeNull)
+						return true;
+
+				return false;
+			}
+
+			set { _canBeNull = value; }
 		}
 
 		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;

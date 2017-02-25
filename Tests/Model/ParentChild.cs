@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Reflection;
+#if !NOIMMUTABLE
+using System.Collections.Immutable;
+#endif
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
@@ -38,7 +41,11 @@ namespace Tests.Model
 		}
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+#if !NOIMMUTABLE
 		public ImmutableList<Child> Children3;
+#else
+		public List<Child> Children3;
+#endif
 
 		public override bool Equals(object obj)
 		{
@@ -188,7 +195,20 @@ namespace Tests.Model
 	public class Parent4 : IEquatable<Parent4>, IComparable
 	{
 		[Column] public int       ParentID;
-		[Column] public TypeValue Value1;
+		public TypeValue _Value1;
+		[Column] public TypeValue Value1
+		{
+			get { return _Value1; }
+			set
+			{
+				if ((int)value == 1)
+				{
+					
+				}
+
+				_Value1 = value;
+			}
+		}
 
 		public override bool Equals(object obj)
 		{
@@ -211,6 +231,11 @@ namespace Tests.Model
 		public int CompareTo(object obj)
 		{
 			return ParentID - ((Parent4)obj).ParentID;
+		}
+
+		public override string ToString()
+		{
+			return "ParentID: {0}, Value1: {1}".Args(ParentID, Value1);
 		}
 	}
 
@@ -247,9 +272,9 @@ namespace Tests.Model
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region Parent1/GrandChild1
+#region Parent1/GrandChild1
 
 	[Table("Parent")]
 	public class Parent1 : IEquatable<Parent1>, IComparable
@@ -328,9 +353,9 @@ namespace Tests.Model
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region Inheritance
+#region Inheritance
 
 	[Table(Name="Parent", IsColumnAttributeRequired=false)]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceNull))]
@@ -415,9 +440,9 @@ namespace Tests.Model
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region Inheritance2
+#region Inheritance2
 
 	[Table(Name="Parent")]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase2))]
@@ -437,9 +462,9 @@ namespace Tests.Model
 		public int Value1;
 	}
 
-	#endregion
+#endregion
 
-	#region Inheritance3
+#region Inheritance3
 
 	[Table(Name="Parent")]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase3))]
@@ -460,9 +485,9 @@ namespace Tests.Model
 		public int Value;
 	}
 
-	#endregion
+#endregion
 
-	#region Inheritance4
+#region Inheritance4
 
 	public enum Parent4Type
 	{
@@ -493,7 +518,7 @@ namespace Tests.Model
 		public override Parent4Type Value1 { get { return Parent4Type.Value2; } }
 	}
 
-	#endregion
+#endregion
 
 	public class Functions
 	{
@@ -507,14 +532,18 @@ namespace Tests.Model
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return _ctx.GetTable<Parent>(this, (MethodInfo)(MethodBase.GetCurrentMethod()), id);
+			var methodInfo = typeof(Functions).GetMethod("GetParentByID", new [] {typeof(int?)});
+
+			return _ctx.GetTable<Parent>(this, methodInfo, id);
 		}
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		public ITable<T> WithTabLock<T>()
-			where T : class 
+			where T : class
 		{
-			return _ctx.GetTable<T>(this, ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)));
+			var methodInfo = typeof(Functions).GetMethod("WithTabLock").MakeGenericMethod(typeof(T));
+
+			return _ctx.GetTable<T>(this, methodInfo);
 		}
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]

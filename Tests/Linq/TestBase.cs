@@ -1,18 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+
+#if !NETSTANDARD
+
 using System.ServiceModel;
 using System.ServiceModel.Description;
+
+#endif
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
+#if !NETSTANDARD
+
 using LinqToDB.ServiceModel;
 
+#endif 
+
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
+using NUnit.Framework.Internal.Builders;
+
+//[assembly: Parallelizable]
 
 namespace Tests
 {
@@ -22,19 +40,60 @@ namespace Tests
 	{
 		static TestBase()
 		{
+			Console.WriteLine("Tests started in {0}...",
+#if NETSTANDARD
+				System.IO.Directory.GetCurrentDirectory()
+#else
+				Environment.CurrentDirectory
+#endif
+				);
+
+			var traceCount = 0;
+
+			DataConnection.TurnTraceSwitchOn();
+			DataConnection.WriteTraceLine = (s1,s2) =>
+			{
+				Console.WriteLine("{0}: {1}", s2, s1);
+				Debug.WriteLine(s1, s2);
+				if (traceCount++ > 1000)
+					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+			};
+
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
+			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
-			var dataProvidersPath = typeof(TestBase).Assembly.CodeBase;
+			ProjectPath = FindProjectPath(assemblyPath);
 
-			dataProvidersPath = Path.GetDirectoryName(dataProvidersPath.Substring("file:///".Length));
-
+#if NETSTANDARD
+			System.IO.Directory.SetCurrentDirectory(assemblyPath);
+#else
+			Environment.CurrentDirectory = assemblyPath;
+#endif
+#if NETSTANDARD
+			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
+			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
+#else
+			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
+			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
+#endif
+			
 			var providerListFile =
-				File.Exists(Path.Combine(dataProvidersPath, @"..\..\UserDataProviders.txt")) ?
-					Path.Combine(dataProvidersPath, @"..\..\UserDataProviders.txt") :
-					Path.Combine(dataProvidersPath, @"..\..\DefaultDataProviders.txt");
+				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
 
-			UserProviders.AddRange(
+			var dataPath = Path.GetFullPath(@"Database\Data");
+
+			if (Directory.Exists(dataPath))
+				Directory.Delete(dataPath, true);
+
+			Directory.CreateDirectory(dataPath);
+
+			var databasePath = Path.GetFullPath(Path.Combine(@"Database"));
+
+			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
+				File.Copy(file, Path.Combine(dataPath, Path.GetFileName(file)), true);
+
+			UserProviders =
 				File.ReadAllLines(providerListFile)
 					.Select(s => s.Trim())
 					.Where (s => s.Length > 0 && !s.StartsWith("--"))
@@ -44,10 +103,12 @@ namespace Tests
 						switch (ss.Length)
 						{
 							case 0 : return null;
-							case 1 : return new UserProviderInfo { Name = ss[0].Trim() };
-							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim() };
+							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0]        };
+							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0]        };
+							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim() };
 						}
-					}));
+					})
+					.ToDictionary(i => i.Name);
 
 			//var map = new ExeConfigurationFileMap();
 			//map.ExeConfigFilename = Path.Combine(
@@ -58,12 +119,30 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-			foreach (var provider in UserProviders)
+#if NETSTANDARD
+			DataConnection.DefaultSettings = TxtSettings.Instance;
+			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
+
+			foreach (var provider in UserProviders.Values)
+			{
+				if (string.IsNullOrWhiteSpace(provider.ConnectionString))
+					throw new InvalidOperationException("ConnectionString should be provided");
+
+				if (string.IsNullOrWhiteSpace(provider.ProviderName))
+					throw new InvalidOperationException("provider.ProviderName should be provided");
+
+				TxtSettings.Instance.AddConnectionString(provider.Name,provider.ProviderName, provider.ConnectionString);
+			}
+#else
+			foreach (var provider in UserProviders.Values)
 				if (provider.ConnectionString != null)
 					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
+#endif
+
 
 			DataConnection.TurnTraceSwitchOn();
 
+#if !NETSTANDARD
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -73,15 +152,33 @@ namespace Tests
 					default                   : return null;
 				}
 			};
-
-			//OpenHost();
+#endif
 		}
 
+		protected static readonly string ProjectPath;
+
+		protected static string FindProjectPath(string basePath)
+		{
+			var fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
+			while (!File.Exists(fileName))
+			{
+				Console.WriteLine("File not found: " + fileName);
+				basePath = Path.GetDirectoryName(basePath);
+				fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
+			}
+			Console.WriteLine("Base path found: " + basePath);
+
+			return basePath;
+		}
+
+#if !NETSTANDARD
 		const int IP = 22654;
 		static bool _isHostOpen;
+#endif
 
 		static void OpenHost()
 		{
+#if !NETSTANDARD
 			if (_isHostOpen)
 				return;
 
@@ -107,16 +204,19 @@ namespace Tests
 				"LinqOverWCF");
 
 			host.Open();
+#endif
 		}
 
 		public class UserProviderInfo
 		{
 			public string Name;
 			public string ConnectionString;
+			public string ProviderName;
 		}
 
-		public static readonly List<UserProviderInfo> UserProviders = new List<UserProviderInfo>();
-		public static readonly List<string>           Providers     = new List<string>
+		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
+
+		static readonly List<string> _providers = new List<string>
 		{
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
@@ -129,55 +229,168 @@ namespace Tests
 			ProviderName.DB2,
 			ProviderName.Informix,
 			ProviderName.Firebird,
-			ProviderName.Oracle,
+			ProviderName.OracleNative,
+			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
 			ProviderName.Sybase,
 			ProviderName.SapHana,
-			"SqlAzure.2012"
+			TestProvName.SqlAzure,
+			TestProvName.MariaDB,
+			TestProvName.MySql57,
+			TestProvName.SQLiteMs
 		};
 
-		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-		public class DataContextSourceAttribute : TestCaseSourceAttribute
+		[AttributeUsage(AttributeTargets.Method)]
+		public abstract class BaseDataContextSourceAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
 		{
+			protected BaseDataContextSourceAttribute(bool includeLinqService, string[] providers)
+			{
+				_includeLinqService = includeLinqService;
+				_providerNames      = providers;
+			}
+
+			readonly bool     _includeLinqService;
+			readonly string[] _providerNames;
+
+			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService)
+			{
+				var name = method.Name + "." + provider;
+				if (isLinqService)
+					name += ".LinqService";
+
+				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
+			}
+
+			protected virtual IEnumerable<object[]> GetParameters(string provider)
+			{
+				yield return new object[] {provider};
+			}
+
+			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
+			{
+				var explic = method.GetCustomAttributes<ExplicitAttribute>(true)
+					.Cast<IApplyToTest>()
+					.Union(method.GetCustomAttributes<IgnoreAttribute>(true))
+					.ToList();
+
+				var builder = new NUnitTestCaseBuilder();
+
+				TestMethod test = null;
+				var hasTest = false;
+
+				foreach (var provider in _providerNames)
+				{
+					var isIgnore = !UserProviders.ContainsKey(provider);
+
+
+					foreach (var parameters in GetParameters(provider))
+					{
+						var data = new TestCaseParameters(parameters);
+
+						test = builder.BuildTestMethod(method, suite, data);
+
+						foreach (var attr in explic)
+							attr.ApplyToTest(test);
+
+						test.Properties.Set(PropertyNames.Category, provider);
+						SetName(test, method, provider, false);
+
+						if (isIgnore)
+						{
+							if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
+								test.RunState = RunState.Ignored;
+
+							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+							continue;
+						}
+
+						hasTest = true;
+
+						yield return test;
+
+					}
+#if !NETSTANDARD
+
+					if (!isIgnore && _includeLinqService)
+					{
+						foreach (var paremeters in GetParameters(provider + ".LinqService"))
+						{
+
+							var data = new TestCaseParameters(paremeters);
+							test = builder.BuildTestMethod(method, suite, data);
+
+							foreach (var attr in explic)
+								attr.ApplyToTest(test);
+
+							test.Properties.Set(PropertyNames.Category, provider);
+							SetName(test, method, provider, true);
+
+							yield return test;
+						}
+					}
+#endif
+				}
+
+				if (!hasTest)
+					yield return test;
+			}
+		}
+
+		[AttributeUsage(AttributeTargets.Method)]
+		public class DataContextSourceAttribute : BaseDataContextSourceAttribute
+		{
+			public DataContextSourceAttribute()
+				: this(true, null)
+			{
+			}
+
 			public DataContextSourceAttribute(params string[] except)
-				: base(DatabaseTestCase.GetDataContextType(true, except, null), "TestCases")
+				: this(true, except)
 			{
 			}
 
 			public DataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(DatabaseTestCase.GetDataContextType(includeLinqService, except, null), "TestCases")
+				: base(includeLinqService,
+					_providers.Where(providerName => except == null || !except.Contains(providerName)).ToArray())
 			{
 			}
 		}
 
-		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-		public class IncludeDataContextSourceAttribute : TestCaseSourceAttribute
+		[AttributeUsage(AttributeTargets.Method)]
+		public class IncludeDataContextSourceAttribute : BaseDataContextSourceAttribute
 		{
 			public IncludeDataContextSourceAttribute(params string[] include)
-				: base(DatabaseTestCase.GetDataContextType(false, null, include), "TestCases")
+				: this(false, include)
 			{
 			}
 
 			public IncludeDataContextSourceAttribute(bool includeLinqService, params string[] include)
-				: base(DatabaseTestCase.GetDataContextType(includeLinqService, null, include), "TestCases")
+				: base(includeLinqService, include)
 			{
 			}
 		}
 
-		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-		public class NorthwindDataContext : TestCaseSourceAttribute
+		[AttributeUsage(AttributeTargets.Method)]
+		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public NorthwindDataContext()
-				: base(DatabaseTestCase.GetDataContextType(false, null, new [] { "Northwind" }), "TestCases")
+			public NorthwindDataContextAttribute(bool excludeSqlite) : base(
+				excludeSqlite
+				? new[] { "Northwind" }
+				: new[] { "Northwind", "NorthwindSqlite" })
+			{
+			}
+
+			public NorthwindDataContextAttribute() : this(false)
 			{
 			}
 		}
 
-		protected ITestDataContext GetDataContext(string configuration)
+		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
+#if !NETSTANDARD
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -185,12 +398,20 @@ namespace Tests
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
-				return dx;
-			}
+				if (ms != null)
+					dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
 
+				return dx;
+#else
+				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
+#endif
+			}
 			Debug.WriteLine(configuration, "Provider ");
 
-			return new TestDataConnection(configuration);
+			var res = new TestDataConnection(configuration);
+			if (ms != null)
+				res.AddMappingSchema(ms);
+			return res;
 		}
 
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
@@ -248,6 +469,8 @@ namespace Tests
 				return _types2;
 			}
 		}
+
+		protected const int MaxPersonID = 3;
 
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
@@ -415,7 +638,7 @@ namespace Tests
 			}
 		}
 
-		protected List<Child> _child;
+		protected        List<Child> _child;
 		protected IEnumerable<Child>  Child
 		{
 			get
@@ -436,7 +659,8 @@ namespace Tests
 						}
 					}
 
-				return _child;
+				foreach (var item in _child)
+					yield return item;
 			}
 		}
 
@@ -482,179 +706,227 @@ namespace Tests
 
 		#endregion
 
+		#region Inheritance Parent/Child Model
+
+		private   List<InheritanceParentBase> _inheritanceParent;
+		protected List<InheritanceParentBase>  InheritanceParent
+		{
+			get
+			{
+				if (_inheritanceParent == null)
+				{
+					using (var db = new TestDataConnection())
+						_inheritanceParent = db.InheritanceParent.ToList();
+				}
+
+				return _inheritanceParent;
+			}
+		}
+
+		private   List<InheritanceChildBase> _inheritanceChild;
+		protected List<InheritanceChildBase>  InheritanceChild
+		{
+			get
+			{
+				if (_inheritanceChild == null)
+				{
+					using (var db = new TestDataConnection())
+						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
+				}
+
+				return _inheritanceChild;
+			}
+		}
+		
+		#endregion
+
 		#region Northwind
 
-		private List<Northwind.Category> _category;
-		public  List<Northwind.Category>  Category
+		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
-			get
-			{
-				if (_category == null)
-					using (var db = new NorthwindDB())
-						_category = db.Category.ToList();
-				return _category;
-			}
+			return new TestBaseNorthwind(context);
 		}
 
-		private List<Northwind.Customer> _customer;
-		public  List<Northwind.Customer>  Customer
+		public class TestBaseNorthwind
 		{
-			get
-			{
-				if (_customer == null)
-				{
-					using (var db = new NorthwindDB())
-						_customer = db.Customer.ToList();
+			private string _context;
 
-					foreach (var c in _customer)
-						c.Orders = (from o in Order where o.CustomerID == c.CustomerID select o).ToList();
+			public TestBaseNorthwind(string context)
+			{
+				_context = context;
+			}
+
+			private List<Northwind.Category> _category;
+			public  List<Northwind.Category>  Category
+			{
+				get
+				{
+					if (_category == null)
+						using (var db = new NorthwindDB(_context))
+							_category = db.Category.ToList();
+					return _category;
 				}
-
-				return _customer;
 			}
-		}
 
-		private List<Northwind.Employee> _employee;
-		public  List<Northwind.Employee>  Employee
-		{
-			get
+			private List<Northwind.Customer> _customer;
+			public  List<Northwind.Customer>  Customer
 			{
-				if (_employee == null)
+				get
 				{
-					using (var db = new NorthwindDB())
+					if (_customer == null)
 					{
-						_employee = db.Employee.ToList();
+						using (var db = new NorthwindDB(_context))
+							_customer = db.Customer.ToList();
 
-						foreach (var employee in _employee)
+						foreach (var c in _customer)
+							c.Orders = (from o in Order where o.CustomerID == c.CustomerID select o).ToList();
+					}
+
+					return _customer;
+				}
+			}
+
+			private List<Northwind.Employee> _employee;
+			public  List<Northwind.Employee>  Employee
+			{
+				get
+				{
+					if (_employee == null)
+					{
+						using (var db = new NorthwindDB(_context))
 						{
-							employee.Employees         = (from e in _employee where e.ReportsTo  == employee.EmployeeID select e).ToList();
-							employee.ReportsToEmployee = (from e in _employee where e.EmployeeID == employee.ReportsTo  select e).SingleOrDefault();
+							_employee = db.Employee.ToList();
+
+							foreach (var employee in _employee)
+							{
+								employee.Employees         = (from e in _employee where e.ReportsTo  == employee.EmployeeID select e).ToList();
+								employee.ReportsToEmployee = (from e in _employee where e.EmployeeID == employee.ReportsTo  select e).SingleOrDefault();
+							}
 						}
 					}
+
+					return _employee;
 				}
-
-				return _employee;
 			}
-		}
 
-		private List<Northwind.EmployeeTerritory> _employeeTerritory;
-		public  List<Northwind.EmployeeTerritory>  EmployeeTerritory
-		{
-			get
+			private List<Northwind.EmployeeTerritory> _employeeTerritory;
+			public  List<Northwind.EmployeeTerritory>  EmployeeTerritory
 			{
-				if (_employeeTerritory == null)
-					using (var db = new NorthwindDB())
-						_employeeTerritory = db.EmployeeTerritory.ToList();
-				return _employeeTerritory;
-			}
-		}
-
-		private List<Northwind.OrderDetail> _orderDetail;
-		public  List<Northwind.OrderDetail>  OrderDetail
-		{
-			get
-			{
-				if (_orderDetail == null)
-					using (var db = new NorthwindDB())
-						_orderDetail = db.OrderDetail.ToList();
-				return _orderDetail;
-			}
-		}
-
-		private List<Northwind.Order> _order;
-		public  List<Northwind.Order>  Order
-		{
-			get
-			{
-				if (_order == null)
+				get
 				{
-					using (var db = new NorthwindDB())
-						_order = db.Order.ToList();
-
-					foreach (var o in _order)
-					{
-						o.Customer = Customer.Single(c => o.CustomerID == c.CustomerID);
-						o.Employee = Employee.Single(e => o.EmployeeID == e.EmployeeID);
-					}
+					if (_employeeTerritory == null)
+						using (var db = new NorthwindDB(_context))
+							_employeeTerritory = db.EmployeeTerritory.ToList();
+					return _employeeTerritory;
 				}
-
-				return _order;
 			}
-		}
 
-		private IEnumerable<Northwind.Product> _product;
-		public  IEnumerable<Northwind.Product>  Product
-		{
-			get
+			private List<Northwind.OrderDetail> _orderDetail;
+			public  List<Northwind.OrderDetail>  OrderDetail
 			{
-				if (_product == null)
-					using (var db = new NorthwindDB())
-						_product = db.Product.ToList();
-
-				foreach (var product in _product)
-					yield return product;
+				get
+				{
+					if (_orderDetail == null)
+						using (var db = new NorthwindDB(_context))
+							_orderDetail = db.OrderDetail.ToList();
+					return _orderDetail;
+				}
 			}
-		}
 
-		private List<Northwind.ActiveProduct> _activeProduct;
-		public  List<Northwind.ActiveProduct>  ActiveProduct
-		{
-			get { return _activeProduct ?? (_activeProduct = Product.OfType<Northwind.ActiveProduct>().ToList()); }
-		}
-
-		public  IEnumerable<Northwind.DiscontinuedProduct>  DiscontinuedProduct
-		{
-			get { return Product.OfType<Northwind.DiscontinuedProduct>(); }
-		}
-
-		private List<Northwind.Region> _region;
-		public  List<Northwind.Region>  Region
-		{
-			get
+			private List<Northwind.Order> _order;
+			public  List<Northwind.Order>  Order
 			{
-				if (_region == null)
-					using (var db = new NorthwindDB())
-						_region = db.Region.ToList();
-				return _region;
-			}
-		}
+				get
+				{
+					if (_order == null)
+					{
+						using (var db = new NorthwindDB(_context))
+							_order = db.Order.ToList();
 
-		private List<Northwind.Shipper> _shipper;
-		public  List<Northwind.Shipper>  Shipper
-		{
-			get
+						foreach (var o in _order)
+						{
+							o.Customer = Customer.Single(c => o.CustomerID == c.CustomerID);
+							o.Employee = Employee.Single(e => o.EmployeeID == e.EmployeeID);
+						}
+					}
+
+					return _order;
+				}
+			}
+
+			private IEnumerable<Northwind.Product> _product;
+			public  IEnumerable<Northwind.Product>  Product
 			{
-				if (_shipper == null)
-					using (var db = new NorthwindDB())
-						_shipper = db.Shipper.ToList();
-				return _shipper;
-			}
-		}
+				get
+				{
+					if (_product == null)
+						using (var db = new NorthwindDB(_context))
+							_product = db.Product.ToList();
 
-		private List<Northwind.Supplier> _supplier;
-		public  List<Northwind.Supplier>  Supplier
-		{
-			get
+					foreach (var product in _product)
+						yield return product;
+				}
+			}
+
+			private List<Northwind.ActiveProduct> _activeProduct;
+			public  List<Northwind.ActiveProduct>  ActiveProduct
 			{
-				if (_supplier == null)
-					using (var db = new NorthwindDB())
-						_supplier = db.Supplier.ToList();
-				return _supplier;
+				get { return _activeProduct ?? (_activeProduct = Product.OfType<Northwind.ActiveProduct>().ToList()); }
 			}
-		}
 
-		private List<Northwind.Territory> _territory;
-		public  List<Northwind.Territory>  Territory
-		{
-			get
+			public  IEnumerable<Northwind.DiscontinuedProduct>  DiscontinuedProduct
 			{
-				if (_territory == null)
-					using (var db = new NorthwindDB())
-						_territory = db.Territory.ToList();
-				return _territory;
+				get { return Product.OfType<Northwind.DiscontinuedProduct>(); }
+			}
+
+			private List<Northwind.Region> _region;
+			public  List<Northwind.Region>  Region
+			{
+				get
+				{
+					if (_region == null)
+						using (var db = new NorthwindDB(_context))
+							_region = db.Region.ToList();
+					return _region;
+				}
+			}
+
+			private List<Northwind.Shipper> _shipper;
+			public  List<Northwind.Shipper>  Shipper
+			{
+				get
+				{
+					if (_shipper == null)
+						using (var db = new NorthwindDB(_context))
+							_shipper = db.Shipper.ToList();
+					return _shipper;
+				}
+			}
+
+			private List<Northwind.Supplier> _supplier;
+			public  List<Northwind.Supplier>  Supplier
+			{
+				get
+				{
+					if (_supplier == null)
+						using (var db = new NorthwindDB(_context))
+							_supplier = db.Supplier.ToList();
+					return _supplier;
+				}
+			}
+
+			private List<Northwind.Territory> _territory;
+			public  List<Northwind.Territory>  Territory
+			{
+				get
+				{
+					if (_territory == null)
+						using (var db = new NorthwindDB(_context))
+							_territory = db.Territory.ToList();
+					return _territory;
+				}
 			}
 		}
-
 		#endregion
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
@@ -670,13 +942,18 @@ namespace Tests
 
 			var exceptExpected = exceptExpectedList.Count;
 			var exceptResult   = exceptResultList.  Count;
+			var message        = new StringBuilder();
 
 			if (exceptResult != 0 || exceptExpected != 0)
 				for (var i = 0; i < resultList.Count; i++)
-					Debug.WriteLine("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+				{ 
+					Debug.  WriteLine   ("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					message.AppendFormat("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					message.AppendLine  ();
+				}
 
-			Assert.AreEqual(0, exceptExpected);
-			Assert.AreEqual(0, exceptResult);
+			Assert.AreEqual(0, exceptExpected, "Expect Expected" + Environment.NewLine + message.ToString());
+			Assert.AreEqual(0, exceptResult,   "Expect Result"   + Environment.NewLine + message.ToString());
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
@@ -723,6 +1000,41 @@ namespace Tests
 					ss[i] = ss[i].Substring(1);
 
 			Assert.AreEqual(string.Join("\n", ss), result.Trim('\r', '\n'));
+		}
+	}
+
+	public static class Helpers
+	{
+		public static string ToInvariantString<T>(this T data)
+		{
+			return string.Format(CultureInfo.InvariantCulture, "{0}", data)
+				.Replace(',', '.').Trim(' ', '.', '0');
+		}
+	}
+
+	public class AllowMultipleQuery : IDisposable
+	{
+		public AllowMultipleQuery()
+		{
+			Configuration.Linq.AllowMultipleQuery = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
+
+	public class WithoutJoinOptimization : IDisposable
+	{
+		public WithoutJoinOptimization()
+		{
+			Configuration.Linq.OptimizeJoins = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.OptimizeJoins = true;
 		}
 	}
 }

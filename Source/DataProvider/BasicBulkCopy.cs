@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider
 {
@@ -12,7 +14,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 
-	class BasicBulkCopy
+	public class BasicBulkCopy
 	{
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
@@ -79,7 +81,7 @@ namespace LinqToDB.DataProvider
 			var l  = Expression.Lambda<Func<IDbConnection,int,IDisposable>>(
 				Expression.Convert(
 					Expression.New(
-						bulkCopyType.GetConstructor(new[] { connectionType, bulkCopyOptionType }),
+						bulkCopyType.GetConstructorEx(new[] { connectionType, bulkCopyOptionType }),
 						Expression.Convert(p1, connectionType),
 						Expression.Convert(p2, bulkCopyOptionType)),
 					typeof(IDisposable)),
@@ -95,7 +97,7 @@ namespace LinqToDB.DataProvider
 			var l  = Expression.Lambda<Func<int,string,object>>(
 				Expression.Convert(
 					Expression.New(
-						columnMappingType.GetConstructor(new[] { typeof(int), typeof(string) }),
+						columnMappingType.GetConstructorEx(new[] { typeof(int), typeof(string) }),
 						new [] { p1, p2 }),
 					typeof(object)),
 				p1, p2);
@@ -105,9 +107,9 @@ namespace LinqToDB.DataProvider
 
 		protected Action<object,Action<object>> CreateBulkCopySubscriber(object bulkCopy, string eventName)
 		{
-			var eventInfo   = bulkCopy.GetType().GetEvent(eventName);
+			var eventInfo   = bulkCopy.GetType().GetEventEx(eventName);
 			var handlerType = eventInfo.EventHandlerType;
-			var eventParams = handlerType.GetMethod("Invoke").GetParameters();
+			var eventParams = handlerType.GetMethodEx("Invoke").GetParameters();
 
 			// Expression<Func<Action<object>,Delegate>> lambda =
 			//     actionParameter => Delegate.CreateDelegate(
@@ -120,10 +122,19 @@ namespace LinqToDB.DataProvider
 			var senderParameter = Expression.Parameter(eventParams[0].ParameterType, eventParams[0].Name);
 			var argsParameter   = Expression.Parameter(eventParams[1].ParameterType, eventParams[1].Name);
 
+#if !NETSTANDARD
+			var mi = MemberHelper.MethodOf(() =>Delegate.CreateDelegate(typeof(string), (object) null, "", false));
+#else
+			MethodInfo mi = null;
+			throw new NotImplementedException("This is not implemented for .Net Core");
+			//Func<string> func = () => null;
+			//var del = func.GetMethodInfo().CreateDelegate(typeof(string));
+#endif
+
 			var lambda = Expression.Lambda<Func<Action<object>, Delegate>>(
 				Expression.Call(
 					null,
-					MemberHelper.MethodOf(() => Delegate.CreateDelegate(typeof(string), (object)null, "", false)),
+					mi,
 					new Expression[]
 					{
 						Expression.Constant(handlerType, typeof(Type)),
@@ -144,9 +155,9 @@ namespace LinqToDB.DataProvider
 
 		protected void TraceAction(DataConnection dataConnection, string commandText, Func<int> action)
 		{
-			if (DataConnection.TraceSwitch.TraceInfo)
+			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 			{
-				DataConnection.OnTrace(new TraceInfo
+				dataConnection.OnTraceConnection(new TraceInfo
 				{
 					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
@@ -155,15 +166,15 @@ namespace LinqToDB.DataProvider
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
-
 				var count = action();
 
-				if (DataConnection.TraceSwitch.TraceInfo)
+				if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 				{
-					DataConnection.OnTrace(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = dataConnection,
@@ -175,13 +186,14 @@ namespace LinqToDB.DataProvider
 			}
 			catch (Exception ex)
 			{
-				if (DataConnection.TraceSwitch.TraceError)
+				if (DataConnection.TraceSwitch.TraceError && dataConnection.OnTraceConnection != null)
 				{
-					DataConnection.OnTrace(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = dataConnection,
 						CommandText    = commandText,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}
@@ -257,7 +269,7 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-		protected  BulkCopyRowsCopied MultipleRowsCopy2<T>(
+		protected virtual BulkCopyRowsCopied MultipleRowsCopy2<T>(
 			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source, string from)
 		{
 			return MultipleRowsCopy2<T>(

@@ -6,12 +6,19 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
+
+using JetBrains.Annotations;
+
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
 // ReSharper disable RedundantCast
 // ReSharper disable PossibleInvalidOperationException
 // ReSharper disable CSharpWarnings::CS0693
 // ReSharper disable RedundantToStringCall
+// ReSharper disable RedundantLambdaParameterType
 #endregion
 
 namespace LinqToDB.Linq
@@ -21,6 +28,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Expressions;
 	using Mapping;
 
+	[PublicAPI]
 	public static class Expressions
 	{
 		#region MapMember
@@ -83,18 +91,18 @@ namespace LinqToDB.Linq
 			MapMember(providerName, M(memberInfo), expression);
 		}
 
-		public static void MapMember<TR>               (string providerName, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember(providerName, MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<TR>               (                     Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember("",           MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,TR>            (string providerName, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember(providerName, MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,TR>            (                     Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember("",           MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,TR>         (string providerName, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember(providerName, MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,TR>         (                     Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember("",           MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,TR>      (string providerName, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember(providerName, MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,TR>      (                     Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember("",           MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,TR>   (string providerName, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember(providerName, MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,TR>   (                     Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember("",           MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, MemberHelper.GetMemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<TR>               (string providerName, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<TR>               (                     Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (string providerName, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (                     Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (string providerName, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (                     Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (string providerName, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (                     Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (string providerName, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (                     Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           MemberHelper.GetMemberInfo(memberInfo), expression); }
 
 		#endregion
 
@@ -258,28 +266,28 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		static MemberInfo M<T>(Expression<Func<T,object>> func)
+		public static MemberInfo M<T>(Expression<Func<T,object>> func)
 		{
-			return MemberHelper.GetMemeberInfo(func);
+			return MemberHelper.GetMemberInfo(func);
 		}
 
-		static MemberInfo M(Expression<Func<object>> func)
+		public static MemberInfo M<T>(Expression<Func<T>> func)
 		{
-			return MemberHelper.GetMemeberInfo(func);
+			return MemberHelper.GetMemberInfo(func);
 		}
 
-		static LambdaExpression L<TR>                   (Expression<Func<TR>>                   func) { return func; }
-		static LambdaExpression L<T1,TR>                (Expression<Func<T1,TR>>                func) { return func; }
-		static LambdaExpression L<T1,T2,TR>             (Expression<Func<T1,T2,TR>>             func) { return func; }
-		static LambdaExpression L<T1,T2,T3,TR>          (Expression<Func<T1,T2,T3,TR>>          func) { return func; }
-		static LambdaExpression L<T1,T2,T3,T4,TR>       (Expression<Func<T1,T2,T3,T4,TR>>       func) { return func; }
-		static LambdaExpression L<T1,T2,T3,T4,T5,TR>    (Expression<Func<T1,T2,T3,T4,T5,TR>>    func) { return func; }
-		static LambdaExpression L<T1,T2,T3,T4,T5,T6,TR> (Expression<Func<T1,T2,T3,T4,T5,T6,TR>> func) { return func; }
-		static LazyExpressionInfo N (Func<LambdaExpression> func) { return new LazyExpressionInfo { Lambda = func }; }
+		public static LambdaExpression L<TR>                   (Expression<Func<TR>>                   func) { return func; }
+		public static LambdaExpression L<T1,TR>                (Expression<Func<T1,TR>>                func) { return func; }
+		public static LambdaExpression L<T1,T2,TR>             (Expression<Func<T1,T2,TR>>             func) { return func; }
+		public static LambdaExpression L<T1,T2,T3,TR>          (Expression<Func<T1,T2,T3,TR>>          func) { return func; }
+		public static LambdaExpression L<T1,T2,T3,T4,TR>       (Expression<Func<T1,T2,T3,T4,TR>>       func) { return func; }
+		public static LambdaExpression L<T1,T2,T3,T4,T5,TR>    (Expression<Func<T1,T2,T3,T4,T5,TR>>    func) { return func; }
+		public static LambdaExpression L<T1,T2,T3,T4,T5,T6,TR> (Expression<Func<T1,T2,T3,T4,T5,T6,TR>> func) { return func; }
+		public static LazyExpressionInfo N (Func<LambdaExpression> func) { return new LazyExpressionInfo { Lambda = func }; }
 
 		#endregion
 
-		class LazyExpressionInfo : IExpressionInfo
+		public class LazyExpressionInfo : IExpressionInfo
 		{
 			public Func<LambdaExpression> Lambda;
 
@@ -338,7 +346,7 @@ namespace LinqToDB.Linq
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
-				if (!typeof(T).IsClassEx() && !typeof(T).IsNullable())
+				if (!typeof(T).IsClassEx() && !typeof(T).IsInterfaceEx() && !typeof(T).IsNullable())
 				{
 					var gtype    = typeof(GetValueOrDefaultExpressionInfo<>).MakeGenericType(typeof(T));
 					var provider = (ISetInfo)Activator.CreateInstance(gtype);
@@ -347,6 +355,8 @@ namespace LinqToDB.Linq
 				}
 			}
 		}
+
+		#region Mapping
 
 		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> _members;
 		static readonly object                                           _memberSync = new object();
@@ -391,7 +401,7 @@ namespace LinqToDB.Linq
 					{ M(() => "".ToLower    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Lower(obj))) },
 					{ M(() => "".ToUpper    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Upper(obj))) },
 					{ M(() => "".CompareTo  ("")      ), N(() => L<String,String,Int32>            ((String obj,String p0)                    => ConvertToCaseCompareTo(obj, p0).Value)) },
-#if !NETFX_CORE
+#if !NETFX_CORE && !NETSTANDARD
 					{ M(() => "".CompareTo  (1)       ), N(() => L<String,Object,Int32>            ((String obj,Object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString()).Value)) },
 #endif
 
@@ -404,15 +414,19 @@ namespace LinqToDB.Linq
 					{ M(() => string.Concat("","","","")                            ), N(() => L<String,String,String,String,String>((String p0,String p1,String p2,String p3) => p0 + p1 + p2 + p3))       },
 					{ M(() => string.Concat((string[])null)                         ), N(() => L<String[],String>                   ((String[] ps)                             => Sql.Concat(ps)))          },
 
-					{ M(() => string.IsNullOrEmpty ("")    ),           N(() => L<String,Boolean>                               ((String p0)                                               => p0 == null || p0.Length == 0)) },
-					{ M(() => string.CompareOrdinal("","")),            N(() => L<String,String,Int32>                          ((String s1,String s2)                                     => s1.CompareTo(s2))) },
-					{ M(() => string.CompareOrdinal("",0,"",0,0)),      N(() => L<String,Int32,String,Int32,Int32,Int32>        ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)           => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
-					{ M(() => string.Compare       ("","")),            N(() => L<String,String,Int32>                          ((String s1,String s2)                                     => s1.CompareTo(s2))) },
-					{ M(() => string.Compare       ("",0,"",0,0)),      N(() => L<String,Int32,String,Int32,Int32,Int32>        ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)           => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
-#if !SILVERLIGHT && !NETFX_CORE
-					{ M(() => string.Compare       ("","",true)),       N(() => L<String,String,Boolean,Int32>                  ((String s1,String s2,Boolean b)                           => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
-					{ M(() => string.Compare       ("",0,"",0,0,true)), N(() => L<String,Int32,String,Int32,Int32,Boolean,Int32>((String s1,Int32 i1,String s2,Int32 i2,Int32 l,Boolean b) => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
+					{ M(() => string.IsNullOrEmpty ("")    ),                                         N(() => L<String,Boolean>                                        ((String p0)                                                         => p0 == null || p0.Length == 0)) },
+					{ M(() => string.CompareOrdinal("","")),                                          N(() => L<String,String,Int32>                                   ((String s1,String s2)                                               => s1.CompareTo(s2))) },
+					{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<String,Int32,String,Int32,Int32,Int32>                 ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)                     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
+					{ M(() => string.Compare       ("","")),                                          N(() => L<String,String,Int32>                                   ((String s1,String s2)                                               => s1.CompareTo(s2))) },
+					{ M(() => string.Compare       ("",0,"",0,0)),                                    N(() => L<String,Int32,String,Int32,Int32,Int32>                 ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)                     => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
+#if !SILVERLIGHT && !NETFX_CORE										                                 														           															            
+					{ M(() => string.Compare       ("","",true)),                                     N(() => L<String,String,Boolean,Int32>                           ((String s1,String s2,Boolean b)                                     => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
+#endif						
+#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
+					{ M(() => string.Compare       ("",0,"",0,0,true)),                               N(() => L<String,Int32,String,Int32,Int32,Boolean,Int32>         ((String s1,Int32 i1,String s2,Int32 i2,Int32 l,Boolean b)           => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 #endif
+					{ M(() => string.Compare       ("",0,"",0,0,StringComparison.OrdinalIgnoreCase)), N(() => L<String,Int32,String,Int32,Int32,StringComparison,Int32>((String s1,Int32 i1,String s2,Int32 i2,Int32 l,StringComparison sc) => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
+					{ M(() => string.Compare       ("","",StringComparison.OrdinalIgnoreCase)),       N(() => L<String,String,StringComparison,Int32>                  ((String s1,String s2,StringComparison sc)                           => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
 
 					{ M(() => AltStuff("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((String p0,Int32? p1,Int32 ?p2,String p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1)))) },
 
@@ -461,7 +475,7 @@ namespace LinqToDB.Linq
 
 					{ M(() => Boolean. Parse("")), N(() => L<String,Boolean> ((String p0) => Sql.ConvertTo<Boolean>. From(p0))) },
 					{ M(() => Byte.    Parse("")), N(() => L<String,Byte>    ((String p0) => Sql.ConvertTo<Byte>.    From(p0))) },
-#if !SILVERLIGHT && !NETFX_CORE
+#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD
 					{ M(() => Char.    Parse("")), N(() => L<String,Char>    ((String p0) => Sql.ConvertTo<Char>.    From(p0))) },
 #endif
 					{ M(() => DateTime.Parse("")), N(() => L<String,DateTime>((String p0) => Sql.ConvertTo<DateTime>.From(p0))) },
@@ -503,9 +517,11 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToBoolean((Boolean)true)), N(() => L<Boolean, Boolean>((Boolean  p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 					{ M(() => Convert.ToBoolean((Byte)    0)  ), N(() => L<Byte,    Boolean>((Byte     p0) => Sql.ConvertTo<Boolean>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToBoolean((Char)   '0') ), N(() => L<Char,    Boolean>((Char     p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 	#if !SILVERLIGHT
 					{ M(() => Convert.ToBoolean(DateTime.Now) ), N(() => L<DateTime,Boolean>((DateTime p0) => Sql.ConvertTo<Boolean>.From(p0))) },
+	#endif
 	#endif
 					{ M(() => Convert.ToBoolean((Decimal) 0)  ), N(() => L<Decimal, Boolean>((Decimal  p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 					{ M(() => Convert.ToBoolean((Double)  0)  ), N(() => L<Double,  Boolean>((Double   p0) => Sql.ConvertTo<Boolean>.From(p0))) },
@@ -526,9 +542,11 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToByte((Boolean)true)), N(() => L<Boolean, Byte>((Boolean  p0) => Sql.ConvertTo<Byte>.From(p0))) },
 					{ M(() => Convert.ToByte((Byte)    0)  ), N(() => L<Byte,    Byte>((Byte     p0) => Sql.ConvertTo<Byte>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToByte((Char)   '0') ), N(() => L<Char,    Byte>((Char     p0) => Sql.ConvertTo<Byte>.From(p0))) },
 	#if !SILVERLIGHT
 					{ M(() => Convert.ToByte(DateTime.Now) ), N(() => L<DateTime,Byte>((DateTime p0) => Sql.ConvertTo<Byte>.From(p0))) },
+	#endif
 	#endif
 					{ M(() => Convert.ToByte((Decimal) 0)  ), N(() => L<Decimal, Byte>((Decimal  p0) => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)))) },
 					{ M(() => Convert.ToByte((Double)  0)  ), N(() => L<Double,  Byte>((Double   p0) => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)))) },
@@ -547,22 +565,26 @@ namespace LinqToDB.Linq
 
 					#region ToChar
 
-	#if !SILVERLIGHT
+	#if !SILVERLIGHT && !NETSTANDARD
 					{ M(() => Convert.ToChar((Boolean)true)), N(() => L<Boolean, Char>((Boolean  p0) => Sql.ConvertTo<Char>.From(p0))) },
 	#endif
 					{ M(() => Convert.ToChar((Byte)    0)  ), N(() => L<Byte,    Char>((Byte     p0) => Sql.ConvertTo<Char>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToChar((Char)   '0') ), N(() => L<Char,    Char>((Char     p0) => p0                          )) },
 	#if !SILVERLIGHT
 					{ M(() => Convert.ToChar(DateTime.Now) ), N(() => L<DateTime,Char>((DateTime p0) => Sql.ConvertTo<Char>.From(p0))) },
 	#endif
 					{ M(() => Convert.ToChar((Decimal) 0)  ), N(() => L<Decimal, Char>((Decimal  p0) => Sql.ConvertTo<Char>.From(Sql.RoundToEven(p0)))) },
 					{ M(() => Convert.ToChar((Double)  0)  ), N(() => L<Double,  Char>((Double   p0) => Sql.ConvertTo<Char>.From(Sql.RoundToEven(p0)))) },
+	#endif
 					{ M(() => Convert.ToChar((Int16)   0)  ), N(() => L<Int16,   Char>((Int16    p0) => Sql.ConvertTo<Char>.From(p0))) },
 					{ M(() => Convert.ToChar((Int32)   0)  ), N(() => L<Int32,   Char>((Int32    p0) => Sql.ConvertTo<Char>.From(p0))) },
 					{ M(() => Convert.ToChar((Int64)   0)  ), N(() => L<Int64,   Char>((Int64    p0) => Sql.ConvertTo<Char>.From(p0))) },
 					{ M(() => Convert.ToChar((Object)  0)  ), N(() => L<Object,  Char>((Object   p0) => Sql.ConvertTo<Char>.From(p0))) },
 					{ M(() => Convert.ToChar((SByte)   0)  ), N(() => L<SByte,   Char>((SByte    p0) => Sql.ConvertTo<Char>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToChar((Single)  0)  ), N(() => L<Single,  Char>((Single   p0) => Sql.ConvertTo<Char>.From(Sql.RoundToEven(p0)))) },
+	#endif
 					{ M(() => Convert.ToChar((String) "0") ), N(() => L<String,  Char>((String   p0) => Sql.ConvertTo<Char>.From(p0))) },
 					{ M(() => Convert.ToChar((UInt16)  0)  ), N(() => L<UInt16,  Char>((UInt16   p0) => Sql.ConvertTo<Char>.From(p0))) },
 					{ M(() => Convert.ToChar((UInt32)  0)  ), N(() => L<UInt32,  Char>((UInt32   p0) => Sql.ConvertTo<Char>.From(p0))) },
@@ -574,7 +596,7 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToDateTime((Object)  0)  ), N(() => L<Object,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 					{ M(() => Convert.ToDateTime((String) "0") ), N(() => L<String,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-	#if !SILVERLIGHT
+	#if !SILVERLIGHT && !NETSTANDARD
 					{ M(() => Convert.ToDateTime((Boolean)true)), N(() => L<Boolean, DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 					{ M(() => Convert.ToDateTime((Byte)    0)  ), N(() => L<Byte,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 					{ M(() => Convert.ToDateTime((Char)   '0') ), N(() => L<Char,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
@@ -597,8 +619,10 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToDecimal((Boolean)true)), N(() => L<Boolean, Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 					{ M(() => Convert.ToDecimal((Byte)    0)  ), N(() => L<Byte,    Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToDecimal((Char)   '0') ), N(() => L<Char,    Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 					{ M(() => Convert.ToDecimal(DateTime.Now) ), N(() => L<DateTime,Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
+	#endif
 					{ M(() => Convert.ToDecimal((Decimal) 0)  ), N(() => L<Decimal, Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 					{ M(() => Convert.ToDecimal((Double)  0)  ), N(() => L<Double,  Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 					{ M(() => Convert.ToDecimal((Int16)   0)  ), N(() => L<Int16,   Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
@@ -618,9 +642,11 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToDouble((Boolean)true)), N(() => L<Boolean, Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 					{ M(() => Convert.ToDouble((Byte)    0)  ), N(() => L<Byte,    Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToDouble((Char)   '0') ), N(() => L<Char,    Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 	#if !SILVERLIGHT
 					{ M(() => Convert.ToDouble(DateTime.Now) ), N(() => L<DateTime,Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
+	#endif
 	#endif
 					{ M(() => Convert.ToDouble((Decimal) 0)  ), N(() => L<Decimal, Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 					{ M(() => Convert.ToDouble((Double)  0)  ), N(() => L<Double,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
@@ -641,9 +667,11 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToInt64((Boolean)true)), N(() => L<Boolean, Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
 					{ M(() => Convert.ToInt64((Byte)    0)  ), N(() => L<Byte,    Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToInt64((Char)   '0') ), N(() => L<Char,    Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
 	#if !SILVERLIGHT
 					{ M(() => Convert.ToInt64(DateTime.Now) ), N(() => L<DateTime,Int64>(p0 => Sql.ConvertTo<Int64>.From(p0))) },
+	#endif
 	#endif
 					{ M(() => Convert.ToInt64((Decimal) 0)  ), N(() => L<Decimal, Int64>(p0 => Sql.ConvertTo<Int64>.From(Sql.RoundToEven(p0)))) },
 					{ M(() => Convert.ToInt64((Double)  0)  ), N(() => L<Double,  Int64>(p0 => Sql.ConvertTo<Int64>.From(Sql.RoundToEven(p0)))) },
@@ -664,9 +692,11 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToInt32((Boolean)true)), N(() => L<Boolean, Int32>(p0 => Sql.ConvertTo<Int32>.From(p0))) },
 					{ M(() => Convert.ToInt32((Byte)    0)  ), N(() => L<Byte,    Int32>(p0 => Sql.ConvertTo<Int32>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToInt32((Char)   '0') ), N(() => L<Char,    Int32>(p0 => Sql.ConvertTo<Int32>.From(p0))) },
 	#if !SILVERLIGHT
 					{ M(() => Convert.ToInt32(DateTime.Now) ), N(() => L<DateTime,Int32>(p0 => Sql.ConvertTo<Int32>.From(p0))) },
+	#endif
 	#endif
 					{ M(() => Convert.ToInt32((Decimal) 0)  ), N(() => L<Decimal, Int32>(p0 => Sql.ConvertTo<Int32>.From(Sql.RoundToEven(p0)))) },
 					{ M(() => Convert.ToInt32((Double)  0)  ), N(() => L<Double,  Int32>(p0 => Sql.ConvertTo<Int32>.From(Sql.RoundToEven(p0)))) },
@@ -687,9 +717,11 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToInt16((Boolean)true)), N(() => L<Boolean, Int16>(p0 => Sql.ConvertTo<Int16>.From(p0))) },
 					{ M(() => Convert.ToInt16((Byte)    0)  ), N(() => L<Byte,    Int16>(p0 => Sql.ConvertTo<Int16>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToInt16((Char)   '0') ), N(() => L<Char,    Int16>(p0 => Sql.ConvertTo<Int16>.From(p0))) },
 	#if !SILVERLIGHT
 					{ M(() => Convert.ToInt16(DateTime.Now) ), N(() => L<DateTime,Int16>(p0 => Sql.ConvertTo<Int16>.From(p0))) },
+	#endif
 	#endif
 					{ M(() => Convert.ToInt16((Decimal) 0)  ), N(() => L<Decimal, Int16>(p0 => Sql.ConvertTo<Int16>.From(Sql.RoundToEven(p0)))) },
 					{ M(() => Convert.ToInt16((Double)  0)  ), N(() => L<Double,  Int16>(p0 => Sql.ConvertTo<Int16>.From(Sql.RoundToEven(p0)))) },
@@ -710,9 +742,11 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToSByte((Boolean)true)), N(() => L<Boolean, SByte>(p0 => Sql.ConvertTo<SByte>.From(p0))) },
 					{ M(() => Convert.ToSByte((Byte)    0)  ), N(() => L<Byte,    SByte>(p0 => Sql.ConvertTo<SByte>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToSByte((Char)   '0') ), N(() => L<Char,    SByte>(p0 => Sql.ConvertTo<SByte>.From(p0))) },
 	#if !SILVERLIGHT
 					{ M(() => Convert.ToSByte(DateTime.Now) ), N(() => L<DateTime,SByte>(p0 => Sql.ConvertTo<SByte>.From(p0))) },
+	#endif
 	#endif
 					{ M(() => Convert.ToSByte((Decimal) 0)  ), N(() => L<Decimal, SByte>(p0 => Sql.ConvertTo<SByte>.From(Sql.RoundToEven(p0)))) },
 					{ M(() => Convert.ToSByte((Double)  0)  ), N(() => L<Double,  SByte>(p0 => Sql.ConvertTo<SByte>.From(Sql.RoundToEven(p0)))) },
@@ -733,9 +767,11 @@ namespace LinqToDB.Linq
 
 					{ M(() => Convert.ToSingle((Boolean)true)), N(() => L<Boolean, Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
 					{ M(() => Convert.ToSingle((Byte)    0)  ), N(() => L<Byte,    Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
+	#if !NETSTANDARD
 					{ M(() => Convert.ToSingle((Char)   '0') ), N(() => L<Char,    Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
 	#if !SILVERLIGHT
 					{ M(() => Convert.ToSingle(DateTime.Now) ), N(() => L<DateTime,Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
+	#endif
 	#endif
 					{ M(() => Convert.ToSingle((Decimal) 0)  ), N(() => L<Decimal, Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
 					{ M(() => Convert.ToSingle((Double)  0)  ), N(() => L<Double,  Single>(p0 => Sql.ConvertTo<Single>.From(p0))) },
@@ -766,7 +802,7 @@ namespace LinqToDB.Linq
 					{ M(() => Convert.ToString((Object)  0)  ), N(() => L<Object,  String>(p0 => Sql.ConvertTo<String>.From(p0))) },
 					{ M(() => Convert.ToString((SByte)   0)  ), N(() => L<SByte,   String>(p0 => Sql.ConvertTo<String>.From(p0))) },
 					{ M(() => Convert.ToString((Single)  0)  ), N(() => L<Single,  String>(p0 => Sql.ConvertTo<String>.From(p0))) },
-	#if !SILVERLIGHT
+	#if !SILVERLIGHT && !NETSTANDARD
 					{ M(() => Convert.ToString((String) "0") ), N(() => L<String,  String>(p0 => p0                            )) },
 	#endif
 					{ M(() => Convert.ToString((UInt16)  0)  ), N(() => L<UInt16,  String>(p0 => Sql.ConvertTo<String>.From(p0))) },
@@ -775,12 +811,12 @@ namespace LinqToDB.Linq
 
 					#endregion
 
-					#region ToInt16
+					#region ToUInt16
 
 					{ M(() => Convert.ToUInt16((Boolean)true)), N(() => L<Boolean, UInt16>(p0 => Sql.ConvertTo<UInt16>.From(p0))) },
 					{ M(() => Convert.ToUInt16((Byte)    0)  ), N(() => L<Byte,    UInt16>(p0 => Sql.ConvertTo<UInt16>.From(p0))) },
 					{ M(() => Convert.ToUInt16((Char)   '0') ), N(() => L<Char,    UInt16>(p0 => Sql.ConvertTo<UInt16>.From(p0))) },
-	#if !SILVERLIGHT
+	#if !SILVERLIGHT && !NETSTANDARD
 					{ M(() => Convert.ToUInt16(DateTime.Now) ), N(() => L<DateTime,UInt16>(p0 => Sql.ConvertTo<UInt16>.From(p0))) },
 	#endif
 					{ M(() => Convert.ToUInt16((Decimal) 0)  ), N(() => L<Decimal, UInt16>(p0 => Sql.ConvertTo<UInt16>.From(Sql.RoundToEven(p0)))) },
@@ -798,12 +834,12 @@ namespace LinqToDB.Linq
 
 					#endregion
 
-					#region ToInt32
+					#region ToUInt32
 
 					{ M(() => Convert.ToUInt32((Boolean)true)), N(() => L<Boolean, UInt32>(p0 => Sql.ConvertTo<UInt32>.From(p0))) },
 					{ M(() => Convert.ToUInt32((Byte)    0)  ), N(() => L<Byte,    UInt32>(p0 => Sql.ConvertTo<UInt32>.From(p0))) },
 					{ M(() => Convert.ToUInt32((Char)   '0') ), N(() => L<Char,    UInt32>(p0 => Sql.ConvertTo<UInt32>.From(p0))) },
-	#if !SILVERLIGHT
+	#if !SILVERLIGHT && !NETSTANDARD
 					{ M(() => Convert.ToUInt32(DateTime.Now) ), N(() => L<DateTime,UInt32>(p0 => Sql.ConvertTo<UInt32>.From(p0))) },
 	#endif
 					{ M(() => Convert.ToUInt32((Decimal) 0)  ), N(() => L<Decimal, UInt32>(p0 => Sql.ConvertTo<UInt32>.From(Sql.RoundToEven(p0)))) },
@@ -826,7 +862,7 @@ namespace LinqToDB.Linq
 					{ M(() => Convert.ToUInt64((Boolean)true)), N(() => L<Boolean, UInt64>(p0 => Sql.ConvertTo<UInt64>.From(p0))) },
 					{ M(() => Convert.ToUInt64((Byte)    0)  ), N(() => L<Byte,    UInt64>(p0 => Sql.ConvertTo<UInt64>.From(p0))) },
 					{ M(() => Convert.ToUInt64((Char)   '0') ), N(() => L<Char,    UInt64>(p0 => Sql.ConvertTo<UInt64>.From(p0))) },
-	#if !SILVERLIGHT
+	#if !SILVERLIGHT && !NETSTANDARD
 					{ M(() => Convert.ToUInt64(DateTime.Now) ), N(() => L<DateTime,UInt64>(p0 => Sql.ConvertTo<UInt64>.From(p0))) },
 	#endif
 					{ M(() => Convert.ToUInt64((Decimal) 0)  ), N(() => L<Decimal, UInt64>(p0 => Sql.ConvertTo<UInt64>.From(Sql.RoundToEven(p0)))) },
@@ -953,6 +989,17 @@ namespace LinqToDB.Linq
 
 					#endregion
 
+					#region SqlTypes
+
+#if !SILVERLIGHT && !NETFX_CORE
+					{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj))          },
+					{ M(() => new SqlBoolean().IsFalse), N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == false)) },
+					{ M(() => new SqlBoolean().IsTrue),  N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == true))  },
+					{ M(() => SqlBoolean.True),          N(() => L<bool>           (()               => true))  },
+					{ M(() => SqlBoolean.False),         N(() => L<bool>           (()               => false)) },
+#endif
+
+					#endregion
 				}},
 
 				#region SqlServer
@@ -1296,6 +1343,8 @@ namespace LinqToDB.Linq
 			};
 		}
 
+		#endregion
+
 		class TypeMember
 		{
 			public TypeMember(Type type, string member)
@@ -1317,14 +1366,55 @@ namespace LinqToDB.Linq
 			{
 				unchecked
 				{
-					return (Type.GetHashCode()*397) ^ Member.GetHashCode();
+					return (Type.GetHashCode() * 397) ^ Member.GetHashCode();
 				}
 			}
 		}
 
+		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, LambdaExpression expression)
+		{
+			Dictionary<TypeMember,IExpressionInfo> dic;
+
+			if (!_typeMembers.TryGetValue(providerName, out dic))
+				_typeMembers.Add(providerName, dic = new Dictionary<TypeMember,IExpressionInfo>());
+
+			var expr = new LazyExpressionInfo();
+
+			expr.SetExpression(expression);
+
+			dic[new TypeMember(objectType, memberInfo.Name)] = expr;
+
+			_checkUserNamespace = false;
+		}
+
+		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, IExpressionInfo expressionInfo)
+		{
+			Dictionary<TypeMember,IExpressionInfo> dic;
+
+			if (!_typeMembers.TryGetValue(providerName, out dic))
+				_typeMembers.Add(providerName, dic = new Dictionary<TypeMember,IExpressionInfo>());
+
+			dic[new TypeMember(objectType, memberInfo.Name)] = expressionInfo;
+
+			_checkUserNamespace = false;
+		}
+
+		public static void MapMember<TR>               (string providerName, Type objectType, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember(providerName, objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<TR>               (                     Type objectType, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (string providerName, Type objectType, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember(providerName, objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (                     Type objectType, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (string providerName, Type objectType, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember(providerName, objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (                     Type objectType, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (string providerName, Type objectType, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember(providerName, objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (                     Type objectType, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (string providerName, Type objectType, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember(providerName, objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (                     Type objectType, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
+
 		static TypeMember MT<T>(Expression<Func<object>> func)
 		{
-			return new TypeMember(typeof(T), MemberHelper.GetMemeberInfo(func).Name);
+			return new TypeMember(typeof(T), MemberHelper.GetMemberInfo(func).Name);
 		}
 
 		static readonly Dictionary<string,Dictionary<TypeMember,IExpressionInfo>> _typeMembers = new Dictionary<string,Dictionary<TypeMember,IExpressionInfo>>
@@ -1374,7 +1464,7 @@ namespace LinqToDB.Linq
 		#region Provider specific functions
 
 		[Sql.Function]
-		static int? ConvertToCaseCompareTo(string str, string value)
+		public static int? ConvertToCaseCompareTo(string str, string value)
 		{
 			return str == null || value == null ? (int?)null : str.CompareTo(value);
 		}
@@ -1382,7 +1472,7 @@ namespace LinqToDB.Linq
 		// Access, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite
 		//
 		[Sql.Function]
-		static string AltStuff(string str, int? startLocation, int? length, string value)
+		public static string AltStuff(string str, int? startLocation, int? length, string value)
 		{
 			return Sql.Stuff(str, startLocation, length, value);
 		}
@@ -1390,7 +1480,7 @@ namespace LinqToDB.Linq
 		// DB2
 		//
 		[Sql.Function]
-		static string VarChar(object obj, int? size)
+		public static string VarChar(object obj, int? size)
 		{
 			return obj.ToString();
 		}
@@ -1398,7 +1488,7 @@ namespace LinqToDB.Linq
 		// DB2
 		//
 		[Sql.Function]
-		static string Hex(Guid? guid)
+		public static string Hex(Guid? guid)
 		{
 			return guid == null ? null : guid.ToString();
 		}
@@ -1412,7 +1502,7 @@ namespace LinqToDB.Linq
 		[Sql.Function(ProviderName.DB2,        "Repeat")]
 		[Sql.Function(ProviderName.PostgreSQL, "Repeat")]
 		[Sql.Function(ProviderName.Access,     "String", 1, 0)]
-		static string Replicate(string str, int? count)
+		public static string Replicate(string str, int? count)
 		{
 			if (str == null || count == null)
 				return null;
@@ -1430,7 +1520,7 @@ namespace LinqToDB.Linq
 		[Sql.Function(ProviderName.DB2,        "Repeat")]
 		[Sql.Function(ProviderName.PostgreSQL, "Repeat")]
 		[Sql.Function(ProviderName.Access,     "String", 1, 0)]
-		static string Replicate(char? ch, int? count)
+		public static string Replicate(char? ch, int? count)
 		{
 			if (ch == null || count == null)
 				return null;
@@ -1446,20 +1536,22 @@ namespace LinqToDB.Linq
 		// SqlServer
 		//
 		[Sql.Function]
-		static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
+		public static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
 		{
 			return days == null ? null : Sql.DateAdd(part, number, new DateTime(1900, 1, days.Value + 1));
 		}
 
 		// MSSQL
 		//
-		[Sql.Function] static Decimal? Round(Decimal? value, int precision, int mode) { return 0; }
-		[Sql.Function] static Double?  Round(Double?  value, int precision, int mode) { return 0; }
+		[Sql.Function]
+		public static Decimal? Round(Decimal? value, int precision, int mode) { return 0; }
+		[Sql.Function]
+		public static Double?  Round(Double?  value, int precision, int mode) { return 0; }
 
 		// Access
 		//
 		[Sql.Function(ProviderName.Access, "DateSerial")]
-		static DateTime? MakeDateTime2(int? year, int? month, int? day)
+		public static DateTime? MakeDateTime2(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null?
 				(DateTime?)null :
@@ -1470,7 +1562,7 @@ namespace LinqToDB.Linq
 		//
 		[CLSCompliant(false)]
 		[Sql.Function("Int", 0)]
-		static T AccessInt<T>(T value)
+		public static T AccessInt<T>(T value)
 		{
 			return value;
 		}
@@ -1479,17 +1571,19 @@ namespace LinqToDB.Linq
 		//
 		[CLSCompliant(false)]
 		[Sql.Function("Round", 0, 1)]
-		static T AccessRound<T>(T value, int? precision) { return value; }
+		public static T AccessRound<T>(T value, int? precision) { return value; }
 
 		// Firebird
 		//
-		[Sql.Function("PI", ServerSideOnly = true)] static decimal DecimalPI() { return (decimal)Math.PI; }
-		[Sql.Function("PI", ServerSideOnly = true)] static double  DoublePI () { return          Math.PI; }
+		[Sql.Function("PI", ServerSideOnly = true)]
+		public static decimal DecimalPI() { return (decimal)Math.PI; }
+		[Sql.Function("PI", ServerSideOnly = true)]
+		public static double  DoublePI () { return          Math.PI; }
 
 		// Informix
 		//
 		[Sql.Function]
-		static DateTime? Mdy(int? month, int? day, int? year)
+		public static DateTime? Mdy(int? month, int? day, int? year)
 		{
 			return year == null || month == null || day == null ?
 				(DateTime?)null :

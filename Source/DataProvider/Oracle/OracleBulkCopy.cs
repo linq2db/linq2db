@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Data;
-	using Mapping;
 	using SqlProvider;
 
 	class OracleBulkCopy : BasicBulkCopy
@@ -40,10 +39,10 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				if (_bulkCopyCreator == null)
 				{
-					var clientNamespace    = OracleTools.AssemblyName + ".Client.";
-					var bulkCopyType       = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopy",              false);
-					var bulkCopyOptionType = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyOptions",       false);
-					var columnMappingType  = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyColumnMapping", false);
+					var clientNamespace    = ((OracleDataProvider)dataConnection.DataProvider).AssemblyName + ".Client.";
+					var bulkCopyType       = _connectionType.AssemblyEx().GetType(clientNamespace + "OracleBulkCopy",              false);
+					var bulkCopyOptionType = _connectionType.AssemblyEx().GetType(clientNamespace + "OracleBulkCopyOptions",       false);
+					var columnMappingType  = _connectionType.AssemblyEx().GetType(clientNamespace + "OracleBulkCopyColumnMapping", false);
 
 					if (bulkCopyType != null)
 					{
@@ -112,10 +111,20 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 
+			options.BulkCopyType = BulkCopyType.MultipleRows;
+
 			return MultipleRowsCopy(dataConnection, options, source);
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
+			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return OracleTools.UseAlternativeBulkCopy
+				? MultipleRowsCopy2(dataConnection, options, source)
+				: MultipleRowsCopy1(dataConnection, options, source);
+		}
+
+		BulkCopyRowsCopied MultipleRowsCopy1<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
@@ -135,7 +144,7 @@ namespace LinqToDB.DataProvider.Oracle
 				helper.StringBuilder.Length -= 2;
 
 				helper.StringBuilder.Append(") VALUES (");
-				helper.BuildColumns(item);
+				helper.BuildColumns(item, _ => _.DataType == DataType.Text || _.DataType == DataType.NText);
 				helper.StringBuilder.AppendLine(")");
 
 				helper.RowsCopied.RowsCopied++;
@@ -156,6 +165,76 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			return helper.RowsCopied;
+		}
+
+		BulkCopyRowsCopied MultipleRowsCopy2<T>(
+			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
+
+			helper.StringBuilder.AppendFormat("INSERT INTO {0} (", helper.TableName);
+
+			foreach (var column in helper.Columns)
+				helper.StringBuilder
+					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+					.Append(", ");
+
+			helper.StringBuilder.Length -= 2;
+
+			helper.StringBuilder.Append(") VALUES (");
+
+			for (var i = 0; i < helper.Columns.Length; i++)
+				helper.StringBuilder.Append(":p" + ( i + 1)).Append(", ");
+
+			helper.StringBuilder.Length -= 2;
+
+			helper.StringBuilder.AppendLine(")");
+			helper.SetHeader();
+
+			var list = new List<T>(31);
+
+			foreach (var item in source)
+			{
+				list.Add(item);
+
+				helper.RowsCopied.RowsCopied++;
+				helper.CurrentCount++;
+
+				if (helper.CurrentCount >= helper.BatchSize)
+				{
+					if (!Execute(dataConnection, helper, list))
+						return helper.RowsCopied;
+
+					list.Clear();
+				}
+			}
+
+			if (helper.CurrentCount > 0)
+			{
+				Execute(dataConnection, helper, list);
+			}
+
+			return helper.RowsCopied;
+		}
+
+		bool Execute<T>(DataConnection dataConnection, MultipleRowsHelper<T> helper, List<T> list)
+		{
+			for (var i = 0; i < helper.Columns.Length; i++)
+			{
+				var column   = helper.Columns[i];
+				var dataType = column.DataType == DataType.Undefined
+					? dataConnection.MappingSchema.GetDataType(column.MemberType).DataType
+					: column.DataType;
+				//var type     = dataConnection.DataProvider.ConvertParameterType(column.MemberType, dataType);
+
+				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType)
+				{
+					Direction = ParameterDirection.Input,
+					IsArray   = true,
+				});
+			}
+
+			return helper.Execute();
 		}
 	}
 }

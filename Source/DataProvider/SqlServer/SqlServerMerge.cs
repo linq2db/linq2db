@@ -31,10 +31,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 
-				tblName = sqlBuilder.BuildTableName(new StringBuilder(),
-					(string)sqlBuilder.Convert(databaseName ?? table.DatabaseName, ConvertType.NameToDatabase),
-					(string)sqlBuilder.Convert(schemaName   ?? table.SchemaName,   ConvertType.NameToOwner),
-					(string)sqlBuilder.Convert(tableName    ?? table.TableName,    ConvertType.NameToQueryTable)).ToString();
+				tblName = sqlBuilder.ConvertTableName(new StringBuilder(),
+					databaseName ?? table.DatabaseName,
+					schemaName   ?? table.SchemaName,
+					tableName    ?? table.TableName).ToString();
 
 				dataConnection.Execute("SET IDENTITY_INSERT {0} ON".Args(tblName));
 			}

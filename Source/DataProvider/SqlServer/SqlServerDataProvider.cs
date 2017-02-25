@@ -68,7 +68,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
 
-			SetField<IDataReader,decimal> ((r,i) => SqlServerTools.DataReaderGetDecimal(r, i));
+			SetField<IDataReader,decimal>((r,i) => r.GetDecimal(i));
+			SetField<IDataReader,decimal>("money",      (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
+			SetField<IDataReader,decimal>("smallmoney", (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
+			SetField<IDataReader,decimal>("decimal",    (r,i) => SqlServerTools.DataReaderGetDecimal(r, i));
 		}
 
 		#endregion
@@ -146,11 +149,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			return typeof(SqlConnection).IsSameOrParentOf(connection.GetType());
 		}
 
+#if !NETSTANDARD
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() : new SqlServerSchemaProvider();
 		}
-
+#endif
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
 
 		public override object GetConnectionInfo(DataConnection dataConnection, string parameterName)
@@ -191,7 +195,12 @@ namespace LinqToDB.DataProvider.SqlServer
 						string s;
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
 							if (parameter is SqlParameter)
+#if NETSTANDARD
+								((SqlParameter)parameter).TypeName = s;
+#else
 								((SqlParameter)parameter).UdtTypeName = s;
+#endif
+
 					}
 
 					break;
@@ -234,9 +243,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Udt support
+#region Udt support
 
 		static readonly ConcurrentDictionary<Type,string> _udtTypes = new ConcurrentDictionary<Type,string>();
 
@@ -268,9 +277,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			_udtTypes[typeof(T)] = udtName;
 		}
 
-		#endregion
+#endregion
 
-		#region BulkCopy
+#region BulkCopy
 
 		SqlServerBulkCopy _bulkCopy;
 
@@ -286,9 +295,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -296,6 +305,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		#endregion
+#endregion
 	}
 }

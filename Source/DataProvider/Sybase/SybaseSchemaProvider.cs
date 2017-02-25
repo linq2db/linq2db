@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 	class SybaseSchemaProvider : SchemaProviderBase
 	{
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -49,6 +49,11 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "Sybase.Data.AseClient";
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
@@ -96,7 +101,7 @@ namespace LinqToDB.DataProvider.Sybase
 				SELECT
 					o.id                                             as TableID,
 					c.name                                           as Name,
-					Convert(bit, c.status & 0x08)                    as isNullable,
+					Convert(bit, c.status & 0x08)                    as IsNullable,
 					c.colid                                          as Ordinal,
 					t.name                                           as DataType,
 					c.length                                         as Length,

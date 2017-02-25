@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -52,7 +53,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override LambdaExpression TryGetConvertExpression(Type from, Type to)
 		{
-			if (to.IsEnum && from == typeof(decimal))
+			if (to.IsEnumEx() && from == typeof(decimal))
 			{
 				var type = Converter.GetDefaultMappingFromEnumType(this, to);
 
@@ -104,6 +105,24 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			stringBuilder.AppendFormat(format, value);
+		}
+
+		internal static readonly OracleMappingSchema Instance = new OracleMappingSchema();
+
+		public class NativeMappingSchema : MappingSchema
+		{
+			public NativeMappingSchema()
+				: base(ProviderName.OracleNative, Instance)
+			{
+			}
+		}
+
+		public class ManagedMappingSchema : MappingSchema
+		{
+			public ManagedMappingSchema()
+				: base(ProviderName.OracleManaged, Instance)
+			{
+			}
 		}
 	}
 }

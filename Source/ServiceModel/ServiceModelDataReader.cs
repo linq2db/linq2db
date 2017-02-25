@@ -48,14 +48,10 @@ namespace LinqToDB.ServiceModel
 			get { return 0; }
 		}
 
-#if !SILVERLIGHT && !NETFX_CORE
-
 		public DataTable GetSchemaTable()
 		{
 			throw new NotImplementedException();
 		}
-
-#endif
 
 		public bool IsClosed
 		{

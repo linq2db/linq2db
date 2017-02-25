@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlQuery;
 	using SqlProvider;
 
-	class PostgreSQLSqlBuilder : BasicSqlBuilder
+	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
 		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -84,6 +84,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				base.BuildFromClause();
 		}
 
+		protected sealed override bool IsReserved(string word)
+		{
+			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);
+		}
+
 		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
 
 		public override object Convert(object value, ConvertType convertType)
@@ -103,13 +108,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						if (name.Length > 0 && name[0] == '"')
 							return name;
 
-						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote ||
-							name
+						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote)
+							return '"' + name + '"';
+
+						if (IsReserved(name))
+							return '"' + name + '"';
+
+						if (name
 #if NETFX_CORE
 								.ToCharArray()
 #endif
-								.Any(c => char.IsUpper(c) || char.IsWhiteSpace(c)))
+								.Any(c => char.IsWhiteSpace(c) || (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c))))
 							return '"' + name + '"';
+
+						
 					}
 
 					break;
@@ -171,6 +183,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			base.BuildCreateTableFieldType(field);
+		}
+
+		protected override bool BuildJoinType(SelectQuery.JoinedTable join)
+		{
+			switch (join.JoinType)
+			{
+				case SelectQuery.JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
+				case SelectQuery.JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
+			}
+
+			return base.BuildJoinType(join);
 		}
 
 #if !SILVERLIGHT

@@ -12,11 +12,14 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
+		private HashSet<string> _systemSchemas =
+			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
+				StringComparer.OrdinalIgnoreCase);
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
-			return dts.AsEnumerable()
+			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
 					TypeName         = t.Field<string>("SQL_TYPE_NAME"),
@@ -47,16 +50,18 @@ namespace LinqToDB.DataProvider.DB2
 				let catalog = dataConnection.Connection.Database
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
-				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == CurrenSchema
+				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
+				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == CurrenSchema
 				select new TableInfo
 				{
-					TableID         = catalog + '.' + schema + '.' + name,
-					CatalogName     = catalog,
-					SchemaName      = schema,
-					TableName       = name,
-					IsDefaultSchema = schema.IsNullOrEmpty(),
-					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW",
-					Description     = t.Field<string>("REMARKS"),
+					TableID            = catalog + '.' + schema + '.' + name,
+					CatalogName        = catalog,
+					SchemaName         = schema,
+					TableName          = name,
+					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
+					Description        = t.Field<string>("REMARKS"),
+					IsProviderSpecific = system || _systemSchemas.Contains(schema)
 				}
 			).ToList();
 		}
@@ -107,7 +112,8 @@ namespace LinqToDB.DataProvider.DB2
 					IDENTITY,
 					COLNO,
 					TYPENAME,
-					REMARKS
+					REMARKS,
+					CODEPAGE
 				FROM
 					SYSCAT.COLUMNS
 				WHERE
@@ -115,6 +121,12 @@ namespace LinqToDB.DataProvider.DB2
 
 			return _columns = dataConnection.Query(rd =>
 				{
+					var typeName = rd.ToString(8);
+					var cp   = Converter.ChangeTypeTo<int>(rd[10]);
+
+					     if (typeName == "CHARACTER" && cp == 0) typeName = "CHAR () FOR BIT DATA";
+					else if (typeName == "VARCHAR"   && cp == 0) typeName = "VARCHAR () FOR BIT DATA";
+
 					var ci = new ColumnInfo
 					{
 						TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
@@ -122,7 +134,7 @@ namespace LinqToDB.DataProvider.DB2
 						IsNullable  = rd.ToString(5) == "Y",
 						IsIdentity  = rd.ToString(6) == "Y",
 						Ordinal     = Converter.ChangeTypeTo<int>(rd[7]),
-						DataType    = rd.ToString(8),
+						DataType    = typeName,
 						Description = rd.ToString(9),
 					};
 
@@ -257,7 +269,7 @@ namespace LinqToDB.DataProvider.DB2
 			return base.GetDbType(columnType, dataType, length, prec, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -292,6 +304,48 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "IBM.Data.DB2Types";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "XML"                       : return "DB2Xml";
+				case "DECFLOAT"                  : return "DB2DecimalFloat";
+				case "DBCLOB"                    :
+				case "CLOB"                      : return "DB2Clob";
+				case "BLOB"                      : return "DB2Blob";
+				case "BIGINT"                    : return "DB2Int64";
+				case "LONG VARCHAR FOR BIT DATA" :
+				case "VARCHAR () FOR BIT DATA"   :
+				case "VARBIN"                    :
+				case "BINARY"                    :
+				case "CHAR () FOR BIT DATA"      : return "DB2Binary";
+				case "LONG VARGRAPHIC"           :
+				case "VARGRAPHIC"                :
+				case "GRAPHIC"                   :
+				case "LONG VARCHAR"              :
+				case "CHARACTER"                 :
+				case "VARCHAR"                   :
+				case "CHAR"                      : return "DB2String";
+				case "DECIMAL"                   : return "DB2Decimal";
+				case "INTEGER"                   : return "DB2Int32";
+				case "SMALLINT"                  : return "DB2Int16";
+				case "REAL"                      : return "DB2Real";
+				case "DOUBLE"                    : return "DB2Double";
+				case "DATE"                      : return "DB2Date";
+				case "TIME"                      : return "DB2Time";
+				case "TIMESTMP"                  :
+				case "TIMESTAMP"                 : return "DB2TimeStamp";
+				case "ROWID"                     : return "DB2RowId";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 
 		protected override string GetDataSourceName(DbConnection dbConnection)
@@ -340,7 +394,7 @@ namespace LinqToDB.DataProvider.DB2
 						SYSCAT.PROCEDURES
 					WHERE
 						" + GetSchemaFilter("PROCSCHEMA"))
-				.Where(p => IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || p.SchemaName == CurrenSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrenSchema)
 				.ToList();
 		}
 
@@ -395,19 +449,19 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected string GetSchemaFilter(string schemaNameField)
 		{
-			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
+			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				var sql = schemaNameField;
 
-				if (IncludedSchemas.Length != 0)
+				if (IncludedSchemas.Count != 0)
 				{
 					sql += string.Format(" IN ({0})", IncludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
 
-					if (ExcludedSchemas.Length != 0)
+					if (ExcludedSchemas.Count != 0)
 						sql += " AND " + schemaNameField;
 				}
 
-				if (ExcludedSchemas.Length != 0)
+				if (ExcludedSchemas.Count != 0)
 					sql += string.Format(" NOT IN ({0})", ExcludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
 
 				return sql;

@@ -58,7 +58,7 @@ namespace Tests.Model
 
 		public override string ToString()
 		{
-			return string.Format("{{{0,2}, {1,7}, {2}, {3,5}, {4}, {5}}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue);
+			return string.Format("{{{0,2}, {1,7}, {2:O}, {3,5}, {4}, {5}}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue);
 		}
 	}
 
@@ -117,7 +117,7 @@ namespace Tests.Model
 
 		public override string ToString()
 		{
-			return string.Format("{{{0,2}, {1,7}, {2}, {3,5}, {4}}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue);
+			return string.Format("{{{0,2}, {1,7}, {2:O}, {3,5}, {4}}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue);
 		}
 	}
 }

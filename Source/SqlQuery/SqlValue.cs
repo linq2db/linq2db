@@ -20,7 +20,7 @@ namespace LinqToDB.SqlQuery
 				SystemType = value.GetType();
 		}
 
-		public object Value      { get; private set; }
+		public object Value      { get; internal set; }
 		public Type   SystemType { get; private set; }
 
 		#region Overrides
@@ -72,9 +72,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		public bool CanBeNull
 		{
-			return Value == null;
+			get { return Value == null; }
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)

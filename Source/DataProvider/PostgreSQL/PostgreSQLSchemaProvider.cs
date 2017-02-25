@@ -32,6 +32,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        FullName },
 				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          FullName },
 
+				new DataTypeInfo { TypeName = "hstore",                      DataType = typeof(Dictionary<string,string>).FullName},
+
 				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        FullName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        FullName, CreateFormat = "character({0})",                    CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       FullName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
@@ -60,16 +62,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var sql = (@"
 				SELECT
-					table_catalog || '.' || table_schema || '.' || table_name as TableID,
-					table_catalog                                             as CatalogName,
-					table_schema                                              as SchemaName,
-					table_name                                                as TableName,
-					table_schema = 'public'                                   as IsDefaultSchema,
-					table_type = 'VIEW'                                       as IsView
+					table_catalog || '.' || table_schema || '.' || table_name            as TableID,
+					table_catalog                                                        as CatalogName,
+					table_schema                                                         as SchemaName,
+					table_name                                                           as TableName,
+					table_schema = 'public'                                              as IsDefaultSchema,
+					table_type = 'VIEW'                                                  as IsView,
+					left(table_schema, 3) = 'pg_' OR table_schema = 'information_schema' as IsProviderSpecific
 				FROM
 					information_schema.tables");
 
-			if (ExcludedSchemas.Length == 0 && IncludedSchemas.Length == 0)
+			if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				sql += @"
 				WHERE
 					table_schema NOT IN ('pg_catalog','information_schema')";
@@ -117,7 +120,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					FROM
 						information_schema.columns";
 
-			if (ExcludedSchemas.Length == 0 || IncludedSchemas.Length == 0)
+			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)
 				sql += @"
 					WHERE
 						table_schema NOT IN ('pg_catalog','information_schema')";
@@ -206,40 +209,72 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
-				case "character"                      : return DataType.NChar;
-				case "text"                           : return DataType.Text;
-				case "smallint"                       : return DataType.Int16;
-				case "integer"                        : return DataType.Int32;
-				case "bigint"                         : return DataType.Int64;
-				case "real"                           : return DataType.Single;
-				case "double precision"               : return DataType.Double;
-				case "bytea"                          : return DataType.Binary;
-				case "boolean"                        : return DataType.Boolean;
-				case "numeric"                        : return DataType.Decimal;
-				case "money"                          : return DataType.Money;
-				case "uuid"                           : return DataType.Guid;
-				case "character varying"              : return DataType.NVarChar;
-				case "timestamp with time zone"       : return DataType.DateTimeOffset;
-				case "timestamp without time zone"    : return DataType.DateTime2;
-				case "time with time zone"            : return DataType.Time;
-				case "time without time zone"         : return DataType.Time;
-				case "date"                           : return DataType.Date;
-				case "xml"                            : return DataType.Xml;
-				case "point"                          : return DataType.Udt;
-				case "lseg"                           : return DataType.Udt;
-				case "box"                            : return DataType.Udt;
-				case "circle"                         : return DataType.Udt;
-				case "path"                           : return DataType.Udt;
-				case "polygon"                        : return DataType.Udt;
-				case "macaddr"                        : return DataType.Udt;
-				case "USER-DEFINED"                   : return DataType.Udt;
+				case "character"                   : return DataType.NChar;
+				case "text"                        : return DataType.Text;
+				case "smallint"                    : return DataType.Int16;
+				case "integer"                     : return DataType.Int32;
+				case "bigint"                      : return DataType.Int64;
+				case "real"                        : return DataType.Single;
+				case "double precision"            : return DataType.Double;
+				case "bytea"                       : return DataType.Binary;
+				case "boolean"                     : return DataType.Boolean;
+				case "numeric"                     : return DataType.Decimal;
+				case "money"                       : return DataType.Money;
+				case "uuid"                        : return DataType.Guid;
+				case "character varying"           : return DataType.NVarChar;
+				case "timestamp with time zone"    : return DataType.DateTimeOffset;
+				case "timestamp without time zone" : return DataType.DateTime2;
+				case "time with time zone"         : return DataType.Time;
+				case "time without time zone"      : return DataType.Time;
+				case "interval"                    : return DataType.Time;
+				case "date"                        : return DataType.Date;
+				case "xml"                         : return DataType.Xml;
+				case "point"                       : return DataType.Udt;
+				case "lseg"                        : return DataType.Udt;
+				case "box"                         : return DataType.Udt;
+				case "circle"                      : return DataType.Udt;
+				case "path"                        : return DataType.Udt;
+				case "line"                        : return DataType.Udt;
+				case "polygon"                     : return DataType.Udt;
+				case "macaddr"                     : return DataType.Udt;
+				case "USER-DEFINED"                : return DataType.Udt;
+				case "bit"                         :
+				case "varbit"                      : return DataType.BitArray;
+				case "hstore"                      : return DataType.Dictionary;
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "NpgsqlTypes";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "interval"                    : return "NpgsqlTimeSpan";
+				case "timestamp with time zone"    :
+				case "timestamp without time zone" :
+				case "date"                        : return "NpgsqlDate";
+				case "point"                       : return "NpgsqlPoint";
+				case "lseg"                        : return "NpgsqlLSeg";
+				case "box"                         : return "NpgsqlBox";
+				case "circle"                      : return "NpgsqlCircle";
+				case "path"                        : return "NpgsqlPath";
+				case "polygon"                     : return "NpgsqlPolygon";
+				case "line"                        : return "NpgsqlLine";
+				case "inet"                        : return "NpgsqlInet";
+				case "geometry "                   : return "PostgisGeometry";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 	}
 }

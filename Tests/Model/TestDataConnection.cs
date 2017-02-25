@@ -18,8 +18,9 @@ namespace Tests.Model
 		}
 
 		public TestDataConnection()
-#if MONO
-			: base(ProviderName.SqlServer2008)
+
+#if NETSTANDARD
+			: base("SQLiteMs")
 #else
 			: base(ProviderName.SQLite)
 #endif
@@ -27,7 +28,7 @@ namespace Tests.Model
 		}
 
 		public ITable<Person>                 Person                 { get { return GetTable<Person>();                 } }
-		public ITable<ComplexPerson>          ComplexPerson          { get { return GetTable<ComplexPerson>(); } }
+		public ITable<ComplexPerson>          ComplexPerson          { get { return GetTable<ComplexPerson>();          } }
 		public ITable<Patient>                Patient                { get { return GetTable<Patient>();                } }
 		public ITable<Doctor>                 Doctor                 { get { return GetTable<Doctor>();                 } }
 		public ITable<Parent>                 Parent                 { get { return GetTable<Parent>();                 } }
@@ -47,11 +48,15 @@ namespace Tests.Model
 		public ITable<LinqDataTypes>          Types                  { get { return GetTable<LinqDataTypes>();          } }
 		public ITable<LinqDataTypes2>         Types2                 { get { return GetTable<LinqDataTypes2>();         } }
 		public ITable<TestIdentity>           TestIdentity           { get { return GetTable<TestIdentity>();           } }
+		public ITable<InheritanceParentBase>  InheritanceParent      { get { return GetTable<InheritanceParentBase>();  } }
+		public ITable<InheritanceChildBase>   InheritanceChild       { get { return GetTable<InheritanceChildBase>();   } }
 
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(), id);
+			var methodInfo = (typeof(TestDataConnection)).GetMethod("GetParentByID", new [] {typeof(int?)});
+
+			return GetTable<Parent>(this, methodInfo, id);
 		}
 
 		public string GetSqlText(SelectQuery query)
@@ -80,7 +85,7 @@ namespace Tests.Model
 		}
 
 		[ExpressionMethod("Expression9")]
-		static public IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
+		public static IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
 		{
 			throw new InvalidOperationException();
 		}

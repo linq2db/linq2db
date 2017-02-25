@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using SqlQuery;
 	using SqlProvider;
 
-	class FirebirdSqlBuilder : BasicSqlBuilder
+	public class FirebirdSqlBuilder : BasicSqlBuilder
 	{
 		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -34,6 +34,15 @@ namespace LinqToDB.DataProvider.Firebird
 				BuildColumns();
 				AppendIndent();
 				StringBuilder.Append("FROM rdb$database").AppendLine();
+			}
+			else if (SelectQuery.Select.IsDistinct)
+			{
+				AppendIndent();
+				StringBuilder.Append("SELECT");
+				BuildSkipFirst();
+				StringBuilder.Append(" DISTINCT");
+				StringBuilder.AppendLine();
+				BuildColumns();
 			}
 			else
 				base.BuildSelectClause();
@@ -209,7 +218,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
 		{
-			if (!field.Nullable)
+			if (!field.CanBeNull)
 				StringBuilder.Append("NOT NULL");
 		}
 

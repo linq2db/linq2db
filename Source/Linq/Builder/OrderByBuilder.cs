@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (!methodCall.IsQueryable("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending"))
+			if (!methodCall.IsQueryable("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending"))
 				return false;
 
 			var body = ((LambdaExpression)methodCall.Arguments[1].Unwrap()).Body.Unwrap();
@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 
 			builder.ReplaceParent(order, sparent);
 
-			if (!methodCall.Method.Name.StartsWith("Then"))
+			if (!methodCall.Method.Name.StartsWith("Then") && !Configuration.Linq.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
 			foreach (var expr in sql)

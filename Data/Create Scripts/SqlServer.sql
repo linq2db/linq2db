@@ -4,10 +4,36 @@ BEGIN DROP TABLE Doctor END
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Patient') AND type in (N'U'))
 BEGIN DROP TABLE Patient END
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('InheritanceParent') AND type in (N'U'))
+BEGIN DROP TABLE InheritanceParent END
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('InheritanceChild') AND type in (N'U'))
+BEGIN DROP TABLE InheritanceChild END
+
+CREATE TABLE InheritanceParent
+(
+	InheritanceParentId int          NOT NULL CONSTRAINT PK_InheritanceParent PRIMARY KEY CLUSTERED,
+	TypeDiscriminator   int              NULL,
+	Name                nvarchar(50)     NULL
+)
+ON [PRIMARY]
+GO
+
+CREATE TABLE InheritanceChild
+(
+	InheritanceChildId  int          NOT NULL CONSTRAINT PK_InheritanceChild PRIMARY KEY CLUSTERED,
+	InheritanceParentId int          NOT NULL,
+	TypeDiscriminator   int              NULL,
+	Name                nvarchar(50)     NULL
+)
+ON [PRIMARY]
+GO
+
 -- Person Table
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Person') AND type in (N'U'))
 BEGIN DROP TABLE Person END
+
 
 CREATE TABLE Person
 (
@@ -24,7 +50,8 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
-
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+GO
 -- Doctor Table Extension
 
 CREATE TABLE Doctor
@@ -501,12 +528,14 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ParentChildVie
 BEGIN DROP VIEW ParentChildView END
 GO
 
-
-DROP TABLE Parent
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Parent') AND type in (N'U'))
+BEGIN DROP TABLE Parent END
 GO
-DROP TABLE Child
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Child') AND type in (N'U'))
+BEGIN DROP TABLE Child END
 GO
-DROP TABLE GrandChild
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('GrandChild') AND type in (N'U'))
+BEGIN DROP TABLE GrandChild END
 GO
 
 CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
@@ -602,7 +631,8 @@ GO
 -- SKIP SqlServer.2014 END
 -- SKIP SqlServer.2008 END
 
-DROP TABLE TestIdentity
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
+BEGIN DROP TABLE TestIdentity END
 GO
 
 CREATE TABLE TestIdentity (
@@ -633,8 +663,8 @@ GO
 
 CREATE TABLE IndexTable2
 (
-	PKField1    int NOT NULL,
-	PKField2    int NOT NULL,
+	PKField1 int NOT NULL,
+	PKField2 int NOT NULL,
 	CONSTRAINT PK_IndexTable2 PRIMARY KEY CLUSTERED (PKField2, PKField1),
 	CONSTRAINT FK_Patient2_IndexTable FOREIGN KEY (PKField2,PKField1)
 			REFERENCES IndexTable (PKField2,PKField1)
@@ -727,3 +757,31 @@ SELECT  12345678901234.5678901234567,                            NULL,          
 SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL
 
 GO
+
+-- SKIP SqlServer.2005 BEGIN
+
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'SqlTypes')
+BEGIN DROP TABLE [SqlTypes] END
+GO
+
+CREATE TABLE [SqlTypes]
+(
+	ID  int NOT NULL PRIMARY KEY CLUSTERED,
+	HID hierarchyid,
+)
+GO
+
+INSERT INTO [SqlTypes]
+SELECT 1, hierarchyid::Parse('/')      UNION ALL
+SELECT 2, hierarchyid::Parse('/1/')    UNION ALL
+SELECT 3, hierarchyid::Parse('/1/1/')  UNION ALL
+SELECT 4, hierarchyid::Parse('/1/2/')  UNION ALL
+SELECT 5, hierarchyid::Parse('/2/')    UNION ALL
+SELECT 6, hierarchyid::Parse('/2/1/')  UNION ALL
+SELECT 7, hierarchyid::Parse('/2/2/')  UNION ALL
+SELECT 8, hierarchyid::Parse('/2/1/1/')
+
+GO
+
+-- SKIP SqlServer.2005 END
+

@@ -75,7 +75,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMono|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\DebugMono\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;MONO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;MONO;NOFSHARP</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisLogFile>bin\Debug\UnitTests.Linq.Interface.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
@@ -94,7 +94,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseMono|AnyCPU'">
     <OutputPath>bin\ReleaseMono\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;MONO;NOFSHARP</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -143,6 +143,7 @@
   <ItemGroup>
     <Compile Include="FullName.cs" />
     <Compile Include="ComplexPerson.cs" />
+    <Compile Include="InheritanceParentChild.cs" />
     <Compile Include="IPerson.cs" />
     <Compile Include="TestDataConnection.cs" />
     <Compile Include="PostgreSQLSpecific.cs" />
@@ -191,6 +192,7 @@
   <ItemGroup>
     <None Include="linq2db.Tests.snk" />
     <None Include="packages.config" />
+    <None Include="Tests.Model.project.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

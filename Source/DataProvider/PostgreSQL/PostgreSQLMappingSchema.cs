@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.NetworkInformation;
 using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
@@ -16,6 +17,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
 
 			SetDataType(typeof(string), DataType.Undefined);
+
+			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
 			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append(v));
 

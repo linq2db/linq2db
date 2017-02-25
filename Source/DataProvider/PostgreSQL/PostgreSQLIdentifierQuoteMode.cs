@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 		None,
 		Quote,
+		Needed,
 		Auto
 	}
 }
