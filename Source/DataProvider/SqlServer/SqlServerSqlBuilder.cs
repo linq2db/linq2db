@@ -43,13 +43,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = SelectQuery.Insert.Into.GetIdentityField();
 
-				if (identityField != null)
+				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
 					AppendOutputTableVariable(SelectQuery.Insert.Into)
 						.Append(" TABLE (")
-						.Append(identityField.PhysicalName)
+						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
 						.Append(" ");
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
@@ -70,9 +70,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					StringBuilder
-						.Append("OUTPUT [INSERTED].[")
-						.Append(identityField.PhysicalName)
-						.Append("]")
+						.Append("OUTPUT [INSERTED].")
+						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
 						.AppendLine();
 					AppendIndent()
 						.Append("INTO ");
@@ -92,12 +91,12 @@ namespace LinqToDB.DataProvider.SqlServer
 					.AppendLine();
 				AppendIndent()
 					.Append("SELECT ")
-					.Append(identityField.PhysicalName)
+					.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
 					.Append(" FROM ");
 				AppendOutputTableVariable(SelectQuery.Insert.Into)
 					.AppendLine();
 			}
-			else if (identityField == null || identityField.DataType != DataType.Guid)
+			else 
 			{
 				StringBuilder
 					.AppendLine()
