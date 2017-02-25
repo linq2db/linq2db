@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue356Tests : TestBase
 	{
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.PostgreSQL)]
 		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -28,19 +28,21 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Access)]
 		public void Test2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var resultUnion = db.Child.Union(db.Child).Take(10);
+				var resultUnion = db.Child.Union(db.Child).OrderBy(_ => _.ParentID).Take(10);
 				var result = db.Parent
 					.SelectMany(x => resultUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.OrderBy(_ => _.ParentID)
 					.Take(10);
 
-				var expectedUnion = Child.Union(Child).Take(10);
+				var expectedUnion = Child.Union(Child).OrderBy(_ => _.ParentID).Take(10);
 				var expected = Parent
 					.SelectMany(x => expectedUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.OrderBy(_ => _.ParentID)
 					.Take(10);
 
 				AreEqual(expected, result);
@@ -52,14 +54,16 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				var resultUnion = db.Child.Union(db.Child).Skip(10).Take(10);
+				var resultUnion = db.Child.Union(db.Child).OrderBy(_ => _.ParentID).Skip(10).Take(10);
 				var result = db.Parent
 					.SelectMany(x => resultUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.OrderBy(_ => _.ParentID)
 					.Take(10);
 
-				var expectedUnion = Child.Union(Child).Skip(10).Take(10);
+				var expectedUnion = Child.Union(Child).OrderBy(_ => _.ParentID).Skip(10).Take(10);
 				var expected = Parent
 					.SelectMany(x => expectedUnion.Where(c => c.ParentID == x.ParentID).Select(z => new {x.ParentID, z.ChildID}))
+					.OrderBy(_ => _.ParentID)
 					.Take(10);
 
 				AreEqual(expected, result);
