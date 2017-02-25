@@ -4,7 +4,9 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using Expressions;
+    using System.Linq;
+
+    using Expressions;
 
 	public class PropertyMappingBuilder<T>
 	{
@@ -66,18 +68,43 @@ namespace LinqToDB.Mapping
 
 		PropertyMappingBuilder<T> SetColumn(Action<ColumnAttribute> setColumn)
 		{
-			_entity.SetAttribute(
-				_memberGetter,
-				false,
-				 _ =>
-				 {
-					var a = new ColumnAttribute { Configuration = _entity.Configuration };
-					setColumn(a);
-					return a;
-				 },
-				(_,a) => setColumn(a),
-				a => a.Configuration,
-				a => new ColumnAttribute(a));
+			if (_memberGetter.Body is MemberExpression && ((MemberExpression)_memberGetter.Body).Expression is MemberExpression)
+			{
+				var me = ((MemberExpression)_memberGetter.Body);
+				var name = me.Member.Name;
+				me = me.Expression as MemberExpression;
+				while (me != null)
+				{
+					name = me.Member.Name + "." + name;
+					me = me.Expression as MemberExpression;
+				}
+
+				var attrs = _entity.GetAttributes<ColumnAttribute>(typeof(T));
+				var existingAttribute = attrs.FirstOrDefault(x => x.MemberName == name);
+				if (existingAttribute != null)
+					setColumn(existingAttribute);
+				else
+				{
+					existingAttribute = new ColumnAttribute() { MemberName = name };
+					setColumn(existingAttribute);
+					_entity.HasAttribute(existingAttribute);
+				}
+			}
+			else
+			{
+				_entity.SetAttribute(
+					_memberGetter,
+					false,
+					 _ =>
+					 {
+						var a = new ColumnAttribute { Configuration = _entity.Configuration };
+						setColumn(a);
+						return a;
+					 },
+					(_,a) => setColumn(a),
+					a => a.Configuration,
+					a => new ColumnAttribute(a));
+			}
 
 			return this;
 		}

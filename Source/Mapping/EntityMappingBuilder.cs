@@ -269,60 +269,32 @@ namespace LinqToDB.Mapping
 				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T))
 					memberInfo = typeof(T).GetPropertyEx(memberInfo.Name);
 
-				if (e is MemberExpression && ((MemberExpression) e).Expression is MemberExpression)
+				if (memberInfo == null)
+					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));
+
+				var attrs = GetAttributes(memberInfo, configGetter);
+
+				if (attrs.Length == 0)
 				{
-					var me = ((MemberExpression) e);
-					var name = me.Member.Name;
-					me = me.Expression as MemberExpression;
-
-					while (me != null)
+					if (overrideAttribute != null)
 					{
-						name = me.Member.Name + "." + name;
-						me = me.Expression as MemberExpression;
+						var attr = _builder.MappingSchema.GetAttribute(memberInfo, configGetter);
+
+						if (attr != null)
+						{
+							var na = overrideAttribute(attr);
+
+							modifyExisting(m, na);
+							_builder.HasAttribute(memberInfo, na);
+
+							return;
+						}
 					}
 
-					var attrs = GetAttributes(typeof(T), configGetter);
-					var existingAttribute = attrs.OfType<ColumnAttribute>().FirstOrDefault(x => x.MemberName == name);
-					if (existingAttribute != null)
-						modifyExisting(m, (TA)(object)existingAttribute);
-					else
-					{
-						var attribute = getNew(m) as ColumnAttribute;
-						attribute.MemberName = name;
-						_builder.HasAttribute(typeof(T), attribute);
-					}
-
+					_builder.HasAttribute(memberInfo, getNew(m));
 				}
 				else
-				{
-
-					if (memberInfo == null)
-						throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));
-
-					var attrs = GetAttributes(memberInfo, configGetter);
-
-					if (attrs.Length == 0)
-					{
-						if (overrideAttribute != null)
-						{
-							var attr = _builder.MappingSchema.GetAttribute(memberInfo, configGetter);
-
-							if (attr != null)
-							{
-								var na = overrideAttribute(attr);
-
-								modifyExisting(m, na);
-								_builder.HasAttribute(memberInfo, na);
-
-								return;
-							}
-						}
-
-						_builder.HasAttribute(memberInfo, getNew(m));
-					}
-					else
-						modifyExisting(m, attrs[0]);
-				}
+					modifyExisting(m, attrs[0]);
 			};
 
 			if (processNewExpression && ex.NodeType == ExpressionType.New)
