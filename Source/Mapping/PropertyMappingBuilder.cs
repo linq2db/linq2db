@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 namespace LinqToDB.Mapping
 {
@@ -68,43 +69,37 @@ namespace LinqToDB.Mapping
 
 		PropertyMappingBuilder<T> SetColumn(Action<ColumnAttribute> setColumn)
 		{
-			if (_memberGetter.Body is MemberExpression && ((MemberExpression)_memberGetter.Body).Expression is MemberExpression)
+			var getter     = _memberGetter;
+			var memberName = null as string;
+			var me         = _memberGetter.Body as MemberExpression;
+
+			if (me != null && me.Expression is MemberExpression)
 			{
-				var me = ((MemberExpression)_memberGetter.Body);
-				var name = me.Member.Name;
-				me = me.Expression as MemberExpression;
-				while (me != null)
+				for (var m = me; m != null; m = m.Expression as MemberExpression)
 				{
-					name = me.Member.Name + "." + name;
-					me = me.Expression as MemberExpression;
+					if (me != m)
+						memberName = me.Member.Name + (string.IsNullOrEmpty(memberName) ? "" : "." + memberName);
+
+					me = m;
 				}
 
-				var attrs = _entity.GetAttributes<ColumnAttribute>(typeof(T));
-				var existingAttribute = attrs.FirstOrDefault(x => x.MemberName == name);
-				if (existingAttribute != null)
-					setColumn(existingAttribute);
-				else
-				{
-					existingAttribute = new ColumnAttribute() { MemberName = name };
-					setColumn(existingAttribute);
-					_entity.HasAttribute(existingAttribute);
-				}
+				var p  = Expression.Parameter(typeof(T));
+				getter = Expression.Lambda<Func<T, object>>(Expression.PropertyOrField(p, me.Member.Name), p);
 			}
-			else
-			{
-				_entity.SetAttribute(
-					_memberGetter,
+
+			_entity.SetAttribute(
+					getter,
 					false,
 					 _ =>
 					 {
-						var a = new ColumnAttribute { Configuration = _entity.Configuration };
+						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName};
 						setColumn(a);
 						return a;
 					 },
 					(_,a) => setColumn(a),
-					a => a.Configuration,
-					a => new ColumnAttribute(a));
-			}
+					a     => a.Configuration,
+					a     => new ColumnAttribute(a),
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 			return this;
 		}
