@@ -645,7 +645,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource, Ignore("Not currently supported")]
+		[Test, DataContextSource]
 		public void SelectComplex3(string context)
 		{
 			var ms = new MappingSchema();
