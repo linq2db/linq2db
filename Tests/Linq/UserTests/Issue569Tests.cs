@@ -12,30 +12,30 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = from territory in db.Patient
-					from employee in db.Person
-					from eter in db.Doctor
-						.Where(x => x.PersonID == employee.ID && x.PersonID == territory.PersonID)
+				var result = from patient in db.Patient
+					from person in db.Person
+					from doctor in db.Doctor
+						.Where(x => x.PersonID == person.ID && x.PersonID == patient.PersonID)
 						.DefaultIfEmpty()
-					where employee.FirstName.StartsWith("J")
+					where person.FirstName.StartsWith("J")
 					select new
 					{
-						PersonId = territory.PersonID,
-						FirstName = employee.FirstName,
-						Taxonomy = eter.Taxonomy
+						PersonId = patient.PersonID,
+						FirstName = person.FirstName,
+						Taxonomy = doctor.Taxonomy
 					};
 
-				var expected = from territory in Patient
-					from employee in Person
-					from eter in Doctor
-						.Where(x => x.PersonID == employee.ID && x.PersonID == territory.PersonID)
+				var expected = from patient in Patient
+					from person in Person
+					from doctor in Doctor
+						.Where(x => x.PersonID == person.ID && x.PersonID == patient.PersonID)
 						.DefaultIfEmpty()
-					where employee.FirstName.StartsWith("J")
+					where person.FirstName.StartsWith("J")
 					select new
 					{
-						PersonId = territory.PersonID,
-						FirstName = employee.FirstName,
-						Taxonomy = eter != null ? eter.Taxonomy : null
+						PersonId = patient.PersonID,
+						FirstName = person.FirstName,
+						Taxonomy = doctor != null ? doctor.Taxonomy : null
 					};
 
 				AreEqual(expected, result);
