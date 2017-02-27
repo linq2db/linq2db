@@ -133,15 +133,20 @@ namespace LinqToDB.DataProvider.SQLite
 
 				if (IsDateTime(leftType) || IsDateTime(rightType))
 				{
+					
+					if (leftType != null)
+					{
+						var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
+							SqlDataType.GetDataType(leftType), exprExpr.Expr1);
+						exprExpr.Expr1 = l;
+					}
 
-					var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
-						SqlDataType.GetDataType(leftType), exprExpr.Expr1);
-
-					var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
-						SqlDataType.GetDataType(rightType), exprExpr.Expr2);
-
-					exprExpr.Expr1 = l;
-					exprExpr.Expr2 = r;
+					if (rightType != null)
+					{
+						var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
+							SqlDataType.GetDataType(rightType), exprExpr.Expr2);
+						exprExpr.Expr2 = r;
+					}
 				}
 			}
 
