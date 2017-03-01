@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 namespace LinqToDB.Mapping
 {
-	using Expressions;
+    using System.Linq;
+
+    using Expressions;
 
 	public class PropertyMappingBuilder<T>
 	{
@@ -66,18 +69,37 @@ namespace LinqToDB.Mapping
 
 		PropertyMappingBuilder<T> SetColumn(Action<ColumnAttribute> setColumn)
 		{
+			var getter     = _memberGetter;
+			var memberName = null as string;
+			var me         = _memberGetter.Body as MemberExpression;
+
+			if (me != null && me.Expression is MemberExpression)
+			{
+				for (var m = me; m != null; m = m.Expression as MemberExpression)
+				{
+					if (me != m)
+						memberName = me.Member.Name + (string.IsNullOrEmpty(memberName) ? "" : "." + memberName);
+
+					me = m;
+				}
+
+				var p  = Expression.Parameter(typeof(T));
+				getter = Expression.Lambda<Func<T, object>>(Expression.PropertyOrField(p, me.Member.Name), p);
+			}
+
 			_entity.SetAttribute(
-				_memberGetter,
-				false,
-				 _ =>
-				 {
-					var a = new ColumnAttribute { Configuration = _entity.Configuration };
-					setColumn(a);
-					return a;
-				 },
-				(_,a) => setColumn(a),
-				a => a.Configuration,
-				a => new ColumnAttribute(a));
+					getter,
+					false,
+					 _ =>
+					 {
+						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName};
+						setColumn(a);
+						return a;
+					 },
+					(_,a) => setColumn(a),
+					a     => a.Configuration,
+					a     => new ColumnAttribute(a),
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 			return this;
 		}

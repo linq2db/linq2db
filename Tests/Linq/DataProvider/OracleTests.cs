@@ -26,8 +26,8 @@ namespace Tests.DataProvider
 		[AttributeUsage(AttributeTargets.Method)]
 		class OracleDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public OracleDataContextAttribute()
-				: base(ProviderName.OracleNative, ProviderName.OracleManaged)
+			public OracleDataContextAttribute(bool includeLinqService = true)
+				: base(includeLinqService, ProviderName.OracleNative, ProviderName.OracleManaged)
 			{
 			}
 		}
@@ -1647,6 +1647,22 @@ namespace Tests.DataProvider
 				}
 			}
 
+		}
+
+		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int id)
+		{
+			return dataConnection.QueryProc<Person>("Person_SelectByKey",
+				new DataParameter("pID", @id),
+				new DataParameter { Name = "retCursor", DataType = DataType.Cursor, Direction = ParameterDirection.ReturnValue });
+		}
+
+		[Test, OracleDataContext(false)]
+		public void PersonSelectByKey(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				AreEqual(Person.Where(_ => _.ID == 1), PersonSelectByKey(db, 1));
+			}
 		}
 	}
 }

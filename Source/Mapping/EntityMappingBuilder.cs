@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -252,13 +253,18 @@ namespace LinqToDB.Mapping
 			Func<bool,TA>              getNew,
 			Action<bool,TA>            modifyExisting,
 			Func<TA,string>            configGetter,
-			Func<TA,TA>                overrideAttribute = null)
+			Func<TA,TA>                overrideAttribute = null,
+			Func<IEnumerable<TA>, TA>  existingGetter    = null
+			)
 			where TA : Attribute
 		{
 			var ex = func.Body;
 
 			if (ex is UnaryExpression)
 				ex = ((UnaryExpression)ex).Operand;
+
+			if (existingGetter == null)
+				existingGetter = GetExisting;
 
 			Action<Expression,bool> setAttr = (e,m) =>
 			{
@@ -272,13 +278,13 @@ namespace LinqToDB.Mapping
 				if (memberInfo == null)
 					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));
 
-				var attrs = GetAttributes(memberInfo, configGetter);
+				var attr = existingGetter(GetAttributes(memberInfo, configGetter));
 
-				if (attrs.Length == 0)
+				if (attr == null)
 				{
 					if (overrideAttribute != null)
 					{
-						var attr = _builder.MappingSchema.GetAttribute(memberInfo, configGetter);
+						attr = existingGetter(_builder.MappingSchema.GetAttributes(memberInfo, configGetter));
 
 						if (attr != null)
 						{
@@ -294,7 +300,7 @@ namespace LinqToDB.Mapping
 					_builder.HasAttribute(memberInfo, getNew(m));
 				}
 				else
-					modifyExisting(m, attrs[0]);
+					modifyExisting(m, attr);
 			};
 
 			if (processNewExpression && ex.NodeType == ExpressionType.New)
@@ -312,6 +318,12 @@ namespace LinqToDB.Mapping
 			setAttr(ex, false);
 
 			return this;
+		}
+
+		private TA GetExisting<TA>(IEnumerable<TA> attrs)
+			where TA : Attribute
+		{
+			return attrs.FirstOrDefault();
 		}
 	}
 }

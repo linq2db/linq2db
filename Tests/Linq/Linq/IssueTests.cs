@@ -37,7 +37,7 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/42
 		//
-		[Test, DataContextSource()]
+		[Test, DataContextSource]
 		public void Issue42Test(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -240,6 +240,91 @@ namespace Tests.Linq
 
 				var sql = r.ToString();
 				Assert.Less(0, sql.IndexOf("INNER", 1), sql);
+			}
+		}
+
+
+		[Test, DataContextSource]
+		public void Issue528Test1(string context)
+		{
+			//using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
+				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
+
+				foreach(var re in result)
+				{
+					var ex = expected.Single(_ => _.Key == re.Key);
+
+					AreEqual(ex.Data, re.Data);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue528Test2(string context)
+		{
+			//using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
+				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
+
+				foreach(var re in result)
+				{
+					var ex = expected.Single(_ => _.Key == re.Key);
+
+					AreEqual(ex.Data, re.Data);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue528Test3(string context)
+		{
+			//using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
+				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
+
+				foreach(var re in result)
+				{
+					var ex = expected.Single(_ => _.Key == re.Key);
+
+					AreEqual(ex.Data.ToList(), re.Data.ToList());
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue508Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = (
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					where c.ChildID == 11
+					select p.ParentID
+							 ).Union(
+					from c in db.Child
+					where c.ChildID == 11
+					select c.ParentID
+								   );
+				var expected = (
+					from c in Child
+					join p in Parent on c.ParentID equals p.ParentID
+					where c.ChildID == 11
+					select p.ParentID
+							 ).Union(
+					from c in Child
+					where c.ChildID == 11
+					select c.ParentID
+								   );
+
+				AreEqual(expected, query);
 			}
 		}
 	}

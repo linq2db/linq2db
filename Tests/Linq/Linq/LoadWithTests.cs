@@ -247,8 +247,6 @@ namespace Tests.Linq
 					Assert.IsNull    (parent.Children3);
 				}
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 	}
 }

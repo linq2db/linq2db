@@ -211,5 +211,10 @@ namespace LinqToDB
 		/// Dictionary type for key-value pairs
 		/// </summary>
 		Dictionary,
+
+		/// <summary>
+		/// Result set (for example OracleDbType.RefCursor)
+		/// </summary>
+		Cursor
 	}
 }

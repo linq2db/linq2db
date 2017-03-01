@@ -348,9 +348,17 @@ namespace LinqToDB.Linq.Builder
 
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
-							return ReferenceEquals(levelExpression, expression) ?
+							var isBlockDisable = Builder.IsBlockDisable;
+
+							Builder.IsBlockDisable = true;
+
+							var r = ReferenceEquals(levelExpression, expression) ?
 								_key.BuildExpression(null,       0) :
 								_key.BuildExpression(expression, level + 1);
+
+							Builder.IsBlockDisable = isBlockDisable;
+
+							return r;
 						}
 					}
 				}
