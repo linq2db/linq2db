@@ -197,7 +197,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, TestDataType(CurrentProvider)]
+		[Test, TestDataType(CurrentProvider), Category("WindowsOnly")]
 		public void TestDataTypes(string typeName, int id, TypeTestData data, string context)
 		{
 			using (var conn = new DataConnection(context))

@@ -3,6 +3,7 @@ sudo: required
 dist: trusty
 
 addons:
+  postgresql: "9.6"
   apt:
     packages:
     - gettext
@@ -12,10 +13,12 @@ addons:
     - libunwind8
     - zlib1g
 
-dotnet: 1.0.0-preview2-003131
+dotnet: 1.0.0-preview2-003156
+
+#dotnet: 1.0.0-preview2-1-003177
 
 mono:  
-  - 4.2.3
+  - latest
 os:  
   - linux
   - osx
@@ -24,28 +27,36 @@ osx_image: xcode7.3
 before_install:
   - if test "$TRAVIS_OS_NAME" == "osx"; then brew update; brew install openssl; ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/; ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/; fi
 
+before_install:
+ - chmod +x build.sh
+
 install:
   - nuget install NUnit.Runners -Version 3.5.0 -OutputDirectory testrunner
 
-services:
-  - mysql
-  - postgresql
+#services:
+#  - mysql
+#  - postgresql
+
+before_script:
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then sudo service postgresql start; fi
+  - nuget restore linq2db.Mono.sln
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PG_DATA=$(brew --prefix)/var/postgres; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pg_ctl -w start -l postgres.log --pgdata ${PG_DATA}; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then createuser -s postgres; fi
+
 
 script:
-  - mysql -e 'CREATE DATABASE TestData;'
-  - psql -c 'create database testdata;' -U postgres
-  - mv Tests/Linq/TravisDataProviders.txt Tests/Linq/UserDataProviders.txt
-  - mv Tests/Linq/TravisDataProviders.Core.txt Tests/Linq/UserDataProviders.Core.txt
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mysql -e 'CREATE DATABASE TestData;'; fi
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then psql -c 'create database testdata;' -U postgres; fi
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv Tests/Linq/TravisDataProviders.txt Tests/Linq/UserDataProviders.txt; fi
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv Tests/Linq/TravisDataProviders.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.txt Tests/Linq/UserDataProviders.txt; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
   - ./build.sh
+#- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then psql -c 'create database testdata;' -U postgres; fi  
 #  - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
 #  - mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll --where "cat != WindowsOnly"
 
 #before_install:
 #  - sudo apt-get install nunit3-console
-
-before_install:
- - chmod +x build.sh
-
-before_script:
-  - nuget restore linq2db.Mono.sln
 
