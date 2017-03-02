@@ -421,8 +421,13 @@ namespace LinqToDB.Linq.Builder
 							var isList = typeof(ICollection).IsAssignableFromEx(me.Member.DeclaringType);
 
 							if (!isList)
+								isList =
+									me.Member.DeclaringType.IsGenericType &&
+									me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(ICollection<>);
+
+							if (!isList)
 								isList = me.Member.DeclaringType.GetInterfacesEx()
-									.Any(t => t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == typeof(IList<>));
+									.Any(t => t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == typeof(ICollection<>));
 
 							if (isList)
 							{
