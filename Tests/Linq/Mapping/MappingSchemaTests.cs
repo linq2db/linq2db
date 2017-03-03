@@ -208,7 +208,6 @@ namespace Tests.Mapping
 			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()("100000,999"));
 		}
 
-#pragma warning disable 649
 
 		class AttrTest
 		{

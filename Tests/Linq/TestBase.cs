@@ -492,6 +492,8 @@ namespace Tests
 			}
 		}
 
+		protected const int MaxPersonID = 3;
+
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
 		{
@@ -543,7 +545,7 @@ namespace Tests
 			}
 		}
 
-#region Parent/Child Model
+		#region Parent/Child Model
 
 		private          List<Parent> _parent;
 		protected IEnumerable<Parent>  Parent
@@ -726,6 +728,39 @@ namespace Tests
 
 #endregion
 
+		#region Inheritance Parent/Child Model
+
+		private   List<InheritanceParentBase> _inheritanceParent;
+		protected List<InheritanceParentBase>  InheritanceParent
+		{
+			get
+			{
+				if (_inheritanceParent == null)
+				{
+					using (var db = new TestDataConnection())
+						_inheritanceParent = db.InheritanceParent.ToList();
+				}
+
+				return _inheritanceParent;
+			}
+		}
+
+		private   List<InheritanceChildBase> _inheritanceChild;
+		protected List<InheritanceChildBase>  InheritanceChild
+		{
+			get
+			{
+				if (_inheritanceChild == null)
+				{
+					using (var db = new TestDataConnection())
+						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
+				}
+
+				return _inheritanceChild;
+			}
+		}
+		
+		#endregion
 
 #region Northwind
 
@@ -990,12 +1025,38 @@ namespace Tests
 		}
 	}
 
-    public static class Helpers
-    {
-        public static string ToInvariantString<T>(this T data)
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0}", data)
-                .Replace(',', '.').Trim(' ', '.', '0');
-        }
-    }
+	public static class Helpers
+	{
+		public static string ToInvariantString<T>(this T data)
+		{
+			return string.Format(CultureInfo.InvariantCulture, "{0}", data)
+				.Replace(',', '.').Trim(' ', '.', '0');
+		}
+	}
+
+	public class AllowMultipleQuery : IDisposable
+	{
+		public AllowMultipleQuery()
+		{
+			Configuration.Linq.AllowMultipleQuery = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
+
+	public class WithoutJoinOptimization : IDisposable
+	{
+		public WithoutJoinOptimization()
+		{
+			Configuration.Linq.OptimizeJoins = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.OptimizeJoins = true;
+		}
+	}
 }

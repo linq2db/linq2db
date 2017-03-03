@@ -1,91 +1,94 @@
 ﻿{
-	"name": "linq2db.Tests.Core",
-	"version": "1.7.5-*",
+  "name": "linq2db.Tests.Core",
+  "version": "1.7.7-*",
 
 
-	"buildOptions": {
-		"outputName": "linq2db.Tests",
-		"publicSign": true,
-		"keyFile": "../Linq/linq2db.Tests.snk"
-	},
+  "buildOptions": {
+    "outputName": "linq2db.Tests",
+    "publicSign": true,
+    "keyFile": "../Linq/linq2db.Tests.snk",
+    "nowarn": [ "CS0649", "CS0429" ]
+  },
 
-	"dependencies": {
-		"Model": "1.0.0-*",
-		"NUnit": "3.4.1"
-	},
+  "dependencies": {
+    "Model": {
+      "target": "project"
+    },
+    "NUnit": "3.4.1"
+  },
 
-	"testRunner": "nunit",
+  "testRunner": "nunit",
 
-	"frameworks": {
-		"netcoreapp1.0": {
-			"imports": "portable-net45+win8",
-			"dependencies": {
-				"Microsoft.NETCore.App": {
-					"version": "1.0.1",
-					"type": "platform"
-				},
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": "portable-net45+win8",
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.1",
+          "type": "platform"
+        },
 
-				"System.Data.Common": "4.1.0",
-				"System.Data.SqlClient": "4.1.0",
-				"System.Runtime.Serialization.Primitives": "4.1.1",
-				"System.Runtime.Loader": "4.0.0",
-				"System.Dynamic.Runtime": "4.0.11",
-				"System.Diagnostics.TraceSource": "4.0.0",
-				"Microsoft.CSharp": "4.0.1",
-				"System.Linq.Queryable": "4.0.1",
-				"System.Xml.XmlDocument": "4.0.1",
-				"System.Threading.Thread": "4.0.0",
-				"System.Net.NetworkInformation": "4.1.0",
-				"System.ComponentModel.Annotations": "4.1.0",
-				"Microsoft.Extensions.DependencyModel": "1.0.0",
+        "System.Data.Common": "4.3.0",
+        "System.Data.SqlClient": "4.3.0",
+        "System.Runtime.Serialization.Primitives": "4.3.0",
+        "System.Runtime.Loader": "4.3.0",
+        "System.Dynamic.Runtime": "4.3.0",
+        "System.Diagnostics.TraceSource": "4.3.0",
+        "Microsoft.CSharp": "4.3.0",
+        "System.Linq.Queryable": "4.3.0",
+        "System.Xml.XmlDocument": "4.3.0",
+        "System.Threading.Thread": "4.3.0",
+        "System.Net.NetworkInformation": "4.3.0",
+        "System.ComponentModel.Annotations": "4.3.0",
+        "Microsoft.Extensions.DependencyModel": "1.1.0",
 
-				"Microsoft.Data.SQLite": "1.0.0",
-				"SQLite": "3.13.0",
-				"MySql.Data": "7.0.5-IR21",
-				"Npgsql": "3.1.8",
+        "Microsoft.Data.SQLite": "1.1.0",
+        "SQLite": "3.13.0",
+        "MySql.Data": "7.0.6-IR31",
+        "Npgsql": "3.2.1",
 
-				"dotnet-test-nunit": "3.4.0-*",
-				"xunit.core": "2.1.0"
-			},
-			"buildOptions": {
-				"define": [ "NETSTANDARD", "NOFSHARP" ],
-				"compile": {
-									"exclude": [
-										"../Linq/**/AccessTests.cs",
-										"../Linq/**/DB2Tests.cs",
-										"../Linq/**/SybaseTests.cs",
-										"../Linq/**/SapHanaTests.cs",
-										"../Linq/**/MiniProfilerTests.cs",
-										"../Linq/**/FirebirdTests.cs",
-										"../Linq/**/InformixTests.cs",
-										"../Linq/**/DataServiceTests.cs",
-										"../Linq/**/AttributeReaderTests.cs",
-										"../Linq/**/XmlReaderTests.cs",
-										"../Linq/**/VisualBasicTests.cs",
-										"../Linq/**/OracleTests.cs",
-										"../Linq/**/SqlServerTypesTests.cs",
-										"../Linq/**/PartialTrust*.cs",
-										"../Linq/**/FSharpTests.cs",
-										"../Linq/**/SchemaProviderTests.cs",
-										"../Linq/obj/**/*.cs",
-										"../Linq/**/AssemblyInfo.cs"
+        "dotnet-test-nunit": "3.4.0-*",
+        "xunit.core": "2.1.0"
+      },
+      "buildOptions": {
+        "define": [ "NETSTANDARD", "NOFSHARP" ],
+        "compile": {
+          "exclude": [
+            "../Linq/**/AccessTests.cs",
+            "../Linq/**/DB2Tests.cs",
+            "../Linq/**/SybaseTests.cs",
+            "../Linq/**/SapHanaTests.cs",
+            "../Linq/**/MiniProfilerTests.cs",
+            "../Linq/**/FirebirdTests.cs",
+            "../Linq/**/InformixTests.cs",
+            "../Linq/**/DataServiceTests.cs",
+            "../Linq/**/AttributeReaderTests.cs",
+            "../Linq/**/XmlReaderTests.cs",
+            "../Linq/**/VisualBasicTests.cs",
+            "../Linq/**/OracleTests.cs",
+            "../Linq/**/SqlServerTypesTests.cs",
+            "../Linq/**/PartialTrust*.cs",
+            "../Linq/**/FSharpTests.cs",
+            "../Linq/**/SchemaProviderTests.cs",
+            "../Linq/obj/**/*.cs",
+            "../Linq/**/AssemblyInfo.cs"
 
 
-									],
-									"include": "../Linq/**/*.cs"
+          ],
+          "include": "../Linq/**/*.cs"
 
-				},
-				"copyToOutput": {
-					"mappings": {
-						"x86/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net451/x86/" },
-						"x64/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net451/x64/" },
-						"Database/": {
-							"include": "../../Data/"
-						}
-					}
+        },
+        "copyToOutput": {
+          "mappings": {
+            "x86/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net451/x86/" },
+            "x64/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net451/x64/" },
+            "Database/": {
+              "include": "../../Data/"
+            }
+          }
 
-				}
-			}
-		}
-	}
+        }
+      }
+    }
+  }
 }

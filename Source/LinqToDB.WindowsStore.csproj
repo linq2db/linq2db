@@ -311,6 +311,7 @@
     <Compile Include="SqlProvider\ConvertType.cs" />
     <Compile Include="SqlProvider\ISqlBuilder.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
+    <Compile Include="SqlProvider\JoinOptimizer.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
@@ -348,6 +349,7 @@
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
+    <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.snk" />

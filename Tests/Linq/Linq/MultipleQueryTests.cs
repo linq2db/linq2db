@@ -13,27 +13,21 @@ namespace Tests.Linq
 		//[Test, DataContextSource]
 		public void Test1(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children,
 					from p in db.Parent select p.Children);
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		//[Test, DataContextSource]
 		public void Test2(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent select p.Children.ToList(),
 					from p in db.Parent select p.Children.ToList());
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
@@ -48,23 +42,19 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void Test4(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
 					from p in    Parent select p.Children.Select(c => c.ChildID),
 					from p in db.Parent select p.Children.Select(c => c.ChildID));
 			}
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource(ProviderName.Sybase)]
 		public void Test5(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using (new AllowMultipleQuery())
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from ch in    Child
@@ -74,8 +64,6 @@ namespace Tests.Linq
 					from ch in db.Child
 					orderby ch.ChildID
 					select db.Parent.Where(p => p.ParentID == ch.Parent.ParentID).Select(p => p));
-
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 	}
 }

@@ -266,6 +266,7 @@
     <Compile Include="SqlProvider\ConvertType.cs" />
     <Compile Include="SqlProvider\ISqlBuilder.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
+    <Compile Include="SqlProvider\JoinOptimizer.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
@@ -288,6 +289,7 @@
     <Compile Include="SqlQuery\SqlDataType.cs" />
     <Compile Include="SqlQuery\SqlException.cs" />
     <Compile Include="SqlQuery\SqlExpression.cs" />
+    <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
     <Compile Include="SqlQuery\SqlField.cs" />
     <Compile Include="SqlQuery\SqlFunction.cs" />
     <Compile Include="SqlQuery\SqlParameter.cs" />

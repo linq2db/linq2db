@@ -300,7 +300,7 @@ namespace LinqToDB.Linq.Builder
 		Expression BuildSql(IBuildContext context, Expression expression)
 		{
 			var sqlex = ConvertToSqlExpression(context, expression);
-			var idx   = context.SelectQuery.Select.Add(sqlex);
+			var idx   = context.SelectQuery.Select.AddNew(sqlex);
 
 			idx = context.ConvertToParentIndex(idx, context);
 

@@ -26,8 +26,8 @@ namespace Tests.DataProvider
 		[AttributeUsage(AttributeTargets.Method)]
 		class OracleDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public OracleDataContextAttribute()
-				: base(ProviderName.OracleNative, ProviderName.OracleManaged)
+			public OracleDataContextAttribute(bool includeLinqService = true)
+				: base(includeLinqService, ProviderName.OracleNative, ProviderName.OracleManaged)
 			{
 			}
 		}
@@ -1177,11 +1177,9 @@ namespace Tests.DataProvider
 
 		class XmlData
 		{
-#pragma warning disable 0649
 			public int    Field1;
 			[Column(Length = 2)]
 			public string Field2;
-#pragma warning restore 0649
 		}
 
 		[Test, OracleDataContext]
@@ -1427,11 +1425,9 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow
 		{
-#pragma warning disable 0649
 			[Column] public decimal Decimal1;
 			[Column] public decimal Decimal2;
 			[Column] public decimal Decimal3;
-#pragma warning restore 0649
 		}
 
 		[Test, OracleDataContext]
@@ -1476,11 +1472,9 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow2
 		{
-#pragma warning disable 0649
 			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal1;
 			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal2;
 			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal3;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]
@@ -1653,6 +1647,22 @@ namespace Tests.DataProvider
 				}
 			}
 
+		}
+
+		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int id)
+		{
+			return dataConnection.QueryProc<Person>("Person_SelectByKey",
+				new DataParameter("pID", @id),
+				new DataParameter { Name = "retCursor", DataType = DataType.Cursor, Direction = ParameterDirection.ReturnValue });
+		}
+
+		[Test, OracleDataContext(false)]
+		public void PersonSelectByKey(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				AreEqual(Person.Where(_ => _.ID == 1), PersonSelectByKey(db, 1));
+			}
 		}
 	}
 }

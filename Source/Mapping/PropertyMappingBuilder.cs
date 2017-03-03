@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 namespace LinqToDB.Mapping
 {
-	using Expressions;
+    using System.Linq;
+
+    using Expressions;
 
 	public class PropertyMappingBuilder<T>
 	{
@@ -20,8 +23,6 @@ namespace LinqToDB.Mapping
 			_entity       = entity;
 			_memberGetter = memberGetter;
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
-			
-			SetColumn(a => a.IsColumn = true);
 		}
 
 		readonly Expression<Func<T,object>> _memberGetter;
@@ -46,6 +47,14 @@ namespace LinqToDB.Mapping
 			return _entity.Property(func);
 		}
 
+		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
+			Expression<Func<T, S>> prop,
+			Expression<Func<T, ID1>> thisKey,
+			Expression<Func<S, ID2>> otherKey )
+		{
+			return _entity.Association( prop, thisKey, otherKey );
+		}
+
 		public PropertyMappingBuilder<T> IsPrimaryKey(int order = -1)
 		{
 			_entity.HasPrimaryKey(_memberGetter, order);
@@ -60,18 +69,37 @@ namespace LinqToDB.Mapping
 
 		PropertyMappingBuilder<T> SetColumn(Action<ColumnAttribute> setColumn)
 		{
+			var getter     = _memberGetter;
+			var memberName = null as string;
+			var me         = _memberGetter.Body as MemberExpression;
+
+			if (me != null && me.Expression is MemberExpression)
+			{
+				for (var m = me; m != null; m = m.Expression as MemberExpression)
+				{
+					if (me != m)
+						memberName = me.Member.Name + (string.IsNullOrEmpty(memberName) ? "" : "." + memberName);
+
+					me = m;
+				}
+
+				var p  = Expression.Parameter(typeof(T));
+				getter = Expression.Lambda<Func<T, object>>(Expression.PropertyOrField(p, me.Member.Name), p);
+			}
+
 			_entity.SetAttribute(
-				_memberGetter,
-				false,
-				 _ =>
-				 {
-					var a = new ColumnAttribute { Configuration = _entity.Configuration };
-					setColumn(a);
-					return a;
-				 },
-				(_,a) => setColumn(a),
-				a => a.Configuration,
-				a => new ColumnAttribute(a));
+					getter,
+					false,
+					 _ =>
+					 {
+						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName};
+						setColumn(a);
+						return a;
+					 },
+					(_,a) => setColumn(a),
+					a     => a.Configuration,
+					a     => new ColumnAttribute(a),
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 			return this;
 		}
@@ -124,6 +152,11 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<T> IsNotColumn()
 		{
 			return SetColumn(a => a.IsColumn = false);
+		}
+
+		public PropertyMappingBuilder<T> IsColumn()
+		{
+			return SetColumn(a => a.IsColumn = true);
 		}
 
 		public PropertyMappingBuilder<T> HasLength(int length)
