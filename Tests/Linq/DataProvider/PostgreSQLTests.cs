@@ -197,12 +197,12 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, TestDataType(CurrentProvider), Category("WindowsOnly")]
+		[Test, TestDataType(CurrentProvider)]
 		public void TestDataTypes(string typeName, int id, TypeTestData data, string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(data.Func(typeName, this, conn), Is.EqualTo(data.Result));
+				Assert.AreEqual(data.Func(typeName, this, conn),data.Result);
 			}
 		}
 
