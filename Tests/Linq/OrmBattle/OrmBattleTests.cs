@@ -18,33 +18,36 @@ using System.Diagnostics;
 using System.Linq;
 using LinqToDB.Data;
 using NUnit.Framework;
+using Tests.Model;
 using Tests.OrmBattle.Helper;
+using static Tests.Model.Northwind;
+using LinqToDB;
 
 namespace Tests.OrmBattle
 {
 	[TestFixture]
-	public class OrmBattleTests
+	public class OrmBattleTests : TestBase
 	{
 		protected NorthwindDB db;
 
-		[SetUp]
-		protected void Setup()
+		protected void Setup(string context)
 		{
-			db = new NorthwindDB();
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+			db = new NorthwindDB(context);
 
-			Customers = db.Customers.ToList();
-			Employees = db.Employees.ToList();
-			Orders    = db.Orders.   ToList();
-			Products  = db.Products. ToList();
+			Customers = db.Customer.ToList();
+			Employees = db.Employee.ToList();
+			Order = db.Order.ToList();
+			Products = db.Product.ToList();
 
-			foreach (var o in Orders)
+			foreach (var o in Order)
 			{
-				o.Customer = Customers.SingleOrDefault(c => c.Id == o.CustomerID);
+				o.Customer = Customers.SingleOrDefault(c => c.CustomerID == o.CustomerID);
 				o.Employee = Employees.SingleOrDefault(e => e.EmployeeID == o.EmployeeID);
 			}
 
 			foreach (var c in Customers)
-			c.Orders = Orders.Where(o => c.Id == o.CustomerID).ToList();
+				c.Orders = Order.Where(o => c.CustomerID == o.CustomerID).ToList();
 
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s, s1) => Debug.WriteLine(s, s1);
@@ -53,18 +56,19 @@ namespace Tests.OrmBattle
 		[TearDown]
 		protected void TearDown()
 		{
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 			DataConnection.TraceSwitch = null;
 			db.Dispose();
 		}
 
-		List<Customer> Customers;
-		List<Employee> Employees;
-		List<Order> Orders;
-		List<Product> Products;
-		List<Category> Categories;
-		List<Supplier> Suppliers;
-		List<Product> DiscontinuedProducts;
-		List<OrderDetail> OrderDetails;
+		List<Northwind.Customer> Customers;
+		List<Northwind.Employee> Employees;
+		List<Northwind.Order> Order;
+		List<Northwind.Product> Products;
+		List<Northwind.Category> Categories;
+		List<Northwind.Supplier> Suppliers;
+		List<Northwind.Product> DiscontinuedProducts;
+		List<Northwind.OrderDetail> OrderDetails;
 
 		// DTO for testing purposes.
 		public class OrderDTO
@@ -76,14 +80,15 @@ namespace Tests.OrmBattle
 
 		#region Filtering tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereTest()
+		public void WhereTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				where o.ShipCity == "Seattle"
 				select o;
-			var expected = from o in Orders
+			var expected = from o in Order
 				where o.ShipCity == "Seattle"
 				select o;
 			var list = result.ToList();
@@ -91,15 +96,16 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereParameterTest()
+		public void WhereParameterTest(string context)
 		{
+			Setup(context);
 			var city = "Seattle";
-			var result = from o in db.Orders
+			var result = from o in db.Order
 				where o.ShipCity == city
 				select o;
-			var expected = from o in Orders
+			var expected = from o in Order
 				where o.ShipCity == city
 				select o;
 			var list = result.ToList();
@@ -112,34 +118,37 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereConditionsTest()
+		public void WhereConditionsTest(string context)
 		{
-			var result = from p in db.Products
+			Setup(context);
+			var result = from p in db.Product
 				where p.UnitsInStock < p.ReorderLevel && p.UnitsOnOrder == 0
 				select p;
 			var list = result.ToList();
 			Assert.AreEqual(1, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereNullTest()
+		public void WhereNullTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				where o.ShipRegion == null
 				select o;
 			var list = result.ToList();
 			Assert.AreEqual(507, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereNullParameterTest()
+		public void WhereNullParameterTest(string context)
 		{
+			Setup(context);
 			string region = null;
-			var result = from o in db.Orders
+			var result = from o in db.Order
 				where o.ShipRegion == region
 				select o;
 			var list = result.ToList();
@@ -150,80 +159,87 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(19, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereNullableTest()
+		public void WhereNullableTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				where !o.ShippedDate.HasValue
 				select o;
 			var list = result.ToList();
 			Assert.AreEqual(21, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereNullableParameterTest()
+		public void WhereNullableParameterTest(string context)
 		{
+			Setup(context);
 			DateTime? shippedDate = null;
-			var result = from o in db.Orders
+			var result = from o in db.Order
 				where o.ShippedDate == shippedDate
 				select o;
 			var list = result.ToList();
 			Assert.AreEqual(21, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereCoalesceTest()
+		public void WhereCoalesceTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				where (o.ShipRegion ?? "N/A") == "N/A"
 				select o;
 			var list = result.ToList();
 			Assert.AreEqual(507, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereConditionalTest()
+		public void WhereConditionalTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				where (o.ShipCity == "Seattle" ? "Home" : "Other") == "Home"
 				select o;
 			var list = result.ToList();
 			Assert.AreEqual(14, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereConditionalBooleanTest()
+		public void WhereConditionalBooleanTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				where o.ShipCity == "Seattle" ? true : false
 				select o;
 			var list = result.ToList();
 			Assert.AreEqual(14, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereAnonymousParameterTest()
+		public void WhereAnonymousParameterTest(string context)
 		{
+			Setup(context);
 			var cityRegion = new {City = "Seattle", Region = "WA"};
-			var result = from o in db.Orders
+			var result = from o in db.Order
 				where new {City = o.ShipCity, Region = o.ShipRegion} == cityRegion
 				select o;
 			var list = result.ToList();
 			Assert.AreEqual(14, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Filtering")]
-		public void WhereEntityParameterTest()
+		public void WhereEntityParameterTest(string context)
 		{
-			var order = db.Orders.OrderBy(o => o.OrderDate).First();
-			var result = from o in db.Orders
+			Setup(context);
+			var order = db.Order.OrderBy(o => o.OrderDate).First();
+			var result = from o in db.Order
 				where o == order
 				select o;
 			var list = result.ToList();
@@ -236,39 +252,42 @@ namespace Tests.OrmBattle
 
 		#region Projection tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectTest()
+		public void SelectTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				select o.ShipRegion;
-			var expected = from o in Orders
+			var expected = from o in Order
 				select o.ShipRegion;
 			var list = result.ToList();
 			Assert.AreEqual(expected.Count(), list.Count);
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectBooleanTest()
+		public void SelectBooleanTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				select o.ShipRegion == "WA";
-			var expected = from o in Orders
+			var expected = from o in Order
 				select o.ShipRegion == "WA";
 			var list = result.ToList();
 			Assert.AreEqual(expected.Count(), list.Count);
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectCalculatedTest()
+		public void SelectCalculatedTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				select o.Freight * 1000;
-			var expected = from o in Orders
+			var expected = from o in Order
 				select o.Freight * 1000;
 			var list = result.ToList();
 			var expectedList = expected.ToList();
@@ -283,16 +302,17 @@ namespace Tests.OrmBattle
 			CollectionAssert.AreEquivalent(expectedList, list);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectNestedCalculatedTest()
+		public void SelectNestedCalculatedTest(string context)
 		{
+			Setup(context);
 			var result = from r in
-				from o in db.Orders
+				from o in db.Order
 				select o.Freight * 1000
 				where r > 100000
 				select r / 1000;
-			var expected = from o in Orders
+			var expected = from o in Order
 				where o.Freight > 100
 				select o.Freight;
 			var list = result.ToList();
@@ -308,30 +328,32 @@ namespace Tests.OrmBattle
 			CollectionAssert.AreEquivalent(expectedList, list);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectAnonymousTest()
+		public void SelectAnonymousTest(string context)
 		{
-			var result = from o in db.Orders
-				select new {OrderID = o.Id, o.OrderDate, o.Freight};
-			var expected = from o in Orders
-				select new {OrderID = o.Id, o.OrderDate, o.Freight};
+			Setup(context);
+			var result = from o in db.Order
+				select new {OrderID = o.OrderID, o.OrderDate, o.Freight};
+			var expected = from o in Order
+				select new {OrderID = o.OrderID, o.OrderDate, o.Freight};
 			var list = result.ToList();
 			Assert.AreEqual(expected.Count(), list.Count);
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectSubqueryTest()
+		public void SelectSubqueryTest(string context)
 		{
+			Setup(context);
 			Assert.AreNotEqual(db.GetType().FullName, "OrmBattle.EF7Model.NorthwindContext",
 				"EF7 has infinite loop here");
 
-			var result = from o in db.Orders
-				select db.Customers.Where(c => c.Id == o.Customer.Id);
-			var expected = from o in Orders
-				select Customers.Where(c => c.Id == o.Customer.Id);
+			var result = from o in db.Order
+				select db.Customer.Where(c => c.CustomerID == o.Customer.CustomerID);
+			var expected = from o in Order
+				select Customers.Where(c => c.CustomerID == o.Customer.CustomerID);
 			var list = result.ToList();
 
 			var expectedList = expected.ToList();
@@ -345,59 +367,64 @@ namespace Tests.OrmBattle
 			//                     });
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectDtoTest()
+		public void SelectDtoTest(string context)
 		{
-			var result = from o in db.Orders
-				select new OrderDTO {Id = o.Id, CustomerId = o.Customer.Id, OrderDate = o.OrderDate};
+			Setup(context);
+			var result = from o in db.Order
+				select new OrderDTO {Id = o.OrderID, CustomerId = o.Customer.CustomerID, OrderDate = o.OrderDate};
 			var list = result.ToList();
-			Assert.AreEqual(Orders.Count(), list.Count);
+			Assert.AreEqual(Order.Count(), list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectNestedDtoTest()
+		public void SelectNestedDtoTest(string context)
 		{
+			Setup(context);
 			var result = from r in
-				from o in db.Orders
-				select new OrderDTO {Id = o.Id, CustomerId = o.Customer.Id, OrderDate = o.OrderDate}
+				from o in db.Order
+				select new OrderDTO {Id = o.OrderID, CustomerId = o.Customer.CustomerID, OrderDate = o.OrderDate}
 				where r.OrderDate > new DateTime(1998, 01, 01)
 				select r;
 			var list = result.ToList();
 			Assert.AreEqual(267, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectManyAnonymousTest()
+		public void SelectManyAnonymousTest(string context)
 		{
-			var result = from c in db.Customers
+			Setup(context);
+			var result = from c in db.Customer
 				from o in c.Orders
 				where o.Freight < 500.00M
-				select new {CustomerId = c.Id, o.Id, o.Freight};
+				select new {CustomerId = c.CustomerID, o.OrderID, o.Freight};
 			var list = result.ToList();
 			Assert.AreEqual(817, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectManyLetTest()
+		public void SelectManyLetTest(string context)
 		{
-			var result = from c in db.Customers
+			Setup(context);
+			var result = from c in db.Customer
 				from o in c.Orders
 				let freight = o.Freight
 				where freight < 500.00M
-				select new {CustomerId = c.Id, o.Id, freight};
+				select new {CustomerId = c.CustomerID, o.OrderID, freight};
 			var list = result.ToList();
 			Assert.AreEqual(817, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectManyGroupByTest()
+		public void SelectManyGroupByTest(string context)
 		{
-			var result = db.Orders
+			Setup(context);
+			var result = db.Order
 				.GroupBy(o => o.Customer)
 				.Where(g => g.Count() > 20)
 				.SelectMany(g => g.Select(o => o.Customer));
@@ -406,23 +433,25 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(89, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectManyOuterProjectionTest()
+		public void SelectManyOuterProjectionTest(string context)
 		{
-			var result = db.Customers.SelectMany(i => i.Orders.Select(t => i));
+			Setup(context);
+			var result = db.Customer.SelectMany(i => i.Orders.Select(t => i));
 
 			var list = result.ToList();
 			Assert.AreEqual(830, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Projections")]
-		public void SelectManyLeftJoinTest()
+		public void SelectManyLeftJoinTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
-				from o in c.Orders.Select(o => new {o.Id, c.CompanyName}).DefaultIfEmpty()
+				from c in db.Customer
+				from o in c.Orders.Select(o => new {o.OrderID, c.CompanyName}).DefaultIfEmpty()
 				select new {c.ContactName, o};
 
 			var list = result.ToList();
@@ -433,76 +462,81 @@ namespace Tests.OrmBattle
 
 		#region Take / Skip tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Take/Skip")]
-		public void TakeTest()
+		public void TakeTest(string context)
 		{
-			var result = (from o in db.Orders
-				orderby o.OrderDate, o.Id
+			Setup(context);
+			var result = (from o in db.Order
+				orderby o.OrderDate, o.OrderID
 				select o).Take(10);
-			var expected = (from o in Orders
-				orderby o.OrderDate, o.Id
+			var expected = (from o in Order
+				orderby o.OrderDate, o.OrderID
 				select o).Take(10);
 			var list = result.ToList();
 			Assert.AreEqual(10, list.Count);
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Take/Skip")]
-		public void SkipTest()
+		public void SkipTest(string context)
 		{
-			var result = (from o in db.Orders
-				orderby o.OrderDate, o.Id
+			Setup(context);
+			var result = (from o in db.Order
+				orderby o.OrderDate, o.OrderID
 				select o).Skip(10);
-			var expected = (from o in Orders
-				orderby o.OrderDate, o.Id
+			var expected = (from o in Order
+				orderby o.OrderDate, o.OrderID
 				select o).Skip(10);
 			var list = result.ToList();
 			Assert.AreEqual(820, list.Count);
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Take/Skip")]
-		public void TakeSkipTest()
+		public void TakeSkipTest(string context)
 		{
-			var result = (from o in db.Orders
-				orderby o.OrderDate, o.Id
+			Setup(context);
+			var result = (from o in db.Order
+				orderby o.OrderDate, o.OrderID
 				select o).Skip(10).Take(10);
-			var expected = (from o in Orders
-				orderby o.OrderDate, o.Id
+			var expected = (from o in Order
+				orderby o.OrderDate, o.OrderID
 				select o).Skip(10).Take(10);
 			var list = result.ToList();
 			Assert.AreEqual(10, list.Count);
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Take/Skip")]
-		public void TakeNestedTest()
+		public void TakeNestedTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
-				select new {Customer = c, TopOrders = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
+				from c in db.Customer
+				select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
 			var expected =
 				from c in Customers
-				select new {Customer = c, TopOrders = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
+				select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
 			var list = result.ToList();
 			Assert.AreEqual(expected.Count(), list.Count);
 			foreach (var anonymous in list)
 			{
-				var count = anonymous.TopOrders.ToList().Count;
+				var count = anonymous.TopOrder.ToList().Count;
 				Assert.GreaterOrEqual(count, 0);
 				Assert.LessOrEqual(count, 5);
 			}
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Take/Skip")]
-		public void ComplexTakeSkipTest()
+		public void ComplexTakeSkipTest(string context)
 		{
-			var original = db.Orders.ToList()
+			Setup(context);
+			var original = db.Order.ToList()
 				.OrderBy(o => o.OrderDate)
 				.Skip(100)
 				.Take(50)
@@ -511,7 +545,7 @@ namespace Tests.OrmBattle
 				.Select(o => o.RequiredDate)
 				.Distinct()
 				.Skip(10);
-			var result = db.Orders
+			var result = db.Order
 				.OrderBy(o => o.OrderDate)
 				.Skip(100)
 				.Take(50)
@@ -530,17 +564,18 @@ namespace Tests.OrmBattle
 
 		#region Ordering tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Ordering")]
-		public void OrderByTest()
+		public void OrderByTest(string context)
 		{
+			Setup(context);
 			var result =
-				from o in db.Orders
-				orderby o.OrderDate, o.ShippedDate descending, o.Id
+				from o in db.Order
+				orderby o.OrderDate, o.ShippedDate descending, o.OrderID
 				select o;
 			var expected =
-				from o in Orders
-				orderby o.OrderDate, o.ShippedDate descending, o.Id
+				from o in Order
+				orderby o.OrderDate, o.ShippedDate descending, o.OrderID
 				select o;
 
 			var list = result.ToList();
@@ -549,73 +584,78 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Ordering")]
-		public void OrderByWhereTest()
+		public void OrderByWhereTest(string context)
 		{
-			var result = (from o in db.Orders
-				orderby o.OrderDate, o.Id
+			Setup(context);
+			var result = (from o in db.Order
+				orderby o.OrderDate, o.OrderID
 				where o.OrderDate > new DateTime(1997, 1, 1)
 				select o).Take(10);
-			var expected = (from o in Orders
+			var expected = (from o in Order
 				where o.OrderDate > new DateTime(1997, 1, 1)
-				orderby o.OrderDate, o.Id
+				orderby o.OrderDate, o.OrderID
 				select o).Take(10);
 			var list = result.ToList();
 			Assert.AreEqual(10, list.Count);
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Ordering")]
-		public void OrderByCalculatedColumnTest()
+		public void OrderByCalculatedColumnTest(string context)
 		{
+			Setup(context);
 			var result =
-				from o in db.Orders
-				orderby o.Freight * o.Id descending
+				from o in db.Order
+				orderby o.Freight * o.OrderID descending
 				select o;
 			var expected =
-				from o in Orders
-				orderby o.Freight * o.Id descending
+				from o in Order
+				orderby o.Freight * o.OrderID descending
 				select o;
 			Assert.IsTrue(expected.SequenceEqual(result));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Ordering")]
-		public void OrderByEntityTest()
+		public void OrderByEntityTest(string context)
 		{
+			Setup(context);
 			var result =
-				from o in db.Orders
+				from o in db.Order
 				orderby o
 				select o;
 			var expected =
-				from o in Orders
-				orderby o.Id
+				from o in Order
+				orderby o.OrderID
 				select o;
-			Assert.IsTrue(expected.SequenceEqual(result, new GenericEqualityComparer<Order>(o => o.Id)));
+			Assert.IsTrue(expected.SequenceEqual(result, new GenericEqualityComparer<Order>(o => o.OrderID)));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Ordering")]
-		public void OrderByAnonymousTest()
+		public void OrderByAnonymousTest(string context)
 		{
+			Setup(context);
 			var result =
-				from o in db.Orders
-				orderby new {o.OrderDate, o.ShippedDate, o.Id}
+				from o in db.Order
+				orderby new {o.OrderDate, o.ShippedDate, o.OrderID}
 				select o;
 			var expected =
-				from o in Orders
-				orderby o.OrderDate, o.ShippedDate, o.Id
+				from o in Order
+				orderby o.OrderDate, o.ShippedDate, o.OrderID
 				select o;
-			Assert.IsTrue(expected.SequenceEqual(result, new GenericEqualityComparer<Order>(o => o.Id)));
+			Assert.IsTrue(expected.SequenceEqual(result, new GenericEqualityComparer<Order>(o => o.OrderID)));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Ordering")]
-		public void OrderByDistinctTest()
+		public void OrderByDistinctTest(string context)
 		{
-			var result = db.Customers
+			Setup(context);
+			var result = db.Customer
 				.OrderBy(c => c.CompanyName)
 				.Select(c => c.City)
 				.Distinct()
@@ -630,32 +670,34 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(result));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Ordering")]
-		public void OrderBySelectManyTest()
+		public void OrderBySelectManyTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers.OrderBy(c => c.ContactName)
-				from o in db.Orders.OrderBy(o => o.OrderDate)
+				from c in db.Customer.OrderBy(c => c.ContactName)
+				from o in db.Order.OrderBy(o => o.OrderDate)
 				where c == o.Customer
 				select new {c.ContactName, o.OrderDate};
 			var expected =
 				from c in Customers.OrderBy(c => c.ContactName)
-				from o in Orders.OrderBy(o => o.OrderDate)
+				from o in Order.OrderBy(o => o.OrderDate)
 				where c == o.Customer
 				select new {c.ContactName, o.OrderDate};
 			Assert.IsTrue(expected.SequenceEqual(result));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Ordering")]
-		public void OrderByPredicateTest()
+		public void OrderByPredicateTest(string context)
 		{
+			Setup(context);
 			var result =
-				db.Orders.OrderBy(o => o.Freight > 0 && o.ShippedDate != null).ThenBy(o => o.Id).Select(o => o.Id);
+				db.Order.OrderBy(o => o.Freight > 0 && o.ShippedDate != null).ThenBy(o => o.OrderID).Select(o => o.OrderID);
 			var list = result.ToList();
 			var original =
-				Orders.OrderBy(o => o.Freight > 0 && o.ShippedDate != null).ThenBy(o => o.Id).Select(o => o.Id).ToList();
+				Order.OrderBy(o => o.Freight > 0 && o.ShippedDate != null).ThenBy(o => o.OrderID).Select(o => o.OrderID).ToList();
 			Assert.IsTrue(list.SequenceEqual(original));
 		}
 
@@ -663,32 +705,35 @@ namespace Tests.OrmBattle
 
 		#region Grouping tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void GroupByTest()
+		public void GroupByTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				group o by o.OrderDate;
 			var list = result.ToList();
 			Assert.AreEqual(480, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void GroupByReferenceTest()
+		public void GroupByReferenceTest(string context)
 		{
-			var result = from o in db.Orders
+			Setup(context);
+			var result = from o in db.Order
 				group o by o.Customer;
 			var list = result.ToList();
 			Assert.AreEqual(89, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void GroupByWhereTest()
+		public void GroupByWhereTest(string context)
 		{
+			Setup(context);
 			var result =
-				from o in db.Orders
+				from o in db.Order
 				group o by o.OrderDate
 				into g
 				where g.Count() > 5
@@ -697,22 +742,24 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(1, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void GroupByTestAnonymous()
+		public void GroupByTestAnonymous(string context)
 		{
-			var result = from c in db.Customers
+			Setup(context);
+			var result = from c in db.Customer
 				group c by new {c.Region, c.City};
 			var list = result.ToList();
 			Assert.AreEqual(69, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void GroupByCalculatedTest()
+		public void GroupByCalculatedTest(string context)
 		{
+			Setup(context);
 			var result =
-				from o in db.Orders
+				from o in db.Order
 				group o by o.Freight > 50 ? o.Freight > 100 ? "expensive" : "average" : "cheap"
 				into g
 				select g;
@@ -720,11 +767,12 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(3, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void GroupBySelectManyTest()
+		public void GroupBySelectManyTest(string context)
 		{
-			var result = db.Customers
+			Setup(context);
+			var result = db.Customer
 				.GroupBy(c => c.City)
 				.SelectMany(g => g);
 
@@ -732,12 +780,13 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(91, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void GroupByCalculateAggregateTest()
+		public void GroupByCalculateAggregateTest(string context)
 		{
+			Setup(context);
 			var result =
-				from o in db.Orders
+				from o in db.Order
 				group o by o.Customer
 				into g
 				select g.Sum(o => o.Freight);
@@ -746,12 +795,13 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(89, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void GroupByCalculateManyAggreagetes()
+		public void GroupByCalculateManyAggreagetes(string context)
 		{
+			Setup(context);
 			var result =
-				from o in db.Orders
+				from o in db.Order
 				group o by o.Customer
 				into g
 				select new
@@ -766,12 +816,13 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(89, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void GroupByAggregate()
+		public void GroupByAggregate(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
+				from c in db.Customer
 				group c by c.Orders.Average(o => o.Freight) >= 80;
 			var list = result.ToList();
 			Assert.AreEqual(2, list.Count);
@@ -779,34 +830,35 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(71, firstGroupList.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Grouping")]
-		public void ComplexGroupingTest()
+		public void ComplexGroupingTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
+				from c in db.Customer
 				select new
 				{
 					c.CompanyName,
 					YearGroups =
-						from o in c.Orders
-						group o by o.OrderDate.Value.Year
-						into yg
-						select new
-						{
-							Year = yg.Key,
-							MonthGroups =
-								from o in yg
-								group o by o.OrderDate.Value.Month
-								into mg
-								select new {Month = mg.Key, Orders = mg}
-						}
+					from o in c.Orders
+					group o by o.OrderDate.Value.Year
+					into yg
+					select new
+					{
+						Year = yg.Key,
+						MonthGroups =
+						from o in yg
+						group o by o.OrderDate.Value.Month
+						into mg
+						select new {Month = mg.Key, Order = mg}
+					}
 				};
 			var list = result.ToList();
 			foreach (var customer in list)
 			{
-				var ordersList = customer.YearGroups.ToList();
-				Assert.LessOrEqual(ordersList.Count, 3);
+				var OrderList = customer.YearGroups.ToList();
+				Assert.LessOrEqual(OrderList.Count, 3);
 			}
 		}
 
@@ -814,28 +866,30 @@ namespace Tests.OrmBattle
 
 		#region Set operations / Distinct tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Set operations")]
-		public void ConcatTest()
+		public void ConcatTest(string context)
 		{
-			var result = db.Customers.Where(c => c.Orders.Count <= 1)
-				.Concat(db.Customers.Where(c => c.Orders.Count > 1));
+			Setup(context);
+			var result = db.Customer.Where(c => c.Orders.Count <= 1)
+				.Concat(db.Customer.Where(c => c.Orders.Count > 1));
 			var list = result.ToList();
 			Assert.AreEqual(91, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Set operations")]
-		public void UnionTest()
+		public void UnionTest(string context)
 		{
+			Setup(context);
 			var result = (
-				from c in db.Customers
-				select c.Phone)
+					from c in db.Customer
+					select c.Phone)
 				.Union(
-					from c in db.Customers
+					from c in db.Customer
 					select c.Fax)
 				.Union(
-					from e in db.Employees
+					from e in db.Employee
 					select e.HomePhone
 				);
 
@@ -843,73 +897,80 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(167, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Set operations")]
-		public void ExceptTest()
+		public void ExceptTest(string context)
 		{
+			Setup(context);
 			var result =
-				db.Customers.Except(db.Customers.Where(c => c.Orders.Count() > 0));
+				db.Customer.Except(db.Customer.Where(c => c.Orders.Count() > 0));
 			var list = result.ToList();
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Set operations")]
-		public void IntersectTest()
+		public void IntersectTest(string context)
 		{
+			Setup(context);
 			var result =
-				db.Customers.Intersect(db.Customers.Where(c => c.Orders.Count() > 0));
+				db.Customer.Intersect(db.Customer.Where(c => c.Orders.Count() > 0));
 			var list = result.ToList();
 			Assert.AreEqual(89, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Set operations")]
-		public void DistinctTest()
+		public void DistinctTest(string context)
 		{
-			var result = db.Orders.Select(c => c.Freight).Distinct();
+			Setup(context);
+			var result = db.Order.Select(c => c.Freight).Distinct();
 			var list = result.ToList();
 			Assert.AreEqual(799, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Set operations")]
-		public void DistinctTakeLastTest()
+		public void DistinctTakeLastTest(string context)
 		{
+			Setup(context);
 			var result =
-				(from o in db.Orders
-					orderby o.OrderDate
-					select o.OrderDate).Distinct().Take(5);
+			(from o in db.Order
+				orderby o.OrderDate
+				select o.OrderDate).Distinct().Take(5);
 			var list = result.ToList();
 			Assert.AreEqual(5, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Set operations")]
-		public void DistinctTakeFirstTest()
+		public void DistinctTakeFirstTest(string context)
 		{
+			Setup(context);
 			var result =
-				(from o in db.Orders
-					orderby o.OrderDate
-					select o.OrderDate).Take(5).Distinct();
+			(from o in db.Order
+				orderby o.OrderDate
+				select o.OrderDate).Take(5).Distinct();
 			var list = result.ToList();
 			Assert.AreEqual(4, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Set operations")]
-		public void DistinctEntityTest()
+		public void DistinctEntityTest(string context)
 		{
-			var result = db.Customers.Distinct();
+			Setup(context);
+			var result = db.Customer.Distinct();
 			var list = result.ToList();
 			Assert.AreEqual(91, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Set operations")]
-		public void DistinctAnonymousTest()
+		public void DistinctAnonymousTest(string context)
 		{
-			var result = db.Customers.Select(c => new {c.Region, c.City}).Distinct();
+			Setup(context);
+			var result = db.Customer.Select(c => new {c.Region, c.City}).Distinct();
 			var list = result.ToList();
 			Assert.AreEqual(69, list.Count);
 		}
@@ -918,38 +979,41 @@ namespace Tests.OrmBattle
 
 		#region Type casts
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Type casts")]
-		public void TypeCastIsChildTest()
+		public void TypeCastIsChildTest(string context)
 		{
-			var result = db.Products.Where(p => p is DiscontinuedProduct);
-			var expected = db.Products.ToList().Where(p => p is DiscontinuedProduct);
+			Setup(context);
+			var result = db.Product.Where(p => p is DiscontinuedProduct);
+			var expected = db.Product.ToList().Where(p => p is DiscontinuedProduct);
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Type casts")]
-		public void TypeCastIsParentTest()
+		public void TypeCastIsParentTest(string context)
 		{
-			var result = db.Products.Where(p => p is Product);
-			var expected = db.Products.ToList();
+			Setup(context);
+			var result = db.Product.Where(p => p is Product);
+			var expected = db.Product.ToList();
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Type casts")]
-		public void TypeCastIsChildConditionalTest()
+		public void TypeCastIsChildConditionalTest(string context)
 		{
-			var result = db.Products
+			Setup(context);
+			var result = db.Product
 				.Select(x => x is DiscontinuedProduct
 					? x
 					: null);
 
-			var expected = db.Products.ToList()
+			var expected = db.Product.ToList()
 				.Select(x => x is DiscontinuedProduct
 					? x
 					: null);
@@ -961,29 +1025,31 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(list.Contains(null));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Type casts")]
-		public void TypeCastOfTypeTest()
+		public void TypeCastOfTypeTest(string context)
 		{
-			var result = db.Products.OfType<DiscontinuedProduct>();
-			var expected = db.Products.ToList().OfType<DiscontinuedProduct>();
+			Setup(context);
+			var result = db.Product.OfType<DiscontinuedProduct>();
+			var expected = db.Product.ToList().OfType<DiscontinuedProduct>();
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Type casts")]
-		public void TypeCastAsTest()
+		public void TypeCastAsTest(string context)
 		{
-			var result = db.DiscontinuedProducts
+			Setup(context);
+			var result = db.DiscontinuedProduct
 				.Select(discontinuedProduct => discontinuedProduct as Product)
 				.Select(product =>
 					product == null
 						? "NULL"
 						: product.ProductName);
 
-			var expected = db.DiscontinuedProducts.ToList()
+			var expected = db.DiscontinuedProduct.ToList()
 				.Select(discontinuedProduct => discontinuedProduct as Product)
 				.Select(product =>
 					product == null
@@ -1000,40 +1066,44 @@ namespace Tests.OrmBattle
 
 		#region Element operations
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Element operations")]
-		public void FirstTest()
+		public void FirstTest(string context)
 		{
-			var customer = db.Customers.First();
+			Setup(context);
+			var customer = db.Customer.First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Element operations")]
-		public void FirstOrDefaultTest()
+		public void FirstOrDefaultTest(string context)
 		{
-			var customer = db.Customers.Where(c => c.Id == "ALFKI").FirstOrDefault();
+			Setup(context);
+			var customer = db.Customer.Where(c => c.CustomerID == "ALFKI").FirstOrDefault();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Element operations")]
-		public void FirstPredicateTest()
+		public void FirstPredicateTest(string context)
 		{
-			var customer = db.Customers.First(c => c.Id == "ALFKI");
+			Setup(context);
+			var customer = db.Customer.First(c => c.CustomerID == "ALFKI");
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Element operations")]
-		public void NestedFirstOrDefaultTest()
+		public void NestedFirstOrDefaultTest(string context)
 		{
+			Setup(context);
 			var result =
-				from p in db.Products
+				from p in db.Product
 				select new
 				{
-					ProductID = p.Id,
-					MaxOrder = db.OrderDetails
+					ProductID = p.ProductID,
+					MaxOrder = db.OrderDetail
 						.Where(od => od.Product == p)
 						.OrderByDescending(od => od.UnitPrice * od.Quantity)
 						.FirstOrDefault()
@@ -1043,50 +1113,55 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Element operations")]
-		public void FirstOrDefaultEntitySetTest()
+		public void FirstOrDefaultEntitySetTest(string context)
 		{
+			Setup(context);
 			var customersCount = Customers.Count;
-			var result = db.Customers.Select(c => c.Orders.FirstOrDefault());
+			var result = db.Customer.Select(c => c.Orders.FirstOrDefault());
 			var list = result.ToList();
 			Assert.AreEqual(customersCount, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Element operations")]
-		public void NestedSingleOrDefaultTest()
+		public void NestedSingleOrDefaultTest(string context)
 		{
+			Setup(context);
 			var customersCount = Customers.Count;
-			var result = db.Customers.Select(c => c.Orders.Take(1).SingleOrDefault());
+			var result = db.Customer.Select(c => c.Orders.Take(1).SingleOrDefault());
 			var list = result.ToList();
 			Assert.AreEqual(customersCount, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Element operations")]
-		public void NestedSingleTest()
+		public void NestedSingleTest(string context)
 		{
-			var result = db.Customers.Where(c => c.Orders.Count() > 0).Select(c => c.Orders.Take(1).Single());
+			Setup(context);
+			var result = db.Customer.Where(c => c.Orders.Count() > 0).Select(c => c.Orders.Take(1).Single());
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Element operations")]
-		public void ElementAtTest()
+		public void ElementAtTest(string context)
 		{
-			var customer = db.Customers.OrderBy(c => c.Id).ElementAt(15);
+			Setup(context);
+			var customer = db.Customer.OrderBy(c => c.CustomerID).ElementAt(15);
 			Assert.IsNotNull(customer);
-			Assert.AreEqual("CONSH", customer.Id);
+			Assert.AreEqual("CONSH", customer.CustomerID);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Element operations")]
-		public void NestedElementAtTest()
+		public void NestedElementAtTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
+				from c in db.Customer
 				where c.Orders.Count() > 5
 				select c.Orders.ElementAt(3);
 
@@ -1098,50 +1173,53 @@ namespace Tests.OrmBattle
 
 		#region Contains / Any / All tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("All/Any/Contains")]
-		public void AllNestedTest()
+		public void AllNestedTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
+				from c in db.Customer
 				where
-					db.Orders.Where(o => o.Customer == c)
-						.All(o => db.Employees.Where(e => o.Employee == e).Any(e => e.FirstName.StartsWith("A")))
+				db.Order.Where(o => o.Customer == c)
+					.All(o => db.Employee.Where(e => o.Employee == e).Any(e => e.FirstName.StartsWith("A")))
 				select c;
 			var list = result.ToList();
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("All/Any/Contains")]
-		public void ComplexAllTest()
+		public void ComplexAllTest(string context)
 		{
+			Setup(context);
 			var result =
-				from o in db.Orders
+				from o in db.Order
 				where
-					db.Customers.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
-					db.Employees.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
+				db.Customer.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
+				db.Employee.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
 				select o;
 			var expected =
-				from o in Orders
+				from o in Order
 				where
-					Customers.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
-					Employees.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
+				Customers.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
+				Employees.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
 				select o;
 
 			Assert.AreEqual(0, expected.Except(result).Count());
 			Assert.AreEqual(result.ToList().Count, 366);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("All/Any/Contains")]
-		public void ContainsNestedTest()
+		public void ContainsNestedTest(string context)
 		{
-			var result = from c in db.Customers
+			Setup(context);
+			var result = from c in db.Customer
 				select new
 				{
 					Customer = c,
-					HasNewOrders = db.Orders
+					HasNewOrder = db.Order
 						.Where(o => o.OrderDate > new DateTime(2001, 1, 1))
 						.Select(o => o.Customer)
 						.Contains(c)
@@ -1154,41 +1232,44 @@ namespace Tests.OrmBattle
 				select new
 				{
 					Customer = c,
-					HasNewOrders = Orders
+					HasNewOrder = Order
 						.Where(o => o.OrderDate > new DateTime(2001, 1, 1))
 						.Select(o => o.Customer)
 						.Contains(c)
 				};
 			Assert.AreEqual(0, expected.Except(resultList).Count());
-			Assert.AreEqual(0, resultList.Count(i => i.HasNewOrders));
+			Assert.AreEqual(0, resultList.Count(i => i.HasNewOrder));
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("All/Any/Contains")]
-		public void AnyTest()
+		public void AnyTest(string context)
 		{
-			var result = db.Customers.Where(c => c.Orders.Any(o => o.Freight > 400));
+			Setup(context);
+			var result = db.Customer.Where(c => c.Orders.Any(o => o.Freight > 400));
 			var expected = Customers.Where(c => c.Orders.Any(o => o.Freight > 400));
 			Assert.AreEqual(0, expected.Except(result).Count());
 			Assert.AreEqual(10, result.ToList().Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("All/Any/Contains")]
-		public void AnyParameterizedTest()
+		public void AnyParameterizedTest(string context)
 		{
+			Setup(context);
 			var ids = new[] {"ABCDE", "ALFKI"};
-			var result = db.Customers.Where(c => ids.Any(id => c.Id == id));
+			var result = db.Customer.Where(c => ids.Any(id => c.CustomerID == id));
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("All/Any/Contains")]
-		public void ContainsParameterizedTest()
+		public void ContainsParameterizedTest(string context)
 		{
+			Setup(context);
 			var customerIDs = new[] {"ALFKI", "ANATR", "AROUT", "BERGS"};
-			var result = db.Orders.Where(o => customerIDs.Contains(o.Customer.Id));
+			var result = db.Order.Where(o => customerIDs.Contains(o.Customer.CustomerID));
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			Assert.AreEqual(41, list.Count);
@@ -1198,49 +1279,54 @@ namespace Tests.OrmBattle
 
 		#region Aggregates tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Aggregates")]
-		public void SumTest()
+		public void SumTest(string context)
 		{
-			var sum = db.Orders.Select(o => o.Freight).Sum();
-			var sum1 = Orders.Select(o => o.Freight).Sum();
+			Setup(context);
+			var sum = db.Order.Select(o => o.Freight).Sum();
+			var sum1 = Order.Select(o => o.Freight).Sum();
 			Assert.AreEqual(sum1, sum);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Aggregates")]
-		public void CountPredicateTest()
+		public void CountPredicateTest(string context)
 		{
-			var count = db.Orders.Count(o => o.Id > 10);
-			var count1 = Orders.Count(o => o.Id > 10);
+			Setup(context);
+			var count = db.Order.Count(o => o.OrderID > 10);
+			var count1 = Order.Count(o => o.OrderID > 10);
 			Assert.AreEqual(count1, count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Aggregates")]
-		public void NestedCountTest()
+		public void NestedCountTest(string context)
 		{
-			var result = db.Customers.Where(c => db.Orders.Count(o => o.Customer.Id == c.Id) > 5);
-			var expected = Customers.Where(c => db.Orders.Count(o => o.Customer.Id == c.Id) > 5);
+			Setup(context);
+			var result = db.Customer.Where(c => db.Order.Count(o => o.Customer.CustomerID == c.CustomerID) > 5);
+			var expected = Customers.Where(c => db.Order.Count(o => o.Customer.CustomerID == c.CustomerID) > 5);
 
 			Assert.IsTrue(expected.Except(result).Count() == 0);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Aggregates")]
-		public void NullableSumTest()
+		public void NullableSumTest(string context)
 		{
-			var sum = db.Orders.Select(o => (int?) o.Id).Sum();
-			var sum1 = Orders.Select(o => (int?) o.Id).Sum();
+			Setup(context);
+			var sum = db.Order.Select(o => (int?) o.OrderID).Sum();
+			var sum1 = Order.Select(o => (int?) o.OrderID).Sum();
 			Assert.AreEqual(sum1, sum);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Aggregates")]
-		public void MaxCountTest()
+		public void MaxCountTest(string context)
 		{
-			var max = db.Customers.Max(c => db.Orders.Count(o => o.Customer.Id == c.Id));
-			var max1 = Customers.Max(c => Orders.Count(o => o.Customer.Id == c.Id));
+			Setup(context);
+			var max = db.Customer.Max(c => db.Order.Count(o => o.Customer.CustomerID == c.CustomerID));
+			var max1 = Customers.Max(c => Order.Count(o => o.Customer.CustomerID == c.CustomerID));
 			Assert.AreEqual(max1, max);
 		}
 
@@ -1248,57 +1334,61 @@ namespace Tests.OrmBattle
 
 		#region Join tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Join")]
-		public void GroupJoinTest()
+		public void GroupJoinTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
-				join o in db.Orders on c.Id equals o.Customer.Id into go
-				join e in db.Employees on c.City equals e.City into ge
+				from c in db.Customer
+				join o in db.Order on c.CustomerID equals o.Customer.CustomerID into go
+				join e in db.Employee on c.City equals e.City into ge
 				select new
 				{
-					OrdersCount = go.Count(),
+					OrderCount = go.Count(),
 					EmployeesCount = ge.Count()
 				};
 			var list = result.ToList();
 			Assert.AreEqual(91, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Join")]
-		public void JoinTest()
+		public void JoinTest(string context)
 		{
+			Setup(context);
 			var result =
-				from p in db.Products
-				join s in db.Suppliers on p.Supplier.Id equals s.Id
+				from p in db.Product
+				join s in db.Supplier on p.Supplier.SupplierID equals s.SupplierID
 				select new {p.ProductName, s.ContactName, s.Phone};
 
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Join")]
-		public void JoinByAnonymousTest()
+		public void JoinByAnonymousTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
-				join o in db.Orders on new {Customer = c, Name = c.ContactName} equals
-					new {o.Customer, Name = o.Customer.ContactName}
+				from c in db.Customer
+				join o in db.Order on new {Customer = c, Name = c.ContactName} equals
+				new {o.Customer, Name = o.Customer.ContactName}
 				select new {c.ContactName, o.OrderDate};
 
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Join")]
-		public void LeftJoinTest()
+		public void LeftJoinTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Categories
-				join p in db.Products on c.Id equals p.Category.Id into g
+				from c in db.Category
+				join p in db.Product on c.CategoryID equals p.Category.CategoryID into g
 				from p in g.DefaultIfEmpty()
 				select new {Name = p == null ? "Nothing!" : p.ProductName, c.CategoryName};
 
@@ -1310,26 +1400,28 @@ namespace Tests.OrmBattle
 
 		#region References tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("References")]
-		public void JoinByReferenceTest()
+		public void JoinByReferenceTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
-				join o in db.Orders on c equals o.Customer
+				from c in db.Customer
+				join o in db.Order on c equals o.Customer
 				select new {c.ContactName, o.OrderDate};
 
 			var list = result.ToList();
 			Assert.AreEqual(830, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("References")]
-		public void CompareReferenceTest()
+		public void CompareReferenceTest(string context)
 		{
+			Setup(context);
 			var result =
-				from c in db.Customers
-				from o in db.Orders
+				from c in db.Customer
+				from o in db.Order
 				where c == o.Customer
 				select new {c.ContactName, o.OrderDate};
 
@@ -1337,12 +1429,13 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(830, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("References")]
-		public void ReferenceNavigationTestTest()
+		public void ReferenceNavigationTestTest(string context)
 		{
+			Setup(context);
 			var result =
-				from od in db.OrderDetails
+				from od in db.OrderDetail
 				where od.Product.Category.CategoryName == "Seafood"
 				select new {od.Order, od.Product};
 
@@ -1356,11 +1449,12 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("References")]
-		public void EntitySetCountTest()
+		public void EntitySetCountTest(string context)
 		{
-			var result = db.Categories.Where(c => c.Products.Count > 10);
+			Setup(context);
+			var result = db.Category.Where(c => c.Products.Count > 10);
 			var list = result.ToList();
 			Assert.AreEqual(4, list.Count);
 		}
@@ -1369,13 +1463,14 @@ namespace Tests.OrmBattle
 
 		#region Complex tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Complex")]
-		public void ComplexTest1()
+		public void ComplexTest1(string context)
 		{
-			var result = db.Suppliers.Select(
-				supplier => db.Products.Select(
-					product => db.Products.Where(p => p.Id == product.Id && p.Supplier.Id == supplier.Id)));
+			Setup(context);
+			var result = db.Supplier.Select(
+				supplier => db.Product.Select(
+					product => db.Product.Where(p => p.ProductID == product.ProductID && p.Supplier.SupplierID == supplier.SupplierID)));
 			var count = result.ToList().Count;
 			Assert.Greater(count, 0);
 			foreach (var queryable in result)
@@ -1390,11 +1485,12 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Complex")]
-		public void ComplexTest2()
+		public void ComplexTest2(string context)
 		{
-			var result = db.Customers
+			Setup(context);
+			var result = db.Customer
 				.GroupBy(c => c.Country,
 					(country, customers) =>
 						customers.Where(k => k.CompanyName.Substring(0, 1) == country.Substring(0, 1)))
@@ -1408,36 +1504,38 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(result).Count());
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Complex")]
-		public void ComplexTest3()
+		public void ComplexTest3(string context)
 		{
-			var products = db.Products;
-			var suppliers = db.Suppliers;
+			Setup(context);
+			var products = db.Product;
+			var suppliers = db.Supplier;
 			var result = from p in products
 				select new
 				{
 					Product = p,
 					Suppliers = suppliers
-						.Where(s => s.Id == p.Supplier.Id)
+						.Where(s => s.SupplierID == p.Supplier.SupplierID)
 						.Select(s => s.CompanyName)
 				};
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
 			foreach (var p in list)
-				foreach (var companyName in p.Suppliers)
-					Assert.IsNotNull(companyName);
+			foreach (var companyName in p.Suppliers)
+				Assert.IsNotNull(companyName);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Complex")]
-		public void ComplexTest4()
+		public void ComplexTest4(string context)
 		{
-			var result = db.Customers
+			Setup(context);
+			var result = db.Customer
 				.Take(2)
 				.Select(
 					c =>
-						db.Orders.Select(o => db.Employees.Take(2).Where(e => e.Orders.Contains(o)))
+						db.Order.Select(o => db.Employee.Take(2).Where(e => e.Orders.Contains(o)))
 							.Where(o => o.Count() > 0))
 				.Select(os => os);
 
@@ -1448,12 +1546,13 @@ namespace Tests.OrmBattle
 				item.ToList();
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Complex")]
-		public void ComplexTest5()
+		public void ComplexTest5(string context)
 		{
-			var result = db.Customers
-				.Select(c => new {Customer = c, Orders = db.Orders})
+			Setup(context);
+			var result = db.Customer
+				.Select(c => new {Customer = c, Order = db.Order})
 				.Select(i => i.Customer.Orders);
 
 			var list = result.ToList();
@@ -1463,13 +1562,14 @@ namespace Tests.OrmBattle
 				item.ToList();
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Complex")]
-		public void ComplexTest6()
+		public void ComplexTest6(string context)
 		{
-			var result = db.Customers
-				.Select(c => new {Customer = c, Orders = db.Orders.Where(o => o.Customer == c)})
-				.SelectMany(i => i.Orders.Select(o => new {i.Customer, Order = o}));
+			Setup(context);
+			var result = db.Customer
+				.Select(c => new {Customer = c, Order = db.Order.Where(o => o.Customer == c)})
+				.SelectMany(i => i.Order.Select(o => new {i.Customer, Order = o}));
 
 			var list = result.ToList();
 			Assert.Greater(list.Count, 0);
@@ -1479,217 +1579,242 @@ namespace Tests.OrmBattle
 
 		#region Standard functions tests
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringStartsWithTest()
+		public void StringStartsWithTest(string context)
 		{
-			var result = db.Customers.Where(c => c.Id.StartsWith("A") || c.Id.StartsWith("L"));
+			Setup(context);
+			var result = db.Customer.Where(c => c.CustomerID.StartsWith("A") || c.CustomerID.StartsWith("L"));
 
 			var list = result.ToList();
 			Assert.AreEqual(13, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringStartsWithParameterizedTest()
+		public void StringStartsWithParameterizedTest(string context)
 		{
+			Setup(context);
 			var likeA = "A";
 			var likeL = "L";
-			var result = db.Customers.Where(c => c.Id.StartsWith(likeA) || c.Id.StartsWith(likeL));
+			var result = db.Customer.Where(c => c.CustomerID.StartsWith(likeA) || c.CustomerID.StartsWith(likeL));
 
 			var list = result.ToList();
 			Assert.AreEqual(13, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringLengthTest()
+		public void StringLengthTest(string context)
 		{
-			var customer = db.Customers.Where(c => c.City.Length == 7).First();
+			Setup(context);
+			var customer = db.Customer.Where(c => c.City.Length == 7).First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringContainsTest()
+		public void StringContainsTest(string context)
 		{
-			var customer = db.Customers.Where(c => c.ContactName.Contains("and")).First();
+			Setup(context);
+			var customer = db.Customer.Where(c => c.ContactName.Contains("and")).First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringToLowerTest()
+		public void StringToLowerTest(string context)
 		{
-			var customer = db.Customers.Where(c => c.City.ToLower() == "seattle").First();
+			Setup(context);
+			var customer = db.Customer.Where(c => c.City.ToLower() == "seattle").First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringRemoveTest()
+		public void StringRemoveTest(string context)
 		{
-			var customer = db.Customers.Where(c => c.City.Remove(3) == "Sea").First();
+			Setup(context);
+			var customer = db.Customer.Where(c => c.City.Remove(3) == "Sea").First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringIndexOfTest()
+		public void StringIndexOfTest(string context)
 		{
-			var customer = db.Customers.Where(c => c.City.IndexOf("tt") == 3).First();
+			Setup(context);
+			var customer = db.Customer.Where(c => c.City.IndexOf("tt") == 3).First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringLastIndexOfTest()
+		public void StringLastIndexOfTest(string context)
 		{
-			var customer = db.Customers.Where(c => c.City.LastIndexOf("t", 1, 3) == 3).First();
+			Setup(context);
+			var customer = db.Customer.Where(c => c.City.LastIndexOf("t", 1, 3) == 3).First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringPadLeftTest()
+		public void StringPadLeftTest(string context)
 		{
-			var customer = db.Customers.Where(c => "123" + c.City.PadLeft(8) == "123 Seattle").First();
+			Setup(context);
+			var customer = db.Customer.Where(c => "123" + c.City.PadLeft(8) == "123 Seattle").First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void DateTimeTest()
+		public void DateTimeTest(string context)
 		{
-			var order = db.Orders.Where(o => o.OrderDate >= new DateTime(o.OrderDate.Value.Year, 1, 1)).First();
+			Setup(context);
+			var order = db.Order.Where(o => o.OrderDate >= new DateTime(o.OrderDate.Value.Year, 1, 1)).First();
 			Assert.IsNotNull(order);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void DateTimeDayTest()
+		public void DateTimeDayTest(string context)
 		{
-			var order = db.Orders.Where(o => o.OrderDate.Value.Day == 5).First();
+			Setup(context);
+			var order = db.Order.Where(o => o.OrderDate.Value.Day == 5).First();
 			Assert.IsNotNull(order);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void DateTimeDayOfWeek()
+		public void DateTimeDayOfWeek(string context)
 		{
-			var order = db.Orders.Where(o => o.OrderDate.Value.DayOfWeek == DayOfWeek.Friday).First();
+			Setup(context);
+			var order = db.Order.Where(o => o.OrderDate.Value.DayOfWeek == DayOfWeek.Friday).First();
 			Assert.IsNotNull(order);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void DateTimeDayOfYear()
+		public void DateTimeDayOfYear(string context)
 		{
-			var order = db.Orders.Where(o => o.OrderDate.Value.DayOfYear == 360).First();
+			Setup(context);
+			var order = db.Order.Where(o => o.OrderDate.Value.DayOfYear == 360).First();
 			Assert.IsNotNull(order);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void MathAbsTest()
+		public void MathAbsTest(string context)
 		{
-			var order = db.Orders.Where(o => Math.Abs(o.Id) == 10 || o.Id > 0).First();
+			Setup(context);
+			var order = db.Order.Where(o => Math.Abs(o.OrderID) == 10 || o.OrderID > 0).First();
 			Assert.IsNotNull(order);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void MathTrignometricTest()
+		public void MathTrignometricTest(string context)
 		{
-			var order = db.Orders.Where(o => Math.Asin(Math.Cos(o.Id)) == 0 || o.Id > 0).First();
+			Setup(context);
+			var order = db.Order.Where(o => Math.Asin(Math.Cos(o.OrderID)) == 0 || o.OrderID > 0).First();
 			Assert.IsNotNull(order);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void MathFloorTest()
+		public void MathFloorTest(string context)
 		{
-			var result = db.Orders.Where(o => Math.Floor(o.Freight) == 140);
+			Setup(context);
+			var result = db.Order.Where(o => Math.Floor(o.Freight) == 140);
 			var list = result.ToList();
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void MathCeilingTest()
+		public void MathCeilingTest(string context)
 		{
-			var result = db.Orders.Where(o => Math.Ceiling(o.Freight) == 141);
+			Setup(context);
+			var result = db.Order.Where(o => Math.Ceiling(o.Freight) == 141);
 			var list = result.ToList();
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void MathTruncateTest()
+		public void MathTruncateTest(string context)
 		{
-			var result = db.Orders.Where(o => Math.Truncate(o.Freight) == 141);
+			Setup(context);
+			var result = db.Order.Where(o => Math.Truncate(o.Freight) == 141);
 			var list = result.ToList();
 			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void MathRoundAwayFromZeroTest()
+		public void MathRoundAwayFromZeroTest(string context)
 		{
-			var result = db.Orders.Where(o => Math.Round(o.Freight / 10, 1, MidpointRounding.AwayFromZero) == 6.5m);
+			Setup(context);
+			var result = db.Order.Where(o => Math.Round(o.Freight / 10, 1, MidpointRounding.AwayFromZero) == 6.5m);
 			var list = result.ToList();
 			Assert.AreEqual(7, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void MathRoundToEvenTest()
+		public void MathRoundToEvenTest(string context)
 		{
-			var result = db.Orders.Where(o => Math.Round(o.Freight / 10, 1, MidpointRounding.ToEven) == 6.5m);
+			Setup(context);
+			var result = db.Order.Where(o => Math.Round(o.Freight / 10, 1, MidpointRounding.ToEven) == 6.5m);
 			var list = result.ToList();
 			Assert.AreEqual(6, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void MathRoundDefaultTest()
+		public void MathRoundDefaultTest(string context)
 		{
-			var result = db.Orders.Where(o => Math.Round(o.Freight / 10, 1) == 6.5m);
+			Setup(context);
+			var result = db.Order.Where(o => Math.Round(o.Freight / 10, 1) == 6.5m);
 			var list = result.ToList();
 			Assert.AreEqual(6, list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void ConvertToInt32()
+		public void ConvertToInt32(string context)
 		{
-			var expected = Orders.Where(o => Convert.ToInt32(o.Freight * 10) == 592);
-			var result = db.Orders.Where(o => Convert.ToInt32(o.Freight * 10) == 592);
+			Setup(context);
+			var expected = Order.Where(o => Convert.ToInt32(o.Freight * 10) == 592);
+			var result = db.Order.Where(o => Convert.ToInt32(o.Freight * 10) == 592);
 			var list = result.ToList();
 			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void StringCompareToTest()
+		public void StringCompareToTest(string context)
 		{
-			var customer = db.Customers.Where(c => c.City.CompareTo("Seattle") >= 0).First();
+			Setup(context);
+			var customer = db.Customer.Where(c => c.City.CompareTo("Seattle") >= 0).First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void ComparisonWithNullTest()
+		public void ComparisonWithNullTest(string context)
 		{
-			var customer = db.Customers.Where(c => null != c.City).First();
+			Setup(context);
+			var customer = db.Customer.Where(c => null != c.City).First();
 			Assert.IsNotNull(customer);
 		}
 
-		[Test]
+		[Test, NorthwindDataContext]
 		[Category("Standard functions")]
-		public void EqualsWithNullTest()
+		public void EqualsWithNullTest(string context)
 		{
-			var customer = db.Customers.Where(c => !c.Address.Equals(null)).First();
+			Setup(context);
+			var customer = db.Customer.Where(c => !c.Address.Equals(null)).First();
 			Assert.IsNotNull(customer);
 		}
 
