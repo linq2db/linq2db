@@ -131,7 +131,9 @@ namespace LinqToDB.DataProvider.SQLite
 				var leftType  = exprExpr.Expr1.SystemType;
 				var rightType = exprExpr.Expr2.SystemType;
 
-				if ((IsDateTime(leftType) || IsDateTime(rightType)) && !((exprExpr.Expr1 is SqlValue && ((SqlValue)exprExpr.Expr1).Value == null) || (exprExpr.Expr2 is SqlValue && ((SqlValue)exprExpr.Expr2).Value == null)))
+				if ((IsDateTime(leftType) || IsDateTime(rightType)) && 
+					!((exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null) 
+					|| (exprExpr.Expr2 is IValueContainer && ((IValueContainer)exprExpr.Expr2).Value == null)))
 				{
 					
 					if (leftType != null)

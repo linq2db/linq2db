@@ -422,7 +422,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (!isList)
 								isList =
-									me.Member.DeclaringType.IsGenericType &&
+									me.Member.DeclaringType.IsGenericTypeEx() &&
 									me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(ICollection<>);
 
 							if (!isList)
