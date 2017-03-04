@@ -855,7 +855,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (MethodCallExpression)expression;
 
-						if (e.IsQueryable())
+						if (e.IsQueryable() && !ContainsBuilder.IsConstant(e))
 						{
 							if (IsSubQuery(context, e))
 								return SubQueryToSql(context, e);
@@ -2340,10 +2340,28 @@ namespace LinqToDB.Linq.Builder
 			if (Configuration.Linq.CheckNullForNotEquals == false)
 				return null;
 
-			if (predicate.CanBeNull && predicate is SelectQuery.Predicate.ExprExpr || predicate is SelectQuery.Predicate.InList)
+			var inList = predicate as SelectQuery.Predicate.InList;
+
+			if (predicate is SelectQuery.SearchCondition)
+			{
+				var sc = (SelectQuery.SearchCondition) predicate;
+
+				inList = new QueryVisitor()
+					.Find(sc, _ => _.ElementType == QueryElementType.InListPredicate) as SelectQuery.Predicate.InList;
+
+				if (inList != null)
+				{
+					isNot = new QueryVisitor().Find(sc, _ =>
+					        {
+						        var condition = _ as SelectQuery.Condition;
+						        return condition != null && condition.IsNot;
+					        }) != null;
+				}
+			}
+
+			if (predicate.CanBeNull && predicate is SelectQuery.Predicate.ExprExpr || inList != null)
 			{
 				var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
-				var inList   = predicate as SelectQuery.Predicate.InList;
 
 
 				if (   (exprExpr != null && 

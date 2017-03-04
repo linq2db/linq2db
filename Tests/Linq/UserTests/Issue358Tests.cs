@@ -139,6 +139,12 @@ namespace Tests.UserTests
 
 			AreEqual(_types.Where(_ => !bigintFilter.Contains(_.BigIntValue)), types.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
 			AreEqual(_types.Where(_ => !boolFilter.  Contains(_.BoolValue)),   types.Where(_ => !boolFilter.  Contains(_.BoolValue)));
+
+			AreEqual(_types.Where(_ => !bigintFilter.Contains(_.BigIntValue)), types.Where(_ => bigintFilter.Contains(_.BigIntValue) == false));
+			AreEqual(_types.Where(_ => !boolFilter.  Contains(_.BoolValue)),   types.Where(_ => boolFilter.  Contains(_.BoolValue)   == false));
+
+			 AreEqual(_types.Where(_ => !bigintFilter.Contains(_.BigIntValue)), types.Where(_ => bigintFilter.Contains(_.BigIntValue) != true));
+			AreEqual(_types.Where(_ => !boolFilter.   Contains(_.BoolValue)),   types.Where(_ => boolFilter.  Contains(_.BoolValue)   != true));
 		}
 
 	}
