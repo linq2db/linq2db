@@ -38,6 +38,8 @@ GenerateDbTypes                     = false;   // If true, generates the DbType 
 GenerateObsoleteAttributeForAliases = false;   // If true, generates [Obsolete] attribute for aliases.
 IsCompactColumnAliases              = true;    // If true, column alias compact view.
 
+NormalizeNames                      = true;    // convert some_name to SomeName for types and members
+
 GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" }; // Defines excluded schemas.
 GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines only included schemas.
 
