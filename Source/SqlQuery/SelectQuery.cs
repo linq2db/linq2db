@@ -168,31 +168,82 @@ namespace LinqToDB.SqlQuery
 				set { _alias = value; }
 			}
 
+			private bool   _underlyingColumnSet = false;
+			private Column _underlyingColumn;
+			private Column  UnderlyingColumn
+			{
+				get
+				{
+					if (_underlyingColumnSet)
+						return _underlyingColumn;
+
+					var columns = new List<Column>(10);
+
+					var column = Expression as Column;
+
+					while (column != null)
+					{
+						if (column._underlyingColumn != null)
+						{
+							columns.Add(column._underlyingColumn);
+							break;
+						}
+
+						columns.Add(column);
+						column = column.Expression as Column;
+					}
+
+					_underlyingColumnSet = true;
+					if (columns.Count == 0)
+						return null;
+
+					_underlyingColumn = columns[columns.Count - 1];
+
+					for (var i = 0; i < columns.Count - 1; i++)
+					{
+						var c = columns[i];
+						c._underlyingColumn    = _underlyingColumn;
+						c._underlyingColumnSet = true;
+					}
+
+					return _underlyingColumn;
+				}
+			}
+
 			public bool Equals(Column other)
 			{
+				if (other == null)
+					return false;
+
 				if (!object.Equals(Parent, other.Parent))
 					return false;
 
-				var found =
-					Expression.Equals(other.Expression)
-					|| new QueryVisitor().Find(other, e =>
-						{
-							switch(e.ElementType)
-							{
-								case QueryElementType.Column: return ((Column)e).Expression.Equals(Expression);
-							}
-							return false;
-						}) != null
-					|| new QueryVisitor().Find(Expression, e =>
-						{
-							switch (e.ElementType)
-							{
-								case QueryElementType.Column: return ((Column)e).Expression.Equals(other.Expression);
-							}
-							return false;
-						}) != null;
+				if (Expression.Equals(other.Expression))
+					return true;
 
-				return found;
+				//return false;
+				return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
+
+				//var found =
+				//	
+				//	|| new QueryVisitor().Find(other, e =>
+				//		{
+				//			switch(e.ElementType)
+				//			{
+				//				case QueryElementType.Column: return ((Column)e).Expression.Equals(Expression);
+				//			}
+				//			return false;
+				//		}) != null
+				//	|| new QueryVisitor().Find(Expression, e =>
+				//		{
+				//			switch (e.ElementType)
+				//			{
+				//				case QueryElementType.Column: return ((Column)e).Expression.Equals(other.Expression);
+				//			}
+				//			return false;
+				//		}) != null;
+
+				//return found;
 			}
 
 			public override string ToString()

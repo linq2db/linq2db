@@ -933,8 +933,17 @@ namespace LinqToDB.Data
 
 #region System.IDisposable Members
 
+		protected bool Disposed { get; private set; }
+
+		protected void ThrowOnDisposed()
+		{
+			if (Disposed)
+				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed");
+		}
+
 		public void Dispose()
 		{
+			Disposed = true;
 			Close();
 		}
 

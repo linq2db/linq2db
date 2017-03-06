@@ -162,6 +162,8 @@ namespace LinqToDB.Data
 
 		int IDataContext.ExecuteNonQuery(object query)
 		{
+			ThrowOnDisposed();
+
 			var pq = (PreparedQuery)query;
 
 			if (pq.Commands.Length == 1)
@@ -206,6 +208,8 @@ namespace LinqToDB.Data
 
 		object IDataContext.ExecuteScalar(object query)
 		{
+			ThrowOnDisposed();
+
 			var pq = (PreparedQuery)query;
 
 			InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
@@ -256,6 +260,8 @@ namespace LinqToDB.Data
 
 		IDataReader IDataContext.ExecuteReader(object query)
 		{
+			ThrowOnDisposed();
+
 			var pq = (PreparedQuery)query;
 
 			InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
@@ -269,6 +275,7 @@ namespace LinqToDB.Data
 
 		void IDataContext.ReleaseQuery(object query)
 		{
+			ThrowOnDisposed();
 		}
 
 		#endregion
@@ -277,6 +284,8 @@ namespace LinqToDB.Data
 
 		string IDataContext.GetSqlText(object query)
 		{
+			ThrowOnDisposed();
+
 			var pq = (PreparedQuery)query;
 
 			var sqlProvider = pq.SqlProvider ?? DataProvider.CreateSqlBuilder();
@@ -346,6 +355,8 @@ namespace LinqToDB.Data
 
 		object IDataContext.SetQuery(IQueryContext queryContext)
 		{
+			ThrowOnDisposed();
+
 			var query = GetCommand(queryContext);
 
 			GetParameters(queryContext, query);
@@ -358,6 +369,8 @@ namespace LinqToDB.Data
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
+			ThrowOnDisposed();
+
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
 				return new DataConnection(DataProvider, _connection) { _mappingSchema = _mappingSchema, Transaction = Transaction };
 
