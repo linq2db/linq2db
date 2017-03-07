@@ -44,7 +44,7 @@ namespace LinqToDB.Linq
 		{
 #if SILVERLIGHT || NETFX_CORE
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return new DataContextInfo(dataContext);
+			return new DataContextInfo(dataContext, false);
 #else
 			return dataContext == null ? (IDataContextInfo)new DefaultDataContextInfo() : new DataContextInfo(dataContext, false);
 #endif
