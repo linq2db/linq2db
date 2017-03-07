@@ -456,12 +456,22 @@ namespace LinqToDB.ServiceModel
 				throw new ObjectDisposedException("RemoteDataContext", "IDataContext is disposed");
 		}
 
+		void IDataContext.Close()
+		{
+			Close();
+		}
+
+		private void Close()
+		{
+			if (OnClosing != null)
+				OnClosing(this, EventArgs.Empty);
+		}
+
 		public void Dispose()
 		{
 			Disposed = true;
 
-			if (OnClosing != null)
-				OnClosing(this, EventArgs.Empty);
+			Close();
 		}
 	}
 }

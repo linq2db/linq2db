@@ -7,11 +7,11 @@ namespace LinqToDB.Linq
 
 	class DataContextInfo : IDataContextInfo
 	{
-		public DataContextInfo(IDataContext dataContext)
-		{
-			DataContext    = dataContext;
-			DisposeContext = false;
-		}
+		//public DataContextInfo(IDataContext dataContext)
+		//{
+		//	DataContext    = dataContext;
+		//	DisposeContext = false;
+		//}
 
 		public DataContextInfo(IDataContext dataContext, bool disposeContext)
 		{
@@ -37,7 +37,7 @@ namespace LinqToDB.Linq
 
 		public IDataContextInfo Clone(bool forNestedQuery)
 		{
-			return new DataContextInfo(DataContext.Clone(forNestedQuery));
+			return new DataContextInfo(DataContext.Clone(forNestedQuery), true);
 		}
 
 		public static IDataContextInfo Create(IDataContext dataContext)
@@ -46,7 +46,7 @@ namespace LinqToDB.Linq
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return new DataContextInfo(dataContext);
 #else
-			return dataContext == null ? (IDataContextInfo)new DefaultDataContextInfo() : new DataContextInfo(dataContext);
+			return dataContext == null ? (IDataContextInfo)new DefaultDataContextInfo() : new DataContextInfo(dataContext, false);
 #endif
 		}
 	}

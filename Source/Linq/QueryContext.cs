@@ -57,8 +57,8 @@ namespace LinqToDB.Linq
 		{
 			if (_contexts != null)
 			{
-				foreach (var context in _contexts.Where(_ => _.DataContextInfo.DisposeContext))
-					context.DataContextInfo.DataContext.Dispose();
+				foreach (var context in _contexts)
+					context.DataContextInfo.DataContext.Close();
 
 				_contexts = null;
 			}
