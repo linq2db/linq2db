@@ -1279,17 +1279,15 @@ namespace Tests.OrmBattle
 
 		#region Aggregates tests
 
-		[Test, NorthwindDataContext, Ignore("Not working at the Moment -> issue #573")]
+		[Test, Ignore("Not working at the Moment -> issue #573")]
+		[NorthwindDataContext(false, true)]
 		[Category("Aggregates")]
 		public void SumTest(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var sum = db.Order.Select(o => o.Freight).Sum();
-				var sum1 = Order.Select(o => o.Freight).Sum();
-				Assert.AreEqual(sum1, sum);
-			}
+			Setup(context);
+			var sum = db.Order.Select(o => o.Freight).Sum();
+			var sum1 = Order.Select(o => o.Freight).Sum();
+			Assert.AreEqual(sum1, sum);
 		}
 
 		[Test, NorthwindDataContext]
@@ -1633,52 +1631,44 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test]
+		[NorthwindDataContext(false, true)]
 		[Category("Standard functions")]
 		public void StringRemoveTest(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var customer = db.Customer.Where(c => c.City.Remove(3) == "Sea").First();
-				Assert.IsNotNull(customer);
-			}
+			Setup(context);
+			var customer = db.Customer.Where(c => c.City.Remove(3) == "Sea").First();
+			Assert.IsNotNull(customer);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test]
+		[NorthwindDataContext(false, true)]
 		[Category("Standard functions")]
 		public void StringIndexOfTest(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var customer = db.Customer.Where(c => c.City.IndexOf("tt") == 3).First();
-				Assert.IsNotNull(customer);
-			}
+			Setup(context);
+			var customer = db.Customer.Where(c => c.City.IndexOf("tt") == 3).First();
+			Assert.IsNotNull(customer);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test]
+		[NorthwindDataContext(false, true)]
 		[Category("Standard functions")]
 		public void StringLastIndexOfTest(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var customer = db.Customer.Where(c => c.City.LastIndexOf("t", 1, 3) == 3).First();
-				Assert.IsNotNull(customer);
-			}
+			Setup(context);
+			var customer = db.Customer.Where(c => c.City.LastIndexOf("t", 1, 3) == 3).First();
+			Assert.IsNotNull(customer);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test]
+		[NorthwindDataContext(false, true)]
 		[Category("Standard functions")]
 		public void StringPadLeftTest(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var customer = db.Customer.Where(c => "123" + c.City.PadLeft(8) == "123 Seattle").First();
-				Assert.IsNotNull(customer);
-			}
+			Setup(context);
+			var customer = db.Customer.Where(c => "123" + c.City.PadLeft(8) == "123 Seattle").First();
+			Assert.IsNotNull(customer);
 		}
 
 		[Test, NorthwindDataContext]
@@ -1726,55 +1716,47 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(order);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test]
+		[NorthwindDataContext(false, true)]
 		[Category("Standard functions")]
 		public void MathTrignometricTest(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var order = db.Order.Where(o => Math.Asin(Math.Cos(o.OrderID)) == 0 || o.OrderID > 0).First();
-				Assert.IsNotNull(order);
-			}
+			Setup(context);
+			var order = db.Order.Where(o => Math.Asin(Math.Cos(o.OrderID)) == 0 || o.OrderID > 0).First();
+			Assert.IsNotNull(order);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test]
+		[NorthwindDataContext(false, true)]
 		[Category("Standard functions")]
 		public void MathFloorTest(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var result = db.Order.Where(o => Math.Floor(o.Freight) == 140);
-				var list = result.ToList();
-				Assert.AreEqual(2, list.Count);
-			}
+			Setup(context);
+			var result = db.Order.Where(o => Math.Floor(o.Freight) == 140);
+			var list = result.ToList();
+			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test]
+		[NorthwindDataContext(false, true)]
 		[Category("Standard functions")]
 		public void MathCeilingTest(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var result = db.Order.Where(o => Math.Ceiling(o.Freight) == 141);
-				var list = result.ToList();
-				Assert.AreEqual(2, list.Count);
-			}
+			Setup(context);
+			var result = db.Order.Where(o => Math.Ceiling(o.Freight) == 141);
+			var list = result.ToList();
+			Assert.AreEqual(2, list.Count);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test]
+		[NorthwindDataContext(false, true)]
 		[Category("Standard functions")]
 		public void MathTruncateTest(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var result = db.Order.Where(o => Math.Truncate(o.Freight) == 141);
-				var list = result.ToList();
-				Assert.AreEqual(2, list.Count);
-			}
+			Setup(context);
+			var result = db.Order.Where(o => Math.Truncate(o.Freight) == 141);
+			var list = result.ToList();
+			Assert.AreEqual(2, list.Count);
 		}
 
 		[Test, NorthwindDataContext]
@@ -1807,18 +1789,16 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(6, list.Count);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test]
+		[NorthwindDataContext(false, true)]
 		[Category("Standard functions")]
 		public void ConvertToInt32(string context)
 		{
-			if (context != TestProvName.SQLiteMs)
-			{
-				Setup(context);
-				var expected = Order.Where(o => Convert.ToInt32(o.Freight * 10) == 592);
-				var result = db.Order.Where(o => Convert.ToInt32(o.Freight * 10) == 592);
-				var list = result.ToList();
-				Assert.AreEqual(expected.Count(), list.Count);
-			}
+			Setup(context);
+			var expected = Order.Where(o => Convert.ToInt32(o.Freight * 10) == 592);
+			var result = db.Order.Where(o => Convert.ToInt32(o.Freight * 10) == 592);
+			var list = result.ToList();
+			Assert.AreEqual(expected.Count(), list.Count);
 		}
 
 		[Test, NorthwindDataContext]
