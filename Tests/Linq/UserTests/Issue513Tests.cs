@@ -25,7 +25,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Test(string context)
 		{
 			using (var semaphore = new Semaphore(0, 10))
