@@ -170,8 +170,6 @@ namespace Tests.DataProvider
 
 				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
 				TestNumeric(conn,  3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
-				TestNumeric(conn, -1.79E+308d, DataType.Double, "bigint int smallint tinyint");
-				TestNumeric(conn,  1.79E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn, decimal.MinValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
 				TestNumeric(conn, decimal.MaxValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
 				TestNumeric(conn, decimal.MinValue,  DataType.VarNumeric, "bigint bit decimal int money numeric smallint tinyint float real");
@@ -180,6 +178,16 @@ namespace Tests.DataProvider
 				TestNumeric(conn, +922337203685477m, DataType.Money);
 				TestNumeric(conn, -214748m,          DataType.SmallMoney);
 				TestNumeric(conn, +214748m,          DataType.SmallMoney);
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs), Category("WindowsOnly")]
+		public void TestNumericsDouble(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn, 1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 			}
 		}
 
