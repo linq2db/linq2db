@@ -861,11 +861,11 @@ namespace LinqToDB.Expressions
 			return list;
 		}
 
-		public static bool IsQueryable(this MethodCallExpression method)
+		public static bool IsQueryable(this MethodCallExpression method, bool enumerable = true)
 		{
 			var type = method.Method.DeclaringType;
 
-			return type == typeof(Queryable) || type == typeof(Enumerable) || type == typeof(LinqExtensions);
+			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions);
 		}
 
 		public static bool IsQueryable(this MethodCallExpression method, string name)

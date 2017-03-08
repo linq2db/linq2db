@@ -855,7 +855,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (MethodCallExpression)expression;
 
-						if (e.IsQueryable())
+						if (e.IsQueryable() && !ContainsBuilder.IsConstant(e))
 						{
 							if (IsSubQuery(context, e))
 								return SubQueryToSql(context, e);
@@ -2293,12 +2293,19 @@ namespace LinqToDB.Linq.Builder
 
 						if (notCondition.Conditions.Count == 1 && notCondition.Conditions[0].Predicate is SelectQuery.Predicate.NotExpr)
 						{
-							var p = notCondition.Conditions[0].Predicate as SelectQuery.Predicate.NotExpr;
-							p.IsNot = !p.IsNot;
-							conditions.Add(notCondition.Conditions[0]);
+							var p           = notCondition.Conditions[0].Predicate as SelectQuery.Predicate.NotExpr;
+							p.IsNot         = !p.IsNot;
+
+							var checkIsNull = CheckIsNull(notCondition.Conditions[0].Predicate, true);
+
+							conditions.Add(checkIsNull ?? notCondition.Conditions[0]);
 						}
 						else
-							conditions.Add(new SelectQuery.Condition(true, notCondition));
+						{
+							var checkIsNull = CheckIsNull(notCondition.Conditions[0].Predicate, true);
+
+							conditions.Add(checkIsNull ?? new SelectQuery.Condition(true, notCondition));
+						}
 
 						break;
 					}
@@ -2322,10 +2329,82 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					conditions.Add(new SelectQuery.Condition(false, predicate));
+					conditions.Add(CheckIsNull(predicate, false) ?? new SelectQuery.Condition(false, predicate));
 
 					break;
 			}
+		}
+
+		private static SelectQuery.Condition CheckIsNull(ISqlPredicate predicate, bool isNot)
+		{
+			if (Configuration.Linq.CheckNullForNotEquals == false)
+				return null;
+
+			var inList = predicate as SelectQuery.Predicate.InList;
+
+			if (predicate is SelectQuery.SearchCondition)
+			{
+				var sc = (SelectQuery.SearchCondition) predicate;
+
+				inList = new QueryVisitor()
+					.Find(sc, _ => _.ElementType == QueryElementType.InListPredicate) as SelectQuery.Predicate.InList;
+
+				if (inList != null)
+				{
+					isNot = new QueryVisitor().Find(sc, _ =>
+					        {
+						        var condition = _ as SelectQuery.Condition;
+						        return condition != null && condition.IsNot;
+					        }) != null;
+				}
+			}
+
+			if (predicate.CanBeNull && predicate is SelectQuery.Predicate.ExprExpr || inList != null)
+			{
+				var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
+
+
+				if (   (exprExpr != null && 
+					   (    (exprExpr.Operator == SelectQuery.Predicate.Operator.NotEqual && isNot == false)
+					     || (exprExpr.Operator == SelectQuery.Predicate.Operator.Equal    && isNot == true)
+					   ))
+				    || (inList != null && inList.IsNot || isNot))
+				{
+					var expr1 = exprExpr != null ? exprExpr.Expr1 : inList.Expr1;
+					var expr2 = exprExpr != null ? exprExpr.Expr2 : null;
+
+					var nullValue1 =                 new QueryVisitor().Find(expr1, _ => _ is IValueContainer);
+					var nullValue2 = expr2 != null ? new QueryVisitor().Find(expr2, _ => _ is IValueContainer) : null;
+
+					var hasNullValue =
+						   nullValue1 != null && ((IValueContainer) nullValue1).Value == null
+						|| nullValue2 != null && ((IValueContainer) nullValue2).Value == null;
+
+					if (!hasNullValue)
+					{
+						var expr1IsField =                  expr1.CanBeNull && new QueryVisitor().Find(expr1, _ => _.ElementType == QueryElementType.SqlField) != null;
+						var expr2IsField = expr2 != null && expr2.CanBeNull && new QueryVisitor().Find(expr2, _ => _.ElementType == QueryElementType.SqlField) != null;
+
+						var nullableField = expr1IsField
+							? expr1
+							: expr2IsField ? expr2 : null;
+
+						if (nullableField != null)
+						{
+							var checkNullPredicate = new SelectQuery.Predicate.IsNull(nullableField, false);
+
+							var orCondition = new SelectQuery.SearchCondition(
+								new SelectQuery.Condition(false,                   checkNullPredicate),
+								new SelectQuery.Condition(isNot && inList == null, predicate));
+
+							orCondition.Conditions[0].IsOr = true;
+
+							return new SelectQuery.Condition(false, orCondition);
+						}
+					}
+				}
+			}
+			return null;
 		}
 
 		#endregion
