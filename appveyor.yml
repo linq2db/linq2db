@@ -58,6 +58,7 @@ artifacts:
 test: 
   assemblies:
     - \Tests\**\linq2db.Tests.dll
+    - \Tests\OrmBattle\**\Tests.dll
 
 before_test:
 - ps: |
