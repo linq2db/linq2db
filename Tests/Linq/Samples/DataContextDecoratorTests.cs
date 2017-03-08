@@ -116,6 +116,11 @@ namespace Tests.Samples
 				return _context.Clone(forNestedQuery);
 			}
 
+			public void Close()
+			{
+				_context.Close();
+			}
+
 			public void Dispose()
 			{
 				_context.Dispose();
