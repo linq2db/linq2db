@@ -312,6 +312,15 @@ namespace Tests.DataProvider
 			}
 		}
 
+		/// <summary>
+		/// Ensure we can 
+		/// </summary>
+		[Test, IncludeDataContextSource(CurrentProvider)]
+	    public void TestJson()
+	    {
+	        
+	    }
+
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void TestDateTime(string context)
 		{
