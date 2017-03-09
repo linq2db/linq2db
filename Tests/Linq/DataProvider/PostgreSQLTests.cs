@@ -28,9 +28,8 @@ using Newtonsoft.Json.Linq;
 
 namespace Tests.DataProvider
 {
-   
 
-    [TestFixture]
+	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
 	{
 		public PostgreSQLTests()
@@ -321,36 +320,37 @@ namespace Tests.DataProvider
 		/// same value back out equivalent in value
 		/// </summary>
 		[Test, IncludeDataContextSource(CurrentProvider)]
-	    public void TestJson(string context)
-	    {
-            using (var conn = new DataConnection(context))
-            {
-                var testJson = "{\"name\":\"bob\", \"age\":10}";
+		public void TestJson(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var testJson = "{\"name\":\"bob\", \"age\":10}";
 
-                Assert.That(conn.Execute<string>("SELECT :p", new DataParameter("p", testJson, DataType.Json)), Is.EqualTo(testJson));
-            }
-        }
+				Assert.That(conn.Execute<string>("SELECT :p", new DataParameter("p", testJson, DataType.Json)), Is.EqualTo(testJson));
+			}
+		}
 
-        /// <summary>
+		/// <summary>
 		/// Ensure we can pass data as binary json and have things handled
 		/// with values coming back as being equivalent in value
 		/// </summary>
 		[Test, IncludeDataContextSource(CurrentProvider)]
-        public void TestJsonb(string context)
-        {
-            var json = new {name = "bob", age = 10};
-            using (var conn = new DataConnection(context))
-            {
-                //properties come back out in potentially diff order as its being
-                //converted between a binary json format and the string representation
-                var raw = conn.Execute<string>("SELECT :p", new DataParameter("p", JsonConvert.SerializeObject(json), DataType.BinaryJson));
-                var obj = JObject.Parse(raw);
-                Assert.That(obj.Value<string>("name"), Is.EqualTo(json.name));
-                Assert.That(obj.Value<int>("age"), Is.EqualTo(json.age));
-            }
-        }
+		public void TestJsonb(string context)
+		{
+			var json = new { name = "bob", age = 10 };
+			using (var conn = new DataConnection(context))
+			{
+				//properties come back out in potentially diff order as its being
+				//converted between a binary json format and the string representation
+				var raw = conn.Execute<string>("SELECT :p", new DataParameter("p", JsonConvert.SerializeObject(json), DataType.BinaryJson));
+				var obj = JObject.Parse(raw);
 
-        [Test, IncludeDataContextSource(CurrentProvider)]
+				Assert.That(obj.Value<string>("name"), Is.EqualTo(json.name));
+				Assert.That(obj.Value<int>("age"),     Is.EqualTo(json.age));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
