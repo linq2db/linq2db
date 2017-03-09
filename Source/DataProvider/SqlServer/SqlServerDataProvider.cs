@@ -33,7 +33,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			else
 			{
-				SqlProviderFlags.IsApplyJoinSupported = true;
+				SqlProviderFlags.IsApplyJoinSupported    = true;
+				SqlProviderFlags.GetIsTakeHintsSupported = h => true;
 			}
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());

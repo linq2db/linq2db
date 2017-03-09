@@ -7,6 +7,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]
@@ -335,6 +336,75 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					   Person.ElementAtOrDefault(3),
 					db.Person.ElementAtOrDefault(3));
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void TakeWithPercent(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.Person.Take(50, TakeHints.Percent).Select(_ => _);
+
+				Assert.IsNotEmpty(q);
+
+				var qry = q.ToString();
+				Assert.That(qry.Contains("PERCENT"));
+			}
+
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void TakeWithPercent1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.Person.Take(() => 50, TakeHints.Percent).Select(_ => _);
+
+				Assert.IsNotEmpty(q);
+
+				var qry = q.ToString();
+				Assert.That(qry.Contains("PERCENT"));
+			}
+
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void TakeWithTies(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.Person.OrderBy(_ => _.FirstName).Take(50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
+
+				Assert.IsNotEmpty(q);
+
+				var qry = q.ToString();
+				Assert.That(qry.Contains("PERCENT"));
+				Assert.That(qry.Contains("WITH"));
+			}
+
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void TakeWithTies2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.Person.OrderBy(_ => _.FirstName).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
+
+				Assert.IsNotEmpty(q);
+
+				var qry = q.ToString();
+				Assert.That(qry.Contains("PERCENT"));
+				Assert.That(qry.Contains("WITH"));
+			}
+
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SQLite, ProviderName.SqlCe, TestProvName.SQLiteMs)]
+		public void TakeWithHintsFails(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 	}
 }

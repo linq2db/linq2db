@@ -1200,6 +1200,8 @@ namespace LinqToDB.SqlProvider
 		protected virtual string LimitFormat  { get { return null; } }
 		protected virtual string OffsetFormat { get { return null; } }
 		protected virtual bool   OffsetFirst  { get { return false; } }
+		protected virtual string TakePercent  { get { return "PERCENT"; } }
+		protected virtual string TakeTies     { get { return "WITH TIES"; } }
 
 		protected bool NeedSkip { get { return SelectQuery.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(SelectQuery); } }
 		protected bool NeedTake { get { return SelectQuery.Select.TakeValue != null && SqlProviderFlags.IsTakeSupported; } }
@@ -1211,12 +1213,28 @@ namespace LinqToDB.SqlProvider
 					SkipFormat, WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.SkipValue)));
 
 			if (NeedTake && FirstFormat != null)
+			{
 				StringBuilder.Append(' ').AppendFormat(
 					FirstFormat, WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.TakeValue)));
+
+				BuildTakeHints();
+			}
 
 			if (!SkipFirst && NeedSkip && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
 					SkipFormat, WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.SkipValue)));
+		}
+
+		protected virtual void BuildTakeHints()
+		{
+			if (SelectQuery.Select.TakeHints == null)
+				return;
+
+			if ((SelectQuery.Select.TakeHints.Value & TakeHints.Percent) != 0)
+				StringBuilder.Append(' ').Append(TakePercent);
+
+			if ((SelectQuery.Select.TakeHints.Value & TakeHints.WithTies) != 0)
+				StringBuilder.Append(' ').Append(TakeTies);
 		}
 
 		protected virtual void BuildOffsetLimit()

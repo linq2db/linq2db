@@ -182,11 +182,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildTake
 
-		public void BuildTake(IBuildContext context, ISqlExpression expr)
+		public void BuildTake(IBuildContext context, ISqlExpression expr, TakeHints? hints)
 		{
 			var sql = context.SelectQuery;
 
-			sql.Select.Take(expr);
+			sql.Select.Take(expr, hints);
 
 			if (sql.Select.SkipValue != null &&
 				 DataContextInfo.SqlProviderFlags.IsTakeSupported &&
@@ -199,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 
 					parm.SetTakeConverter((int)((SqlValue)sql.Select.TakeValue).Value);
 
-					sql.Select.Take(parm);
+					sql.Select.Take(parm, hints);
 
 					var ep = (from pm in CurrentSqlParameters where ReferenceEquals(pm.SqlParameter, skip) select pm).First();
 
@@ -215,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 				else
 					sql.Select.Take(Convert(
 						context,
-						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive)));
+						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive)), hints);
 			}
 
 			if (!DataContextInfo.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
