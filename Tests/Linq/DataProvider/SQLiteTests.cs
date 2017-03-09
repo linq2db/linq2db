@@ -372,7 +372,22 @@ namespace Tests.DataProvider
 			}
 		}
 
-		enum TestEnum
+        /// <summary>
+		/// Ensure we can pass data as Json parameter type and get 
+		/// same value back out equivalent in value
+		/// </summary>
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+        public void TestJson(string context)
+        {
+            using (var conn = new DataConnection(context))
+            {
+                var testJson = "{\"name\":\"bob\", \"age\":10}";
+
+                Assert.That(conn.Execute<string>("SELECT @p", new DataParameter("p", testJson, DataType.Json)), Is.EqualTo(testJson));
+            }
+        }
+
+        enum TestEnum
 		{
 			[MapValue("A")] AA,
 			[MapValue("B")] BB,
