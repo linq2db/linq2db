@@ -330,7 +330,7 @@ namespace Tests
 						yield return test;
 
 					}
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 
 					if (!isIgnore && _includeLinqService)
 					{

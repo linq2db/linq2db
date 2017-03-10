@@ -23,5 +23,5 @@ dotnet test ./Tests/Linq/project.json -c Release -f netcoreapp1.0 --where "cat !
 # Instead, run directly with mono for the full .net version 
 # dotnet build ./test/TEST_PROJECT_NAME -c Release -f net451
 
-mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll --workers=1 --agents=1 --where "cat != WindowsOnly"
+mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll --where "cat != WindowsOnly"
 
