@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider
 				IsGroupByExpressionSupported   = true,
 				IsDistinctOrderBySupported     = true,
 				IsUpdateSetTableAliasSupported = true,
-				GetIsTakeHintsSupported        = h => false,
+				TakeHintsSupported             = null,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));

@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 			{
 				SqlProviderFlags.IsApplyJoinSupported    = true;
-				SqlProviderFlags.GetIsTakeHintsSupported = h => true;
+				SqlProviderFlags.TakeHintsSupported      = TakeHints.Percent | TakeHints.WithTies;
 			}
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());

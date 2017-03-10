@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsSkipSupported           = false;
 			SqlProviderFlags.IsCountSubQuerySupported  = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
-			SqlProviderFlags.GetIsTakeHintsSupported   = h => h == TakeHints.Percent;
+			SqlProviderFlags.TakeHintsSupported        = TakeHints.Percent;
 
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
 

@@ -3,7 +3,6 @@
 namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
-	using IsTakeHints = Func<TakeHints, bool>;
 
 	public class SqlProviderFlags
 	{
@@ -25,7 +24,8 @@ namespace LinqToDB.SqlProvider
 		public int         MaxInListValuesCount           { get; set; }
 		public bool        IsUpdateSetTableAliasSupported { get; set; }
 		public bool        IsSybaseBuggyGroupBy           { get; set; }
-		public IsTakeHints GetIsTakeHintsSupported        { get; set; }
+		//public IsTakeHints GetIsTakeHintsSupported        { get; set; }
+		public TakeHints?  TakeHintsSupported             { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
@@ -35,6 +35,14 @@ namespace LinqToDB.SqlProvider
 		public bool GetIsSkipSupportedFlag(SelectQuery selectQuery)
 		{
 			return IsSkipSupported || IsSkipSupportedIfTake && selectQuery.Select.TakeValue != null;
+		}
+
+		public bool GetIsTakeHintsSupported(TakeHints hints)
+		{
+			if (TakeHintsSupported == null)
+				return false;
+
+			return (TakeHintsSupported.Value & hints) == hints;
 		}
 	}
 }
