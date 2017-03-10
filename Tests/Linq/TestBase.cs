@@ -131,7 +131,7 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-#if NETSTANDARD || MONO
+#if NETSTANDARD
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -155,7 +155,7 @@ namespace Tests
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD || MONO
+#if NETSTANDARD
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
