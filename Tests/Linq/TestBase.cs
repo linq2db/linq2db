@@ -131,7 +131,7 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-#if NETSTANDARD
+#if NETSTANDARD || MONO
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -155,7 +155,7 @@ namespace Tests
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD
+#if NETSTANDARD || MONO
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
@@ -191,14 +191,14 @@ namespace Tests
 			return basePath;
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
 #endif
 
 		static void OpenHost()
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 			if (_isHostOpen)
 				return;
 
@@ -412,7 +412,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
