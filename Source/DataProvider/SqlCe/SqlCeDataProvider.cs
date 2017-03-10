@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsCountSubQuerySupported  = false;
 			SqlProviderFlags.IsApplyJoinSupported      = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
-			SqlProviderFlags.IsCrossJoinSupported      = false;
+			SqlProviderFlags.IsCrossJoinSupported      = true;
 
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 
@@ -182,7 +182,13 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			DropFileDatabase(databaseName, ".sdf");
 		}
-#region BulkCopy
+
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			return true;
+		}
+
+		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)

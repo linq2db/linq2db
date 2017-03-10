@@ -131,34 +131,42 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var join = leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql);
+				var join      = leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql);
+				var subquery  = false;
+				var tables    = sequence.SelectQuery.From.Tables;
+				var baseTable = tables[0];
 
 				// if new join has dependency to many From tables we have to convert them to INNER JOINS
-				var tables = sequence.SelectQuery.From.Tables;
 				if (tables.Count > 1)
 				{
-					var mayDepend      = new HashSet<ISqlTableSource>(tables.Skip(1).SelectMany(t => t.GetTables()));
-					var depended       = null != new QueryVisitor().Find(join.JoinedTable, e => 
-						e.ElementType == QueryElementType.TableSource && mayDepend.Contains((ISqlTableSource)e)  ||
-						e.ElementType == QueryElementType.SqlField    && mayDepend.Contains(((SqlField)e).Table) ||
-						e.ElementType == QueryElementType.Column      && mayDepend.Contains(((SelectQuery.Column)e).Parent));
-
-					if (depended)
+					if (builder.DataContextInfo.SqlProviderFlags.IsCrossJoinSupported)
 					{
-						while (tables.Count > 1)
+						for (var i = tables.Count - 1; i > 0; i--)
 						{
-							var table = tables[1];
-							// it may converted to CROSS JOIN later
-							tables[0].Joins.Add(new SelectQuery.JoinedTable(SelectQuery.JoinType.Inner, table, false));
-							tables.RemoveAt(1);
+							baseTable.Joins.Add(new SelectQuery.JoinedTable(SelectQuery.JoinType.Inner, tables[i], false));
+							tables.RemoveAt(i);
 						}
+						baseTable.Joins.Add(join.JoinedTable);
+					}
+					else
+					{
+						var outterQuery = new SelectQuery();
+
+						outterQuery.Select.From.Tables.Add(new SelectQuery.TableSource(sequence.SelectQuery, null));
+						outterQuery.Select.From.Tables[0].Joins.Add(join.JoinedTable);
+
+						sequence.SelectQuery = outterQuery;
+						subquery = true;
+
 					}
 				}
-
-				tables[0].Joins.Add(join.JoinedTable);
+				else
+					baseTable.Joins.Add(join.JoinedTable);
 
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
-				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
+				
+				return new SelectContext(buildInfo.Parent, resultSelector, sequence,
+					subquery? context.Collection:context);
 			}
 		}
 

@@ -243,9 +243,9 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.LikePredicate :
 							{
 								var expr = (SelectQuery.Predicate.Like)e;
-								if (dic.TryGetValue(expr.Expr1,  out ex)) expr.Expr1  = ex;
-								if (dic.TryGetValue(expr.Expr2,  out ex)) expr.Expr2  = ex;
-								if (dic.TryGetValue(expr.Escape, out ex)) expr.Escape = ex;
+								if (                       dic.TryGetValue(expr.Expr1,  out ex)) expr.Expr1  = ex;
+								if (                       dic.TryGetValue(expr.Expr2,  out ex)) expr.Expr2  = ex;
+								if (expr.Escape != null && dic.TryGetValue(expr.Escape, out ex)) expr.Escape = ex;
 								break;
 							}
 
