@@ -142,10 +142,9 @@ namespace Tests.Samples
 
 		private InterceptDataConnection _connection;
 
-		[OneTimeSetUp]
-		public void SetUp()
+		public void SetUp(string context)
 		{
-			_connection = new InterceptDataConnection(ProviderName.SQLite, "Data Source=:memory:;");
+			_connection = new InterceptDataConnection(context, "Data Source=:memory:;");
 
 			_connection.CreateTable<TestTable>();
 
@@ -153,15 +152,17 @@ namespace Tests.Samples
 			_connection.Insert(new TestTable { ID = 2, Description = "Row 2" });
 		}
 
-		[OneTimeTearDown]
 		public void TearDown()
 		{
 			_connection.Dispose();
 		}
 
 		[Test]
-		public void CheckUpdateOK()
+		[IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void CheckUpdateOK(string context)
 		{
+			SetUp(context);
+
 			var db = _connection;
 
 			var table = db.GetTable<TestTable>();
@@ -175,11 +176,16 @@ namespace Tests.Samples
 
 			var updated = table.First(t => t.ID == 1);
 			Assert.AreEqual(row.RowVer + 1, updated.RowVer);
+
+			TearDown();
 		}
 
 		[Test]
-		public void CheckUpdateFail()
+		[IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void CheckUpdateFail(string context)
 		{
+			SetUp(context);
+
 			var db = _connection;
 			var table = db.GetTable<TestTable>();
 
@@ -199,11 +205,16 @@ namespace Tests.Samples
 			result = db.Update(row1);
 
 			Assert.AreEqual(0, result);
+
+			TearDown();
 		}
 
 		[Test]
-		public void InsertAndDeleteTest()
+		[IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void InsertAndDeleteTest(string context)
 		{
+			SetUp(context);
+
 			var db = _connection;
 			var table = db.GetTable<TestTable>();
 
@@ -222,11 +233,16 @@ namespace Tests.Samples
 
 			Assert.AreEqual(0, db.Delete(obj1000));
 			Assert.AreEqual(1, db.Delete(obj1001));
+
+			TearDown();
 		}
 
 		[Test]
-		public void CheckInsertOrUpdate()
+		[IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void CheckInsertOrUpdate(string context)
 		{
+			SetUp(context);
+
 			var db     = _connection;
 			var table  = db.GetTable<TestTable>();
 
@@ -242,6 +258,8 @@ namespace Tests.Samples
 			result = db.InsertOrReplace(newval);
 			Assert.AreEqual(1, result);
 			Assert.AreEqual(3, table.Count());
+
+			TearDown();
 		}
 	}
 }
