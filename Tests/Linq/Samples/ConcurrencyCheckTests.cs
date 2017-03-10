@@ -13,6 +13,7 @@ namespace Tests.Samples
 	[TestFixture]
 	public class ConcurrencyCheckTests : TestBase
 	{
+#if !MONO
 		private class InterceptDataConnection : DataConnection
 		{
 			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
@@ -142,9 +143,10 @@ namespace Tests.Samples
 
 		private InterceptDataConnection _connection;
 
-		public void SetUp(string context)
+		[OneTimeSetUp]
+		public void SetUp()
 		{
-			_connection = new InterceptDataConnection(context, "Data Source=:memory:;");
+			_connection = new InterceptDataConnection(ProviderName.SQLite, "Data Source=:memory:;");
 
 			_connection.CreateTable<TestTable>();
 
@@ -152,17 +154,15 @@ namespace Tests.Samples
 			_connection.Insert(new TestTable { ID = 2, Description = "Row 2" });
 		}
 
+		[OneTimeTearDown]
 		public void TearDown()
 		{
 			_connection.Dispose();
 		}
 
 		[Test]
-		[IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
-		public void CheckUpdateOK(string context)
+		public void CheckUpdateOK()
 		{
-			SetUp(context);
-
 			var db = _connection;
 
 			var table = db.GetTable<TestTable>();
@@ -176,16 +176,11 @@ namespace Tests.Samples
 
 			var updated = table.First(t => t.ID == 1);
 			Assert.AreEqual(row.RowVer + 1, updated.RowVer);
-
-			TearDown();
 		}
 
 		[Test]
-		[IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
-		public void CheckUpdateFail(string context)
+		public void CheckUpdateFail()
 		{
-			SetUp(context);
-
 			var db = _connection;
 			var table = db.GetTable<TestTable>();
 
@@ -205,16 +200,11 @@ namespace Tests.Samples
 			result = db.Update(row1);
 
 			Assert.AreEqual(0, result);
-
-			TearDown();
 		}
 
 		[Test]
-		[IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
-		public void InsertAndDeleteTest(string context)
+		public void InsertAndDeleteTest()
 		{
-			SetUp(context);
-
 			var db = _connection;
 			var table = db.GetTable<TestTable>();
 
@@ -233,16 +223,11 @@ namespace Tests.Samples
 
 			Assert.AreEqual(0, db.Delete(obj1000));
 			Assert.AreEqual(1, db.Delete(obj1001));
-
-			TearDown();
 		}
 
 		[Test]
-		[IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
-		public void CheckInsertOrUpdate(string context)
+		public void CheckInsertOrUpdate()
 		{
-			SetUp(context);
-
 			var db     = _connection;
 			var table  = db.GetTable<TestTable>();
 
@@ -258,8 +243,7 @@ namespace Tests.Samples
 			result = db.InsertOrReplace(newval);
 			Assert.AreEqual(1, result);
 			Assert.AreEqual(3, table.Count());
-
-			TearDown();
 		}
+#endif
 	}
 }
