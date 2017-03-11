@@ -14,6 +14,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue358Tests : TestBase
 	{
+#if !MONO
 		private DataConnection _connection;
 
 		enum TestIssue358Enum
@@ -146,6 +147,6 @@ namespace Tests.UserTests
 			 AreEqual(_types.Where(_ => !bigintFilter.Contains(_.BigIntValue)), types.Where(_ => bigintFilter.Contains(_.BigIntValue) != true));
 			AreEqual(_types.Where(_ => !boolFilter.   Contains(_.BoolValue)),   types.Where(_ => boolFilter.  Contains(_.BoolValue)   != true));
 		}
-
+#endif
 	}
 }
