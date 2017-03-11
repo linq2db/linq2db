@@ -43,6 +43,7 @@ namespace LinqToDB.DataProvider
 				IsDistinctOrderBySupported     = true,
 				IsUpdateSetTableAliasSupported = true,
 				IsCrossJoinSupported           = true,
+				IsInnerJoinAsCrossSupported    = true
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));

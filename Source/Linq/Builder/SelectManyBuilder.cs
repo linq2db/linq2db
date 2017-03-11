@@ -139,7 +139,7 @@ namespace LinqToDB.Linq.Builder
 				// if new join has dependency to many From tables we have to convert them to INNER JOINS
 				if (tables.Count > 1)
 				{
-					if (builder.DataContextInfo.SqlProviderFlags.IsCrossJoinSupported)
+					if (builder.DataContextInfo.SqlProviderFlags.IsCrossJoinSupported || builder.DataContextInfo.SqlProviderFlags.IsInnerJoinAsCrossSupported)
 					{
 						for (var i = tables.Count - 1; i > 0; i--)
 						{
