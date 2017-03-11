@@ -78,7 +78,7 @@ test_script:
     }
     else
     {
-        nunit3-console .\Tests\Linq\bin\Release\linq2db.Tests.dll --result=TestResult.xml;format=AppVeyor --x86
+        nunit3-console .\Tests\Linq\bin\Release\linq2db.Tests.dll --result="TestResult.xml;format=AppVeyor" --x86
     }
 
 before_test:
