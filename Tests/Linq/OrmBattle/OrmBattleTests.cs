@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using LinqToDB.Data;
 using NUnit.Framework;
@@ -50,7 +49,7 @@ namespace Tests.OrmBattle
 				c.Orders = Order.Where(o => c.CustomerID == o.CustomerID).ToList();
 
 			DataConnection.TurnTraceSwitchOn();
-			DataConnection.WriteTraceLine = (s, s1) => Debug.WriteLine(s, s1);
+			DataConnection.WriteTraceLine = (s, s1) => Console.WriteLine(s, s1);
 		}
 
 		[TearDown]
