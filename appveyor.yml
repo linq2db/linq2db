@@ -4,9 +4,9 @@ environment:
   packageVersion: 1.7.7
   matrix:
     - buildConfiguration: dotNet
-        solutionName: linq2db.4.5.sln
+      solutionName: linq2db.4.5.sln
     - buildConfiguration: dotNetCore
-        solutionName: linq2db.core.sln
+      solutionName: linq2db.core.sln
 
 
 version: $(packageVersion).{build}
