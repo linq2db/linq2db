@@ -342,7 +342,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test, NorthwindDataContext]
-		[Category("Projections")]
+		[Category("WindowsOnly")]
 		public void SelectSubqueryTest(string context)
 		{
 			Setup(context);
@@ -1464,7 +1464,7 @@ namespace Tests.OrmBattle
 		#region Complex tests
 
 		[Test, NorthwindDataContext]
-		[Category("Complex")]
+		[Category("WindowsOnly")]
 		public void ComplexTest1(string context)
 		{
 			Setup(context);
