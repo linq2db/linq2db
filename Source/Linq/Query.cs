@@ -453,8 +453,8 @@ namespace LinqToDB.Linq
 
 			if (!_enumConverters.TryGetValue(valueType, out converter))
 			{
-				var toType = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
-				var convExpr = MappingSchema.GetConvertExpression(valueType, toType);
+				var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
+				var convExpr  = MappingSchema.GetConvertExpression(valueType, toType);
 				var convParam = Expression.Parameter(typeof(object));
 
 				var lex = Expression.Lambda<Func<object, object>>(
@@ -462,6 +462,8 @@ namespace LinqToDB.Linq
 					convParam);
 
 				converter = lex.Compile();
+
+				_enumConverters.GetOrAdd(valueType, converter);
 			}
 
 			return converter(value);

@@ -319,6 +319,28 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeUnions()
 		{
+			var isAllUnion = new QueryVisitor().Find(_selectQuery,
+				ne =>
+				{
+					var nu = ne as SelectQuery.Union;
+					if (nu != null && nu.IsAll == true)
+						return true;
+
+					return false;
+				});
+			var isNotAllUnion = new QueryVisitor().Find(_selectQuery,
+				ne =>
+				{
+					var nu = ne as SelectQuery.Union;
+					if (nu != null && nu.IsAll == false)
+						return true;
+
+					return false;
+				});
+
+			if (isNotAllUnion != null && isAllUnion != null)
+				return;
+
 			var exprs = new Dictionary<ISqlExpression,ISqlExpression>();
 
 			new QueryVisitor().Visit(_selectQuery, e =>

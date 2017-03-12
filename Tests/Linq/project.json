@@ -16,7 +16,8 @@
     "Model": {
       "target": "project"
     },
-    "NUnit": "3.4.1"
+    "NUnit": "3.4.1",
+    "Newtonsoft.Json": "9.0.1"
   },
 
   "testRunner": "nunit",

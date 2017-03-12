@@ -170,7 +170,29 @@ namespace LinqToDB.SqlQuery
 
 			public bool Equals(Column other)
 			{
-				return Expression.Equals(other.Expression) && object.Equals(Parent, other.Parent);
+				if (!object.Equals(Parent, other.Parent))
+					return false;
+
+				var found =
+					Expression.Equals(other.Expression)
+					|| new QueryVisitor().Find(other, e =>
+						{
+							switch(e.ElementType)
+							{
+								case QueryElementType.Column: return ((Column)e).Expression.Equals(Expression);
+							}
+							return false;
+						}) != null
+					|| new QueryVisitor().Find(Expression, e =>
+						{
+							switch (e.ElementType)
+							{
+								case QueryElementType.Column: return ((Column)e).Expression.Equals(other.Expression);
+							}
+							return false;
+						}) != null;
+
+				return found;
 			}
 
 			public override string ToString()
@@ -1896,6 +1918,15 @@ namespace LinqToDB.SqlQuery
 					throw new InvalidOperationException();
 
 				return Columns.IndexOf(AddOrGetColumn(new Column(SelectQuery, expr)));
+			}
+
+			public int AddNew(ISqlExpression expr)
+			{
+				if (expr is Column && ((Column)expr).Parent == SelectQuery)
+					throw new InvalidOperationException();
+
+				Columns.Add(new Column(SelectQuery, expr));
+				return Columns.Count - 1;
 			}
 
 			public int Add(ISqlExpression expr, string alias)
