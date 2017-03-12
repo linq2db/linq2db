@@ -53,10 +53,25 @@ build_script:
 
 
 after_build:
-- cmd: cd Source
-- cmd: Compile.bat
-- cmd: cd ..
-- ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
+- ps: |
+    if ($env:buildConfiguration -eq "dotNetCore")
+    {
+        if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
+        {
+           dotnet pack --no-build Source/project.json -c=Release
+        }
+        else
+        {
+           dotnet pack --no-build Source/project.json --version-suffix="rc$env:APPVEYOR_BUILD_NUMBER" -c=Release
+        }
+    }
+    else
+    {
+       cd Source
+       .\Compile.bat
+       cd ..
+       nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
+    }
 
 artifacts:
 - path: \**\linq2db*.nupkg
