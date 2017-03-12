@@ -1001,9 +1001,9 @@ namespace LinqToDB.Extensions
 		/// <remarks><see cref="System.String"/>. <see cref="Stream"/>. 
 		/// <see cref="XmlReader"/>. <see cref="XmlDocument"/>. are specially handled by the library
 		/// and, therefore, can be treated as scalar types.</remarks>
-		public static bool IsScalar(this Type type)
+		public static bool IsScalar(this Type type, bool checkArrayElementType = true)
 		{
-			while (type.IsArray)
+			while (checkArrayElementType && type.IsArray)
 				type = type.GetElementType();
 
 			return type.IsValueTypeEx()

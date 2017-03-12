@@ -670,10 +670,24 @@ namespace LinqToDB.SchemaProvider
 									_.Length > 0 && _ != t.TableName &&
 									(t.SchemaName == null || t.IsDefaultSchema || _ != t.SchemaName))
 								.ToArray());
+
+							var digitEnd = 0;
+							for (var i = name.Length - 1; i >= 0; i--)
+							{
+								if (char.IsDigit(name[i]))
+									digitEnd++;
+								else
+									break;
+							}
+
+							if (digitEnd > 0)
+								name = name.Substring(0, name.Length - digitEnd);
 						}
 
-						if (name.Length != 0 &&
-							t.ForeignKeys.Select(_ => _.MemberName).Concat(
+						if (string.IsNullOrEmpty(name))
+							name = key.OtherTable.TableName;
+
+						if (t.ForeignKeys.Select(_ => _.MemberName). Concat(
 							t.Columns.    Select(_ => _.MemberName)).Concat(
 								new[] { t.TypeName }).All(_ => _ != name))
 						{

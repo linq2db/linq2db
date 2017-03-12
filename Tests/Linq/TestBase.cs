@@ -374,10 +374,10 @@ namespace Tests
 		[AttributeUsage(AttributeTargets.Method)]
 		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public NorthwindDataContextAttribute(bool excludeSqlite) : base(
+			public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false) : base(
 				excludeSqlite
 				? new[] { "Northwind" }
-				: new[] { "Northwind", "NorthwindSqlite" })
+				:  ( excludeSqliteMs  ? new[] { "Northwind", "NorthwindSqlite" } : new[] { "Northwind", "NorthwindSqlite",  "NorthwindSqliteMs"}))
 			{
 			}
 
