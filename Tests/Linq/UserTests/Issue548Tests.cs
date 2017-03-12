@@ -24,7 +24,7 @@ namespace Tests.UserTests
 			public int Value { get; set; }
 		}
 
-		[Test]
+		[Test, Category("WindowsOnly")]
 		public void Test1()
 		{ 
 			var ms      = new MappingSchema();
@@ -54,7 +54,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test]
+		[Test, Category("WindowsOnly")]
 		public void Test2()
 		{
 			var ms      = new MappingSchema();

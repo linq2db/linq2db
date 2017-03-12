@@ -13,6 +13,7 @@ namespace Tests.Samples
 	[TestFixture]
 	public class ConcurrencyCheckTests : TestBase
 	{
+#if !MONO
 		private class InterceptDataConnection : DataConnection
 		{
 			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
@@ -243,5 +244,6 @@ namespace Tests.Samples
 			Assert.AreEqual(1, result);
 			Assert.AreEqual(3, table.Count());
 		}
+#endif
 	}
 }

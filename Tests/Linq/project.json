@@ -16,7 +16,7 @@
     "Model": {
       "target": "project"
     },
-    "NUnit": "3.4.1",
+    "NUnit": "3.6.1",
     "Newtonsoft.Json": "9.0.1"
   },
 
@@ -51,7 +51,7 @@
 
         "Microsoft.DotNet.InternalAbstractions": "1.0.0",
 
-        "dotnet-test-nunit": "3.4.0-beta-2",
+        "dotnet-test-nunit": "3.4.0-beta-3",
         "xunit.core": "2.1.0"
       },
       "buildOptions": {
@@ -119,7 +119,7 @@
         "System.Data.SQLite.Core": "1.0.101.0",
         "xunit": "1.9.1",
         "xunit.extensions": "1.9.1",
-        "NUnit.Runners": "3.4.1"
+        "NUnit.Runners": "3.6.0"
 
       },
       "buildOptions": {
@@ -197,7 +197,7 @@
         "System.Data.SQLite.Core": "1.0.101.0",
         "xunit": "1.9.1",
         "xunit.extensions": "1.9.1",
-        "NUnit.Runners": "3.4.1"
+        "NUnit.Runners": "3.6.0"
 
       }
     }

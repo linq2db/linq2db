@@ -99,7 +99,7 @@
     <DefineConstants>TRACE;FW4;MONO;NOFSHARP</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisLogFile>bin\Release\UnitTests.Linq.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
     <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
     <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
@@ -154,10 +154,6 @@
     </Reference>
     <Reference Include="Npgsql, Version=3.0.6.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Npgsql.3.0.6\lib\net45\Npgsql.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="nunit.framework, Version=3.2.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NUnit.3.2.1\lib\net45\nunit.framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Oracle.DataAccess, Version=2.112.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
@@ -524,13 +520,19 @@
       <Link>Sybase.AdoNet45.AseClient.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="AppveyorDataProviders.Core.txt" />
     <Content Include="AppveyorDataProviders.txt" />
     <Content Include="DefaultDataProviders.txt" />
+    <Content Include="MonoAppveyorDataProviders.txt" />
     <Content Include="SqlServerTypes\readme.htm" />
     <Content Include="..\..\Data\Northwind.sqlite">
       <Link>Database\Northwind.sqlite</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TravisDataProviders.Core.txt" />
+    <Content Include="TravisDataProviders.Osx.Core.txt" />
+    <Content Include="TravisDataProviders.Osx.txt" />
+    <Content Include="TravisDataProviders.txt" />
     <None Include="..\..\Data\TestData.sqlite">
       <Link>Database\TestData.sqlite</Link>
     </None>

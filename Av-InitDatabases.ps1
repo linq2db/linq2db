@@ -1,4 +1,17 @@
-﻿$startPath = "$($env:appveyor_build_folder)\Data"
+﻿param ([string]$conf="")
+
+if ($conf -eq "mono")
+{
+	Rename-Item Tests\Linq\MonoAppveyorDataProviders.txt UserDataProviders.txt
+	Rename-Item Tests\Linq\AppveyorDataProviders.Core.txt UserDataProviders.Core.txt
+}
+else
+{
+	Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
+	Rename-Item Tests\Linq\AppveyorDataProviders.Core.txt UserDataProviders.Core.txt
+}
+
+$startPath = "$($env:appveyor_build_folder)\Data"
 $sqlInstance = "(local)\SQL2012SP1"
 $dbName = "TestData"
 
@@ -22,6 +35,5 @@ $env:PGPASSWORD="Password12!"
 $cmd = '"C:\Program Files\PostgreSQL\9.3\bin\createdb" $dbName'
 iex "& $cmd"
 
-Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
-Rename-Item Tests\Linq\AppveyorDataProviders.Core.txt UserDataProviders.Core.txt
+
 
