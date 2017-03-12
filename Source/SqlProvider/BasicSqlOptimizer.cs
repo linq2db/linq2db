@@ -37,8 +37,139 @@ namespace LinqToDB.SqlProvider
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
 
+			selectQuery = BuildCrossJoins(selectQuery);
+
 			if (Common.Configuration.Linq.OptimizeJoins)
 				selectQuery = OptimizeJoins(selectQuery);
+
+			return selectQuery;
+		}
+
+		SelectQuery BuildCrossJoins(SelectQuery selectQuery)
+		{
+			bool setAlias = false;
+
+			new QueryVisitor().Visit(selectQuery, element =>
+			{
+				if (element.ElementType != QueryElementType.SqlQuery)
+					return;
+
+				var query = (SelectQuery)element;
+
+				var select = query.Select;
+				if (select.From.Tables.Count == 1)
+					return;
+
+				var joins = select.From.Tables.SelectMany(_ => _.Joins).Distinct().ToArray();
+				if (joins.Length == 0)
+					return;
+
+				var tables    = select.From.Tables.ToArray();
+				var baseTable = tables[0];
+
+				if (SqlProviderFlags.IsCrossJoinSupported || SqlProviderFlags.IsInnerJoinAsCrossSupported)
+				{
+					select.From.Tables.Clear();
+					baseTable.Joins.Clear();
+
+					select.From.Tables.Add(baseTable);
+
+					foreach (var t in tables.Skip(1))
+					{
+						t.Joins.Clear();
+						baseTable.Joins.Add(new SelectQuery.JoinedTable(SelectQuery.JoinType.Inner, t, false));
+					}
+
+					foreach (var j in joins)
+						baseTable.Joins.Add(j);
+
+					return;
+				}
+				else // move to subquery
+				{
+					setAlias = true;
+
+					var subQuery     = new SelectQuery();
+					var tableSources = tables.Select(_ => _.Source).ToArray();
+					var replaced     = new Dictionary<IQueryElement, IQueryElement>();
+					var sourcesToAdd = new HashSet<ISqlTableSource>();
+					var searches     = new List<SelectQuery.SearchCondition>();
+
+					Func<IQueryElement, IQueryElement> changeSource = e =>
+					{
+						switch (e.ElementType)
+						{
+							case QueryElementType.SqlField:
+								var f = (SqlField)e;
+
+								if (!tableSources.Contains(f.Table))
+									return null;
+
+								if (!sourcesToAdd.Contains(f.Table))
+								{
+									sourcesToAdd.Add(f.Table);
+									subQuery.Select.From.Tables.Add(new SelectQuery.TableSource(f.Table, null));
+								}
+
+								return subQuery.Select.Columns[subQuery.Select.Add(f)];
+							case QueryElementType.Column:
+								var c = (SelectQuery.Column)e;
+
+								if (!tableSources.Contains(c.Parent))
+									return null;
+
+								if (!sourcesToAdd.Contains(c.Parent))
+								{
+									sourcesToAdd.Add(c.Parent);
+									subQuery.Select.From.Tables.Add(new SelectQuery.TableSource(c.Parent, null));
+								}
+								return subQuery.Select.Columns[subQuery.Select.Add(c)];
+							default:
+								return null;
+						}
+
+					};
+
+					baseTable = new SelectQuery.TableSource(subQuery, null);
+
+					foreach (var t in tables)
+						t.Joins.Clear();
+
+					foreach (var j in joins)
+					{
+						baseTable.Joins.Add(new SelectQuery.JoinedTable(
+							j.JoinType, j.Table, j.IsWeak, 
+							new QueryVisitor().Convert(j.Condition, changeSource)));
+					}
+
+					query.Select.From.Tables.Clear();
+					query.Select.From.Tables.Add(baseTable);
+
+					var sc =                  new QueryVisitor().Convert(query.Select,  changeSource) ?? query.Select;
+					var ic = query.IsInsert ? new QueryVisitor().Convert(query.Insert,  changeSource) ?? query.Insert : null;
+					var uc = query.IsUpdate ? new QueryVisitor().Convert(query.Update,  changeSource) ?? query.Update : null;
+					var dc = query.IsDelete ? new QueryVisitor().Convert(query.Delete,  changeSource) ?? query.Delete : null;
+					var wc =                  new QueryVisitor().Convert(query.Where,   changeSource) ?? query.Where;
+					var gc =                  new QueryVisitor().Convert(query.GroupBy, changeSource) ?? query.GroupBy;
+					var hc =                  new QueryVisitor().Convert(query.Having,  changeSource) ?? query.Having;
+					var oc =                  new QueryVisitor().Convert(query.OrderBy, changeSource) ?? query.OrderBy;
+					var us = query.HasUnion ? query.Unions.Select(_ => new QueryVisitor().Convert(_, changeSource)).ToList() : query.Unions;
+
+					var ps = new List<SqlParameter>(query.Parameters.Count);
+
+					ps.AddRange(query.Parameters);
+
+					query.Init(ic, uc, dc, sc, query.From, wc, gc, hc, oc, us,
+						query.ParentSelect,
+						query.CreateTable,
+						query.IsParameterDependent,
+						ps);
+				}
+
+			});
+
+			if (setAlias)
+				selectQuery.SetAliases();
 
 			return selectQuery;
 		}
