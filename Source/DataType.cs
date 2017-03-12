@@ -211,5 +211,20 @@ namespace LinqToDB
 		/// Dictionary type for key-value pairs
 		/// </summary>
 		Dictionary,
+
+		/// <summary>
+		/// Result set (for example OracleDbType.RefCursor)
+		/// </summary>
+		Cursor,
+
+		/// <summary>
+		/// Json type utilized in postgres provider
+		/// </summary>
+		Json,
+
+		/// <summary>
+		/// Binary type utilized postgres provider (jsonb)
+		/// </summary>
+		BinaryJson
 	}
 }

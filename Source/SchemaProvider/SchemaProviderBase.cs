@@ -32,8 +32,10 @@ namespace LinqToDB.SchemaProvider
 		}
 
 		protected List<DataTypeInfo> DataTypes;
-		protected string[]           IncludedSchemas;
-		protected string[]           ExcludedSchemas;
+		protected HashSet<string>    IncludedSchemas;
+		protected HashSet<string>    ExcludedSchemas;
+		protected HashSet<string>    IncludedCatalogs;
+		protected HashSet<string>    ExcludedCatalogs;
 		protected bool               GenerateChar1AsString;
 		protected DataTable          DataTypesSchema;
 
@@ -44,8 +46,10 @@ namespace LinqToDB.SchemaProvider
 			if (options == null)
 				options = new GetSchemaOptions();
 
-			IncludedSchemas       = options.IncludedSchemas ?? new string[0];
-			ExcludedSchemas       = options.ExcludedSchemas ?? new string[0];
+			IncludedSchemas       = GetHashSet(options.IncludedSchemas,  options.StringComparer);
+			ExcludedSchemas       = GetHashSet(options.ExcludedSchemas,  options.StringComparer);
+			IncludedCatalogs      = GetHashSet(options.IncludedCatalogs, options.StringComparer);
+			ExcludedCatalogs      = GetHashSet(options.ExcludedCatalogs, options.StringComparer);
 			GenerateChar1AsString = options.GenerateChar1AsString;
 
 			var dbConnection = (DbConnection)dataConnection.Connection;
@@ -68,20 +72,23 @@ namespace LinqToDB.SchemaProvider
 				(
 					from t in GetTables(dataConnection)
 					where
-						(IncludedSchemas.Length == 0 ||  IncludedSchemas.Contains(t.SchemaName)) &&
-						(ExcludedSchemas.Length == 0 || !ExcludedSchemas.Contains(t.SchemaName))
+						(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(t.SchemaName))  &&
+						(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(t.SchemaName))  &&
+						(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(t.CatalogName)) &&
+						(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(t.CatalogName))
 					select new TableSchema
 					{
-						ID              = t.TableID,
-						CatalogName     = t.CatalogName,
-						SchemaName      = t.SchemaName,
-						TableName       = t.TableName,
-						Description     = t.Description,
-						IsDefaultSchema = t.IsDefaultSchema,
-						IsView          = t.IsView,
-						TypeName        = ToValidName(t.TableName),
-						Columns         = new List<ColumnSchema>(),
-						ForeignKeys     = new List<ForeignKeySchema>()
+						ID                 = t.TableID,
+						CatalogName        = t.CatalogName,
+						SchemaName         = t.SchemaName,
+						TableName          = t.TableName,
+						Description        = t.Description,
+						IsDefaultSchema    = t.IsDefaultSchema,
+						IsView             = t.IsView,
+						TypeName           = ToValidName(t.TableName),
+						Columns            = new List<ColumnSchema>(),
+						ForeignKeys        = new List<ForeignKeySchema>(),
+						IsProviderSpecific = t.IsProviderSpecific
 					}
 				).ToList();
 
@@ -195,8 +202,10 @@ namespace LinqToDB.SchemaProvider
 					(
 						from sp in procs
 						where
-							(IncludedSchemas.Length == 0 ||  IncludedSchemas.Contains(sp.SchemaName)) &&
-							(ExcludedSchemas.Length == 0 || !ExcludedSchemas.Contains(sp.SchemaName))
+							(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(sp.SchemaName))  &&
+							(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(sp.SchemaName))  &&
+							(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(sp.CatalogName)) &&
+							(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(sp.CatalogName))
 						join p  in procPparams on sp.ProcedureID equals p.ProcedureID
 						into gr
 						select new ProcedureSchema
@@ -282,6 +291,19 @@ namespace LinqToDB.SchemaProvider
 				DataTypesSchema               = DataTypesSchema,
 
 			}, options);
+		}
+
+		protected static HashSet<string> GetHashSet(string[] data, IEqualityComparer<string> comparer)
+		{
+			var set = new HashSet<string>(comparer ?? StringComparer.OrdinalIgnoreCase);
+
+			if (data == null)
+				return set;
+
+			foreach (var s in data)
+				set.Add(s);
+
+			return set;
 		}
 
 		protected virtual List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection)
@@ -507,12 +529,11 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
-		protected string ToValidName(string name)
+		internal static string ToValidName(string name)
 		{
-			if (name.Contains(" "))
+			if (name.Contains(" ") || name.Contains("\t"))
 			{
-				var ss = name.Split(' ')
-					.Where (s => s.Trim().Length > 0)
+				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
 					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
 
 				name = string.Join("", ss.ToArray());
@@ -522,10 +543,11 @@ namespace LinqToDB.SchemaProvider
 				name = "_" + name;
 
 			return name
-				.Replace('$', '_')
-				.Replace('#', '_')
-				.Replace('-', '_')
-				.Replace('/', '_')
+				.Replace('$',  '_')
+				.Replace('#',  '_')
+				.Replace('-',  '_')
+				.Replace('/',  '_')
+				.Replace('\\', '_')
 				;
 		}
 
@@ -614,7 +636,7 @@ namespace LinqToDB.SchemaProvider
 						name = schemaOptions.GetAssociationMemberName(key);
 
 						if (name != null)
-							key.MemberName = name;
+							key.MemberName = ToValidName(name);
 					}
 
 					if (name == null)
@@ -648,14 +670,28 @@ namespace LinqToDB.SchemaProvider
 									_.Length > 0 && _ != t.TableName &&
 									(t.SchemaName == null || t.IsDefaultSchema || _ != t.SchemaName))
 								.ToArray());
+
+							var digitEnd = 0;
+							for (var i = name.Length - 1; i >= 0; i--)
+							{
+								if (char.IsDigit(name[i]))
+									digitEnd++;
+								else
+									break;
+							}
+
+							if (digitEnd > 0)
+								name = name.Substring(0, name.Length - digitEnd);
 						}
 
-						if (name.Length != 0 &&
-							t.ForeignKeys.Select(_ => _.MemberName).Concat(
+						if (string.IsNullOrEmpty(name))
+							name = key.OtherTable.TableName;
+
+						if (t.ForeignKeys.Select(_ => _.MemberName). Concat(
 							t.Columns.    Select(_ => _.MemberName)).Concat(
 								new[] { t.TypeName }).All(_ => _ != name))
 						{
-							key.MemberName = name;
+							key.MemberName = ToValidName(name);
 						}
 					}
 				}

@@ -170,8 +170,6 @@ namespace Tests.DataProvider
 
 				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
 				TestNumeric(conn,  3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
-				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
-				TestNumeric(conn,  1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn, decimal.MinValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
 				TestNumeric(conn, decimal.MaxValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
 				TestNumeric(conn, decimal.MinValue,  DataType.VarNumeric, "bigint bit decimal int money numeric smallint tinyint float real");
@@ -180,6 +178,16 @@ namespace Tests.DataProvider
 				TestNumeric(conn, +922337203685477m, DataType.Money);
 				TestNumeric(conn, -214748m,          DataType.SmallMoney);
 				TestNumeric(conn, +214748m,          DataType.SmallMoney);
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs), Category("WindowsOnly")]
+		public void TestNumericsDouble(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn, 1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 			}
 		}
 
@@ -372,6 +380,21 @@ namespace Tests.DataProvider
 			}
 		}
 
+		/// <summary>
+		/// Ensure we can pass data as Json parameter type and get 
+		/// same value back out equivalent in value
+		/// </summary>
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestJson(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var testJson = "{\"name\":\"bob\", \"age\":10}";
+
+				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter("p", testJson, DataType.Json)), Is.EqualTo(testJson));
+			}
+		}
+
 		enum TestEnum
 		{
 			[MapValue("A")] AA,
@@ -404,12 +427,27 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table(Name = "CreateTableTest", Schema = "IgnoreSchema")]
+		public class CreateTableTest
+		{
+			[PrimaryKey, Identity]
+			public int Id;
+		}
+
 		[Test, IncludeDataContextSource(ProviderName.SQLite)]
 		public void CreateDatabase(string context)
 		{
 			SQLiteTools.CreateDatabase("TestDatabase");
 			Assert.IsTrue(File.Exists ("TestDatabase.sqlite"));
-			SQLiteTools.DropDatabase  ("TestDatabase");
+
+			using (var db = new DataConnection(SQLiteTools.GetDataProvider(), "Data Source=TestDatabase.sqlite"))
+			{
+				db.CreateTable<CreateTableTest>();
+				db.DropTable  <CreateTableTest>();
+			}
+
+			SQLiteTools.DropDatabase   ("TestDatabase");
+			Assert.IsFalse(File.Exists ("TestDatabase.sqlite"));
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]

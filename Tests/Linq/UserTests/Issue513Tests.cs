@@ -1,58 +1,65 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using Model;
+
 	[TestFixture]
 	public class Issue513Tests : TestBase
 	{
-		System.Threading.Semaphore _semaphore = new System.Threading.Semaphore(0, 10);
-
-		[Table ("Child")]
-		[Column("ParentID", "Parent.ParentID")]
-		public class Child513
-		{
-			[Association(ThisKey = "Parent.ParentID", OtherKey = "ParentID")]
-			public Parent513 Parent;
-		}
-
-		[Table("Parent")]
-		public class Parent513
-		{
-			[Column]
-			public int ParentID;
-		}
-
-		[DataContextSource(false)]
-		public void Test(string context)
-		{
-			var tasks = new Task[10];
-			for (var i = 0; i < 10; i++)
-				tasks[i] = new Task(() => TestInternal(context));
-
-			for (var i = 0; i < 10; i++)
-				tasks[i].Start();
-
-			System.Threading.Thread.Sleep(1000);
-			_semaphore.Release(10);
-
-			Task.WaitAll(tasks);
-		}
-
-		public void TestInternal(string context)
+		[Test, DataContextSource, Category("WindowsOnly")]
+		public void Simple(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				_semaphore.WaitOne();
-				var r = db.GetTable<Child513>().Select(_ => _.Parent).Distinct();
-				Assert.IsNotEmpty(r);
+				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
+				Assert.AreEqual(typeof(InheritanceParent1),    InheritanceParent[1].GetType());
+				Assert.AreEqual(typeof(InheritanceParent2),    InheritanceParent[2].GetType());
+
+				AreEqual(InheritanceParent, db.InheritanceParent);
+				AreEqual(InheritanceChild,  db.InheritanceChild);
+			}
+		}
+
+		[Test, DataContextSource(TestProvName.SQLiteMs), Category("WindowsOnly")]
+		public void Test(string context)
+		{
+			using (var semaphore = new Semaphore(0, 10))
+			{
+				var tasks = new Task[10];
+				for (var i = 0; i < 10; i++)
+					tasks[i] = new Task(() => TestInternal(context, semaphore));
+
+				for (var i = 0; i < 10; i++)
+					tasks[i].Start();
+
+				Thread   .Sleep(100);
+				semaphore.Release(10);
+
+				Task.WaitAll(tasks);
+			}
+		}
+
+		private void TestInternal(string context, Semaphore semaphore)
+		{
+			try
+			{
+				using (var db = GetDataContext(context))
+				{
+					semaphore.WaitOne();
+
+					AreEqual(
+						   InheritanceChild.Select(_ => _.Parent).Distinct(),
+						db.InheritanceChild.Select(_ => _.Parent).Distinct());
+				}
+			}
+			finally
+			{
+				semaphore.Release();
 			}
 		}
 	}

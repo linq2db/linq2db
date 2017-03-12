@@ -191,14 +191,14 @@ namespace Tests
 			return basePath;
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
 #endif
 
 		static void OpenHost()
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 			if (_isHostOpen)
 				return;
 
@@ -330,7 +330,7 @@ namespace Tests
 						yield return test;
 
 					}
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 
 					if (!isIgnore && _includeLinqService)
 					{
@@ -396,10 +396,10 @@ namespace Tests
 		[AttributeUsage(AttributeTargets.Method)]
 		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public NorthwindDataContextAttribute(bool excludeSqlite) : base(
+			public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false) : base(
 				excludeSqlite
 				? new[] { "Northwind" }
-				: new[] { "Northwind", "NorthwindSqlite" })
+				:  ( excludeSqliteMs  ? new[] { "Northwind", "NorthwindSqlite" } : new[] { "Northwind", "NorthwindSqlite",  "NorthwindSqliteMs"}))
 			{
 			}
 
@@ -412,7 +412,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -492,6 +492,8 @@ namespace Tests
 			}
 		}
 
+		protected const int MaxPersonID = 3;
+
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
 		{
@@ -543,7 +545,7 @@ namespace Tests
 			}
 		}
 
-#region Parent/Child Model
+		#region Parent/Child Model
 
 		private          List<Parent> _parent;
 		protected IEnumerable<Parent>  Parent
@@ -726,6 +728,39 @@ namespace Tests
 
 #endregion
 
+		#region Inheritance Parent/Child Model
+
+		private   List<InheritanceParentBase> _inheritanceParent;
+		protected List<InheritanceParentBase>  InheritanceParent
+		{
+			get
+			{
+				if (_inheritanceParent == null)
+				{
+					using (var db = new TestDataConnection())
+						_inheritanceParent = db.InheritanceParent.ToList();
+				}
+
+				return _inheritanceParent;
+			}
+		}
+
+		private   List<InheritanceChildBase> _inheritanceChild;
+		protected List<InheritanceChildBase>  InheritanceChild
+		{
+			get
+			{
+				if (_inheritanceChild == null)
+				{
+					using (var db = new TestDataConnection())
+						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
+				}
+
+				return _inheritanceChild;
+			}
+		}
+		
+		#endregion
 
 #region Northwind
 
@@ -990,12 +1025,38 @@ namespace Tests
 		}
 	}
 
-    public static class Helpers
-    {
-        public static string ToInvariantString<T>(this T data)
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0}", data)
-                .Replace(',', '.').Trim(' ', '.', '0');
-        }
-    }
+	public static class Helpers
+	{
+		public static string ToInvariantString<T>(this T data)
+		{
+			return string.Format(CultureInfo.InvariantCulture, "{0}", data)
+				.Replace(',', '.').Trim(' ', '.', '0');
+		}
+	}
+
+	public class AllowMultipleQuery : IDisposable
+	{
+		public AllowMultipleQuery()
+		{
+			Configuration.Linq.AllowMultipleQuery = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
+
+	public class WithoutJoinOptimization : IDisposable
+	{
+		public WithoutJoinOptimization()
+		{
+			Configuration.Linq.OptimizeJoins = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.OptimizeJoins = true;
+		}
+	}
 }

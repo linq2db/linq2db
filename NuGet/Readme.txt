@@ -1,8 +1,15 @@
-LINQ to DB 1.0.7.5  Release Notes
+LINQ to DB 1.7.6  Release Notes
 ---------------------------------
 
-Welcome to the release notes for LINQ to DB 1.0.7.5
+Welcome to the release notes for LINQ to DB 1.7.6
 
+What's new in 1.7.6
+---------------------
+
+Multi-threading issues fixes
+Inner Joins optimizations (Configuration.Linq.OptimizeJoins)
+Fixed issues with paths on Linux
+F# options support
 
 What's new in 1.0.7.5
 ---------------------

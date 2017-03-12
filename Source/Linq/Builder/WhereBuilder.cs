@@ -17,6 +17,12 @@ namespace LinqToDB.Linq.Builder
 			var isHaving  = methodCall.Method.Name == "Having";
 			var sequence  = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var condition = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+
+			if (sequence.SelectQuery.Select.IsDistinct        ||
+			    sequence.SelectQuery.Select.TakeValue != null ||
+			    sequence.SelectQuery.Select.SkipValue != null)
+				sequence = new SubQueryContext(sequence);
+
 			var result    = builder.BuildWhere(buildInfo.Parent, sequence, condition, !isHaving, isHaving);
 
 			result.SetAlias(condition.Parameters[0].Name);

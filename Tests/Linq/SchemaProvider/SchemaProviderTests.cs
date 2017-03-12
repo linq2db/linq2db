@@ -132,6 +132,8 @@ namespace Tests.SchemaProvider
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
+
+				Assert.IsNotNull(dbSchema);
 			}
 		}
 
@@ -142,13 +144,13 @@ namespace Tests.SchemaProvider
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
-				var table    = dbSchema.Tables.Single(t => t.TableName == "alltypes");
+				var table    = dbSchema.Tables.Single(t => t.TableName.Equals("alltypes", StringComparison.OrdinalIgnoreCase));
 
 				Assert.That(table.Columns[0].MemberType, Is.Not.EqualTo("object"));
 
-				Assert.That(table.Columns.Single(c => c.ColumnName == "intUnsignedDataType").MemberType, Is.EqualTo("uint?"));
+				Assert.That(table.Columns.Single(c => c.ColumnName.Equals("intUnsignedDataType", StringComparison.OrdinalIgnoreCase)).MemberType, Is.EqualTo("uint?"));
 
-				var view = dbSchema.Tables.Single(t => t.TableName == "personview");
+				var view = dbSchema.Tables.Single(t => t.TableName.Equals("personview", StringComparison.OrdinalIgnoreCase));
 
 				Assert.That(view.Columns.Count, Is.EqualTo(1));
 			}
@@ -161,7 +163,7 @@ namespace Tests.SchemaProvider
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
-				var table    = dbSchema.Tables.Single(t => t.TableName == "person");
+				var table    = dbSchema.Tables.Single(t => t.TableName.Equals("person", StringComparison.OrdinalIgnoreCase));
 				var pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
 
 				Assert.That(pk, Is.Not.Null);
@@ -170,10 +172,8 @@ namespace Tests.SchemaProvider
 
 		class PKTest
 		{
-#pragma warning disable 0649
 			[PrimaryKey(1)] public int ID1;
 			[PrimaryKey(2)] public int ID2;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
@@ -207,6 +207,94 @@ namespace Tests.SchemaProvider
 
 				Assert.That(table.Columns.Single(c => c.ColumnName == "BINARYDATATYPE").   ColumnType, Is.EqualTo("CHAR (5) FOR BIT DATA"));
 				Assert.That(table.Columns.Single(c => c.ColumnName == "VARBINARYDATATYPE").ColumnType, Is.EqualTo("VARCHAR (5) FOR BIT DATA"));
+			}
+		}
+
+		[Test]
+		public void ToValidNameTest()
+		{
+			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("1"));
+			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("    1   "));
+			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("\t1\t"));
+		}
+
+		[Test, DataContextSource(false)]
+		public void IncludeExcludeCatalogTest(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var exclude = conn.DataProvider.GetSchemaProvider().GetSchema(conn).Tables.Select(_ => _.CatalogName).Distinct().ToList();
+				exclude.Add(null);
+				exclude.Add("");
+
+				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedCatalogs = exclude.ToArray()});
+				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedCatalogs = new []{ "IncludeExcludeCatalogTest" }});
+
+				Assert.IsEmpty(schema1.Tables);
+				Assert.IsEmpty(schema2.Tables);
+			}
+
+		}
+
+		[Test, DataContextSource(false)]
+		public void IncludeExcludeSchemaTest(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var exclude = conn.DataProvider.GetSchemaProvider()
+						.GetSchema(conn, new GetSchemaOptions() {ExcludedSchemas = new string[] {null}})
+						.Tables.Select(_ => _.SchemaName)
+						.Distinct()
+						.ToList();
+				exclude.Add(null);
+				exclude.Add("");
+
+				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()});
+				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } });
+
+				Assert.IsEmpty(schema1.Tables);
+				Assert.IsEmpty(schema2.Tables);
+			}
+
+		}
+
+
+		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void SchemaProviderNormalizeName(string context)
+		{
+			using (var db = new DataConnection(ProviderName.SQLite, "Data Source=:memory:;"))
+			{
+				db.Execute(
+					@"create table Customer
+					(
+						ID int not null primary key,
+						Name nvarchar(30) not null
+					)");
+
+				db.Execute(
+					@"create table Purchase
+					(
+						ID int not null primary key,
+						CustomerID int null references Customer (ID),
+						Date datetime not null,
+						Description varchar(30) not null,
+						Price decimal not null
+					)");
+
+				db.Execute(
+					@"create table PurchaseItem
+					(
+						ID int not null primary key,
+						PurchaseID int not null references Purchase (ID),
+						Detail varchar(30) not null,
+						Price decimal not null
+					)");
+
+				var sp = db.DataProvider.GetSchemaProvider();
+				var sc = sp.GetSchema(db);
+
+				Assert.IsNotNull(sc);
+				Assert.IsEmpty(sc.Tables.SelectMany(_ => _.ForeignKeys).Where(_ => _.MemberName.Any(char.IsDigit)));
 			}
 		}
 	}

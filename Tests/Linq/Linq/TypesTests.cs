@@ -472,7 +472,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Value = p.Value1.GetValueOrDefault() });
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.Sybase), Category("WindowsOnly")]
 		public void Unicode(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -481,7 +481,7 @@ namespace Tests.Linq
 
 				try
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 
 					var id =
 						db.Person
@@ -503,7 +503,7 @@ namespace Tests.Linq
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -130,21 +131,36 @@ namespace LinqToDB.DataProvider.SQLite
 				var leftType  = exprExpr.Expr1.SystemType;
 				var rightType = exprExpr.Expr2.SystemType;
 
-				if (IsDateTime(leftType) || IsDateTime(rightType))
+				if ((IsDateTime(leftType) || IsDateTime(rightType)) && 
+					!((exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null) 
+					|| (exprExpr.Expr2 is IValueContainer && ((IValueContainer)exprExpr.Expr2).Value == null)))
 				{
+					
+					if (leftType != null)
+					{
+						var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
+							SqlDataType.GetDataType(leftType), exprExpr.Expr1);
+						exprExpr.Expr1 = l;
+					}
 
-					var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
-						SqlDataType.GetDataType(leftType), exprExpr.Expr1);
-
-					var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
-						SqlDataType.GetDataType(rightType), exprExpr.Expr2);
-
-					exprExpr.Expr1 = l;
-					exprExpr.Expr2 = r;
+					if (rightType != null)
+					{
+						var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
+							SqlDataType.GetDataType(rightType), exprExpr.Expr2);
+						exprExpr.Expr2 = r;
+					}
 				}
 			}
 
 			base.BuildPredicate(predicate);
+		}
+
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			if (database != null)
+				sb.Append(database).Append(".");
+
+			return sb.Append(table);
 		}
 
 		private static bool IsDateTime(Type type)

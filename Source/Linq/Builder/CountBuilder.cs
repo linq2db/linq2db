@@ -111,7 +111,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression expression, int level)
 			{
-				return Builder.BuildSql(_returnType, ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index);
+				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
+				if (Parent != null)
+					ConvertToParentIndex(index, Parent);
+				return Builder.BuildSql(_returnType, index);
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)

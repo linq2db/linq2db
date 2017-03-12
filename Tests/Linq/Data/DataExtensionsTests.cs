@@ -48,10 +48,8 @@ namespace Tests.Data
 
 		class QueryObject
 		{
-#pragma warning disable 0649
 			public int      Column1;
 			public DateTime Column2;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
@@ -151,10 +149,8 @@ namespace Tests.Data
 		[ScalarType(false)]
 		struct QueryStruct
 		{
-#pragma warning disable 0649
 			public int      Column1;
 			public DateTime Column2;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
@@ -198,13 +194,13 @@ namespace Tests.Data
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
+			ms.SetConvertExpression<TwoValues, DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
 
 			using (var conn = new DataConnection().AddMappingSchema(ms))
 			{
-				var n = conn.Execute<long>("SELECT @p", new { p = new TwoValues { Value1 = 1, Value2 = 2 }});
+				var n = conn.Execute<long>("SELECT @p", new { p = new TwoValues { Value1 = 1, Value2 = 2 } });
 
-				Assert.AreEqual(1L << 32 | 2, n);
+				Assert.AreEqual(1L << 16 | 2, n);
 			}
 		}
 

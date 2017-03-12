@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -112,7 +113,20 @@ namespace LinqToDB.Mapping
 
 		public PropertyMappingBuilder<T> Property(Expression<Func<T,object>> func)
 		{
-			return new PropertyMappingBuilder<T>(this, func);
+			return (new PropertyMappingBuilder<T>(this, func)).IsColumn();
+		}
+
+		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
+			Expression<Func<T, S>> prop,
+			Expression<Func<T, ID1>> thisKey,
+			Expression<Func<S, ID2>> otherKey )
+		{
+			var thisKeyName = ((MemberExpression)thisKey.Body).Member.Name;
+			var otherKeyName = ((MemberExpression)otherKey.Body).Member.Name;
+
+			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+
+			return Property( objProp ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName } );
 		}
 
 		public EntityMappingBuilder<T> HasPrimaryKey(Expression<Func<T,object>> func, int order = -1)
@@ -170,6 +184,15 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<T> HasDatabaseName(string databaseName)
 		{
 			return SetTable(a => a.Database = databaseName);
+		}
+
+		public EntityMappingBuilder<T> Inheritance<S>(Expression<Func<T, S>> key, S value, Type type, bool isDefault = false)
+		{
+			HasAttribute(new InheritanceMappingAttribute() {Code = value, Type = type, IsDefault = isDefault});
+			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(key.Body, typeof(object)), key.Parameters);
+			Property(objProp).IsDiscriminator();
+
+			return this;
 		}
 
 		EntityMappingBuilder<T> SetTable(Action<TableAttribute> setColumn)
@@ -230,13 +253,18 @@ namespace LinqToDB.Mapping
 			Func<bool,TA>              getNew,
 			Action<bool,TA>            modifyExisting,
 			Func<TA,string>            configGetter,
-			Func<TA,TA>                overrideAttribute = null)
+			Func<TA,TA>                overrideAttribute = null,
+			Func<IEnumerable<TA>, TA>  existingGetter    = null
+			)
 			where TA : Attribute
 		{
 			var ex = func.Body;
 
 			if (ex is UnaryExpression)
 				ex = ((UnaryExpression)ex).Operand;
+
+			if (existingGetter == null)
+				existingGetter = GetExisting;
 
 			Action<Expression,bool> setAttr = (e,m) =>
 			{
@@ -250,13 +278,13 @@ namespace LinqToDB.Mapping
 				if (memberInfo == null)
 					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));
 
-				var attrs = GetAttributes(memberInfo, configGetter);
+				var attr = existingGetter(GetAttributes(memberInfo, configGetter));
 
-				if (attrs.Length == 0)
+				if (attr == null)
 				{
 					if (overrideAttribute != null)
 					{
-						var attr = _builder.MappingSchema.GetAttribute(memberInfo, configGetter);
+						attr = existingGetter(_builder.MappingSchema.GetAttributes(memberInfo, configGetter));
 
 						if (attr != null)
 						{
@@ -272,7 +300,7 @@ namespace LinqToDB.Mapping
 					_builder.HasAttribute(memberInfo, getNew(m));
 				}
 				else
-					modifyExisting(m, attrs[0]);
+					modifyExisting(m, attr);
 			};
 
 			if (processNewExpression && ex.NodeType == ExpressionType.New)
@@ -290,6 +318,12 @@ namespace LinqToDB.Mapping
 			setAttr(ex, false);
 
 			return this;
+		}
+
+		private TA GetExisting<TA>(IEnumerable<TA> attrs)
+			where TA : Attribute
+		{
+			return attrs.FirstOrDefault();
 		}
 	}
 }

@@ -545,11 +545,11 @@ namespace LinqToDB.SqlProvider
 			BuildInsertClause("INSERT", false);
 			Indent--;
 
-			while (_endLine.Contains(StringBuilder[StringBuilder.Length - 1]))
+			while (EndLine.Contains(StringBuilder[StringBuilder.Length - 1]))
 				StringBuilder.Length--;
 		}
 
-		protected static readonly char[] _endLine = { ' ', '\r', '\n' };
+		protected static readonly char[] EndLine = { ' ', '\r', '\n' };
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert()
 		{
@@ -1478,17 +1478,18 @@ namespace LinqToDB.SqlProvider
 				if (p.Values.Count == 1 && p.Values[0] is SqlParameter &&
 					!(p.Expr1.SystemType == typeof(string) && ((SqlParameter)p.Values[0]).Value is string))
 				{
-					var pr = (SqlParameter)p.Values[0];
+					var pr      = (SqlParameter)p.Values[0];
+					var prValue = pr.Value;
 
-					if (pr.Value == null)
+					if (prValue == null)
 					{
 						BuildPredicate(new SelectQuery.Predicate.Expr(new SqlValue(false)));
 						return;
 					}
 
-					if (pr.Value is IEnumerable)
+					if (prValue is IEnumerable)
 					{
-						var items = (IEnumerable)pr.Value;
+						var items = (IEnumerable)prValue;
 
 						if (p.Expr1 is ISqlTableSource)
 						{

@@ -80,15 +80,15 @@ namespace LinqToDB.Linq.Builder
 			foreach (var sql in groupSql)
 				sequence.SelectQuery.GroupBy.Expr(sql.Sql);
 
-			new QueryVisitor().Visit(sequence.SelectQuery.From, e =>
-			{
-				if (e.ElementType == QueryElementType.JoinedTable)
-				{
-					var jt = (SelectQuery.JoinedTable)e;
-					if (jt.JoinType == SelectQuery.JoinType.Inner)
-						jt.IsWeak = false;
-				}
-			});
+//			new QueryVisitor().Visit(sequence.SelectQuery.From, e =>
+//			{
+//				if (e.ElementType == QueryElementType.JoinedTable)
+//				{
+//					var jt = (SelectQuery.JoinedTable)e;
+//					if (jt.JoinType == SelectQuery.JoinType.Inner)
+//						jt.IsWeak = false;
+//				}
+//			});
 
 			var element = new SelectContext (buildInfo.Parent, elementSelector, sequence/*, key*/);
 			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element);
@@ -348,9 +348,17 @@ namespace LinqToDB.Linq.Builder
 
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
-							return ReferenceEquals(levelExpression, expression) ?
+							var isBlockDisable = Builder.IsBlockDisable;
+
+							Builder.IsBlockDisable = true;
+
+							var r = ReferenceEquals(levelExpression, expression) ?
 								_key.BuildExpression(null,       0) :
 								_key.BuildExpression(expression, level + 1);
+
+							Builder.IsBlockDisable = isBlockDisable;
+
+							return r;
 						}
 					}
 				}

@@ -16,6 +16,30 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void LoadSinglesWithPatient( string context)
+		{
+			using (var db = GetDataContext(context))
+				FSharp.WhereTest.LoadSinglesWithPatient( db);
+		}
+
+		[Test, DataContextSource]
+		public void LoadSingleWithOptions(string context)
+		{
+
+			var ms = Tests.FSharp.MappingSchema.Initialize();
+
+			using (var db = GetDataContext(context, ms))
+				FSharp.WhereTest.LoadSingleWithOptions(db);
+		}
+
+		[Test, DataContextSource]
+		public void LoadSingleCLIMutable(string context)
+		{
+			using (var db = GetDataContext(context))
+				FSharp.WhereTest.LoadSingleCLIMutable(db, null);
+		}
+
+		[Test, DataContextSource]
 		public void LoadSingleComplexPerson(string context)
 		{
 			using (var db = GetDataContext(context))

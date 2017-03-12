@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Expressions;
 	using Mapping;
 	using SqlProvider;
+	using Extensions;
 
 	public class PostgreSQLDataProvider : DynamicDataProviderBase
 	{
@@ -109,7 +110,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						dataReaderParameter,
 						indexParameter);
 			}
-
+			
 			_setMoney     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Money");
 			_setVarBinary = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Bytea");
 			_setBoolean   = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Boolean");
@@ -117,7 +118,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_setText      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Text");
 			_setBit       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Bit");
 			_setHstore    = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Hstore");
-
+			_setJson      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Json");
+			_setJsonb     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Jsonb");
 
 			if (BitStringType        != null) MappingSchema.AddScalarType(BitStringType);
 			if (NpgsqlIntervalType   != null) MappingSchema.AddScalarType(NpgsqlIntervalType);
@@ -161,13 +163,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (_npgsqlDateTime != null)
 			{
-				var p = Expression.Parameter(_npgsqlDateTime, "p");
+				var p  = Expression.Parameter(_npgsqlDateTime, "p");
+				var pi = p.Type.GetPropertyEx("DateTime");
+
+				Expression expr;
+
+				if (pi != null)
+					expr = Expression.Property(p, pi);
+				else
+					expr = Expression.Call(p, "ToDateTime", null);
 
 				MappingSchema.SetConvertExpression(_npgsqlDateTime, typeof(DateTimeOffset),
 					Expression.Lambda(
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
-							Expression.PropertyOrField(p, "DateTime")),p));
+							expr),p));
 			}
 		}
 
@@ -201,6 +211,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static Action<IDbDataParameter> _setText;
 		static Action<IDbDataParameter> _setBit;
 		static Action<IDbDataParameter> _setHstore;
+		static Action<IDbDataParameter> _setJsonb;
+		static Action<IDbDataParameter> _setJson;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
@@ -233,6 +245,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.NText      : _setText     (parameter);                   break;
 				case DataType.BitArray   : _setBit      (parameter);                   break;
 				case DataType.Dictionary : _setHstore(parameter);                      break;
+				case DataType.Json       : _setJson(parameter);                        break;
+				case DataType.BinaryJson : _setJsonb(parameter);                       break;
 				default                  : base.SetParameterType(parameter, dataType); break;
 			}
 		}

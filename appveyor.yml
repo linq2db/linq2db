@@ -1,7 +1,7 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.7.6
+  packageVersion: 1.7.7
 
 version: $(packageVersion).{build}
 
@@ -58,6 +58,7 @@ artifacts:
 test: 
   assemblies:
     - \Tests\**\linq2db.Tests.dll
+    - \Tests\OrmBattle\**\Tests.dll
 
 before_test:
 - ps: |

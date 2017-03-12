@@ -61,14 +61,14 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
+//#if OVERRIDETOSTRING
 
 		public override string ToString()
 		{
 			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
 		}
 
-#endif
+//#endif
 
 		#endregion
 

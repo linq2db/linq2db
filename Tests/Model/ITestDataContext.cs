@@ -27,6 +27,8 @@ namespace Tests.Model
 		ITable<LinqDataTypes>          Types                  { get; }
 		ITable<LinqDataTypes2>         Types2                 { get; }
 		ITable<TestIdentity>           TestIdentity           { get; }
+		ITable<InheritanceParentBase>  InheritanceParent      { get; }
+		ITable<InheritanceChildBase>   InheritanceChild       { get; }
 
 		[Sql.TableFunction(Name="GetParentByID")]
 		ITable<Parent> GetParentByID(int? id);

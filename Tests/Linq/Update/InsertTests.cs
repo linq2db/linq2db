@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -253,7 +254,7 @@ namespace Tests.xUpdate
 						db.Child
 							.Where(c => c.ChildID == 11)
 							.Into(db.Parent)
-								.Value(p => p.ParentID, c => c.ParentID)
+								.Value(p => p.ParentID, c => c.ParentID + 1000)
 								.Value(p => p.Value1,   c => (int?)c.ChildID)
 							.Insert());
 					Assert.AreEqual(1, db.Parent.Count(p => p.Value1 == 11));
@@ -610,7 +611,7 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 
 					var id =
 						db.Person
@@ -630,7 +631,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
@@ -642,7 +643,7 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 
 					var id = db
 						.Into(db.Person)
@@ -660,7 +661,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
@@ -672,7 +673,7 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 
 					var id = db
 						.Into(db.Person)
@@ -690,7 +691,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
@@ -704,7 +705,7 @@ namespace Tests.xUpdate
 				{
 					for (var i = 0; i < 2; i++)
 					{
-						db.Person.Delete(p => p.ID > 2);
+						db.Person.Delete(p => p.ID > MaxPersonID);
 
 						var id = db.InsertWithIdentity(
 							new Person
@@ -724,7 +725,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
@@ -738,7 +739,7 @@ namespace Tests.xUpdate
 				{
 					for (var i = 0; i < 2; i++)
 					{
-						db.Person.Delete(p => p.ID > 2);
+						db.Person.Delete(p => p.ID > MaxPersonID);
 
 						var person = new Person
 						{
@@ -759,17 +760,15 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > 2);
+					db.Person.Delete(p => p.ID > MaxPersonID);
 				}
 			}
 		}
 
 		class GuidID
 		{
-#pragma warning disable 0649
 			[Identity] public Guid ID;
 			           public int  Field1;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(
@@ -779,14 +778,70 @@ namespace Tests.xUpdate
 			using (var db = new DataConnection(context))
 			{
 				var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
+				Assert.AreNotEqual(Guid.Empty, id);
+			}
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+		public void InsertWithGuidIdentityOutput(string context)
+		{
+			try
+			{
+				SqlServerConfiguration.GenerateScopeIdentity = false;
+				using (var db = new DataConnection(context))
+				{
+					var id = (Guid) db.InsertWithIdentity(new GuidID {Field1 = 1});
+					Assert.AreNotEqual(Guid.Empty, id);
+				}
+			}
+			finally
+			{
+				SqlServerConfiguration.GenerateScopeIdentity = true;
+			}
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+		public void InsertWithIdentityOutput(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					SqlServerConfiguration.GenerateScopeIdentity = false;
+					for (var i = 0; i < 2; i++)
+					{
+						db.Person.Delete(p => p.ID > MaxPersonID);
+
+						var person = new Person
+						{
+							FirstName = "John" + i,
+							LastName  = "Shepard",
+							Gender    = Gender.Male
+						};
+
+						var id = db.InsertWithIdentity(person);
+
+						Assert.NotNull(id);
+
+						var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
+
+						Assert.NotNull(john);
+						Assert.AreEqual(id, john.ID);
+					}
+				}
+				finally
+				{
+					db.Person.Delete(p => p.ID > MaxPersonID);
+					SqlServerConfiguration.GenerateScopeIdentity = true;
+				}
 			}
 		}
 
 		class GuidID2
 		{
-#pragma warning disable 0649
 			[Identity] public Guid ID;
-#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(
@@ -1070,6 +1125,35 @@ namespace Tests.xUpdate
 				finally
 				{
 					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Insert15(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
+
+				try
+				{
+					db.Insert(new ComplexPerson
+						{
+							Name = new FullName
+							{
+								FirstName = "Insert15",
+								LastName  = "Insert15"
+							},
+							Gender = Gender.Male,
+						});
+
+					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Count();
+					Assert.AreEqual(1, cnt);
+				}
+				finally
+				{
+					db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
 				}
 			}
 		}

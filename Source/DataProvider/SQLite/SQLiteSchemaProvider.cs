@@ -15,23 +15,41 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var views =  ((DbConnection)dataConnection.Connection).GetSchema("Views");
 
-			return
-			(
-				from t in tables.AsEnumerable()
-				where t.Field<string>("TABLE_TYPE") != "SYSTEM_TABLE"
-				let catalog = t.Field<string>("TABLE_CATALOG")
-				let schema  = t.Field<string>("TABLE_SCHEMA")
-				let name    = t.Field<string>("TABLE_NAME")
-				select new TableInfo
-				{
-					TableID         = catalog + '.' + schema + '.' + name,
-					CatalogName     = catalog,
-					SchemaName      = schema,
-					TableName       = name,
-					IsDefaultSchema = schema.IsNullOrEmpty(),
-				}
-			).ToList();
+			return Enumerable
+				.Empty<TableInfo>()
+				.Concat
+				(
+					from t in tables.AsEnumerable()
+					where t.Field<string>("TABLE_TYPE") != "SYSTEM_TABLE"
+					let catalog = t.Field<string>("TABLE_CATALOG")
+					let schema  = t.Field<string>("TABLE_SCHEMA")
+					let name    = t.Field<string>("TABLE_NAME")
+					select new TableInfo
+					{
+						TableID         = catalog + '.' + schema + '.' + name,
+						CatalogName     = catalog,
+						SchemaName      = schema,
+						TableName       = name,
+						IsDefaultSchema = schema.IsNullOrEmpty(),
+					}
+				)
+				.Concat(
+					from t in views.AsEnumerable()
+					let catalog = t.Field<string>("TABLE_CATALOG")
+					let schema  = t.Field<string>("TABLE_SCHEMA")
+					let name    = t.Field<string>("TABLE_NAME")
+					select new TableInfo
+					{
+						TableID         = catalog + '.' + schema + '.' + name,
+						CatalogName     = catalog,
+						SchemaName      = schema,
+						TableName       = name,
+						IsDefaultSchema = schema.IsNullOrEmpty(),
+						IsView          = true,
+					}
+				).ToList();
 		}
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)

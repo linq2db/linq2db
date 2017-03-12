@@ -33,6 +33,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          FullName },
 
 				new DataTypeInfo { TypeName = "hstore",                      DataType = typeof(Dictionary<string,string>).FullName},
+				new DataTypeInfo { TypeName = "json",                        DataType = typeof(string).        FullName },
+				new DataTypeInfo { TypeName = "jsonb",                       DataType = typeof(string).        FullName },
 
 				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        FullName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        FullName, CreateFormat = "character({0})",                    CreateParameters = "length" },
@@ -62,16 +64,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var sql = (@"
 				SELECT
-					table_catalog || '.' || table_schema || '.' || table_name as TableID,
-					table_catalog                                             as CatalogName,
-					table_schema                                              as SchemaName,
-					table_name                                                as TableName,
-					table_schema = 'public'                                   as IsDefaultSchema,
-					table_type = 'VIEW'                                       as IsView
+					table_catalog || '.' || table_schema || '.' || table_name            as TableID,
+					table_catalog                                                        as CatalogName,
+					table_schema                                                         as SchemaName,
+					table_name                                                           as TableName,
+					table_schema = 'public'                                              as IsDefaultSchema,
+					table_type = 'VIEW'                                                  as IsView,
+					left(table_schema, 3) = 'pg_' OR table_schema = 'information_schema' as IsProviderSpecific
 				FROM
 					information_schema.tables");
 
-			if (ExcludedSchemas.Length == 0 && IncludedSchemas.Length == 0)
+			if (ExcludedSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				sql += @"
 				WHERE
 					table_schema NOT IN ('pg_catalog','information_schema')";
@@ -119,7 +122,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					FROM
 						information_schema.columns";
 
-			if (ExcludedSchemas.Length == 0 || IncludedSchemas.Length == 0)
+			if (ExcludedSchemas.Count == 0 || IncludedSchemas.Count == 0)
 				sql += @"
 					WHERE
 						table_schema NOT IN ('pg_catalog','information_schema')";
@@ -244,6 +247,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "bit"                         :
 				case "varbit"                      : return DataType.BitArray;
 				case "hstore"                      : return DataType.Dictionary;
+				case "json"                        : return DataType.Json;
+				case "jsonb"                       : return DataType.BinaryJson;
 			}
 
 			return DataType.Undefined;
