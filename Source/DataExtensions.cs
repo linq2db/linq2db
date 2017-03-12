@@ -231,15 +231,15 @@ namespace LinqToDB
 
 		#region Update
 
-		public static int Update<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
+		public static int Update<T>([NotNull] this IDataContextInfo dataContextInfo, T obj, bool overrideConcurrency = false)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.Update(dataContextInfo, obj);
+			return Query<T>.Update(dataContextInfo, obj, overrideConcurrency);
 		}
 
-		public static int Update<T>(this IDataContext dataContext, T obj)
+		public static int Update<T>(this IDataContext dataContext, T obj, bool overrideConcurrency = false)
 		{
-			return Query<T>.Update(DataContextInfo.Create(dataContext), obj);
+			return Query<T>.Update(DataContextInfo.Create(dataContext), obj, overrideConcurrency);
 		}
 
 		#endregion

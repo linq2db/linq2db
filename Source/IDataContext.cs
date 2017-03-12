@@ -34,5 +34,7 @@ namespace LinqToDB
 		IDataContext        Clone              (bool forNestedQuery);
 
 		event EventHandler  OnClosing;
+
+		void				QueryExecuted		(int count, string action);
 	}
 }

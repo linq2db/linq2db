@@ -439,5 +439,10 @@ namespace LinqToDB.ServiceModel
 			if (OnClosing != null)
 				OnClosing(this, EventArgs.Empty);
 		}
+
+		public void QueryExecuted(int count, string action)
+		{
+			
+		}
 	}
 }

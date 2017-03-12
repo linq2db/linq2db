@@ -13,10 +13,19 @@ namespace Tests.Samples
 	[TestFixture]
 	public class ConcurrencyCheckTests : TestBase
 	{
-		private class InterceptDataConnection : DataConnection
+		private class InterceptDataConnection : DataConnection, IDataContext
 		{
 			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
 			{
+			}
+
+			void IDataContext.QueryExecuted(int count, string action)
+			{
+				// TODO: determine that the query is on a table with RowVer
+				if (count == 0)
+				{
+					throw new ConcurrencyException();
+				}
 			}
 
 			/// <summary>
@@ -68,22 +77,47 @@ namespace Tests.Samples
 					if (rowVersion == null)
 						return selectQuery;
 
+					var rowverAttrib = rowVersion.MemberAccessor.GetAttribute<RowVersionAttribute>();
+
 					var newQuery = Clone(selectQuery);
-					source       = newQuery.From.Tables[0].Source as SqlTable;
-					var field    = source.Fields[rowVersion.ColumnName];
+					source = newQuery.From.Tables[0].Source as SqlTable;
+					var field = source.Fields[rowVersion.ColumnName];
 
 					// get real value of RowVersion
 					var updateColumn = newQuery.Update.Items.FirstOrDefault(ui => ui.Column is SqlField && ((SqlField)ui.Column).Equals(field));
-					if (updateColumn == null)
+					ISqlExpression versionValue;
+					
+					versionValue = updateColumn == null ? null: updateColumn.Expression;
+
+					if (updateColumn == null || !rowverAttrib.DBManaged)
 					{
 						updateColumn = new SelectQuery.SetExpression(field, field);
 						newQuery.Update.Items.Add(updateColumn);
+
+						updateColumn.Expression = new SqlBinaryExpression(typeof(int), field, "+", new SqlValue(1));
 					}
 
-					updateColumn.Expression = new SqlBinaryExpression(typeof(int), field, "+", new SqlValue(1));
+					if (!selectQuery.OverrideConcurrencyCheck && versionValue != null)
+					{
+						var search = newQuery.Where.SearchCondition;
+						var current = search;
+
+						if (search.Conditions.Count > 0 && search.Precedence < Precedence.LogicalConjunction)
+						{
+							current = new SelectQuery.SearchCondition();
+							var prev = new SelectQuery.SearchCondition();
+
+							prev.Conditions.AddRange(search.Conditions);
+							search.Conditions.Clear();
+
+							search.Conditions.Add(new SelectQuery.Condition(false, current, false));
+							search.Conditions.Add(new SelectQuery.Condition(false, prev, false));
+						}
+
+						current.Conditions.Add(new SelectQuery.Condition(false, new SelectQuery.Predicate.ExprExpr(field, SelectQuery.Predicate.Operator.Equal, versionValue)));
+					}
 
 					return newQuery;
-
 				}
 
 				#endregion Update
@@ -92,14 +126,14 @@ namespace Tests.Samples
 
 				else if (selectQuery.IsInsert)
 				{
-					var source     = selectQuery.Insert.Into;
+					var source = selectQuery.Insert.Into;
 					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 
 					if (rowVersion == null)
 						return selectQuery;
 
-					
+
 					var newQuery = Clone(selectQuery);
 
 					var field = newQuery.Insert.Into[rowVersion.ColumnName];
@@ -117,12 +151,54 @@ namespace Tests.Samples
 					}
 				}
 				#endregion Insert
+
+				#region Delete
+
+				else if (selectQuery.IsDelete)
+				{
+					var source = selectQuery.From.Tables[0];
+					var descriptor = MappingSchema.GetEntityDescriptor(source.SystemType);
+					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
+
+					if (rowVersion == null)
+						return selectQuery;
+
+					// TODO: add in the RowVer value check
+
+				}
+				#endregion Delete
+
 				return selectQuery;
 			}
 		}
 
-		public class RowVersionAttribute: Attribute
-		{ }
+		[AttributeUsage(
+			AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Interface,
+			AllowMultiple = false, Inherited = true)]
+		public class RowVersionAttribute : Attribute
+		{
+			public bool DBManaged { get; set; }
+		}
+
+		public class ConcurrencyException : Exception
+		{
+			public object obj { get; set; }
+
+			public ConcurrencyException()
+			{
+			}
+
+			public ConcurrencyException(string message)
+				: base(message)
+			{
+			}
+
+			public ConcurrencyException(string message, Exception inner)
+				: base(message, inner)
+			{
+			}
+		}
+
 
 		[Table("TestTable")]
 		public class TestTable
@@ -135,14 +211,14 @@ namespace Tests.Samples
 
 			private int _rowVer;
 
-			[Column(Name = "RowVer", Storage = "_rowVer", IsPrimaryKey = true, PrimaryKeyOrder = 1)]
-			[RowVersion]
+			[Column(Name = "RowVer", Storage = "_rowVer")]
+			[RowVersion(DBManaged = false)]
 			public int RowVer { get { return _rowVer; } }
 		}
 
 		private InterceptDataConnection _connection;
 
-		[OneTimeSetUp]
+		[SetUp]
 		public void SetUp()
 		{
 			_connection = new InterceptDataConnection(ProviderName.SQLite, "Data Source=:memory:;");
@@ -153,7 +229,7 @@ namespace Tests.Samples
 			_connection.Insert(new TestTable { ID = 2, Description = "Row 2" });
 		}
 
-		[OneTimeTearDown]
+		[TearDown]
 		public void TearDown()
 		{
 			_connection.Dispose();
@@ -168,13 +244,35 @@ namespace Tests.Samples
 
 			var row = table.First(t => t.ID == 1);
 			row.Description = "Changed desc";
-
+			
 			var result = db.Update(row);
 
 			Assert.AreEqual(1, result);
 
 			var updated = table.First(t => t.ID == 1);
 			Assert.AreEqual(row.RowVer + 1, updated.RowVer);
+		}
+
+		[Test]
+		public void CheckUpdateMultiple()
+		{
+			var db = _connection;
+
+			var table = db.GetTable<TestTable>();
+
+			db.Insert(new TestTable { ID = 1000, Description = "Row 1000" });
+			db.Insert(new TestTable { ID = 1001, Description = "Row 1001" });
+
+			var results = table
+				.Where(t => t.ID >= 1000)
+				.Set(t => t.Description, "Changed description")
+				.Update();
+
+			Assert.AreEqual(2, results);
+
+			var row1000 = table.First(t => t.ID == 1000);
+
+			Assert.AreEqual(2, row1000.RowVer);
 		}
 
 		[Test]
@@ -196,9 +294,43 @@ namespace Tests.Samples
 			// 2nd change will fail as the version number is different to the one sent with the update
 			row2.Description = "Another change";
 
-			result = db.Update(row1);
+			Assert.Throws(typeof(ConcurrencyException), () => db.Update(row1));
+		}
 
-			Assert.AreEqual(0, result);
+		[Test]
+		public void CheckUpdateFailWithOverride()
+		{
+			var db = _connection;
+			var table = db.GetTable<TestTable>();
+
+			var row1 = table.First(t => t.ID == 1);
+			var row2 = table.First(t => t.ID == 1);
+
+			// 1st change of the record will modify the rowver to the rowver + 1
+			row1.Description = "Changed desc";
+
+			var result = db.Update(row1);
+
+			Assert.AreEqual(1, result);
+
+			// 2nd change will fail as the version number is different to the one sent with the update
+			row2.Description = "Another change";
+
+			try
+			{
+				db.Update(row2);
+				Assert.Fail("Should not get to here");
+			}
+			catch (ConcurrencyException)
+			{
+				// got concurreny excption but now override it
+				result = db.Update(row2, true);
+				Assert.AreEqual(1, result);
+
+				var resultrow = table.First(t => t.ID == 1);
+				Assert.AreEqual("Another change", resultrow.Description);
+				Assert.AreEqual(3, resultrow.RowVer);
+			}
 		}
 
 		[Test]
@@ -227,10 +359,10 @@ namespace Tests.Samples
 		[Test]
 		public void CheckInsertOrUpdate()
 		{
-			var db     = _connection;
-			var table  = db.GetTable<TestTable>();
+			var db = _connection;
+			var table = db.GetTable<TestTable>();
 
-			var result = db.InsertOrReplace(new TestTable {ID = 3, Description = "Row 3"});
+			var result = db.InsertOrReplace(new TestTable { ID = 3, Description = "Row 3" });
 
 			Assert.AreEqual(1, result);
 			Assert.AreEqual(3, table.Count());
