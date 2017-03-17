@@ -23,9 +23,12 @@ using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
 
 using Tests.Model;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Tests.DataProvider
 {
+
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
 	{
@@ -203,7 +206,15 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(data.Func(typeName, this, conn), Is.EqualTo(data.Result));
+				var value = data.Func(typeName, this, conn);
+				if (data.Result is NpgsqlPoint)
+				{
+					Assert.IsTrue(object.Equals(value, data.Result));
+				}
+				else
+				{
+					Assert.AreEqual(value ,data.Result);
+				}
 			}
 		}
 
@@ -309,6 +320,41 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12' as date)"),                          Is.EqualTo(dateTime));
 				Assert.That(conn.Execute<DateTime> ("SELECT :p", DataParameter.Date("p", dateTime)),               Is.EqualTo(dateTime));
 				Assert.That(conn.Execute<DateTime?>("SELECT :p", new DataParameter("p", dateTime, DataType.Date)), Is.EqualTo(dateTime));
+			}
+		}
+
+		/// <summary>
+		/// Ensure we can pass data as Json parameter type and get 
+		/// same value back out equivalent in value
+		/// </summary>
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestJson(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var testJson = "{\"name\":\"bob\", \"age\":10}";
+
+				Assert.That(conn.Execute<string>("SELECT :p", new DataParameter("p", testJson, DataType.Json)), Is.EqualTo(testJson));
+			}
+		}
+
+		/// <summary>
+		/// Ensure we can pass data as binary json and have things handled
+		/// with values coming back as being equivalent in value
+		/// </summary>
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestJsonb(string context)
+		{
+			var json = new { name = "bob", age = 10 };
+			using (var conn = new DataConnection(context))
+			{
+				//properties come back out in potentially diff order as its being
+				//converted between a binary json format and the string representation
+				var raw = conn.Execute<string>("SELECT :p", new DataParameter("p", JsonConvert.SerializeObject(json), DataType.BinaryJson));
+				var obj = JObject.Parse(raw);
+
+				Assert.That(obj.Value<string>("name"), Is.EqualTo(json.name));
+				Assert.That(obj.Value<int>("age"),     Is.EqualTo(json.age));
 			}
 		}
 

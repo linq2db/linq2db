@@ -1,6 +1,6 @@
 ﻿Access
 SqlCe
-SQLite
+!SQLite
 NorthwindSqlite
 
 MySql57        * Server=localhost;Port=3306;Database=TestData;Uid=root;Pwd=Password12!;charset=utf8;                                            * MySql.Data.MySqlClient

@@ -1,4 +1,13 @@
 ﻿{
-	"runtimes": { "win-x86": {}, "win":{} },
-	"frameworks": { "net45": {} }
+  "runtimes": {
+    "win-x86": {},
+    "win": {}
+  },
+  "frameworks": {
+    "net45": {}
+  },
+  "dependencies": {
+    "Newtonsoft.Json": "9.0.1",
+    "NUnit": "3.6.1"
+  }
 }
