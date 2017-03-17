@@ -400,6 +400,21 @@ namespace Tests.Linq
 
 		}
 
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void SkipTakeWithTies(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.Person.OrderBy(_ => _.FirstName).Skip(1).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
+
+				Assert.IsNotEmpty(q);
+
+				var qry = q.ToString();
+				Assert.That(qry.Contains("PERCENT"));
+				Assert.That(qry.Contains("WITH"));
+			}
+		}
+
 		[Test, IncludeDataContextSource(ProviderName.SQLite, ProviderName.SqlCe, TestProvName.SQLiteMs)]
 		public void TakeWithHintsFails(string context)
 		{
