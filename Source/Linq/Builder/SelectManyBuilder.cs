@@ -131,45 +131,11 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var join = leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql);				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
+				var join = leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql);
+				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
-
-				//var join = leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql);
-				//var subquery = false;
-				//var tables = sequence.SelectQuery.From.Tables;
-				//var baseTable = tables[0];
-
-				//// if new join has dependency to many From tables we have to convert them to INNER JOINS
-				//if (tables.Count > 1)
-				//{
-				//	if (builder.DataContextInfo.SqlProviderFlags.IsCrossJoinSupported || builder.DataContextInfo.SqlProviderFlags.IsInnerJoinAsCrossSupported)
-				//	{
-				//		for (var i = tables.Count - 1; i > 0; i--)
-				//		{
-				//			baseTable.Joins.Add(new SelectQuery.JoinedTable(SelectQuery.JoinType.Inner, tables[i], false));
-				//			tables.RemoveAt(i);
-				//		}
-				//		baseTable.Joins.Add(join.JoinedTable);
-				//	}
-				//	else
-				//	{
-				//		var outterQuery = new SelectQuery();
-
-				//		outterQuery.Select.From.Tables.Add(new SelectQuery.TableSource(sequence.SelectQuery, null));
-				//		outterQuery.Select.From.Tables[0].Joins.Add(join.JoinedTable);
-
-				//		sequence.SelectQuery = outterQuery;
-				//		subquery = true;
-
-				//	}
-				//}
-				//else
-				//	baseTable.Joins.Add(join.JoinedTable);
-
-				//context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
-
-				//return new SelectContext(buildInfo.Parent, resultSelector, sequence,
-				//	subquery ? context.Collection : context);
+				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
+				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 			}
 		}
 

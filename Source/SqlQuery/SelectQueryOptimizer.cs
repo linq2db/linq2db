@@ -695,9 +695,83 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			return source.Source is SelectQuery ?
-				RemoveSubQuery(source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns) :
-				source;
+			var select = source.Source as SelectQuery;
+			if (select != null)
+			{
+				var canRemove = !CorrectCrossJoinQuery(select);
+				if (canRemove)
+					return RemoveSubQuery(source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns);
+			}
+
+			return source;
+		}
+
+		bool CorrectCrossJoinQuery(SelectQuery query)
+		{
+			var select = query.Select;
+			if (select.From.Tables.Count == 1)
+				return false;
+
+			var joins = select.From.Tables.SelectMany(_ => _.Joins).Distinct().ToArray();
+			if (joins.Length == 0)
+				return false;
+
+			var tables = select.From.Tables.ToArray();
+			foreach (var t in tables)
+				t.Joins.Clear();
+
+			var baseTable = tables[0];
+
+			if (_flags.IsCrossJoinSupported || _flags.IsInnerJoinAsCrossSupported)
+			{
+				select.From.Tables.Clear();
+				select.From.Tables.Add(baseTable);
+
+				foreach (var t in tables.Skip(1))
+				{
+					baseTable.Joins.Add(new SelectQuery.JoinedTable(SelectQuery.JoinType.Inner, t, false));
+				}
+
+				foreach (var j in joins)
+					baseTable.Joins.Add(j);
+			}
+			else
+			{
+				// move to subquery
+				var subQuery = new SelectQuery();
+
+				subQuery.Select.From.Tables.AddRange(tables);
+
+				baseTable = new SelectQuery.TableSource(subQuery, "cross");
+				baseTable.Joins.AddRange(joins);
+
+				query.Select.From.Tables.Clear();
+
+				var sources = new HashSet<ISqlTableSource>(tables.Select(t => t.Source));
+				var foundFields = new HashSet<ISqlExpression>();
+
+				QueryHelper.CollectDependencies(query.RootQuery(), sources, foundFields);
+				QueryHelper.CollectDependencies(baseTable,         sources, foundFields);
+
+				var toReplace = foundFields.ToDictionary(f => f,
+					f => subQuery.Select.Columns[subQuery.Select.Add(f)] as ISqlExpression);
+
+				Func<ISqlExpression, ISqlExpression> transformFunc = e =>
+				{
+					ISqlExpression newValue;
+					return toReplace.TryGetValue(e, out newValue) ? newValue : e;
+				};
+
+				((ISqlExpressionWalkable) query.RootQuery()).Walk(false, transformFunc);
+				foreach (var j in joins)
+				{
+					((ISqlExpressionWalkable) j).Walk(false, transformFunc);
+				}
+
+				query.Select.From.Tables.Add(baseTable);
+			}
+
+			return true;
 		}
 
 		static bool CheckColumn(SelectQuery.Column column, ISqlExpression expr, SelectQuery query, bool optimizeValues, bool optimizeColumns)
@@ -930,6 +1004,8 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeSubQueries(bool isApplySupported, bool optimizeColumns)
 		{
+			CorrectCrossJoinQuery(_selectQuery);
+
 			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
 			{
 				var table = OptimizeSubQuery(_selectQuery.From.Tables[i], true, false, isApplySupported, true, optimizeColumns);

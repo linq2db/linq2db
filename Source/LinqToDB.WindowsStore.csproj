@@ -341,6 +341,7 @@
     <Compile Include="SqlQuery\SqlTableT.cs" />
     <Compile Include="SqlQuery\SqlTableType.cs" />
     <Compile Include="SqlQuery\SqlValue.cs" />
+    <Compile Include="SqlQuery\QueryHelper.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
