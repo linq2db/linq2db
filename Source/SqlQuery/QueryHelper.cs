@@ -12,7 +12,8 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().VisitParentFirst(root, e =>
 			{
-				if (hash.Contains(e) || hashIgnore.Contains(e))
+				var source = e as ISqlTableSource;
+				if (source != null && hash.Contains(source) || hashIgnore.Contains(e))
 					return false;
 
 				switch (e.ElementType)
