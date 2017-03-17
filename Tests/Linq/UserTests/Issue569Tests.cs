@@ -18,6 +18,7 @@
 						.Where(x => x.PersonID == person.ID && x.PersonID == patient.PersonID)
 						.DefaultIfEmpty()
 					where person.FirstName.StartsWith("J")
+					orderby patient.PersonID, person.FirstName, doctor.Taxonomy
 					select new
 					{
 						PersonId  = patient.PersonID,
@@ -31,6 +32,7 @@
 						.Where(x => x.PersonID == person.ID && x.PersonID == patient.PersonID)
 						.DefaultIfEmpty()
 					where person.FirstName.StartsWith("J")
+					orderby patient.PersonID, person.FirstName, doctor != null ? doctor.Taxonomy : null
 					select new
 					{
 						PersonId  = patient.PersonID,
@@ -81,6 +83,7 @@
 				var expected = from p  in Person
 							   from pt in Patient
 							   from d  in Doctor
+							   orderby p.ID, pt.PersonID, d.Taxonomy
 							   select new
 							   {
 								   p. ID,
@@ -91,6 +94,7 @@
 				var result   = from p  in db.Person
 							   from pt in db.Patient
 							   from d  in db.Doctor
+							   orderby p.ID, pt.PersonID, d.Taxonomy
 							   select new
 							   {
 								   p. ID,
@@ -100,6 +104,104 @@
 
 				AreEqual(expected, result);
 
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test4(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var sq = 
+					from parent     in db.Parent
+					from child      in db.Child
+					from grandChild in child.GrandChildren.DefaultIfEmpty()
+					select new
+					{
+						parent    .ParentID,
+						child     .ChildID,
+						grandChild.GrandChildID
+					};
+
+				var q = 
+					from parent in db.Parent
+					from s in sq
+					select new
+					{
+						parent,
+						s
+					};
+
+				var rsq = 
+					from parent     in Parent
+					from child      in Child
+					from grandChild in child.GrandChildren.DefaultIfEmpty()
+					select new
+					{
+						parent    .ParentID,
+						child     .ChildID,
+						GrandChildID = grandChild != null ? grandChild.GrandChildID : null
+					};
+
+				var rq = 
+					from parent in Parent
+					from s in rsq
+					select new
+					{
+						parent,
+						s
+					};
+
+				Assert.AreEqual(rq.Count(), q.Count());
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test5(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var sq = 
+					from parent     in db.Parent
+					from child      in db.Child
+					from grandChild in child.GrandChildren.DefaultIfEmpty()
+					select new
+					{
+						parent    .ParentID,
+						child     .ChildID,
+						grandChild.GrandChildID
+					};
+
+				var q = 
+					from s in sq
+					from parent in db.Parent
+					select new
+					{
+						parent,
+						s
+					};
+
+				var rsq = 
+					from parent     in Parent
+					from child      in Child
+					from grandChild in child.GrandChildren.DefaultIfEmpty()
+					select new
+					{
+						parent    .ParentID,
+						child     .ChildID,
+						GrandChildID = grandChild != null ? grandChild.GrandChildID : null
+					};
+
+				var rq = 
+					from s in rsq
+					from parent in Parent
+					select new
+					{
+						parent,
+						s
+					};
+
+				Assert.AreEqual(rq.Count(), q.Count());
 			}
 		}
 	}
