@@ -7,7 +7,7 @@ Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoc
 
 However, it's not as heavy as LINQ to SQL or Entity Framework. There is no change-tracking, so you have to manage that yourself, but on the plus side you get more control and faster access to your data.
 
-In another words **LINQ to DB is type-safe SQL**.
+In other words **LINQ to DB is type-safe SQL**.
 
 Visit our [blog](http://blog.linq2db.com/) and see [Wiki](https://github.com/linq2db/linq2db/wiki) for more details.
 
