@@ -14,7 +14,7 @@ F# options support
 What's new in 1.0.7.5
 ---------------------
 
-Added JOIN LITERAL support for PostgreSQL.
+Added JOIN LATERAL support for PostgreSQL.
 
 
 
