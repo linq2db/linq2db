@@ -16,6 +16,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static readonly SybaseDataProvider _sybaseDataProvider = new SybaseDataProvider();
 
+#pragma warning disable 3015, 219
 		static SybaseTools()
 		{
 			try
@@ -34,6 +35,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			DataConnection.AddDataProvider(_sybaseDataProvider);
 		}
+#pragma warning restore 3015, 219
 
 		public static IDataProvider GetDataProvider()
 		{
