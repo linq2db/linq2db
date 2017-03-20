@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using LinqToDB.Data;
 using NUnit.Framework;
@@ -50,7 +49,7 @@ namespace Tests.OrmBattle
 				c.Orders = Order.Where(o => c.CustomerID == o.CustomerID).ToList();
 
 			DataConnection.TurnTraceSwitchOn();
-			DataConnection.WriteTraceLine = (s, s1) => Debug.WriteLine(s, s1);
+			DataConnection.WriteTraceLine = (s, s1) => Console.WriteLine(s, s1);
 		}
 
 		[TearDown]
@@ -343,7 +342,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test, NorthwindDataContext]
-		[Category("Projections")]
+		[Category("WindowsOnly")]
 		public void SelectSubqueryTest(string context)
 		{
 			Setup(context);
@@ -1465,7 +1464,7 @@ namespace Tests.OrmBattle
 		#region Complex tests
 
 		[Test, NorthwindDataContext]
-		[Category("Complex")]
+		[Category("WindowsOnly")]
 		public void ComplexTest1(string context)
 		{
 			Setup(context);

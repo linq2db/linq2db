@@ -206,7 +206,15 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(data.Func(typeName, this, conn), Is.EqualTo(data.Result));
+				var value = data.Func(typeName, this, conn);
+				if (data.Result is NpgsqlPoint)
+				{
+					Assert.IsTrue(object.Equals(value, data.Result));
+				}
+				else
+				{
+					Assert.AreEqual(value ,data.Result);
+				}
 			}
 		}
 

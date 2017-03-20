@@ -4,7 +4,7 @@
 
 Access
 SqlCe
-SQLite
+!SQLite
 NorthwindSqlite
 
 --DB2

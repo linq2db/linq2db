@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.Access
 	using Common;
 	using Data;
 	using SchemaProvider;
+	using System.Data.OleDb;
 
 	class AccessSchemaProvider : SchemaProviderBase
 	{
@@ -137,7 +138,21 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			return new List<ForeingKeyInfo>();
+			var data = ((OleDbConnection)dataConnection.Connection)
+				.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, new object[] { null, null });
+
+			var q = from fk in data.AsEnumerable()
+					select new ForeingKeyInfo
+					{
+						Name         = fk.Field<string>("FK_NAME"),
+						ThisColumn   = fk.Field<string>("FK_COLUMN_NAME"),
+						OtherColumn  = fk.Field<string>("PK_COLUMN_NAME"),
+						ThisTableID  = fk.Field<string>("FK_TABLE_CATALOG") + "." + fk.Field<string>("FK_TABLE_SCHEMA") + "." + fk.Field<string>("FK_TABLE_NAME"),
+						OtherTableID = fk.Field<string>("PK_TABLE_CATALOG") + "." + fk.Field<string>("PK_TABLE_SCHEMA") + "." + fk.Field<string>("PK_TABLE_NAME"),
+						Ordinal      = ConvertTo<int>.From(fk.Field<long>("ORDINAL")),
+					};
+
+			return q.ToList();
 		}
 
 		protected override string GetProviderSpecificTypeNamespace()
