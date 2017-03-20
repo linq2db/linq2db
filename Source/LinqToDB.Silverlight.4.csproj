@@ -292,6 +292,7 @@
     <Compile Include="SqlQuery\SqlException.cs" />
     <Compile Include="SqlQuery\SqlExpression.cs" />
     <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
+    <Compile Include="SqlQuery\QueryHelper.cs" />
     <Compile Include="SqlQuery\SqlField.cs" />
     <Compile Include="SqlQuery\SqlFunction.cs" />
     <Compile Include="SqlQuery\SqlParameter.cs" />

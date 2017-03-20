@@ -152,8 +152,16 @@
       <HintPath>..\..\packages\MySql.Data.6.9.8\lib\net45\MySql.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Npgsql, Version=3.0.6.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Npgsql.3.0.6\lib\net45\Npgsql.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="nunit.framework, Version=3.2.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NUnit.3.2.1\lib\net45\nunit.framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Oracle.DataAccess, Version=2.112.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
@@ -368,6 +376,7 @@
     <Compile Include="UserTests\Issue496Tests.cs" />
     <Compile Include="UserTests\Issue513Tests.cs" />
     <Compile Include="UserTests\Issue548Tests.cs" />
+    <Compile Include="UserTests\Issue569Tests.cs" />
     <Compile Include="UserTests\LetTests.cs" />
     <Compile Include="UserTests\MultiPartIdentifierTests.cs" />
     <Compile Include="UserTests\SelectManyDeleteTests.cs" />
