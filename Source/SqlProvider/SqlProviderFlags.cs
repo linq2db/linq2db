@@ -24,6 +24,7 @@ namespace LinqToDB.SqlProvider
 		public int  MaxInListValuesCount           { get; set; }
 		public bool IsUpdateSetTableAliasSupported { get; set; }
 		public bool IsSybaseBuggyGroupBy           { get; set; }
+		public bool IsCrossJoinSupported           { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{

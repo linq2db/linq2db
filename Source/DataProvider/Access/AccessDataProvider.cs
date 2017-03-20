@@ -29,6 +29,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsSkipSupported           = false;
 			SqlProviderFlags.IsCountSubQuerySupported  = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			SqlProviderFlags.IsCrossJoinSupported      = false;
 
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
 

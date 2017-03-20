@@ -29,6 +29,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsCountSubQuerySupported  = false;
 			SqlProviderFlags.IsApplyJoinSupported      = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			SqlProviderFlags.IsCrossJoinSupported      = false;
 
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 

@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using System.Linq;
+
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -130,7 +132,30 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var join = leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql);
-				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+
+				// if new join has dependency to many From tables we have to convert them to INNER JOINS
+				var tables = sequence.SelectQuery.From.Tables;
+				if (tables.Count > 1)
+				{
+					var mayDepend      = new HashSet<ISqlTableSource>(tables.Skip(1).SelectMany(t => t.GetTables()));
+					var depended       = null != new QueryVisitor().Find(join.JoinedTable, e => 
+						e.ElementType == QueryElementType.TableSource && mayDepend.Contains((ISqlTableSource)e)  ||
+						e.ElementType == QueryElementType.SqlField    && mayDepend.Contains(((SqlField)e).Table) ||
+						e.ElementType == QueryElementType.Column      && mayDepend.Contains(((SelectQuery.Column)e).Parent));
+
+					if (depended)
+					{
+						while (tables.Count > 1)
+						{
+							var table = tables[1];
+							// it may converted to CROSS JOIN later
+							tables[0].Joins.Add(new SelectQuery.JoinedTable(SelectQuery.JoinType.Inner, table, false));
+							tables.RemoveAt(1);
+						}
+					}
+				}
+
+				tables[0].Joins.Add(join.JoinedTable);
 
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
