@@ -732,6 +732,31 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void MultipleLeftJoin(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result =
+					from parent             in db.Parent
+					join child              in db.Child      on parent.ParentID equals child.ParentID      into childTemp
+					join grandChild         in db.GrandChild on parent.ParentID equals grandChild.ParentID into grandChildTemp
+					from grandChildLeftJoin in grandChildTemp.DefaultIfEmpty()
+					from childLeftJoin      in childTemp.DefaultIfEmpty()
+					select new { parent.ParentID, ChildID = (int?)childLeftJoin.ChildID, GrandChildID = (int?)grandChildLeftJoin.GrandChildID };
+
+				var expected =
+					from parent             in Parent
+					join child              in Child      on parent.ParentID equals child.ParentID      into childTemp
+					join grandChild         in GrandChild on parent.ParentID equals grandChild.ParentID into grandChildTemp
+					from grandChildLeftJoin in grandChildTemp.DefaultIfEmpty()
+					from childLeftJoin      in childTemp.DefaultIfEmpty()
+					select new { parent.ParentID, childLeftJoin?.ChildID, grandChildLeftJoin?.GrandChildID };
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource]
 		public void SubQueryJoin(string context)
 		{
 			using (var db = GetDataContext(context))
