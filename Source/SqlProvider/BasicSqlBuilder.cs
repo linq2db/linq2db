@@ -1052,7 +1052,17 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (join.JoinType)
 			{
-				case SelectQuery.JoinType.Inner     : StringBuilder.Append("INNER JOIN ");  return true;
+				case SelectQuery.JoinType.Inner     :
+					if (SqlProviderFlags.IsCrossJoinSupported && join.Condition.Conditions.IsNullOrEmpty())
+					{
+						StringBuilder.Append("CROSS JOIN ");
+						return false;
+					}
+					else
+					{
+						StringBuilder.Append("INNER JOIN ");
+						return true;
+					}
 				case SelectQuery.JoinType.Left      : StringBuilder.Append("LEFT JOIN ");   return true;
 				case SelectQuery.JoinType.CrossApply: StringBuilder.Append("CROSS APPLY "); return false;
 				case SelectQuery.JoinType.OuterApply: StringBuilder.Append("OUTER APPLY "); return false;
