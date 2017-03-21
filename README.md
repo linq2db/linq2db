@@ -11,14 +11,14 @@ In other words **LINQ to DB is type-safe SQL**.
 
 Visit our [blog](http://blog.linq2db.com/) and see [Wiki](https://github.com/linq2db/linq2db/wiki) for more details.
 
-Code examples and demos can be found [here] (https://github.com/linq2db/examples).
+Code examples and demos can be found [here](https://github.com/linq2db/examples).
 
 Project Build Status
 --------------------
-||Appveyor|Travis
----|-------|--------
+| |Appveyor|Travis
+-----|-------|--------
 |master|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)|[![Build Status](https://travis-ci.org/linq2db/linq2db.svg?branch=master)](https://travis-ci.org/linq2db/linq2db)
-|latest|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)||
+|latest|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)| |
 
 Feeds
 ----------
