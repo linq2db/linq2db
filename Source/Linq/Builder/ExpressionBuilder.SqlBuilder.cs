@@ -1448,7 +1448,14 @@ namespace LinqToDB.Linq.Builder
 
 		Expression AddEqualTrue(Expression expr)
 		{
-			return Equal(MappingSchema, Expression.Constant(true), expr);
+			Expression left;
+			var convert = MappingSchema.GetConvertExpression<bool, DataParameter>(false, false);
+			if (convert != null)
+				left = Expression.Constant(convert.Compile()(true).Value);
+			else
+				left = Expression.Constant(true);
+
+			return Equal(MappingSchema, left, expr);
 		}
 
 		#region ConvertCompare

@@ -252,10 +252,9 @@ namespace LinqToDB.Mapping
 			get { return Schemas[0].Converters; }
 		}
 
-		public Expression<Func<TFrom,TTo>> GetConvertExpression<TFrom,TTo>()
+		public Expression<Func<TFrom,TTo>> GetConvertExpression<TFrom,TTo>(bool checkNull = true, bool createDefault = true)
 		{
-			var li = GetConverter(typeof(TFrom), typeof(TTo), true);
-			return (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.CheckNullLambda);
+			return (Expression<Func<TFrom, TTo>>)GetConvertExpression(typeof(TFrom), typeof(TTo), checkNull, createDefault);
 		}
 
 		public LambdaExpression GetConvertExpression(Type from, Type to, bool checkNull = true, bool createDefault = true)
