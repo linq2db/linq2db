@@ -64,7 +64,7 @@ namespace Tests.UserTests
 
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Test(string context)
 		{
 			var ms = new MappingSchema();
@@ -100,6 +100,12 @@ namespace Tests.UserTests
 				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().Count(_ => _.BoolValue == 'N'));
 				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().Count(_ => _.BoolValue == 'Y'));
 				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().Count(_ => _.GuidValue == verified.GuidValue.ToString()));
+
+				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => _.BoolValue == false));
+				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => _.BoolValue == true));
+
+				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => _.BoolValue != true));
+				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => _.BoolValue != false));
 
 				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => !_.BoolValue));
 				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ =>  _.BoolValue));

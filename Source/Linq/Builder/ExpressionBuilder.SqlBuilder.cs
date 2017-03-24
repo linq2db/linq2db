@@ -1094,6 +1094,11 @@ namespace LinqToDB.Linq.Builder
 		Expression _lastExpr1;
 		bool       _lastResult1;
 
+		bool HasConverterToDataPartameter(Type type)
+		{
+			return MappingSchema.GetConvertExpression(type, typeof(DataParameter), false, false) != null;
+		}
+
 		bool CanBeConstant(Expression expr)
 		{
 			if (_lastExpr1 == expr)
@@ -1103,6 +1108,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
 					return false;
+
+				if (HasConverterToDataPartameter(ex.Type))
+					return true;
 
 				switch (ex.NodeType)
 				{
