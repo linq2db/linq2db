@@ -20,19 +20,30 @@ namespace LinqToDB
 			private class FunctionBuilder<T>: IReadyToFunction<T>, IAnalyticFunctionBuilder
 			{
 				public Func<Expression, ISqlExpression> Convert { get; private set; }
+				public Expression[] Arguments { get; private set; }
 
-				public FunctionBuilder([NotNull] SqlAnalyticFunction function, [NotNull] Func<Expression, ISqlExpression> convert)
+				public FunctionBuilder(
+					[NotNull] SqlAnalyticFunction function, 
+					[NotNull] Func<Expression, ISqlExpression> convert,
+					[NotNull] Expression[] arguments)
 				{
 					if (function == null) throw new ArgumentNullException("function");
 					if (convert == null) throw new ArgumentNullException("convert");
+					if (arguments == null) throw new ArgumentNullException("arguments");
 					Function = function;
 					Convert = convert;
+					Arguments = arguments;
 				}
 
 				#region Implementation of IAnalyticFunctionBuilder
-				public ISqlExpression ConvertParameter(Expression expr)
+				public ISqlExpression ConvertExpression(Expression expr)
 				{
 					return Convert(expr);
+				}
+
+				public ISqlExpression GetArgument(int index)
+				{
+					return ConvertExpression(Arguments[index]);
 				}
 
 				public T1 GetValue<T1>(Expression expr)
@@ -103,7 +114,7 @@ namespace LinqToDB
 				});
 			}
 
-			protected SqlAnalyticFunction.AnalyticClause BuildAnalyticClause(Expression expr, Func<Expression, ISqlExpression> converter)
+			protected SqlAnalyticFunction.AnalyticClause BuildAnalyticClause(Expression expr, Func<Expression, ISqlExpression> converter, out Expression entityParam)
 			{
 				var analytic     = new SqlAnalyticFunction.AnalyticClause();
 				var chains  = new List<FunctionChain>();
@@ -349,6 +360,7 @@ namespace LinqToDB
 					throw new InvalidOperationException(string.Format("Invalid method chain for Analytic function: {0}", chain.Name));
 				}
 
+				entityParam = tableExpression;
 				return analytic;
 			}
 
@@ -365,7 +377,9 @@ namespace LinqToDB
 			public override ISqlExpression GetExpression(MemberInfo member, Expression[] args, Func<Expression, ISqlExpression> converter)
 			{
 				var firstArg = args.First();
-				var analytic = BuildAnalyticClause(firstArg, converter);
+				Expression entityParam;
+				var analytic = BuildAnalyticClause(firstArg, converter, out entityParam);
+
 				var method = (MethodInfo) member;
 				var func = new SqlAnalyticFunction(method.ReturnType, FunctionName, Precedence, analytic);
 
@@ -373,14 +387,45 @@ namespace LinqToDB
 				{
 					// run function in parsing mode
 
+					Func<Expression, ISqlExpression> convertFunc = e =>
+					{
+						var lambda = e as LambdaExpression;
+						if (lambda != null)
+						{
+							e = lambda.Body;
+							foreach (var param in lambda.Parameters.Where(p => entityParam.Type == p.Type))
+							{
+								e = ReplaceExpression(e, param, entityParam);
+							}
+						}
+						return converter(e);
+					};
+
 					var generic = typeof(FunctionBuilder<>).MakeGenericType(firstArg.Type.GenericTypeArguments.Single());
-					var builder = Activator.CreateInstance(generic, func, converter);
+					var builder = Activator.CreateInstance(generic, func, convertFunc, args.Skip(1).ToArray());
 
 					var paramValues = new List<object>();
 					paramValues.Add(builder);
-					paramValues.AddRange(method.GetParameters()
-						.Skip(1)
-						.Select(p => p.ParameterType.GetDefaultValue()));
+					for (int i = 1; i < args.Length; i++)
+					{
+						var arg = args[i];
+						object argValue;
+						if (typeof(Expression).IsSameOrParentOf(arg.Type))
+						{
+							argValue = arg.Unwrap();
+						}
+						else
+						{
+							var lambda = System.Linq.Expressions.Expression.Lambda(arg);
+							var v = lambda.Compile();
+							argValue = v.DynamicInvoke();
+						}
+						paramValues.Add(argValue);
+					}
+
+//					paramValues.AddRange(method.GetParameters()
+//						.Skip(1)
+//						.Select(p => p.ParameterType.GetDefaultValue()));
 
 					method.Invoke(builder, paramValues.ToArray());
 				}

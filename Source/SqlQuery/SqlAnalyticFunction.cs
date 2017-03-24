@@ -375,5 +375,10 @@
 		}
 
 		#endregion
+
+		public void AddArgument(string name, object value)
+		{
+			Arguments[name] = value;
+		}
 	}
 }

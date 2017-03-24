@@ -23,7 +23,7 @@
 				var q = from e in db.Parent
 					select new
 					{
-						Rank = Sql.Over(e).PartitionBy(v => v.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.Count(v => v.ParentID)
+						Rank = Sql.Over(e).PartitionBy(v => v.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.Count(v => v.ParentID, Sql.AggregateModifier.Distinct)
 					};
 				var str = q.ToString();
 			}

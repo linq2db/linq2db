@@ -2085,6 +2085,118 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildAnalyticFunction
 
+		void BuildPointExpression(SqlAnalyticFunction.PointExpression point)
+		{
+			switch (point.Kind)
+			{
+				case SqlAnalyticFunction.LimitExpressionKind.UnboundedPreceding :
+					StringBuilder.Append(" UNBOUNDED PRECEDING");
+					break;
+				case SqlAnalyticFunction.LimitExpressionKind.ValueExprPreceding :
+					if (point.ValueExpression == null)
+						throw new InvalidOperationException("Missed ValueExpression for Boundary Point in Analytic function");
+					BuildExpression(point.ValueExpression);
+					StringBuilder.Append(" PRECEDING");
+					break;
+				case SqlAnalyticFunction.LimitExpressionKind.CurrentRow :
+					StringBuilder.Append(" CURRENT ROW");
+					break;
+				case SqlAnalyticFunction.LimitExpressionKind.UnboundedFollowing :
+					StringBuilder.Append(" UNBOUNDED FOLLOWING");
+					break;
+				case SqlAnalyticFunction.LimitExpressionKind.ValueExprFollowing :
+					if (point.ValueExpression == null)
+						throw new InvalidOperationException("Missed ValueExpression for Boundary Point in Analytic function");
+					BuildExpression(point.ValueExpression);
+					StringBuilder.Append(" FOLLOWING");
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		protected virtual void BuildAnalyticClause(SqlAnalyticFunction.AnalyticClause clause)
+		{
+			StringBuilder.Append(" OVER (");
+
+			if (clause.QueryPartition != null)
+			{
+				StringBuilder.Append("PARTITION BY");
+				StringBuilder.Append(" (");
+
+				var isFirst = true;
+				foreach (var arg in clause.QueryPartition.Arguments)
+				{
+					if (!isFirst)
+						StringBuilder.Append(", ");
+
+					BuildExpression(arg);
+
+					isFirst = false;
+				}
+
+				StringBuilder.Append(")");
+			}
+
+			if (clause.OrderBy != null)
+			{
+				//TODO: Currently ORDER SIBLINGS BY not supported
+				StringBuilder.Append("ORDER BY ");
+
+				var isFirst = true;
+				foreach (var item in clause.OrderBy.Items)
+				{
+					if (!isFirst)
+						StringBuilder.Append(", ");
+
+					BuildExpression(item.Expression);
+					if (item.IsDescending)
+						StringBuilder.Append(" DESC");
+
+					switch (item.Nulls)
+					{
+						case SqlAnalyticFunction.Nulls.First :
+							StringBuilder.Append(" NULLS FIRST");
+							break;
+						case SqlAnalyticFunction.Nulls.Last :
+							StringBuilder.Append(" NULLS LAST");
+							break;
+					}
+
+					isFirst = false;
+				}
+			}
+
+			if (clause.Windowing != null)
+			{
+				//TODO: Check syntax
+//				if (clause.OrderBy == null)
+//					throw new InvalidOperationException("Missed OrderBy Clause for Analytic function");
+
+				switch (clause.Windowing.BasedOn)
+				{
+					case SqlAnalyticFunction.BasedOn.Rows :
+						StringBuilder.Append(" ROWS");
+						break;
+					case SqlAnalyticFunction.BasedOn.Range :
+						StringBuilder.Append(" RANGE");
+						break;
+					default :
+						throw new ArgumentOutOfRangeException();
+				}
+
+				if (clause.Windowing.Start == null)
+					throw new InvalidOperationException("Inconsistent Windowsing Clause for Analytic function");
+
+				BuildPointExpression(clause.Windowing.Start);
+
+				if (clause.Windowing.End != null)
+					BuildPointExpression(clause.Windowing.End);
+			}
+
+			StringBuilder.Append(")");
+		}
+
 		protected virtual void BuildAnalyticFunction(SqlAnalyticFunction func)
 		{
 			//TODO: Fake implementation
@@ -2093,6 +2205,9 @@ namespace LinqToDB.SqlProvider
 				.Append("Analytic(")
 				.Append(func.Name)
 				.Append(')');
+
+			if (func.Analytic != null)
+				BuildAnalyticClause(func.Analytic);
 		}
 
 		#endregion
