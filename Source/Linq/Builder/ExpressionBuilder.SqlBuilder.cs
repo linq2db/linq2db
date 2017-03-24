@@ -894,6 +894,11 @@ namespace LinqToDB.Linq.Builder
 							if (attr.InlineParameters)
 								DataContextInfo.DataContext.InlineParameters = true;
 
+							if (attr.HasPureConvertor)
+							{
+								return Convert(context, attr.GetExpression(e.Method, e.Arguments.ToArray(), _ => ConvertToSql(context, _)));
+							}
+
 							var parms = new List<ISqlExpression>();
 
 							if (e.Object != null)

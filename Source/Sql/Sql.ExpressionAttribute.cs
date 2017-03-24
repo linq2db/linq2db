@@ -4,10 +4,9 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-// ReSharper disable CheckNamespace
-
 namespace LinqToDB
 {
+	using System.Linq.Expressions;
 	using Extensions;
 	using SqlQuery;
 
@@ -55,6 +54,7 @@ namespace LinqToDB
 			public bool   InlineParameters { get; set; }
 			public bool   ExpectExpression { get; set; }
 			public bool   IsPredicate      { get; set; }
+			public bool   HasPureConvertor { get; set; }
 
 			private bool? _canBeNull;
 			public  bool   CanBeNull
@@ -92,6 +92,11 @@ namespace LinqToDB
 			public virtual ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
 			{
 				return new SqlExpression(member.GetMemberType(), Expression ?? member.Name, Precedence, ConvertArgs(member, args)) { CanBeNull = CanBeNull };
+			}
+
+			public virtual ISqlExpression GetExpression(MemberInfo member, Expression[] args, Func<Expression, ISqlExpression> converter)
+			{
+				throw new NotImplementedException();
 			}
 		}
 	}

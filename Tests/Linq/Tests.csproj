@@ -256,6 +256,7 @@
     <Compile Include="Data\MiniProfilerTests.cs" />
     <Compile Include="Data\TransactionTests.cs" />
     <Compile Include="Data\ProcedureTests.cs" />
+    <Compile Include="Linq\AnalyticTests.cs" />
     <Compile Include="Linq\InterfaceTests.cs" />
     <Compile Include="Linq\JoinOptimizeTests.cs" />
     <Compile Include="Samples\DataContextDecoratorTests.cs" />

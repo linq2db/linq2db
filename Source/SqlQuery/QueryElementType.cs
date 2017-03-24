@@ -6,6 +6,7 @@ namespace LinqToDB.SqlQuery
 	{
 		SqlField,
 		SqlFunction,
+		SqlAnalyticFunction,
 		SqlParameter,
 		SqlExpression,
 		SqlBinaryExpression,

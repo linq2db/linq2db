@@ -1903,6 +1903,10 @@ namespace LinqToDB.SqlProvider
 					BuildFunction((SqlFunction)expr);
 					break;
 
+				case QueryElementType.SqlAnalyticFunction:
+					BuildAnalyticFunction((SqlAnalyticFunction)expr);
+					break;
+
 				case QueryElementType.SqlParameter:
 					{
 						var parm = (SqlParameter)expr;
@@ -2075,6 +2079,20 @@ namespace LinqToDB.SqlProvider
 			}
 
 			StringBuilder.Append(')');
+		}
+
+		#endregion
+
+		#region BuildAnalyticFunction
+
+		protected virtual void BuildAnalyticFunction(SqlAnalyticFunction func)
+		{
+			//TODO: Fake implementation
+
+			StringBuilder
+				.Append("Analytic(")
+				.Append(func.Name)
+				.Append(')');
 		}
 
 		#endregion
