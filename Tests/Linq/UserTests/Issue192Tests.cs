@@ -110,6 +110,12 @@ namespace Tests.UserTests
 				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => !_.BoolValue));
 				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ =>  _.BoolValue));
 
+				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => _.BoolValue.Equals(false)));
+				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => _.BoolValue.Equals(true)));
+
+				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => !_.BoolValue.Equals(true)));
+				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => !_.BoolValue.Equals(false)));
+
 				Assert.AreEqual(notVerified, db.GetTable<TypeConvertTable>().First(_ => _.GuidValue == notVerified.GuidValue));
 				Assert.AreEqual(verified,    db.GetTable<TypeConvertTable>().First(_ => _.GuidValue == verified   .GuidValue));
 			}

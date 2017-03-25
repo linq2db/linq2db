@@ -1094,11 +1094,6 @@ namespace LinqToDB.Linq.Builder
 		Expression _lastExpr1;
 		bool       _lastResult1;
 
-		bool HasConverterToDataPartameter(Type type)
-		{
-			return MappingSchema.GetConvertExpression(type, typeof(DataParameter), false, false) != null;
-		}
-
 		bool CanBeConstant(Expression expr)
 		{
 			if (_lastExpr1 == expr)
@@ -1109,7 +1104,7 @@ namespace LinqToDB.Linq.Builder
 				if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
 					return false;
 
-				if (HasConverterToDataPartameter(ex.Type))
+				if (MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
 					return true;
 
 				switch (ex.NodeType)
@@ -1456,14 +1451,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression AddEqualTrue(Expression expr)
 		{
-			Expression left;
-			var convert = MappingSchema.GetConvertExpression<bool, DataParameter>(false, false);
-			if (convert != null)
-				left = Expression.Constant(convert.Compile()(true).Value);
-			else
-				left = Expression.Constant(true);
-
-			return Equal(MappingSchema, left, expr);
+			return Equal(MappingSchema, Expression.Constant(true), expr);
 		}
 
 		#region ConvertCompare
