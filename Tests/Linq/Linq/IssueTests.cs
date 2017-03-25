@@ -327,5 +327,34 @@ namespace Tests.Linq
 				AreEqual(expected, query);
 			}
 		}
+
+		public class PersonWrapper
+		{
+			public int    ID;
+			public string FirstName;
+			public string SecondName;
+		}
+
+		[Test, DataContextSource]
+		public void Issue535Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person
+						where p.FirstName.StartsWith("J")
+						select new PersonWrapper
+						{
+							ID         = p.ID,
+							FirstName  = p.FirstName,
+							SecondName = p.LastName
+						};
+
+				q = from p in q
+					where p.ID == 1 || p.SecondName == "fail"
+					select p;
+
+				Assert.IsNotNull(q.FirstOrDefault());
+			}
+		}
 	}
 }

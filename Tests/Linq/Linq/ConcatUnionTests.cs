@@ -660,7 +660,7 @@ namespace Tests.Linq
 					select c.Parent.ParentID);
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource, Category("WindowsOnly")]
 		public void ConcatToString(string context)
 		{
 			string pattern = "1";
@@ -692,6 +692,63 @@ namespace Tests.Linq
 						)
 					)
 				);
+		}
+
+		[Test, DataContextSource]
+		public void UnionWithObjects(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 =
+					from p in db.Parent
+					from p2 in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var q2 =
+					from p in db.Parent
+					from p2 in db.Parent
+					join c in db.Child on p2.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var q = q1.Union(q2);
+
+				var qe1 = 
+					from p in Parent
+					from p2 in Parent
+					join c in Child on p.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var qe2 =
+					from p in Parent
+					from p2 in Parent
+					join c in Child on p2.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var qe = qe1.Union(qe2);
+
+				AreEqual(qe, q);
+			}
 		}
 	}
 }

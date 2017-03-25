@@ -90,12 +90,7 @@ namespace LinqToDB.Linq.Builder
 
 					var ep = (from pm in builder.CurrentSqlParameters where pm.SqlParameter == skip select pm).First();
 
-					ep = new ParameterAccessor
-					{
-						Expression   = ep.Expression,
-						Accessor     = ep.Accessor,
-						SqlParameter = parm
-					};
+					ep = new ParameterAccessor(ep.Expression, ep.Accessor, ep.DataTypeAccessor, parm);
 
 					builder.CurrentSqlParameters.Add(ep);
 				}

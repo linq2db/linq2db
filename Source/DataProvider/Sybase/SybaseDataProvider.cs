@@ -30,6 +30,7 @@ namespace LinqToDB.DataProvider.Sybase
 			//SqlProviderFlags.IsCountSubQuerySupported  = false;
 			SqlProviderFlags.CanCombineParameters      = false;
 			SqlProviderFlags.IsSybaseBuggyGroupBy      = true;
+			SqlProviderFlags.IsCrossJoinSupported      = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());

@@ -26,6 +26,16 @@ namespace LinqToDB.SqlProvider
 		public bool        IsSybaseBuggyGroupBy           { get; set; }
 		//public IsTakeHints GetIsTakeHintsSupported        { get; set; }
 		public TakeHints?  TakeHintsSupported             { get; set; }
+		/// <summary>
+		/// Provider supports:
+		/// CROSS JOIN a Supported
+		/// </summary>
+		public bool IsCrossJoinSupported                  { get; set; }
+		/// <summary>
+		/// Provider supports:
+		/// INNER JOIN a ON 1 = 1 
+		/// </summary>
+		public bool IsInnerJoinAsCrossSupported           { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
