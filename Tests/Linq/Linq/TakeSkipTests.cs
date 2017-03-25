@@ -405,13 +405,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = db.Person.OrderBy(_ => _.FirstName).Skip(1).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
+				Assert.Throws<LinqException>(() => db.Person.Skip(1).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _).ToList());
 
-				Assert.IsNotEmpty(q);
-
-				var qry = q.ToString();
-				Assert.That(qry.Contains("PERCENT"));
-				Assert.That(qry.Contains("WITH"));
+				Assert.Throws<LinqException>(() => db.Person.Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Skip(1).Select(_ => _).ToList());
 			}
 		}
 

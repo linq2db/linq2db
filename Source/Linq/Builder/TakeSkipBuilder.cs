@@ -73,6 +73,9 @@ namespace LinqToDB.Linq.Builder
 			if (hints != null && !builder.DataContextInfo.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
 				throw new LinqException("TakeHints are {0} not supported by current database".Args(hints));
 
+			if (hints != null && sql.Select.SkipValue != null)
+				throw new LinqException("Take with hints could not be applied with Skip");
+
 			sql.Select.Take(expr, hints);
 
 			if ( sql.Select.SkipValue != null &&
@@ -112,6 +115,10 @@ namespace LinqToDB.Linq.Builder
 		static void BuildSkip(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression prevSkipValue, ISqlExpression expr)
 		{
 			var sql = sequence.SelectQuery;
+
+			if (sql.Select.TakeHints != null)
+				throw new LinqException("Skip could not be applied with Take with hints");
+
 
 			sql.Select.Skip(expr);
 

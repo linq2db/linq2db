@@ -44,10 +44,10 @@ namespace LinqToDB.SqlProvider
 
 		/// <summary>
 		/// True if it is needed to wrap join condition with ()
+		/// </summary>
 		/// <example>
 		/// INNER JOIN Table2 t2 ON (t1.Value = t2.Value)
 		/// </example>
-		/// </summary>
 		public virtual bool WrapJoinCondition               { get { return false; } }
 
 		#endregion

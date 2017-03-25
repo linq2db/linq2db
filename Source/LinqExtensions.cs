@@ -903,6 +903,9 @@ namespace LinqToDB
 		/// <see cref="System.Linq.Enumerable.Take{TSource}(System.Collections.Generic.IEnumerable{TSource}, int)"/>
 		/// Using this method may cause runtime <see cref="LinqException"/> if take hints are not supported by database
 		/// </summary>
+		/// <remarks>
+		/// Hints are not supported with <see cref="System.Linq.Enumerable.Skip{TSource}(System.Collections.Generic.IEnumerable{TSource}, int)"/>
+		/// </remarks>
 		/// <typeparam name="TSource"></typeparam>
 		/// <param name="source">source</param>
 		/// <param name="count">number of records to take</param>
@@ -930,6 +933,9 @@ namespace LinqToDB
 		/// <see cref="System.Linq.Enumerable.Take{TSource}(System.Collections.Generic.IEnumerable{TSource}, int)"/>
 		/// Using this method may cause runtime <see cref="LinqException"/> if take hints are not supported by database
 		/// </summary>
+		/// <remarks>
+		/// Hints are not supported with <see cref="System.Linq.Enumerable.Skip{TSource}(System.Collections.Generic.IEnumerable{TSource}, int)"/>
+		/// </remarks>
 		/// <typeparam name="TSource"></typeparam>
 		/// <param name="source">source</param>
 		/// <param name="count">number of records to take</param>
