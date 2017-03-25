@@ -28,6 +28,7 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		public override bool IsNestedJoinSupported     { get { return false; } }
+		public override bool WrapJoinCondition         { get { return true;  } }
 
 		#region Skip / Take Support
 

@@ -42,6 +42,14 @@ namespace LinqToDB.SqlProvider
 		public virtual bool IsNestedJoinSupported           { get { return true; } }
 		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
 
+		/// <summary>
+		/// True if it is needed to wrap join condition with ()
+		/// <example>
+		/// INNER JOIN Table2 t2 ON (t1.Value = t2.Value)
+		/// </example>
+		/// </summary>
+		public virtual bool WrapJoinCondition               { get { return false; } }
+
 		#endregion
 
 		#region CommandCount
@@ -1027,6 +1035,9 @@ namespace LinqToDB.SqlProvider
 			else if (buildOn)
 				StringBuilder.Append(" ON ");
 
+			if (WrapJoinCondition && join.Condition.Conditions.Count > 0)
+				StringBuilder.Append("(");
+
 			if (buildOn)
 			{
 				if (join.Condition.Conditions.Count != 0)
@@ -1034,6 +1045,9 @@ namespace LinqToDB.SqlProvider
 				else
 					StringBuilder.Append("1=1");
 			}
+
+			if (WrapJoinCondition && join.Condition.Conditions.Count > 0)
+				StringBuilder.Append(")");
 
 			if (joinCounter > 0)
 			{
