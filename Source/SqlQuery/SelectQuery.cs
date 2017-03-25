@@ -2017,19 +2017,22 @@ namespace LinqToDB.SqlQuery
 
 #region Take
 
-			public SelectClause Take(int value)
+			public SelectClause Take(int value, TakeHints? hints)
 			{
 				TakeValue = new SqlValue(value);
+				TakeHints = hints;
 				return this;
 			}
 
-			public SelectClause Take(ISqlExpression value)
+			public SelectClause Take(ISqlExpression value, TakeHints? hints)
 			{
+				TakeHints = hints;
 				TakeValue = value;
 				return this;
 			}
 
-			public ISqlExpression TakeValue { get; set; }
+			public ISqlExpression TakeValue { get; private set; }
+			public TakeHints?     TakeHints { get; private set; }
 
 #endregion
 
