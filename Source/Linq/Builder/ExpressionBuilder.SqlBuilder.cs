@@ -1105,6 +1105,9 @@ namespace LinqToDB.Linq.Builder
 				if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
 					return false;
 
+				if (MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
+					return true;
+
 				switch (ex.NodeType)
 				{
 					case ExpressionType.Constant     :
