@@ -1,32 +1,57 @@
-﻿<Properties StartupItem="Source\LinqToDB.csproj">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ActiveRuntime="Mono 4.0.1 (Visual)" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Tests\Linq\Create\CreateData.cs">
-    <Files>
-      <File FileName="Tests\Linq\DataContextTestCase.cs" Line="1" Column="1" />
-      <File FileName="Tests\Linq\TestBase.cs" Line="1" Column="1" />
-      <File FileName="Source\DataProvider\SQLite\SQLiteDataProvider.cs" Line="1" Column="1" />
-      <File FileName="Tests\Linq\Create\CreateData.cs" Line="142" Column="1" />
-      <File FileName="Tests\Linq\Linq\TableFunctionTest.cs" Line="1" Column="1" />
-      <File FileName="Source\DataProvider\SqlServer\SqlServerSqlBuilder.cs" Line="1" Column="1" />
-      <File FileName="Tests\Model\NorthwindDB.cs" Line="1" Column="1" />
-      <File FileName="Source\DataProvider\SQLite\SQLiteTools.cs" Line="1" Column="1" />
-      <File FileName="Source\DataProvider\AssemblyResolver.cs" Line="1" Column="1" />
-      <File FileName="Source\DataProvider\SQLite\SQLiteFactory.cs" Line="1" Column="1" />
-      <File FileName="Tests\Linq\DataProvider\SQLiteTest.cs" Line="1" Column="1" />
-      <File FileName="Tests\Linq\App.config" Line="1" Column="1" />
-      <File FileName="Source\Data\DataConnectionExtensions.cs" Line="1" Column="1" />
-      <File FileName="Source\DataProvider\SqlServer\SqlServerDataProvider.cs" Line="1" Column="1" />
-      <File FileName="Source\DataProvider\BasicBulkCopy.cs" Line="1" Column="1" />
-      <File FileName="Source\DataProvider\SqlServer\SqlServerBulkCopy.cs" Line="1" Column="1" />
-    </Files>
-  </MonoDevelop.Ide.Workbench>
+﻿<Properties StartupConfiguration="{07997A18-86D3-47AC-A514-AB1B03E6AEC8}|Unit Tests">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="DebugMono" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
       <Breakpoint file="I:\linq2db\Tests\Linq\Create\CreateData.cs" line="80" column="2" />
       <Breakpoint file="I:\linq2db\Source\Data\DataConnectionExtensions.cs" line="205" column="3" />
+      <Breakpoint file="F:\job\linq2db\Tests\Linq\Exceptions\JoinTests.cs" line="52" column="1" />
+      <Breakpoint file="f:\job\linq2db\Tests\Linq\TestBase.cs" line="527" column="1" />
+      <Breakpoint file="F:\job\linq2db\Tests\Linq\Create\CreateData.cs" line="26" column="1" />
+      <Breakpoint file="F:\job\linq2db\Source\DataProvider\DynamicDataProviderBase.cs" line="74" column="1" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Source\DataProvider\SQLite\SQLiteTools.cs">
+    <Files>
+      <File FileName=".travis.yml" Line="9" Column="42" />
+      <File FileName="Tests\Linq\Create\CreateData.cs" Line="77" Column="1" />
+      <File FileName="Source\Data\DataConnectionExtensions.cs" Line="111" Column="1" />
+      <File FileName="Source\Data\CommandInfo.cs" Line="276" Column="4" />
+      <File FileName="Source\Data\DataConnection.cs" Line="521" Column="1" />
+      <File FileName="Source\DataProvider\DataProviderBase.cs" Line="76" Column="1" />
+      <File FileName="Source\DataProvider\DynamicDataProviderBase.cs" Line="74" Column="1" />
+      <File FileName="Source\DataProvider\SQLite\SQLiteDataProvider.cs" Line="101" Column="21" />
+      <File FileName="Source\Extensions\ReflectionExtensions.cs" Line="541" Column="22" />
+      <File FileName="Source\DataProvider\SQLite\SQLiteTools.cs" Line="1" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="MonoDevelop.UnitTesting.TestPad">
+        <State name="__root__">
+          <Node name="linq2db.Mono" expanded="True">
+            <Node name="Tests" expanded="True">
+              <Node name="Tests.Mono" expanded="True">
+                <Node name="Tests" expanded="True">
+                  <Node name="_Create" expanded="True">
+                    <Node name="_CreateData" expanded="True">
+                      <Node name="SQLite" selected="True" />
+                    </Node>
+                  </Node>
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State>
+          <Value>connectionType.Assembly</Value>
+          <Value>connectionType.GetConstructorEx(new[] { typeof(string) })</Value>
+          <Value>l</Value>
+          <Value>IntPtr.Size</Value>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
   <DisabledProjects>
     <String>Source\LinqToDB.Mono.csproj</String>
   </DisabledProjects>

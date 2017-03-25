@@ -18,8 +18,12 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tests.VisualBasic", "Tests\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".doc", ".doc", "{751CE0BA-690F-42BF-94C7-C8276F8A84CF}"
 	ProjectSection(SolutionItems) = preProject
+		.travis.yml = .travis.yml
 		appveyor.core.yml = appveyor.core.yml
+		appveyor.mono.yml = appveyor.mono.yml
 		appveyor.yml = appveyor.yml
+		Av-InitDatabases.ps1 = Av-InitDatabases.ps1
+		build.sh = build.sh
 		MIT-LICENSE.txt = MIT-LICENSE.txt
 		README.md = README.md
 	EndProjectSection

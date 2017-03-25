@@ -1,4 +1,9 @@
 ﻿{
-	"runtimes": { "win-x86": {}, "win":{} },
-	"frameworks": { "net45": {} }
+  "runtimes": {
+    "win-x86": {},
+    "win": {}
+  },
+  "frameworks": {
+    "net45": {}
+  }
 }

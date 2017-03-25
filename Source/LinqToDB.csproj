@@ -399,6 +399,7 @@
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
     <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
+    <Compile Include="SqlQuery\QueryHelper.cs" />
     <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
     <Compile Include="Sql\Sql.cs" />

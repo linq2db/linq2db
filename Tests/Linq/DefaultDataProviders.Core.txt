@@ -2,9 +2,9 @@
 -- Copy this file as UserDataProviders.txt and uncomment providers you need to work on.
 -- UserDataProviders.txt is in .gitignore and it is not committed to the repository.
 
-SQLiteMs    * Data Source=Database\TestData.sqlite      * SQLite
-SQLite.Data * Data Source=Database\Data\TestData.sqlite * SQLite
-NorthwindSqlite * Data Source=Database\Northwind.sqlite    * SQLite
+!SQLiteMs         * Data Source=Database\TestData.sqlite      * SQLite
+SQLite.Data       * Data Source=Database\Data\TestData.sqlite * SQLite
+NorthwindSqliteMs * Data Source=Database\Northwind.sqlite     * SQLite
 
 --DB2
 --Firebird

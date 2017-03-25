@@ -99,7 +99,7 @@
     <DefineConstants>TRACE;FW4;MONO;NOFSHARP</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisLogFile>bin\Release\UnitTests.Linq.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
     <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
     <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
@@ -150,6 +150,10 @@
     </Reference>
     <Reference Include="MySql.Data, Version=6.9.8.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\..\packages\MySql.Data.6.9.8\lib\net45\MySql.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Npgsql, Version=3.0.6.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
@@ -254,6 +258,10 @@
     <Compile Include="Data\ProcedureTests.cs" />
     <Compile Include="Linq\InterfaceTests.cs" />
     <Compile Include="Linq\JoinOptimizeTests.cs" />
+    <Compile Include="Samples\DataContextDecoratorTests.cs" />
+    <Compile Include="OrmBattle\Helper\ExpressionUtils.cs" />
+    <Compile Include="OrmBattle\Helper\GenericEqualityComparer.cs" />
+    <Compile Include="OrmBattle\OrmBattleTests.cs" />
     <Compile Include="TestProvName.cs" />
     <Compile Include="Update\CreateTableTests.cs" />
     <Compile Include="Linq\QueryHintsTests.cs" />
@@ -354,8 +362,13 @@
     <Compile Include="UserTests\FirstOrDefaultNullReferenceExceptionTests.cs" />
     <Compile Include="UserTests\GenericsFilterTests.cs" />
     <Compile Include="UserTests\GroupBySubqueryTests.cs" />
+    <Compile Include="UserTests\Issue175Tests.cs" />
+    <Compile Include="UserTests\Issue358Tests.cs" />
+    <Compile Include="UserTests\Issue356Tests.cs" />
+    <Compile Include="UserTests\Issue395Tests.cs" />
     <Compile Include="UserTests\Issue273Tests.cs" />
     <Compile Include="UserTests\Issue447Tests.cs" />
+    <Compile Include="UserTests\Issue461Tests.cs" />
     <Compile Include="UserTests\Issue531Tests.cs" />
     <Compile Include="UserTests\Issue357Tests.cs" />
     <Compile Include="UserTests\Issue352Tests.cs" />
@@ -364,7 +377,9 @@
     <Compile Include="UserTests\Issue488Tests.cs" />
     <Compile Include="UserTests\Issue496Tests.cs" />
     <Compile Include="UserTests\Issue513Tests.cs" />
+    <Compile Include="UserTests\Issue533Tests.cs" />
     <Compile Include="UserTests\Issue548Tests.cs" />
+    <Compile Include="UserTests\Issue569Tests.cs" />
     <Compile Include="UserTests\LetTests.cs" />
     <Compile Include="UserTests\MultiPartIdentifierTests.cs" />
     <Compile Include="UserTests\SelectManyDeleteTests.cs" />
@@ -517,13 +532,19 @@
       <Link>Sybase.AdoNet45.AseClient.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="AppveyorDataProviders.Core.txt" />
     <Content Include="AppveyorDataProviders.txt" />
     <Content Include="DefaultDataProviders.txt" />
+    <Content Include="MonoAppveyorDataProviders.txt" />
     <Content Include="SqlServerTypes\readme.htm" />
     <Content Include="..\..\Data\Northwind.sqlite">
       <Link>Database\Northwind.sqlite</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TravisDataProviders.Core.txt" />
+    <Content Include="TravisDataProviders.Osx.Core.txt" />
+    <Content Include="TravisDataProviders.Osx.txt" />
+    <Content Include="TravisDataProviders.txt" />
     <None Include="..\..\Data\TestData.sqlite">
       <Link>Database\TestData.sqlite</Link>
     </None>

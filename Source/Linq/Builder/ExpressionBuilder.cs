@@ -272,7 +272,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (isQueryable)
 					{
-						var p = sequence.ExpressionsToReplace.SingleOrDefault(s => s.Path.NodeType == ExpressionType.Parameter);
+						var p = sequence.ExpressionsToReplace.Single(s => s.Path.NodeType == ExpressionType.Parameter);
 
 						return Expression.Call(
 							((MethodCallExpression)expr).Method.DeclaringType,
@@ -464,8 +464,13 @@ namespace LinqToDB.Linq.Builder
 							var isList = typeof(ICollection).IsAssignableFromEx(me.Member.DeclaringType);
 
 							if (!isList)
+								isList =
+									me.Member.DeclaringType.IsGenericTypeEx() &&
+									me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(ICollection<>);
+
+							if (!isList)
 								isList = me.Member.DeclaringType.GetInterfacesEx()
-									.Any(t => t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == typeof(IList<>));
+									.Any(t => t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == typeof(ICollection<>));
 
 							if (isList)
 							{
@@ -1268,7 +1273,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, _ => {});
+				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
 
 				if (expr.Find(e => e.NodeType == ExpressionType.Parameter && e != p) != null)
 					return expression;

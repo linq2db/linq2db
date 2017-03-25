@@ -614,10 +614,58 @@ namespace Tests.Linq
 
 				var sql = q.ToString();
 
-				Assert.That(sql.IndexOf("First"), Is.LessThan(0));
+				Assert.That(sql.IndexOf("First"),    Is.LessThan(0));
 				Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
 			}
 		}
 
+		[Test, DataContextSource]
+		public void SelectComplex1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var r = db.GetTable<ComplexPerson>().First(_ => _.ID == 1);
+
+				Assert.IsNotEmpty(r.Name.FirstName);
+				Assert.IsNotEmpty(r.Name.MiddleName);
+				Assert.IsNotEmpty(r.Name.LastName);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void SelectComplex2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var r = db.GetTable<ComplexPerson2>().First(_ => _.ID == 1);
+
+				Assert.IsNotEmpty(r.Name.FirstName);
+				Assert.IsNotEmpty(r.Name.MiddleName);
+				Assert.IsNotEmpty(r.Name.LastName);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void SelectComplex3(string context)
+		{
+			var ms = new MappingSchema();
+			var b  = ms.GetFluentMappingBuilder();
+
+			b
+				.Entity<ComplexPerson3>()        .HasTableName ("Person")
+				.Property(_ => _.ID)             .HasColumnName("PersonID")
+				.Property(_ => _.Name.FirstName) .HasColumnName("FirstName")
+				.Property(_ => _.Name.LastName)  .HasColumnName("LastName")
+				.Property(_ => _.Name.MiddleName).HasColumnName("MiddleName");
+
+			using (var db = GetDataContext(context, ms))
+			{
+				var r = db.GetTable<ComplexPerson3>().First(_ => _.ID == 1);
+
+				Assert.IsNotEmpty(r.Name.FirstName);
+				Assert.IsNotEmpty(r.Name.MiddleName);
+				Assert.IsNotEmpty(r.Name.LastName);
+			}
+		}
 	}
 }

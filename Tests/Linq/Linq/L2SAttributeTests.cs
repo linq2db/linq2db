@@ -73,10 +73,10 @@ namespace Tests.Linq
 	[TestFixture]
 	public class L2SAttributeTests : TestBase
 	{
-		[Test]
-		public void IsDbGeneratedTest()
+		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
+		public void IsDbGeneratedTest(string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 

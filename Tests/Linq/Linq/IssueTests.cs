@@ -37,7 +37,7 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/42
 		//
-		[Test, DataContextSource()]
+		[Test, DataContextSource]
 		public void Issue42Test(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -206,6 +206,154 @@ namespace Tests.Linq
 					   Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1),
 					db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1)
 					);
+			}
+		}
+
+		// https://github.com/linq2db/linq2db/issues/498
+		//
+		[Test, DataContextSource()]
+		public void Issue498Test(string context)
+		{
+			using (new WithoutJoinOptimization())
+			using (var db = GetDataContext(context))
+			{
+				var q = from x in db.Child
+					//join y in db.GrandChild on new { x.ParentID, x.ChildID } equals new { ParentID = (int)y.ParentID, ChildID = (int)y.ChildID }
+					from y in x.GrandChildren1
+					select x.ParentID;
+
+				var r = from x in q
+					group x by x
+					into g
+					select new { g.Key, Cghildren = g.Count() };
+
+				var qq = from x in Child
+					from y in x.GrandChildren
+					select x.ParentID;
+
+				var rr = from x in qq
+					group x by x
+					into g
+					select new { g.Key, Cghildren = g.Count() };
+
+				AreEqual(rr, r);
+
+				var sql = r.ToString();
+				Assert.Less(0, sql.IndexOf("INNER", 1), sql);
+			}
+		}
+
+
+		[Test, DataContextSource]
+		public void Issue528Test1(string context)
+		{
+			//using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
+				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
+
+				foreach(var re in result)
+				{
+					var ex = expected.Single(_ => _.Key == re.Key);
+
+					AreEqual(ex.Data, re.Data);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue528Test2(string context)
+		{
+			//using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
+				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
+
+				foreach(var re in result)
+				{
+					var ex = expected.Single(_ => _.Key == re.Key);
+
+					AreEqual(ex.Data, re.Data);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue528Test3(string context)
+		{
+			//using (new AllowMultipleQuery())
+			using (var db = GetDataContext(context))
+			{
+				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
+				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
+
+				foreach(var re in result)
+				{
+					var ex = expected.Single(_ => _.Key == re.Key);
+
+					AreEqual(ex.Data.ToList(), re.Data.ToList());
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue508Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = (
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					where c.ChildID == 11
+					select p.ParentID
+							 ).Union(
+					from c in db.Child
+					where c.ChildID == 11
+					select c.ParentID
+								   );
+				var expected = (
+					from c in Child
+					join p in Parent on c.ParentID equals p.ParentID
+					where c.ChildID == 11
+					select p.ParentID
+							 ).Union(
+					from c in Child
+					where c.ChildID == 11
+					select c.ParentID
+								   );
+
+				AreEqual(expected, query);
+			}
+		}
+
+		public class PersonWrapper
+		{
+			public int    ID;
+			public string FirstName;
+			public string SecondName;
+		}
+
+		[Test, DataContextSource]
+		public void Issue535Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person
+						where p.FirstName.StartsWith("J")
+						select new PersonWrapper
+						{
+							ID         = p.ID,
+							FirstName  = p.FirstName,
+							SecondName = p.LastName
+						};
+
+				q = from p in q
+					where p.ID == 1 || p.SecondName == "fail"
+					select p;
+
+				Assert.IsNotNull(q.FirstOrDefault());
 			}
 		}
 	}

@@ -89,10 +89,11 @@ namespace Tests.Model
 				other.MoneyValue                 == MoneyValue    &&
 				other.BoolValue                  == BoolValue     &&
 				other.GuidValue                  == GuidValue     &&
-				other.DateTimeValue.Value.Date   == DateTimeValue.Value.Date &&
-				other.DateTimeValue.Value.Hour   == DateTimeValue.Value.Hour &&
-				other.DateTimeValue.Value.Minute == DateTimeValue.Value.Minute &&
-				other.DateTimeValue.Value.Second == DateTimeValue.Value.Second;
+				other.DateTimeValue              == DateTimeValue;
+				//other.DateTimeValue.Value.Date   == DateTimeValue.Value.Date &&
+				//other.DateTimeValue.Value.Hour   == DateTimeValue.Value.Hour &&
+				//other.DateTimeValue.Value.Minute == DateTimeValue.Value.Minute &&
+				//other.DateTimeValue.Value.Second == DateTimeValue.Value.Second;
 		}
 
 		public override int GetHashCode()

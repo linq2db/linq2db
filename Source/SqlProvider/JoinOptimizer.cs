@@ -46,7 +46,7 @@ namespace LinqToDB.SqlProvider
 						if ((sj.JoinType == SelectQuery.JoinType.Inner || sj.JoinType == SelectQuery.JoinType.Left)
 							&& table != j.Table && !HasDependencyWithParent(j, sj))
 						{
-							table.Joins.Add(sj);
+							table.Joins.Insert(i + 1, sj);
 							j.Table.Joins.RemoveAt(si);
 							--si;
 						}
@@ -156,9 +156,10 @@ namespace LinqToDB.SqlProvider
 		bool HasDependencyWithParent(SelectQuery.JoinedTable parent,
 			SelectQuery.JoinedTable child)
 		{
-			var sources = new HashSet<int>(child.Table.GetTables().Select(t => t.SourceID));
+			var sources   = new HashSet<int>(child.Table.GetTables().Select(t => t.SourceID));
 			var dependent = false;
 
+			// check that parent has dependency on child
 			new QueryVisitor().VisitParentFirst(parent, e =>
 			{
 				if (dependent)

@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using System.Linq;
+
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -76,6 +78,12 @@ namespace LinqToDB.Linq.Builder
 
 			if (collection is TableBuilder.TableContext)
 			{
+//				if (collectionInfo.IsAssociationBuilt)
+//				{
+//					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
+//					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
+//				}
+
 				var table = (TableBuilder.TableContext)collection;
 
 				var join = table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0 ?
@@ -108,7 +116,14 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					//if (collectionInfo.IsAssociationBuilt)
+					//{
+					//	collectionInfo.AssosiationContext.ParentAssociationJoin.IsWeak = false;
+					//}
+					//else
+					{
+						sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					}
 				}
 
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);

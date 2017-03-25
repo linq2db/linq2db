@@ -53,10 +53,18 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
-				Console.WriteLine("{0}: {1}", s2, s1);
-				Debug.WriteLine(s1, s2);
+				if (traceCount < 1000)
+				{
+					Console.WriteLine("{0}: {1}", s2, s1);
+					Debug.WriteLine(s1, s2);
+				}
+#if MONO
+				else
+					Console.Write("z");
+#else
 				if (traceCount++ > 1000)
 					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+#endif
 			};
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
@@ -99,13 +107,17 @@ namespace Tests
 					.Where (s => s.Length > 0 && !s.StartsWith("--"))
 					.Select(s =>
 					{
+						var isDefault = s.StartsWith("!");
+						if (isDefault)
+							s = s.Substring(1);
+
 						var ss = s.Split('*');
 						switch (ss.Length)
 						{
 							case 0 : return null;
-							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0]        };
-							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0]        };
-							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim() };
+							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0],        IsDefault = isDefault };
+							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0],        IsDefault = isDefault };
+							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim(), IsDefault = isDefault };
 						}
 					})
 					.ToDictionary(i => i.Name);
@@ -120,7 +132,7 @@ namespace Tests
 			//DataConnection.SetConnectionStrings(config);
 
 #if NETSTANDARD
-			DataConnection.DefaultSettings = TxtSettings.Instance;
+			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
 			foreach (var provider in UserProviders.Values)
@@ -139,6 +151,14 @@ namespace Tests
 					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
 #endif
 
+			var defaultConfiguration = UserProviders.Where(_ => _.Value.IsDefault).Select(_ => _.Key).FirstOrDefault();
+			if (!string.IsNullOrEmpty(defaultConfiguration))
+			{
+				DataConnection.DefaultConfiguration       = defaultConfiguration;
+#if NETSTANDARD
+				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
+#endif
+			}
 
 			DataConnection.TurnTraceSwitchOn();
 
@@ -171,14 +191,14 @@ namespace Tests
 			return basePath;
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
 #endif
 
 		static void OpenHost()
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 			if (_isHostOpen)
 				return;
 
@@ -212,6 +232,7 @@ namespace Tests
 			public string Name;
 			public string ConnectionString;
 			public string ProviderName;
+			public bool   IsDefault;
 		}
 
 		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
@@ -306,11 +327,10 @@ namespace Tests
 						}
 
 						hasTest = true;
-
 						yield return test;
 
 					}
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 
 					if (!isIgnore && _includeLinqService)
 					{
@@ -333,7 +353,9 @@ namespace Tests
 				}
 
 				if (!hasTest)
+				{
 					yield return test;
+				}
 			}
 		}
 
@@ -374,10 +396,10 @@ namespace Tests
 		[AttributeUsage(AttributeTargets.Method)]
 		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public NorthwindDataContextAttribute(bool excludeSqlite) : base(
+			public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false) : base(
 				excludeSqlite
 				? new[] { "Northwind" }
-				: new[] { "Northwind", "NorthwindSqlite" })
+				:  ( excludeSqliteMs  ? new[] { "Northwind", "NorthwindSqlite" } : new[] { "Northwind", "NorthwindSqlite",  "NorthwindSqliteMs"}))
 			{
 			}
 
@@ -390,7 +412,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -704,7 +726,7 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
 		#region Inheritance Parent/Child Model
 
@@ -740,7 +762,7 @@ namespace Tests
 		
 		#endregion
 
-		#region Northwind
+#region Northwind
 
 		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
@@ -927,7 +949,7 @@ namespace Tests
 				}
 			}
 		}
-		#endregion
+#endregion
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
@@ -1022,6 +1044,19 @@ namespace Tests
 		public void Dispose()
 		{
 			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
+
+	public class WithoutJoinOptimization : IDisposable
+	{
+		public WithoutJoinOptimization()
+		{
+			Configuration.Linq.OptimizeJoins = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.OptimizeJoins = true;
 		}
 	}
 }
