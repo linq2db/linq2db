@@ -1230,7 +1230,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, _ => {});
+				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
 
 				if (expr.Find(e => e.NodeType == ExpressionType.Parameter && e != p) != null)
 					return expression;
