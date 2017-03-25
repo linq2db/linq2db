@@ -441,6 +441,10 @@ namespace LinqToDB.Linq
 				}
 
 				p.SqlParameter.Value = value;
+
+				var dataType = p.DataTypeAccessor(expr, parameters);
+				if (dataType != DataType.Undefined)
+					p.SqlParameter.DataType = dataType;
 			}
 		}
 
@@ -550,13 +554,20 @@ namespace LinqToDB.Linq
 				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
 			}
 
+			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
+
 			var expr = dataContext.MappingSchema.GetConvertExpression(field.SystemType, typeof(DataParameter), createDefault: false);
 
 			if (expr != null)
-				getter = Expression.PropertyOrField(expr.GetBody(getter), "Value");
+			{
+				var body = expr.GetBody(getter);
+
+				getter             = Expression.PropertyOrField(body, "Value");
+				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
+			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+				dataContext, getter, dataTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
 
 			return param;
 		}
@@ -817,11 +828,12 @@ namespace LinqToDB.Linq
 				SelectQuery = insertQuery,
 				Parameters  = Queries[0].Parameters
 					.Select(p => new ParameterAccessor
-						{
-							Expression   = p.Expression,
-							Accessor     = p.Accessor,
-							SqlParameter = dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null
-						})
+						(
+							p.Expression,
+							p.Accessor,
+							p.DataTypeAccessor,
+							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null
+						))
 					.Where(p => p.SqlParameter != null)
 					.ToList(),
 			});
@@ -1315,8 +1327,22 @@ namespace LinqToDB.Linq
 
 	public class ParameterAccessor
 	{
-		public Expression                       Expression;
-		public Func<Expression,object[],object> Accessor;
-		public SqlParameter                     SqlParameter;
+		public ParameterAccessor(
+			Expression                           expression,
+			Func<Expression, object[], object>   accessor,
+			Func<Expression, object[], DataType> dataTypeAccessor,
+			SqlParameter                         sqlParameter
+			)
+		{
+			Expression       = expression;
+			Accessor         = accessor;
+			DataTypeAccessor = dataTypeAccessor;
+			SqlParameter     = sqlParameter;
+		}
+
+		public          Expression                         Expression;
+		public readonly Func<Expression,object[],object>   Accessor;
+		public readonly Func<Expression,object[],DataType> DataTypeAccessor;
+		public readonly SqlParameter                       SqlParameter;
 	}
 }
