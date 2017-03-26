@@ -10,33 +10,73 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue082Tests : TestBase
 	{
-		[Test, NorthwindDataContext]
-		public void Test(string context)
+		[Test, DataContextSource]
+		public void Test1(string context)
 		{
-			using (var db = new NorthwindDB(context))
+			using (var db = GetDataContext(context))
 			{
 
-				var query = from o in db.Order
-							join od in db.OrderDetail on o.OrderID equals od.OrderID into irc
+				var resultQuery = 
+							from o in db.Parent
+							join od in db.Child on o.ParentID equals od.ParentID into irc
 							select new
 							{
-								Order = o,
-								CountResources = irc.Count(),
-								CountInventory = irc.Sum(x => x.Quantity)
+								ParentID    = o.ParentID,
+								CountResult = irc.Count(),
+								SumResult   = irc.Sum(x => x.ParentID)
 							};
 
-				var lst = query.ToList();
-				var resMemory = lst.Where(x => x.CountResources > 0).ToList();
+				var expectedQuery = 
+							from o in Parent
+							join od in Child on o.ParentID equals od.ParentID into irc
+							select new
+							{
+								ParentID    = o.ParentID,
+								CountResult = irc.Count(),
+								SumResult   = irc.Sum(x => x.ParentID)
+							};
 
-				var res = query.Where(x => x.CountResources > 0);
+				AreEqual(expectedQuery, resultQuery);
 
+				Assert.That(expectedQuery.Count(), Is.EqualTo(resultQuery.Count()));
 
-				// ok
-				Assert.That(resMemory.Count(), Is.EqualTo(res.Count()));
-
-				// failing
-				Assert.That(resMemory.Count(), Is.EqualTo(res.ToList().Count()));
+				AreEqual(expectedQuery.Where(x => x.CountResult > 0),
+					     resultQuery  .Where(x => x.CountResult > 0));
 			}
 		}
+
+		[Test, DataContextSource]
+		public void Test2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var resultQuery = 
+							from o in db.Parent
+							select new
+							{
+								ParentID    = o.ParentID,
+								CountResult = o.Children.Count(),
+								SumResult   = o.Children.Sum(x => x.ParentID)
+							};
+
+				var expectedQuery = 
+							from o in Parent
+							select new
+							{
+								ParentID    = o.ParentID,
+								CountResult = o.Children.Count(),
+								SumResult   = o.Children.Sum(x => x.ParentID)
+							};
+
+				AreEqual(expectedQuery, resultQuery);
+
+				Assert.That(expectedQuery.Count(), Is.EqualTo(resultQuery.Count()));
+
+				AreEqual(expectedQuery.Where(x => x.CountResult > 0),
+					     resultQuery  .Where(x => x.CountResult > 0));
+			}
+		}
+
 	}
 }
