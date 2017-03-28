@@ -109,7 +109,9 @@ namespace Tests.Samples
 				}
 			}
 
+#pragma warning disable CS0067  
 			public event EventHandler OnClosing;
+#pragma warning restore CS0067
 
 			public IDataContext Clone(bool forNestedQuery)
 			{
