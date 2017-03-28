@@ -1,8 +1,6 @@
 ﻿namespace LinqToDB
 {
 	using System;
-	using System.ComponentModel;
-	using System.Linq;
 	using System.Linq.Expressions;
 
 	using SqlQuery;
@@ -20,592 +18,724 @@
 
 		public interface IAnalyticFunctionBuilder
 		{
-			ISqlExpression ConvertExpression(Expression expr);
-			ISqlExpression GetArgument(int index);
+			string				Configuration { get; }
+			ISqlExpression      GetArgument(int index);
+			ISqlExpression[]    GetArrayArgument(int index);
+			T                   GetValue<T>(int index);
 			SqlAnalyticFunction Function { get; }
 		}
 
-		public static IOver<T> Over<T>(T entity)
+		public static IOver Over
 		{
-			throw new NotImplementedException();
-		}
-
-		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-		public class FunctionChainAttribute : ChainCollector
-		{
-		}
-
-		[AttributeUsage(AttributeTargets.Method)]
-		public class ChainCollector : ExpressionAttribute
-		{
-			public ChainCollector() : base(string.Empty, string.Empty)
+			get
 			{
-				ServerSideOnly = true;
-				PreferServerSide = true;
+				throw new NotImplementedException();
 			}
 		}
 
-		static TR SimpleExprHandler<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		public enum From
+		{
+			None,
+			First,
+			Last
+		}
+
+		public enum Nulls
+		{
+			None,
+			Respect,
+			Ignore
+		}
+
+		public enum NullsPosition
+		{
+			None,
+			First,
+			Last
+		}
+
+		private static TR TwoExprDefaultBuilder<TR>(IReadyToFunction window)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr", builder.ConvertExpression(expr));
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+			builder.Function.Arguments.Add(builder.GetArgument(0));
 
 			return default(TR);
 		}
 
-		static TR AggregateExprHandler<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, AggregateModifier modifier)
+		private static TR AggregateExprDefaultBuilder<TR>(IReadyToFunction window, string funcName, AggregateModifier modifier)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr",     builder.ConvertExpression(expr));
-			builder.Function.AddArgument("Modifier", builder.ConvertExpression(expr));
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+
+			switch (builder.GetValue<AggregateModifier>(1))
+			{
+				case AggregateModifier.None :
+					builder.Function.Expression = funcName + "({0})";
+					break;
+				case AggregateModifier.Distinct :
+					builder.Function.Expression = funcName + "(DISTINCT {0})";
+					break;
+				case AggregateModifier.All :
+					builder.Function.Expression = funcName + "(ALL {0})";
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
 
 			return default(TR);
 		}
 
-		static TR TwoExprHandler<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		private static TR SingleExpressionDefaultBuilder<TR>(IReadyToFunction window)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr1", builder.ConvertExpression(expr1));
-			builder.Function.AddArgument("Expr2", builder.ConvertExpression(expr2));
+			builder.Function.Arguments.Add(builder.GetArgument(0));
 
 			return default(TR);
 		}
 
-		static TR MultipyExprHandler<T, TR>(this IReadyToFunction<T> window, params Expression<Func<T, TR>>[] expressions)
+		[AnalyticFunction("AVG({0})")]
+		public static TR Average<TR>(this IReadyToFunction window, TR expr)
+		{
+			return AggregateExprDefaultBuilder<TR>(window, "AVG", AggregateModifier.None);
+		}
+
+		[AnalyticFunction("AVG({0})")]
+		public static TR Average<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expressions", expressions.Select(e => builder.ConvertExpression(e)).ToList());
-
-			return default(TR);
+			return AggregateExprDefaultBuilder<TR>(window, "AVG", builder.GetValue<AggregateModifier>(1));
 		}
 
-
-		[AnalyticFunction("AVG")]
-		public static TR Average<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("CORR({0}, {1})")]
+		public static TR Corr<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return SimpleExprHandler(window, expr);
+			return TwoExprDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("AVG")]
-		public static TR Average<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, AggregateModifier modifier)
-		{
-			return AggregateExprHandler(window, expr, modifier);
-		}
-
-		[AnalyticFunction("CORR")]
-		public static TR Corr<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
-		{
-			return TwoExprHandler(window, expr1, expr2);
-		}
-
-		[AnalyticFunction("COUNT")]
-		public static long Count<T>(this IReadyToFunction<T> window)
+		[AnalyticFunction("COUNT(*)")]
+		public static long Count(this IReadyToFunction window)
 		{
 			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("COUNT")]
-		public static long Count<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("COUNT({0})")]
+		public static long Count<TR>(this IReadyToFunction window, TR expr)
+		{
+			return SingleExpressionDefaultBuilder<long>(window);
+		}
+
+		[AnalyticFunction("COUNT({0})")]
+		public static long Count<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr", builder.ConvertExpression(expr));
-
-			return default(long);
+			return AggregateExprDefaultBuilder<long>(window, "COUNT", builder.GetValue<AggregateModifier>(1));
 		}
 
-		[AnalyticFunction("COUNT")]
-		public static long Count<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, AggregateModifier modifier)
+		[AnalyticFunction("COVAR_POP({0}, {1})")]
+		public static TR CovarPop<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+		{
+			return TwoExprDefaultBuilder<TR>(window);
+		}
+
+		[AnalyticFunction("COVAR_SAMP({0}, {1})")]
+		public static TR CovarSamp<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+		{
+			return TwoExprDefaultBuilder<TR>(window);
+		}
+
+		[AnalyticFunction("CUME_DIST({0}, {1})")]
+		public static TR CumeDist<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+		{
+			return TwoExprDefaultBuilder<TR>(window);
+		}
+
+		[AnalyticFunction("DENSE_RANK()")]
+		public static decimal DenseRank(this IReadyToFunction window)
+		{
+			throw new NotImplementedException();
+		}
+
+		[AnalyticFunction("DENSE_RANK({0.., ', '})")]
+		public static decimal DenseRank(this IReadyToFunction window, params object[] expressions)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr",     builder.ConvertExpression(expr));
-			builder.Function.AddArgument("Modifier", modifier);
-
-			return default(long);
-		}
-
-		[AnalyticFunction("COVAR_POP")]
-		public static TR CovarPop<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
-		{
-			return TwoExprHandler(window, expr1, expr2);
-		}
-
-		[AnalyticFunction("COVAR_SAMP")]
-		public static TR CovarSamp<T, TR>(this IReadyToFunction<T> window, params Expression<Func<T, TR>>[] expressions)
-		{
-			return MultipyExprHandler(window, expressions);
-		}
-
-		[AnalyticFunction("CUME_DIST")]
-		public static TR CumeDist<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
-		{
-			return TwoExprHandler(window, expr1, expr2);
-		}
-
-		[AnalyticFunction("DENSE_RANK")]
-		public static decimal DenseRank<T>(this IReadyToFunction<T> window, params Expression<Func<T, object>>[] expressions)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.AddArgument("Expressions", expressions.Select(e => builder.ConvertExpression(e)).ToList());
+			builder.Function.Arguments.AddRange(builder.GetArrayArgument(0));
 
 			return default(decimal);
 		}
 
 		//TODO: FIRST - http://docs.oracle.com/cloud/latest/db112/SQLRF/functions065.htm#SQLRF00641
 
-		[AnalyticFunction("FIRST_VALUE")]
-		public static TR FirstValue<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, SqlAnalyticFunction.Nulls nulls)
+		[AnalyticFunction("FIRST_VALUE({0})")]
+		public static TR FirstValue<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr",  builder.ConvertExpression(expr));
-			builder.Function.AddArgument("Nulls", nulls);
-			
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+
+			switch (builder.GetValue<Sql.Nulls>(1))
+			{
+				case Sql.Nulls.None :
+					break;
+				case Sql.Nulls.Respect :
+					builder.Function.Expression = "FIRST_VALUE({0} RESPECT NULLS)";
+					break;
+				case Sql.Nulls.Ignore :
+					builder.Function.Expression = "FIRST_VALUE({0} IGNORE NULLS)";
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+
+			return default(TR);
+		}
+
+		[AnalyticFunction("LAG({0})")]
+		public static TR Lag<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls)
+		{
+			var builder = window as IAnalyticFunctionBuilder;
+			if (builder == null)
+				throw new NotImplementedException();
+
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+
+			switch (builder.GetValue<Sql.Nulls>(1))
+			{
+				case Sql.Nulls.None :
+					break;
+				case Sql.Nulls.Respect :
+					builder.Function.Expression = "LAG({0} RESPECT NULLS)";
+					break;
+				case Sql.Nulls.Ignore :
+					builder.Function.Expression = "LAG({0} IGNORE NULLS)";
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+
 			return default(TR);
 		}
 
 		[AnalyticFunction("LAG")]
-		public static TR Lag<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, SqlAnalyticFunction.Nulls nulls)
+		public static TR Lag<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls, int offset, int? @default)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr",  builder.ConvertExpression(expr));
-			builder.Function.AddArgument("Nulls", nulls);
-			
-			return default(TR);
-		}
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+			builder.Function.Arguments.Add(builder.GetArgument(2));
+			builder.Function.Arguments.Add(builder.GetArgument(3));
 
-		[AnalyticFunction("LAG")]
-		public static TR Lag<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, SqlAnalyticFunction.Nulls nulls, int offset, int? @default)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
+			string expression;
 
-			builder.Function.AddArgument("Expr",    builder.ConvertExpression(expr));
-			builder.Function.AddArgument("Nulls",   nulls);
-			builder.Function.AddArgument("Offset",  builder.GetArgument(2));
-			builder.Function.AddArgument("Default", builder.GetArgument(3));
-			
+			switch (builder.GetValue<Sql.Nulls>(1))
+			{
+				case Sql.Nulls.None :
+					expression = "LAG({0}";
+					break;
+				case Sql.Nulls.Respect :
+					expression = "LAG({0} RESPECT NULLS";
+					break;
+				case Sql.Nulls.Ignore :
+					expression = "LAG({0} IGNORE NULLS";
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+
+			expression = expression + ", {1}, {2})";
+			builder.Function.Expression = expression;
+
 			return default(TR);
 		}
 
 		//TODO: LAST - http://docs.oracle.com/cloud/latest/db112/SQLRF/functions083.htm#SQLRF00653
 
-		[AnalyticFunction("LAST_VALUE")]
-		public static TR LastValue<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, SqlAnalyticFunction.Nulls nulls)
+		[AnalyticFunction("LAST_VALUE({0})")]
+		public static TR LastValue<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr",  builder.ConvertExpression(expr));
-			builder.Function.AddArgument("Nulls", nulls);
-			
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+
+			switch (builder.GetValue<Sql.Nulls>(1))
+			{
+				case Sql.Nulls.None :
+					break;
+				case Sql.Nulls.Respect :
+					builder.Function.Expression = "LAST_VALUE({0} RESPECT NULLS)";
+					break;
+				case Sql.Nulls.Ignore :
+					builder.Function.Expression = "LAST_VALUE({0} IGNORE NULLS)";
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+
 			return default(TR);
 		}
 
-		[AnalyticFunction("LEAD")]
-		public static TR Lead<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, SqlAnalyticFunction.Nulls nulls)
+		[AnalyticFunction("LEAD({0})")]
+		public static TR Lead<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr",  builder.ConvertExpression(expr));
-			builder.Function.AddArgument("Nulls", nulls);
-			
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+
+			switch (builder.GetValue<Sql.Nulls>(1))
+			{
+				case Sql.Nulls.None :
+					break;
+				case Sql.Nulls.Respect :
+					builder.Function.Expression = "LEAD({0} RESPECT NULLS)";
+					break;
+				case Sql.Nulls.Ignore :
+					builder.Function.Expression = "LEAD({0} IGNORE NULLS)";
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+
 			return default(TR);
 		}
 
-		[AnalyticFunction("LEAD")]
-		public static TR Lead<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, SqlAnalyticFunction.Nulls nulls, int offset, int? @default)
+		[AnalyticFunction("LEAD({0})")]
+		public static TR Lead<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls, int offset, int? @default)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr",    builder.ConvertExpression(expr));
-			builder.Function.AddArgument("Nulls",   nulls);
-			builder.Function.AddArgument("Offset",  builder.GetArgument(2));
-			builder.Function.AddArgument("Default", builder.GetArgument(3));
-			
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+			builder.Function.Arguments.Add(builder.GetArgument(2));
+			builder.Function.Arguments.Add(builder.GetArgument(3));
+
+			string expression;
+
+			switch (builder.GetValue<Sql.Nulls>(1))
+			{
+				case Sql.Nulls.None :
+					expression = "LEAD({0}";
+					break;
+				case Sql.Nulls.Respect :
+					expression = "LEAD({0} RESPECT NULLS";
+					break;
+				case Sql.Nulls.Ignore :
+					expression = "LEAD({0} IGNORE NULLS";
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+
+			expression = expression + ", {1}, {2})";
+			builder.Function.Expression = expression;
+
 			return default(TR);
 		}
 
-		[AnalyticFunction("LISTAGG")]
-		public static string ListAgg<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("LISTAGG({0})")]
+		public static string ListAgg<T, TR>(this IReadyToFunction window, TR expr)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr",  builder.ConvertExpression(expr));
+			builder.Function.Arguments.Add(builder.GetArgument(0));
 			
 			return default(string);
 		}
 
-		[AnalyticFunction("LISTAGG")]
-		public static string ListAgg<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, string delimiter)
+		[AnalyticFunction("LISTAGG({0}, {1})")]
+		public static string ListAgg<T, TR>(this IReadyToFunction window, TR expr, string delimiter)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr",      builder.ConvertExpression(expr));
-			builder.Function.AddArgument("Delimiter", builder.GetArgument(1));
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+			builder.Function.Arguments.Add(builder.GetArgument(1));
 			
 			return default(string);
 		}
 
-		[AnalyticFunction("MAX")]
-		public static TR Max<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("MAX({0})")]
+		public static TR Max<T, TR>(this IReadyToFunction window, TR expr)
 		{
-			return SimpleExprHandler(window, expr);
+			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("MAX")]
-		public static TR Max<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, AggregateModifier modifier)
-		{
-			return AggregateExprHandler(window, expr, modifier);
-		}
-
-		[AnalyticFunction("MEDIAN")]
-		public static TR Med<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
-		{
-			return SimpleExprHandler(window, expr);
-		}
-
-		[AnalyticFunction("MIN")]
-		public static TR Min<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
-		{
-			return SimpleExprHandler(window, expr);
-		}
-
-		[AnalyticFunction("MIN")]
-		public static TR Min<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, AggregateModifier modifier)
-		{
-			return AggregateExprHandler(window, expr, modifier);
-		}
-
-		[AnalyticFunction("NTH_VALUE")]
-		public static TR NthValue<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, int n)
+		[AnalyticFunction("MAX({0})")]
+		public static TR Max<T, TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr", builder.ConvertExpression(expr));
-			builder.Function.AddArgument("N",    builder.GetArgument(1));
+			return AggregateExprDefaultBuilder<TR>(window, "MAX", builder.GetValue<AggregateModifier>(1));
+		}
+
+		[AnalyticFunction("MEDIAN({0})")]
+		public static TR Med<T, TR>(this IReadyToFunction window, TR expr)
+		{
+			return SingleExpressionDefaultBuilder<TR>(window);
+		}
+
+		[AnalyticFunction("MIN({0})")]
+		public static TR Min<T, TR>(this IReadyToFunction window, TR expr)
+		{
+			return SingleExpressionDefaultBuilder<TR>(window);
+		}
+
+		[AnalyticFunction("MIN({0})")]
+		public static TR Min<T, TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
+		{
+			var builder = window as IAnalyticFunctionBuilder;
+			if (builder == null)
+				throw new NotImplementedException();
+
+			return AggregateExprDefaultBuilder<TR>(window, "MIN", builder.GetValue<AggregateModifier>(1));
+		}
+
+		[AnalyticFunction("NTH_VALUE({0}, {1})")]
+		public static TR NthValue<T, TR>(this IReadyToFunction window, TR expr, int n)
+		{
+			var builder = window as IAnalyticFunctionBuilder;
+			if (builder == null)
+				throw new NotImplementedException();
+
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+			builder.Function.Arguments.Add(builder.GetArgument(1));
 			
 			return default(TR);
 		}
 
-		[AnalyticFunction("NTILE")]
-		public static long NTile<T>(this IReadyToFunction<T> window, Expression<Func<T, int>> groupCount)
+		[AnalyticFunction("NTH_VALUE({0}, {1})")]
+		public static TR NthValue<T, TR>(this IReadyToFunction window, TR expr, int n, From from, Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("GroupCount", builder.ConvertExpression(groupCount));
+			builder.Function.Arguments.Add(builder.GetArgument(0));
+			builder.Function.Arguments.Add(builder.GetArgument(1));
+
+			var expression = builder.Function.Expression;
+			switch (builder.GetValue<From>(2))
+			{
+				case From.None :
+					break;
+				case From.First :
+					expression = expression + " FROM FIRST";
+					break;
+				case From.Last :
+					expression = expression + " FROM LAST";
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+
+			switch (builder.GetValue<Nulls>(3))
+			{
+				case Nulls.None :
+					break;
+				case Nulls.Respect :
+					expression = expression + " RESPECT NULLS";
+					break;
+				case Nulls.Ignore :
+					expression = expression + " IGNORE NULLS";
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+
+			builder.Function.Expression = expression;
+			
+			return default(TR);
+		}
+
+		[AnalyticFunction("NTILE({0})")]
+		public static long NTile(this IReadyToFunction window, int groupCount)
+		{
+			return SingleExpressionDefaultBuilder<long>(window);
+		}
+
+		[AnalyticFunction("PERCENT_RANK({0.., ', '}) WITHIN GROUP")]
+		public static long PercentRank(this IReadyToFunction window, params object[] expressions)
+		{
+			var builder = window as IAnalyticFunctionBuilder;
+			if (builder == null)
+				throw new NotImplementedException();
+
+			builder.Function.Arguments.AddRange(builder.GetArrayArgument(0));
 			
 			return default(long);
 		}
 
-		[AnalyticFunction("PERCENT_RANK")]
-		public static long PercentRank<T>(this IReadyToFunction<T> window, params Expression<Func<T, object>>[] expressions)
+		[AnalyticFunction("PERCENTILE_CONT({0})")]
+		public static double PercentileCont<T>(this IReadyToFunction window, Expression<Func<T, object>> expr)
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.AddArgument("Expressions", expressions.Select(e => builder.ConvertExpression(e)).ToList());
-			
-			return default(long);
+			return SingleExpressionDefaultBuilder<double>(window);
 		}
 
-		[AnalyticFunction("PERCENTILE_CONT")]
-		public static double PercentileCont<T>(this IReadyToFunction<T> window, Expression<Func<T, object>> expr)
+		[AnalyticFunction("PERCENTILE_DISC({0})")]
+		public static double PercentileDisc<T>(this IReadyToFunction window, Expression<Func<T, object>> expr)
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.AddArgument("Expr", builder.ConvertExpression(expr));
-			
-			return default(double);
+			return SingleExpressionDefaultBuilder<double>(window);
 		}
 
-		[AnalyticFunction("PERCENTILE_DISC")]
-		public static double PercentileDisc<T>(this IReadyToFunction<T> window, Expression<Func<T, object>> expr)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.AddArgument("Expr", builder.ConvertExpression(expr));
-			
-			return default(double);
-		}
-
-		[AnalyticFunction("RANK")]
-		public static long Rank<T>(this IReadyToFunction<T> window)
+		[AnalyticFunction("RANK()")]
+		public static long Rank(this IReadyToFunction window)
 		{
 			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("RATIO_TO_REPORT")]
-		public static double? RatioToReport<T>(this IReadyToFunction<T> window, Expression<Func<T, object>> expr)
+		[AnalyticFunction(PN.Oracle, "RANK({0.., ', '})")]
+		public static long Rank(this IReadyToFunction window, params object[] expessions)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
-			builder.Function.AddArgument("Expr", builder.ConvertExpression(expr));
+			builder.Function.Arguments.AddRange(builder.GetArrayArgument(0));
 			
-			return default(double?);
+			return default(long);
+		}
+
+		[AnalyticFunction("RATIO_TO_REPORT({0})")]
+		public static double? RatioToReport<TR>(this IReadyToFunction window, TR expr)
+		{
+			return SingleExpressionDefaultBuilder<double?>(window);
 		}
 
 		#region REGR_ (Linear Regression) Functions 
 
-		static TR RegrHandler<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1,
-			Expression<Func<T, TR>> expr2)
+		static TR RegrHandler<TR>(this IReadyToFunction window)
 		{
-			return TwoExprHandler(window, expr1, expr2);
+			return TwoExprDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("REGR_SLOPE")]
-		public static TR RegrSlope<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		[AnalyticFunction("REGR_SLOPE({0}, {1})")]
+		public static TR RegrSlope<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return RegrHandler(window, expr1, expr2);
+			return RegrHandler<TR>(window);
 		}
 		
-		[AnalyticFunction("REGR_INTERCEPT")]
-		public static TR RegrIntercept<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		[AnalyticFunction("REGR_INTERCEPT({0}, {1})")]
+		public static TR RegrIntercept<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return RegrHandler(window, expr1, expr2);
+			return RegrHandler<TR>(window);
 		}
 		
-		[AnalyticFunction("REGR_COUNT")]
-		public static TR RegrCount<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		[AnalyticFunction("REGR_COUNT({0}, {1})")]
+		public static TR RegrCount<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return RegrHandler(window, expr1, expr2);
+			return RegrHandler<TR>(window);
 		}
 		
-		[AnalyticFunction("REGR_R2")]
-		public static TR RegrR2<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		[AnalyticFunction("REGR_R2({0}, {1})")]
+		public static TR RegrR2<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return RegrHandler(window, expr1, expr2);
+			return RegrHandler<TR>(window);
 		}
 		
-		[AnalyticFunction("REGR_AVGX")]
-		public static TR RegrAvgX<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		[AnalyticFunction("REGR_AVGX({0}, {1})")]
+		public static TR RegrAvgX<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return RegrHandler(window, expr1, expr2);
+			return RegrHandler<TR>(window);
 		}
 		
-		[AnalyticFunction("REGR_AVGY")]
-		public static TR RegrAvgY<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		[AnalyticFunction("REGR_AVGY({0}, {1})")]
+		public static TR RegrAvgY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return RegrHandler(window, expr1, expr2);
+			return RegrHandler<TR>(window);
 		}
 		
-		[AnalyticFunction("REGR_SXX")]
-		public static TR RegrSXX<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		[AnalyticFunction("REGR_SXX({0}, {1})")]
+		public static TR RegrSXX<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return RegrHandler(window, expr1, expr2);
+			return RegrHandler<TR>(window);
 		}
 		
-		[AnalyticFunction("REGR_SYY")]
-		public static TR RegrSYY<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		[AnalyticFunction("REGR_SYY({0}, {1})")]
+		public static TR RegrSYY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return RegrHandler(window, expr1, expr2);
+			return RegrHandler<TR>(window);
 		}
 		
-		[AnalyticFunction("REGR_SXY")]
-		public static TR RegrSXY<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr1, Expression<Func<T, TR>> expr2)
+		[AnalyticFunction("REGR_SXY({0}, {1})")]
+		public static TR RegrSXY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
-			return RegrHandler(window, expr1, expr2);
+			return RegrHandler<TR>(window);
 		}
 		
 		#endregion
 
-		[AnalyticFunction("ROW_NUMBER")]
-		public static long RowNumber<T>(this IReadyToFunction<T> window)
+		[AnalyticFunction("ROW_NUMBER()")]
+		public static long RowNumber(this IReadyToFunction window)
 		{
 			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("STDDEV")]
-		public static TR StdDev<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, AggregateModifier modifier)
+		[AnalyticFunction("STDDEV({0})")]
+		public static TR StdDev<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
 		{
-			return AggregateExprHandler(window, expr, modifier);
+			var builder = window as IAnalyticFunctionBuilder;
+			if (builder == null)
+				throw new NotImplementedException();
+
+			return AggregateExprDefaultBuilder<TR>(window, "STDDEV", builder.GetValue<AggregateModifier>(1));
 		}
 
-		[AnalyticFunction("STDDEV_POP")]
-		public static TR StdDevPop<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("STDDEV_POP({0})")]
+		public static TR StdDevPop<TR>(this IReadyToFunction window, TR expr)
 		{
-			return SimpleExprHandler(window, expr);
+			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("STDDEV_SAMP")]
-		public static TR StdDevSamp<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("STDDEV_SAMP({0})")]
+		public static TR StdDevSamp<TR>(this IReadyToFunction window, TR expr)
 		{
-			return SimpleExprHandler(window, expr);
+			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("SUM")]
-		public static TR Sum<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("SUM({0})")]
+		public static TR Sum<TR>(this IReadyToFunction window, TR expr)
 		{
-			return SimpleExprHandler(window, expr);
+			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("SUM")]
-		public static TR Sum<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, AggregateModifier modifier)
+		[AnalyticFunction("SUM({0})")]
+		public static TR Sum<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
 		{
-			return AggregateExprHandler(window, expr, modifier);
+			var builder = window as IAnalyticFunctionBuilder;
+			if (builder == null)
+				throw new NotImplementedException();
+
+			return AggregateExprDefaultBuilder<TR>(window, "SUM", builder.GetValue<AggregateModifier>(1));
 		}
 
-		[AnalyticFunction("VAR_POP")]
-		public static TR VarPop<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("VAR_POP({0})")]
+		public static TR VarPop<TR>(this IReadyToFunction window, TR expr)
 		{
-			return SimpleExprHandler(window, expr);
+			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("VAR_SAMP")]
-		public static TR VarSamp<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("VAR_SAMP({0})")]
+		public static TR VarSamp<TR>(this IReadyToFunction window, TR expr)
 		{
-			return SimpleExprHandler(window, expr);
+			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("VARIANCE")]
-		public static TR Variance<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr)
+		[AnalyticFunction("VARIANCE({0})")]
+		public static TR Variance<TR>(this IReadyToFunction window, TR expr)
 		{
-			return SimpleExprHandler(window, expr);
+			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("VARIANCE")]
-		public static TR Variance<T, TR>(this IReadyToFunction<T> window, Expression<Func<T, TR>> expr, AggregateModifier modifier)
+		[AnalyticFunction("VARIANCE({0})")]
+		public static TR Variance<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
 		{
-			return AggregateExprHandler(window, expr, modifier);
+			var builder = window as IAnalyticFunctionBuilder;
+			if (builder == null)
+				throw new NotImplementedException();
+
+			return AggregateExprDefaultBuilder<TR>(window, "VARIANCE", builder.GetValue<AggregateModifier>(1));
 		}
 
-		public interface IReadyToFunction<T>
+		public interface IReadyToFunction
 		{
 		}
 
-		public interface IPartitionNotRanged<T>
+		public interface IPartitionNotRanged
 		{
-			[FunctionChain]
-			IWindowFrameExtent<T> Rows { get; }
-
-			[FunctionChain]
-			IWindowFrameExtent<T> Range { get; }
+			IWindowFrameExtent Rows { get; }
+			IWindowFrameExtent Range { get; }
 		}
 
-		public interface IOver<T> : IReadyToFunction<T>, IPartitionNotOrdered<T>
+		public interface IOver : IReadyToFunction, IPartitionNotOrdered
 		{
-			[FunctionChain]
-			IPartitionNotOrdered<T> PartitionBy<TKey>(Expression<Func<T, TKey>> field);
+			IPartitionNotOrdered PartitionBy(params object[] expressions);
 		}
 
-		public interface IPartitionNotOrdered<T> : IPartitionNotRanged<T>
+		public interface IPartitionNotOrdered : IPartitionNotRanged
 		{
-			[FunctionChain]
-			IPartitionOrdered<T> OrderBy<TKey>(Expression<Func<T, TKey>> keySelector);
+			IPartitionOrdered OrderBy<TKey>(TKey keySelector);
+			IPartitionOrdered OrderBy<TKey>(TKey keySelector, NullsPosition nulls);
 
-			[FunctionChain]
-			IPartitionOrdered<T> OrderByDesc<TKey>(Expression<Func<T, TKey>> keySelector);
+			IPartitionOrdered OrderByDesc<TKey>(TKey keySelector);
+			IPartitionOrdered OrderByDesc<TKey>(TKey keySelector, NullsPosition nulls);
 		}
 
-		public interface IPartitionOrdered<T> : IReadyToFunction<T>, IPartitionNotRanged<T>
+		public interface IPartitionOrdered : IReadyToFunction, IPartitionNotRanged
 		{
-			[FunctionChain]
-			IPartitionOrdered<T> ThenBy<TKey>(Expression<Func<T, TKey>> keySelector);
+			IPartitionOrdered ThenBy<TKey>(TKey keySelector);
+			IPartitionOrdered ThenBy<TKey>(TKey keySelector, NullsPosition nulls);
 
-			[FunctionChain]
-			IPartitionOrdered<T> ThenByDesc<TKey>(Expression<Func<T, TKey>> keySelector);
+			IPartitionOrdered ThenByDesc<TKey>(TKey keySelector);
+			IPartitionOrdered ThenByDesc<TKey>(TKey keySelector, NullsPosition nulls);
 		}
 
-		public interface IWindowFrameExtent<T>
+		public interface IWindowFrameExtent
 		{
-			[FunctionChain]
-			IReadyToFunction<T> UnboundedPreceding { get; }
-
-			[FunctionChain]
-			IWindowFrameBetween<T> Between { get; }
+			IReadyToFunction UnboundedPreceding { get; }
+			IWindowFrameBetween Between { get; }
 		}
 
-		public interface IWindowFrameBetween<T>
+		public interface IWindowFrameBetween
 		{
-			[FunctionChain]
-			IWindowFrameBetweenNext<T> UnboundedPreceding { get; }
-
-			[FunctionChain]
-			IValueExprFirst<T> Value<TKey>(Expression<Func<T, TKey>> valueExpression);
+			IWindowFrameBetweenNext UnboundedPreceding { get; }
+			IValueExprFirst Value<TKey>(TKey value);
 		}
 
-		public interface IValueExprFirst<T>
+		public interface IValueExprFirst
 		{
-			[FunctionChain]
-			IWindowFrameBetweenNext<T> Preceding { get; }
-
-			[FunctionChain]
-			IWindowFrameBetweenNext<T> Following { get; }
-
-			[FunctionChain]
-			IWindowFrameFollowing<T> And { get; }
+			IWindowFrameBetweenNext Preceding { get; }
+			IWindowFrameBetweenNext Following { get; }
+			IWindowFrameFollowing And { get; }
 		}
 
-		public interface IWindowFrameBetweenNext<T>
+		public interface IWindowFrameBetweenNext
 		{
-			[FunctionChain]
-			IWindowFrameFollowing<T> And { get; }
+			IWindowFrameFollowing And { get; }
 		}
 
-		public interface IWindowFrameFollowing<T>
+		public interface IWindowFrameFollowing
 		{
-			[FunctionChain]
-			IReadyToFunction<T> UnboundedFollowing { get; }
-
-			[FunctionChain]
-			IReadyToFunction<T> CurrentRow { get; }
-
-			[FunctionChain]
-			IValueExprSecond<T> Value<TKey>(Expression<Func<T, TKey>> valueExpression);
+			IReadyToFunction UnboundedFollowing { get; }
+			IReadyToFunction CurrentRow { get; }
+			IValueExprSecond Value<TKey>(TKey value);
 		}
 
-		public interface IValueExprSecond<T>
+		public interface IValueExprSecond
 		{
-			[FunctionChain]
-			IReadyToFunction<T> Preceding { get; }
-			[FunctionChain]
-			IReadyToFunction<T> Following { get; }
+			IReadyToFunction Preceding { get; }
+			IReadyToFunction Following { get; }
 		}
 
 	}

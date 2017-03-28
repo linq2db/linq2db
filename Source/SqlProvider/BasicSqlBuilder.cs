@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 #if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;
@@ -2085,17 +2086,17 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildAnalyticFunction
 
-		void BuildPointExpression(SqlAnalyticFunction.PointExpression point)
+		void BuildWindowBoundExpression(SqlAnalyticFunction.WindowFrameBound bound)
 		{
-			switch (point.Kind)
+			switch (bound.Kind)
 			{
 				case SqlAnalyticFunction.LimitExpressionKind.UnboundedPreceding :
 					StringBuilder.Append(" UNBOUNDED PRECEDING");
 					break;
 				case SqlAnalyticFunction.LimitExpressionKind.ValueExprPreceding :
-					if (point.ValueExpression == null)
+					if (bound.ValueExpression == null)
 						throw new InvalidOperationException("Missed ValueExpression for Boundary Point in Analytic function");
-					BuildExpression(point.ValueExpression);
+					BuildExpression(bound.ValueExpression);
 					StringBuilder.Append(" PRECEDING");
 					break;
 				case SqlAnalyticFunction.LimitExpressionKind.CurrentRow :
@@ -2105,9 +2106,9 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(" UNBOUNDED FOLLOWING");
 					break;
 				case SqlAnalyticFunction.LimitExpressionKind.ValueExprFollowing :
-					if (point.ValueExpression == null)
+					if (bound.ValueExpression == null)
 						throw new InvalidOperationException("Missed ValueExpression for Boundary Point in Analytic function");
-					BuildExpression(point.ValueExpression);
+					BuildExpression(bound.ValueExpression);
 					StringBuilder.Append(" FOLLOWING");
 					break;
 				default :
@@ -2119,10 +2120,11 @@ namespace LinqToDB.SqlProvider
 		{
 			StringBuilder.Append(" OVER (");
 
-			if (clause.QueryPartition != null)
+			var spaceNeeded = false;
+
+			if (clause.QueryPartition != null && clause.QueryPartition.Arguments.Length > 0)
 			{
-				StringBuilder.Append("PARTITION BY");
-				StringBuilder.Append(" (");
+				StringBuilder.Append("PARTITION BY ");
 
 				var isFirst = true;
 				foreach (var arg in clause.QueryPartition.Arguments)
@@ -2135,13 +2137,18 @@ namespace LinqToDB.SqlProvider
 					isFirst = false;
 				}
 
-				StringBuilder.Append(")");
+				spaceNeeded = true;
 			}
 
-			if (clause.OrderBy != null)
+			if (clause.OrderBy != null && clause.OrderBy.Items.Count > 0)
 			{
-				//TODO: Currently ORDER SIBLINGS BY not supported
-				StringBuilder.Append("ORDER BY ");
+				if (spaceNeeded)
+					StringBuilder.Append(" ");
+
+				StringBuilder.Append("ORDER ");
+				if (clause.OrderBy.Siblings)
+					StringBuilder.Append("SIBLINGS ");
+				StringBuilder.Append("BY ");
 
 				var isFirst = true;
 				foreach (var item in clause.OrderBy.Items)
@@ -2155,43 +2162,53 @@ namespace LinqToDB.SqlProvider
 
 					switch (item.Nulls)
 					{
-						case SqlAnalyticFunction.Nulls.First :
+						case Sql.NullsPosition.First :
 							StringBuilder.Append(" NULLS FIRST");
 							break;
-						case SqlAnalyticFunction.Nulls.Last :
+						case Sql.NullsPosition.Last :
 							StringBuilder.Append(" NULLS LAST");
 							break;
 					}
 
 					isFirst = false;
 				}
+
+				spaceNeeded = true;
 			}
 
-			if (clause.Windowing != null)
+			if (clause.Windowing != null && clause.Windowing.Start != null)
 			{
 				//TODO: Check syntax
-//				if (clause.OrderBy == null)
-//					throw new InvalidOperationException("Missed OrderBy Clause for Analytic function");
+
+				if (spaceNeeded)
+					StringBuilder.Append(" ");
 
 				switch (clause.Windowing.BasedOn)
 				{
 					case SqlAnalyticFunction.BasedOn.Rows :
-						StringBuilder.Append(" ROWS");
+						StringBuilder.Append("ROWS");
 						break;
 					case SqlAnalyticFunction.BasedOn.Range :
-						StringBuilder.Append(" RANGE");
+						StringBuilder.Append("RANGE");
 						break;
 					default :
 						throw new ArgumentOutOfRangeException();
 				}
 
-				if (clause.Windowing.Start == null)
-					throw new InvalidOperationException("Inconsistent Windowsing Clause for Analytic function");
+				if (clause.Windowing.Start != null && clause.Windowing.End != null)
+				{
+					StringBuilder.Append(" BETWEEN");
+				}
 
-				BuildPointExpression(clause.Windowing.Start);
+				BuildWindowBoundExpression(clause.Windowing.Start);
+
+				if (clause.Windowing.Start != null && clause.Windowing.End != null)
+				{
+					StringBuilder.Append(" AND");
+				}
 
 				if (clause.Windowing.End != null)
-					BuildPointExpression(clause.Windowing.End);
+					BuildWindowBoundExpression(clause.Windowing.End);
 			}
 
 			StringBuilder.Append(")");
@@ -2199,12 +2216,54 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildAnalyticFunction(SqlAnalyticFunction func)
 		{
-			//TODO: Fake implementation
+			if (func.Arguments.Count == 0)
+			{
+				StringBuilder.Append(func.Expression);
+			}
+			else
+			{
+				string pattern = @"\{(\d*)(..(\d*),\s*'(.*?)')?}";
+				var regex = new Regex(pattern);
+				var sb = new StringBuilder();
+				var formatted = regex.Replace(func.Expression, m =>
+				{
+					WithStringBuilder(sb, () =>
+					{
+						sb.Length = 0;
+						if (m.Groups.Count == 1)
+							// {index}
+							BuildExpression(GetPrecedence(func), func.Arguments[int.Parse(m.Groups[1].Value)]);
+						else
+						{
+							// {start..[end], 'delimimter'}
+							var start = int.Parse(m.Groups[1].Value);
+							var currentArgs = func.Arguments.AsEnumerable();
+							if (start > 0)
+								currentArgs = currentArgs.Skip(start);
 
-			StringBuilder
-				.Append("Analytic(")
-				.Append(func.Name)
-				.Append(')');
+							int end;
+							if (int.TryParse(m.Groups[3].Value, out end))
+							{
+								currentArgs = currentArgs.Take(end - start);
+							}
+
+							var delimiter = m.Groups[4].Value;
+							var isFirst = true;
+							foreach (var arg in currentArgs)
+							{
+								if (!isFirst)
+									sb.Append(delimiter);
+								BuildExpression(GetPrecedence(func), arg);
+								isFirst = false;
+							}
+
+						}
+					});
+					return sb.ToString();
+				});
+        
+				StringBuilder.AppendFormat(formatted);
+			}
 
 			if (func.Analytic != null)
 				BuildAnalyticClause(func.Analytic);

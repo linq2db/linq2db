@@ -9,118 +9,7 @@
 
 	public class SqlAnalyticFunction : ISqlExpression
 	{
-		public class OrderByClause : ISqlExpressionWalkable
-		{
-			public OrderByClause()
-			{
-				Items = new List<OrderByItem>();
-			}
-
-			public List<OrderByItem> Items    { get; private set; }
-			public bool              Siblings { get; set; }
-
-			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
-			{
-				foreach (var item in Items)
-				{
-					((ISqlExpressionWalkable) item).Walk(skipColumns, func);
-				}
-
-				return null;
-			}
-		}
-
-		public enum Nulls
-		{
-			None,
-			First,
-			Last
-		}
-
-		public class OrderByItem: ISqlExpressionWalkable
-		{
-			public OrderByItem(ISqlExpression expression, bool isDescending)
-			{
-				Expression   = expression;
-				IsDescending = isDescending;
-			}
-
-			public bool IsDescending { get; set; }
-
-			public ISqlExpression Expression { get; set; }
-			public Nulls Nulls { get; set; }
-
-			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
-			{
-				if (Expression != null)
-					Expression = Expression.Walk(skipColumns, func);
-				return null;
-			}
-		}
-
-		public class AnalyticClause: ICloneableElement, ISqlExpressionWalkable
-		{
-			public AnalyticClause([CanBeNull] QueryPartitionClause queryPartition, [CanBeNull] OrderByClause orderBy, [CanBeNull] WindowingClause windowing)
-			{
-				QueryPartition = queryPartition;
-				OrderBy        = orderBy;
-				Windowing      = windowing;
-			}
-
-			public AnalyticClause()
-			{
-			}
-
-			
-			[CanBeNull] public QueryPartitionClause QueryPartition { get; set; }
-			[CanBeNull] public OrderByClause        OrderBy        { get; set; }
-			[CanBeNull] public WindowingClause      Windowing      { get; set; }
-
-			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
-			{
-				if (QueryPartition != null)
-					((ISqlExpressionWalkable) QueryPartition).Walk(skipColumns, func);
-
-				if (OrderBy != null)
-					((ISqlExpressionWalkable) OrderBy).Walk(skipColumns, func);
-
-				if (Windowing != null)
-					((ISqlExpressionWalkable) Windowing).Walk(skipColumns, func);
-
-				return null;
-			}
-
-			#region Implementation of ICloneableElement
-			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				throw new NotImplementedException();
-			}
-			#endregion
-		}
-
-		public class QueryPartitionClause : ISqlExpressionWalkable
-		{
-			[NotNull] public ISqlExpression[] Arguments { get; private set; }
-
-			public QueryPartitionClause([NotNull] ISqlExpression[] arguments)
-			{
-				if (arguments == null) throw new ArgumentNullException("arguments");
-				Arguments = arguments;
-			}
-
-			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
-			{
-				for (var i = 0; i < Arguments.Length; i++)
-				{
-					var argument = Arguments[i];
-					var walkable = argument as ISqlExpressionWalkable;
-					if (walkable != null)
-						Arguments[i] = walkable.Walk(skipColumns, func);
-				}
-
-				return null;
-			}
-		}
+		#region Enums
 
 		public enum BasedOn
 		{
@@ -136,16 +25,195 @@
 			UnboundedFollowing,
 			ValueExprFollowing
 		}
+		
+		#endregion
 
-		public class PointExpression : ISqlExpressionWalkable
+		public class OrderByClause : IQueryElement, ISqlExpressionWalkable
 		{
-			public PointExpression(LimitExpressionKind kind, [CanBeNull] ISqlExpression valueExpression)
+			public OrderByClause(bool siblings, IEnumerable<OrderByItem> items)
+			{
+				Siblings = siblings;
+				Items    = new List<OrderByItem>(items);
+			}
+
+			public OrderByClause()
+			{
+				Items = new List<OrderByItem>();
+			}
+
+			public List<OrderByItem> Items    { get; private set; }
+			public bool              Siblings { get; set; }
+
+			#region IQueryElement Members
+
+			public QueryElementType ElementType { get { return QueryElementType.AnalyticOrderByClause; } }
+
+			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				//TODO: implement	
+				return sb.Append("OrderByClause");
+			}
+
+			#endregion
+
+			#region ISqlExpressionWalkable Members
+
+			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+			{
+				foreach (var item in Items)
+				{
+					item.Walk(skipColumns, func);
+				}
+
+				return null;
+			}
+
+			#endregion
+		}
+
+		public class OrderByItem: IQueryElement, ISqlExpressionWalkable
+		{
+			public OrderByItem(ISqlExpression expression, bool isDescending, Sql.NullsPosition nulls)
+			{
+				Expression   = expression;
+				IsDescending = isDescending;
+				Nulls = nulls;
+			}
+
+			public bool IsDescending { get; set; }
+
+			public ISqlExpression Expression { get; set; }
+			public Sql.NullsPosition Nulls   { get; set; }
+
+			#region IQueryElement Members
+
+			public QueryElementType ElementType { get { return QueryElementType.AnalyticOrderByItem; } }
+
+			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				//TODO: implement	
+				return sb.Append("OrderByItem");
+			}
+
+			#endregion
+
+			#region ISqlExpressionWalkable Members
+
+			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+			{
+				if (Expression != null)
+					Expression = Expression.Walk(skipColumns, func);
+				return null;
+			}
+
+			#endregion
+		}
+
+		public class AnalyticClause: IQueryElement, ISqlExpressionWalkable
+		{
+			public AnalyticClause([CanBeNull] QueryPartitionClause queryPartition, [CanBeNull] OrderByClause orderBy, [CanBeNull] WindowingClause windowing)
+			{
+				QueryPartition = queryPartition ?? new QueryPartitionClause(new ISqlExpression[0]);
+				OrderBy        = orderBy	    ?? new OrderByClause();
+				Windowing      = windowing      ?? new WindowingClause();
+			}
+
+			public AnalyticClause()
+			{
+				QueryPartition = new QueryPartitionClause(new ISqlExpression[0]);
+				OrderBy        = new OrderByClause();
+				Windowing      = new WindowingClause();
+			}
+
+			
+			public QueryPartitionClause QueryPartition { get; set; }
+			public OrderByClause        OrderBy        { get; set; }
+			public WindowingClause      Windowing      { get; set; }
+
+			#region ICloneableElement Members
+			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+			{
+				throw new NotImplementedException();
+			}
+			#endregion
+
+			#region IQueryElement Members
+
+			public QueryElementType ElementType { get {return QueryElementType.AnalyticClause;} }
+
+			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				//TODO: implement	
+				return sb.Append("AnalyticClause");
+			}
+
+			#endregion
+
+			#region ISqlExpressionWalkable Members
+
+			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+			{
+				if (QueryPartition != null)
+					QueryPartition.Walk(skipColumns, func);
+
+				if (OrderBy != null)
+					OrderBy.Walk(skipColumns, func);
+
+				if (Windowing != null)
+					Windowing.Walk(skipColumns, func);
+
+				return null;
+			}
+
+			#endregion
+		}
+
+		public class QueryPartitionClause : IQueryElement, ISqlExpressionWalkable
+		{
+			[NotNull] public ISqlExpression[] Arguments { get; private set; }
+
+			public QueryPartitionClause([NotNull] ISqlExpression[] arguments)
+			{
+				if (arguments == null) throw new ArgumentNullException("arguments");
+				Arguments = arguments;
+			}
+
+			#region IQueryElement Members
+
+			public QueryElementType ElementType { get { return QueryElementType.QueryPartitionClause; } }
+
+			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				//TODO: implement	
+				return sb.Append("QueryPartitionClause");
+			}
+
+			#endregion
+
+			#region ISqlExpressionWalkable Members
+
+			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+			{
+				for (var i = 0; i < Arguments.Length; i++)
+				{
+					Arguments[i] = Arguments[i].Walk(skipColumns, func);
+				}
+
+				return null;
+			}
+
+			#endregion
+		}
+
+		public class WindowFrameBound : IQueryElement, ISqlExpressionWalkable
+		{
+			public WindowFrameBound(LimitExpressionKind kind, [CanBeNull] ISqlExpression valueExpression)
 			{
 				Kind = kind;
 				ValueExpression = valueExpression;
 			}
 
-			public PointExpression()
+			public WindowFrameBound()
 			{
 			}
 
@@ -154,114 +222,126 @@
 			[CanBeNull]
 			public ISqlExpression ValueExpression { get; set; }
 
+			#region IQueryElement Members
+
+			public QueryElementType ElementType { get { return QueryElementType.WindowFrameBound; } }
+
+			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				//TODO: implement	
+				return sb.Append("WindowFrameBound");
+			}
+
+			#endregion
+
+			#region ISqlExpressionWalkable Members
+
 			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
 			{
 				if (ValueExpression != null)
 					ValueExpression = func(ValueExpression);
 				return null;
 			}
+
+			#endregion
 		}
 
-		public class WindowingClause : ISqlExpressionWalkable
+		public class WindowingClause : IQueryElement, ISqlExpressionWalkable
 		{
 
 			public WindowingClause()
 			{
 			}
 
-			public WindowingClause(BasedOn basedOn, PointExpression start, [CanBeNull] PointExpression end)
+			public WindowingClause(BasedOn basedOn, WindowFrameBound start, [CanBeNull] WindowFrameBound end)
 			{
 				BasedOn = basedOn;
 				Start   = start;
 				End     = end;
 			}
 
-			public BasedOn BasedOn { get; set; }
-			[CanBeNull] public PointExpression Start { get; set; }
-			[CanBeNull] public PointExpression End   { get; set; }
+			public BasedOn          BasedOn { get; set; }
+			public WindowFrameBound Start   { get; set; }
+			public WindowFrameBound End     { get; set; }
+
+			#region IQueryElement Members
+
+			public QueryElementType ElementType { get { return QueryElementType.WindowingClause; } }
+
+			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				//TODO: implement	
+				return sb.Append("WindowingClause");
+			}
+
+			#endregion
+
+			#region ISqlExpressionWalkable Members
 
 			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
 			{
 				if (Start != null)
-					((ISqlExpressionWalkable) Start).Walk(skipColumns, func);
+					Start.Walk(skipColumns, func);
+				if (End != null)
+					End.Walk(skipColumns, func);
 				return null;
 			}
+
+			#endregion
 		}
 
 		public SqlAnalyticFunction()
 		{
 			Analytic  = new AnalyticClause();
-			Arguments = new Dictionary<string, object>();
+			Arguments = new List<ISqlExpression>();
 		}
 
-		public SqlAnalyticFunction(Type systemType, string name, AnalyticClause analytic)
-			: this(systemType, name, SqlQuery.Precedence.Primary, analytic)
+		public SqlAnalyticFunction(Type systemType, string expression, AnalyticClause analytic)
+			: this(systemType, expression, SqlQuery.Precedence.Primary, analytic)
 		{
 		}
 
-		public SqlAnalyticFunction(Type systemType, string name, int precedence, AnalyticClause analytic)
+		public SqlAnalyticFunction(Type systemType, string expression, int precedence, AnalyticClause analytic, List<ISqlExpression> arguments)
 			: this()
 		{
 			SystemType = systemType;
-			Name       = name;
+			Expression       = expression;
+			Precedence = precedence;
+			if (analytic != null)
+				Analytic = analytic;
+			if (arguments != null)
+				Arguments = arguments;
+		}
+
+		public SqlAnalyticFunction(Type systemType, string expression, int precedence, AnalyticClause analytic)
+			: this()
+		{
+			SystemType = systemType;
+			Expression       = expression;
 			Precedence = precedence;
 			if (analytic != null)
 				Analytic = analytic;
 		}
 
 		public Type                       SystemType { get; private set; }
-		public string                     Name       { get; private set; }
+		public string                     Expression { get;         set; }
 		public int                        Precedence { get; private set; }
 		public AnalyticClause             Analytic   { get; private set; }
-		public Dictionary<string, object> Arguments  { get; private set; }
-
-		public bool TryGetArgument<T>(string name, out T argument)
-		{
-			object value;
-			if (Arguments.TryGetValue(name, out value))
-			{
-				if (value is T)
-				{
-					argument = (T) value;
-					return true;
-				}
-			}
-
-			argument = default(T);
-			return false;
-		}
+		public List<ISqlExpression>       Arguments  { get; private set; }
 
 		#region ISqlExpressionWalkable Members
 
 		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> action)
 		{
-			Dictionary<string, object> newValues = null;
-			foreach (var pair in Arguments)
+			for (var i = 0; i < Arguments.Count; i++)
 			{
-				var walkable = pair.Value as ISqlExpressionWalkable;
-				if (walkable != null)
-				{
-					var newValue = walkable.Walk(skipColumns, action);
-					if (!ReferenceEquals(newValue, pair.Value))
-					{
-						if (newValues == null)
-							newValues = new Dictionary<string, object>();
-						newValues.Add(pair.Key, newValue);
-					}
-				}
+				Arguments[i] = Arguments[i].Walk(skipColumns, action);
 			}
-
-			if (newValues != null)
-				foreach (var pair in newValues)
-				{
-					Arguments[pair.Key] = pair.Value;
-				}
 
 			if (Analytic != null)
 			{
-				((ISqlExpressionWalkable) Analytic).Walk(skipColumns, action);
+				Analytic.Walk(skipColumns, action);
 			}
-				
 
 			return action(this);
 		}
@@ -303,18 +383,10 @@
 			{
 				var function = new SqlAnalyticFunction(
 					SystemType,
-					Name,
+					Expression,
 					Precedence,
-					(AnalyticClause) Analytic.Clone(objectTree, doClone));
-
-				foreach (var pair in Arguments)
-				{
-					var cloneableParam = pair.Value as ICloneableElement;
-					if (cloneableParam != null)
-						function.Arguments.Add(pair.Key, cloneableParam.Clone(objectTree, doClone));
-					else
-						function.Arguments.Add(pair.Key, pair.Value);
-				}
+					(AnalyticClause) Analytic.Clone(objectTree, doClone),
+					Arguments.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToList());
 
 				clone = function;
 				objectTree.Add(this, clone);
@@ -330,16 +402,13 @@
 
 			var func = other as SqlAnalyticFunction;
 
-			if (func == null || Name != func.Name || Arguments.Count != func.Arguments.Count &&
+			if (func == null || Expression != func.Expression || Arguments.Count != func.Arguments.Count &&
 				SystemType != func.SystemType)
 				return false;
 
-			foreach (var pair in Arguments)
+			for (var i = 0; i < Arguments.Count; i++)
 			{
-				object value;
-				if (!func.Arguments.TryGetValue(pair.Key, out value))
-					return false;
-				if (!Equals(pair.Key, value))
+				if (!Arguments[i].Equals(func.Arguments[i]))
 					return false;
 			}
 
@@ -357,28 +426,12 @@
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			//TODO:
-//			sb
-//				.Append(Name)
-//				.Append("(");
-//
-//			foreach (var p in Arguments)
-//			{
-//				p.ToString(sb, dic);
-//				sb.Append(", ");
-//			}
-//
-//			if (Arguments.Length > 0)
-//				sb.Length -= 2;
-//
-			return sb.Append("()");
+			//TODO: Implement
+			sb.Append(Expression);
+			return sb;
 		}
 
 		#endregion
 
-		public void AddArgument(string name, object value)
-		{
-			Arguments[name] = value;
-		}
 	}
 }

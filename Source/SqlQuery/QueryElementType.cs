@@ -6,7 +6,6 @@ namespace LinqToDB.SqlQuery
 	{
 		SqlField,
 		SqlFunction,
-		SqlAnalyticFunction,
 		SqlParameter,
 		SqlExpression,
 		SqlBinaryExpression,
@@ -43,5 +42,13 @@ namespace LinqToDB.SqlQuery
 				OrderByItem,
 			Union,
 			CreateTableStatement,
+
+		SqlAnalyticFunction,
+			AnalyticClause,
+				AnalyticOrderByClause,
+				AnalyticOrderByItem,
+			QueryPartitionClause,
+			WindowingClause,
+				WindowFrameBound,
 	}
 }

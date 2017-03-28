@@ -580,6 +580,7 @@ namespace LinqToDB.ServiceModel
 						}
 
 					case QueryElementType.SqlFunction         : GetType(((SqlFunction)        e).SystemType); break;
+					case QueryElementType.SqlAnalyticFunction : GetType(((SqlAnalyticFunction)e).SystemType); break;
 					case QueryElementType.SqlExpression       : GetType(((SqlExpression)      e).SystemType); break;
 					case QueryElementType.SqlBinaryExpression : GetType(((SqlBinaryExpression)e).SystemType); break;
 					case QueryElementType.SqlDataType         : GetType(((SqlDataType)        e).Type);       break;
@@ -627,6 +628,81 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.Precedence);
 							Append(elem.Parameters);
+
+							break;
+						}
+
+					case QueryElementType.SqlAnalyticFunction :
+						{
+							var elem = (SqlAnalyticFunction)e;
+
+							Append(elem.SystemType);
+							Append(elem.Expression);
+							Append(elem.Precedence);
+							Append(elem.Arguments);
+							Append(elem.Analytic);
+
+							break;
+						}
+
+					case QueryElementType.AnalyticClause:
+						{
+							var analytic = (SqlAnalyticFunction.AnalyticClause)e;
+
+							Append(analytic.QueryPartition);
+							Append(analytic.OrderBy);
+							Append(analytic.Windowing);
+
+							break;
+						}
+
+					case QueryElementType.QueryPartitionClause :
+						{
+							var partition = (SqlAnalyticFunction.QueryPartitionClause)e;
+
+							Append(partition.Arguments);
+
+							break;
+						}
+
+					case QueryElementType.AnalyticOrderByClause :
+						{
+							var order = (SqlAnalyticFunction.OrderByClause)e;
+
+							Append(order.Siblings);
+							Append(order.Items);
+
+							break;
+						}
+
+					case QueryElementType.AnalyticOrderByItem :
+						{
+							var item = (SqlAnalyticFunction.OrderByItem)e;
+
+							Append(item.Expression);
+							Append(item.IsDescending);
+							Append((int)item.Nulls);
+
+							break;
+						}
+
+					case QueryElementType.WindowingClause :
+						{
+							var window = (SqlAnalyticFunction.WindowingClause)e;
+
+							Append((int) window.BasedOn);
+							Append(window.Start);
+							Append(window.End);
+
+							break;
+						}
+
+					case QueryElementType.WindowFrameBound :
+						{
+							var bound = (SqlAnalyticFunction.WindowFrameBound)e;
+
+							Append((int) bound.Kind);
+							Append(bound.ValueExpression);
 
 							break;
 						}
@@ -1195,6 +1271,81 @@ namespace LinqToDB.ServiceModel
 							var parameters = ReadArray<ISqlExpression>();
 
 							obj = new SqlFunction(systemType, name, precedence, parameters);
+
+							break;
+						}
+
+					case QueryElementType.SqlAnalyticFunction :
+						{
+							var systemType = Read<Type>();
+							var expression = ReadString();
+							var precedence = ReadInt();
+							var arguments  = ReadArray<ISqlExpression>();
+							var analytic   = Read<SqlAnalyticFunction.AnalyticClause>();
+
+							obj = new SqlAnalyticFunction(systemType, expression, precedence, analytic, arguments.ToList());
+
+							break;
+						}
+
+					case QueryElementType.AnalyticClause:
+						{
+							var partition = Read<SqlAnalyticFunction.QueryPartitionClause>();
+							var orderby   = Read<SqlAnalyticFunction.OrderByClause>();
+							var window    = Read<SqlAnalyticFunction.WindowingClause>();
+
+							obj = new SqlAnalyticFunction.AnalyticClause(partition, orderby, window);
+
+							break;
+						}
+
+					case QueryElementType.QueryPartitionClause :
+						{
+							var arguments = ReadArray<ISqlExpression>();
+
+							obj = new SqlAnalyticFunction.QueryPartitionClause(arguments);
+
+							break;
+						}
+
+					case QueryElementType.AnalyticOrderByClause :
+						{
+							var siblings = ReadBool();
+							var items    = ReadArray<SqlAnalyticFunction.OrderByItem>();
+
+							obj = new SqlAnalyticFunction.OrderByClause(siblings, items);
+
+							break;
+						}
+
+					case QueryElementType.AnalyticOrderByItem :
+						{
+							var expr         = Read<ISqlExpression>();
+							var isDescending = ReadBool();
+							var nulls        = (Sql.NullsPosition) ReadInt();
+
+							obj = new SqlAnalyticFunction.OrderByItem(expr, isDescending, nulls);
+
+							break;
+						}
+
+					case QueryElementType.WindowingClause :
+						{
+							var basedOn = (SqlAnalyticFunction.BasedOn)ReadInt();
+							var start   = Read<SqlAnalyticFunction.WindowFrameBound>();
+							var end     = Read<SqlAnalyticFunction.WindowFrameBound>();
+
+							obj = new SqlAnalyticFunction.WindowingClause(basedOn, start, end);
+
+							break;
+						}
+
+					case QueryElementType.WindowFrameBound :
+						{
+							var kind = (SqlAnalyticFunction.LimitExpressionKind)ReadInt();
+							var expr = Read<ISqlExpression>();
+
+							obj = new SqlAnalyticFunction.WindowFrameBound(kind, expr);
 
 							break;
 						}
