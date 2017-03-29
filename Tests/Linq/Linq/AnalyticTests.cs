@@ -7,7 +7,8 @@
 	[TestFixture]
 	public class AnalyticTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.Access, ProviderName.SQLite, ProviderName.SapHana, ProviderName.MySql, ProviderName.SqlCe)]
+		[Test, DataContextSource(ProviderName.Access, ProviderName.SQLite, ProviderName.SapHana, ProviderName.MySql, ProviderName.SqlCe,
+			TestProvName.MySql57, TestProvName.SQLiteMs)]
 		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))
