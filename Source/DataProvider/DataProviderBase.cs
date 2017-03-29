@@ -42,6 +42,7 @@ namespace LinqToDB.DataProvider
 				IsGroupByExpressionSupported   = true,
 				IsDistinctOrderBySupported     = true,
 				IsUpdateSetTableAliasSupported = true,
+				TakeHintsSupported             = null,
 				IsCrossJoinSupported           = true,
 				IsInnerJoinAsCrossSupported    = true
 			};

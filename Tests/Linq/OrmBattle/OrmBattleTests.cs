@@ -71,7 +71,7 @@ namespace Tests.OrmBattle
 			using (db)
 				db = null;
 		}
-
+#pragma warning disable 0169
 		List<Northwind.Customer> Customers;
 		List<Northwind.Employee> Employees;
 		List<Northwind.Order> Order;
@@ -80,7 +80,7 @@ namespace Tests.OrmBattle
 //		List<Northwind.Supplier> Suppliers;
 //		List<Northwind.Product> DiscontinuedProducts;
 //		List<Northwind.OrderDetail> OrderDetails;
-
+#pragma warning restore 0169
 		// DTO for testing purposes.
 		public class OrderDTO
 		{

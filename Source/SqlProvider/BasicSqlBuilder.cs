@@ -43,6 +43,14 @@ namespace LinqToDB.SqlProvider
 		public virtual bool IsNestedJoinSupported           { get { return true; } }
 		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
 
+		/// <summary>
+		/// True if it is needed to wrap join condition with ()
+		/// </summary>
+		/// <example>
+		/// INNER JOIN Table2 t2 ON (t1.Value = t2.Value)
+		/// </example>
+		public virtual bool WrapJoinCondition               { get { return false; } }
+
 		#endregion
 
 		#region CommandCount
@@ -1028,6 +1036,9 @@ namespace LinqToDB.SqlProvider
 			else if (buildOn)
 				StringBuilder.Append(" ON ");
 
+			if (WrapJoinCondition && join.Condition.Conditions.Count > 0)
+				StringBuilder.Append("(");
+
 			if (buildOn)
 			{
 				if (join.Condition.Conditions.Count != 0)
@@ -1035,6 +1046,9 @@ namespace LinqToDB.SqlProvider
 				else
 					StringBuilder.Append("1=1");
 			}
+
+			if (WrapJoinCondition && join.Condition.Conditions.Count > 0)
+				StringBuilder.Append(")");
 
 			if (joinCounter > 0)
 			{
@@ -1211,6 +1225,8 @@ namespace LinqToDB.SqlProvider
 		protected virtual string LimitFormat  { get { return null; } }
 		protected virtual string OffsetFormat { get { return null; } }
 		protected virtual bool   OffsetFirst  { get { return false; } }
+		protected virtual string TakePercent  { get { return "PERCENT"; } }
+		protected virtual string TakeTies     { get { return "WITH TIES"; } }
 
 		protected bool NeedSkip { get { return SelectQuery.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(SelectQuery); } }
 		protected bool NeedTake { get { return SelectQuery.Select.TakeValue != null && SqlProviderFlags.IsTakeSupported; } }
@@ -1222,12 +1238,28 @@ namespace LinqToDB.SqlProvider
 					SkipFormat, WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.SkipValue)));
 
 			if (NeedTake && FirstFormat != null)
+			{
 				StringBuilder.Append(' ').AppendFormat(
 					FirstFormat, WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.TakeValue)));
+
+				BuildTakeHints();
+			}
 
 			if (!SkipFirst && NeedSkip && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
 					SkipFormat, WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.SkipValue)));
+		}
+
+		protected virtual void BuildTakeHints()
+		{
+			if (SelectQuery.Select.TakeHints == null)
+				return;
+
+			if ((SelectQuery.Select.TakeHints.Value & TakeHints.Percent) != 0)
+				StringBuilder.Append(' ').Append(TakePercent);
+
+			if ((SelectQuery.Select.TakeHints.Value & TakeHints.WithTies) != 0)
+				StringBuilder.Append(' ').Append(TakeTies);
 		}
 
 		protected virtual void BuildOffsetLimit()
@@ -1867,6 +1899,14 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValue:
 					var sqlval = (SqlValue)expr;
 					var dt = sqlval.SystemType == null ? null : new SqlDataType(sqlval.SystemType);
+
+					if (sqlval.DataType != null)
+					{
+						dt = sqlval.SystemType == null
+							? new SqlDataType(sqlval.DataType.Value)
+							: new SqlDataType(sqlval.DataType.Value, sqlval.SystemType);
+					}
+
 					BuildValue(dt, sqlval.Value);
 					break;
 
