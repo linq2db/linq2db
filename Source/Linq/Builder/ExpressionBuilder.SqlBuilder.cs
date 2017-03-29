@@ -1547,6 +1547,15 @@ namespace LinqToDB.Linq.Builder
 			var l = ConvertToSql(context, left);
 			var r = ConvertToSql(context, right, true);
 
+			var lValue = l as SqlValue;
+			var rValue = r as SqlValue;
+
+			if (lValue != null)
+				lValue.DataType = GetDataType(r);
+
+			if (rValue != null)
+				rValue.DataType = GetDataType(l);
+
 			switch (nodeType)
 			{
 				case ExpressionType.Equal   :
@@ -1912,6 +1921,37 @@ namespace LinqToDB.Linq.Builder
 				dataType = dta.DataType.Value;
 
 			return dataType;
+		}
+
+		static DataType? GetDataType(ISqlExpression expr)
+		{
+			DataType? result = null;
+
+			new QueryVisitor().Find(expr, e =>
+			{
+				switch (e.ElementType)
+				{
+					case QueryElementType.SqlField:
+						result = ((SqlField)e).DataType;
+						return true;
+					case QueryElementType.SqlParameter:
+						result = ((SqlParameter)e).DataType;
+						return true;
+					case QueryElementType.SqlDataType:
+						result = ((SqlDataType)e).DataType;
+						return true;
+					case QueryElementType.SqlValue:
+						result = ((SqlValue)e).DataType;
+						return true;
+					default:
+						return false;
+				}
+			});
+
+			if (result == DataType.Undefined)
+				result = null;
+
+			return result;
 		}
 
 		internal static ParameterAccessor CreateParameterAccessor(
