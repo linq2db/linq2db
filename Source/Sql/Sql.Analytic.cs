@@ -186,7 +186,7 @@
 		//TODO: FIRST - http://docs.oracle.com/cloud/latest/db112/SQLRF/functions065.htm#SQLRF00641
 
 		[AnalyticFunction("FIRST_VALUE({0})")]
-		public static TR FirstValue<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls)
+		public static TR FirstValue<TR>(this IReadyToFunction window, TR expr, Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -194,14 +194,14 @@
 
 			builder.Function.Arguments.Add(builder.GetArgument(0));
 
-			switch (builder.GetValue<Sql.Nulls>(1))
+			switch (builder.GetValue<Nulls>(1))
 			{
-				case Sql.Nulls.None :
+				case Nulls.None :
 					break;
-				case Sql.Nulls.Respect :
+				case Nulls.Respect :
 					builder.Function.Expression = "FIRST_VALUE({0} RESPECT NULLS)";
 					break;
-				case Sql.Nulls.Ignore :
+				case Nulls.Ignore :
 					builder.Function.Expression = "FIRST_VALUE({0} IGNORE NULLS)";
 					break;
 				default :
@@ -212,7 +212,7 @@
 		}
 
 		[AnalyticFunction("LAG({0})")]
-		public static TR Lag<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls)
+		public static TR Lag<TR>(this IReadyToFunction window, TR expr, Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -220,14 +220,14 @@
 
 			builder.Function.Arguments.Add(builder.GetArgument(0));
 
-			switch (builder.GetValue<Sql.Nulls>(1))
+			switch (builder.GetValue<Nulls>(1))
 			{
-				case Sql.Nulls.None :
+				case Nulls.None :
 					break;
-				case Sql.Nulls.Respect :
+				case Nulls.Respect :
 					builder.Function.Expression = "LAG({0} RESPECT NULLS)";
 					break;
-				case Sql.Nulls.Ignore :
+				case Nulls.Ignore :
 					builder.Function.Expression = "LAG({0} IGNORE NULLS)";
 					break;
 				default :
@@ -238,7 +238,7 @@
 		}
 
 		[AnalyticFunction("LAG")]
-		public static TR Lag<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls, int offset, int? @default)
+		public static TR Lag<TR>(this IReadyToFunction window, TR expr, Nulls nulls, int offset, int? @default)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -250,15 +250,15 @@
 
 			string expression;
 
-			switch (builder.GetValue<Sql.Nulls>(1))
+			switch (builder.GetValue<Nulls>(1))
 			{
-				case Sql.Nulls.None :
+				case Nulls.None :
 					expression = "LAG({0}";
 					break;
-				case Sql.Nulls.Respect :
+				case Nulls.Respect :
 					expression = "LAG({0} RESPECT NULLS";
 					break;
-				case Sql.Nulls.Ignore :
+				case Nulls.Ignore :
 					expression = "LAG({0} IGNORE NULLS";
 					break;
 				default :
@@ -274,7 +274,7 @@
 		//TODO: LAST - http://docs.oracle.com/cloud/latest/db112/SQLRF/functions083.htm#SQLRF00653
 
 		[AnalyticFunction("LAST_VALUE({0})")]
-		public static TR LastValue<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls)
+		public static TR LastValue<TR>(this IReadyToFunction window, TR expr, Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -282,14 +282,14 @@
 
 			builder.Function.Arguments.Add(builder.GetArgument(0));
 
-			switch (builder.GetValue<Sql.Nulls>(1))
+			switch (builder.GetValue<Nulls>(1))
 			{
-				case Sql.Nulls.None :
+				case Nulls.None :
 					break;
-				case Sql.Nulls.Respect :
+				case Nulls.Respect :
 					builder.Function.Expression = "LAST_VALUE({0} RESPECT NULLS)";
 					break;
-				case Sql.Nulls.Ignore :
+				case Nulls.Ignore :
 					builder.Function.Expression = "LAST_VALUE({0} IGNORE NULLS)";
 					break;
 				default :
@@ -300,7 +300,7 @@
 		}
 
 		[AnalyticFunction("LEAD({0})")]
-		public static TR Lead<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls)
+		public static TR Lead<TR>(this IReadyToFunction window, TR expr, Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -308,14 +308,14 @@
 
 			builder.Function.Arguments.Add(builder.GetArgument(0));
 
-			switch (builder.GetValue<Sql.Nulls>(1))
+			switch (builder.GetValue<Nulls>(1))
 			{
-				case Sql.Nulls.None :
+				case Nulls.None :
 					break;
-				case Sql.Nulls.Respect :
+				case Nulls.Respect :
 					builder.Function.Expression = "LEAD({0} RESPECT NULLS)";
 					break;
-				case Sql.Nulls.Ignore :
+				case Nulls.Ignore :
 					builder.Function.Expression = "LEAD({0} IGNORE NULLS)";
 					break;
 				default :
@@ -326,7 +326,7 @@
 		}
 
 		[AnalyticFunction("LEAD({0})")]
-		public static TR Lead<TR>(this IReadyToFunction window, TR expr, Sql.Nulls nulls, int offset, int? @default)
+		public static TR Lead<TR>(this IReadyToFunction window, TR expr, Nulls nulls, int offset, int? @default)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -338,15 +338,15 @@
 
 			string expression;
 
-			switch (builder.GetValue<Sql.Nulls>(1))
+			switch (builder.GetValue<Nulls>(1))
 			{
-				case Sql.Nulls.None :
+				case Nulls.None :
 					expression = "LEAD({0}";
 					break;
-				case Sql.Nulls.Respect :
+				case Nulls.Respect :
 					expression = "LEAD({0} RESPECT NULLS";
 					break;
-				case Sql.Nulls.Ignore :
+				case Nulls.Ignore :
 					expression = "LEAD({0} IGNORE NULLS";
 					break;
 				default :
@@ -360,7 +360,7 @@
 		}
 
 		[AnalyticFunction("LISTAGG({0})")]
-		public static string ListAgg<T, TR>(this IReadyToFunction window, TR expr)
+		public static string ListAgg<TR>(this IReadyToFunction window, TR expr)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -372,7 +372,7 @@
 		}
 
 		[AnalyticFunction("LISTAGG({0}, {1})")]
-		public static string ListAgg<T, TR>(this IReadyToFunction window, TR expr, string delimiter)
+		public static string ListAgg<TR>(this IReadyToFunction window, TR expr, string delimiter)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -385,13 +385,13 @@
 		}
 
 		[AnalyticFunction("MAX({0})")]
-		public static TR Max<T, TR>(this IReadyToFunction window, TR expr)
+		public static TR Max<TR>(this IReadyToFunction window, TR expr)
 		{
 			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
 		[AnalyticFunction("MAX({0})")]
-		public static TR Max<T, TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
+		public static TR Max<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -401,19 +401,19 @@
 		}
 
 		[AnalyticFunction("MEDIAN({0})")]
-		public static TR Med<T, TR>(this IReadyToFunction window, TR expr)
+		public static TR Med<TR>(this IReadyToFunction window, TR expr)
 		{
 			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
 		[AnalyticFunction("MIN({0})")]
-		public static TR Min<T, TR>(this IReadyToFunction window, TR expr)
+		public static TR Min<TR>(this IReadyToFunction window, TR expr)
 		{
 			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
 		[AnalyticFunction("MIN({0})")]
-		public static TR Min<T, TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
+		public static TR Min<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -423,7 +423,7 @@
 		}
 
 		[AnalyticFunction("NTH_VALUE({0}, {1})")]
-		public static TR NthValue<T, TR>(this IReadyToFunction window, TR expr, int n)
+		public static TR NthValue<TR>(this IReadyToFunction window, TR expr, int n)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -436,7 +436,7 @@
 		}
 
 		[AnalyticFunction("NTH_VALUE({0}, {1})")]
-		public static TR NthValue<T, TR>(this IReadyToFunction window, TR expr, int n, From from, Nulls nulls)
+		public static TR NthValue<TR>(this IReadyToFunction window, TR expr, int n, From from, Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
