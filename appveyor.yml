@@ -82,7 +82,7 @@ test_script:
 - ps: |
     if ($env:buildConfiguration -eq "dotNetCore")
     {
-        dotnet test tests\linq -c Release -f netcoreapp1.0 
+        dotnet test tests\linq -c Release -f netcoreapp1.0 --where "cat != FreeText"
         $test1res = $LASTEXITCODE 
         # upload results to AppVeyor
         $wc = New-Object 'System.Net.WebClient'
