@@ -47,6 +47,8 @@ nuget:
 before_build:
 - cmd: nuget restore linq2db.4.5.sln
 - cmd: dotnet restore 
+- cmd: 7z e Tests\Linq\northwind.sql.zip
+- cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2012SP1 -i "northwind.sql"
 
 build_script:
   - msbuild %solutionName%  /property:Configuration=Release
