@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 			if (take != 0)
-				builder.BuildTake(sequence, new SqlValue(take));
+				builder.BuildTake(sequence, new SqlValue(take), null);
 
 			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall);
 		}

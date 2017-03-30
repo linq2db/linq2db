@@ -308,6 +308,7 @@
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
+    <Compile Include="TakeHints.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.snk" />

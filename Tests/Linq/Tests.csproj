@@ -362,6 +362,9 @@
     <Compile Include="UserTests\FirstOrDefaultNullReferenceExceptionTests.cs" />
     <Compile Include="UserTests\GenericsFilterTests.cs" />
     <Compile Include="UserTests\GroupBySubqueryTests.cs" />
+    <Compile Include="UserTests\Issue192Tests.cs" />
+    <Compile Include="UserTests\Issue175Tests.cs" />
+    <Compile Include="UserTests\Issue271Tests.cs" />
     <Compile Include="UserTests\Issue358Tests.cs" />
     <Compile Include="UserTests\Issue356Tests.cs" />
     <Compile Include="UserTests\Issue395Tests.cs" />
@@ -375,6 +378,7 @@
     <Compile Include="UserTests\Issue488Tests.cs" />
     <Compile Include="UserTests\Issue496Tests.cs" />
     <Compile Include="UserTests\Issue513Tests.cs" />
+    <Compile Include="UserTests\Issue533Tests.cs" />
     <Compile Include="UserTests\Issue548Tests.cs" />
     <Compile Include="UserTests\Issue569Tests.cs" />
     <Compile Include="UserTests\LetTests.cs" />
