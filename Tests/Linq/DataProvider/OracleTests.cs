@@ -1650,9 +1650,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test, OracleDataContext]
-		public void Issue612Test()
+		public void Issue612Test(string context)
 		{
-			using (var db = GetDataContext("Oracle.Managed"))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
