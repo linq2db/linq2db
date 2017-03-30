@@ -1059,4 +1059,20 @@ namespace Tests
 			Configuration.Linq.OptimizeJoins = true;
 		}
 	}
+
+	public class LocalTable<T> : IDisposable
+	{
+		private IDataContext _db;
+
+		public LocalTable(IDataContext db)
+		{
+			_db = db;
+			_db.CreateTable<T>();
+		}
+
+		public void Dispose()
+		{
+			_db.DropTable<T>();
+		}
+	}
 }
