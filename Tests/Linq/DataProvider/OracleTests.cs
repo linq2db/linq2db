@@ -1649,6 +1649,32 @@ namespace Tests.DataProvider
 
 		}
 
+		[Test, OracleDataContext]
+		public void Issue612Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+                    // initialize with ticks with default oracle timestamp presicion (6 fractional seconds)
+                    var expected = new DateTimeOffset(636264847785126550, TimeSpan.FromHours(3));
+
+                    db.CreateTable<DateTimeOffsetTable>();
+
+                    db.Insert(new DateTimeOffsetTable { DateTimeOffsetValue = expected });
+
+				    var actual = db.GetTable<DateTimeOffsetTable>().Select(x => x.DateTimeOffsetValue).Single();
+
+				    Assert.That(actual, Is.EqualTo(expected)); 
+				}
+				finally
+				{
+                    db.DropTable<DateTimeOffsetTable>();
+                }
+			}
+
+		}
+
 		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int id)
 		{
 			return dataConnection.QueryProc<Person>("Person_SelectByKey",
