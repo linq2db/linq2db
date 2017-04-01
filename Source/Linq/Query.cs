@@ -1191,56 +1191,59 @@ namespace LinqToDB.Linq
 
 			var isFaulted = false;
 
-			foreach (var dr in data)
+			try
 			{
-				var mapper = mapInfo.Mapper;
 
-				if (mapper == null)
+				foreach (var dr in data)
 				{
-					mapInfo.MapperExpression = mapInfo.Expression.Transform(e =>
+					var mapper = mapInfo.Mapper;
+
+					if (mapper == null)
 					{
-						var ex = e as ConvertFromDataReaderExpression;
-						return ex != null ? ex.Reduce(dr) : e;
-					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
+						mapInfo.MapperExpression = mapInfo.Expression.Transform(e =>
+						{
+							var ex = e as ConvertFromDataReaderExpression;
+							return ex != null ? ex.Reduce(dr) : e;
+						}) as Expression<Func<QueryContext, IDataContext, IDataReader, Expression, object[], T>>;
 
-					// IT : # MapperExpression.Compile()
-					//
-					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
+						// IT : # MapperExpression.Compile()
+						//
+						mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
+					}
+
+					T result;
+
+					try
+					{
+						result = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+					}
+					catch (FormatException)
+					{
+						if (isFaulted)
+							throw;
+
+						isFaulted = true;
+
+						mapInfo.Mapper = mapInfo.Expression.Compile();
+						result = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+					}
+					catch (InvalidCastException)
+					{
+						if (isFaulted)
+							throw;
+
+						isFaulted = true;
+
+						mapInfo.Mapper = mapInfo.Expression.Compile();
+						result = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+					}
+					yield return result;
 				}
-
-				T result;
-				
-				try
-				{
-					result = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
-				}
-				catch (FormatException)
-				{
-					if (isFaulted)
-						throw;
-
-					isFaulted = true;
-
-					mapInfo.Mapper = mapInfo.Expression.Compile();
-					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
-				}
-				catch (InvalidCastException)
-				{
-					if (isFaulted)
-						throw;
-
-					isFaulted = true;
-
-					mapInfo.Mapper = mapInfo.Expression.Compile();
-					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
-				}
-				finally
-				{
-					if (closeQueryContext)
-						queryContext.Close();
-				}
-
-				yield return result;
+			}
+			finally
+			{
+				if (closeQueryContext)
+					queryContext.Close();
 			}
 		}
 
