@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -16,6 +15,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public class OracleDataProvider : DynamicDataProviderBase
 	{
+	    private static readonly int NanosecondsPerTick = Convert.ToInt32(1000000000 / TimeSpan.TicksPerSecond);
+
 		public OracleDataProvider()
 			: this(OracleTools.DetectedProviderName)
 		{
@@ -119,7 +120,7 @@ namespace LinqToDB.DataProvider.Oracle
 				//     return new DateTimeOffset(
 				//         tstz.Year, tstz.Month,  tstz.Day,
 				//         tstz.Hour, tstz.Minute, tstz.Second,
-				//         TimeSpan.Parse(tstz.TimeZone.TrimStart('+'))).AddTicks(tstz.Nanosecond / 100);
+				//         TimeSpan.Parse(tstz.TimeZone.TrimStart('+'))).AddTicks(tstz.Nanosecond / NanosecondsPerTick);
 				// }
 
 				var tstz = Expression.Parameter(_oracleTimeStampTZ, "tstz");
@@ -147,7 +148,7 @@ namespace LinqToDB.DataProvider.Oracle
 				//     return new DateTimeOffset(
 				//         tstz.Year, tstz.Month,  tstz.Day,
 				//         tstz.Hour, tstz.Minute, tstz.Second,
-				//         TimeSpan.Parse(tstz.TimeZone.TrimStart('+'))).AddTicks(tstz.Nanosecond / 100);
+				//         TimeSpan.Parse(tstz.TimeZone.TrimStart('+'))).AddTicks(tstz.Nanosecond / NanosecondsPerTick);
 				// }
 
 				var tstz = Expression.Parameter(_oracleTimeStampTZ, "tstz");
@@ -212,7 +213,7 @@ namespace LinqToDB.DataProvider.Oracle
 								Expression.PropertyOrField(dto, "Hour"),
 								Expression.PropertyOrField(dto, "Minute"),
 								Expression.PropertyOrField(dto, "Second"),
-								Expression.Call(null, typeof(OracleDataProvider).GetMethod("GetDateTimeOffsetNanoseconds", BindingFlags.Static | BindingFlags.NonPublic), dto),
+								Expression.Call(null, MemberHelper.MethodOf(() => GetDateTimeOffsetNanoseconds(default(DateTimeOffset))), dto),
 								zone),
 							typeof(object)),
 						dto,
@@ -262,18 +263,17 @@ namespace LinqToDB.DataProvider.Oracle
 	    {
             var tmp = new DateTimeOffset(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Offset);
 
-            return (int) (value.Ticks - tmp.Ticks) * 100;
+            return Convert.ToInt32((value.Ticks - tmp.Ticks) * NanosecondsPerTick);
         }
 
 		static DateTimeOffset ToDateTimeOffset(object value)
 		{
-			dynamic tstz        = value;
-			double  millisecond = tstz.Millisecond;
+			dynamic tstz = value;
 
 			return new DateTimeOffset(
 				tstz.Year, tstz.Month,  tstz.Day, 
 				tstz.Hour, tstz.Minute, tstz.Second,
-				tstz.GetTimeZoneOffset()).AddTicks(tstz.Nanosecond / 100);
+				tstz.GetTimeZoneOffset()).AddTicks(tstz.Nanosecond / NanosecondsPerTick);
 		}
 
 		static object GetNullValue(Type type)

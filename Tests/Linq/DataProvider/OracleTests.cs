@@ -1675,7 +1675,33 @@ namespace Tests.DataProvider
 
 		}
 
-		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int id)
+        [Test, OracleDataContext]
+        public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks(string context)
+        {
+            using (var db = GetDataContext(context))
+            {
+                try
+                {
+                    // initialize with ticks with default DateTimeOffset presicion (7 fractional seconds for Oracle TSTZ)
+                    var expected = new DateTimeOffset(636264847785126559, TimeSpan.FromHours(3));
+
+                    db.CreateTable<DateTimeOffsetTable>();
+
+                    db.Insert(new DateTimeOffsetTable { DateTimeOffsetValue = expected });
+
+                    var actual = db.GetTable<DateTimeOffsetTable>().Select(x => x.DateTimeOffsetValue).Single();
+
+                    Assert.That(actual, Is.EqualTo(expected).Within(9).Ticks);
+                }
+                finally
+                {
+                    db.DropTable<DateTimeOffsetTable>();
+                }
+            }
+
+        }
+
+        public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int id)
 		{
 			return dataConnection.QueryProc<Person>("Person_SelectByKey",
 				new DataParameter("pID", @id),
