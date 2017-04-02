@@ -1998,7 +1998,7 @@ namespace LinqToDB.Linq.Builder
 				expression,
 				mapper.Compile(),
 				dataTypeAccessor.Compile(),
-				new SqlParameter(accessorExpression.Type, name, null) { IsQueryParameter = !dataContext.InlineParameters }
+				new SqlParameter(accessorExpression.Type, name, null) { IsQueryParameter = !(dataContext.InlineParameters && accessorExpression.Type.IsScalar(false)) }
 			);
 		}
 
@@ -2132,7 +2132,7 @@ namespace LinqToDB.Linq.Builder
 						LikeStart        = start,
 						LikeEnd          = end,
 						ReplaceLike      = p.ReplaceLike,
-						IsQueryParameter = !DataContextInfo.DataContext.InlineParameters
+						IsQueryParameter = !(DataContextInfo.DataContext.InlineParameters && ep.Expression.Type.IsScalar(false))
 					}
 				);
 

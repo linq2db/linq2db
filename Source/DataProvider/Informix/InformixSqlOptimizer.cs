@@ -15,7 +15,11 @@ namespace LinqToDB.DataProvider.Informix
 		static void SetQueryParameter(IQueryElement element)
 		{
 			if (element.ElementType == QueryElementType.SqlParameter)
-				((SqlParameter)element).IsQueryParameter = false;
+			{
+				var p = (SqlParameter)element;
+				if (p.SystemType == null || p.SystemType.IsScalar(false))
+					p.IsQueryParameter = false;
+			}
 		}
 
 		public override SelectQuery Finalize(SelectQuery selectQuery)
