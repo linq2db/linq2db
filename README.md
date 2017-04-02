@@ -28,7 +28,7 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 
 # Let's get started
 
-sFrom **NuGet**: 
+From **NuGet**: 
 * `Install-Package linq2db` - .Net
 * `Install-Package linq2db.core` - .Net Core
 
