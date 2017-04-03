@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public class OracleDataProvider : DynamicDataProviderBase
 	{
-	    private static readonly int NanosecondsPerTick = Convert.ToInt32(1000000000 / TimeSpan.TicksPerSecond);
+		private static readonly int NanosecondsPerTick = Convert.ToInt32(1000000000 / TimeSpan.TicksPerSecond);
 
 		public OracleDataProvider()
 			: this(OracleTools.DetectedProviderName)
@@ -259,12 +259,12 @@ namespace LinqToDB.DataProvider.Oracle
 				MappingSchema.AddScalarType(_oracleXmlStream, GetNullValue(_oracleXmlStream), true, DataType.Xml); // ?
 		}
 
-	    static int GetDateTimeOffsetNanoseconds(DateTimeOffset value)
-	    {
-            var tmp = new DateTimeOffset(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Offset);
+		static int GetDateTimeOffsetNanoseconds(DateTimeOffset value)
+		{
+			var tmp = new DateTimeOffset(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Offset);
 
-            return Convert.ToInt32((value.Ticks - tmp.Ticks) * NanosecondsPerTick);
-        }
+			return Convert.ToInt32((value.Ticks - tmp.Ticks) * NanosecondsPerTick);
+		}
 
 		static DateTimeOffset ToDateTimeOffset(object value)
 		{
