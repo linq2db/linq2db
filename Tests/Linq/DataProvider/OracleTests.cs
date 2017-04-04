@@ -1656,21 +1656,47 @@ namespace Tests.DataProvider
 			{
 				try
 				{
-                    // initialize with ticks with default oracle timestamp presicion (6 fractional seconds)
-                    var expected = new DateTimeOffset(636264847785126550, TimeSpan.FromHours(3));
+					// initialize with ticks with default oracle timestamp presicion (6 fractional seconds)
+					var expected = new DateTimeOffset(636264847785126550, TimeSpan.FromHours(3));
 
-                    db.CreateTable<DateTimeOffsetTable>();
+					db.CreateTable<DateTimeOffsetTable>();
 
-                    db.Insert(new DateTimeOffsetTable { DateTimeOffsetValue = expected });
+					db.Insert(new DateTimeOffsetTable { DateTimeOffsetValue = expected });
 
-				    var actual = db.GetTable<DateTimeOffsetTable>().Select(x => x.DateTimeOffsetValue).Single();
+					var actual = db.GetTable<DateTimeOffsetTable>().Select(x => x.DateTimeOffsetValue).Single();
 
-				    Assert.That(actual, Is.EqualTo(expected)); 
+					Assert.That(actual, Is.EqualTo(expected));
 				}
 				finally
 				{
-                    db.DropTable<DateTimeOffsetTable>();
-                }
+					db.DropTable<DateTimeOffsetTable>();
+				}
+			}
+
+		}
+
+		[Test, OracleDataContext]
+		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					// initialize with ticks with default DateTimeOffset presicion (7 fractional seconds for Oracle TSTZ)
+					var expected = new DateTimeOffset(636264847785126559, TimeSpan.FromHours(3));
+
+					db.CreateTable<DateTimeOffsetTable>();
+
+					db.Insert(new DateTimeOffsetTable { DateTimeOffsetValue = expected });
+
+					var actual = db.GetTable<DateTimeOffsetTable>().Select(x => x.DateTimeOffsetValue).Single();
+
+					Assert.That(actual, Is.EqualTo(expected).Within(9).Ticks);
+				}
+				finally
+				{
+					db.DropTable<DateTimeOffsetTable>();
+				}
 			}
 
 		}
