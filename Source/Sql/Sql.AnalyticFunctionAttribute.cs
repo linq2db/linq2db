@@ -17,7 +17,7 @@ namespace LinqToDB
 	{
 		public class AnalyticFunctionAttribute : ExpressionAttribute
 		{
-			class FunctionBuilder: IReadyToFunction, IAnalyticFunctionBuilder
+			class FunctionBuilder: IReadyToFunction, IPartitioned, IAnalyticFunctionBuilder, IOrdered, INotOrdered
 			{
 				public FunctionBuilder(
 					string                                     configuration,
@@ -160,17 +160,17 @@ namespace LinqToDB
 				{
 					var chain = chains[i];
 
-					if (chain.Name == "Over")
-					{
-						continue;
-					}
-
-					var parentType = chain.Method != null ? chain.Method.ReturnType : chain.Member.DeclaringType;
+					var parentType = chain.Method != null
+						? chain.Method.DeclaringType 
+						: chain.Member.DeclaringType;
 
 					if (parentType == null)
 						throw new InvalidOperationException();
 
-					if (typeof(IPartitionNotRanged).IsSameOrParentOf(parentType))
+					if (typeof(Sql).IsSameOrParentOf(parentType))
+						continue;
+
+					if (typeof(IReadyToWindow).IsSameOrParentOf(parentType))
 					{
 						switch (chain.Name)
 						{
@@ -187,7 +187,7 @@ namespace LinqToDB
 						}
 					}
 
-					if (typeof(IPartitionNotOrdered).IsSameOrParentOf(parentType))
+					if (typeof(IOver).IsSameOrParentOf(parentType))
 					{
 						switch (chain.Name)
 						{
@@ -202,15 +202,19 @@ namespace LinqToDB
 						}
 					}
 
-					if (typeof(IPartitionNotOrdered).IsSameOrParentOf(parentType) ||
+					if (typeof(IPartitionedReadyToOrder).IsSameOrParentOf(parentType)      ||
+						typeof(IReadyToOrderWithoutPartition).IsSameOrParentOf(parentType) ||
+						typeof(IOrderedWithoutPartition).IsSameOrParentOf(parentType)      ||
 						typeof(IPartitionOrdered).IsSameOrParentOf(parentType))
 					{
 						switch (chain.Name)
 						{
-							case "OrderBy"     :
-							case "OrderByDesc" :
-							case "ThenBy"      :
-							case "ThenByDesc"  :
+							case "OrderBy"             :
+							case "OrderByDesc"         :
+							case "OrderSiblingsBy"     :
+							case "OrderSiblingsByDesc" :
+							case "ThenBy"              :
+							case "ThenByDesc"          :
 								{
 									chain.EnsureMethod();
 
@@ -225,8 +229,11 @@ namespace LinqToDB
 									}
 
 									analytic.OrderBy = analytic.OrderBy ?? new SqlAnalyticFunction.OrderByClause();
-									analytic.OrderBy.Items.AddRange(fields.Select(f => new SqlAnalyticFunction.OrderByItem(f, isDescending, nulls)));
 
+									if (!chain.Name.StartsWith("ThenBy"))
+										analytic.OrderBy.Siblings = chain.Name.Contains("Siblings");
+
+									analytic.OrderBy.Items.AddRange(fields.Select(f => new SqlAnalyticFunction.OrderByItem(f, isDescending, nulls)));
 
 									continue;
 								}
@@ -355,14 +362,14 @@ namespace LinqToDB
 								{
 									chain.EnsureMember();
 									analytic.Windowing.End = analytic.Windowing.End ?? new SqlAnalyticFunction.WindowFrameBound();
-									analytic.Windowing.End.Kind = SqlAnalyticFunction.LimitExpressionKind.UnboundedPreceding;
+									analytic.Windowing.End.Kind = SqlAnalyticFunction.LimitExpressionKind.ValueExprPreceding;
 									continue;
 								}
 							case "Following" :
 								{
 									chain.EnsureMember();
 									analytic.Windowing.End = analytic.Windowing.End ?? new SqlAnalyticFunction.WindowFrameBound();
-									analytic.Windowing.End.Kind = SqlAnalyticFunction.LimitExpressionKind.UnboundedFollowing;
+									analytic.Windowing.End.Kind = SqlAnalyticFunction.LimitExpressionKind.ValueExprFollowing;
 									continue;
 								}
 						}

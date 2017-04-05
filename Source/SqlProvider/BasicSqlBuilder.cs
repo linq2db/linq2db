@@ -2136,6 +2136,7 @@ namespace LinqToDB.SqlProvider
 				case SqlAnalyticFunction.LimitExpressionKind.ValueExprPreceding :
 					if (bound.ValueExpression == null)
 						throw new InvalidOperationException("Missed ValueExpression for Boundary Point in Analytic function");
+					StringBuilder.Append(" ");
 					BuildExpression(bound.ValueExpression);
 					StringBuilder.Append(" PRECEDING");
 					break;
@@ -2148,6 +2149,7 @@ namespace LinqToDB.SqlProvider
 				case SqlAnalyticFunction.LimitExpressionKind.ValueExprFollowing :
 					if (bound.ValueExpression == null)
 						throw new InvalidOperationException("Missed ValueExpression for Boundary Point in Analytic function");
+					StringBuilder.Append(" ");
 					BuildExpression(bound.ValueExpression);
 					StringBuilder.Append(" FOLLOWING");
 					break;
@@ -2262,7 +2264,7 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				string pattern = @"\{(\d*)(..(\d*),\s*'(.*?)')?}";
+				string pattern = @"\{(\d*)((..)(\d*),\s*'(.*?)')?}";
 				var regex = new Regex(pattern);
 				var sb = new StringBuilder();
 				var formatted = regex.Replace(func.Expression, m =>
@@ -2270,7 +2272,7 @@ namespace LinqToDB.SqlProvider
 					WithStringBuilder(sb, () =>
 					{
 						sb.Length = 0;
-						if (m.Groups.Count == 1)
+						if (m.Groups.Count == 1 || m.Groups[4].Value != "..")
 							// {index}
 							BuildExpression(GetPrecedence(func), func.Arguments[int.Parse(m.Groups[1].Value)]);
 						else

@@ -54,19 +54,19 @@
 			Last
 		}
 
-		private static TR TwoExprDefaultBuilder<TR>(IReadyToFunction window)
+		private static TR TwoExprDefaultBuilder<TR>(object window)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
 				throw new NotImplementedException();
 
 			builder.Function.Arguments.Add(builder.GetArgument(0));
-			builder.Function.Arguments.Add(builder.GetArgument(0));
+			builder.Function.Arguments.Add(builder.GetArgument(1));
 
 			return default(TR);
 		}
 
-		private static TR AggregateExprDefaultBuilder<TR>(IReadyToFunction window, string funcName, AggregateModifier modifier)
+		private static TR AggregateExprDefaultBuilder<TR>(object window, string funcName, AggregateModifier modifier)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -92,7 +92,7 @@
 			return default(TR);
 		}
 
-		private static TR SingleExpressionDefaultBuilder<TR>(IReadyToFunction window)
+		private static TR SingleExpressionDefaultBuilder<TR>(object window)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -104,13 +104,13 @@
 		}
 
 		[AnalyticFunction("AVG({0})")]
-		public static TR Average<TR>(this IReadyToFunction window, TR expr)
+		public static TR Average<TR>(this IReadyToFunction window, object expr)
 		{
 			return AggregateExprDefaultBuilder<TR>(window, "AVG", AggregateModifier.None);
 		}
 
 		[AnalyticFunction("AVG({0})")]
-		public static TR Average<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
+		public static TR Average<TR>(this IReadyToFunction window, object expr, AggregateModifier modifier)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -120,10 +120,12 @@
 		}
 
 		[AnalyticFunction("CORR({0}, {1})")]
-		public static TR Corr<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+		public static TR Corr<TR>(this IReadyToFunction window, object expr1, object expr2)
 		{
 			return TwoExprDefaultBuilder<TR>(window);
 		}
+
+		#region Count
 
 		[AnalyticFunction("COUNT(*)")]
 		public static long Count(this IReadyToFunction window)
@@ -147,6 +149,8 @@
 			return AggregateExprDefaultBuilder<long>(window, "COUNT", builder.GetValue<AggregateModifier>(1));
 		}
 
+		#endregion
+
 		[AnalyticFunction("COVAR_POP({0}, {1})")]
 		public static TR CovarPop<TR>(this IReadyToFunction window, TR expr1, TR expr2)
 		{
@@ -159,28 +163,16 @@
 			return TwoExprDefaultBuilder<TR>(window);
 		}
 
-		[AnalyticFunction("CUME_DIST({0}, {1})")]
-		public static TR CumeDist<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return TwoExprDefaultBuilder<TR>(window);
-		}
-
-		[AnalyticFunction("DENSE_RANK()")]
-		public static decimal DenseRank(this IReadyToFunction window)
+		[AnalyticFunction("CUME_DIST()")]
+		public static double CumeDist(this IOrdered window)
 		{
 			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("DENSE_RANK({0.., ', '})")]
-		public static decimal DenseRank(this IReadyToFunction window, params object[] expressions)
+		[AnalyticFunction("DENSE_RANK()")]
+		public static decimal DenseRank(this IOrdered window)
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.AddRange(builder.GetArrayArgument(0));
-
-			return default(decimal);
+			throw new NotImplementedException();
 		}
 
 		//TODO: FIRST - http://docs.oracle.com/cloud/latest/db112/SQLRF/functions065.htm#SQLRF00641
@@ -212,7 +204,7 @@
 		}
 
 		[AnalyticFunction("LAG({0})")]
-		public static TR Lag<TR>(this IReadyToFunction window, TR expr, Nulls nulls)
+		public static TR Lag<TR>(this IOrdered window, TR expr, Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -238,7 +230,7 @@
 		}
 
 		[AnalyticFunction("LAG")]
-		public static TR Lag<TR>(this IReadyToFunction window, TR expr, Nulls nulls, int offset, int? @default)
+		public static TR Lag<TR>(this IOrdered window, TR expr, Nulls nulls, int offset, int? @default)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -300,7 +292,7 @@
 		}
 
 		[AnalyticFunction("LEAD({0})")]
-		public static TR Lead<TR>(this IReadyToFunction window, TR expr, Nulls nulls)
+		public static TR Lead<TR>(this IOrdered window, TR expr, Nulls nulls)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -326,7 +318,7 @@
 		}
 
 		[AnalyticFunction("LEAD({0})")]
-		public static TR Lead<TR>(this IReadyToFunction window, TR expr, Nulls nulls, int offset, int? @default)
+		public static TR Lead<TR>(this IOrdered window, TR expr, Nulls nulls, int offset, int? @default)
 		{
 			var builder = window as IAnalyticFunctionBuilder;
 			if (builder == null)
@@ -359,30 +351,32 @@
 			return default(TR);
 		}
 
-		[AnalyticFunction("LISTAGG({0})")]
-		public static string ListAgg<TR>(this IReadyToFunction window, TR expr)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
+		//TODO: LISTAGG
 
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-			
-			return default(string);
-		}
-
-		[AnalyticFunction("LISTAGG({0}, {1})")]
-		public static string ListAgg<TR>(this IReadyToFunction window, TR expr, string delimiter)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-			builder.Function.Arguments.Add(builder.GetArgument(1));
-			
-			return default(string);
-		}
+//		[AnalyticFunction("LISTAGG({0})")]
+//		public static string ListAgg<TR>(this IReadyToFunction window, TR expr)
+//		{
+//			var builder = window as IAnalyticFunctionBuilder;
+//			if (builder == null)
+//				throw new NotImplementedException();
+//
+//			builder.Function.Arguments.Add(builder.GetArgument(0));
+//			
+//			return default(string);
+//		}
+//
+//		[AnalyticFunction("LISTAGG({0}, {1})")]
+//		public static string ListAgg<TR>(this IReadyToFunction window, TR expr, string delimiter)
+//		{
+//			var builder = window as IAnalyticFunctionBuilder;
+//			if (builder == null)
+//				throw new NotImplementedException();
+//
+//			builder.Function.Arguments.Add(builder.GetArgument(0));
+//			builder.Function.Arguments.Add(builder.GetArgument(1));
+//			
+//			return default(string);
+//		}
 
 		[AnalyticFunction("MAX({0})")]
 		public static TR Max<TR>(this IReadyToFunction window, TR expr)
@@ -401,7 +395,7 @@
 		}
 
 		[AnalyticFunction("MEDIAN({0})")]
-		public static TR Med<TR>(this IReadyToFunction window, TR expr)
+		public static TR Median<TR>(this INotOrdered window, TR expr)
 		{
 			return SingleExpressionDefaultBuilder<TR>(window);
 		}
@@ -485,121 +479,112 @@
 			return SingleExpressionDefaultBuilder<long>(window);
 		}
 
-		[AnalyticFunction("PERCENT_RANK({0.., ', '}) WITHIN GROUP")]
-		public static long PercentRank(this IReadyToFunction window, params object[] expressions)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.AddRange(builder.GetArrayArgument(0));
-			
-			return default(long);
-		}
-
-		[AnalyticFunction("PERCENTILE_CONT({0})")]
-		public static double PercentileCont<T>(this IReadyToFunction window, Expression<Func<T, object>> expr)
-		{
-			return SingleExpressionDefaultBuilder<double>(window);
-		}
-
-		[AnalyticFunction("PERCENTILE_DISC({0})")]
-		public static double PercentileDisc<T>(this IReadyToFunction window, Expression<Func<T, object>> expr)
-		{
-			return SingleExpressionDefaultBuilder<double>(window);
-		}
-
-		[AnalyticFunction("RANK()")]
-		public static long Rank(this IReadyToFunction window)
+		[AnalyticFunction("PERCENT_RANK()")]
+		public static long PercentRank(this IReadyToFunction window)
 		{
 			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction(PN.Oracle, "RANK({0.., ', '})")]
-		public static long Rank(this IReadyToFunction window, params object[] expessions)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
+		//TODO: PERCENTILE_CONT
+//		[AnalyticFunction("PERCENTILE_CONT({0})")]
+//		public static double PercentileCont<T>(this IReadyToFunction window, Expression<Func<T, object>> expr)
+//		{
+//			return SingleExpressionDefaultBuilder<double>(window);
+//		}
 
-			builder.Function.Arguments.AddRange(builder.GetArrayArgument(0));
-			
-			return default(long);
+		//TODO: PERCENTILE_DISC
+//		[AnalyticFunction("PERCENTILE_DISC({0})")]
+//		public static double PercentileDisc<T>(this IReadyToFunction window, Expression<Func<T, object>> expr)
+//		{
+//			return SingleExpressionDefaultBuilder<double>(window);
+//		}
+
+		[AnalyticFunction("RANK()")]
+		public static long Rank(this IOrdered window)
+		{
+			throw new NotImplementedException();
 		}
 
 		[AnalyticFunction("RATIO_TO_REPORT({0})")]
-		public static double? RatioToReport<TR>(this IReadyToFunction window, TR expr)
+		public static double? RatioToReport<TR>(this INotOrdered window, TR expr)
 		{
 			return SingleExpressionDefaultBuilder<double?>(window);
 		}
 
-		#region REGR_ (Linear Regression) Functions 
-
-		static TR RegrHandler<TR>(this IReadyToFunction window)
-		{
-			return TwoExprDefaultBuilder<TR>(window);
-		}
-
-		[AnalyticFunction("REGR_SLOPE({0}, {1})")]
-		public static TR RegrSlope<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return RegrHandler<TR>(window);
-		}
-		
-		[AnalyticFunction("REGR_INTERCEPT({0}, {1})")]
-		public static TR RegrIntercept<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return RegrHandler<TR>(window);
-		}
-		
-		[AnalyticFunction("REGR_COUNT({0}, {1})")]
-		public static TR RegrCount<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return RegrHandler<TR>(window);
-		}
-		
-		[AnalyticFunction("REGR_R2({0}, {1})")]
-		public static TR RegrR2<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return RegrHandler<TR>(window);
-		}
-		
-		[AnalyticFunction("REGR_AVGX({0}, {1})")]
-		public static TR RegrAvgX<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return RegrHandler<TR>(window);
-		}
-		
-		[AnalyticFunction("REGR_AVGY({0}, {1})")]
-		public static TR RegrAvgY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return RegrHandler<TR>(window);
-		}
-		
-		[AnalyticFunction("REGR_SXX({0}, {1})")]
-		public static TR RegrSXX<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return RegrHandler<TR>(window);
-		}
-		
-		[AnalyticFunction("REGR_SYY({0}, {1})")]
-		public static TR RegrSYY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return RegrHandler<TR>(window);
-		}
-		
-		[AnalyticFunction("REGR_SXY({0}, {1})")]
-		public static TR RegrSXY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-		{
-			return RegrHandler<TR>(window);
-		}
-		
-		#endregion
+		//TODO: regr functions
+//		#region REGR_ (Linear Regression) Functions 
+//
+//		static TR RegrHandler<TR>(this IReadyToFunction window)
+//		{
+//			return TwoExprDefaultBuilder<TR>(window);
+//		}
+//
+//		[AnalyticFunction("REGR_SLOPE({0}, {1})")]
+//		public static TR RegrSlope<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+//		{
+//			return RegrHandler<TR>(window);
+//		}
+//		
+//		[AnalyticFunction("REGR_INTERCEPT({0}, {1})")]
+//		public static TR RegrIntercept<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+//		{
+//			return RegrHandler<TR>(window);
+//		}
+//		
+//		[AnalyticFunction("REGR_COUNT({0}, {1})")]
+//		public static TR RegrCount<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+//		{
+//			return RegrHandler<TR>(window);
+//		}
+//		
+//		[AnalyticFunction("REGR_R2({0}, {1})")]
+//		public static TR RegrR2<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+//		{
+//			return RegrHandler<TR>(window);
+//		}
+//		
+//		[AnalyticFunction("REGR_AVGX({0}, {1})")]
+//		public static TR RegrAvgX<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+//		{
+//			return RegrHandler<TR>(window);
+//		}
+//		
+//		[AnalyticFunction("REGR_AVGY({0}, {1})")]
+//		public static TR RegrAvgY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+//		{
+//			return RegrHandler<TR>(window);
+//		}
+//		
+//		[AnalyticFunction("REGR_SXX({0}, {1})")]
+//		public static TR RegrSXX<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+//		{
+//			return RegrHandler<TR>(window);
+//		}
+//		
+//		[AnalyticFunction("REGR_SYY({0}, {1})")]
+//		public static TR RegrSYY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+//		{
+//			return RegrHandler<TR>(window);
+//		}
+//		
+//		[AnalyticFunction("REGR_SXY({0}, {1})")]
+//		public static TR RegrSXY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+//		{
+//			return RegrHandler<TR>(window);
+//		}
+//		
+//		#endregion
 
 		[AnalyticFunction("ROW_NUMBER()")]
 		public static long RowNumber(this IReadyToFunction window)
 		{
 			throw new NotImplementedException();
+		}
+
+		[AnalyticFunction("STDDEV({0})")]
+		public static TR StdDev<TR>(this IReadyToFunction window, TR expr)
+		{
+			return SingleExpressionDefaultBuilder<TR>(window);
 		}
 
 		[AnalyticFunction("STDDEV({0})")]
@@ -672,27 +657,70 @@
 		{
 		}
 
-		public interface IPartitionNotRanged
+		public interface INotOrdered
+		{
+		}
+
+		public interface IReadyToWindow
 		{
 			IWindowFrameExtent Rows { get; }
 			IWindowFrameExtent Range { get; }
 		}
 
-		public interface IOver : IReadyToFunction, IPartitionNotOrdered
+		public interface IOver : IReadyToOrderWithoutPartition, IReadyToFunction
 		{
-			IPartitionNotOrdered PartitionBy(params object[] expressions);
+			IPartitionedReadyToOrder PartitionBy(params object[] expressions);
 		}
 
-		public interface IPartitionNotOrdered : IPartitionNotRanged
+		public interface IPartitioned
+		{
+		}
+
+		public interface IOrdered
+		{
+			
+		}
+
+		public interface IReadyToOrderWithoutPartition : INotOrdered
+		{
+			IOrderedWithoutPartition OrderBy<TKey>(TKey keySelector);
+			IOrderedWithoutPartition OrderBy<TKey>(TKey keySelector, NullsPosition nulls);
+
+			IOrderedWithoutPartition OrderByDesc<TKey>(TKey keySelector);
+			IOrderedWithoutPartition OrderByDesc<TKey>(TKey keySelector, NullsPosition nulls);
+
+			IOrderedWithoutPartition OrderSiblingsBy<TKey>(TKey keySelector);
+			IOrderedWithoutPartition OrderSiblingsBy<TKey>(TKey keySelector, NullsPosition nulls);
+
+			IOrderedWithoutPartition OrderSiblingsByDesc<TKey>(TKey keySelector);
+			IOrderedWithoutPartition OrderSiblingsByDesc<TKey>(TKey keySelector, NullsPosition nulls);
+		}
+
+		public interface IOrderedWithoutPartition : IReadyToFunction, IOrdered
+		{
+			IOrderedWithoutPartition ThenBy<TKey>(TKey keySelector);
+			IOrderedWithoutPartition ThenBy<TKey>(TKey keySelector, NullsPosition nulls);
+
+			IOrderedWithoutPartition ThenByDesc<TKey>(TKey keySelector);
+			IOrderedWithoutPartition ThenByDesc<TKey>(TKey keySelector, NullsPosition nulls);
+		}
+
+		public interface IPartitionedReadyToOrder : IPartitioned, INotOrdered, IReadyToFunction
 		{
 			IPartitionOrdered OrderBy<TKey>(TKey keySelector);
 			IPartitionOrdered OrderBy<TKey>(TKey keySelector, NullsPosition nulls);
 
 			IPartitionOrdered OrderByDesc<TKey>(TKey keySelector);
 			IPartitionOrdered OrderByDesc<TKey>(TKey keySelector, NullsPosition nulls);
+
+			IPartitionOrdered OrderSiblingsBy<TKey>(TKey keySelector);
+			IPartitionOrdered OrderSiblingsBy<TKey>(TKey keySelector, NullsPosition nulls);
+
+			IPartitionOrdered OrderSiblingsByDesc<TKey>(TKey keySelector);
+			IPartitionOrdered OrderSiblingsByDesc<TKey>(TKey keySelector, NullsPosition nulls);
 		}
 
-		public interface IPartitionOrdered : IReadyToFunction, IPartitionNotRanged
+		public interface IPartitionOrdered : IReadyToFunction, IPartitioned, IReadyToWindow, IOrdered
 		{
 			IPartitionOrdered ThenBy<TKey>(TKey keySelector);
 			IPartitionOrdered ThenBy<TKey>(TKey keySelector, NullsPosition nulls);
@@ -710,7 +738,7 @@
 		public interface IWindowFrameBetween
 		{
 			IWindowFrameBetweenNext UnboundedPreceding { get; }
-			IValueExprFirst Value<TKey>(TKey value);
+			IValueExprFirst Value<T>(T value);
 		}
 
 		public interface IValueExprFirst
@@ -729,7 +757,7 @@
 		{
 			IReadyToFunction UnboundedFollowing { get; }
 			IReadyToFunction CurrentRow { get; }
-			IValueExprSecond Value<TKey>(TKey value);
+			IValueExprSecond Value<T>(T value);
 		}
 
 		public interface IValueExprSecond
