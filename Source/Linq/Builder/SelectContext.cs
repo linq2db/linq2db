@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 		public MethodCallExpression MethodCall;
 #endif
 
-		public IBuildContext[]   Sequence    { get; set; }
+		public IBuildContext[]   Sequence    { get; private set; }
 		public LambdaExpression  Lambda      { get; set; }
 		public Expression        Body        { get; set; }
 		public ExpressionBuilder Builder     { get; private set; }

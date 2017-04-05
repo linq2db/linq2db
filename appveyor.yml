@@ -47,6 +47,8 @@ nuget:
 before_build:
 - cmd: nuget restore linq2db.4.5.sln
 - cmd: dotnet restore 
+- cmd: 7z e Data\northwind.sql.zip
+- cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2012SP1 -i "northwind.sql"
 
 build_script:
   - msbuild %solutionName%  /property:Configuration=Release
@@ -80,7 +82,7 @@ test_script:
 - ps: |
     if ($env:buildConfiguration -eq "dotNetCore")
     {
-        dotnet test tests\linq -c Release -f netcoreapp1.0 
+        dotnet test tests\linq -c Release -f netcoreapp1.0 --where "cat != FreeText"
         $test1res = $LASTEXITCODE 
         # upload results to AppVeyor
         $wc = New-Object 'System.Net.WebClient'
@@ -93,7 +95,7 @@ test_script:
     }
     else
     {
-        nunit3-console .\Tests\Linq\bin\Release\linq2db.Tests.dll --result="TestResult.xml;format=AppVeyor" --x86
+        nunit3-console .\Tests\Linq\bin\Release\linq2db.Tests.dll --result="TestResult.xml;format=AppVeyor" --x86 --where "cat != FreeText"
     }
 
 before_test:
