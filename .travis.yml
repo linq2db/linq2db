@@ -21,7 +21,7 @@ mono:
   - latest
 os:  
   - linux
-  - osx
+#  - osx
 osx_image: xcode7.3
 
 before_install:
