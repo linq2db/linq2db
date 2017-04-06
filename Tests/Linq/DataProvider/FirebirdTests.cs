@@ -472,5 +472,51 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		[Table]
+		public class Issue76Entity
+		{
+			[Column] public long   Id        { get; set; } 
+			[Column] public string Caption   { get; set; } 
+			[Column] public long?  ParentId  { get; set; } 
+
+			         public bool HasChildren { get; set; }
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void Issue76(string context)
+		{
+			var saveQuoteIdentifiers = FirebirdSqlBuilder.IdentifierQuoteMode;
+			FirebirdSqlBuilder.IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Quote;
+
+			try
+			{
+				using (var db = GetDataContext(context))
+				using (new LocalTable<Issue76Entity>(db))
+				{
+					var folders = db.GetTable<Issue76Entity>().Select(f => new Issue76Entity()
+					{
+						Id          = f.Id,
+						Caption     = f.Caption,
+						HasChildren = db.GetTable<Issue76Entity>().Any(f2 => f2.ParentId == f.Id)
+					});
+
+					folders =
+						from folder  in folders
+						join folder2 in db.GetTable<Issue76Entity>() on folder.ParentId equals folder2.Id
+						where folder2.Caption == "dewde"
+						select folder;
+
+
+					Assert.DoesNotThrow(() => folders.ToList());
+				}
+			}
+			finally
+			{
+				FirebirdSqlBuilder.IdentifierQuoteMode = saveQuoteIdentifiers;
+				
+			}
+		}
+
 	}
 }
