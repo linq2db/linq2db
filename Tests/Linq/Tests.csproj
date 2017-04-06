@@ -370,6 +370,7 @@
     <Compile Include="UserTests\Issue082Tests.cs" />
     <Compile Include="UserTests\Issue395Tests.cs" />
     <Compile Include="UserTests\Issue273Tests.cs" />
+    <Compile Include="UserTests\Issue421.cs" />
     <Compile Include="UserTests\Issue461Tests.cs" />
     <Compile Include="UserTests\Issue531Tests.cs" />
     <Compile Include="UserTests\Issue357Tests.cs" />
