@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -43,6 +41,15 @@ namespace Tests.UserTests
 				var v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
 
 				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue);
+
+				db.GetTable<BlobClass>()
+					.Where(_ => _.Id == 1)
+					.Set(_ => _.BlobValue, new byte[] {3, 2, 1})
+					.Update();
+
+				v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue);
 			}
 		}
 
@@ -63,6 +70,63 @@ namespace Tests.UserTests
 				var v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
 
 				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue);
+
+				db.GetTable<BlobClass>()
+					.Where(_ => _.Id == 1)
+					.Set(_ => _.BlobValue, new byte[] {3, 2, 1})
+					.Update();
+
+				v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test3(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new LocalTable<BlobClass>(db))
+			{
+
+				var e = new BlobClass() {Id = 1, BlobValue = new byte[] {1, 2, 3}};
+
+				db.Insert(e);
+
+				var v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue);
+
+				e.BlobValue = new byte[] {3, 2, 1};
+
+				v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue);
+			}
+		}
+
+
+		[Test, DataContextSource]
+		public void Test4(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new LocalTable<BlobClass>(db))
+			{
+				db.InlineParameters = true;
+
+				var e = new BlobClass() { Id = 1, BlobValue = new byte[] { 1, 2, 3 } };
+
+				db.Insert(e);
+
+				var v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue);
+
+				e.BlobValue = new byte[] { 3, 2, 1 };
+
+				v = db.GetTable<BlobClass>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue);
 			}
 		}
 	}
