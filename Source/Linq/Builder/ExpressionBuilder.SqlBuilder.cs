@@ -1475,25 +1475,29 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertCompare(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			if (left.NodeType == ExpressionType.Convert && left.Type == typeof(int) && right.NodeType == ExpressionType.Constant)
+			if (left.NodeType == ExpressionType.Convert && left.Type == typeof(int) && (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Convert))
 			{
-				var conv = (UnaryExpression)left;
+				var conv  = (UnaryExpression)left;
 
 				if (conv.Operand.Type == typeof(char))
 				{
 					left  = conv.Operand;
-					right = Expression.Constant(ConvertTo<char>.From(((ConstantExpression)right).Value));
+					right = right.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression) right).Value))
+						: ((UnaryExpression) right).Operand;
 				}
 			}
 
-			if (right.NodeType == ExpressionType.Convert && right.Type == typeof(int) && left.NodeType == ExpressionType.Constant)
+			if (right.NodeType == ExpressionType.Convert && right.Type == typeof(int) && (left.NodeType == ExpressionType.Constant || left.NodeType == ExpressionType.Convert))
 			{
 				var conv = (UnaryExpression)right;
 
 				if (conv.Operand.Type == typeof(char))
 				{
 					right = conv.Operand;
-					left  = Expression.Constant(ConvertTo<char>.From(((ConstantExpression)left).Value));
+					left  = left.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression) left).Value))
+						: ((UnaryExpression) left).Operand;
 				}
 			}
 
