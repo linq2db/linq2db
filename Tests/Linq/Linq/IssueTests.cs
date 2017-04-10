@@ -435,6 +435,32 @@ namespace Tests.Linq
 				Assert.IsNotEmpty(l.Where(_ => _.Doc != null));
 			}
 		}
+
+		[Test, DataContextSource]
+		public void Issue173(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new AllowMultipleQuery())
+			{
+				var result =
+					from r in db.GetTable<Parent>()
+					select new
+					{
+						id = r.ParentID,
+					};
+				result = result.Where(_ => _.id == 1);
+
+				var expected =
+					from r in Parent
+					select new
+					{
+						id = r.ParentID,
+					};
+				expected = expected.Where(_ => _.id == 1);
+
+				AreEqual(expected, result);
+			}
+		}
 	}
 
 }
