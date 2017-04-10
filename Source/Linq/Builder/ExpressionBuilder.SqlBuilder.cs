@@ -1669,7 +1669,7 @@ namespace LinqToDB.Linq.Builder
 						object mapValue;
 
 						if (!dic.TryGetValue(origValue, out mapValue))
-							return null;
+							mapValue = ((ConstantExpression)value).Value;
 
 						ISqlExpression l, r;
 
