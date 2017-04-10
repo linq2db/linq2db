@@ -1026,6 +1026,13 @@ namespace LinqToDB.Mapping
 			return ed;
 		}
 
+		internal void ResetEntityDescriptor(Type type)
+		{
+			EntityDescriptor ed;
+
+			_entityDescriptors.TryRemove(type, out ed);
+		}
+
 		//public EntityDescriptor GetEntityDescriptor(Type type)
 		//{
 		//    if (_entityDescriptors == null)

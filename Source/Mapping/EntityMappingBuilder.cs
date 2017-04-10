@@ -18,6 +18,10 @@ namespace LinqToDB.Mapping
 
 			_builder      = builder;
 			Configuration = configuration;
+
+			// We'll reset cache here, because there is no need to create builder if you don't want to change something
+			_builder.MappingSchema.ResetEntityDescriptor(typeof(T));
+
 		}
 
 		readonly FluentMappingBuilder _builder;

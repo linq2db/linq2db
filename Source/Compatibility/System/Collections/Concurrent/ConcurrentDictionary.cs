@@ -17,6 +17,11 @@ namespace System.Collections.Concurrent
 			_storage = new Dictionary<TKey, TValue>(comparer);
 		}
 
+		public int                 Count      { get { return _storage.Count; } }
+		public bool                IsReadOnly { get { return _storage.IsReadOnly; } }
+		public ICollection<TKey>   Keys       { get { return _storage.Keys; } }
+		public ICollection<TValue> Values     { get { return _storage.Values; } }
+
 		public TValue GetOrAdd(TKey key, TValue value)
 		{
 			if ((object)key == null)
@@ -93,8 +98,6 @@ namespace System.Collections.Concurrent
 				return _storage.Remove(item);
 		}
 
-		public int Count { get { return _storage.Count; } }
-		public bool IsReadOnly { get { return _storage.IsReadOnly; } }
 		public bool ContainsKey(TKey key)
 		{
 			return _storage.ContainsKey(key);
@@ -117,13 +120,22 @@ namespace System.Collections.Concurrent
 			return _storage.TryGetValue(key, out value);
 		}
 
+		public bool TryRemove(TKey key, out TValue value)
+		{
+			lock (_storage)
+			{
+				var res = _storage.TryGetValue(key, out value);
+				if (res)
+					_storage.Remove(key);
+
+				return res;
+			}
+		}
+
 		public TValue this[TKey key]
 		{
 			get { return _storage[key]; }
 			set { lock (_storage) _storage[key] = value; }
 		}
-
-		public ICollection<TKey> Keys { get { return _storage.Keys; } }
-		public ICollection<TValue> Values { get { return _storage.Values; } }
 	}
 }

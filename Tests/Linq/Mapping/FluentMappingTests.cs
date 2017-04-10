@@ -196,8 +196,8 @@ namespace Tests.Mapping
 		[Table("Person", IsColumnAttributeRequired = false)]
 		public class TestInheritancePerson
 		{
-			public int PersonID  { get; set; }
-			public Gender Gender { get; set; }
+			public int    PersonID { get; set; }
+			public Gender Gender   { get; set; }
 		}
 
 		public class TestInheritanceMale : TestInheritancePerson
@@ -234,6 +234,26 @@ namespace Tests.Mapping
 				Assert.That(jane, Is.TypeOf<TestInheritanceFemale>());
 
 			}
+		}
+
+		[Test]
+		public void DoubleNameChangeTest()
+		{
+			var ms = new MappingSchema();
+			var b  = ms.GetFluentMappingBuilder();
+
+			b.Entity<MyClass>().HasTableName("Name1");
+
+			var od1 = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.AreEqual("Name1", od1.TableName);
+
+			b.Entity<MyClass>().HasTableName("Name2");
+
+			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.AreEqual("Name2", od2.TableName);
+
 		}
 	}
 }
