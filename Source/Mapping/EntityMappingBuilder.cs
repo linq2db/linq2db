@@ -277,7 +277,7 @@ namespace LinqToDB.Mapping
 					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
 
 				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T))
-					memberInfo = typeof(T).GetPropertyEx(memberInfo.Name);
+					memberInfo = typeof(T).GetMemberEx(memberInfo);
 
 				if (memberInfo == null)
 					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));

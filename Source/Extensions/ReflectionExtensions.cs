@@ -234,6 +234,26 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		/// <summary>
+		/// Returns <see cref="MemberInfo"/> of <paramref name="type"/> described by <paramref name="memberInfo"/>
+		/// It us useful when member's declared and reflected types are not the same
+		/// </summary>
+		/// <remarks>This method searces only properties, fields and methods</remarks>
+		/// <param name="type"><see cref="Type"/> to find member info</param>
+		/// <param name="memberInfo"><see cref="MemberInfo"/> </param>
+		/// <returns><see cref="MemberInfo"/> or null</returns>
+		public static MemberInfo GetMemberEx(this Type type, MemberInfo memberInfo)
+		{
+			switch (memberInfo.MemberType)
+			{
+				case MemberTypes.Property: return type.GetPropertyEx(memberInfo.Name);
+				case MemberTypes.Field   : return type.GetFieldEx   (memberInfo.Name);
+				case MemberTypes.Method  : return type.GetMethodEx  (memberInfo.Name, ((MethodInfo)memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
+				
+				default                  : return null;
+			}
+		}
+
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
 		{
 #if NETFX_CORE || NETSTANDARD
