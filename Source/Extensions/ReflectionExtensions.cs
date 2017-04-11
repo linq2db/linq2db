@@ -244,14 +244,16 @@ namespace LinqToDB.Extensions
 		/// <returns><see cref="MemberInfo"/> or null</returns>
 		public static MemberInfo GetMemberEx(this Type type, MemberInfo memberInfo)
 		{
-			switch (memberInfo.MemberType)
-			{
-				case MemberTypes.Property: return type.GetPropertyEx(memberInfo.Name);
-				case MemberTypes.Field   : return type.GetFieldEx   (memberInfo.Name);
-				case MemberTypes.Method  : return type.GetMethodEx  (memberInfo.Name, ((MethodInfo)memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
-				
-				default                  : return null;
-			}
+			if (memberInfo.IsPropertyEx())
+				return type.GetPropertyEx(memberInfo.Name);
+
+			if (memberInfo.IsFieldEx())
+				return type.GetFieldEx   (memberInfo.Name);
+
+			if (memberInfo.IsMethodEx())
+				return type.GetMethodEx  (memberInfo.Name, ((MethodInfo) memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
+
+			return null;
 		}
 
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)

@@ -27,7 +27,7 @@ namespace LinqToDB.Metadata
 
 		readonly ConcurrentDictionary<MemberInfo,List<Attribute>> _members = new ConcurrentDictionary<MemberInfo,List<Attribute>>();
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
 			List<Attribute> attrs;
@@ -40,23 +40,15 @@ namespace LinqToDB.Metadata
 			if (inherit == false)
 				return Array<T>.Empty;
 
-			var parent    = memberInfo.DeclaringType;
-			var reflected = memberInfo.ReflectedTypeEx();
-
-			if (parent == null || parent == reflected || !parent.IsSameOrParentOf(reflected))
+			var parent = type.BaseTypeEx();
+			if (parent == null || parent == typeof(object) || parent == typeof(ValueType) || parent == typeof(Enum))
 				return Array<T>.Empty;
 
-			var parentMemberInfo = parent.GetMemberEx(memberInfo);
-
-			if (parentMemberInfo == null)
+			var mi = parent.GetMemberEx(memberInfo);
+			if (mi == null)
 				return Array<T>.Empty;
 
-			got = _members.TryGetValue(parentMemberInfo, out attrs);
-
-			if (got)
-				return attrs.OfType<T>().ToArray();
-
-			return Array<T>.Empty;
+			return GetAttributes<T>(parent, mi, inherit);
 		}
 
 		public void AddAttribute(MemberInfo memberInfo, Attribute attribute)

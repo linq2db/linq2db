@@ -9,6 +9,7 @@ using Tests.Model;
 
 namespace Tests.Mapping
 {
+	[TestFixture]
 	public class FluentMappingTests : TestBase
 	{
 		[Table]
@@ -43,6 +44,10 @@ namespace Tests.Mapping
 		}
 
 		class MyInheritedClass : MyBaseClass
+		{
+		}
+
+		class MyInheritedClass2 : MyInheritedClass
 		{
 		}
 
@@ -298,6 +303,27 @@ namespace Tests.Mapping
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
 			Assert.AreEqual(2, ed.Associations.Count);
 			Assert.AreEqual(1, ed.Columns.Count(_ => _.IsPrimaryKey));
+
+		}
+
+		[Test]
+		public void AttributeInheritance2()
+		{
+			var ms = new MappingSchema();
+			var b  = ms.GetFluentMappingBuilder();
+
+			b.Entity<MyInheritedClass>()
+				.Property(_ => _.Id)          .IsPrimaryKey()
+				.Property(_ => _.Assosiation) .HasAttribute(new AssociationAttribute() {ThisKey = "Assosiation.ID", OtherKey = "ID"})
+				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"});
+
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass2));
+			Assert.AreEqual(2, ed.Associations.Count);
+			Assert.AreEqual(1, ed.Columns.Count(_ => _.IsPrimaryKey));
+
+			var ed1 = ms.GetEntityDescriptor(typeof(MyBaseClass));
+			Assert.AreEqual(0, ed1.Associations.Count);
+			Assert.AreEqual(0, ed1.Columns.Count(_ => _.IsPrimaryKey));
 
 		}
 	}

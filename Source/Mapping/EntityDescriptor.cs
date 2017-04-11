@@ -69,7 +69,7 @@ namespace LinqToDB.Mapping
 
 			foreach (var member in TypeAccessor.Members)
 			{
-				var aa = _mappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo, attr => attr.Configuration);
+				var aa = _mappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 				if (aa != null)
 				{
@@ -78,7 +78,7 @@ namespace LinqToDB.Mapping
 					continue;
 				}
 
-				var ca = _mappingSchema.GetAttribute<ColumnAttribute>(member.MemberInfo, attr => attr.Configuration);
+				var ca = _mappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 				if (ca != null)
 				{
@@ -98,8 +98,8 @@ namespace LinqToDB.Mapping
 				}
 				else if (
 					!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type) ||
-					_mappingSchema.GetAttribute<IdentityAttribute>(member.MemberInfo, attr => attr.Configuration) != null ||
-					_mappingSchema.GetAttribute<PrimaryKeyAttribute>(member.MemberInfo, attr => attr.Configuration) != null)
+					_mappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
+					_mappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
 				{
 					var cd = new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member);
 					Columns.Add(cd);
@@ -107,7 +107,7 @@ namespace LinqToDB.Mapping
 				}
 				else
 				{
-					var caa = _mappingSchema.GetAttribute<ColumnAliasAttribute>(member.MemberInfo, attr => attr.Configuration);
+					var caa = _mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 					if (caa != null)
 					{

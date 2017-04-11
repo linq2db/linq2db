@@ -79,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var mexpr  = (MemberExpression)expression;
 							var member = lastMember = mexpr.Member;
-							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member);
+							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedTypeEx(), member);
 
 							if (attr == null)
 								throw new LinqToDBException(

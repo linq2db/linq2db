@@ -53,12 +53,12 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
 			where T : Attribute
 		{
 			if (typeof(T) == typeof(ColumnAttribute))
 			{
-				var attrs = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>(memberInfo, inherit);
+				var attrs = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>(type, memberInfo, inherit);
 
 				if (attrs.Length == 1)
 				{

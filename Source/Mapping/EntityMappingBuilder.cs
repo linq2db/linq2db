@@ -47,7 +47,7 @@ namespace LinqToDB.Mapping
 		public TA[] GetAttributes<TA>(MemberInfo memberInfo)
 			where TA : Attribute
 		{
-			return _builder.GetAttributes<TA>(memberInfo);
+			return _builder.GetAttributes<TA>(typeof(T), memberInfo);
 		}
 
 		public TA[] GetAttributes<TA>(Func<TA,string> configGetter)
@@ -288,7 +288,7 @@ namespace LinqToDB.Mapping
 				{
 					if (overrideAttribute != null)
 					{
-						attr = existingGetter(_builder.MappingSchema.GetAttributes(memberInfo, configGetter));
+						attr = existingGetter(_builder.MappingSchema.GetAttributes(typeof(T), memberInfo, configGetter));
 
 						if (attr != null)
 						{
