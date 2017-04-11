@@ -238,7 +238,7 @@ namespace LinqToDB.Extensions
 		/// Returns <see cref="MemberInfo"/> of <paramref name="type"/> described by <paramref name="memberInfo"/>
 		/// It us useful when member's declared and reflected types are not the same
 		/// </summary>
-		/// <remarks>This method searces only properties, fields and methods</remarks>
+		/// <remarks>This method searches only properties, fields and methods</remarks>
 		/// <param name="type"><see cref="Type"/> to find member info</param>
 		/// <param name="memberInfo"><see cref="MemberInfo"/> </param>
 		/// <returns><see cref="MemberInfo"/> or null</returns>
