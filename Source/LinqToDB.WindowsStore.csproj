@@ -334,6 +334,9 @@
     <Compile Include="SqlQuery\SqlDataType.cs" />
     <Compile Include="SqlQuery\SqlException.cs" />
     <Compile Include="SqlQuery\SqlExpression.cs" />
+    <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
+    <Compile Include="SqlQuery\QueryHelper.cs" />
+    <Compile Include="SqlQuery\SqlExtension.cs" />
     <Compile Include="SqlQuery\SqlField.cs" />
     <Compile Include="SqlQuery\SqlFunction.cs" />
     <Compile Include="SqlQuery\SqlParameter.cs" />
@@ -341,19 +344,16 @@
     <Compile Include="SqlQuery\SqlTableT.cs" />
     <Compile Include="SqlQuery\SqlTableType.cs" />
     <Compile Include="SqlQuery\SqlValue.cs" />
-    <Compile Include="SqlQuery\QueryHelper.cs" />
-    <Compile Include="SqlQuery\SqlAnalyticFunction.cs" />
-    <Compile Include="Sql\Sql.AnalyticFunctionAttribute.cs" />
     <Compile Include="Sql\Sql.Analytic.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.ExtensionAttribute.cs" />
     <Compile Include="Sql\Sql.FunctionAttribute.cs" />
     <Compile Include="Sql\Sql.GroupBy.cs" />
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
-    <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
     <Compile Include="TakeHints.cs" />
   </ItemGroup>
   <ItemGroup>
