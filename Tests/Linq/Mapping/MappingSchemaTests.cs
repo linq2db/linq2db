@@ -223,6 +223,7 @@ namespace Tests.Mapping
 			var ms = new MappingSchema("2");
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -237,6 +238,7 @@ namespace Tests.Mapping
 			var ms = new MappingSchema("2", new MappingSchema("3"));
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -252,6 +254,7 @@ namespace Tests.Mapping
 			var ms = new MappingSchema("3", new MappingSchema("2"));
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -265,6 +268,7 @@ namespace Tests.Mapping
 		public void AttributeTest4()
 		{
 			var attrs = MappingSchema.Default.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length, Is.EqualTo(3));
@@ -274,6 +278,7 @@ namespace Tests.Mapping
 		public void AttributeTest5()
 		{
 			var attrs = MappingSchema.Default.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -304,6 +309,7 @@ namespace Tests.Mapping
 				});
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -327,6 +333,7 @@ namespace Tests.Mapping
 			};
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -346,6 +353,7 @@ namespace Tests.Mapping
 			};
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 

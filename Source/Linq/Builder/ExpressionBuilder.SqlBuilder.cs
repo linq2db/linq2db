@@ -1673,7 +1673,7 @@ namespace LinqToDB.Linq.Builder
 						object mapValue;
 
 						if (!dic.TryGetValue(origValue, out mapValue))
-							return null;
+							mapValue = ((ConstantExpression)value).Value;
 
 						ISqlExpression l, r;
 
@@ -1914,8 +1914,8 @@ namespace LinqToDB.Linq.Builder
 
 		DataType? GetMemberDataType(MemberInfo member)
 		{
-			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member);
-			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member);
+			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedTypeEx(), member);
+			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedTypeEx(), member);
 			var dataType = null as DataType?;
 
 			if (ca != null)
@@ -2629,12 +2629,12 @@ namespace LinqToDB.Linq.Builder
 
 		Sql.ExpressionAttribute GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
 		}
 
 		internal Sql.TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
 		}
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)

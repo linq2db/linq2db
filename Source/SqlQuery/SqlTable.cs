@@ -126,6 +126,7 @@ namespace LinqToDB.SqlQuery
 				var cd = ed[identityField.Name];
 
 				SequenceAttributes = mappingSchema.GetAttributes<SequenceNameAttribute>(
+					cd.MemberAccessor.TypeAccessor.Type,
 					cd.MemberAccessor.MemberInfo, a => a.Configuration);
 			}
 		}
