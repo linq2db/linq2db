@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using System.Collections.Generic;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -7,6 +9,7 @@ using Tests.Model;
 
 namespace Tests.Mapping
 {
+	[TestFixture]
 	public class FluentMappingTests : TestBase
 	{
 		[Table]
@@ -31,6 +34,21 @@ namespace Tests.Mapping
 		class MyClass3
 		{
 			public int ID { get; set; }
+		}
+
+		class MyBaseClass
+		{
+			public int           Id;
+			public MyClass       Assosiation;
+			public List<MyClass> Assosiations;
+		}
+
+		class MyInheritedClass : MyBaseClass
+		{
+		}
+
+		class MyInheritedClass2 : MyInheritedClass
+		{
 		}
 
 		[Test]
@@ -253,6 +271,59 @@ namespace Tests.Mapping
 			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
 
 			Assert.AreEqual("Name2", od2.TableName);
+
+		}
+
+		[Test]
+		public void AssociationInheritance()
+		{
+			var ms = new MappingSchema();
+			var b  = ms.GetFluentMappingBuilder();
+
+			b.Entity<MyInheritedClass>()
+				.Property(_ => _.Id)          .IsPrimaryKey()
+				.Property(_ => _.Assosiation) .HasAttribute(new AssociationAttribute() {ThisKey = "Assosiation.ID", OtherKey = "ID"})
+				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"});
+
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
+			Assert.AreEqual(2, ed.Associations.Count);
+		}
+
+		[Test]
+		public void AttributeInheritance()
+		{
+			var ms = new MappingSchema();
+			var b  = ms.GetFluentMappingBuilder();
+
+			b.Entity<MyBaseClass>()
+				.Property(_ => _.Id)          .IsPrimaryKey()
+				.Property(_ => _.Assosiation) .HasAttribute(new AssociationAttribute() {ThisKey = "Assosiation.ID", OtherKey = "ID"})
+				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"});
+
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
+			Assert.AreEqual(2, ed.Associations.Count);
+			Assert.AreEqual(1, ed.Columns.Count(_ => _.IsPrimaryKey));
+
+		}
+
+		[Test]
+		public void AttributeInheritance2()
+		{
+			var ms = new MappingSchema();
+			var b  = ms.GetFluentMappingBuilder();
+
+			b.Entity<MyInheritedClass>()
+				.Property(_ => _.Id)          .IsPrimaryKey()
+				.Property(_ => _.Assosiation) .HasAttribute(new AssociationAttribute() {ThisKey = "Assosiation.ID", OtherKey = "ID"})
+				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"});
+
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass2));
+			Assert.AreEqual(2, ed.Associations.Count);
+			Assert.AreEqual(1, ed.Columns.Count(_ => _.IsPrimaryKey));
+
+			var ed1 = ms.GetEntityDescriptor(typeof(MyBaseClass));
+			Assert.AreEqual(0, ed1.Associations.Count);
+			Assert.AreEqual(0, ed1.Columns.Count(_ => _.IsPrimaryKey));
 
 		}
 	}

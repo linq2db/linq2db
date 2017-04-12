@@ -254,7 +254,7 @@ namespace LinqToDB.Linq.Builder
 						table.Table.LoadWith = member.NextLoadWith;
 					}
 
-					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo);
+					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
 
 					var ex = BuildExpression(ma, 1, parentObject);
 					var ax = Expression.Assign(
@@ -359,7 +359,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var members = isRecordType ?
 					typeAccessor.Members.Where(m =>
-						IsRecord( Builder.MappingSchema.GetAttributes<Attribute>(m.MemberInfo))) :
+						IsRecord( Builder.MappingSchema.GetAttributes<Attribute>(typeAccessor.Type, m.MemberInfo))) :
 					typeAccessor.Members;
 
 				var loadWith = GetLoadWith();
@@ -374,7 +374,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(member.MemberInfo).FirstOrDefault();
+						var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(typeAccessor.Type, member.MemberInfo).FirstOrDefault();
 						bool isAssociation = assocAttr != null;
 						if (isAssociation)
 						{
