@@ -1,11 +1,9 @@
 ﻿namespace LinqToDB
 {
 	using System;
-	using System.Linq.Expressions;
+	using JetBrains.Annotations;
 
 	using SqlQuery;
-
-	using PN = LinqToDB.ProviderName;
 
 	public static partial class Sql
 	{
@@ -14,23 +12,6 @@
 			None,
 			Distinct,
 			All,
-		}
-
-		public interface IAnalyticFunctionBuilder
-		{
-			string				Configuration { get; }
-			ISqlExpression      GetArgument(int index);
-			ISqlExpression[]    GetArrayArgument(int index);
-			T                   GetValue<T>(int index);
-			SqlAnalyticFunction Function { get; }
-		}
-
-		public static IOver Over
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
 		}
 
 		public enum From
@@ -53,719 +34,722 @@
 			First,
 			Last
 		}
+	
+	}
 
-		private static TR TwoExprDefaultBuilder<TR>(object window)
+	public static class AnalyticFunctions
+	{
+		public const string AggregateFunctionName = "aggregate_function";
+		public const string AnalyticFunctionName  = "analytic_function";
+
+		#region Static Builders
+
+		[UsedImplicitly]
+		static void OrderItemBuilder(Sql.ISqExtensionBuilder builder)
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-			builder.Function.Arguments.Add(builder.GetArgument(1));
-
-			return default(TR);
-		}
-
-		private static TR AggregateExprDefaultBuilder<TR>(object window, string funcName, AggregateModifier modifier)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-
-			switch (builder.GetValue<AggregateModifier>(1))
+			var nulls = builder.GetValue<Sql.NullsPosition>("nulls");
+			switch (nulls)
 			{
-				case AggregateModifier.None :
-					builder.Function.Expression = funcName + "({0})";
+				case Sql.NullsPosition.None :
 					break;
-				case AggregateModifier.Distinct :
-					builder.Function.Expression = funcName + "(DISTINCT {0})";
+				case Sql.NullsPosition.First :
+					builder.Expression = builder.Expression + " NULLS FIRST";
 					break;
-				case AggregateModifier.All :
-					builder.Function.Expression = funcName + "(ALL {0})";
+				case Sql.NullsPosition.Last :
+					builder.Expression = builder.Expression + " NULLS LAST";
 					break;
 				default :
 					throw new ArgumentOutOfRangeException();
 			}
-
-			return default(TR);
 		}
 
-		private static TR SingleExpressionDefaultBuilder<TR>(object window)
+		[UsedImplicitly]
+		static void ApplyAggregateModifier(Sql.ISqExtensionBuilder builder)
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-
-			return default(TR);
+			var modifier = builder.GetValue<Sql.AggregateModifier>("modifier");
+			switch (modifier)
+			{
+				case Sql.AggregateModifier.None :
+					break;
+				case Sql.AggregateModifier.Distinct :
+					builder.AddParameter("modifier", new SqlExtension("DISTINCT"));
+					break;
+				case Sql.AggregateModifier.All :
+					builder.AddParameter("modifier", new SqlExtension("ALL"));
+					break;
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
 		}
 
-		[AnalyticFunction("AVG({0})")]
-		public static TR Average<TR>(this IReadyToFunction window, object expr)
+		[UsedImplicitly]
+		static void ApplyNullsModifier(Sql.ISqExtensionBuilder builder)
 		{
-			return AggregateExprDefaultBuilder<TR>(window, "AVG", AggregateModifier.None);
+			var nulls = builder.GetValue<Sql.Nulls>("nulls");
+			builder.AddParameter("modifier", new SqlExtension(GetNullsStr(nulls)));
 		}
 
-		[AnalyticFunction("AVG({0})")]
-		public static TR Average<TR>(this IReadyToFunction window, object expr, AggregateModifier modifier)
+		static string GetNullsStr(Sql.Nulls nulls)
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			return AggregateExprDefaultBuilder<TR>(window, "AVG", builder.GetValue<AggregateModifier>(1));
+			switch (nulls)
+			{
+				case Sql.Nulls.None :
+					break;
+				case Sql.Nulls.Respect :
+					return "RESPECT NULLS";
+				case Sql.Nulls.Ignore :
+					return "IGNORE NULLS";
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+			return string.Empty;
 		}
 
-		[AnalyticFunction("CORR({0}, {1})")]
-		public static TR Corr<TR>(this IReadyToFunction window, object expr1, object expr2)
+		static string GetFromStr(Sql.From from)
 		{
-			return TwoExprDefaultBuilder<TR>(window);
+			switch (from)
+			{
+				case Sql.From.None :
+					break;
+				case Sql.From.First :
+					return "FROM FIRST";
+				case Sql.From.Last :
+					return "FROM LAST";
+				default :
+					throw new ArgumentOutOfRangeException();
+			}
+			return string.Empty;
 		}
 
-		#region Count
-
-		[AnalyticFunction("COUNT(*)")]
-		public static long Count(this IReadyToFunction window)
+		[UsedImplicitly]
+		static void ApplyFromAndNullsModifier(Sql.ISqExtensionBuilder builder)
 		{
-			throw new NotImplementedException();
-		}
+			var nulls = builder.GetValue<Sql.Nulls>("nulls");
+			var from  = builder.GetValue<Sql.From>("from");
 
-		[AnalyticFunction("COUNT({0})")]
-		public static long Count<TR>(this IReadyToFunction window, TR expr)
-		{
-			return SingleExpressionDefaultBuilder<long>(window);
-		}
+			var fromStr = GetFromStr(from);
+			var nullsStr = GetNullsStr(nulls);
 
-		[AnalyticFunction("COUNT({0})")]
-		public static long Count<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			return AggregateExprDefaultBuilder<long>(window, "COUNT", builder.GetValue<AggregateModifier>(1));
+			builder.AddParameter("from", new SqlExtension(fromStr));
+			builder.AddParameter("nulls", new SqlExtension(nullsStr));
 		}
 
 		#endregion
 
-		[AnalyticFunction("COVAR_POP({0}, {1})")]
-		public static TR CovarPop<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+		#region API Interfaces
+		public interface IReadyToFunction<out TR>
 		{
-			return TwoExprDefaultBuilder<TR>(window);
+			[Sql.Extension("")]
+			TR ToValue();
 		}
 
-		[AnalyticFunction("COVAR_SAMP({0}, {1})")]
-		public static TR CovarSamp<TR>(this IReadyToFunction window, TR expr1, TR expr2)
+		public interface IReadyToFunctionOrOverWithPartition<out TR> : IReadyToFunction<TR>
 		{
-			return TwoExprDefaultBuilder<TR>(window);
+			[Sql.Extension("OVER({query_partition_clause?})", "over")]
+			IOverMayHavePartition<TR> Over();
 		}
 
-		[AnalyticFunction("CUME_DIST()")]
-		public static double CumeDist(this IOrdered window)
+		public interface IOverWithPartitionNeeded<out TR>
 		{
-			throw new NotImplementedException();
+			[Sql.Extension("OVER({query_partition_clause?})", "over")]
+			IOverMayHavePartition<TR> Over();
 		}
 
-		[AnalyticFunction("DENSE_RANK()")]
-		public static decimal DenseRank(this IOrdered window)
+		public interface INeedOrderByAndMaybeOverWithPartition<out TR>
 		{
-			throw new NotImplementedException();
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr}", "order_item")]
+			IOrderedAcceptOverReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr);
+
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedAcceptOverReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr} DESC", "order_item")]
+			IOrderedAcceptOverReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr);
+
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedAcceptOverReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
-		//TODO: FIRST - http://docs.oracle.com/cloud/latest/db112/SQLRF/functions065.htm#SQLRF00641
-
-		[AnalyticFunction("FIRST_VALUE({0})")]
-		public static TR FirstValue<TR>(this IReadyToFunction window, TR expr, Nulls nulls)
+		public interface INeedSingleOrderByAndMaybeOverWithPartition<out TR>
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr}", "order_item")]
+			IReadyToFunctionOrOverWithPartition<TR> OrderBy<TKey>([ExprParameter] TKey expr);
 
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-
-			switch (builder.GetValue<Nulls>(1))
-			{
-				case Nulls.None :
-					break;
-				case Nulls.Respect :
-					builder.Function.Expression = "FIRST_VALUE({0} RESPECT NULLS)";
-					break;
-				case Nulls.Ignore :
-					builder.Function.Expression = "FIRST_VALUE({0} IGNORE NULLS)";
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
-			}
-
-			return default(TR);
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr} DESC", "order_item")]
+			IReadyToFunctionOrOverWithPartition<TR> OrderByDesc<TKey>([ExprParameter] TKey expr);
 		}
 
-		[AnalyticFunction("LAG({0})")]
-		public static TR Lag<TR>(this IOrdered window, TR expr, Nulls nulls)
+		public interface IOrderedAcceptOverReadyToFunction<out TR> : IReadyToFunctionOrOverWithPartition<TR>
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
+			[Sql.Extension("{expr}", "order_item")]
+			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
-			builder.Function.Arguments.Add(builder.GetArgument(0));
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")] 
+			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
-			switch (builder.GetValue<Nulls>(1))
-			{
-				case Nulls.None :
-					break;
-				case Nulls.Respect :
-					builder.Function.Expression = "LAG({0} RESPECT NULLS)";
-					break;
-				case Nulls.Ignore :
-					builder.Function.Expression = "LAG({0} IGNORE NULLS)";
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
-			}
+			[Sql.Extension("{expr} DESC", "order_item")]
+			IOrderedAcceptOverReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
-			return default(TR);
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedAcceptOverReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
-		[AnalyticFunction("LAG")]
-		public static TR Lag<TR>(this IOrdered window, TR expr, Nulls nulls, int offset, int? @default)
+		public interface IOverMayHavePartition<out TR> : IReadyToFunction<TR>
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-			builder.Function.Arguments.Add(builder.GetArgument(2));
-			builder.Function.Arguments.Add(builder.GetArgument(3));
-
-			string expression;
-
-			switch (builder.GetValue<Nulls>(1))
-			{
-				case Nulls.None :
-					expression = "LAG({0}";
-					break;
-				case Nulls.Respect :
-					expression = "LAG({0} RESPECT NULLS";
-					break;
-				case Nulls.Ignore :
-					expression = "LAG({0} IGNORE NULLS";
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
-			}
-
-			expression = expression + ", {1}, {2})";
-			builder.Function.Expression = expression;
-
-			return default(TR);
+			[Sql.Extension("PARTITION BY {expr, ', '}", "query_partition_clause")]
+			IReadyToFunction<TR> PartitionBy([ExprParameter("expr")] params object[] expressions);
 		}
 
-		//TODO: LAST - http://docs.oracle.com/cloud/latest/db112/SQLRF/functions083.htm#SQLRF00653
-
-		[AnalyticFunction("LAST_VALUE({0})")]
-		public static TR LastValue<TR>(this IReadyToFunction window, TR expr, Nulls nulls)
+		public interface IPartitionedMayHaveOrder<out TR> : IReadyToFunction<TR>, INeedsOrderByOnly<TR>
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-
-			switch (builder.GetValue<Nulls>(1))
-			{
-				case Nulls.None :
-					break;
-				case Nulls.Respect :
-					builder.Function.Expression = "LAST_VALUE({0} RESPECT NULLS)";
-					break;
-				case Nulls.Ignore :
-					builder.Function.Expression = "LAST_VALUE({0} IGNORE NULLS)";
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
-			}
-
-			return default(TR);
 		}
 
-		[AnalyticFunction("LEAD({0})")]
-		public static TR Lead<TR>(this IOrdered window, TR expr, Nulls nulls)
+		public interface IOverMayHavePartitionAndOrder<out TR> : IReadyToFunction<TR>, INeedsOrderByOnly<TR>
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-
-			switch (builder.GetValue<Nulls>(1))
-			{
-				case Nulls.None :
-					break;
-				case Nulls.Respect :
-					builder.Function.Expression = "LEAD({0} RESPECT NULLS)";
-					break;
-				case Nulls.Ignore :
-					builder.Function.Expression = "LEAD({0} IGNORE NULLS)";
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
-			}
-
-			return default(TR);
+			[Sql.Extension("PARTITION BY {expr, ', '}", "query_partition_clause")]
+			IPartitionedMayHaveOrder<TR> PartitionBy([ExprParameter("expr")] params object[] expressions);
 		}
 
-		[AnalyticFunction("LEAD({0})")]
-		public static TR Lead<TR>(this IOrdered window, TR expr, Nulls nulls, int offset, int? @default)
+		public interface IAnalyticFunction<out TR>
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-			builder.Function.Arguments.Add(builder.GetArgument(2));
-			builder.Function.Arguments.Add(builder.GetArgument(3));
-
-			string expression;
-
-			switch (builder.GetValue<Nulls>(1))
-			{
-				case Nulls.None :
-					expression = "LEAD({0}";
-					break;
-				case Nulls.Respect :
-					expression = "LEAD({0} RESPECT NULLS";
-					break;
-				case Nulls.Ignore :
-					expression = "LEAD({0} IGNORE NULLS";
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
-			}
-
-			expression = expression + ", {1}, {2})";
-			builder.Function.Expression = expression;
-
-			return default(TR);
+			[Sql.Extension("{analytic_function} OVER({query_partition_clause?}{_}{order_by_clause?}{_}{windowing_clause?})",
+				"over", ChainPrecedence = 10)]
+			IReadyForFullAnalyticClause<TR> Over();
 		}
 
-		//TODO: LISTAGG
-
-//		[AnalyticFunction("LISTAGG({0})")]
-//		public static string ListAgg<TR>(this IReadyToFunction window, TR expr)
-//		{
-//			var builder = window as IAnalyticFunctionBuilder;
-//			if (builder == null)
-//				throw new NotImplementedException();
-//
-//			builder.Function.Arguments.Add(builder.GetArgument(0));
-//			
-//			return default(string);
-//		}
-//
-//		[AnalyticFunction("LISTAGG({0}, {1})")]
-//		public static string ListAgg<TR>(this IReadyToFunction window, TR expr, string delimiter)
-//		{
-//			var builder = window as IAnalyticFunctionBuilder;
-//			if (builder == null)
-//				throw new NotImplementedException();
-//
-//			builder.Function.Arguments.Add(builder.GetArgument(0));
-//			builder.Function.Arguments.Add(builder.GetArgument(1));
-//			
-//			return default(string);
-//		}
-
-		[AnalyticFunction("MAX({0})")]
-		public static TR Max<TR>(this IReadyToFunction window, TR expr)
+		public interface IAnalyticFunctionWithoutWindow<out TR>
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			[Sql.Extension("{analytic_function} OVER({query_partition_clause?}{_}{order_by_clause?})", "over", ChainPrecedence = 10)]
+			IOverMayHavePartitionAndOrder<TR> Over();
 		}
 
-		[AnalyticFunction("MAX({0})")]
-		public static TR Max<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
-		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
+		public interface IAggregateFunction<out TR> : IAnalyticFunction<TR> {}
+		public interface IAggregateFunctionSelfContained<out TR> : IAggregateFunction<TR>, IReadyToFunction<TR> {}
 
-			return AggregateExprDefaultBuilder<TR>(window, "MAX", builder.GetValue<AggregateModifier>(1));
+		public interface IOrderedReadyToFunction<out TR> : IReadyToFunction<TR>
+		{
+			[Sql.Extension("{expr}", "order_item")]
+			IOrderedReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr);
+
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+
+			[Sql.Extension("{expr} DESC", "order_item")]
+			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
+
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
-		[AnalyticFunction("MEDIAN({0})")]
-		public static TR Median<TR>(this INotOrdered window, TR expr)
+		public interface INeedsWithingGroupWithOrderOnly<out TR>
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			[Sql.Extension("WITHIN GROUP ({order_by_clause})", "within_group")]
+			INeedsOrderByOnly<TR> WithinGroup { get; }
 		}
 
-		[AnalyticFunction("MIN({0})")]
-		public static TR Min<TR>(this IReadyToFunction window, TR expr)
+		public interface INeedsWithingGroupWithOrderAndMaybePartition<out TR>
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			[Sql.Extension("WITHIN GROUP ({order_by_clause}){_}{over?}", "within_group")]
+			INeedOrderByAndMaybeOverWithPartition<TR> WithinGroup { get; }
 		}
 
-		[AnalyticFunction("MIN({0})")]
-		public static TR Min<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
+		public interface INeedsWithingGroupWithSingleOrderAndMaybePartition<out TR>
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			return AggregateExprDefaultBuilder<TR>(window, "MIN", builder.GetValue<AggregateModifier>(1));
+			[Sql.Extension("WITHIN GROUP ({order_by_clause}){_}{over?}", "within_group")]
+			INeedSingleOrderByAndMaybeOverWithPartition<TR> WithinGroup { get; }
 		}
 
-		[AnalyticFunction("NTH_VALUE({0}, {1})")]
-		public static TR NthValue<TR>(this IReadyToFunction window, TR expr, int n)
+		public interface INeedsOrderByOnly<out TR>
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr}", "order_item")]
+			IOrderedReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr);
 
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-			builder.Function.Arguments.Add(builder.GetArgument(1));
-			
-			return default(TR);
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr} DESC", "order_item")]
+			IOrderedReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr);
+
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
-		[AnalyticFunction("NTH_VALUE({0}, {1})")]
-		public static TR NthValue<TR>(this IReadyToFunction window, TR expr, int n, From from, Nulls nulls)
+		#region Full Support
+
+		public interface IReadyForSortingWithWindow<out TR>
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr}", "order_item")]
+			IOrderedReadyToWindowing<TR> OrderBy<TKey>([ExprParameter("expr")] TKey keySelector);
 
-			builder.Function.Arguments.Add(builder.GetArgument(0));
-			builder.Function.Arguments.Add(builder.GetArgument(1));
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedReadyToWindowing<TR> OrderBy<TKey>([ExprParameter("expr")] TKey keySelector, Sql.NullsPosition nulls);
 
-			var expression = builder.Function.Expression;
-			switch (builder.GetValue<From>(2))
-			{
-				case From.None :
-					break;
-				case From.First :
-					expression = expression + " FROM FIRST";
-					break;
-				case From.Last :
-					expression = expression + " FROM LAST";
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
-			}
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr} DESC", "order_item")]
+			IOrderedReadyToWindowing<TR> OrderByDesc<TKey>([ExprParameter("expr")] TKey keySelector);
 
-			switch (builder.GetValue<Nulls>(3))
-			{
-				case Nulls.None :
-					break;
-				case Nulls.Respect :
-					expression = expression + " RESPECT NULLS";
-					break;
-				case Nulls.Ignore :
-					expression = expression + " IGNORE NULLS";
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
-			}
-
-			builder.Function.Expression = expression;
-			
-			return default(TR);
+			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedReadyToWindowing<TR> OrderByDesc<TKey>([ExprParameter("expr")] TKey keySelector, Sql.NullsPosition nulls);
 		}
 
-		[AnalyticFunction("NTILE({0})")]
-		public static long NTile(this IReadyToFunction window, int groupCount)
+		public interface IReadyForFullAnalyticClause<out TR> : IReadyToFunction<TR>, IReadyForSortingWithWindow<TR>
 		{
-			return SingleExpressionDefaultBuilder<long>(window);
+			[Sql.Extension("PARTITION BY {expr, ', '}", "query_partition_clause")]
+			IPartitionDefinedReadyForSortingWithWindow<TR> PartitionBy([ExprParameter("expr")] params object[] expressions);
 		}
 
-		[AnalyticFunction("PERCENT_RANK()")]
-		public static long PercentRank(this IReadyToFunction window)
+		public interface IPartitionDefinedReadyForSortingWithWindow<out TR> : IReadyForSortingWithWindow<TR>, IReadyToFunction<TR>
+		{
+		}
+
+		public interface IOrderedReadyToWindowing<out TR> : IReadyToFunction<TR>
+		{
+			[Sql.Extension("ROWS {boundary_clause}", "windowing_clause")]
+			IBoundaryExpected<TR> Rows { get; }
+
+			[Sql.Extension("RANGE {boundary_clause}", "windowing_clause")]
+			IBoundaryExpected<TR> Range { get; }
+
+			[Sql.Extension("{expr}", "order_item")]
+			IOrderedReadyToWindowing<TR> ThenBy<TKey>([ExprParameter] TKey expr);
+
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedReadyToWindowing<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+
+			[Sql.Extension("{expr} DESC", "order_item")]
+			IOrderedReadyToWindowing<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
+
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			IOrderedReadyToWindowing<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+		}
+
+		public interface IBoundaryExpected<out TR>
+		{
+			[Sql.Extension("UNBOUNDED PRECEDING", "boundary_clause")]
+			IReadyToFunction<TR> UnboundedPreceding { get; }
+
+			[Sql.Extension("CURRENT ROW", "boundary_clause")]
+			IReadyToFunction<TR> CurrentRow { get; }
+
+			[Sql.Extension("{value_expr} PRECEDING", "boundary_clause")]
+			IReadyToFunction<TR> ValuePreceding<T>([ExprParameter("value_expr")] T value);
+
+			[Sql.Extension("BETWEEN {start_boundary} AND {end_boundary}", "boundary_clause")]
+			IBetweenStartExpected<TR> Between { get; }
+		}
+
+		public interface IBetweenStartExpected<out TR>
+		{
+			[Sql.Extension("UNBOUNDED PRECEDING", "start_boundary")]
+			IAndExpected<TR> UnboundedPreceding { get; }
+
+			[Sql.Extension("CURRENT ROW", "start_boundary")]
+			IAndExpected<TR> CurrentRow { get; }
+
+			[Sql.Extension("{value_expr} PRECEDING", "start_boundary")]
+			IAndExpected<TR> ValuePreceding<T>([ExprParameter("value_expr")] T value);
+		}
+
+		public interface IAndExpected<out TR>
+		{
+			[Sql.Extension("")]
+			ISecondBoundaryExpected<TR> And { get; }
+		}
+
+		public interface ISecondBoundaryExpected<out TR>
+		{
+			[Sql.Extension("UNBOUNDED FOLLOWING", "end_boundary")]
+			IReadyToFunction<TR> UnboundedFollowing { get; }
+
+			[Sql.Extension("CURRENT ROW", "end_boundary")]
+			IReadyToFunction<TR> CurrentRow { get; }
+
+			[Sql.Extension("{value_expr} PRECEDING", "end_boundary")]
+			IReadyToFunction<TR> ValuePreceding<T>([ExprParameter("value_expr")] T value);
+
+			[Sql.Extension("{value_expr} FOLLOWING", "end_boundary")]
+			IReadyToFunction<TR> ValueFollowing<T>([ExprParameter("value_expr")] T value);
+		}
+
+		#endregion Full Support
+		
+		#endregion API Interfaces
+
+		#region Analytic functions
+
+		[Sql.Extension("AVG({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		//TODO: PERCENTILE_CONT
-//		[AnalyticFunction("PERCENTILE_CONT({0})")]
-//		public static double PercentileCont<T>(this IReadyToFunction window, Expression<Func<T, object>> expr)
-//		{
-//			return SingleExpressionDefaultBuilder<double>(window);
-//		}
-
-		//TODO: PERCENTILE_DISC
-//		[AnalyticFunction("PERCENTILE_DISC({0})")]
-//		public static double PercentileDisc<T>(this IReadyToFunction window, Expression<Func<T, object>> expr)
-//		{
-//			return SingleExpressionDefaultBuilder<double>(window);
-//		}
-
-		[AnalyticFunction("RANK()")]
-		public static long Rank(this IOrdered window)
+		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("RATIO_TO_REPORT({0})")]
-		public static double? RatioToReport<TR>(this INotOrdered window, TR expr)
-		{
-			return SingleExpressionDefaultBuilder<double?>(window);
-		}
-
-		//TODO: regr functions
-//		#region REGR_ (Linear Regression) Functions 
-//
-//		static TR RegrHandler<TR>(this IReadyToFunction window)
-//		{
-//			return TwoExprDefaultBuilder<TR>(window);
-//		}
-//
-//		[AnalyticFunction("REGR_SLOPE({0}, {1})")]
-//		public static TR RegrSlope<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-//		{
-//			return RegrHandler<TR>(window);
-//		}
-//		
-//		[AnalyticFunction("REGR_INTERCEPT({0}, {1})")]
-//		public static TR RegrIntercept<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-//		{
-//			return RegrHandler<TR>(window);
-//		}
-//		
-//		[AnalyticFunction("REGR_COUNT({0}, {1})")]
-//		public static TR RegrCount<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-//		{
-//			return RegrHandler<TR>(window);
-//		}
-//		
-//		[AnalyticFunction("REGR_R2({0}, {1})")]
-//		public static TR RegrR2<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-//		{
-//			return RegrHandler<TR>(window);
-//		}
-//		
-//		[AnalyticFunction("REGR_AVGX({0}, {1})")]
-//		public static TR RegrAvgX<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-//		{
-//			return RegrHandler<TR>(window);
-//		}
-//		
-//		[AnalyticFunction("REGR_AVGY({0}, {1})")]
-//		public static TR RegrAvgY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-//		{
-//			return RegrHandler<TR>(window);
-//		}
-//		
-//		[AnalyticFunction("REGR_SXX({0}, {1})")]
-//		public static TR RegrSXX<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-//		{
-//			return RegrHandler<TR>(window);
-//		}
-//		
-//		[AnalyticFunction("REGR_SYY({0}, {1})")]
-//		public static TR RegrSYY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-//		{
-//			return RegrHandler<TR>(window);
-//		}
-//		
-//		[AnalyticFunction("REGR_SXY({0}, {1})")]
-//		public static TR RegrSXY<TR>(this IReadyToFunction window, TR expr1, TR expr2)
-//		{
-//			return RegrHandler<TR>(window);
-//		}
-//		
-//		#endregion
-
-		[AnalyticFunction("ROW_NUMBER()")]
-		public static long RowNumber(this IReadyToFunction window)
+		[Sql.Extension("CORR({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Corr<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("STDDEV({0})")]
-		public static TR StdDev<TR>(this IReadyToFunction window, TR expr)
+		#region Count
+
+		[Sql.Extension("COUNT(*)", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext)
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			throw new NotImplementedException();
+		}
+		[Sql.Extension("COUNT({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Count<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
+		{
+			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("STDDEV({0})")]
-		public static TR StdDev<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			return AggregateExprDefaultBuilder<TR>(window, "STDDEV", builder.GetValue<AggregateModifier>(1));
+			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("STDDEV_POP({0})")]
-		public static TR StdDevPop<TR>(this IReadyToFunction window, TR expr)
+		#endregion
+
+		[Sql.Extension("COVAR_POP({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> CovarPop<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("STDDEV_SAMP({0})")]
-		public static TR StdDevSamp<TR>(this IReadyToFunction window, TR expr)
+		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> CovarSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			throw new NotImplementedException();
+		}
+		
+		[Sql.Extension("CUME_DIST({expr, ', '}) {within_group}", Names = AggregateFunctionName, ChainPrecedence = 1)]
+		public static INeedsWithingGroupWithOrderOnly<TR> CumeDist<TR>(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
+		{
+			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("SUM({0})")]
-		public static TR Sum<TR>(this IReadyToFunction window, TR expr)
+		[Sql.Extension("CUME_DIST()", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<TR> CumeDist<TR>(this Sql.ISqlExtension ext)
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("SUM({0})")]
-		public static TR Sum<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
+		[Sql.Extension("DENSE_RANK({expr1}, {expr2}) {within_group}", Names = AggregateFunctionName, ChainPrecedence = 1)]
+		public static INeedsWithingGroupWithOrderOnly<long> DenseRank(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			return AggregateExprDefaultBuilder<TR>(window, "SUM", builder.GetValue<AggregateModifier>(1));
+			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("VAR_POP({0})")]
-		public static TR VarPop<TR>(this IReadyToFunction window, TR expr)
+		[Sql.Extension("DENSE_RANK()", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<long> DenseRank(this Sql.ISqlExtension ext)
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("VAR_SAMP({0})")]
-		public static TR VarSamp<TR>(this IReadyToFunction window, TR expr)
+		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", Names = AggregateFunctionName + "," + AnalyticFunctionName, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("VARIANCE({0})")]
-		public static TR Variance<TR>(this IReadyToFunction window, TR expr)
+		[Sql.Extension("LAG({expr}{_}{modifier?})", Names = AggregateFunctionName + "," + AnalyticFunctionName, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
-			return SingleExpressionDefaultBuilder<TR>(window);
+			throw new NotImplementedException();
 		}
 
-		[AnalyticFunction("VARIANCE({0})")]
-		public static TR Variance<TR>(this IReadyToFunction window, TR expr, AggregateModifier modifier)
+		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", Names = AggregateFunctionName + "," + AnalyticFunctionName, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
 		{
-			var builder = window as IAnalyticFunctionBuilder;
-			if (builder == null)
-				throw new NotImplementedException();
-
-			return AggregateExprDefaultBuilder<TR>(window, "VARIANCE", builder.GetValue<AggregateModifier>(1));
+			throw new NotImplementedException();
 		}
 
-		public interface IReadyToFunction
+		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", Names = AggregateFunctionName + "," + AnalyticFunctionName, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
+			throw new NotImplementedException();
 		}
 
-		public interface INotOrdered
+		[Sql.Extension("LEAD({expr}{_}{modifier?})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
+			throw new NotImplementedException();
 		}
 
-		public interface IReadyToWindow
+		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", Names = AggregateFunctionName + "," + AnalyticFunctionName, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
 		{
-			IWindowFrameExtent Rows { get; }
-			IWindowFrameExtent Range { get; }
+			throw new NotImplementedException();
 		}
 
-		public interface IOver : IReadyToOrderWithoutPartition, IReadyToFunction
+		[Sql.Extension("LISTAGG({expr}) {within_group}", Names = AggregateFunctionName, ChainPrecedence = 1)]
+		public static INeedsWithingGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
-			IPartitionedReadyToOrder PartitionBy(params object[] expressions);
+			throw new NotImplementedException();
+		}
+		[Sql.Extension("LISTAGG({expr}, {delimiter}) {within_group}", Names = AggregateFunctionName, ChainPrecedence = 1)]
+		public static INeedsWithingGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] string delimiter)
+		{
+			throw new NotImplementedException();
 		}
 
-		public interface IPartitioned
+		[Sql.Extension("MAX({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
+			throw new NotImplementedException();
 		}
 
-		public interface IOrdered
+		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
 		{
-			
+			throw new NotImplementedException();
 		}
 
-		public interface IReadyToOrderWithoutPartition : INotOrdered
+		[Sql.Extension("MEDIAN({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IReadyToFunctionOrOverWithPartition<T> Median<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
-			IOrderedWithoutPartition OrderBy<TKey>(TKey keySelector);
-			IOrderedWithoutPartition OrderBy<TKey>(TKey keySelector, NullsPosition nulls);
-
-			IOrderedWithoutPartition OrderByDesc<TKey>(TKey keySelector);
-			IOrderedWithoutPartition OrderByDesc<TKey>(TKey keySelector, NullsPosition nulls);
-
-			IOrderedWithoutPartition OrderSiblingsBy<TKey>(TKey keySelector);
-			IOrderedWithoutPartition OrderSiblingsBy<TKey>(TKey keySelector, NullsPosition nulls);
-
-			IOrderedWithoutPartition OrderSiblingsByDesc<TKey>(TKey keySelector);
-			IOrderedWithoutPartition OrderSiblingsByDesc<TKey>(TKey keySelector, NullsPosition nulls);
+			throw new NotImplementedException();
 		}
 
-		public interface IOrderedWithoutPartition : IReadyToFunction, IOrdered
+		[Sql.Extension("MIN({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
-			IOrderedWithoutPartition ThenBy<TKey>(TKey keySelector);
-			IOrderedWithoutPartition ThenBy<TKey>(TKey keySelector, NullsPosition nulls);
-
-			IOrderedWithoutPartition ThenByDesc<TKey>(TKey keySelector);
-			IOrderedWithoutPartition ThenByDesc<TKey>(TKey keySelector, NullsPosition nulls);
+			throw new NotImplementedException();
 		}
 
-		public interface IPartitionedReadyToOrder : IPartitioned, INotOrdered, IReadyToFunction
+		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
 		{
-			IPartitionOrdered OrderBy<TKey>(TKey keySelector);
-			IPartitionOrdered OrderBy<TKey>(TKey keySelector, NullsPosition nulls);
-
-			IPartitionOrdered OrderByDesc<TKey>(TKey keySelector);
-			IPartitionOrdered OrderByDesc<TKey>(TKey keySelector, NullsPosition nulls);
-
-			IPartitionOrdered OrderSiblingsBy<TKey>(TKey keySelector);
-			IPartitionOrdered OrderSiblingsBy<TKey>(TKey keySelector, NullsPosition nulls);
-
-			IPartitionOrdered OrderSiblingsByDesc<TKey>(TKey keySelector);
-			IPartitionOrdered OrderSiblingsByDesc<TKey>(TKey keySelector, NullsPosition nulls);
+			throw new NotImplementedException();
 		}
 
-		public interface IPartitionOrdered : IReadyToFunction, IPartitioned, IReadyToWindow, IOrdered
+		[Sql.Extension("NTH_VALUE({expr}, {n})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> NthValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] long n)
 		{
-			IPartitionOrdered ThenBy<TKey>(TKey keySelector);
-			IPartitionOrdered ThenBy<TKey>(TKey keySelector, NullsPosition nulls);
-
-			IPartitionOrdered ThenByDesc<TKey>(TKey keySelector);
-			IPartitionOrdered ThenByDesc<TKey>(TKey keySelector, NullsPosition nulls);
+			throw new NotImplementedException();
 		}
 
-		public interface IWindowFrameExtent
+		[Sql.Extension("NTH_VALUE({expr}, {n}){_}{from?}{_}{nulls?}", Names = AggregateFunctionName + "," + AnalyticFunctionName, BuilderMethod = "ApplyFromAndNullsModifier", ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> NthValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] long n, Sql.From from, Sql.Nulls nulls)
 		{
-			IReadyToFunction UnboundedPreceding { get; }
-			IWindowFrameBetween Between { get; }
+			throw new NotImplementedException();
 		}
 
-		public interface IWindowFrameBetween
+		[Sql.Extension("NTILE({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<T> NTile<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
-			IWindowFrameBetweenNext UnboundedPreceding { get; }
-			IValueExprFirst Value<T>(T value);
+			throw new NotImplementedException();
 		}
 
-		public interface IValueExprFirst
+		[Sql.Extension("PERCENT_RANK({expr, ', '}) {within_group}", Names = AggregateFunctionName, ChainPrecedence = 1)]
+		public static INeedsWithingGroupWithOrderOnly<T> PercentRank<T>(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
 		{
-			IWindowFrameBetweenNext Preceding { get; }
-			IWindowFrameBetweenNext Following { get; }
-			IWindowFrameFollowing And { get; }
+			throw new NotImplementedException();
 		}
 
-		public interface IWindowFrameBetweenNext
+		[Sql.Extension("PERCENT_RANK()", Names = AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<T> PercentRank<T>(this Sql.ISqlExtension ext)
 		{
-			IWindowFrameFollowing And { get; }
+			throw new NotImplementedException();
 		}
 
-		public interface IWindowFrameFollowing
+		[Sql.Extension("PERCENTILE_CONT({expr}) {within_group}", Names = AnalyticFunctionName, ChainPrecedence = 1)]
+		public static INeedsWithingGroupWithSingleOrderAndMaybePartition<T> PercentileCont<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
-			IReadyToFunction UnboundedFollowing { get; }
-			IReadyToFunction CurrentRow { get; }
-			IValueExprSecond Value<T>(T value);
+			throw new NotImplementedException();
 		}
 
-		public interface IValueExprSecond
+		//TODO: check nulls support when ordering
+		[Sql.Extension("PERCENTILE_DISC({expr}) {within_group}", Names = AnalyticFunctionName, ChainPrecedence = 1)]
+		public static INeedsWithingGroupWithSingleOrderAndMaybePartition<T> PercentileDisc<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
-			IReadyToFunction Preceding { get; }
-			IReadyToFunction Following { get; }
+			throw new NotImplementedException();
 		}
 
+		[Sql.Extension("RANK({expr, ', '}) {within_group}", Names = AggregateFunctionName, ChainPrecedence = 1)]
+		public static INeedsWithingGroupWithOrderOnly<long> Rank(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("RANK()", Names = AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<long> Rank(this Sql.ISqlExtension ext)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("RATIO_TO_REPORT({expr}) {over}", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IOverWithPartitionNeeded<TR> RatioToReport<TR>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		#region REGR_ function
+
+		[Sql.Extension("REGR_SLOPE({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> RegrSlope<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("REGR_INTERCEPT({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> RegrIntercept<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("REGR_COUNT({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<long> RegrCount(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("REGR_R2({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> RegrR2<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("REGR_AVGX({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> RegrAvgX<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("REGR_AVGY({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> RegrAvgY<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		// ReSharper disable once InconsistentNaming
+		[Sql.Extension("REGR_SXX({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> RegrSXX<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		// ReSharper disable once InconsistentNaming
+		[Sql.Extension("REGR_SYY({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> RegrSYY<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		// ReSharper disable once InconsistentNaming
+		[Sql.Extension("REGR_SXY({expr1}, {expr2})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> RegrSXY<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		[Sql.Extension("ROW_NUMBER()", Names = AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAnalyticFunctionWithoutWindow<long> RowNumber(this Sql.ISqlExtension ext)
+		{
+			throw new NotImplementedException();
+		}
+
+		//TODO: support of aggreagate functions
+//		[Sql.Extension("STDDEV({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+//		public static IAggregateFunctionSelfContained<double> StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
+//		{
+//			throw new NotImplementedException();
+//		}
+
+		[Sql.Extension("STDDEV({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("STDDEV({modifier?}{_}{expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, BuilderMethod = "ApplyAggregateModifier", ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("STDDEV_POP({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> StdDevPop<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("STDDEV_SAMP({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> StdDevSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("SUM({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Sum<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("SUM({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Sum<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("VAR_POP({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> VarPop<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("VAR_SAMP({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> VarSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("VARIANCE({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1)]
+		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("{aggregate_function} KEEP (DENSE_RANK FIRST {order_by_clause}){_}{over?}", ChainPrecedence = 10)]
+		public static INeedOrderByAndMaybeOverWithPartition<TR> KeepFirst<TR>(this IAggregateFunction<TR> ext)
+		{
+			throw new NotImplementedException();
+		}
+		
+		[Sql.Extension("{aggregate_function} KEEP (DENSE_RANK LAST {order_by_clause}){_}{over?}", ChainPrecedence = 10)]
+		public static INeedOrderByAndMaybeOverWithPartition<TR> KeepLast<TR>(this IAggregateFunction<TR> ext)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion Analytic functions
 	}
 
 }

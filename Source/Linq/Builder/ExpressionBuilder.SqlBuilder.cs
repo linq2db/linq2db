@@ -897,7 +897,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (attr.HasPureConvertor)
 							{
-								return Convert(context, attr.GetExpression(e.Method, e.Arguments.ToArray(), _ => ConvertToSql(context, _)));
+								return Convert(context, attr.GetExpression(e, _ => ConvertToSql(context, _)));
 							}
 
 							var parms = new List<ISqlExpression>();

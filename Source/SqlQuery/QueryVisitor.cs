@@ -44,55 +44,18 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.SqlAnalyticFunction:
+				case QueryElementType.SqlExtension:
 					{
-						var func = (SqlAnalyticFunction)element;
-						foreach (var p in func.Arguments) Visit1(p);
-						Visit1(func.Analytic);
+						var ext = (SqlExtension)element;
+						foreach (var p in ext.GetParameters())
+							Visit1(p);
 						break;
 					}
 
-				case QueryElementType.AnalyticClause:
+				case QueryElementType.SqlExtensionParam:
 					{
-						var analytic = (SqlAnalyticFunction.AnalyticClause) element;
-						Visit1(analytic.QueryPartition);
-						Visit1(analytic.OrderBy);
-						Visit1(analytic.Windowing);
-						break;
-					}
-
-				case QueryElementType.QueryPartitionClause :
-					{
-						var partition = (SqlAnalyticFunction.QueryPartitionClause) element;
-						foreach (var p in partition.Arguments) Visit1(p);
-						break;
-					}
-
-				case QueryElementType.AnalyticOrderByClause :
-					{
-						var order = (SqlAnalyticFunction.OrderByClause) element;
-						foreach (var p in order.Items) Visit1(p);
-						break;
-					}
-
-				case QueryElementType.AnalyticOrderByItem :
-					{
-						Visit1(((SqlAnalyticFunction.OrderByItem) element).Expression);
-						break;
-					}
-
-				case QueryElementType.WindowingClause :
-					{
-						var window = (SqlAnalyticFunction.WindowingClause) element;
-						Visit1(window.Start);
-						Visit1(window.End);
-						break;
-					}
-
-				case QueryElementType.WindowFrameBound :
-					{
-						var bound = (SqlAnalyticFunction.WindowFrameBound) element;
-						Visit1(bound.ValueExpression);
+						var param = (SqlExtension.ExtensionParam)element;
+						Visit1(param.Expression);
 						break;
 					}
 
@@ -409,55 +372,18 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.SqlAnalyticFunction:
+				case QueryElementType.SqlExtension:
 					{
-						var func = (SqlAnalyticFunction)element;
-						foreach (var p in func.Arguments) Visit2(p);
-						Visit2(func.Analytic);
+						var ext = (SqlExtension)element;
+						foreach (var p in ext.GetParameters())
+							Visit2(p);
 						break;
 					}
 
-				case QueryElementType.AnalyticClause:
+				case QueryElementType.SqlExtensionParam:
 					{
-						var analytic = (SqlAnalyticFunction.AnalyticClause) element;
-						Visit2(analytic.QueryPartition);
-						Visit2(analytic.OrderBy);
-						Visit2(analytic.Windowing);
-						break;
-					}
-
-				case QueryElementType.QueryPartitionClause :
-					{
-						var partition = (SqlAnalyticFunction.QueryPartitionClause) element;
-						foreach (var p in partition.Arguments) Visit2(p);
-						break;
-					}
-
-				case QueryElementType.AnalyticOrderByClause :
-					{
-						var order = (SqlAnalyticFunction.OrderByClause) element;
-						foreach (var p in order.Items) Visit2(p);
-						break;
-					}
-
-				case QueryElementType.AnalyticOrderByItem :
-					{
-						Visit2(((SqlAnalyticFunction.OrderByItem) element).Expression);
-						break;
-					}
-
-				case QueryElementType.WindowingClause :
-					{
-						var window = (SqlAnalyticFunction.WindowingClause) element;
-						Visit2(window.Start);
-						Visit2(window.End);
-						break;
-					}
-
-				case QueryElementType.WindowFrameBound :
-					{
-						var bound = (SqlAnalyticFunction.WindowFrameBound) element;
-						Visit2(bound.ValueExpression);
+						var param = (SqlExtension.ExtensionParam)element;
+						Visit2(param.Expression);
 						break;
 					}
 
@@ -821,48 +747,16 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.Union             : return Find(((SelectQuery.Union)             element).SelectQuery,     find);
 				case QueryElementType.FuncLikePredicate : return Find(((SelectQuery.Predicate.FuncLike)element).Function,        find);
 
-				case QueryElementType.SqlAnalyticFunction:
+				case QueryElementType.SqlExtension:
 					{
-						var func = (SqlAnalyticFunction)element;
-						return Find(func.Arguments, find) ?? Find(func.Analytic, find);
+						var ext = (SqlExtension)element;
+						return Find(ext.GetParameters(), find);
 					}
 
-				case QueryElementType.AnalyticClause:
+				case QueryElementType.SqlExtensionParam:
 					{
-						var analytic = (SqlAnalyticFunction.AnalyticClause) element;
-						return	Find(analytic.QueryPartition, find) ??
-								Find(analytic.OrderBy, find) ??
-								Find(analytic.Windowing, find);
-					}
-
-				case QueryElementType.QueryPartitionClause :
-					{
-						var partition = (SqlAnalyticFunction.QueryPartitionClause) element;
-						return Find(partition.Arguments, find);
-					}
-
-				case QueryElementType.AnalyticOrderByClause :
-					{
-						var order = (SqlAnalyticFunction.OrderByClause) element;
-						return Find(order.Items, find);
-					}
-
-				case QueryElementType.AnalyticOrderByItem :
-					{
-						return Find(((SqlAnalyticFunction.OrderByItem) element).Expression, find);
-					}
-
-				case QueryElementType.WindowingClause :
-					{
-						var window = (SqlAnalyticFunction.WindowingClause) element;
-						return	Find(window.Start, find) ??
-								Find(window.End, find);
-					}
-
-				case QueryElementType.WindowFrameBound :
-					{
-						var bound = (SqlAnalyticFunction.WindowFrameBound) element;
-						return Find(bound.ValueExpression, find);
+						var param = (SqlExtension.ExtensionParam)element;
+						return Find(param.Expression, find);
 					}
 
 				case QueryElementType.SqlBinaryExpression:
@@ -1040,83 +934,25 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.SqlAnalyticFunction:
+				case QueryElementType.SqlExtension:
 					{
-						var func     = (SqlAnalyticFunction)element;
-						var args     = Convert(func.Arguments, action);
-						var analytic = Convert(func.Analytic, action);
-
-						if (args != null && !ReferenceEquals(args, func.Arguments) || !ReferenceEquals(analytic, func.Analytic))
-							newElement = new SqlAnalyticFunction(func.SystemType, func.Expression, func.Precedence, func.Analytic, args);
+						var ext      = (SqlExtension)element;
+						var argsPrev = ext.GetParameters();
+						var args     = Convert(argsPrev, action);
+						
+						if (args != null && !ReferenceEquals(args, argsPrev))
+							newElement = new SqlExtension(ext.SystemType, ext.Expr, ext.Precedence, ext.ChainPrecedence, args);
 
 						break;
 					}
 
-				case QueryElementType.AnalyticClause:
+				case QueryElementType.SqlExtensionParam:
 					{
-						var analytic  = (SqlAnalyticFunction.AnalyticClause) element;
-						var partition = Convert(analytic.QueryPartition, action);
-						var orderby   = Convert(analytic.OrderBy,        action);
-						var window    = Convert(analytic.Windowing,      action);
-
-						if (!ReferenceEquals(partition, analytic.QueryPartition) || !ReferenceEquals(orderby, analytic.OrderBy)  || !ReferenceEquals(window, analytic.Windowing))
-							newElement = new SqlAnalyticFunction.AnalyticClause(partition, orderby, window);
-
-						break;
-					}
-
-				case QueryElementType.QueryPartitionClause :
-					{
-						var partition = (SqlAnalyticFunction.QueryPartitionClause) element;
-						var arguments = Convert(partition.Arguments, action);
-
-						if (arguments != null && !ReferenceEquals(arguments, partition.Arguments))
-							newElement = new SqlAnalyticFunction.QueryPartitionClause(arguments);
-
-						break;
-					}
-
-				case QueryElementType.AnalyticOrderByClause :
-					{
-						var order = (SqlAnalyticFunction.OrderByClause) element;
-						var items = Convert(order.Items, action);
-
-						if (items != null && !ReferenceEquals(items, order.Items))
-							newElement = new SqlAnalyticFunction.OrderByClause(order.Siblings, items);
-
-						break;
-					}
-
-				case QueryElementType.AnalyticOrderByItem :
-					{
-						var orderByItem = (SqlAnalyticFunction.OrderByItem) element;
-						var expr        = Convert(orderByItem.Expression, action);
-
-						if (!ReferenceEquals(expr, orderByItem.Expression))
-							return new SqlAnalyticFunction.OrderByItem(expr, orderByItem.IsDescending, orderByItem.Nulls);
-
-						break;
-					}
-
-				case QueryElementType.WindowingClause :
-					{
-						var window = (SqlAnalyticFunction.WindowingClause) element;
-						var start  = Convert(window.Start, action);
-						var end    = Convert(window.End,  action);
-
-						if (!ReferenceEquals(start, window.Start) || !ReferenceEquals(end, window.End))
-							newElement = new SqlAnalyticFunction.WindowingClause(window.BasedOn, start, end);
-
-						break;
-					}
-
-				case QueryElementType.WindowFrameBound :
-					{
-						var bound = (SqlAnalyticFunction.WindowFrameBound) element;
-						var expr  = Convert(bound.ValueExpression, action);
-
-						if (!ReferenceEquals(expr, bound.ValueExpression))
-							newElement = new SqlAnalyticFunction.WindowFrameBound(bound.Kind, expr);
+						var param    = (SqlExtension.ExtensionParam)element;
+						var expr     = Convert(param.Expression, action);
+						
+						if (!ReferenceEquals(expr, param.Expression))
+							newElement = new SqlExtension.ExtensionParam(param.Name, expr);
 
 						break;
 					}

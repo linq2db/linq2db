@@ -1944,8 +1944,8 @@ namespace LinqToDB.SqlProvider
 					BuildFunction((SqlFunction)expr);
 					break;
 
-				case QueryElementType.SqlAnalyticFunction:
-					BuildAnalyticFunction((SqlAnalyticFunction)expr);
+				case QueryElementType.SqlExtension:
+					BuildSqlExtension((SqlExtension)expr);
 					break;
 
 				case QueryElementType.SqlParameter:
@@ -2124,191 +2124,65 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		#region BuildAnalyticFunction
-
-		void BuildWindowBoundExpression(SqlAnalyticFunction.WindowFrameBound bound)
+		#region BuildExtension
+		
+		protected virtual void BuildSqlExtension(SqlExtension extension)
 		{
-			switch (bound.Kind)
+			var sb = new StringBuilder();
+			var resolvedParams = new Dictionary<SqlExtension.ExtensionParam, string>();
+			var resolving = new HashSet<SqlExtension.ExtensionParam>();
+
+			Func<string, string, string> valueProvider = null;
+			Stack<SqlExtension> current = new Stack<SqlExtension>();
+			valueProvider = (name, delimiter) =>
 			{
-				case SqlAnalyticFunction.LimitExpressionKind.UnboundedPreceding :
-					StringBuilder.Append(" UNBOUNDED PRECEDING");
-					break;
-				case SqlAnalyticFunction.LimitExpressionKind.ValueExprPreceding :
-					if (bound.ValueExpression == null)
-						throw new InvalidOperationException("Missed ValueExpression for Boundary Point in Analytic function");
-					StringBuilder.Append(" ");
-					BuildExpression(bound.ValueExpression);
-					StringBuilder.Append(" PRECEDING");
-					break;
-				case SqlAnalyticFunction.LimitExpressionKind.CurrentRow :
-					StringBuilder.Append(" CURRENT ROW");
-					break;
-				case SqlAnalyticFunction.LimitExpressionKind.UnboundedFollowing :
-					StringBuilder.Append(" UNBOUNDED FOLLOWING");
-					break;
-				case SqlAnalyticFunction.LimitExpressionKind.ValueExprFollowing :
-					if (bound.ValueExpression == null)
-						throw new InvalidOperationException("Missed ValueExpression for Boundary Point in Analytic function");
-					StringBuilder.Append(" ");
-					BuildExpression(bound.ValueExpression);
-					StringBuilder.Append(" FOLLOWING");
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
-			}
-		}
-
-		protected virtual void BuildAnalyticClause(SqlAnalyticFunction.AnalyticClause clause)
-		{
-			StringBuilder.Append(" OVER (");
-
-			var spaceNeeded = false;
-
-			if (clause.QueryPartition != null && clause.QueryPartition.Arguments.Length > 0)
-			{
-				StringBuilder.Append("PARTITION BY ");
-
-				var isFirst = true;
-				foreach (var arg in clause.QueryPartition.Arguments)
+				var found = extension.GetParametersByName(name);
+				if (current.Count != 0)
+					found = current.Peek().GetParametersByName(name).Concat(found);
+				string result = null;
+				foreach (var p in found)
 				{
-					if (!isFirst)
-						StringBuilder.Append(", ");
-
-					BuildExpression(arg);
-
-					isFirst = false;
-				}
-
-				spaceNeeded = true;
-			}
-
-			if (clause.OrderBy != null && clause.OrderBy.Items.Count > 0)
-			{
-				if (spaceNeeded)
-					StringBuilder.Append(" ");
-
-				StringBuilder.Append("ORDER ");
-				if (clause.OrderBy.Siblings)
-					StringBuilder.Append("SIBLINGS ");
-				StringBuilder.Append("BY ");
-
-				var isFirst = true;
-				foreach (var item in clause.OrderBy.Items)
-				{
-					if (!isFirst)
-						StringBuilder.Append(", ");
-
-					BuildExpression(item.Expression);
-					if (item.IsDescending)
-						StringBuilder.Append(" DESC");
-
-					switch (item.Nulls)
+					string paramValue;
+					if (!resolvedParams.TryGetValue(p, out paramValue))
 					{
-						case Sql.NullsPosition.First :
-							StringBuilder.Append(" NULLS FIRST");
-							break;
-						case Sql.NullsPosition.Last :
-							StringBuilder.Append(" NULLS LAST");
-							break;
-					}
 
-					isFirst = false;
-				}
+						if (resolving.Contains(p))
+							throw new InvalidOperationException("Circular reference");
 
-				spaceNeeded = true;
-			}
-
-			if (clause.Windowing != null && clause.Windowing.Start != null)
-			{
-				//TODO: Check syntax
-
-				if (spaceNeeded)
-					StringBuilder.Append(" ");
-
-				switch (clause.Windowing.BasedOn)
-				{
-					case SqlAnalyticFunction.BasedOn.Rows :
-						StringBuilder.Append("ROWS");
-						break;
-					case SqlAnalyticFunction.BasedOn.Range :
-						StringBuilder.Append("RANGE");
-						break;
-					default :
-						throw new ArgumentOutOfRangeException();
-				}
-
-				if (clause.Windowing.Start != null && clause.Windowing.End != null)
-				{
-					StringBuilder.Append(" BETWEEN");
-				}
-
-				BuildWindowBoundExpression(clause.Windowing.Start);
-
-				if (clause.Windowing.Start != null && clause.Windowing.End != null)
-				{
-					StringBuilder.Append(" AND");
-				}
-
-				if (clause.Windowing.End != null)
-					BuildWindowBoundExpression(clause.Windowing.End);
-			}
-
-			StringBuilder.Append(")");
-		}
-
-		protected virtual void BuildAnalyticFunction(SqlAnalyticFunction func)
-		{
-			if (func.Arguments.Count == 0)
-			{
-				StringBuilder.Append(func.Expression);
-			}
-			else
-			{
-				string pattern = @"\{(\d*)((..)(\d*),\s*'(.*?)')?}";
-				var regex = new Regex(pattern);
-				var sb = new StringBuilder();
-				var formatted = regex.Replace(func.Expression, m =>
-				{
-					WithStringBuilder(sb, () =>
-					{
-						sb.Length = 0;
-						if (m.Groups.Count == 1 || m.Groups[4].Value != "..")
-							// {index}
-							BuildExpression(GetPrecedence(func), func.Arguments[int.Parse(m.Groups[1].Value)]);
+						resolving.Add(p);
+						var ext = p.Expression as SqlExtension;
+						if (ext != null)
+						{
+							current.Push(ext);
+							paramValue = SqlExtension.ResolveExpressionValues(ext.Expr, valueProvider);
+							current.Pop();
+						}
 						else
 						{
-							// {start..[end], 'delimimter'}
-							var start = int.Parse(m.Groups[1].Value);
-							var currentArgs = func.Arguments.AsEnumerable();
-							if (start > 0)
-								currentArgs = currentArgs.Skip(start);
-
-							int end;
-							if (int.TryParse(m.Groups[3].Value, out end))
-							{
-								currentArgs = currentArgs.Take(end - start);
-							}
-
-							var delimiter = m.Groups[4].Value;
-							var isFirst = true;
-							foreach (var arg in currentArgs)
-							{
-								if (!isFirst)
-									sb.Append(delimiter);
-								BuildExpression(GetPrecedence(func), arg);
-								isFirst = false;
-							}
-
+							sb.Length = 0;
+							WithStringBuilder(sb, () => BuildExpression(GetPrecedence(p.Expression), p.Expression));
+							paramValue = sb.ToString();
 						}
-					});
-					return sb.ToString();
-				});
-        
-				StringBuilder.AppendFormat(formatted);
-			}
 
-			if (func.Analytic != null)
-				BuildAnalyticClause(func.Analytic);
+						resolvedParams.Add(p, paramValue);
+
+						if (string.IsNullOrEmpty(paramValue))
+							continue;
+
+						if (!string.IsNullOrEmpty(result))
+							result = result + delimiter;
+						result = result + paramValue;
+					}
+
+					if (delimiter == null && !string.IsNullOrEmpty(result))
+						break;
+				}
+
+				return result;
+			};
+
+			var str = SqlExtension.ResolveExpressionValues(extension.Expr, valueProvider);
+			StringBuilder.Append(str);
 		}
 
 		#endregion

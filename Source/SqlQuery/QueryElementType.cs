@@ -43,12 +43,7 @@ namespace LinqToDB.SqlQuery
 			Union,
 			CreateTableStatement,
 
-		SqlAnalyticFunction,
-			AnalyticClause,
-				AnalyticOrderByClause,
-				AnalyticOrderByItem,
-			QueryPartitionClause,
-			WindowingClause,
-				WindowFrameBound,
+		SqlExtension,
+			SqlExtensionParam
 	}
 }

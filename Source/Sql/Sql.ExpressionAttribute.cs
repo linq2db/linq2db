@@ -94,7 +94,7 @@ namespace LinqToDB
 				return new SqlExpression(member.GetMemberType(), Expression ?? member.Name, Precedence, ConvertArgs(member, args)) { CanBeNull = CanBeNull };
 			}
 
-			public virtual ISqlExpression GetExpression(MemberInfo member, Expression[] args, Func<Expression, ISqlExpression> converter)
+			public virtual ISqlExpression GetExpression(Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				throw new NotImplementedException();
 			}
