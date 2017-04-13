@@ -1944,10 +1944,6 @@ namespace LinqToDB.SqlProvider
 					BuildFunction((SqlFunction)expr);
 					break;
 
-				case QueryElementType.SqlExtension:
-					BuildSqlExtension((SqlExtension)expr);
-					break;
-
 				case QueryElementType.SqlParameter:
 					{
 						var parm = (SqlParameter)expr;
@@ -2120,70 +2116,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			StringBuilder.Append(')');
-		}
-
-		#endregion
-
-		#region BuildExtension
-		
-		protected virtual void BuildSqlExtension(SqlExtension extension)
-		{
-			var sb             = new StringBuilder();
-			var resolvedParams = new Dictionary<SqlExtension.ExtensionParam, string>();
-			var resolving      = new HashSet<SqlExtension.ExtensionParam>();
-
-			Func<string, string, string> valueProvider = null;
-			Stack<SqlExtension> current = new Stack<SqlExtension>();
-
-			valueProvider = (name, delimiter) =>
-			{
-				var found = extension.GetParametersByName(name);
-				if (current.Count != 0)
-					found = current.Peek().GetParametersByName(name).Concat(found);
-				string result = null;
-				foreach (var p in found)
-				{
-					string paramValue;
-					if (!resolvedParams.TryGetValue(p, out paramValue))
-					{
-
-						if (resolving.Contains(p))
-							throw new InvalidOperationException("Circular reference");
-
-						resolving.Add(p);
-						var ext = p.Expression as SqlExtension;
-						if (ext != null)
-						{
-							current.Push(ext);
-							paramValue = SqlExtension.ResolveExpressionValues(ext.Expr, valueProvider);
-							current.Pop();
-						}
-						else
-						{
-							sb.Length = 0;
-							WithStringBuilder(sb, () => BuildExpression(GetPrecedence(p.Expression), p.Expression));
-							paramValue = sb.ToString();
-						}
-
-						resolvedParams.Add(p, paramValue);
-
-						if (string.IsNullOrEmpty(paramValue))
-							continue;
-
-						if (!string.IsNullOrEmpty(result))
-							result = result + delimiter;
-						result = result + paramValue;
-					}
-
-					if (delimiter == null && !string.IsNullOrEmpty(result))
-						break;
-				}
-
-				return result;
-			};
-
-			var str = SqlExtension.ResolveExpressionValues(extension.Expr, valueProvider);
-			StringBuilder.Append(str);
 		}
 
 		#endregion

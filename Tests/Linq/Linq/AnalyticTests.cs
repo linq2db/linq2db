@@ -1,6 +1,5 @@
 ﻿namespace Tests.Linq
 {
-	using System;
 	using System.Linq;
 
 	using LinqToDB;

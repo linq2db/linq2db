@@ -44,21 +44,6 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.SqlExtension:
-					{
-						var ext = (SqlExtension)element;
-						foreach (var p in ext.GetParameters())
-							Visit1(p);
-						break;
-					}
-
-				case QueryElementType.SqlExtensionParam:
-					{
-						var param = (SqlExtension.ExtensionParam)element;
-						Visit1(param.Expression);
-						break;
-					}
-
 				case QueryElementType.SqlExpression:
 					{
 						foreach (var v in ((SqlExpression)element).Parameters) Visit1(v);
@@ -369,21 +354,6 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlFunction:
 					{
 						foreach (var p in ((SqlFunction)element).Parameters) Visit2(p);
-						break;
-					}
-
-				case QueryElementType.SqlExtension:
-					{
-						var ext = (SqlExtension)element;
-						foreach (var p in ext.GetParameters())
-							Visit2(p);
-						break;
-					}
-
-				case QueryElementType.SqlExtensionParam:
-					{
-						var param = (SqlExtension.ExtensionParam)element;
-						Visit2(param.Expression);
 						break;
 					}
 
@@ -747,18 +717,6 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.Union             : return Find(((SelectQuery.Union)             element).SelectQuery,     find);
 				case QueryElementType.FuncLikePredicate : return Find(((SelectQuery.Predicate.FuncLike)element).Function,        find);
 
-				case QueryElementType.SqlExtension:
-					{
-						var ext = (SqlExtension)element;
-						return Find(ext.GetParameters(), find);
-					}
-
-				case QueryElementType.SqlExtensionParam:
-					{
-						var param = (SqlExtension.ExtensionParam)element;
-						return Find(param.Expression, find);
-					}
-
 				case QueryElementType.SqlBinaryExpression:
 					{
 						var bexpr = (SqlBinaryExpression)element;
@@ -930,29 +888,6 @@ namespace LinqToDB.SqlQuery
 
 						if (parms != null && !ReferenceEquals(parms, func.Parameters))
 							newElement = new SqlFunction(func.SystemType, func.Name, func.Precedence, parms);
-
-						break;
-					}
-
-				case QueryElementType.SqlExtension:
-					{
-						var ext      = (SqlExtension)element;
-						var argsPrev = ext.GetParameters();
-						var args     = Convert(argsPrev, action);
-						
-						if (args != null && !ReferenceEquals(args, argsPrev))
-							newElement = new SqlExtension(ext.SystemType, ext.Expr, ext.Precedence, ext.ChainPrecedence, args);
-
-						break;
-					}
-
-				case QueryElementType.SqlExtensionParam:
-					{
-						var param    = (SqlExtension.ExtensionParam)element;
-						var expr     = Convert(param.Expression, action);
-						
-						if (!ReferenceEquals(expr, param.Expression))
-							newElement = new SqlExtension.ExtensionParam(param.Name, expr);
 
 						break;
 					}

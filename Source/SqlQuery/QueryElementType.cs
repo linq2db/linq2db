@@ -42,8 +42,5 @@ namespace LinqToDB.SqlQuery
 				OrderByItem,
 			Union,
 			CreateTableStatement,
-
-		SqlExtension,
-			SqlExtensionParam
 	}
 }

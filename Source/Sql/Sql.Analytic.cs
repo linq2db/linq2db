@@ -3,8 +3,6 @@
 	using System;
 	using JetBrains.Annotations;
 
-	using SqlQuery;
-
 	public static partial class Sql
 	{
 		public enum AggregateModifier
@@ -45,7 +43,7 @@
 		#region Static Builders
 
 		[UsedImplicitly]
-		static void OrderItemBuilder(Sql.ISqExtensionBuilder builder)
+		public static void OrderItemBuilder(Sql.ISqExtensionBuilder builder)
 		{
 			var nulls = builder.GetValue<Sql.NullsPosition>("nulls");
 			switch (nulls)
@@ -64,7 +62,7 @@
 		}
 
 		[UsedImplicitly]
-		static void ApplyAggregateModifier(Sql.ISqExtensionBuilder builder)
+		public static void ApplyAggregateModifier(Sql.ISqExtensionBuilder builder)
 		{
 			var modifier = builder.GetValue<Sql.AggregateModifier>("modifier");
 			switch (modifier)
@@ -72,10 +70,10 @@
 				case Sql.AggregateModifier.None :
 					break;
 				case Sql.AggregateModifier.Distinct :
-					builder.AddParameter("modifier", new SqlExtension("DISTINCT"));
+					builder.AddEpression("modifier", "DISTINCT");
 					break;
 				case Sql.AggregateModifier.All :
-					builder.AddParameter("modifier", new SqlExtension("ALL"));
+					builder.AddEpression("modifier", "ALL");
 					break;
 				default :
 					throw new ArgumentOutOfRangeException();
@@ -83,10 +81,10 @@
 		}
 
 		[UsedImplicitly]
-		static void ApplyNullsModifier(Sql.ISqExtensionBuilder builder)
+		public static void ApplyNullsModifier(Sql.ISqExtensionBuilder builder)
 		{
 			var nulls = builder.GetValue<Sql.Nulls>("nulls");
-			builder.AddParameter("modifier", new SqlExtension(GetNullsStr(nulls)));
+			builder.AddEpression("modifier", GetNullsStr(nulls));
 		}
 
 		static string GetNullsStr(Sql.Nulls nulls)
@@ -122,7 +120,7 @@
 		}
 
 		[UsedImplicitly]
-		static void ApplyFromAndNullsModifier(Sql.ISqExtensionBuilder builder)
+		public static void ApplyFromAndNullsModifier(Sql.ISqExtensionBuilder builder)
 		{
 			var nulls = builder.GetValue<Sql.Nulls>("nulls");
 			var from  = builder.GetValue<Sql.From>("from");
@@ -130,8 +128,8 @@
 			var fromStr = GetFromStr(from);
 			var nullsStr = GetNullsStr(nulls);
 
-			builder.AddParameter("from", new SqlExtension(fromStr));
-			builder.AddParameter("nulls", new SqlExtension(nullsStr));
+			builder.AddEpression("from", fromStr);
+			builder.AddEpression("nulls", nullsStr);
 		}
 
 		#endregion

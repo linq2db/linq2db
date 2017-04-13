@@ -580,7 +580,6 @@ namespace LinqToDB.ServiceModel
 						}
 
 					case QueryElementType.SqlFunction         : GetType(((SqlFunction)        e).SystemType); break;
-					case QueryElementType.SqlExtension        : GetType(((SqlExtension)       e).SystemType); break;
 					case QueryElementType.SqlExpression       : GetType(((SqlExpression)      e).SystemType); break;
 					case QueryElementType.SqlBinaryExpression : GetType(((SqlBinaryExpression)e).SystemType); break;
 					case QueryElementType.SqlDataType         : GetType(((SqlDataType)        e).Type);       break;
@@ -628,29 +627,6 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.Precedence);
 							Append(elem.Parameters);
-
-							break;
-						}
-
-					case QueryElementType.SqlExtension :
-						{
-							var elem = (SqlExtension)e;
-
-							Append(elem.SystemType);
-							Append(elem.Expr);
-							Append(elem.Precedence);
-							Append(elem.ChainPrecedence);
-							Append(elem.GetParameters());
-
-							break;
-						}
-
-					case QueryElementType.SqlExtensionParam :
-						{
-							var param = (SqlExtension.ExtensionParam)e;
-
-							Append(param.Name);
-							Append(param.Expression);
 
 							break;
 						}
@@ -1219,29 +1195,6 @@ namespace LinqToDB.ServiceModel
 							var parameters = ReadArray<ISqlExpression>();
 
 							obj = new SqlFunction(systemType, name, precedence, parameters);
-
-							break;
-						}
-
-					case QueryElementType.SqlExtension :
-						{
-							var systemType      = Read<Type>();
-							var expression      = ReadString();
-							var precedence      = ReadInt();
-							var chainPrecedence = ReadInt();
-							var parameters      = ReadArray<SqlExtension.ExtensionParam>();
-
-							obj = new SqlExtension(systemType, expression, precedence, chainPrecedence, parameters);
-
-							break;
-						}
-
-					case QueryElementType.SqlExtensionParam :
-						{
-							var paramName  = ReadString();
-							var expression = Read<ISqlExpression>();
-
-							obj = new SqlExtension.ExtensionParam(paramName, expression);
 
 							break;
 						}
