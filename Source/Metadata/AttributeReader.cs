@@ -23,7 +23,7 @@ namespace LinqToDB.Metadata
 		}
 
 		[NotNull]
-		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
 			var attrs = memberInfo.GetCustomAttributesEx(typeof(T), inherit);
