@@ -14,7 +14,7 @@
 		{
 			public ExtensionParam(string name, ISqlExpression expression)
 			{
-				Name = name;
+				Name       = name;
 				Expression = expression;
 			}
 
@@ -24,9 +24,10 @@
 			#region Implementation of IQueryElement
 
 			public QueryElementType ElementType { get { return QueryElementType.SqlExtensionParam; } }
+
 			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 			{
-				//TODO: Impelement
+				//TODO: Implement
 				return sb;
 			}
 
@@ -71,10 +72,9 @@
 		{
 		}
 
-		public Type             SystemType { get;         set; }
-		public string           Expr       { get;         set; }
-		public int              Precedence { get; private set; }
-		public bool             IsRoot     { get; set;         }
+		public Type    SystemType { get;         set; }
+		public string  Expr       { get;         set; }
+		public int     Precedence { get; private set; }
 
 		#region Overrides
 

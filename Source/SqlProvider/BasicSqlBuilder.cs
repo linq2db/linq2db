@@ -2128,12 +2128,13 @@ namespace LinqToDB.SqlProvider
 		
 		protected virtual void BuildSqlExtension(SqlExtension extension)
 		{
-			var sb = new StringBuilder();
+			var sb             = new StringBuilder();
 			var resolvedParams = new Dictionary<SqlExtension.ExtensionParam, string>();
-			var resolving = new HashSet<SqlExtension.ExtensionParam>();
+			var resolving      = new HashSet<SqlExtension.ExtensionParam>();
 
 			Func<string, string, string> valueProvider = null;
 			Stack<SqlExtension> current = new Stack<SqlExtension>();
+
 			valueProvider = (name, delimiter) =>
 			{
 				var found = extension.GetParametersByName(name);

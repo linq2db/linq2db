@@ -54,7 +54,6 @@ namespace LinqToDB
 			public bool   InlineParameters { get; set; }
 			public bool   ExpectExpression { get; set; }
 			public bool   IsPredicate      { get; set; }
-			public bool   HasPureConvertor { get; set; }
 
 			private bool? _canBeNull;
 			public  bool   CanBeNull
@@ -96,7 +95,7 @@ namespace LinqToDB
 
 			public virtual ISqlExpression GetExpression(Expression expression, Func<Expression, ISqlExpression> converter)
 			{
-				throw new NotImplementedException();
+				return null;
 			}
 		}
 	}

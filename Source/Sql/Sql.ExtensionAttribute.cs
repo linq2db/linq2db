@@ -210,7 +210,6 @@ namespace LinqToDB
 				ServerSideOnly   = true;
 				PreferServerSide = true;
 				ExpectExpression = true;
-				HasPureConvertor = true;
 				ServerSideOnly   = true;
 				PreferServerSide = true;
 			}
