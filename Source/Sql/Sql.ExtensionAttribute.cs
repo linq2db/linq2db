@@ -326,13 +326,21 @@ namespace LinqToDB
 				}
 
 				var builderType = BuilderType ?? member.DeclaringType;
-				if (!string.IsNullOrEmpty(BuilderMethod) && (builderType != null))
+				if (!string.IsNullOrEmpty(BuilderMethod) && builderType != null)
 				{
-					var builderMethod = builderType.GetMethodEx(BuilderMethod, typeof(ISqExtensionBuilder));
-					if (builderMethod == null)
+					var builderMethod = builderType.GetMethod(BuilderMethod,
+						BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+					if (builderMethod == null ||
+					    !builderMethod.IsStatic ||
+					    builderMethod.GetParameters().Length != 1 ||
+					    builderMethod.GetParameters()[0].ParameterType != typeof(ISqExtensionBuilder))
+					{
 						throw new InvalidOperationException(string.Format(
-							"Builder method 'static void {0}({1})' for class '{2}' not found", BuilderMethod, typeof(ISqExtensionBuilder).Name,
+							"Builder method 'static void {0}({1})' for class '{2}' not found", BuilderMethod,
+							typeof(ISqExtensionBuilder).Name,
 							builderType.Name));
+					}
 
 					var builder = new ExtensionBuilder(Configuration, extension, convertHelper, method, arguments);
 					builderMethod.Invoke(null, new object[] {builder});
