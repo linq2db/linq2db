@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
@@ -62,13 +63,16 @@ namespace LinqToDB
 
 		public interface ISqExtensionBuilder
 		{
-			string		   Configuration    { get; }
+			string         Configuration    { get; }
+			MappingSchema  Mapping          { get; }
 			SqlExtension   Extension        { get; }
 			ISqlExpression ResultExpression { get; set; }
 			string         Expression       { get; set; }
 
 			T GetValue<T>(int index);
 			T GetValue<T>(string argName);
+			ISqlExpression GetExpression(int index);
+			ISqlExpression GetExpression(string argName);
 
 			SqlExtensionParam AddParameter(string name, ISqlExpression expr);
 		}
@@ -164,33 +168,45 @@ namespace LinqToDB
 			/// </summary>
 			public string Names { get; set; }
 
-			protected class ExtensionBuilder: ISqlExtension, ISqExtensionBuilder
+			protected class ExtensionBuilder: ISqExtensionBuilder
 			{
 				readonly ConvertHelper _convert;
 
 				public ExtensionBuilder(
-					string                                       configuration,
-					[NotNull]   SqlExtension                     extension, 
-					[NotNull]   ConvertHelper                    convertHeper,
-					[CanBeNull] MethodInfo                       method,
-					[NotNull]   Expression[]                     arguments)
+					string                     configuration,
+					[NotNull]   MappingSchema  mapping,
+					[NotNull]   SqlExtension   extension, 
+					[NotNull]   ConvertHelper  convertHeper,
+					[CanBeNull] MethodInfo     method,
+					[NotNull]   Expression[]   arguments)
 				{
-					if (extension == null) throw new ArgumentNullException("extension");
-					if (convertHeper   == null) throw new ArgumentNullException("convertHeper");
-					if (arguments == null) throw new ArgumentNullException("arguments");
+					if (mapping      == null) throw new ArgumentNullException("mapping");
+					if (extension    == null) throw new ArgumentNullException("extension");
+					if (convertHeper == null) throw new ArgumentNullException("convertHeper");
+					if (arguments    == null) throw new ArgumentNullException("arguments");
 
-					Extension = extension;
-					_convert   = convertHeper;
-					Method    = method;
-					Arguments = arguments;
+					Mapping       = mapping;
+					Configuration = configuration;
+					Extension     = extension;
+					_convert      = convertHeper;
+					Method        = method;
+					Arguments     = arguments;
 				}
 
-				public SqlExtension Extension { get; private set; }
-				ISqlExpression ISqExtensionBuilder.ResultExpression
+				public ISqlExpression ConvertExpression(Expression expr)
 				{
-					get { return ResultExpression; }
-					set { ResultExpression = value; }
+					return _convert.Convert(expr);
 				}
+
+				public MethodInfo     Method           { get; private set; }
+				public Expression[]   Arguments        { get; private set; }
+
+				#region ISqExtensionBuilder Members
+
+				public string         Configuration    { get; private set; }
+				public MappingSchema  Mapping          { get; private set; }
+				public SqlExtension   Extension        { get; private set; }
+				public ISqlExpression ResultExpression { get;         set; }
 
 				public string Expression
 				{
@@ -221,25 +237,35 @@ namespace LinqToDB
 					throw new InvalidOperationException(string.Format("Argument '{0}' bot found", argName));
 				}
 
+				public ISqlExpression GetExpression(int index)
+				{
+					return ConvertExpression(Arguments[index]);
+				}
+
+				public ISqlExpression GetExpression(string argName)
+				{
+					if (Method != null)
+					{
+						var parameters = Method.GetParameters();
+						for (int i = 0; i < parameters.Length; i++)
+						{
+							if (parameters[i].Name == argName)
+							{
+								return GetExpression(i);
+							}
+						}
+					}
+
+					throw new InvalidOperationException(string.Format("Argument '{0}' bot found", argName));
+				}
+
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
 				{
 					return Extension.AddParameter(name, expr);;
 				}
 
-				public MethodInfo                       Method    { get; private set; }
-				public Expression[]                     Arguments { get; private set; }
-
-				#region IAnalyticFunctionBuilder Members
-
-				public ISqlExpression ConvertExpression(Expression expr)
-				{
-					return _convert.Convert(expr);
-				}
-
-				public string Configuration { get; private set; }
-				public ISqlExpression ResultExpression { get; private set; }
-
 				#endregion
+
 			}
 
 			public string BuilderMethod   { get; set; }
@@ -271,7 +297,7 @@ namespace LinqToDB
 				return lambda.Compile()();
 			}
 
-			protected List<SqlExtensionParam> BuildFunctionsChain(Expression expr, ConvertHelper convertHelper)
+			protected List<SqlExtensionParam> BuildFunctionsChain(MappingSchema mapping, Expression expr, ConvertHelper convertHelper)
 			{
 				var chains   = new List<SqlExtensionParam>();
 				var current  = expr;
@@ -315,11 +341,10 @@ namespace LinqToDB
 					var attributes = memberInfo.GetCustomAttributes(true).OfType<ExtensionAttribute>();
 					foreach (var attr in attributes)
 					{
-						var chainExtension = attr.BuildExtensions(memberInfo, arguments, convertHelper);
+						var chainExtension = attr.BuildExtensions(mapping, memberInfo, arguments, convertHelper);
 						if (expr != null)
 						{
-							//TODO: check order
-							chains.AddRange(chainExtension);
+							chains.AddRange(chainExtension.Reverse());
 						}
 					}
 
@@ -383,7 +408,7 @@ namespace LinqToDB
 				return str;
 			}
 
-			IEnumerable<SqlExtensionParam> BuildExtensions(MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
+			IEnumerable<SqlExtensionParam> BuildExtensions(MappingSchema mapping, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
 			{
 				var extension = new SqlExtension(member.GetMemberType(), Expression, Precedence, ChainPrecedence);
 				SqlExtensionParam result = null;
@@ -443,7 +468,7 @@ namespace LinqToDB
 							builderType.Name));
 					}
 
-					var builder = new ExtensionBuilder(Configuration, extension, convertHelper, method, arguments);
+					var builder = new ExtensionBuilder(Configuration, mapping, extension, convertHelper, method, arguments);
 					builderMethod.Invoke(null, new object[] {builder});
 
 					result = builder.ResultExpression != null ? new SqlExtensionParam(string.Empty, builder.ResultExpression) : new SqlExtensionParam(string.Empty, builder.Extension);
@@ -504,6 +529,7 @@ namespace LinqToDB
 							});
 						}
 
+						//TODO: Aggregate functions support
 //						current = ((LambdaExpression) current).Body;
 					}
 					return _converter(current);
@@ -523,7 +549,7 @@ namespace LinqToDB
 				var newParams      = new List<ISqlExpression>();
 
 				Func<string, string, string> valueProvider = null;
-				Stack<SqlExtension> current       = new Stack<SqlExtension>();
+				Stack<SqlExtension> current                = new Stack<SqlExtension>();
 
 				valueProvider = (name, delimiter) =>
 				{
@@ -580,16 +606,16 @@ namespace LinqToDB
 				return new SqlExpression(systemType, expr, precedence, newParams.ToArray());
 			}
 
-			public override ISqlExpression GetExpression(Expression expression, Func<Expression, ISqlExpression> converter)
+			public override ISqlExpression GetExpression(MappingSchema mapping, Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				var helper = new ConvertHelper(converter);
-				var chain = BuildFunctionsChain(expression, helper);
+				var chain  = BuildFunctionsChain(mapping, expression, helper);
 
 				if (chain.Count == 0)
 					throw new InvalidOperationException("No sequnce found");
 
 				var ordered = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension.ChainPrecedence).ToList();
-				var main = ordered.FirstOrDefault();
+				var main    = ordered.FirstOrDefault();
 				if (main == null)
 					throw new InvalidOperationException("Can not find root sequence");
 

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
@@ -93,7 +94,7 @@ namespace LinqToDB
 				return new SqlExpression(member.GetMemberType(), Expression ?? member.Name, Precedence, ConvertArgs(member, args)) { CanBeNull = CanBeNull };
 			}
 
-			public virtual ISqlExpression GetExpression(Expression expression, Func<Expression, ISqlExpression> converter)
+			public virtual ISqlExpression GetExpression(MappingSchema mapping, Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				return null;
 			}

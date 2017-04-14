@@ -895,7 +895,7 @@ namespace LinqToDB.Linq.Builder
 							if (attr.InlineParameters)
 								DataContextInfo.DataContext.InlineParameters = true;
 
-							var sqlExpression = attr.GetExpression(e, _ => ConvertToSql(context, _));
+							var sqlExpression = attr.GetExpression(MappingSchema, e, _ => ConvertToSql(context, _));
 							if (sqlExpression != null)
 								return Convert(context, sqlExpression);
 
