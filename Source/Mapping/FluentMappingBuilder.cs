@@ -33,10 +33,10 @@ namespace LinqToDB.Mapping
 			return _reader.GetAttributes<T>(type);
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : Attribute
 		{
-			return _reader.GetAttributes<T>(memberInfo);
+			return _reader.GetAttributes<T>(type, memberInfo);
 		}
 
 		#endregion

@@ -435,6 +435,75 @@ namespace Tests.Linq
 				Assert.IsNotEmpty(l.Where(_ => _.Doc != null));
 			}
 		}
+
+
+		[Table("Person", IsColumnAttributeRequired = false)]
+		public class Person88
+		{
+			[SequenceName(ProviderName.Firebird, "PersonID")]
+			[Column("PersonID"), Identity, PrimaryKey] public int    ID;
+			[NotNull]                                  public string FirstName { get; set; }
+			[NotNull]                                  public string LastName;
+			[Nullable]                                 public string MiddleName;
+			                                           public char   Gender;
+		}
+
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		public void Issue88(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var llc = db
+					.GetTable<Person88>()
+					.Where(_ => _.ID == 1 && _.Gender == 'M');
+
+				var lrc = db
+					.GetTable<Person88>()
+					.Where(_ => _.ID == 1 && 'M' == _.Gender);
+
+				var gender = 'M';
+				var llp = db
+					.GetTable<Person88>()
+					.Where(_ => _.ID == 1 && _.Gender == gender);
+
+				var lrp = db
+					.GetTable<Person88>()
+					.Where(_ => _.ID == 1 && gender == _.Gender);
+
+				Assert.IsNotEmpty(llc);
+				Assert.IsNotEmpty(lrc);
+				Assert.IsNotEmpty(llp);
+				Assert.IsNotEmpty(lrp);
+			}
+
+		}
+
+
+		[Test, DataContextSource]
+		public void Issue173(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new AllowMultipleQuery())
+			{
+				var result =
+					from r in db.GetTable<Parent>()
+					select new
+					{
+						id = r.ParentID,
+					};
+				result = result.Where(_ => _.id == 1);
+
+				var expected =
+					from r in Parent
+					select new
+					{
+						id = r.ParentID,
+					};
+				expected = expected.Where(_ => _.id == 1);
+
+				AreEqual(expected, result);
+			}
+		}
 	}
 
 }
