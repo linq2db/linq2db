@@ -174,8 +174,7 @@ namespace LinqToDB.SqlQuery
 					return false;
 
 				var found =
-					Expression.Equals(other.Expression)
-					|| new QueryVisitor().Find(other, e =>
+					new QueryVisitor().Find(other, e =>
 						{
 							switch(e.ElementType)
 							{
@@ -1814,13 +1813,13 @@ namespace LinqToDB.SqlQuery
 
 			public SelectClause Field(SqlField field)
 			{
-				AddOrGetColumn(new Column(SelectQuery, field));
+				AddOrFindColumn(new Column(SelectQuery, field));
 				return this;
 			}
 
 			public SelectClause Field(SqlField field, string alias)
 			{
-				AddOrGetColumn(new Column(SelectQuery, field, alias));
+				AddOrFindColumn(new Column(SelectQuery, field, alias));
 				return this;
 			}
 
@@ -1831,7 +1830,7 @@ namespace LinqToDB.SqlQuery
 
 				subQuery.ParentSelect = SelectQuery;
 
-				AddOrGetColumn(new Column(SelectQuery, subQuery));
+				AddOrFindColumn(new Column(SelectQuery, subQuery));
 				return this;
 			}
 
@@ -1842,73 +1841,73 @@ namespace LinqToDB.SqlQuery
 
 				selectQuery.ParentSelect = SelectQuery;
 
-				AddOrGetColumn(new Column(SelectQuery, selectQuery, alias));
+				AddOrFindColumn(new Column(SelectQuery, selectQuery, alias));
 				return this;
 			}
 
 			public SelectClause Expr(ISqlExpression expr)
 			{
-				AddOrGetColumn(new Column(SelectQuery, expr));
+				AddOrFindColumn(new Column(SelectQuery, expr));
 				return this;
 			}
 
 			public SelectClause Expr(ISqlExpression expr, string alias)
 			{
-				AddOrGetColumn(new Column(SelectQuery, expr, alias));
+				AddOrFindColumn(new Column(SelectQuery, expr, alias));
 				return this;
 			}
 
 			public SelectClause Expr(string expr, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(null, expr, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(null, expr, values)));
 				return this;
 			}
 
 			public SelectClause Expr(Type systemType, string expr, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, values)));
 				return this;
 			}
 
 			public SelectClause Expr(string expr, int priority, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(null, expr, priority, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(null, expr, priority, values)));
 				return this;
 			}
 
 			public SelectClause Expr(Type systemType, string expr, int priority, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
 				return this;
 			}
 
 			public SelectClause Expr(string alias, string expr, int priority, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(null, expr, priority, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(null, expr, priority, values)));
 				return this;
 			}
 
 			public SelectClause Expr(Type systemType, string alias, string expr, int priority, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
 				return this;
 			}
 
 			public SelectClause Expr<T>(ISqlExpression expr1, string operation, ISqlExpression expr2)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2)));
 				return this;
 			}
 
 			public SelectClause Expr<T>(ISqlExpression expr1, string operation, ISqlExpression expr2, int priority)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority)));
 				return this;
 			}
 
 			public SelectClause Expr<T>(string alias, ISqlExpression expr1, string operation, ISqlExpression expr2, int priority)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority), alias));
+				AddOrFindColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority), alias));
 				return this;
 			}
 
@@ -1917,7 +1916,7 @@ namespace LinqToDB.SqlQuery
 				if (expr is Column && ((Column)expr).Parent == SelectQuery)
 					throw new InvalidOperationException();
 
-				return Columns.IndexOf(AddOrGetColumn(new Column(SelectQuery, expr)));
+				return AddOrFindColumn(new Column(SelectQuery, expr));
 			}
 
 			public int AddNew(ISqlExpression expr)
@@ -1931,14 +1930,21 @@ namespace LinqToDB.SqlQuery
 
 			public int Add(ISqlExpression expr, string alias)
 			{
-				return Columns.IndexOf(AddOrGetColumn(new Column(SelectQuery, expr, alias)));
+				return AddOrFindColumn(new Column(SelectQuery, expr, alias));
 			}
 
-			Column AddOrGetColumn(Column col)
+			/// <summary>
+			/// Adds column if it is not added yet.
+			/// <returns>Returns index of column in Columns list.</returns>
+			int AddOrFindColumn(Column col)
 			{
-				foreach (var c in Columns)
-					if (c.Equals(col))
-						return col;
+				for (var i = 0; i < Columns.Count; i++)
+				{
+					if (Columns[i].Equals(col))
+					{
+						return i;
+					}
+				}
 
 #if DEBUG
 
@@ -1981,10 +1987,9 @@ namespace LinqToDB.SqlQuery
 				}
 
 #endif
-
 				Columns.Add(col);
 
-				return col;
+				return Columns.Count - 1;
 			}
 
 			readonly List<Column> _columns = new List<Column>();
@@ -2124,13 +2129,14 @@ namespace LinqToDB.SqlQuery
 				if (Columns.Count == 0)
 					sb.Append("\t*, \n");
 				else
-					foreach (var c in Columns)
+					for (var i = 0; i < Columns.Count; i++)
 					{
+						var c = Columns[i];
 						sb.Append("\t");
 						((IQueryElement)c).ToString(sb, dic);
 						sb
 							.Append(" as ")
-							.Append(c.Alias ?? "c" + (Columns.IndexOf(c) + 1))
+							.Append(c.Alias ?? "c" + (i + 1))
 							.Append(", \n");
 					}
 
