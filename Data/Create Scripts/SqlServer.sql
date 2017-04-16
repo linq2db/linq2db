@@ -380,10 +380,10 @@ CREATE TABLE AllTypes
 
 	charDataType             char(1)           NULL,
 	varcharDataType          varchar(20)       NULL,
-	textDataType             text              NULL,
+	textDataType             text  COLLATE Latin1_General_CI_AS NULL,
 	ncharDataType            nchar(20)         NULL,
 	nvarcharDataType         nvarchar(20)      NULL,
-	ntextDataType            ntext             NULL,
+	ntextDataType            ntext COLLATE Latin1_General_CI_AS NULL,
 
 	binaryDataType           binary            NULL,
 	varbinaryDataType        varbinary         NULL,
