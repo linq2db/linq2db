@@ -174,7 +174,8 @@ namespace LinqToDB.SqlQuery
 					return false;
 
 				var found =
-					new QueryVisitor().Find(other, e =>
+					Expression.Equals(other.Expression)
+					|| new QueryVisitor().Find(other, e =>
 						{
 							switch(e.ElementType)
 							{
