@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue357Tests : TestBase
 	{
-		[Table(Database="TestData", Name="AllTypes2")]
+		[Table(Name="AllTypes2")]
 		class AllTypes2
 		{
 			[Column(DbType="int"), PrimaryKey, Identity]
