@@ -122,7 +122,7 @@ namespace Tests.DataProvider
 
 				if (((OracleDataProvider)conn.DataProvider).IsXmlTypeSupported)
 				{
-					var res = context == ProviderName.OracleNative
+					var res = context == ProviderName.OracleNative || context == ProviderName.OracleManaged
 						? "<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n"
 						: "<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>";
 
