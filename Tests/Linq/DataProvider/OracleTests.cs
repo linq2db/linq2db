@@ -122,11 +122,9 @@ namespace Tests.DataProvider
 
 				if (((OracleDataProvider)conn.DataProvider).IsXmlTypeSupported)
 				{
-					var res = context == ProviderName.OracleNative || context == ProviderName.OracleManaged
-						? "<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n"
-						: "<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>";
+					var res = "<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>";
 
-					TestType(conn, "xmlDataType", res);
+					TestType(conn, "XMLSERIALIZE(DOCUMENT xmlDataType AS CLOB NO INDENT)", res);
 				}
 			}
 		}
