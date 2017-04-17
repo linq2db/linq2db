@@ -566,7 +566,7 @@ namespace Tests.DataProvider
 
 		#region DateTime Tests
 
-		[Table(Schema="TESTUSER", Name="ALLTYPES")]
+		[Table(Name="ALLTYPES")]
 		public partial class ALLTYPE
 		{
 			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal         ID                     { get; set; } // NUMBER
@@ -1717,7 +1717,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table(Schema = "TESTUSER", Name = "ALLTYPES")]
+		[Table(Name = "ALLTYPES")]
 		public partial class ALLTYPE2
 		{
 			[Column, PrimaryKey, Identity] public decimal ID             { get; set; } // NUMBER
