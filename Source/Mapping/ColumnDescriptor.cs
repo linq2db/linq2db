@@ -62,7 +62,7 @@ namespace LinqToDB.Mapping
 				CanBeNull = columnAttribute.CanBeNull;
 			else
 			{
-				var na = mappingSchema.GetAttribute<NullableAttribute>(MemberInfo, attr => attr.Configuration);
+				var na = mappingSchema.GetAttribute<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 
 				if (na != null)
 				{
@@ -79,7 +79,7 @@ namespace LinqToDB.Mapping
 				IsIdentity = columnAttribute.IsIdentity;
 			else
 			{
-				var a = mappingSchema.GetAttribute<IdentityAttribute>(MemberInfo, attr => attr.Configuration);
+				var a = mappingSchema.GetAttribute<IdentityAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 				if (a != null)
 					IsIdentity = true;
 			}
@@ -94,7 +94,7 @@ namespace LinqToDB.Mapping
 				IsPrimaryKey = columnAttribute.IsPrimaryKey;
 			else
 			{
-				var a = mappingSchema.GetAttribute<PrimaryKeyAttribute>(MemberInfo, attr => attr.Configuration);
+				var a = mappingSchema.GetAttribute<PrimaryKeyAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 
 				if (a != null)
 				{
@@ -105,7 +105,7 @@ namespace LinqToDB.Mapping
 
 			if (DbType == null || DataType == DataType.Undefined)
 			{
-				var a = mappingSchema.GetAttribute<DataTypeAttribute>(MemberInfo, attr => attr.Configuration);
+				var a = mappingSchema.GetAttribute<DataTypeAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 
 				if (a != null)
 				{

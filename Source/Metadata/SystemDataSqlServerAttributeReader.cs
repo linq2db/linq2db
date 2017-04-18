@@ -25,7 +25,7 @@ namespace LinqToDB.Metadata
 
 		static readonly ConcurrentDictionary<MemberInfo,object> _cache = new ConcurrentDictionary<MemberInfo,object>();
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
 			where T : Attribute
 		{
 			if (typeof(T) == typeof(Sql.ExpressionAttribute) && (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx()))
@@ -36,7 +36,7 @@ namespace LinqToDB.Metadata
 				{
 					if (memberInfo.IsMethodEx())
 					{
-						var ma = _reader.GetAttributes<SqlMethodAttribute>(memberInfo);
+						var ma = _reader.GetAttributes<SqlMethodAttribute>(type, memberInfo, inherit);
 
 						if (ma.Length > 0)
 						{
@@ -70,7 +70,7 @@ namespace LinqToDB.Metadata
 
 						if (gm != null)
 						{
-							var ma = _reader.GetAttributes<SqlMethodAttribute>(gm);
+							var ma = _reader.GetAttributes<SqlMethodAttribute>(type, gm, inherit);
 
 							if (ma.Length > 0)
 							{

@@ -1475,25 +1475,29 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertCompare(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			if (left.NodeType == ExpressionType.Convert && left.Type == typeof(int) && right.NodeType == ExpressionType.Constant)
+			if (left.NodeType == ExpressionType.Convert && left.Type == typeof(int) && (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Convert))
 			{
-				var conv = (UnaryExpression)left;
+				var conv  = (UnaryExpression)left;
 
 				if (conv.Operand.Type == typeof(char))
 				{
 					left  = conv.Operand;
-					right = Expression.Constant(ConvertTo<char>.From(((ConstantExpression)right).Value));
+					right = right.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression) right).Value))
+						: ((UnaryExpression) right).Operand;
 				}
 			}
 
-			if (right.NodeType == ExpressionType.Convert && right.Type == typeof(int) && left.NodeType == ExpressionType.Constant)
+			if (right.NodeType == ExpressionType.Convert && right.Type == typeof(int) && (left.NodeType == ExpressionType.Constant || left.NodeType == ExpressionType.Convert))
 			{
 				var conv = (UnaryExpression)right;
 
 				if (conv.Operand.Type == typeof(char))
 				{
 					right = conv.Operand;
-					left  = Expression.Constant(ConvertTo<char>.From(((ConstantExpression)left).Value));
+					left  = left.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression) left).Value))
+						: ((UnaryExpression) left).Operand;
 				}
 			}
 
@@ -1669,7 +1673,7 @@ namespace LinqToDB.Linq.Builder
 						object mapValue;
 
 						if (!dic.TryGetValue(origValue, out mapValue))
-							return null;
+							mapValue = ((ConstantExpression)value).Value;
 
 						ISqlExpression l, r;
 
@@ -1910,8 +1914,8 @@ namespace LinqToDB.Linq.Builder
 
 		DataType? GetMemberDataType(MemberInfo member)
 		{
-			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member);
-			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member);
+			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedTypeEx(), member);
+			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedTypeEx(), member);
 			var dataType = null as DataType?;
 
 			if (ca != null)
@@ -1998,7 +2002,7 @@ namespace LinqToDB.Linq.Builder
 				expression,
 				mapper.Compile(),
 				dataTypeAccessor.Compile(),
-				new SqlParameter(accessorExpression.Type, name, null) { IsQueryParameter = !dataContext.InlineParameters }
+				new SqlParameter(accessorExpression.Type, name, null) { IsQueryParameter = !(dataContext.InlineParameters && accessorExpression.Type.IsScalar(false)) }
 			);
 		}
 
@@ -2132,7 +2136,7 @@ namespace LinqToDB.Linq.Builder
 						LikeStart        = start,
 						LikeEnd          = end,
 						ReplaceLike      = p.ReplaceLike,
-						IsQueryParameter = !DataContextInfo.DataContext.InlineParameters
+						IsQueryParameter = !(DataContextInfo.DataContext.InlineParameters && ep.Expression.Type.IsScalar(false))
 					}
 				);
 
@@ -2625,12 +2629,12 @@ namespace LinqToDB.Linq.Builder
 
 		Sql.ExpressionAttribute GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
 		}
 
 		internal Sql.TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedTypeEx(), member, a => a.Configuration);
 		}
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)
