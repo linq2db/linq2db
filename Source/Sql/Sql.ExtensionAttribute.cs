@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 namespace LinqToDB
@@ -59,6 +61,11 @@ namespace LinqToDB
 			{
 				return null;
 			}
+		}
+
+		public interface IExtensionCallBuilder
+		{
+			void Build(ISqExtensionBuilder builder);
 		}
 
 		public interface ISqExtensionBuilder
@@ -163,6 +170,8 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class ExtensionAttribute : ExpressionAttribute
 		{
+			private static ConcurrentDictionary<Type, IExtensionCallBuilder> _builders = new ConcurrentDictionary<Type, IExtensionCallBuilder>();
+
 			public string TokenName { get; set; }
 
 			protected class ExtensionBuilder: ISqExtensionBuilder
@@ -265,7 +274,6 @@ namespace LinqToDB
 
 			}
 
-			public string BuilderMethod   { get; set; }
 			public Type   BuilderType     { get; set; }
 			public int    ChainPrecedence { get; set; }
 
@@ -339,8 +347,8 @@ namespace LinqToDB
 						a => a.Configuration);
 					foreach (var attr in attributes)
 					{
-						var chainExtension = attr.BuildExtensions(mapping, memberInfo, arguments, convertHelper);
-						chains.AddRange(chainExtension.Reverse());
+						var param = attr.BuildExtensionParam(mapping, memberInfo, arguments, convertHelper);
+						chains.Add(param);
 					}
 
 				}
@@ -403,7 +411,7 @@ namespace LinqToDB
 				return str;
 			}
 
-			IEnumerable<SqlExtensionParam> BuildExtensions(MappingSchema mapping, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
+			SqlExtensionParam BuildExtensionParam(MappingSchema mapping, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
 			{
 				var extension = new SqlExtension(member.GetMemberType(), Expression, Precedence, ChainPrecedence);
 				SqlExtensionParam result = null;
@@ -450,28 +458,27 @@ namespace LinqToDB
 					}
 				}
 
-				var builderType = BuilderType ?? member.DeclaringType;
-				if (!string.IsNullOrEmpty(BuilderMethod) && builderType != null)
+				if (BuilderType != null)
 				{
-					var builderMethod = builderType.GetMethodEx(BuilderMethod, typeof(ISqExtensionBuilder));
-
-					if (builderMethod == null || !builderMethod.IsStatic)
-					{
-						throw new InvalidOperationException(string.Format(
-							"Builder method 'public static void {2}.{0}({1})' for class '{2}' not found", BuilderMethod,
-							typeof(ISqExtensionBuilder).Name,
-							builderType.Name));
-					}
+					var callBuilder = _builders.GetOrAdd(BuilderType, t =>
+						{
+							var res = Activator.CreateInstance(BuilderType) as IExtensionCallBuilder;
+							if (res == null)
+								throw new ArgumentException(
+									"Type '{0}' does not implement {1} interface.".Args(BuilderType, typeof(IExtensionCallBuilder).Name));
+							return res;
+						}
+					);
 
 					var builder = new ExtensionBuilder(Configuration, mapping, extension, convertHelper, method, arguments);
-					builderMethod.Invoke(null, new object[] {builder});
+					callBuilder.Build(builder);
 
 					result = builder.ResultExpression != null ? new SqlExtensionParam(TokenName, builder.ResultExpression) : new SqlExtensionParam(TokenName, builder.Extension);
 				}
 
 				result = result ?? new SqlExtensionParam(TokenName, extension);
 
-				return new[] {result};
+				return result;
 			}
 
 			static IEnumerable<Expression> ExtractArray(Expression expression)

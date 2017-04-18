@@ -1,7 +1,6 @@
 ﻿namespace LinqToDB
 {
 	using System;
-	using JetBrains.Annotations;
 
 	public static partial class Sql
 	{
@@ -39,51 +38,57 @@
 	{
 		public const string FunctionToken  = "function";
 
-		#region Static Builders
+		#region Call Builders
 
-		[UsedImplicitly]
-		public static void OrderItemBuilder(Sql.ISqExtensionBuilder builder)
+		public class OrderItemBuilder: Sql.IExtensionCallBuilder
 		{
-			var nulls = builder.GetValue<Sql.NullsPosition>("nulls");
-			switch (nulls)
+			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				case Sql.NullsPosition.None :
-					break;
-				case Sql.NullsPosition.First :
-					builder.Expression = builder.Expression + " NULLS FIRST";
-					break;
-				case Sql.NullsPosition.Last :
-					builder.Expression = builder.Expression + " NULLS LAST";
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
+				var nulls = builder.GetValue<Sql.NullsPosition>("nulls");
+				switch (nulls)
+				{
+					case Sql.NullsPosition.None :
+						break;
+					case Sql.NullsPosition.First :
+						builder.Expression = builder.Expression + " NULLS FIRST";
+						break;
+					case Sql.NullsPosition.Last :
+						builder.Expression = builder.Expression + " NULLS LAST";
+						break;
+					default :
+						throw new ArgumentOutOfRangeException();
+				}
 			}
 		}
 
-		[UsedImplicitly]
-		public static void ApplyAggregateModifier(Sql.ISqExtensionBuilder builder)
+		public class ApplyAggregateModifier: Sql.IExtensionCallBuilder
 		{
-			var modifier = builder.GetValue<Sql.AggregateModifier>("modifier");
-			switch (modifier)
+			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				case Sql.AggregateModifier.None :
-					break;
-				case Sql.AggregateModifier.Distinct :
-					builder.AddEpression("modifier", "DISTINCT");
-					break;
-				case Sql.AggregateModifier.All :
-					builder.AddEpression("modifier", "ALL");
-					break;
-				default :
-					throw new ArgumentOutOfRangeException();
+				var modifier = builder.GetValue<Sql.AggregateModifier>("modifier");
+				switch (modifier)
+				{
+					case Sql.AggregateModifier.None :
+						break;
+					case Sql.AggregateModifier.Distinct :
+						builder.AddEpression("modifier", "DISTINCT");
+						break;
+					case Sql.AggregateModifier.All :
+						builder.AddEpression("modifier", "ALL");
+						break;
+					default :
+						throw new ArgumentOutOfRangeException();
+				}
 			}
 		}
 
-		[UsedImplicitly]
-		public static void ApplyNullsModifier(Sql.ISqExtensionBuilder builder)
+		public class ApplyNullsModifier: Sql.IExtensionCallBuilder
 		{
-			var nulls = builder.GetValue<Sql.Nulls>("nulls");
-			builder.AddEpression("modifier", GetNullsStr(nulls));
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var nulls = builder.GetValue<Sql.Nulls>("nulls");
+				builder.AddEpression("modifier", GetNullsStr(nulls));
+			}
 		}
 
 		static string GetNullsStr(Sql.Nulls nulls)
@@ -118,17 +123,19 @@
 			return string.Empty;
 		}
 
-		[UsedImplicitly]
-		public static void ApplyFromAndNullsModifier(Sql.ISqExtensionBuilder builder)
+		public class ApplyFromAndNullsModifier: Sql.IExtensionCallBuilder
 		{
-			var nulls = builder.GetValue<Sql.Nulls>("nulls");
-			var from  = builder.GetValue<Sql.From>("from");
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var nulls = builder.GetValue<Sql.Nulls>("nulls");
+				var from  = builder.GetValue<Sql.From>("from");
 
-			var fromStr = GetFromStr(from);
-			var nullsStr = GetNullsStr(nulls);
+				var fromStr = GetFromStr(from);
+				var nullsStr = GetNullsStr(nulls);
 
-			builder.AddEpression("from", fromStr);
-			builder.AddEpression("nulls", nullsStr);
+				builder.AddEpression("from", fromStr);
+				builder.AddEpression("nulls", nullsStr);
+			}
 		}
 
 		#endregion
@@ -159,7 +166,7 @@
 			IOrderedAcceptOverReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedAcceptOverReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
@@ -167,7 +174,7 @@
 			IOrderedAcceptOverReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedAcceptOverReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
@@ -187,13 +194,13 @@
 			[Sql.Extension("{expr}", "order_item")]
 			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")] 
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))] 
 			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
 			[Sql.Extension("{expr} DESC", "order_item")]
 			IOrderedAcceptOverReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedAcceptOverReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
@@ -234,13 +241,13 @@
 			[Sql.Extension("{expr}", "order_item")]
 			IOrderedReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
 			[Sql.Extension("{expr} DESC", "order_item")]
 			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
@@ -269,7 +276,7 @@
 			IOrderedReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
@@ -277,7 +284,7 @@
 			IOrderedReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
@@ -290,7 +297,7 @@
 			IOrderedReadyToWindowing<TR> OrderBy<TKey>([ExprParameter("expr")] TKey keySelector);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToWindowing<TR> OrderBy<TKey>([ExprParameter("expr")] TKey keySelector, Sql.NullsPosition nulls);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
@@ -298,7 +305,7 @@
 			IOrderedReadyToWindowing<TR> OrderByDesc<TKey>([ExprParameter("expr")] TKey keySelector);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToWindowing<TR> OrderByDesc<TKey>([ExprParameter("expr")] TKey keySelector, Sql.NullsPosition nulls);
 		}
 
@@ -323,13 +330,13 @@
 			[Sql.Extension("{expr}", "order_item")]
 			IOrderedReadyToWindowing<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToWindowing<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
 			[Sql.Extension("{expr} DESC", "order_item")]
 			IOrderedReadyToWindowing<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(AnalyticFunctions), BuilderMethod = "OrderItemBuilder")]
+			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToWindowing<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
@@ -393,7 +400,7 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", TokenName = FunctionToken, ChainPrecedence = 1)]
+		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
@@ -418,7 +425,7 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", TokenName = FunctionToken, ChainPrecedence = 1)]
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
@@ -462,25 +469,25 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LAG({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		[Sql.Extension("LAG({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
@@ -492,7 +499,7 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderMethod = "ApplyNullsModifier", ChainPrecedence = 1)]
+		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
 		{
 			throw new NotImplementedException();
@@ -515,7 +522,7 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", TokenName = FunctionToken, ChainPrecedence = 1)]
+		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
@@ -533,7 +540,7 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", TokenName = FunctionToken, ChainPrecedence = 1)]
+		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
@@ -545,7 +552,7 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("NTH_VALUE({expr}, {n}){_}{from?}{_}{nulls?}", TokenName = FunctionToken, BuilderMethod = "ApplyFromAndNullsModifier", ChainPrecedence = 1)]
+		[Sql.Extension("NTH_VALUE({expr}, {n}){_}{from?}{_}{nulls?}", TokenName = FunctionToken, BuilderType = typeof(ApplyFromAndNullsModifier), ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<T> NthValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] long n, Sql.From from, Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
@@ -680,7 +687,7 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderMethod = "ApplyAggregateModifier", ChainPrecedence = 1)]
+		[Sql.Extension("STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
@@ -704,7 +711,7 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("SUM({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", TokenName = FunctionToken, ChainPrecedence = 1)]
+		[Sql.Extension("SUM({modifier?}{_}{expr})" , BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<T> Sum<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
@@ -728,7 +735,7 @@
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderMethod = "ApplyAggregateModifier", TokenName = FunctionToken, ChainPrecedence = 1)]
+		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1)]
 		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
