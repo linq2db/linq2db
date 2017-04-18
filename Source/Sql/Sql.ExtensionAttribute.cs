@@ -163,10 +163,7 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class ExtensionAttribute : ExpressionAttribute
 		{
-			/// <summary>
-			/// Names separated by comma
-			/// </summary>
-			public string Names { get; set; }
+			public string TokenName { get; set; }
 
 			protected class ExtensionBuilder: ISqExtensionBuilder
 			{
@@ -280,9 +277,9 @@ namespace LinqToDB
 			{
 			}
 
-			public ExtensionAttribute(string configuration, string expression, string names): base(configuration, expression)
+			public ExtensionAttribute(string configuration, string expression, string tokenName): base(configuration, expression)
 			{
-				Names = names;
+				TokenName        = tokenName;
 
 				ServerSideOnly   = true;
 				PreferServerSide = true;
@@ -338,14 +335,12 @@ namespace LinqToDB
 
 					}
 
-					var attributes = memberInfo.GetCustomAttributes(true).OfType<ExtensionAttribute>();
+					var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo,
+						a => a.Configuration);
 					foreach (var attr in attributes)
 					{
 						var chainExtension = attr.BuildExtensions(mapping, memberInfo, arguments, convertHelper);
-						if (expr != null)
-						{
-							chains.AddRange(chainExtension.Reverse());
-						}
+						chains.AddRange(chainExtension.Reverse());
 					}
 
 				}
@@ -471,14 +466,12 @@ namespace LinqToDB
 					var builder = new ExtensionBuilder(Configuration, mapping, extension, convertHelper, method, arguments);
 					builderMethod.Invoke(null, new object[] {builder});
 
-					result = builder.ResultExpression != null ? new SqlExtensionParam(string.Empty, builder.ResultExpression) : new SqlExtensionParam(string.Empty, builder.Extension);
+					result = builder.ResultExpression != null ? new SqlExtensionParam(TokenName, builder.ResultExpression) : new SqlExtensionParam(TokenName, builder.Extension);
 				}
 
-				result = result ?? new SqlExtensionParam(string.Empty, extension);
+				result = result ?? new SqlExtensionParam(TokenName, extension);
 
-				var extNames = Names == null ? new string[] {""} : Names.Split(',');
-
-				return extNames.Select(n => result.Expression != null ? new SqlExtensionParam(n, result.Expression) : new SqlExtensionParam(n, result.Extension));
+				return new[] {result};
 			}
 
 			static IEnumerable<Expression> ExtractArray(Expression expression)
@@ -490,7 +483,7 @@ namespace LinqToDB
 			protected class ConvertHelper
 			{
 				readonly Func<Expression, ISqlExpression> _converter;
-				readonly Dictionary<Type, Expression> _typeMapping = new Dictionary<Type, Expression>();
+				readonly Dictionary<Type, Expression>     _typeMapping = new Dictionary<Type, Expression>();
 
 				public ConvertHelper([NotNull] Func<Expression, ISqlExpression> converter)
 				{
@@ -614,8 +607,7 @@ namespace LinqToDB
 				if (chain.Count == 0)
 					throw new InvalidOperationException("No sequnce found");
 
-				var ordered = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension.ChainPrecedence).ToList();
-				var main    = ordered.FirstOrDefault();
+				var main = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension.ChainPrecedence).FirstOrDefault();
 				if (main == null)
 					throw new InvalidOperationException("Can not find root sequence");
 
