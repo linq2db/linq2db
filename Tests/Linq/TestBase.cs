@@ -492,7 +492,7 @@ namespace Tests
 			}
 		}
 
-		protected const int MaxPersonID = 3;
+		protected const int MaxPersonID = 4;
 
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
