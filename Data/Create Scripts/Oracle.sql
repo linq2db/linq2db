@@ -1,4 +1,4 @@
--- Cleanup schema
+﻿-- Cleanup schema
 
 DROP SEQUENCE PersonSeq
 /
@@ -142,6 +142,8 @@ INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',   
 INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 /
 INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+/
+INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
 /
 INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (1, 'Psychiatry')
 /
