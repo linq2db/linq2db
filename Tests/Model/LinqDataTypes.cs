@@ -85,10 +85,10 @@ namespace Tests.Model
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 			return
-				other.ID == ID &&
-				other.MoneyValue == MoneyValue &&
-				other.BoolValue == BoolValue &&
-				other.GuidValue == GuidValue &&
+				other.ID                     == ID                     &&
+ 				other.MoneyValue             == MoneyValue             &&
+ 				other.BoolValue              == BoolValue              &&
+ 				other.GuidValue              == GuidValue              &&				
 				other.DateTimeValue.HasValue == DateTimeValue.HasValue &&
 				other.DateTimeValue == null ||
 				(
