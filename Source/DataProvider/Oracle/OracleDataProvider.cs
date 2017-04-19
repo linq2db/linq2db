@@ -234,6 +234,7 @@ namespace LinqToDB.DataProvider.Oracle
 			_setDateTimeOffset = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "TimeStampTZ");
 			_setGuid           = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Raw");
 			_setCursor         = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "RefCursor");
+			_setNVarchar2      = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "NVarchar2");
 
 			MappingSchema.AddScalarType(_oracleBFile,        GetNullValue(_oracleBFile),        true, DataType.VarChar);    // ?
 			MappingSchema.AddScalarType(_oracleBinary,       GetNullValue(_oracleBinary),       true, DataType.VarBinary);
@@ -454,6 +455,7 @@ namespace LinqToDB.DataProvider.Oracle
 		Action<IDbDataParameter> _setDateTimeOffset;
 		Action<IDbDataParameter> _setGuid;
 		Action<IDbDataParameter> _setCursor;
+		Action<IDbDataParameter> _setNVarchar2;
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
@@ -481,6 +483,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.DateTimeOffset : _setDateTimeOffset   (parameter);           break;
 				case DataType.Guid           : _setGuid             (parameter);           break;
 				case DataType.Cursor         : _setCursor           (parameter);           break;
+				case DataType.NVarChar2      : _setNVarchar2        (parameter);           break;
 				default                      : base.SetParameterType(parameter, dataType); break;
 			}
 		}

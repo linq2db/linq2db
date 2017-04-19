@@ -2239,6 +2239,8 @@ namespace LinqToDB.SqlQuery
 
 						if (field.ColumnDescriptor != null)
 						{
+							if (field.ColumnDescriptor.DataType != DataType.Undefined && p.DataType == DataType.Undefined)
+								p.DataType = field.ColumnDescriptor.DataType;
 //							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbTypeSet)
 //								p.DbType = field.ColumnDescriptorptor.MapMemberInfo.DbType;
 //
