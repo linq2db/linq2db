@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -489,10 +491,73 @@ namespace LinqToDB.DataProvider.Oracle
 
 		OracleBulkCopy _bulkCopy;
 
+		class SequenceId
+		{
+			public decimal LEVEL { get; set; }
+			public decimal ID { get; set; }
+		}
+
+		private List<Int64> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
+		{
+			var results = new List<long>();
+
+			var sql         = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
+			var dr          = db.ExecuteReader(sql);
+			var converter   = new DataReaderExpressionConverter<SequenceId>(dr.Reader);
+			var sequenceIds = converter.CreateItemsFromRows();
+
+			results.AddRange(sequenceIds.Select(e => e.ID).ToList().Select(Convert.ToInt64));
+			return results;
+		}
+
 		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new OracleBulkCopy(this, GetConnectionType());
+
+			if (options.RetrieveSequence)
+			{
+				var entityDescriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+
+				bool foundIdentityColumn = false;
+				foreach (ColumnDescriptor column in entityDescriptor.Columns)
+				{
+					if (column.IsPrimaryKey && column.IsIdentity)
+					{
+						foundIdentityColumn = true;
+
+						string sequenceName = null;
+						foreach (CustomAttributeData attribute in column.MemberInfo.CustomAttributes)
+						{
+							if (attribute.AttributeType == typeof(SequenceNameAttribute))
+							{
+								sequenceName = (string) attribute.ConstructorArguments[0].Value;
+								break;
+							}
+						}
+
+						if (!string.IsNullOrWhiteSpace(sequenceName))
+						{
+							var sequences = ReserveSequenceValues(dataConnection, source.Count(), sequenceName);
+
+							int i = 0;
+							foreach (var item in source)
+							{
+								object value = Converter.ChangeType(sequences[i], column.MemberType);
+								column.MemberAccessor.SetValue(item, value);
+								i++;
+							}
+							break;
+						}
+						throw new Exception("No sequence name found. RetrieveSequence should be equal to false!");
+					}
+				}
+
+				if (!foundIdentityColumn)
+					throw new Exception("No identity expression found. RetrieveSequence should be equal to false!");
+
+				options.KeepIdentity = true;
+			}
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,

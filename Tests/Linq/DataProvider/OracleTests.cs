@@ -876,6 +876,85 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopyRetrieveSequencesProviderSpecific(string context, bool useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
+		}
+
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopyRetrieveSequencesMultipleRows(string context, bool useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
+		}
+
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopyRetrieveSequencesRowByRow(string context, bool useAlternativeBulkCopy)
+		{
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopyRetrieveSequence(context, BulkCopyType.RowByRow);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
+		}
+
+		static void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType)
+		{
+			var data = new[]
+			{
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+			};
+
+			using (var db = new TestDataConnection(context))
+			{
+				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+
+				var options = new BulkCopyOptions
+				{
+					MaxBatchSize = 5,
+					RetrieveSequence = true,
+					BulkCopyType = bulkCopyType,
+					NotifyAfter  = 3,
+					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+				};
+
+				db.BulkCopy(options, data);
+
+				foreach (var d in data)
+				{
+					Assert.That(d.ID, Is.GreaterThan(0));
+				}
+
+				//Assert.That(options.BulkCopyType, Is.EqualTo(bulkCopyType));
+			}
+		}
+
 		[System.Data.Linq.Mapping.Table(Name = "stg_trade_information")]
 		public class Trade
 		{

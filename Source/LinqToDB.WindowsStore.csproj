@@ -145,6 +145,7 @@
     <Compile Include="DataProvider\Firebird\FirebirdSqlBuilder.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlBuilder.cs" />
+    <Compile Include="DataProvider\Oracle\DataReaderExpressionConverter.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlBuilder.cs" />

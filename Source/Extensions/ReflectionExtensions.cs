@@ -566,6 +566,15 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		public static PropertyInfo GetPropertyEx(this Type type, string propertyName, Type argumentType)
+		{
+#if NETFX_CORE
+			return type.GetTypeInfo().GetAllProperties().FirstOrDefault(e => e.Name == propertyName && e.GetIndexParameters().Any(p => p.ParameterType == argumentType));
+#else
+			return type.GetProperty(propertyName, new[] { argumentType });
+#endif
+		}
+
 		public static PropertyInfo GetPropertyEx(this Type type, string propertyName)
 		{
 #if NETFX_CORE
