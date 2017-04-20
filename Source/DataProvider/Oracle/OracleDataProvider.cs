@@ -514,6 +514,8 @@ namespace LinqToDB.DataProvider.Oracle
 			if (_bulkCopy == null)
 				_bulkCopy = new OracleBulkCopy(this, GetConnectionType());
 
+			IList<T> sourceList = null;
+
 			if (options.RetrieveSequence)
 			{
 				var entityDescriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -521,50 +523,38 @@ namespace LinqToDB.DataProvider.Oracle
 				bool foundIdentityColumn = false;
 				foreach (ColumnDescriptor column in entityDescriptor.Columns)
 				{
-					if (column.IsPrimaryKey && column.IsIdentity)
+					foundIdentityColumn = foundIdentityColumn || column.IsIdentity;
+
+					var sequenceName = column.MemberInfo
+						.GetCustomAttributesEx(typeof(SequenceNameAttribute), true)
+						.OfType<SequenceNameAttribute>()
+						.Select(a => a.SequenceName)
+						.FirstOrDefault(s => !string.IsNullOrEmpty(s));
+
+					if (!string.IsNullOrWhiteSpace(sequenceName))
 					{
-						foundIdentityColumn = true;
+						sourceList = sourceList ?? source.ToList();
+						var sequences = ReserveSequenceValues(dataConnection, sourceList.Count, sequenceName);
 
-						string sequenceName = null;
-						foreach (var attribute in column.MemberInfo.GetCustomAttributesEx(true))
+						for (var i = 0; i < sourceList.Count; i++)
 						{
-							var nameAttribute = attribute as SequenceNameAttribute;
-							if (nameAttribute != null)
-							{
-								var sequenceNameAttribute = nameAttribute;
-								sequenceName              = sequenceNameAttribute.SequenceName;
-								break;
-							}
+							var item = sourceList[i];
+							var value = Converter.ChangeType(sequences[i], column.MemberType);
+							column.MemberAccessor.SetValue(item, value);
 						}
-
-						if (!string.IsNullOrWhiteSpace(sequenceName))
-						{
-							var sequences = ReserveSequenceValues(dataConnection, source.Count(), sequenceName);
-
-							int i = 0;
-							foreach (var item in source)
-							{
-								object value = Converter.ChangeType(sequences[i], column.MemberType);
-								column.MemberAccessor.SetValue(item, value);
-								i++;
-							}
-							break;
-						}
-						throw new Exception("No sequence name found. RetrieveSequence should be equal to false!");
+						break;
 					}
+
 				}
 
-				if (!foundIdentityColumn)
-					throw new Exception("No identity expression found. RetrieveSequence should be equal to false!");
-
-				options.KeepIdentity = true;
+				options.KeepIdentity = foundIdentityColumn;
 			}
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
 				dataConnection,
 				options,
-				source);
+				sourceList ?? source);
 		}
 
 #endregion
