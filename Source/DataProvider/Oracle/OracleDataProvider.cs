@@ -527,11 +527,13 @@ namespace LinqToDB.DataProvider.Oracle
 						foundIdentityColumn = true;
 
 						string sequenceName = null;
-						foreach (CustomAttributeData attribute in column.MemberInfo.CustomAttributes)
+						foreach (var attribute in column.MemberInfo.GetCustomAttributesEx(true))
 						{
-							if (attribute.AttributeType == typeof(SequenceNameAttribute))
+							var nameAttribute = attribute as SequenceNameAttribute;
+							if (nameAttribute != null)
 							{
-								sequenceName = (string) attribute.ConstructorArguments[0].Value;
+								var sequenceNameAttribute = nameAttribute;
+								sequenceName              = sequenceNameAttribute.SequenceName;
 								break;
 							}
 						}
