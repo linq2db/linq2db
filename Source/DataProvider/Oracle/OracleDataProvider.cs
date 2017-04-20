@@ -492,20 +492,18 @@ namespace LinqToDB.DataProvider.Oracle
 
 		class SequenceId
 		{
-			public decimal LEVEL { get; set; }
-			public decimal ID { get; set; }
+			public long LEVEL { get; set; }
+			public long ID { get; set; }
 		}
 
-		private List<Int64> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
+		private List<long> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
 		{
 			var results = new List<long>();
 
-			var sql         = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
-			var dr          = db.ExecuteReader(sql);
-			var converter   = new DataReaderExpressionConverter<SequenceId>(dr.Reader);
-			var sequenceIds = converter.CreateItemsFromRows();
+			var sql = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
+			var sequenceIds = db.Query<SequenceId>(sql);
 
-			results.AddRange(sequenceIds.Select(e => Convert.ToInt64(e.ID)));
+			results.AddRange(sequenceIds.Select(e => e.ID));
 			return results;
 		}
 
