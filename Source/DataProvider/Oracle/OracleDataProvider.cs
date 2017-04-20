@@ -528,7 +528,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 					if (!string.IsNullOrWhiteSpace(sequenceName))
 					{
-						sourceList = sourceList ?? source.ToList();
+						sourceList    = sourceList ?? source.ToList();
 						var sequences = ReserveSequenceValues(dataConnection, sourceList.Count, sequenceName);
 
 						for (var i = 0; i < sourceList.Count; i++)
