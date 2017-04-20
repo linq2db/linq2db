@@ -589,7 +589,8 @@ namespace Tests.DataProvider
 			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string          VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
 			[Column(DataType=DataType.Text,           Length=4000),                         Nullable         ] public string          TEXTDATATYPE           { get; set; } // CLOB
 			[Column(DataType=DataType.NChar,          Length=40),                           Nullable         ] public string          NCHARDATATYPE          { get; set; } // NCHAR(40)
-			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string          NVARCHARDATATYPE       { get; set; } // NVARCHAR2(40)
+			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string          NVARCHARDATATYPE       { get; set; } // NVARCHAR(40)
+			[Column(DataType=DataType.NVarChar2,      Length=40),                           Nullable         ] public string          NVARCHAR2DATATYPE      { get; set; } // NVARCHAR2(40)
 			[Column(DataType=DataType.NText,          Length=4000),                         Nullable         ] public string          NTEXTDATATYPE          { get; set; } // NCLOB
 			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]          BINARYDATATYPE         { get; set; } // BLOB
 			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]          BFILEDATATYPE          { get; set; } // BFILE
@@ -638,6 +639,33 @@ namespace Tests.DataProvider
 						DATETIME2DATATYPE = DateTime.Now
 					}
 				});
+			}
+		}
+
+		[Test, OracleDataContext]
+		public void NVarchar2Test1(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.InlineParameters = false;
+				db.BeginTransaction();
+
+				var query = from p in db.GetTable<ALLTYPE>()
+					select p;
+
+				var res = query.FirstOrDefault();
+				if (res != null)
+				{
+					var value = "致我们最爱的母亲";
+					query.Set(e => e.NVARCHAR2DATATYPE, () => value)
+						.Update();
+
+					res = (from p in db.GetTable<ALLTYPE>()
+						where p.ID == res.ID
+						select p).First();
+
+					Assert.That(res.NVARCHAR2DATATYPE, Is.EqualTo(value));
+				}
 			}
 		}
 
