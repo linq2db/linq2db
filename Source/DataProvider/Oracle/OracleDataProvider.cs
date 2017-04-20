@@ -498,7 +498,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private List<long> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
 		{
-			var sql = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
+			var sql         = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
 			var sequenceIds = db.Query<SequenceId>(sql);
 
 			return sequenceIds.Select(e => e.ID).ToList();
