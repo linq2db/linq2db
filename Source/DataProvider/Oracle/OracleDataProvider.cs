@@ -537,9 +537,7 @@ namespace LinqToDB.DataProvider.Oracle
 							var value = Converter.ChangeType(sequences[i], column.MemberType);
 							column.MemberAccessor.SetValue(item, value);
 						}
-						break;
 					}
-
 				}
 
 				options.KeepIdentity = foundIdentityColumn;
