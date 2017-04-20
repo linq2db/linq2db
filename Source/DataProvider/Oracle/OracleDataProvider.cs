@@ -505,7 +505,7 @@ namespace LinqToDB.DataProvider.Oracle
 			var converter   = new DataReaderExpressionConverter<SequenceId>(dr.Reader);
 			var sequenceIds = converter.CreateItemsFromRows();
 
-			results.AddRange(sequenceIds.Select(e => e.ID).ToList().Select(Convert.ToInt64));
+			results.AddRange(sequenceIds.Select(e => Convert.ToInt64(e.ID)));
 			return results;
 		}
 
