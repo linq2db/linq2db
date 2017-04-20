@@ -498,13 +498,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private List<long> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
 		{
-			var results = new List<long>();
-
 			var sql = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
 			var sequenceIds = db.Query<SequenceId>(sql);
 
-			results.AddRange(sequenceIds.Select(e => e.ID));
-			return results;
+			return sequenceIds.Select(e => e.ID).ToList();
 		}
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
