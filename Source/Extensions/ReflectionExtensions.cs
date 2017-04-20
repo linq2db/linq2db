@@ -573,7 +573,7 @@ namespace LinqToDB.Extensions
 #elif SILVERLIGHT || NETSTANDARD
 			return type.GetProperties().FirstOrDefault(e => e.Name == propertyName && e.GetIndexParameters().Any(p => p.ParameterType == argumentType));
 #else
-            return type.GetProperty(propertyName, new Type[] { argumentType });
+			return type.GetProperty(propertyName, new Type[] { argumentType });
 #endif
 		}
 
