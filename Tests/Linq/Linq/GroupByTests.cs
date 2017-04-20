@@ -1826,10 +1826,10 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void GroupBy_ToDictionary(string context)
+		public void GroupByGuard(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-
+			using(new AllowMultipleQuery())
+			using(new GuardGrouping())
 			using (var db = GetDataContext(context))
 			{
 				// group on client
@@ -1838,16 +1838,31 @@ namespace Tests.Linq
 					.GroupBy(_ => _.Gender)
 					.ToDictionary(_ => _.Key, _ => _.ToList());
 
-				// group on server
-				var dictionary2 = db.Person
-					.GroupBy(_ => _.Gender)
-					//.AsEnumerable()
-					.ToDictionary(_ => _.Key, _ => _.ToList());
+				Assert.AreEqual(2, dictionary1.Count);
+				Assert.AreEqual(2, dictionary1.First().Value.Count);
 
-				Assert.AreEqual(1, dictionary1.Count);
-				Assert.AreEqual(2, dictionary1.Single().Value.Count);
-				Assert.AreEqual(1, dictionary2.Count);
-				Assert.AreEqual(0, dictionary2.Single().Value.Count);
+				Assert.Throws<InvalidOperationException>(() =>
+				{
+					// group on server
+					db.Person
+						.GroupBy(_ => _.Gender)
+						.ToDictionary(_ => _.Key, _ => _.ToList());
+				});
+
+				Assert.Throws<InvalidOperationException>(() =>
+				{
+					db.Person
+						.GroupBy(_ => _)
+						.ToDictionary(_ => _.Key, _ => _.ToList());
+				});
+
+				Assert.Throws<InvalidOperationException>(() =>
+				{
+					db.Person
+						.GroupBy(_ => _)
+						.ToList();
+				});
+
 			}
 		}
 	}

@@ -211,6 +211,20 @@ namespace LinqToDB.Linq.Builder
 			{
 				public Expression GetGrouping(GroupByContext context)
 				{
+					if (Configuration.Linq.GuardGrouping)
+					{
+						if (context._element.Lambda.Parameters.Count == 1                   && 
+							context._element.Body == context._element.Lambda.Parameters[0])
+						{
+							var ex = new InvalidOperationException(
+								"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
+								"Set Configuration.Linq.GuardGrouping = false to disable this check."
+								);
+							ex.HelpLink = "https://github.com/linq2db/linq2db/issues/365";
+							throw ex;
+						}
+					}
+
 					var parameters = context.Builder.CurrentSqlParameters
 						.Select((p,i) => new { p, i })
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
