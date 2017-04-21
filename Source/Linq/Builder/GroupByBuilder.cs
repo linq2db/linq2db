@@ -216,7 +216,7 @@ namespace LinqToDB.Linq.Builder
 						if (context._element.Lambda.Parameters.Count == 1                   && 
 							context._element.Body == context._element.Lambda.Parameters[0])
 						{
-							var ex = new InvalidOperationException(
+							var ex = new LinqToDBException(
 								"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
 								"Set Configuration.Linq.GuardGrouping = false to disable this check."
 								);

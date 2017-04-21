@@ -1841,7 +1841,15 @@ namespace Tests.Linq
 				Assert.AreEqual(2, dictionary1.Count);
 				Assert.AreEqual(2, dictionary1.First().Value.Count);
 
-				Assert.Throws<InvalidOperationException>(() =>
+				var list =
+				(
+					from p in db.Person
+					group p by p.Gender into gr
+					select new { gr.Key, Count = gr.Count() }
+				)
+				.ToDictionary(_ => _.Key);
+
+				Assert.Throws<LinqToDBException>(() =>
 				{
 					// group on server
 					db.Person
@@ -1849,20 +1857,19 @@ namespace Tests.Linq
 						.ToDictionary(_ => _.Key, _ => _.ToList());
 				});
 
-				Assert.Throws<InvalidOperationException>(() =>
+				Assert.Throws<LinqToDBException>(() =>
 				{
 					db.Person
 						.GroupBy(_ => _)
 						.ToDictionary(_ => _.Key, _ => _.ToList());
 				});
 
-				Assert.Throws<InvalidOperationException>(() =>
+				Assert.Throws<LinqToDBException>(() =>
 				{
 					db.Person
 						.GroupBy(_ => _)
 						.ToList();
 				});
-
 			}
 		}
 	}
