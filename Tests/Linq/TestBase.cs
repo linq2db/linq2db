@@ -1049,6 +1049,19 @@ namespace Tests
 		}
 	}
 
+	public class GuardGrouping : IDisposable
+	{
+		public GuardGrouping()
+		{
+			Configuration.Linq.GuardGrouping = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.GuardGrouping = false;
+		}
+	}
+
 	public class WithoutJoinOptimization : IDisposable
 	{
 		public WithoutJoinOptimization()
