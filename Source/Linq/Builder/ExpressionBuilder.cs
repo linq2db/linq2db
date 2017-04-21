@@ -332,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var me = (MemberExpression)expr;
-							var l  = ConvertMethodExpression(me.Member);
+							var l  = ConvertMethodExpression(me.Member.ReflectedTypeEx(), me.Member);
 
 							if (l != null)
 							{
@@ -479,7 +479,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = ConvertMethodExpression(call.Method);
+							var l = ConvertMethodExpression(call.Method.ReflectedTypeEx(), call.Method);
 
 							if (l != null)
 								return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));
@@ -505,9 +505,9 @@ namespace LinqToDB.Linq.Builder
 			return new TransformInfo(expr);
 		}
 
-		LambdaExpression ConvertMethodExpression(MemberInfo mi)
+		LambdaExpression ConvertMethodExpression(Type type, MemberInfo mi)
 		{
-			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(mi, a => a.Configuration);
+			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
 
 			if (attr != null)
 			{
@@ -1230,7 +1230,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, _ => {});
+				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
 
 				if (expr.Find(e => e.NodeType == ExpressionType.Parameter && e != p) != null)
 					return expression;

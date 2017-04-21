@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using LinqToDB.Data;
 using NUnit.Framework;
@@ -28,11 +27,19 @@ namespace Tests.OrmBattle
 	[TestFixture]
 	public class OrmBattleTests : TestBase
 	{
+		private const double doubleDelta = 1E-9;
+		private string _currentContext;
 		protected NorthwindDB db;
 
 		protected void Setup(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+			if (_currentContext == context)
+				return;
+
+			using (db)
+				db = null;
+
+			// LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 			db = new NorthwindDB(context);
 
 			Customers = db.Customer.ToList();
@@ -50,7 +57,9 @@ namespace Tests.OrmBattle
 				c.Orders = Order.Where(o => c.CustomerID == o.CustomerID).ToList();
 
 			DataConnection.TurnTraceSwitchOn();
-			DataConnection.WriteTraceLine = (s, s1) => Debug.WriteLine(s, s1);
+			DataConnection.WriteTraceLine = (s, s1) => Console.WriteLine(s, s1);
+
+			_currentContext = context;
 		}
 
 		[TearDown]
@@ -58,18 +67,20 @@ namespace Tests.OrmBattle
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 			DataConnection.TraceSwitch = null;
-			db.Dispose();
+			_currentContext = null;
+			using (db)
+				db = null;
 		}
-
+#pragma warning disable 0169
 		List<Northwind.Customer> Customers;
 		List<Northwind.Employee> Employees;
 		List<Northwind.Order> Order;
 		List<Northwind.Product> Products;
-		List<Northwind.Category> Categories;
-		List<Northwind.Supplier> Suppliers;
-		List<Northwind.Product> DiscontinuedProducts;
-		List<Northwind.OrderDetail> OrderDetails;
-
+//		List<Northwind.Category> Categories;
+//		List<Northwind.Supplier> Suppliers;
+//		List<Northwind.Product> DiscontinuedProducts;
+//		List<Northwind.OrderDetail> OrderDetails;
+#pragma warning restore 0169
 		// DTO for testing purposes.
 		public class OrderDTO
 		{
@@ -343,28 +354,31 @@ namespace Tests.OrmBattle
 		}
 
 		[Test, NorthwindDataContext]
-		[Category("Projections")]
+		[Category("WindowsOnly")]
 		public void SelectSubqueryTest(string context)
 		{
-			Setup(context);
-			Assert.AreNotEqual(db.GetType().FullName, "OrmBattle.EF7Model.NorthwindContext",
-				"EF7 has infinite loop here");
+			using (new AllowMultipleQuery())
+			{
+				Setup(context);
+				Assert.AreNotEqual(db.GetType().FullName, "OrmBattle.EF7Model.NorthwindContext",
+					"EF7 has infinite loop here");
 
-			var result = from o in db.Order
-				select db.Customer.Where(c => c.CustomerID == o.Customer.CustomerID);
-			var expected = from o in Order
-				select Customers.Where(c => c.CustomerID == o.Customer.CustomerID);
-			var list = result.ToList();
+				var result = from o in db.Order
+					select db.Customer.Where(c => c.CustomerID == o.Customer.CustomerID);
+				var expected = from o in Order
+					select Customers.Where(c => c.CustomerID == o.Customer.CustomerID);
+				var list = result.ToList();
 
-			var expectedList = expected.ToList();
-			CollectionAssert.AreEquivalent(expectedList, list);
+				var expectedList = expected.ToList();
+				CollectionAssert.AreEquivalent(expectedList, list);
 
-			//Assert.AreEqual(expected.Count(), list.Count);
-			//expected.Zip(result, (expectedCustomers, actualCustomers) => {
-			//                       Assert.AreEqual(expectedCustomers.Count(), actualCustomers.Count());
-			//                       Assert.AreEqual(0, expectedCustomers.Except(actualCustomers));
-			//                       return true;
-			//                     });
+				//Assert.AreEqual(expected.Count(), list.Count);
+				//expected.Zip(result, (expectedCustomers, actualCustomers) => {
+				//                       Assert.AreEqual(expectedCustomers.Count(), actualCustomers.Count());
+				//                       Assert.AreEqual(0, expectedCustomers.Except(actualCustomers));
+				//                       return true;
+				//                     });
+			}
 		}
 
 		[Test, NorthwindDataContext]
@@ -514,20 +528,23 @@ namespace Tests.OrmBattle
 		[Category("Take/Skip")]
 		public void TakeNestedTest(string context)
 		{
-			Setup(context);
-			var result =
-				from c in db.Customer
-				select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
-			var expected =
-				from c in Customers
-				select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
-			var list = result.ToList();
-			Assert.AreEqual(expected.Count(), list.Count);
-			foreach (var anonymous in list)
+			using (new AllowMultipleQuery())
 			{
-				var count = anonymous.TopOrder.ToList().Count;
-				Assert.GreaterOrEqual(count, 0);
-				Assert.LessOrEqual(count, 5);
+				Setup(context);
+				var result =
+					from c in db.Customer
+					select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
+				var expected =
+					from c in Customers
+					select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
+				var list = result.ToList();
+				Assert.AreEqual(expected.Count(), list.Count);
+				foreach (var anonymous in list)
+				{
+					var count = anonymous.TopOrder.ToList().Count;
+					Assert.GreaterOrEqual(count, 0);
+					Assert.LessOrEqual(count, 5);
+				}
 			}
 		}
 
@@ -654,6 +671,7 @@ namespace Tests.OrmBattle
 		[Category("Ordering")]
 		public void OrderByDistinctTest(string context)
 		{
+			//TODO: sdanyliv: data in Northwind.sqlite is broken
 			Setup(context);
 			var result = db.Customer
 				.OrderBy(c => c.CompanyName)
@@ -674,6 +692,7 @@ namespace Tests.OrmBattle
 		[Category("Ordering")]
 		public void OrderBySelectManyTest(string context)
 		{
+			//TODO: sdanyliv: data in Northwind.sqlite is broken
 			Setup(context);
 			var result =
 				from c in db.Customer.OrderBy(c => c.ContactName)
@@ -834,6 +853,7 @@ namespace Tests.OrmBattle
 		[Category("Grouping")]
 		public void ComplexGroupingTest(string context)
 		{
+			//TODO: sdanyliv: Nested queries support is not implemented. Possible in V2
 			Setup(context);
 			var result =
 				from c in db.Customer
@@ -1007,6 +1027,7 @@ namespace Tests.OrmBattle
 		[Category("Type casts")]
 		public void TypeCastIsChildConditionalTest(string context)
 		{
+			//TODO: sdanyliv: strange test for me
 			Setup(context);
 			var result = db.Product
 				.Select(x => x is DiscontinuedProduct
@@ -1093,7 +1114,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, IncludeDataContextSource("Northwind")]
 		[Category("Element operations")]
 		public void NestedFirstOrDefaultTest(string context)
 		{
@@ -1113,7 +1134,7 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, IncludeDataContextSource("Northwind")]
 		[Category("Element operations")]
 		public void FirstOrDefaultEntitySetTest(string context)
 		{
@@ -1124,7 +1145,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(customersCount, list.Count);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, IncludeDataContextSource("Northwind")]
 		[Category("Element operations")]
 		public void NestedSingleOrDefaultTest(string context)
 		{
@@ -1135,7 +1156,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(customersCount, list.Count);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, IncludeDataContextSource("Northwind")]
 		[Category("Element operations")]
 		public void NestedSingleTest(string context)
 		{
@@ -1155,7 +1176,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual("CONSH", customer.CustomerID);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, IncludeDataContextSource("Northwind")]
 		[Category("Element operations")]
 		public void NestedElementAtTest(string context)
 		{
@@ -1256,6 +1277,7 @@ namespace Tests.OrmBattle
 		[Category("All/Any/Contains")]
 		public void AnyParameterizedTest(string context)
 		{
+			//TODO: sdanyliv: It may take many efforts to implement. And I don't see any benefits.
 			Setup(context);
 			var ids = new[] {"ABCDE", "ALFKI"};
 			var result = db.Customer.Where(c => ids.Any(id => c.CustomerID == id));
@@ -1279,7 +1301,7 @@ namespace Tests.OrmBattle
 
 		#region Aggregates tests
 
-		[Test, Ignore("Not working at the Moment -> issue #573")]
+		[Test]
 		[NorthwindDataContext(false, true)]
 		[Category("Aggregates")]
 		public void SumTest(string context)
@@ -1287,7 +1309,7 @@ namespace Tests.OrmBattle
 			Setup(context);
 			var sum = db.Order.Select(o => o.Freight).Sum();
 			var sum1 = Order.Select(o => o.Freight).Sum();
-			Assert.AreEqual(sum1, sum);
+			Assert.AreEqual((double)sum1, (double)sum, doubleDelta);
 		}
 
 		[Test, NorthwindDataContext]
@@ -1339,6 +1361,7 @@ namespace Tests.OrmBattle
 		[Category("Join")]
 		public void GroupJoinTest(string context)
 		{
+			//TODO: sdanyliv: o.Customer.CustomerID - it is association that means additional JOIN. We have to decide if it is a bug.
 			Setup(context);
 			var result =
 				from c in db.Customer
@@ -1386,6 +1409,7 @@ namespace Tests.OrmBattle
 		[Category("Join")]
 		public void LeftJoinTest(string context)
 		{
+			//TODO: sdanyliv: Same as in GroupJoinTest, p.Category.CategoryID - is an association.
 			Setup(context);
 			var result =
 				from c in db.Category
@@ -1465,22 +1489,26 @@ namespace Tests.OrmBattle
 		#region Complex tests
 
 		[Test, NorthwindDataContext]
-		[Category("Complex")]
+		[Category("WindowsOnly")]
 		public void ComplexTest1(string context)
 		{
-			Setup(context);
-			var result = db.Supplier.Select(
-				supplier => db.Product.Select(
-					product => db.Product.Where(p => p.ProductID == product.ProductID && p.Supplier.SupplierID == supplier.SupplierID)));
-			var count = result.ToList().Count;
-			Assert.Greater(count, 0);
-			foreach (var queryable in result)
+			using (new AllowMultipleQuery())
 			{
-				foreach (var queryable1 in queryable)
+
+				Setup(context);
+				var result = db.Supplier.Select(
+					supplier => db.Product.Select(
+						product => db.Product.Where(p => p.ProductID == product.ProductID && p.Supplier.SupplierID == supplier.SupplierID)));
+				var count = result.ToList().Count;
+				Assert.Greater(count, 0);
+				foreach (var queryable in result)
 				{
-					foreach (var product in queryable1)
+					foreach (var queryable1 in queryable)
 					{
-						Assert.IsNotNull(product);
+						foreach (var product in queryable1)
+						{
+							Assert.IsNotNull(product);
+						}
 					}
 				}
 			}
@@ -1491,6 +1519,15 @@ namespace Tests.OrmBattle
 		public void ComplexTest2(string context)
 		{
 			Setup(context);
+
+			//TODO: sdanyliv: It can be replaced by the following linq expression. We have to decide that we have time to implement.
+			var r = from c in db.Customer
+				group c by c.Country
+				into g
+				from gi in g
+				where gi.CompanyName.Substring(0, 1) == g.Key.Substring(0, 1)
+				select gi;
+
 			var result = db.Customer
 				.GroupBy(c => c.Country,
 					(country, customers) =>
@@ -1505,7 +1542,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(result).Count());
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, NorthwindDataContext, Ignore("Disabled, multiply queries")]
 		[Category("Complex")]
 		public void ComplexTest3(string context)
 		{
@@ -1531,6 +1568,7 @@ namespace Tests.OrmBattle
 		[Category("Complex")]
 		public void ComplexTest4(string context)
 		{
+			//TODO: sdanyliv: This is a bug
 			Setup(context);
 			var result = db.Customer
 				.Take(2)
@@ -1547,7 +1585,7 @@ namespace Tests.OrmBattle
 				item.ToList();
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, NorthwindDataContext, Ignore("Disabled, multiply queries")]
 		[Category("Complex")]
 		public void ComplexTest5(string context)
 		{
@@ -1568,6 +1606,18 @@ namespace Tests.OrmBattle
 		public void ComplexTest6(string context)
 		{
 			Setup(context);
+
+			//TODO: sdanyliv: Another strange query that needs efforts for implementation. Can be replaced by this one:
+			var r =
+				from c in db.Customer
+				from o in db.Order
+				where o.Customer == c
+				select new
+				{
+					Customer = c,
+					Order = o
+				};
+
 			var result = db.Customer
 				.Select(c => new {Customer = c, Order = db.Order.Where(o => o.Customer == c)})
 				.SelectMany(i => i.Order.Select(o => new {i.Customer, Order = o}));

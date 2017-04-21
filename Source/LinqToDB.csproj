@@ -398,6 +398,7 @@
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
     <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
+    <Compile Include="SqlQuery\QueryHelper.cs" />
     <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
     <Compile Include="Sql\Sql.cs" />
@@ -471,6 +472,7 @@
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
     <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
+    <Compile Include="TakeHints.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

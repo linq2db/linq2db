@@ -170,8 +170,6 @@ namespace Tests.DataProvider
 
 				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
 				TestNumeric(conn,  3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
-				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
-				TestNumeric(conn,  1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn, decimal.MinValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
 				TestNumeric(conn, decimal.MaxValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
 				TestNumeric(conn, decimal.MinValue,  DataType.VarNumeric, "bigint bit decimal int money numeric smallint tinyint float real");
@@ -180,6 +178,16 @@ namespace Tests.DataProvider
 				TestNumeric(conn, +922337203685477m, DataType.Money);
 				TestNumeric(conn, -214748m,          DataType.SmallMoney);
 				TestNumeric(conn, +214748m,          DataType.SmallMoney);
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs), Category("WindowsOnly")]
+		public void TestNumericsDouble(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn, 1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 			}
 		}
 
@@ -369,6 +377,21 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<XmlDocument>("SELECT  @p", DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT  @p", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT  @p", new DataParameter("p", xml)). ToString(), Is.EqualTo("<xml />"));
+			}
+		}
+
+		/// <summary>
+		/// Ensure we can pass data as Json parameter type and get 
+		/// same value back out equivalent in value
+		/// </summary>
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestJson(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var testJson = "{\"name\":\"bob\", \"age\":10}";
+
+				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter("p", testJson, DataType.Json)), Is.EqualTo(testJson));
 			}
 		}
 

@@ -1,10 +1,11 @@
-﻿NorthwindSqliteMs * Data Source=Database\Northwind.sqlite    * SQLite
+﻿NorthwindSqliteMs * Data Source=Database\Northwind.sqlite     * SQLite
 
-SQLiteMs       * Data Source=Database\TestData.sqlite      * SQLite
-SQLite.Data    * Data Source=Database\Data\TestData.sqlite * SQLite
-			   
-MySql57        * Server=localhost;Port=3306;Database=TestData;Uid=root;Pwd=Password12!;charset=utf8;                                            * MySql.Data.MySqlClient
-PostgreSQL     * Server=localhost;Port=5432;Database=TestData;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100 * Npgsql
+!SQLiteMs       * Data Source=Database\TestData.sqlite      * SQLite
+SQLite.Data     * Data Source=Database\Data\TestData.sqlite * SQLite
 
-SqlServer.2012 * Server=localhost\SQL2012SP1;Database=TestData;User Id=sa;Password=Password12!;                                                 * System.Data.SqlClient 
+MySql57         * Server=localhost;Port=3306;Database=TestData;Uid=root;Pwd=Password12!;charset=utf8;                                            * MySql.Data.MySqlClient
+PostgreSQL      * Server=localhost;Port=5432;Database=TestData;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100 * Npgsql
+
+Northwind       * Server=localhost\SQL2012SP1;Database=Northwind;User Id=sa;Password=Password12!;                                                * System.Data.SqlClient 
+SqlServer.2012  * Server=localhost\SQL2012SP1;Database=TestData;User Id=sa;Password=Password12!;                                                 * System.Data.SqlClient 
 --SqlServer.2008 * Server=localhost\SQL2008R2SP2;Database=TestData;User Id=sa;Password=Password12!;                                               * System.Data.SqlClient 

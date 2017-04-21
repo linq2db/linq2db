@@ -1,4 +1,4 @@
-DROP TABLE "Doctor"
+﻿DROP TABLE "Doctor"
 GO
 
 DROP TABLE "Patient"
@@ -45,6 +45,8 @@ GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Testerson', 'M')
 GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jane',   'Doe',       'F')
+GO
+INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jürgen', 'König',     'M')
 GO
 
 -- Doctor Table Extension

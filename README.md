@@ -1,5 +1,4 @@
-LINQ to DB [![build status](https://ci.appveyor.com/api/projects/status/github/linq2db/linq2db)](https://ci.appveyor.com/project/igor-tkachev/linq2db)
-==========
+# LINQ to DB [![build status](https://ci.appveyor.com/api/projects/status/github/linq2db/linq2db)](https://ci.appveyor.com/project/igor-tkachev/linq2db) [![Build Status](https://travis-ci.org/linq2db/linq2db.svg?branch=master)](https://travis-ci.org/linq2db/linq2db)
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
 
@@ -7,28 +6,34 @@ Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoc
 
 However, it's not as heavy as LINQ to SQL or Entity Framework. There is no change-tracking, so you have to manage that yourself, but on the plus side you get more control and faster access to your data.
 
+In other words **LINQ to DB is type-safe SQL**.
+
 Visit our [blog](http://blog.linq2db.com/) and see [Wiki](https://github.com/linq2db/linq2db/wiki) for more details.
 
-Code examples and demos can be found [here] (https://github.com/linq2db/examples).
+Code examples and demos can be found [here](https://github.com/linq2db/examples).
 
-Project Build Status
+# Project Build Status
 --------------------
-||linq2db|linq2db.core
----|-------|--------
-|master|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)|[![Build status](https://ci.appveyor.com/api/projects/status/au06kbyxx8imhrf6/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db-8c54d/branch/master)|
-|latest|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)|[![Build status](https://ci.appveyor.com/api/projects/status/au06kbyxx8imhrf6?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db-8c54d)|
+| |Appveyor|Travis
+-----|-------|--------
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)|[![Build Status](https://travis-ci.org/linq2db/linq2db.svg?branch=master)](https://travis-ci.org/linq2db/linq2db)
+|latest|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)| |
 
-Feeds
-----------
+# Feeds
+
 * Release builds can be found on [NuGet](https://www.nuget.org/packages?q=linq2db)
 * [MyGet](https://www.myget.org/gallery/linq2db)
  * V2 `https://www.myget.org/F/linq2db/api/v2`
  * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
 
-Let's get started
------------------
+# Let's get started
 
-From **NuGet**: `Install-Package linq2db`
+From **NuGet**: 
+* `Install-Package linq2db` - .Net
+* `Install-Package linq2db.core` - .Net Core
+
+## Configuring connection strings
+### .Net
 
 In your `web.config` or `app.config` make sure you have a connection string:
 
@@ -39,8 +44,51 @@ In your `web.config` or `app.config` make sure you have a connection string:
     providerName     = "SqlServer" />
 </connectionStrings>
 ```
+### .Net Core
+.Net Core does not support `System.Configuration` so to configure connection strings you should implement `ILinqToDBSettings`, for example:
+```cs
+public class ConnectionStringSettings : IConnectionStringSettings
+{
+	public string ConnectionString { get; set; }
+	public string Name { get; set; }
+	public string ProviderName { get; set; }
+	public bool IsGlobal => false;
+}
 
-Now let's create a **POCO** class:
+public class MySettings : ILinqToDBSettings
+{
+	public IEnumerable<IDataProviderSettings> DataProviders
+	{
+		get { yield break; }
+	}
+	
+	public string DefaultConfiguration => "SqlServer";
+	public string DefaultDataProvider => "SqlServer";
+
+	public IEnumerable<IConnectionStringSettings> ConnectionStrings
+	{
+		get
+		{
+			yield return
+				new ConnectionStringSettings
+				{
+					Name = "SqlServer",
+					ProviderName = "SqlServer",
+					ConnectionString = @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
+				};
+		}
+	}
+}
+
+```
+
+And later just set:
+```cs
+DataConnection.DefaultSettings = new MySettings();
+```
+You can also use same for regular .Net
+
+## Now let's create a **POCO** class:
 
 ```c#
 using System;

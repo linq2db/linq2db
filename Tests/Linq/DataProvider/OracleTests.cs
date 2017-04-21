@@ -26,7 +26,7 @@ namespace Tests.DataProvider
 		[AttributeUsage(AttributeTargets.Method)]
 		class OracleDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public OracleDataContextAttribute(bool includeLinqService = true)
+			public OracleDataContextAttribute(bool includeLinqService = false)
 				: base(includeLinqService, ProviderName.OracleNative, ProviderName.OracleManaged)
 			{
 			}
@@ -1649,6 +1649,58 @@ namespace Tests.DataProvider
 
 		}
 
+		[Test, OracleDataContext]
+		public void Issue612Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					// initialize with ticks with default oracle timestamp presicion (6 fractional seconds)
+					var expected = new DateTimeOffset(636264847785126550, TimeSpan.FromHours(3));
+
+					db.CreateTable<DateTimeOffsetTable>();
+
+					db.Insert(new DateTimeOffsetTable { DateTimeOffsetValue = expected });
+
+					var actual = db.GetTable<DateTimeOffsetTable>().Select(x => x.DateTimeOffsetValue).Single();
+
+					Assert.That(actual, Is.EqualTo(expected));
+				}
+				finally
+				{
+					db.DropTable<DateTimeOffsetTable>();
+				}
+			}
+
+		}
+
+		[Test, OracleDataContext]
+		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					// initialize with ticks with default DateTimeOffset presicion (7 fractional seconds for Oracle TSTZ)
+					var expected = new DateTimeOffset(636264847785126559, TimeSpan.FromHours(3));
+
+					db.CreateTable<DateTimeOffsetTable>();
+
+					db.Insert(new DateTimeOffsetTable { DateTimeOffsetValue = expected });
+
+					var actual = db.GetTable<DateTimeOffsetTable>().Select(x => x.DateTimeOffsetValue).Single();
+
+					Assert.That(actual, Is.EqualTo(expected).Within(9).Ticks);
+				}
+				finally
+				{
+					db.DropTable<DateTimeOffsetTable>();
+				}
+			}
+
+		}
+
 		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int id)
 		{
 			return dataConnection.QueryProc<Person>("Person_SelectByKey",
@@ -1662,6 +1714,49 @@ namespace Tests.DataProvider
 			using (var db = new TestDataConnection(context))
 			{
 				AreEqual(Person.Where(_ => _.ID == 1), PersonSelectByKey(db, 1));
+			}
+		}
+
+		[Table(Schema = "TESTUSER", Name = "ALLTYPES")]
+		public partial class ALLTYPE2
+		{
+			[Column, PrimaryKey, Identity] public decimal ID             { get; set; } // NUMBER
+			[Column,             Nullable] public byte[]  BINARYDATATYPE { get; set; } // BLOB
+			[Column,             Nullable] public byte[]  BFILEDATATYPE  { get; set; } // BFILE
+			[Column,             Nullable] public byte[]  GUIDDATATYPE   { get; set; } // RAW(16)
+		}
+
+
+		[Test, OracleDataContext()]
+		public void Issue539(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var n = 0;
+				try
+				{
+					var val = new byte[] { 1, 2, 3 };
+
+					n = Convert.ToInt32(db.GetTable<ALLTYPE2>()
+						.InsertWithIdentity(() => new ALLTYPE2 { ID = 1000, BINARYDATATYPE = val, GUIDDATATYPE = val }));
+
+					var qry = db.GetTable<ALLTYPE2>().Where(_ => _.ID == 1000 && _.GUIDDATATYPE == val);
+
+					var data = db.GetTable<ALLTYPE2>()
+						.Where(_ => _.ID == n)
+						.Select(_ => new
+						{
+							_.BINARYDATATYPE,
+							Count = qry.Count()
+						}).First();
+
+					AreEqual(val, data.BINARYDATATYPE);
+
+				}
+				finally
+				{
+					db.GetTable<ALLTYPE2>().Delete(_ => _.ID == n);
+				}
 			}
 		}
 	}

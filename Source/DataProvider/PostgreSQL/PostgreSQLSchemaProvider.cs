@@ -33,6 +33,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          FullName },
 
 				new DataTypeInfo { TypeName = "hstore",                      DataType = typeof(Dictionary<string,string>).FullName},
+				new DataTypeInfo { TypeName = "json",                        DataType = typeof(string).        FullName },
+				new DataTypeInfo { TypeName = "jsonb",                       DataType = typeof(string).        FullName },
 
 				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        FullName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        FullName, CreateFormat = "character({0})",                    CreateParameters = "length" },
@@ -245,6 +247,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "bit"                         :
 				case "varbit"                      : return DataType.BitArray;
 				case "hstore"                      : return DataType.Dictionary;
+				case "json"                        : return DataType.Json;
+				case "jsonb"                       : return DataType.BinaryJson;
 			}
 
 			return DataType.Undefined;

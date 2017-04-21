@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Metadata
 {
@@ -26,11 +27,28 @@ namespace LinqToDB.Metadata
 
 		readonly ConcurrentDictionary<MemberInfo,List<Attribute>> _members = new ConcurrentDictionary<MemberInfo,List<Attribute>>();
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
 			List<Attribute> attrs;
-			return _members.TryGetValue(memberInfo, out attrs) ? attrs.OfType<T>().ToArray() : Array<T>.Empty;
+
+			var got = _members.TryGetValue(memberInfo, out attrs);
+
+			if (got)
+				return attrs.OfType<T>().ToArray();
+
+			if (inherit == false)
+				return Array<T>.Empty;
+
+			var parent = type.BaseTypeEx();
+			if (parent == null || parent == typeof(object) || parent == typeof(ValueType) || parent == typeof(Enum))
+				return Array<T>.Empty;
+
+			var mi = parent.GetMemberEx(memberInfo);
+			if (mi == null)
+				return Array<T>.Empty;
+
+			return GetAttributes<T>(parent, mi, inherit);
 		}
 
 		public void AddAttribute(MemberInfo memberInfo, Attribute attribute)

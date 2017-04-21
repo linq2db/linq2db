@@ -234,6 +234,28 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		/// <summary>
+		/// Returns <see cref="MemberInfo"/> of <paramref name="type"/> described by <paramref name="memberInfo"/>
+		/// It us useful when member's declared and reflected types are not the same
+		/// </summary>
+		/// <remarks>This method searches only properties, fields and methods</remarks>
+		/// <param name="type"><see cref="Type"/> to find member info</param>
+		/// <param name="memberInfo"><see cref="MemberInfo"/> </param>
+		/// <returns><see cref="MemberInfo"/> or null</returns>
+		public static MemberInfo GetMemberEx(this Type type, MemberInfo memberInfo)
+		{
+			if (memberInfo.IsPropertyEx())
+				return type.GetPropertyEx(memberInfo.Name);
+
+			if (memberInfo.IsFieldEx())
+				return type.GetFieldEx   (memberInfo.Name);
+
+			if (memberInfo.IsMethodEx())
+				return type.GetMethodEx  (memberInfo.Name, ((MethodInfo) memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
+
+			return null;
+		}
+
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
 		{
 #if NETFX_CORE || NETSTANDARD
@@ -1001,9 +1023,9 @@ namespace LinqToDB.Extensions
 		/// <remarks><see cref="System.String"/>. <see cref="Stream"/>. 
 		/// <see cref="XmlReader"/>. <see cref="XmlDocument"/>. are specially handled by the library
 		/// and, therefore, can be treated as scalar types.</remarks>
-		public static bool IsScalar(this Type type)
+		public static bool IsScalar(this Type type, bool checkArrayElementType = true)
 		{
-			while (type.IsArray)
+			while (checkArrayElementType && type.IsArray)
 				type = type.GetElementType();
 
 			return type.IsValueTypeEx()

@@ -28,7 +28,7 @@ namespace Tests.Metadata
 		public void FieldAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<ColumnAttribute>(MemberHelper.MemberOf<AttributeReaderTests>(a => a.Field1));
+			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(AttributeReaderTests), MemberHelper.MemberOf<AttributeReaderTests>(a => a.Field1));
 
 			Assert.AreEqual(0, attrs.Length);
 		}
@@ -40,7 +40,7 @@ namespace Tests.Metadata
 		public void PropertyAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<ColumnAttribute>(MemberHelper.MemberOf<AttributeReaderTests>(a => a.Property1));
+			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(AttributeReaderTests), MemberHelper.MemberOf<AttributeReaderTests>(a => a.Property1));
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);

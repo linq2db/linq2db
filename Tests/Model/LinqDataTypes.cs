@@ -85,15 +85,18 @@ namespace Tests.Model
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 			return
-				other.ID                         == ID            &&
-				other.MoneyValue                 == MoneyValue    &&
-				other.BoolValue                  == BoolValue     &&
-				other.GuidValue                  == GuidValue     &&
-				other.DateTimeValue              == DateTimeValue;
-				//other.DateTimeValue.Value.Date   == DateTimeValue.Value.Date &&
-				//other.DateTimeValue.Value.Hour   == DateTimeValue.Value.Hour &&
-				//other.DateTimeValue.Value.Minute == DateTimeValue.Value.Minute &&
-				//other.DateTimeValue.Value.Second == DateTimeValue.Value.Second;
+				other.ID                     == ID                     &&
+ 				other.MoneyValue             == MoneyValue             &&
+ 				other.BoolValue              == BoolValue              &&
+ 				other.GuidValue              == GuidValue              &&				
+				other.DateTimeValue.HasValue == DateTimeValue.HasValue &&
+				other.DateTimeValue == null ||
+				(
+					other.DateTimeValue.Value.Date   == DateTimeValue.Value.Date   &&
+					other.DateTimeValue.Value.Hour   == DateTimeValue.Value.Hour   &&
+					other.DateTimeValue.Value.Minute == DateTimeValue.Value.Minute &&
+					other.DateTimeValue.Value.Second == DateTimeValue.Value.Second
+				);
 		}
 
 		public override int GetHashCode()

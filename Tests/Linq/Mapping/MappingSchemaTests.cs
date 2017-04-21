@@ -87,11 +87,11 @@ namespace Tests.Mapping
 			Convert<DateTime,string>.Lambda = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
 
 #if !NETSTANDARD
-			ms1.SetConverter<DateTime,string>(d => d.ToString(new CultureInfo("en-US", false).DateTimeFormat));
-			ms2.SetConverter<DateTime,string>(d => d.ToString(new CultureInfo("ru-RU", false).DateTimeFormat));
+			ms1.SetConverter<DateTime,string>(d => d.ToString("M\\/d\\/yyyy h:mm:ss tt", System.Globalization.CultureInfo.InvariantCulture));
+			ms2.SetConverter<DateTime,string>(d => d.ToString("dd.MM.yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
 #else
-			ms1.SetConverter<DateTime,string>(d => d.ToString(new CultureInfo("en-US").DateTimeFormat));
-			ms2.SetConverter<DateTime,string>(d => d.ToString(new CultureInfo("ru-RU").DateTimeFormat));
+			ms1.SetConverter<DateTime,string>(d => d.ToString("M\\/d\\/yyyy h:mm:ss tt"));
+			ms2.SetConverter<DateTime,string>(d => d.ToString("dd.MM.yyyy HH:mm:ss"));
 #endif
 
 			{
@@ -188,11 +188,17 @@ namespace Tests.Mapping
 			var ms = new MappingSchema();
 
 #if !NETSTANDARD
-			ms.SetCultureInfo(new CultureInfo("ru-RU", false));
+			var ci = (CultureInfo)new CultureInfo("ru-RU", false).Clone();
 #else
-			ms.SetCultureInfo(new CultureInfo("ru-RU"));
-#endif 
+			var ci = (CultureInfo)new CultureInfo("ru-RU").Clone();
+#endif
+			ci.DateTimeFormat.FullDateTimePattern = "dd.MM.yyyy HH:mm:ss";
+			ci.DateTimeFormat.LongDatePattern = "dd.MM.yyyy";
+			ci.DateTimeFormat.ShortDatePattern = "dd.MM.yyyy";
+			ci.DateTimeFormat.LongTimePattern = "HH:mm:ss";
+			ci.DateTimeFormat.ShortTimePattern = "HH:mm:ss";
 
+			ms.SetCultureInfo(ci);
 			Assert.AreEqual("20.01.2012 16:30:40",                 ms.GetConverter<DateTime,string>()(new DateTime(2012, 1, 20, 16, 30, 40)));
 			Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), ms.GetConverter<string,DateTime>()("20.01.2012 16:30:40"));
 			Assert.AreEqual("100000,999",                          ms.GetConverter<decimal,string> ()(100000.999m));
@@ -217,6 +223,7 @@ namespace Tests.Mapping
 			var ms = new MappingSchema("2");
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -231,6 +238,7 @@ namespace Tests.Mapping
 			var ms = new MappingSchema("2", new MappingSchema("3"));
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -246,6 +254,7 @@ namespace Tests.Mapping
 			var ms = new MappingSchema("3", new MappingSchema("2"));
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -259,6 +268,7 @@ namespace Tests.Mapping
 		public void AttributeTest4()
 		{
 			var attrs = MappingSchema.Default.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length, Is.EqualTo(3));
@@ -268,6 +278,7 @@ namespace Tests.Mapping
 		public void AttributeTest5()
 		{
 			var attrs = MappingSchema.Default.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -298,6 +309,7 @@ namespace Tests.Mapping
 				});
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -321,6 +333,7 @@ namespace Tests.Mapping
 			};
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 
@@ -340,6 +353,7 @@ namespace Tests.Mapping
 			};
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
+				typeof(AttrTest),
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
 				a => a.Configuration);
 

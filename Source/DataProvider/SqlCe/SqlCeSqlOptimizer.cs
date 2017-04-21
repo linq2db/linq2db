@@ -20,8 +20,13 @@ namespace LinqToDB.DataProvider.SqlCe
 			{
 				if (element.ElementType == QueryElementType.SqlParameter)
 				{
-					((SqlParameter)element).IsQueryParameter = false;
-					selectQuery.IsParameterDependent = true;
+					var p = (SqlParameter)element;
+					if (p.SystemType == null || p.SystemType.IsScalar(false))
+					{
+						p.IsQueryParameter = false;
+
+						selectQuery.IsParameterDependent = true;
+					}
 				}
 			});
 

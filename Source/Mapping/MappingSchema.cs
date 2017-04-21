@@ -252,10 +252,9 @@ namespace LinqToDB.Mapping
 			get { return Schemas[0].Converters; }
 		}
 
-		public Expression<Func<TFrom,TTo>> GetConvertExpression<TFrom,TTo>()
+		public Expression<Func<TFrom,TTo>> GetConvertExpression<TFrom,TTo>(bool checkNull = true, bool createDefault = true)
 		{
-			var li = GetConverter(typeof(TFrom), typeof(TTo), true);
-			return (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.CheckNullLambda);
+			return (Expression<Func<TFrom, TTo>>)GetConvertExpression(typeof(TFrom), typeof(TTo), checkNull, createDefault);
 		}
 
 		public LambdaExpression GetConvertExpression(Type from, Type to, bool checkNull = true, bool createDefault = true)
@@ -609,12 +608,12 @@ namespace LinqToDB.Mapping
 			return q.ToArray();
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
 			var q =
 				from mr in MetadataReaders
-				from a in mr.GetAttributes<T>(memberInfo, inherit)
+				from a in mr.GetAttributes<T>(type, memberInfo, inherit)
 				select a;
 
 			return q.ToArray();
@@ -627,10 +626,10 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
-		public T GetAttribute<T>(MemberInfo memberInfo, bool inherit = true)
+		public T GetAttribute<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = GetAttributes<T>(memberInfo, inherit);
+			var attrs = GetAttributes<T>(type, memberInfo, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
@@ -648,11 +647,11 @@ namespace LinqToDB.Mapping
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
 			var list  = new List<T>();
-			var attrs = GetAttributes<T>(memberInfo, inherit);
+			var attrs = GetAttributes<T>(type, memberInfo, inherit);
 
 			foreach (var c in ConfigurationList)
 				foreach (var a in attrs)
@@ -669,10 +668,10 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 		
-		public T GetAttribute<T>(MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
+		public T GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = GetAttributes(memberInfo, configGetter, inherit);
+			var attrs = GetAttributes(type, memberInfo, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
@@ -882,7 +881,7 @@ namespace LinqToDB.Mapping
 				(
 					from f in underlyingType.GetFieldsEx()
 					where (f.Attributes & EnumField) == EnumField
-					from attr in GetAttributes<MapValueAttribute>(f, a => a.Configuration).Select(attr => attr)
+					from attr in GetAttributes<MapValueAttribute>(underlyingType, f, a => a.Configuration).Select(attr => attr)
 					orderby attr.IsDefault ? 0 : 1
 					select attr
 				).ToList();
@@ -972,7 +971,7 @@ namespace LinqToDB.Mapping
 				(
 					from f in underlyingType.GetFieldsEx()
 					where (f.Attributes & EnumField) == EnumField
-					let attrs = GetAttributes<MapValueAttribute>(f, a => a.Configuration)
+					let attrs = GetAttributes<MapValueAttribute>(underlyingType, f, a => a.Configuration)
 					select new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs)
 				).ToArray();
 
@@ -1025,6 +1024,13 @@ namespace LinqToDB.Mapping
 			}
 
 			return ed;
+		}
+
+		internal void ResetEntityDescriptor(Type type)
+		{
+			EntityDescriptor ed;
+
+			_entityDescriptors.TryRemove(type, out ed);
 		}
 
 		//public EntityDescriptor GetEntityDescriptor(Type type)
