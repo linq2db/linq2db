@@ -1,4 +1,4 @@
-DROP PROCEDURE Person_SelectByKey;            COMMIT;
+﻿DROP PROCEDURE Person_SelectByKey;            COMMIT;
 DROP PROCEDURE Person_SelectAll;              COMMIT;
 DROP PROCEDURE Person_SelectByName;           COMMIT;
 DROP PROCEDURE Person_Insert;                 COMMIT;
@@ -105,6 +105,8 @@ COMMIT;
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M');
 COMMIT;
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
+COMMIT;
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M');
 COMMIT;
 
 -- Doctor Table Extension

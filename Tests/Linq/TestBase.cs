@@ -73,6 +73,8 @@ namespace Tests
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
+			SqlServerTypes.Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
+
 #if NETSTANDARD
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
 #else
@@ -492,7 +494,7 @@ namespace Tests
 			}
 		}
 
-		protected const int MaxPersonID = 3;
+		protected const int MaxPersonID = 4;
 
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person

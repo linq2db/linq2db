@@ -105,6 +105,7 @@ CREATE COLUMN TABLE "Person" (
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('John',   'Pupkin',    'M');;
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Tester', 'Testerson', 'M');;
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Jane',   'Doe',       'F');;
+INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Jürgen', 'König',     'M');;
 
 
 CREATE COLUMN TABLE "Doctor"
