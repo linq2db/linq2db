@@ -1193,7 +1193,6 @@ namespace LinqToDB.Linq
 
 			try
 			{
-
 				foreach (var dr in data)
 				{
 					var mapper = mapInfo.Mapper;
@@ -1237,6 +1236,12 @@ namespace LinqToDB.Linq
 						mapInfo.Mapper = mapInfo.Expression.Compile();
 						result = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
 					}
+					finally
+					{
+						if (closeQueryContext)
+							queryContext.Close();
+					}
+
 					yield return result;
 				}
 			}
