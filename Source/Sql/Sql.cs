@@ -323,6 +323,7 @@ namespace LinqToDB
 		[Sql.Function(PN.SqlServer, "Len",         PreferServerSide = true)]
 		[Sql.Function(PN.SqlCe,     "Len",         PreferServerSide = true)]
 		[Sql.Function(PN.Sybase,    "Len",         PreferServerSide = true)]
+		[Sql.Function(PN.MySql,     "Char_Length", PreferServerSide = true)]
 		public static int? Length(string str)
 		{
 			return str == null ? null : (int?)str.Length;

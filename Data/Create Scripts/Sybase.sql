@@ -1,4 +1,4 @@
-USE master
+﻿USE master
 GO
 
 DROP DATABASE TestData
@@ -69,6 +69,8 @@ GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+GO
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
 GO
 -- Doctor Table Extension
 

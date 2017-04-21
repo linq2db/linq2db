@@ -10,6 +10,8 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	using LinqToDB;
+
 	[TestFixture]
 	public class Issue461Tests : TestBase
 	{
@@ -215,7 +217,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
+		// Sybase do not supports limiting subqueries
+		[Test, DataContextSource(true, ProviderName.Sybase)]
 		public void SelectPlainTest1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -230,7 +233,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
+		// Sybase do not supports limiting subqueries
+		[Test, DataContextSource(true, ProviderName.Sybase)]
 		public void SelectPlainTest2(string context)
 		{
 			using (var db = GetDataContext(context))
