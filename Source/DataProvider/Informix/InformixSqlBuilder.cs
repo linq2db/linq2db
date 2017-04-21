@@ -41,10 +41,10 @@ namespace LinqToDB.DataProvider.Informix
 				.Replace("NULL IS NULL",     "1=1");
 		}
 
-		protected override bool ParenthesizeJoin(List<SelectQuery.JoinedTable> joins)
-		{
-			return joins.Any(j => j.JoinType == SelectQuery.JoinType.Inner && j.Condition.Conditions.IsNullOrEmpty());
-		}
+//		protected override bool ParenthesizeJoin(List<SelectQuery.JoinedTable> joins)
+//		{
+//			return joins.Any(j => j.JoinType == SelectQuery.JoinType.Inner && j.Condition.Conditions.IsNullOrEmpty());
+//		}
 
 		protected override void BuildSelectClause()
 		{
