@@ -12,14 +12,6 @@
     "nowarn": [ "CS0649", "CS0429" ]
   },
 
-  "dependencies": {
-    "Model": {
-      "target": "project"
-    },
-    "NUnit": "3.6.1",
-    "Newtonsoft.Json": "9.0.1"
-  },
-
   "testRunner": "nunit",
 
   "frameworks": {
