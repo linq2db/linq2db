@@ -260,7 +260,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public string BuildReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return "SELECT level, " + sequenceName + ".nextval Id from DUAL connect by level <= " + count;
+			return "SELECT " + sequenceName + ".nextval Id from DUAL connect by level <= " + count;
 		}
 
 		protected override void BuildEmptyInsert()

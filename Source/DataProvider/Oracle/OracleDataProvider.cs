@@ -490,18 +490,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 		OracleBulkCopy _bulkCopy;
 
-		class SequenceId
-		{
-			public long LEVEL { get; set; }
-			public long ID { get; set; }
-		}
-
 		private List<long> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
 		{
 			var sql         = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
-			var sequenceIds = db.Query<SequenceId>(sql);
+			var sequenceIds = db.Query<long>(sql);
 
-			return sequenceIds.Select(e => e.ID).ToList();
+			return sequenceIds.ToList();
 		}
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
