@@ -1838,8 +1838,13 @@ namespace Tests.Linq
 					.GroupBy(_ => _.Gender)
 					.ToDictionary(_ => _.Key, _ => _.ToList());
 
-				Assert.AreEqual(2, dictionary1.Count);
-				Assert.AreEqual(2, dictionary1.First().Value.Count);
+				var dictionary2 = Person
+					.AsEnumerable()
+					.GroupBy(_ => _.Gender)
+					.ToDictionary(_ => _.Key, _ => _.ToList());
+
+				Assert.AreEqual(dictionary2.Count,               dictionary1.Count);
+				Assert.AreEqual(dictionary2.First().Value.Count, dictionary1.First().Value.Count);
 
 				var list =
 				(
