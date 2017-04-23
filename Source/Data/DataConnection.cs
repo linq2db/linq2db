@@ -28,12 +28,12 @@ namespace LinqToDB.Data
 
 		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this((string)null)
 		{
-			this._mappingSchema = mappingSchema;
+			AddMappingSchema(mappingSchema);
 		}
 
 		public DataConnection(string configurationString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this(configurationString)
 		{
-			this._mappingSchema = mappingSchema;
+			AddMappingSchema(mappingSchema);
 		}
 
 		public DataConnection(string configurationString)
@@ -55,7 +55,7 @@ namespace LinqToDB.Data
 		public DataConnection([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(providerName, connectionString)
 		{
-			this._mappingSchema = mappingSchema;
+			AddMappingSchema(mappingSchema);
 		}
 
 		public DataConnection([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
@@ -78,7 +78,7 @@ namespace LinqToDB.Data
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(dataProvider, connectionString)
 		{
-			this._mappingSchema = mappingSchema;
+			AddMappingSchema(mappingSchema);
 		}
 
 
@@ -97,7 +97,7 @@ namespace LinqToDB.Data
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbConnection connection, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(dataProvider, connection)
 		{
-			this._mappingSchema = mappingSchema;
+			AddMappingSchema(mappingSchema);
 		}
 
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbConnection connection)
@@ -119,7 +119,7 @@ namespace LinqToDB.Data
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbTransaction transaction, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(dataProvider, transaction)
 		{
-			this._mappingSchema = mappingSchema;
+			AddMappingSchema(mappingSchema);
 		}
 
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbTransaction transaction)
