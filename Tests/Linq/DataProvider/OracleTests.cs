@@ -937,10 +937,10 @@ namespace Tests.DataProvider
 
 				var options = new BulkCopyOptions
 				{
-					MaxBatchSize = 5,
-					RetrieveSequence = true,
-					BulkCopyType = bulkCopyType,
-					NotifyAfter  = 3,
+					MaxBatchSize       = 5,
+					RetrieveSequence   = true,
+					BulkCopyType       = bulkCopyType,
+					NotifyAfter        = 3,
 					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
