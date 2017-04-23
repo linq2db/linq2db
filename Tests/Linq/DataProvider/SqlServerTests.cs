@@ -14,10 +14,10 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
-using SqlServerTypes;
 
 #if !NETSTANDARD
 using Microsoft.SqlServer.Types;
+using SqlServerTypes;
 #endif
 
 using NUnit.Framework;
@@ -27,12 +27,14 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
+#if !NETSTANDARD
 		[OneTimeSetUp]
 		protected void InitializeFixture()
 		{
 			// load spatial types support
 			Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
 		}
+#endif
 
 		[AttributeUsage(AttributeTargets.Method)]
 		class SqlServerDataContextAttribute : IncludeDataContextSourceAttribute
