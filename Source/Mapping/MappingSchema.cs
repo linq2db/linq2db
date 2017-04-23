@@ -92,8 +92,8 @@ namespace LinqToDB.Mapping
 				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.OrderBy(_ => _.Value).Select(_ => _.Key).ToArray());
 			}
 
-			if (schemas != null && schemas.Length > 0)
-				_entityDescriptors = schemas[0]._entityDescriptors;
+			//if (schemas != null && schemas.Length > 0)
+			//	_entityDescriptors = schemas[0]._entityDescriptors;
 		}
 
 		internal readonly MappingSchemaInfo[] Schemas;
