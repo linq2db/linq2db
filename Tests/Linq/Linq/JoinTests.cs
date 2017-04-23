@@ -862,6 +862,7 @@ namespace Tests.Linq
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Explicit("Test is very slow. Reenable after https://github.com/linq2db/linq2db/pull/584 merged.")]
 		public void StackOverflow(string context)
 		{
 			using (var db = GetDataContext(context))
