@@ -74,6 +74,10 @@ namespace Tests
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
+#if !NETSTANDARD && !MONO
+			SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+#endif
+
 #if NETSTANDARD
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
 #else
@@ -493,7 +497,7 @@ namespace Tests
 			}
 		}
 
-		protected const int MaxPersonID = 3;
+		protected const int MaxPersonID = 4;
 
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
@@ -1097,6 +1101,19 @@ namespace Tests
 		public void Dispose()
 		{
 			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
+
+	public class GuardGrouping : IDisposable
+	{
+		public GuardGrouping()
+		{
+			Configuration.Linq.GuardGrouping = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.GuardGrouping = false;
 		}
 	}
 

@@ -1824,5 +1824,58 @@ namespace Tests.Linq
 				);
 			}
 		}
+
+		[Test, DataContextSource]
+		public void GroupByGuard(string context)
+		{
+			using(new AllowMultipleQuery())
+			using(new GuardGrouping())
+			using (var db = GetDataContext(context))
+			{
+				// group on client
+				var dictionary1 = db.Person
+					.AsEnumerable()
+					.GroupBy(_ => _.Gender)
+					.ToDictionary(_ => _.Key, _ => _.ToList());
+
+				var dictionary2 = Person
+					.AsEnumerable()
+					.GroupBy(_ => _.Gender)
+					.ToDictionary(_ => _.Key, _ => _.ToList());
+
+				Assert.AreEqual(dictionary2.Count,               dictionary1.Count);
+				Assert.AreEqual(dictionary2.First().Value.Count, dictionary1.First().Value.Count);
+
+				var list =
+				(
+					from p in db.Person
+					group p by p.Gender into gr
+					select new { gr.Key, Count = gr.Count() }
+				)
+				.ToDictionary(_ => _.Key);
+
+				Assert.Throws<LinqToDBException>(() =>
+				{
+					// group on server
+					db.Person
+						.GroupBy(_ => _.Gender)
+						.ToDictionary(_ => _.Key, _ => _.ToList());
+				});
+
+				Assert.Throws<LinqToDBException>(() =>
+				{
+					db.Person
+						.GroupBy(_ => _)
+						.ToDictionary(_ => _.Key, _ => _.ToList());
+				});
+
+				Assert.Throws<LinqToDBException>(() =>
+				{
+					db.Person
+						.GroupBy(_ => _)
+						.ToList();
+				});
+			}
+		}
 	}
 }

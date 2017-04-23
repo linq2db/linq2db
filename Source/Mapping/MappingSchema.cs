@@ -69,33 +69,31 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var schemaList     = new List<MappingSchemaInfo>(10) { schemaInfo };
-				var baseConverters = new List<ValueToSqlConverter>(10);
+				var schemaList     = new Dictionary<MappingSchemaInfo,   int>(schemas.Length);
+				var baseConverters = new Dictionary<ValueToSqlConverter, int>(10);
+
+				var i = 0;
+				var j = 0;
+
+				schemaList[schemaInfo] = i++;
 
 				foreach (var schema in schemas)
 				{
 					foreach (var sc in schema.Schemas)
-					{
-						if (schemaList.Contains(sc))
-							schemaList.Remove(sc);
-						schemaList.Add(sc);
-					}
+						schemaList[sc] = i++;
 
-					if (baseConverters.Contains(schema.ValueToSqlConverter))
-						baseConverters.Remove(schema.ValueToSqlConverter);
-					baseConverters.Add(schema.ValueToSqlConverter);
+					baseConverters[schema.ValueToSqlConverter] = j++;
 
 					foreach (var bc in schema.ValueToSqlConverter.BaseConverters)
-					{
-						if (baseConverters.Contains(bc))
-							baseConverters.Remove(bc);
-						baseConverters.Add(bc);
-					}
+						baseConverters[bc] = j++;
 				}
 
-				Schemas             = schemaList.ToArray();
-				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.ToArray());
+				Schemas             = schemaList.OrderBy(_ => _.Value).Select(_ => _.Key).ToArray();
+				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.OrderBy(_ => _.Value).Select(_ => _.Key).ToArray());
 			}
+
+			//if (schemas != null && schemas.Length > 0)
+			//	_entityDescriptors = schemas[0]._entityDescriptors;
 		}
 
 		internal readonly MappingSchemaInfo[] Schemas;
@@ -1024,6 +1022,16 @@ namespace LinqToDB.Mapping
 			}
 
 			return ed;
+		}
+
+		/// <summary>
+		/// Enumerate types for cached <see cref="EntityDescriptor"/>s
+		/// </summary>
+		/// <seealso cref="GetEntityDescriptor"/>
+		/// <returns><see cref="IEnumerable{T}"/></returns>
+		public IEnumerable<Type> GetEntites()
+		{
+			return _entityDescriptors.Keys;
 		}
 
 		internal void ResetEntityDescriptor(Type type)

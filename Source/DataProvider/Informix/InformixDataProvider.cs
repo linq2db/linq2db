@@ -28,6 +28,8 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsSubQueryTakeSupported      = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported    = false;
 			SqlProviderFlags.IsGroupByExpressionSupported = false;
+			SqlProviderFlags.IsCrossJoinSupported         = false;
+
 
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd());

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -259,6 +258,11 @@ namespace LinqToDB.DataProvider.Oracle
 			BuildInsertOrUpdateQueryAsMerge("FROM SYS.DUAL");
 		}
 
+		public string BuildReserveSequenceValuesSql(int count, string sequenceName)
+		{
+			return "SELECT " + sequenceName + ".nextval Id from DUAL connect by level <= " + count;
+		}
+
 		protected override void BuildEmptyInsert()
 		{
 			StringBuilder.Append("VALUES ");
@@ -336,6 +340,7 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 		}
+
 
 #if !SILVERLIGHT
 

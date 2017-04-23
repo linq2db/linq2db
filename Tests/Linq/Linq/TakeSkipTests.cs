@@ -334,8 +334,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					   Person.ElementAtOrDefault(3),
-					db.Person.ElementAtOrDefault(3));
+					Person.   OrderBy(p => p.LastName).ElementAtOrDefault(3),
+					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(3));
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
