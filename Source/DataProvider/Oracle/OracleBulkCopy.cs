@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (_bulkCopyCreator != null)
 				{
 					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToList();
-					var rd      = new BulkCopyReader(_dataProvider, columns, source);
+					var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
 					var rc      = new BulkCopyRowsCopied();
 
 					var bcOptions = 0; // Default
@@ -227,7 +227,7 @@ namespace LinqToDB.DataProvider.Oracle
 					: column.DataType;
 				//var type     = dataConnection.DataProvider.ConvertParameterType(column.MemberType, dataType);
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType)
+				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(dataConnection.MappingSchema, o)).ToArray(), dataType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,

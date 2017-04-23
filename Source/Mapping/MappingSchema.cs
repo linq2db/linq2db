@@ -91,9 +91,6 @@ namespace LinqToDB.Mapping
 				Schemas             = schemaList.OrderBy(_ => _.Value).Select(_ => _.Key).ToArray();
 				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.OrderBy(_ => _.Value).Select(_ => _.Key).ToArray());
 			}
-
-			//if (schemas != null && schemas.Length > 0)
-			//	_entityDescriptors = schemas[0]._entityDescriptors;
 		}
 
 		internal readonly MappingSchemaInfo[] Schemas;
@@ -1009,19 +1006,9 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors
-			= new ConcurrentDictionary<Type, EntityDescriptor>();
-
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
-			EntityDescriptor ed;
-
-			if (!_entityDescriptors.TryGetValue(type, out ed))
-			{
-				ed = _entityDescriptors.GetOrAdd(type, new EntityDescriptor(this, type));
-			}
-
-			return ed;
+			return Schemas[0].GetEntityDescriptor(this, type);
 		}
 
 		/// <summary>
@@ -1031,22 +1018,13 @@ namespace LinqToDB.Mapping
 		/// <returns><see cref="IEnumerable{T}"/></returns>
 		public IEnumerable<Type> GetEntites()
 		{
-			return _entityDescriptors.Keys;
+			return Schemas[0].GetEntites();
 		}
 
 		internal void ResetEntityDescriptor(Type type)
 		{
-			EntityDescriptor ed;
-
-			_entityDescriptors.TryRemove(type, out ed);
+			Schemas[0].ResetEntityDescriptor(type);
 		}
-
-		//public EntityDescriptor GetEntityDescriptor(Type type)
-		//{
-		//    if (_entityDescriptors == null)
-		//        _entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
-		//    return _entityDescriptors.GetOrAdd(type, t => new EntityDescriptor(this, t));
-		//}
 
 		#endregion
 

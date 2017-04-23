@@ -239,5 +239,42 @@ namespace LinqToDB.Mapping
 		}
 
 		#endregion
+
+		#region EntityDescriptor
+
+		readonly ConcurrentDictionary<Type, EntityDescriptor> _entityDescriptors
+			= new ConcurrentDictionary<Type, EntityDescriptor>();
+
+		public EntityDescriptor GetEntityDescriptor(MappingSchema mappingSchema, Type type)
+		{
+			EntityDescriptor ed;
+
+			if (!_entityDescriptors.TryGetValue(type, out ed))
+			{
+				ed = _entityDescriptors.GetOrAdd(type, new EntityDescriptor(mappingSchema, type));
+			}
+
+			return ed;
+		}
+
+		/// <summary>
+		/// Enumerate types for cached <see cref="EntityDescriptor"/>s
+		/// </summary>
+		/// <seealso cref="GetEntityDescriptor"/>
+		/// <returns><see cref="IEnumerable{T}"/></returns>
+		public IEnumerable<Type> GetEntites()
+		{
+			return _entityDescriptors.Keys;
+		}
+
+		internal void ResetEntityDescriptor(Type type)
+		{
+			EntityDescriptor ed;
+
+			_entityDescriptors.TryRemove(type, out ed);
+		}
+
+		#endregion
+
 	}
 }

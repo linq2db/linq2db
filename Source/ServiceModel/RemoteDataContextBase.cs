@@ -303,7 +303,7 @@ namespace LinqToDB.ServiceModel
 		int IDataContext.ExecuteNonQuery(object query)
 		{
 			var ctx  = (QueryContext)query;
-			var q    = ctx.Query.SelectQuery.ProcessParameters();
+			var q    = ctx.Query.SelectQuery.ProcessParameters(MappingSchema);
 			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints);
 
 			if (_batchCounter > 0)
@@ -326,7 +326,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q = ctx.Query.SelectQuery.ProcessParameters();
+			var q = ctx.Query.SelectQuery.ProcessParameters(MappingSchema);
 
 			return ctx.Client.ExecuteScalar(
 				Configuration,
@@ -342,7 +342,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q      = ctx.Query.SelectQuery.ProcessParameters();
+			var q      = ctx.Query.SelectQuery.ProcessParameters(MappingSchema);
 			var ret    = ctx.Client.ExecuteReader(
 				Configuration,
 				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints));

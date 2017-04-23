@@ -923,8 +923,8 @@ namespace Tests.DataProvider
 
 			foreach (var column in ed.Columns)
 			{
-				var actualValue = column.GetValue(actual);
-				var testValue   = column.GetValue(test);
+				var actualValue = column.GetValue(mappingSchema, actual);
+				var testValue   = column.GetValue(mappingSchema, test);
 
 				if (column.SkipOnInsert == false)
 					Assert.That(actualValue, Is.EqualTo(testValue),
