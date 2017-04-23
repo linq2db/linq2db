@@ -27,7 +27,7 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 		[OneTimeSetUp]
 		protected void InitializeFixture()
 		{
