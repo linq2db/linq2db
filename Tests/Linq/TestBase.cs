@@ -73,7 +73,9 @@ namespace Tests
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
+#if !NETSTANDARD && !MONO
 			SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+#endif
 
 #if NETSTANDARD
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
