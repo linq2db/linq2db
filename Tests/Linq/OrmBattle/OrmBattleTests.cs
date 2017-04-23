@@ -1488,13 +1488,12 @@ namespace Tests.OrmBattle
 
 		#region Complex tests
 
-		[Test, NorthwindDataContext, Ignore("Not working at the Moment -> issue #573")]
+		[Test, NorthwindDataContext]
 		[Category("WindowsOnly")]
 		public void ComplexTest1(string context)
 		{
 			using (new AllowMultipleQuery())
 			{
-
 				Setup(context);
 				var result = db.Supplier.Select(
 					supplier => db.Product.Select(
