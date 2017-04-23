@@ -69,24 +69,27 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var schemaList     = new Dictionary<MappingSchemaInfo,   MappingSchemaInfo>  (10);
-				var baseConverters = new Dictionary<ValueToSqlConverter, ValueToSqlConverter>(10);
+				var schemaList     = new Dictionary<MappingSchemaInfo,   int>(schemas.Length);
+				var baseConverters = new Dictionary<ValueToSqlConverter, int>(10);
 
-				schemaList[schemaInfo] = schemaInfo;
+				var i = 0;
+				var j = 0;
+
+				schemaList[schemaInfo] = i++;
 
 				foreach (var schema in schemas)
 				{
 					foreach (var sc in schema.Schemas)
-						schemaList[sc] = sc;
+						schemaList[sc] = i++;
 
-					baseConverters[schema.ValueToSqlConverter] = schema.ValueToSqlConverter;
+					baseConverters[schema.ValueToSqlConverter] = j++;
 
 					foreach (var bc in schema.ValueToSqlConverter.BaseConverters)
-						baseConverters[bc] = bc;
+						baseConverters[bc] = j++;
 				}
 
-				Schemas             = schemaList.Values.ToArray();
-				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.Values.ToArray());
+				Schemas             = schemaList.OrderBy(_ => _.Value).Select(_ => _.Key).ToArray();
+				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.OrderBy(_ => _.Value).Select(_ => _.Key).ToArray());
 			}
 
 			if (schemas != null && schemas.Length > 0)
