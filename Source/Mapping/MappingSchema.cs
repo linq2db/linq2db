@@ -69,33 +69,28 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var schemaList     = new List<MappingSchemaInfo>(10) { schemaInfo };
-				var baseConverters = new List<ValueToSqlConverter>(10);
+				var schemaList     = new Dictionary<MappingSchemaInfo,   MappingSchemaInfo>  (10);
+				var baseConverters = new Dictionary<ValueToSqlConverter, ValueToSqlConverter>(10);
+
+				schemaList[schemaInfo] = schemaInfo;
 
 				foreach (var schema in schemas)
 				{
 					foreach (var sc in schema.Schemas)
-					{
-						if (schemaList.Contains(sc))
-							schemaList.Remove(sc);
-						schemaList.Add(sc);
-					}
+						schemaList[sc] = sc;
 
-					if (baseConverters.Contains(schema.ValueToSqlConverter))
-						baseConverters.Remove(schema.ValueToSqlConverter);
-					baseConverters.Add(schema.ValueToSqlConverter);
+					baseConverters[schema.ValueToSqlConverter] = schema.ValueToSqlConverter;
 
 					foreach (var bc in schema.ValueToSqlConverter.BaseConverters)
-					{
-						if (baseConverters.Contains(bc))
-							baseConverters.Remove(bc);
-						baseConverters.Add(bc);
-					}
+						baseConverters[bc] = bc;
 				}
 
-				Schemas             = schemaList.ToArray();
-				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.ToArray());
+				Schemas             = schemaList.Values.ToArray();
+				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.Values.ToArray());
 			}
+
+			if (schemas != null && schemas.Length > 0)
+				_entityDescriptors = schemas[0]._entityDescriptors;
 		}
 
 		internal readonly MappingSchemaInfo[] Schemas;
