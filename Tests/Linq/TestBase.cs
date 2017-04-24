@@ -35,6 +35,7 @@ using NUnit.Framework.Internal.Builders;
 namespace Tests
 {
 	using Model;
+	using System.Text.RegularExpressions;
 
 	public class TestBase
 	{
@@ -73,7 +74,9 @@ namespace Tests
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
-			SqlServerTypes.Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
+#if !NETSTANDARD && !MONO
+			SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+#endif
 
 #if NETSTANDARD
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
@@ -951,7 +954,59 @@ namespace Tests
 				}
 			}
 		}
-#endregion
+		#endregion
+
+		[Sql.Function("VERSION", ServerSideOnly = true)]
+		private static string MySqlVersion()
+		{
+			throw new InvalidOperationException();
+		}
+
+		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
+		{
+			if (db.ContextID == "MySql" || db.ContextID == "MySql.LinqService")
+			{
+				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
+				// them from expected data too
+				var version = db.Types.Select(_ => MySqlVersion()).First();
+				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
+				if (match.Success)
+				{
+					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
+
+					if (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604)
+					{
+						var adjusted = new List<LinqDataTypes2>();
+						foreach (var record in data)
+						{
+							var copy = new LinqDataTypes2()
+							{
+								ID             = record.ID,
+								MoneyValue     = record.MoneyValue,
+								DateTimeValue  = record.DateTimeValue,
+								DateTimeValue2 = record.DateTimeValue2,
+								BoolValue      = record.BoolValue,
+								GuidValue      = record.GuidValue,
+								SmallIntValue  = record.SmallIntValue,
+								IntValue       = record.IntValue,
+								BigIntValue    = record.BigIntValue,
+							};
+
+							if (copy.DateTimeValue != null)
+							{
+								copy.DateTimeValue = copy.DateTimeValue.Value.AddMilliseconds(-copy.DateTimeValue.Value.Millisecond);
+							}
+
+							adjusted.Add(copy);
+						}
+
+						return adjusted;
+					}
+				}
+			}
+
+			return data;
+		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
@@ -1046,6 +1101,19 @@ namespace Tests
 		public void Dispose()
 		{
 			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
+
+	public class GuardGrouping : IDisposable
+	{
+		public GuardGrouping()
+		{
+			Configuration.Linq.GuardGrouping = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.GuardGrouping = false;
 		}
 	}
 

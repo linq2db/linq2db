@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override bool ParenthesizeJoin()
+		protected override bool ParenthesizeJoin(List<SelectQuery.JoinedTable> tsJoins)
 		{
 			return true;
 		}

@@ -17,6 +17,7 @@ using LinqToDB.Mapping;
 
 #if !NETSTANDARD
 using Microsoft.SqlServer.Types;
+using SqlServerTypes;
 #endif
 
 using NUnit.Framework;
@@ -26,6 +27,15 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
+#if !NETSTANDARD && !MONO
+		[OneTimeSetUp]
+		protected void InitializeFixture()
+		{
+			// load spatial types support
+			Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
+		}
+#endif
+
 		[AttributeUsage(AttributeTargets.Method)]
 		class SqlServerDataContextAttribute : IncludeDataContextSourceAttribute
 		{
@@ -399,8 +409,18 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),   Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),   Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),          Is.Null);
+				var isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.Databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
+				if (isScCollation)
+				{
+					// explicit collation set for legacy text types as they doesn't support *_SC collations
+					Assert.That(conn.Execute<string>("SELECT Cast('12345' COLLATE Latin1_General_CI_AS as text)"),                Is.EqualTo("12345"));
+					Assert.That(conn.Execute<string>("SELECT Cast(CAST(NULL as nvarchar) COLLATE Latin1_General_CI_AS as text)"), Is.Null);
+				}
+				else
+				{
+					Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),     Is.EqualTo("12345"));
+					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),     Is.Null);
+				}
 
 				if (context != ProviderName.SqlServer2000)
 				{
@@ -416,8 +436,17 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"),  Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"),  Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as ntext)"),         Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as ntext)"),         Is.Null);
+				if (isScCollation)
+				{
+					// explicit collation set for legacy text types as they doesn't support *_SC collations
+					Assert.That(conn.Execute<string>("SELECT Cast('12345' COLLATE Latin1_General_CI_AS as ntext)"),                Is.EqualTo("12345"));
+					Assert.That(conn.Execute<string>("SELECT Cast(CAST(NULL as nvarchar) COLLATE Latin1_General_CI_AS as ntext)"), Is.Null);
+				}
+				else
+				{
+					Assert.That(conn.Execute<string>("SELECT Cast('12345' as ntext)"), Is.EqualTo("12345"));
+					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as ntext)"), Is.Null);
+				}
 
 				if (context != ProviderName.SqlServer2000)
 				{

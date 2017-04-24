@@ -353,7 +353,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, NorthwindDataContext, Ignore("Not working at the Moment -> issue #573")]
 		[Category("WindowsOnly")]
 		public void SelectSubqueryTest(string context)
 		{
@@ -1494,7 +1494,6 @@ namespace Tests.OrmBattle
 		{
 			using (new AllowMultipleQuery())
 			{
-
 				Setup(context);
 				var result = db.Supplier.Select(
 					supplier => db.Product.Select(

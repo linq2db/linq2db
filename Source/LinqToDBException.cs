@@ -81,5 +81,9 @@ namespace LinqToDB
 		}
 
 #endif
+
+#if SILVERLIGHT
+		public string HelpLink { get; set; }
+#endif
 	}
 }

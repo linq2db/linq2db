@@ -218,7 +218,7 @@ namespace Tests.UserTests
 		}
 
 		// Sybase do not supports limiting subqueries
-		[Test, DataContextSource(true, ProviderName.Sybase)]
+		[Test, DataContextSource(true, ProviderName.Sybase, ProviderName.Informix)]
 		public void SelectPlainTest1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -234,7 +234,7 @@ namespace Tests.UserTests
 		}
 
 		// Sybase do not supports limiting subqueries
-		[Test, DataContextSource(true, ProviderName.Sybase)]
+		[Test, DataContextSource(true, ProviderName.Sybase, ProviderName.Informix)]
 		public void SelectPlainTest2(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Data;
 	using SqlProvider;
+	using Extensions;
 
 	class OracleBulkCopy : BasicBulkCopy
 	{
@@ -127,7 +127,7 @@ namespace LinqToDB.DataProvider.Oracle
 		BulkCopyRowsCopied MultipleRowsCopy1<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, options.KeepIdentity ?? false);
 
 			helper.StringBuilder.AppendLine("INSERT ALL");
 			helper.SetHeader();
@@ -170,7 +170,7 @@ namespace LinqToDB.DataProvider.Oracle
 		BulkCopyRowsCopied MultipleRowsCopy2<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, options.KeepIdentity ?? false);
 
 			helper.StringBuilder.AppendFormat("INSERT INTO {0} (", helper.TableName);
 
