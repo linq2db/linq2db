@@ -981,15 +981,15 @@ namespace Tests
 						{
 							var copy = new LinqDataTypes2()
 							{
-								ID = record.ID,
-								MoneyValue = record.MoneyValue,
-								DateTimeValue = record.DateTimeValue,
+								ID             = record.ID,
+								MoneyValue     = record.MoneyValue,
+								DateTimeValue  = record.DateTimeValue,
 								DateTimeValue2 = record.DateTimeValue2,
-								BoolValue = record.BoolValue,
-								GuidValue = record.GuidValue,
-								SmallIntValue = record.SmallIntValue,
-								IntValue = record.IntValue,
-								BigIntValue = record.BigIntValue,
+								BoolValue      = record.BoolValue,
+								GuidValue      = record.GuidValue,
+								SmallIntValue  = record.SmallIntValue,
+								IntValue       = record.IntValue,
+								BigIntValue    = record.BigIntValue,
 							};
 
 							if (copy.DateTimeValue != null)
