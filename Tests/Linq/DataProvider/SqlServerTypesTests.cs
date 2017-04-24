@@ -29,7 +29,7 @@ namespace Tests.DataProvider
 			Configuration.LinqService.SerializeAssemblyQualifiedName = false;
 		}
 
-		[Table(Database="TestData", Name="AllTypes2")]
+		[Table(Name="AllTypes2")]
 		class AllTypes2
 		{
 			[Column(DbType="int"),   PrimaryKey, Identity] public int             ID                     { get; set; } // int

@@ -6,6 +6,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using Common;
 	using SqlQuery;
 	using SqlProvider;
 
@@ -39,6 +40,11 @@ namespace LinqToDB.DataProvider.Informix
 				.Replace("NULL IS NOT NULL", "1=0")
 				.Replace("NULL IS NULL",     "1=1");
 		}
+
+//		protected override bool ParenthesizeJoin(List<SelectQuery.JoinedTable> joins)
+//		{
+//			return joins.Any(j => j.JoinType == SelectQuery.JoinType.Inner && j.Condition.Conditions.IsNullOrEmpty());
+//		}
 
 		protected override void BuildSelectClause()
 		{

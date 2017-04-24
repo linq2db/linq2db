@@ -10,13 +10,20 @@ using NUnit.Framework;
 namespace Tests.Data
 {
 	using Model;
+	using System.Data.SqlClient;
 
 	[TestFixture]
 	public class ProcedureTests : TestBase
 	{
 		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int? @id)
 		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
+			var databaseName = dataConnection.Execute<string>("SELECT DB_NAME()");
+#if !NETSTANDARD
+			var escapedTableName = new SqlCommandBuilder().QuoteIdentifier(databaseName);
+#else
+			var escapedTableName = "[" + databaseName + "]";
+#endif
+			return dataConnection.QueryProc<Person>(escapedTableName + "..[Person_SelectByKey]",
 				new DataParameter("@id", @id));
 		}
 
