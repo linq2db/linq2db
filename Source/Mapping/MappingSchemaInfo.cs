@@ -258,13 +258,15 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Enumerate types for cached <see cref="EntityDescriptor"/>s
+		///     Enumerate types for cached <see cref="EntityDescriptor" />s
 		/// </summary>
-		/// <seealso cref="GetEntityDescriptor"/>
-		/// <returns><see cref="IEnumerable{T}"/></returns>
-		public IEnumerable<Type> GetEntites()
+		/// <seealso cref="GetEntityDescriptor" />
+		/// <returns>
+		///     <see cref="Array{Type}" />
+		/// </returns>
+		public Type[] GetEntites()
 		{
-			return _entityDescriptors.Keys;
+			return _entityDescriptors.Keys.ToArray();
 		}
 
 		internal void ResetEntityDescriptor(Type type)
