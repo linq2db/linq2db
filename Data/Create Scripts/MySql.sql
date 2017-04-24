@@ -1,4 +1,4 @@
-
+﻿
 DROP TABLE IF EXISTS Doctor
 GO
 DROP TABLE IF EXISTS Patient
@@ -50,6 +50,8 @@ GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+GO
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
 GO
 
 CREATE OR REPLACE VIEW PersonView AS SELECT * FROM Person

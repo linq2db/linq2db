@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -573,16 +574,58 @@ namespace LinqToDB.DataProvider.Oracle
 
 		OracleBulkCopy _bulkCopy;
 
+		private List<long> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
+		{
+			var sql         = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
+			var sequenceIds = db.Query<long>(sql);
+
+			return sequenceIds.ToList();
+		}
+
 		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new OracleBulkCopy(this, GetConnectionType());
 
+			IList<T> sourceList = null;
+
+			if (options.RetrieveSequence)
+			{
+				var entityDescriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+
+				bool foundIdentityColumn = false;
+				foreach (ColumnDescriptor column in entityDescriptor.Columns)
+				{
+					foundIdentityColumn = foundIdentityColumn || column.IsIdentity;
+
+					var sequenceName = column.MemberInfo
+						.GetCustomAttributesEx(typeof(SequenceNameAttribute), true)
+						.OfType<SequenceNameAttribute>()
+						.Select(a => a.SequenceName)
+						.FirstOrDefault(s => !string.IsNullOrEmpty(s));
+
+					if (!string.IsNullOrWhiteSpace(sequenceName))
+					{
+						sourceList    = sourceList ?? source.ToList();
+						var sequences = ReserveSequenceValues(dataConnection, sourceList.Count, sequenceName);
+
+						for (var i = 0; i < sourceList.Count; i++)
+						{
+							var item = sourceList[i];
+							var value = Converter.ChangeType(sequences[i], column.MemberType);
+							column.MemberAccessor.SetValue(item, value);
+						}
+					}
+				}
+
+				options.KeepIdentity = foundIdentityColumn;
+			}
+
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
 				dataConnection,
 				options,
-				source);
+				sourceList ?? source);
 		}
 
 #endregion

@@ -145,7 +145,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder = current;
 		}
 
-		protected virtual bool ParenthesizeJoin()
+		protected virtual bool ParenthesizeJoin(List<SelectQuery.JoinedTable> joins)
 		{
 			return false;
 		}
@@ -940,7 +940,7 @@ namespace LinqToDB.SqlProvider
 
 				first = false;
 
-				var jn = ParenthesizeJoin() ? ts.GetJoinNumber() : 0;
+				var jn = ParenthesizeJoin(ts.Joins) ? ts.GetJoinNumber() : 0;
 
 				if (jn > 0)
 				{

@@ -32,6 +32,11 @@ namespace LinqToDB.Common
 			/// </example>
 			/// </summary>
 			public static bool CheckNullForNotEquals = true;
+
+			/// <summary>
+			/// Prevents to use constructions like q.GroupBy(_ => _.SomeValue) which leads to unexpected behaviour.
+			/// </summary>
+			public static bool GuardGrouping = false;
 		}
 
 		public static class LinqService

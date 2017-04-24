@@ -7,6 +7,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.SqlQuery;
 	using Model;
 
 	[TestFixture]
@@ -16,6 +17,17 @@ namespace Tests.Linq
 		{
 			public int  ParentID;
 			public int? Value1;
+		}
+
+		[Sql.Function("DB_NAME", ServerSideOnly = true)]
+		static string DbName()
+		{
+			throw new InvalidOperationException();
+		}
+
+		private static string GetDatabaseName(ITestDataContext db)
+		{
+			return db.Types.Select(_ => DbName()).First();
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
@@ -29,7 +41,7 @@ namespace Tests.Linq
 		public void DatabaseName(string context)
 		{
 			using (var db = GetDataContext(context))
-				db.GetTable<Parent>().DatabaseName("TestData").ToList();
+				db.GetTable<Parent>().DatabaseName(GetDatabaseName(db)).ToList();
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
@@ -44,7 +56,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>()
-					.DatabaseName("TestData")
+					.DatabaseName(GetDatabaseName(db))
 					.SchemaName("dbo")
 					.TableName("Parent")
 					.ToList();
