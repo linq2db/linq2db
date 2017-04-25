@@ -1047,6 +1047,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void BulkCopyAllTypes2MultipleRows(string context)
 		{
@@ -1058,6 +1059,7 @@ namespace Tests.DataProvider
 		{
 			BulkCopyAllTypes2(context, BulkCopyType.ProviderSpecific);
 		}
+#endif
 
 		[Test, SqlServerDataContext]
 		public void CreateAlltypes(string context)
@@ -1087,6 +1089,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void CreateAlltypes2(string context)
 		{
@@ -1114,6 +1117,7 @@ namespace Tests.DataProvider
 				db.DropTable<AllTypes2>();
 			}
 		}
+#endif
 
 		[Table("#TempTable")]
 		class TempTable
