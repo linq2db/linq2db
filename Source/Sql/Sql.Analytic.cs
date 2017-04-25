@@ -149,64 +149,64 @@
 
 		public interface IReadyToFunctionOrOverWithPartition<out TR> : IReadyToFunction<TR>
 		{
-			[Sql.Extension("OVER({query_partition_clause?})", "over")]
+			[Sql.Extension("OVER({query_partition_clause?})", TokenName = "over")]
 			IOverMayHavePartition<TR> Over();
 		}
 
 		public interface IOverWithPartitionNeeded<out TR>
 		{
-			[Sql.Extension("OVER({query_partition_clause?})", "over")]
+			[Sql.Extension("OVER({query_partition_clause?})", TokenName = "over")]
 			IOverMayHavePartition<TR> Over();
 		}
 
 		public interface INeedOrderByAndMaybeOverWithPartition<out TR>
 		{
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item")]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr}", TokenName = "order_item")]
 			IOrderedAcceptOverReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedAcceptOverReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item")]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IOrderedAcceptOverReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedAcceptOverReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
 		public interface INeedSingleOrderByAndMaybeOverWithPartition<out TR>
 		{
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item")]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr}", TokenName = "order_item")]
 			IReadyToFunctionOrOverWithPartition<TR> OrderBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item")]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IReadyToFunctionOrOverWithPartition<TR> OrderByDesc<TKey>([ExprParameter] TKey expr);
 		}
 
 		public interface IOrderedAcceptOverReadyToFunction<out TR> : IReadyToFunctionOrOverWithPartition<TR>
 		{
-			[Sql.Extension("{expr}", "order_item")]
+			[Sql.Extension("{expr}", TokenName = "order_item")]
 			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))] 
+			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))] 
 			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
-			[Sql.Extension("{expr} DESC", "order_item")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IOrderedAcceptOverReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedAcceptOverReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
 		public interface IOverMayHavePartition<out TR> : IReadyToFunction<TR>
 		{
-			[Sql.Extension("PARTITION BY {expr, ', '}", "query_partition_clause")]
+			[Sql.Extension("PARTITION BY {expr, ', '}", TokenName = "query_partition_clause")]
 			IReadyToFunction<TR> PartitionBy([ExprParameter("expr")] params object[] expressions);
 		}
 
@@ -216,20 +216,20 @@
 
 		public interface IOverMayHavePartitionAndOrder<out TR> : IReadyToFunction<TR>, INeedsOrderByOnly<TR>
 		{
-			[Sql.Extension("PARTITION BY {expr, ', '}", "query_partition_clause")]
+			[Sql.Extension("PARTITION BY {expr, ', '}", TokenName = "query_partition_clause")]
 			IPartitionedMayHaveOrder<TR> PartitionBy([ExprParameter("expr")] params object[] expressions);
 		}
 
 		public interface IAnalyticFunction<out TR>
 		{
 			[Sql.Extension("{function} OVER({query_partition_clause?}{_}{order_by_clause?}{_}{windowing_clause?})",
-				"over", ChainPrecedence = 10)]
+				TokenName = "over", ChainPrecedence = 10)]
 			IReadyForFullAnalyticClause<TR> Over();
 		}
 
 		public interface IAnalyticFunctionWithoutWindow<out TR>
 		{
-			[Sql.Extension("{function} OVER({query_partition_clause?}{_}{order_by_clause?})", "over", ChainPrecedence = 10)]
+			[Sql.Extension("{function} OVER({query_partition_clause?}{_}{order_by_clause?})", TokenName = "over", ChainPrecedence = 10)]
 			IOverMayHavePartitionAndOrder<TR> Over();
 		}
 
@@ -238,53 +238,53 @@
 
 		public interface IOrderedReadyToFunction<out TR> : IReadyToFunction<TR>
 		{
-			[Sql.Extension("{expr}", "order_item")]
+			[Sql.Extension("{expr}", TokenName = "order_item")]
 			IOrderedReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
-			[Sql.Extension("{expr} DESC", "order_item")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
 		public interface INeedsWithingGroupWithOrderOnly<out TR>
 		{
-			[Sql.Extension("WITHIN GROUP ({order_by_clause})", "within_group")]
+			[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "within_group")]
 			INeedsOrderByOnly<TR> WithinGroup { get; }
 		}
 
 		public interface INeedsWithingGroupWithOrderAndMaybePartition<out TR>
 		{
-			[Sql.Extension("WITHIN GROUP ({order_by_clause}){_}{over?}", "within_group")]
+			[Sql.Extension("WITHIN GROUP ({order_by_clause}){_}{over?}", TokenName = "within_group")]
 			INeedOrderByAndMaybeOverWithPartition<TR> WithinGroup { get; }
 		}
 
 		public interface INeedsWithingGroupWithSingleOrderAndMaybePartition<out TR>
 		{
-			[Sql.Extension("WITHIN GROUP ({order_by_clause}){_}{over?}", "within_group")]
+			[Sql.Extension("WITHIN GROUP ({order_by_clause}){_}{over?}", TokenName = "within_group")]
 			INeedSingleOrderByAndMaybeOverWithPartition<TR> WithinGroup { get; }
 		}
 
 		public interface INeedsOrderByOnly<out TR>
 		{
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item")]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr}", TokenName = "order_item")]
 			IOrderedReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item")]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IOrderedReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
@@ -292,26 +292,26 @@
 
 		public interface IReadyForSortingWithWindow<out TR>
 		{
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item")]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr}", TokenName = "order_item")]
 			IOrderedReadyToWindowing<TR> OrderBy<TKey>([ExprParameter("expr")] TKey keySelector);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToWindowing<TR> OrderBy<TKey>([ExprParameter("expr")] TKey keySelector, Sql.NullsPosition nulls);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item")]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IOrderedReadyToWindowing<TR> OrderByDesc<TKey>([ExprParameter("expr")] TKey keySelector);
 
-			[Sql.Extension("ORDER BY {order_item, ', '}", "order_by_clause")]
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToWindowing<TR> OrderByDesc<TKey>([ExprParameter("expr")] TKey keySelector, Sql.NullsPosition nulls);
 		}
 
 		public interface IReadyForFullAnalyticClause<out TR> : IReadyToFunction<TR>, IReadyForSortingWithWindow<TR>
 		{
-			[Sql.Extension("PARTITION BY {expr, ', '}", "query_partition_clause")]
+			[Sql.Extension("PARTITION BY {expr, ', '}", TokenName = "query_partition_clause")]
 			IPartitionDefinedReadyForSortingWithWindow<TR> PartitionBy([ExprParameter("expr")] params object[] expressions);
 		}
 
@@ -321,49 +321,49 @@
 
 		public interface IOrderedReadyToWindowing<out TR> : IReadyToFunction<TR>
 		{
-			[Sql.Extension("ROWS {boundary_clause}", "windowing_clause")]
+			[Sql.Extension("ROWS {boundary_clause}", TokenName = "windowing_clause")]
 			IBoundaryExpected<TR> Rows { get; }
 
-			[Sql.Extension("RANGE {boundary_clause}", "windowing_clause")]
+			[Sql.Extension("RANGE {boundary_clause}", TokenName = "windowing_clause")]
 			IBoundaryExpected<TR> Range { get; }
 
-			[Sql.Extension("{expr}", "order_item")]
+			[Sql.Extension("{expr}", TokenName = "order_item")]
 			IOrderedReadyToWindowing<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr}", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToWindowing<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 
-			[Sql.Extension("{expr} DESC", "order_item")]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IOrderedReadyToWindowing<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr} DESC", "order_item", BuilderType = typeof(OrderItemBuilder))]
+			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedReadyToWindowing<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
 		public interface IBoundaryExpected<out TR>
 		{
-			[Sql.Extension("UNBOUNDED PRECEDING", "boundary_clause")]
+			[Sql.Extension("UNBOUNDED PRECEDING", TokenName = "boundary_clause")]
 			IReadyToFunction<TR> UnboundedPreceding { get; }
 
-			[Sql.Extension("CURRENT ROW", "boundary_clause")]
+			[Sql.Extension("CURRENT ROW", TokenName = "boundary_clause")]
 			IReadyToFunction<TR> CurrentRow { get; }
 
-			[Sql.Extension("{value_expr} PRECEDING", "boundary_clause")]
+			[Sql.Extension("{value_expr} PRECEDING", TokenName = "boundary_clause")]
 			IReadyToFunction<TR> ValuePreceding<T>([ExprParameter("value_expr")] T value);
 
-			[Sql.Extension("BETWEEN {start_boundary} AND {end_boundary}", "boundary_clause")]
+			[Sql.Extension("BETWEEN {start_boundary} AND {end_boundary}", TokenName = "boundary_clause")]
 			IBetweenStartExpected<TR> Between { get; }
 		}
 
 		public interface IBetweenStartExpected<out TR>
 		{
-			[Sql.Extension("UNBOUNDED PRECEDING", "start_boundary")]
+			[Sql.Extension("UNBOUNDED PRECEDING", TokenName = "start_boundary")]
 			IAndExpected<TR> UnboundedPreceding { get; }
 
-			[Sql.Extension("CURRENT ROW", "start_boundary")]
+			[Sql.Extension("CURRENT ROW", TokenName = "start_boundary")]
 			IAndExpected<TR> CurrentRow { get; }
 
-			[Sql.Extension("{value_expr} PRECEDING", "start_boundary")]
+			[Sql.Extension("{value_expr} PRECEDING", TokenName = "start_boundary")]
 			IAndExpected<TR> ValuePreceding<T>([ExprParameter("value_expr")] T value);
 		}
 
@@ -375,16 +375,16 @@
 
 		public interface ISecondBoundaryExpected<out TR>
 		{
-			[Sql.Extension("UNBOUNDED FOLLOWING", "end_boundary")]
+			[Sql.Extension("UNBOUNDED FOLLOWING", TokenName = "end_boundary")]
 			IReadyToFunction<TR> UnboundedFollowing { get; }
 
-			[Sql.Extension("CURRENT ROW", "end_boundary")]
+			[Sql.Extension("CURRENT ROW", TokenName = "end_boundary")]
 			IReadyToFunction<TR> CurrentRow { get; }
 
-			[Sql.Extension("{value_expr} PRECEDING", "end_boundary")]
+			[Sql.Extension("{value_expr} PRECEDING", TokenName = "end_boundary")]
 			IReadyToFunction<TR> ValuePreceding<T>([ExprParameter("value_expr")] T value);
 
-			[Sql.Extension("{value_expr} FOLLOWING", "end_boundary")]
+			[Sql.Extension("{value_expr} FOLLOWING", TokenName = "end_boundary")]
 			IReadyToFunction<TR> ValueFollowing<T>([ExprParameter("value_expr")] T value);
 		}
 

@@ -113,9 +113,9 @@ namespace LinqToDB
 			{
 			}
 
-			public Type    SystemType { get;         set; }
-			public string  Expr       { get;         set; }
-			public int     Precedence { get; private set; }
+			public Type    SystemType { get; set; }
+			public string  Expr       { get; set; }
+			public int     Precedence { get; set; }
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
 			{
@@ -125,10 +125,11 @@ namespace LinqToDB
 			public SqlExtensionParam AddParameter(SqlExtensionParam param)
 			{
 				List<SqlExtensionParam> list;
-				if (!_namedParameters.TryGetValue(param.Name, out list))
+				var key = param.Name ?? string.Empty;
+				if (!_namedParameters.TryGetValue(key, out list))
 				{
 					list = new List<SqlExtensionParam>();
-					_namedParameters.Add(param.Name, list);
+					_namedParameters.Add(key, list);
 				}
 				list.Add(param);
 				return param;
@@ -277,18 +278,12 @@ namespace LinqToDB
 			public Type   BuilderType     { get; set; }
 			public int    ChainPrecedence { get; set; }
 
-			public ExtensionAttribute(string expression): this(expression, string.Empty)
+			public ExtensionAttribute(string expression): this(string.Empty, expression)
 			{
 			}
 
-			public ExtensionAttribute(string expression, string names): this(string.Empty, expression, names)
+			public ExtensionAttribute(string configuration, string expression) : base(configuration, expression)
 			{
-			}
-
-			public ExtensionAttribute(string configuration, string expression, string tokenName): base(configuration, expression)
-			{
-				TokenName        = tokenName;
-
 				ServerSideOnly   = true;
 				PreferServerSide = true;
 				ExpectExpression = true;
@@ -344,7 +339,11 @@ namespace LinqToDB
 					}
 
 					var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo,
-						a => a.Configuration);
+						a => string.IsNullOrEmpty(a.Configuration) ? "___" : a.Configuration);
+					if (attributes.Length == 0)
+						attributes =
+							mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo, a => a.Configuration);
+
 					foreach (var attr in attributes)
 					{
 						var param = attr.BuildExtensionParam(mapping, memberInfo, arguments, convertHelper);
@@ -560,9 +559,12 @@ namespace LinqToDB
 					foreach (var p in found)
 					{
 						string paramValue;
-						if (!resolvedParams.TryGetValue(p, out paramValue))
+						if (resolvedParams.TryGetValue(p, out paramValue))
 						{
-
+							result = paramValue;
+						}
+						else
+						{
 							if (resolving.Contains(p))
 								throw new InvalidOperationException("Circular reference");
 
@@ -576,7 +578,7 @@ namespace LinqToDB
 							}
 							else
 							{
-								sb.Length  = 0;
+								sb.Length = 0;
 								if (p.Expression != null)
 								{
 									paramValue = string.Format("{{{0}}}", newParams.Count);
@@ -616,7 +618,13 @@ namespace LinqToDB
 
 				var main = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension.ChainPrecedence).FirstOrDefault();
 				if (main == null)
-					throw new InvalidOperationException("Can not find root sequence");
+				{
+					var replaced = chain.Where(c => c.Expression != null).ToArray();
+					if (replaced.Length != 1)
+						throw new InvalidOperationException("Can not find root sequence");
+
+					return replaced[0].Expression;
+				}
 
 				var mainExtension = main.Extension;
 
