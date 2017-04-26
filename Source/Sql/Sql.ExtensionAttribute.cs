@@ -554,7 +554,7 @@ namespace LinqToDB
 						}
 					);
 
-					var builder = new ExtensionBuilder(Configuration, mapping, extension, convertHelper, method, arguments);
+					var builder = new ExtensionBuilder(Configuration, mapping, extension, convertHelper, member, arguments);
 					callBuilder.Build(builder);
 
 					result = builder.ResultExpression != null ? new SqlExtensionParam(TokenName, builder.ResultExpression) : new SqlExtensionParam(TokenName, builder.Extension);
