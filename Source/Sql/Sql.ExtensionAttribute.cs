@@ -42,7 +42,7 @@ namespace LinqToDB
 			return builder.AddParameter(name, new SqlValue(value));
 		}
 
-		public static Sql.SqlExtensionParam AddEpression(this Sql.ISqExtensionBuilder builder, string name, string expr)
+		public static Sql.SqlExtensionParam AddExpression(this Sql.ISqExtensionBuilder builder, string name, string expr)
 		{
 			return builder.AddParameter(name, new SqlExpression(expr, Precedence.Primary));
 		}

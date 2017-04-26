@@ -35,7 +35,7 @@ namespace Tests.Linq
 						throw new ArgumentOutOfRangeException();
 				}
 
-				builder.AddEpression("part", partStr);
+				builder.AddExpression("part", partStr);
 			}
 		}
 
@@ -68,7 +68,7 @@ namespace Tests.Linq
 				}
 
 				if (partStr != null)
-					builder.AddEpression("part", partStr);
+					builder.AddExpression("part", partStr);
 			}
 		}
 
@@ -101,7 +101,7 @@ namespace Tests.Linq
 				}
 
 				if (partStr != null)
-					builder.AddEpression("part", partStr);
+					builder.AddExpression("part", partStr);
 			}
 		}
 
@@ -138,7 +138,7 @@ namespace Tests.Linq
 				}
 
 				if (partStr != null)
-					builder.AddEpression("part", partStr);
+					builder.AddExpression("part", partStr);
 			}
 		}
 
@@ -164,7 +164,7 @@ namespace Tests.Linq
 						throw new ArgumentOutOfRangeException();
 				}
 
-				builder.AddEpression("part", partStr);
+				builder.AddExpression("part", partStr);
 			}
 		}
 

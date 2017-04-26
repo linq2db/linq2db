@@ -71,10 +71,10 @@
 					case Sql.AggregateModifier.None :
 						break;
 					case Sql.AggregateModifier.Distinct :
-						builder.AddEpression("modifier", "DISTINCT");
+						builder.AddExpression("modifier", "DISTINCT");
 						break;
 					case Sql.AggregateModifier.All :
-						builder.AddEpression("modifier", "ALL");
+						builder.AddExpression("modifier", "ALL");
 						break;
 					default :
 						throw new ArgumentOutOfRangeException();
@@ -87,7 +87,7 @@
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
-				builder.AddEpression("modifier", GetNullsStr(nulls));
+				builder.AddExpression("modifier", GetNullsStr(nulls));
 			}
 		}
 
@@ -133,8 +133,8 @@
 				var fromStr = GetFromStr(from);
 				var nullsStr = GetNullsStr(nulls);
 
-				builder.AddEpression("from", fromStr);
-				builder.AddEpression("nulls", nullsStr);
+				builder.AddExpression("from", fromStr);
+				builder.AddExpression("nulls", nullsStr);
 			}
 		}
 
@@ -251,19 +251,19 @@
 			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
 		}
 
-		public interface INeedsWithingGroupWithOrderOnly<out TR>
+		public interface INeedsWithinGroupWithOrderOnly<out TR>
 		{
 			[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "within_group")]
 			INeedsOrderByOnly<TR> WithinGroup { get; }
 		}
 
-		public interface INeedsWithingGroupWithOrderAndMaybePartition<out TR>
+		public interface INeedsWithinGroupWithOrderAndMaybePartition<out TR>
 		{
 			[Sql.Extension("WITHIN GROUP ({order_by_clause}){_}{over?}", TokenName = "within_group")]
 			INeedOrderByAndMaybeOverWithPartition<TR> WithinGroup { get; }
 		}
 
-		public interface INeedsWithingGroupWithSingleOrderAndMaybePartition<out TR>
+		public interface INeedsWithinGroupWithSingleOrderAndMaybePartition<out TR>
 		{
 			[Sql.Extension("WITHIN GROUP ({order_by_clause}){_}{over?}", TokenName = "within_group")]
 			INeedSingleOrderByAndMaybeOverWithPartition<TR> WithinGroup { get; }
@@ -446,7 +446,7 @@
 		}
 		
 		[Sql.Extension("CUME_DIST({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1)]
-		public static INeedsWithingGroupWithOrderOnly<TR> CumeDist<TR>(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
+		public static INeedsWithinGroupWithOrderOnly<TR> CumeDist<TR>(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
 		{
 			throw new NotImplementedException();
 		}
@@ -458,7 +458,7 @@
 		}
 
 		[Sql.Extension("DENSE_RANK({expr1}, {expr2}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1)]
-		public static INeedsWithingGroupWithOrderOnly<long> DenseRank(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
+		public static INeedsWithinGroupWithOrderOnly<long> DenseRank(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
@@ -506,12 +506,12 @@
 		}
 
 		[Sql.Extension("LISTAGG({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1)]
-		public static INeedsWithingGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
+		public static INeedsWithinGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new NotImplementedException();
 		}
 		[Sql.Extension("LISTAGG({expr}, {delimiter}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1)]
-		public static INeedsWithingGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] string delimiter)
+		public static INeedsWithinGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] string delimiter)
 		{
 			throw new NotImplementedException();
 		}
@@ -565,7 +565,7 @@
 		}
 
 		[Sql.Extension("PERCENT_RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1)]
-		public static INeedsWithingGroupWithOrderOnly<T> PercentRank<T>(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
+		public static INeedsWithinGroupWithOrderOnly<T> PercentRank<T>(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
 		{
 			throw new NotImplementedException();
 		}
@@ -577,20 +577,20 @@
 		}
 
 		[Sql.Extension("PERCENTILE_CONT({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1)]
-		public static INeedsWithingGroupWithSingleOrderAndMaybePartition<T> PercentileCont<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
+		public static INeedsWithinGroupWithSingleOrderAndMaybePartition<T> PercentileCont<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
 		//TODO: check nulls support when ordering
 		[Sql.Extension("PERCENTILE_DISC({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1)]
-		public static INeedsWithingGroupWithSingleOrderAndMaybePartition<T> PercentileDisc<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
+		public static INeedsWithinGroupWithSingleOrderAndMaybePartition<T> PercentileDisc<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1)]
-		public static INeedsWithingGroupWithOrderOnly<long> Rank(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
+		public static INeedsWithinGroupWithOrderOnly<long> Rank(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
 		{
 			throw new NotImplementedException();
 		}
