@@ -56,8 +56,8 @@ namespace Tests.Linq
 					case Sql.DateParts.Day         : partStr = "day";         break;
 					case Sql.DateParts.Week        : partStr = "week";        break;
 					case Sql.DateParts.WeekDay     :
-						builder.Expression = "WeekDay(Date_Add({date}, interval 1 day)) + 1";
-						builder.Extension.Precedence = Precedence.Additive;
+						builder.Expression = "WeekDay(Date_Add({date}, interval 1 day))";
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
 						break;
 					case Sql.DateParts.Hour        : partStr = "hour";        break;
 					case Sql.DateParts.Minute      : partStr = "minute";      break;
@@ -87,8 +87,8 @@ namespace Tests.Linq
 					case Sql.DateParts.Day         : partStr = "day";     break;
 					case Sql.DateParts.Week        : partStr = "week";    break;
 					case Sql.DateParts.WeekDay     :
-						builder.Expression = "Extract(dow from {date}) + 1";
-						builder.Extension.Precedence = Precedence.Additive;
+						builder.Expression = "Extract(dow from {date})";
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
 						break;
 					case Sql.DateParts.Hour        : partStr = "hour";    break;
 					case Sql.DateParts.Minute      : partStr = "minute";  break;
@@ -105,7 +105,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderSQLite: Sql.IExtensionCallBuilder
+		class DatePartBuilderSqLite: Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -115,16 +115,16 @@ namespace Tests.Linq
 				{
 					case Sql.DateParts.Year        : partStr = "Y"; break;
 					case Sql.DateParts.Quarter     :
-						builder.Expression = "((Cast(StrFTime('%m', {date}) as int)) - 1) / 3 + 1";
-						builder.Extension.Precedence = Precedence.Additive;
+						builder.Expression = "Cast(strFTime('%m', {date}) as int)";
+						builder.ResultExpression = builder.Inc(builder.Div(builder.Dec(builder.ConvertToSqlExpression(Precedence.Primary)), 3));
 						break;
 					case Sql.DateParts.Month       : partStr = "m"; break;
 					case Sql.DateParts.DayOfYear   : partStr = "j"; break;
 					case Sql.DateParts.Day         : partStr = "d"; break;
 					case Sql.DateParts.Week        : partStr = "W"; break;
 					case Sql.DateParts.WeekDay     :
-						builder.Expression = "(Cast(strFTime('%w', [t1].[DateTimeValue]) as int)) + 1";
-						builder.Extension.Precedence = Precedence.Additive;
+						builder.Expression = "Cast(strFTime('%w', {date}) as int)";
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
 						break;
 					case Sql.DateParts.Hour        : partStr = "H"; break;
 					case Sql.DateParts.Minute      : partStr = "M"; break;
@@ -228,7 +228,7 @@ namespace Tests.Linq
 		[Sql.Extension(PN.MySql,      "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderMySql))]
 		[Sql.Extension(PN.PostgreSQL, "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderPostgre))]
 		[Sql.Extension(PN.Firebird,   "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilder))]
-		[Sql.Extension(PN.SQLite,     "Cast(StrFTime('%{part}', {date}) as int)", ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSQLite))]
+		[Sql.Extension(PN.SQLite,     "Cast(StrFTime('%{part}', {date}) as int)", ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSqLite))]
 		[Sql.Extension(PN.Access,     "DatePart('{part}', {date})",               ServerSideOnly = false, BuilderType = typeof(DatePartBuilderAccess))]
 		[Sql.Extension(PN.SapHana,    "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSapHana))]
 		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracleInformixDb2))]
