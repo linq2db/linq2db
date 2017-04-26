@@ -76,26 +76,32 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr;
+				string partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
-					case Sql.DateParts.Year        : partStr = "year"; break;
+					case Sql.DateParts.Year        : partStr = "year";    break;
 					case Sql.DateParts.Quarter     : partStr = "quarter"; break;
-					case Sql.DateParts.Month       : partStr = "month"; break;
-					case Sql.DateParts.DayOfYear   : partStr = "doy"; break;
-					case Sql.DateParts.Day         : partStr = "day"; break;
-					case Sql.DateParts.Week        : partStr = "week"; break;
-					case Sql.DateParts.WeekDay     : partStr = "dow"; break;
-					case Sql.DateParts.Hour        : partStr = "hour"; break;
-					case Sql.DateParts.Minute      : partStr = "minute"; break;
-					case Sql.DateParts.Second      : partStr = "second"; break;
-					case Sql.DateParts.Millisecond : partStr = "milliseconds"; break;
+					case Sql.DateParts.Month       : partStr = "month";   break;
+					case Sql.DateParts.DayOfYear   : partStr = "doy";     break;
+					case Sql.DateParts.Day         : partStr = "day";     break;
+					case Sql.DateParts.Week        : partStr = "week";    break;
+					case Sql.DateParts.WeekDay     :
+						builder.Expression = "Extract(dow from {date}) + 1";
+						builder.Extension.Precedence = Precedence.Additive;
+						break;
+					case Sql.DateParts.Hour        : partStr = "hour";    break;
+					case Sql.DateParts.Minute      : partStr = "minute";  break;
+					case Sql.DateParts.Second      : partStr = "second";  break;
+					case Sql.DateParts.Millisecond :
+						builder.Expression = "Cast(To_Char({date}, 'MS') as int)";
+						break;
 					default:
 						throw new ArgumentOutOfRangeException(nameof(part), part, null);
 				}
 
-				builder.AddEpression("part", partStr);
+				if (partStr != null)
+					builder.AddEpression("part", partStr);
 			}
 		}
 
