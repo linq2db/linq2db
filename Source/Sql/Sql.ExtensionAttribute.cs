@@ -141,6 +141,7 @@ namespace LinqToDB
 		{
 			string         Configuration    { get; }
 			MappingSchema  Mapping          { get; }
+			MemberInfo     Member           { get; }
 			SqlExtension   Extension        { get; }
 			ISqlExpression ResultExpression { get; set; }
 			string         Expression       { get; set; }
@@ -255,7 +256,7 @@ namespace LinqToDB
 					[NotNull]   MappingSchema  mapping,
 					[NotNull]   SqlExtension   extension, 
 					[NotNull]   ConvertHelper  convertHeper,
-					[CanBeNull] MethodInfo     method,
+					[NotNull]   MemberInfo     member,
 					[NotNull]   Expression[]   arguments)
 				{
 					if (mapping      == null) throw new ArgumentNullException("mapping");
@@ -267,22 +268,25 @@ namespace LinqToDB
 					Configuration = configuration;
 					Extension     = extension;
 					_convert      = convertHeper;
-					Method        = method;
+					Member        = member;
+					Method        = member as MethodInfo;
 					Arguments     = arguments;
 				}
+
+				public MethodInfo Method               { get; private set; }
 
 				public ISqlExpression ConvertExpression(Expression expr)
 				{
 					return _convert.Convert(expr);
 				}
 
-				public MethodInfo     Method           { get; private set; }
 				public Expression[]   Arguments        { get; private set; }
 
 				#region ISqExtensionBuilder Members
 
 				public string         Configuration    { get; private set; }
 				public MappingSchema  Mapping          { get; private set; }
+				public MemberInfo     Member           { get; private set; }
 				public SqlExtension   Extension        { get; private set; }
 				public ISqlExpression ResultExpression { get;         set; }
 
