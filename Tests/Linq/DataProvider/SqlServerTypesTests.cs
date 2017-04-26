@@ -37,9 +37,11 @@ namespace Tests.DataProvider
 			[Column(DbType="datetimeoffset(7)"), Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset(7)
 			[Column(DbType="datetime2(7)"),      Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2(7)
 			[Column(DbType="time(7)"),           Nullable] public TimeSpan?       timeDataType           { get; set; } // time(7)
+#if !NETSTANDARD
 			[Column(DbType="hierarchyid"),       Nullable] public SqlHierarchyId  hierarchyidDataType    { get; set; } // hierarchyid
 			[Column(DbType="geography"),         Nullable] public SqlGeography    geographyDataType      { get; set; } // geography
 			[Column(DbType="geometry"),          Nullable] public SqlGeometry     geometryDataType       { get; set; } // geometry
+#endif
 		}
 
 		[AttributeUsage(AttributeTargets.Method)]
