@@ -369,8 +369,6 @@ namespace LinqToDB
 
 			public ExtensionAttribute(string configuration, string expression) : base(configuration, expression)
 			{
-				ServerSideOnly   = true;
-				PreferServerSide = true;
 				ExpectExpression = true;
 				ServerSideOnly   = true;
 				PreferServerSide = true;
