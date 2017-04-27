@@ -36,11 +36,11 @@
 
 	public static class AnalyticFunctions
 	{
-		public const string FunctionToken  = "function";
+		const string FunctionToken  = "function";
 
 		#region Call Builders
 
-		public class OrderItemBuilder: Sql.IExtensionCallBuilder
+		class OrderItemBuilder: Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -61,7 +61,7 @@
 			}
 		}
 
-		public class ApplyAggregateModifier: Sql.IExtensionCallBuilder
+		class ApplyAggregateModifier: Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -82,12 +82,14 @@
 			}
 		}
 
-		public class ApplyNullsModifier: Sql.IExtensionCallBuilder
+		class ApplyNullsModifier: Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
-				builder.AddExpression("modifier", GetNullsStr(nulls));
+				var nullsStr = GetNullsStr(nulls);
+				if (!string.IsNullOrEmpty(nullsStr))
+					builder.AddExpression("modifier", nullsStr);
 			}
 		}
 
@@ -123,18 +125,20 @@
 			return string.Empty;
 		}
 
-		public class ApplyFromAndNullsModifier: Sql.IExtensionCallBuilder
+		class ApplyFromAndNullsModifier: Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
 				var from  = builder.GetValue<Sql.From>("from");
 
-				var fromStr = GetFromStr(from);
+				var fromStr  = GetFromStr(from);
 				var nullsStr = GetNullsStr(nulls);
 
-				builder.AddExpression("from", fromStr);
-				builder.AddExpression("nulls", nullsStr);
+				if (!string.IsNullOrEmpty(fromStr))
+					builder.AddExpression("from", fromStr);
+				if (!string.IsNullOrEmpty(nullsStr))
+					builder.AddExpression("nulls", nullsStr);
 			}
 		}
 

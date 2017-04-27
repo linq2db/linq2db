@@ -235,8 +235,8 @@ namespace LinqToDB
 				Extension = extension;
 			}
 
-			public string Name { get; set; }
-			public SqlExtension   Extension { get; set; }
+			public string         Name       { get; set; }
+			public SqlExtension   Extension  { get; set; }
 			public ISqlExpression Expression { get; set; }
 		}
 
@@ -497,10 +497,16 @@ namespace LinqToDB
 
 			SqlExtensionParam BuildExtensionParam(MappingSchema mapping, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
 			{
-				var extension = new SqlExtension(member.GetMemberType(), Expression, Precedence, ChainPrecedence);
+				var method = member as MethodInfo;
+				var type   = member.GetMemberType();
+				if (method != null)
+					type = method.ReturnType ?? type;
+				else if (member is PropertyInfo)
+					type = ((PropertyInfo)member).PropertyType;
+
+				var extension = new SqlExtension(type, Expression, Precedence, ChainPrecedence);
 				SqlExtensionParam result = null;
 
-				var method = member as MethodInfo;
 				if (method != null)
 				{
 					var parameters = method.GetParameters();
@@ -701,7 +707,8 @@ namespace LinqToDB
 				if (chain.Count == 0)
 					throw new InvalidOperationException("No sequnce found");
 
-				var main = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension.ChainPrecedence).FirstOrDefault();
+				var ordered = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension.ChainPrecedence).ToArray();
+				var main    = ordered.FirstOrDefault();
 				if (main == null)
 				{
 					var replaced = chain.Where(c => c.Expression != null).ToArray();
@@ -713,14 +720,20 @@ namespace LinqToDB
 
 				var mainExtension = main.Extension;
 
-				mainExtension.SystemType = expression.Type;
+				// suggesting type
+				var type = ordered.Select(c => c.Extension.SystemType).FirstOrDefault(t => t != null);
+				if (type == null)
+					type = chain.Where(c => c.Expression != null).Select(c => c.Expression.SystemType).FirstOrDefault(t => t != null);
+
+				mainExtension.SystemType = type ??expression.Type;
+
 				foreach (var c in chain.Where(c => c.Extension != mainExtension))
 				{
 					mainExtension.AddParameter(c);
 				}
 
-				//TODO: SytemType and precedence calculation
-				var res = BuildSqlExpression(mainExtension, expression.Type, mainExtension.Precedence);
+				//TODO: Precedence calculation
+				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType, mainExtension.Precedence);
 
 				return res;
 			}
