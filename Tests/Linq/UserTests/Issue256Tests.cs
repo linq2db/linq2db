@@ -3,6 +3,7 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Data.Linq;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -271,7 +272,7 @@ namespace Tests.UserTests
 			db.Types.Where(_ => _.ID == 10256).Delete();
 
 			Assert.AreEqual(1, result.Count);
-			Assert.AreEqual(256, result[0].ID);
+			Assert.AreEqual(10256, result[0].ID);
 			Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
 		}
 
