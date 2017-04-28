@@ -70,6 +70,7 @@ namespace Tests.UserTests
 			}
 		}
 
+#if !MONO
 		[Issue256TestSource]
 		public void SimpleTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
@@ -81,6 +82,7 @@ namespace Tests.UserTests
 		{
 			Test(context, action, 3);
 		}
+#endif
 
 		public void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
 		{
@@ -112,13 +114,6 @@ namespace Tests.UserTests
 		{
 			var value = RunTest(db, test, calls);
 
-			// one GC.Collect call is enough for most runtimes
-			GC.Collect();
-
-			// this is added for Travis runs for .NETFramework,Version=v4.5
-			GC.WaitForPendingFinalizers();
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
 			GC.Collect();
 
 			Assert.False(value.IsAlive);
