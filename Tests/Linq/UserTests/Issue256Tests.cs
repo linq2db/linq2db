@@ -21,6 +21,25 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue256Tests : TestBase
 	{
+		[Table("LinqDataTypes")]
+		public class LinqDataTypesWithPK
+		{
+			[PrimaryKey]
+			public int ID;
+			[Column]
+			public decimal MoneyValue;
+			[Column]
+			public DateTime DateTimeValue;
+			[Column]
+			public bool BoolValue;
+			[Column]
+			public Guid GuidValue;
+			[Column]
+			public Binary BinaryValue;
+			[Column]
+			public short SmallIntValue;
+		}
+
 		[AttributeUsage(AttributeTargets.Method)]
 		class Issue256TestSourceAttribute : DataContextSourceAttribute
 		{
@@ -267,7 +286,7 @@ namespace Tests.UserTests
 
 		private static void NonLinqInsert(ITestDataContext db, byte[] value, int calls)
 		{
-			db.Insert(new LinqDataTypes() { ID = 10256, BinaryValue = value });
+			db.Insert(new LinqDataTypesWithPK() { ID = 10256, BinaryValue = value });
 			var result = db.Types.Where(_ => _.ID == 10256).ToList();
 			db.Types.Where(_ => _.ID == 10256).Delete();
 
@@ -282,14 +301,14 @@ namespace Tests.UserTests
 
 			while (calls > 0)
 			{
-				db.Update(new LinqDataTypes() { ID = 256, BinaryValue = null });
+				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = null });
 				var result = query.ToList();
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
 				Assert.IsNull(result[0].BinaryValue);
 
-				db.Update(new LinqDataTypes() { ID = 256, BinaryValue = value });
+				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value });
 				result = query.ToList();
 
 				Assert.AreEqual(1, result.Count);
