@@ -30,7 +30,7 @@ namespace Tests.UserTests
 			public int ID;
 			[Column]
 			public decimal MoneyValue;
-			[Column]
+			[Column(DataType = DataType.DateTime)]
 			public DateTime DateTimeValue;
 			[Column]
 			public bool BoolValue;
@@ -90,7 +90,11 @@ namespace Tests.UserTests
 				{
 					ID = 256,
 					BinaryValue = new byte[] { 1, 2, 3 },
-					DateTimeValue = Date
+					DateTimeValue = Date,
+					BoolValue = false,
+					GuidValue = Guid.Empty,
+					MoneyValue = 0,
+					SmallIntValue = 0
 				});
 
 				try
@@ -192,7 +196,7 @@ namespace Tests.UserTests
 			var expected = true;
 			while (calls > 0)
 			{
-				query.Set(_ => _.BoolValue, _ => !_.BoolValue || true).Update();
+				query.Set(_ => _.BoolValue, _ => !_.BoolValue).Update();
 				var result = db.Types.Where(_ => _.ID == 256).ToList();
 
 				Assert.AreEqual(1, result.Count);
@@ -325,7 +329,7 @@ namespace Tests.UserTests
 		{
 			while (calls > 0)
 			{
-				db.Delete(new LinqDataTypes() { ID = 256, BinaryValue = value, DateTimeValue = Date });
+				db.Delete(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value, DateTimeValue = Date });
 				var result = db.Types.Where(_ => _.ID == 256).ToList();
 
 				Assert.AreEqual(0, result.Count);
