@@ -21,6 +21,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue256Tests : TestBase
 	{
+		private readonly static DateTime Date = DateTime.Now;
+
 		[Table("LinqDataTypes")]
 		public class LinqDataTypesWithPK
 		{
@@ -88,7 +90,7 @@ namespace Tests.UserTests
 				{
 					ID = 256,
 					BinaryValue = new byte[] { 1, 2, 3 },
-					DateTimeValue = DateTime.Now
+					DateTimeValue = Date
 				});
 
 				try
@@ -220,7 +222,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.IsNull(result[0].BinaryValue);
+				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
 
 				calls--;
 			}
@@ -244,7 +246,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.IsNull(result[0].BinaryValue);
+				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
 
 				calls--;
 			}
@@ -262,7 +264,7 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.IsNull(result[0].BinaryValue);
+				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
 
 				calls--;
 			}
@@ -286,7 +288,7 @@ namespace Tests.UserTests
 
 		private static void NonLinqInsert(ITestDataContext db, byte[] value, int calls)
 		{
-			db.Insert(new LinqDataTypesWithPK() { ID = 10256, BinaryValue = value });
+			db.Insert(new LinqDataTypesWithPK() { ID = 10256, BinaryValue = value, DateTimeValue = Date });
 			var result = db.Types.Where(_ => _.ID == 10256).ToList();
 			db.Types.Where(_ => _.ID == 10256).Delete();
 
@@ -301,19 +303,19 @@ namespace Tests.UserTests
 
 			while (calls > 0)
 			{
-				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = null });
+				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = null, DateTimeValue = Date });
 				var result = query.ToList();
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
 				Assert.IsNull(result[0].BinaryValue);
 
-				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value });
+				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value, DateTimeValue = Date });
 				result = query.ToList();
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(256, result[0].ID);
-				Assert.IsNull(result[0].BinaryValue);
+				Assert.True(value.SequenceEqual(result[0].BinaryValue.ToArray()));
 
 				calls--;
 			}
@@ -321,11 +323,9 @@ namespace Tests.UserTests
 
 		private static void NonLinqDelete(ITestDataContext db, byte[] value, int calls)
 		{
-			var query = db.Types.Where(_ => _.BinaryValue == value);
-
 			while (calls > 0)
 			{
-				db.Delete(new LinqDataTypes() { ID = 256, BinaryValue = value });
+				db.Delete(new LinqDataTypes() { ID = 256, BinaryValue = value, DateTimeValue = Date });
 				var result = db.Types.Where(_ => _.ID == 256).ToList();
 
 				Assert.AreEqual(0, result.Count);
