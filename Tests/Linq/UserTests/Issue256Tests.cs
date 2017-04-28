@@ -111,17 +111,21 @@ namespace Tests.UserTests
 		private void TestWrapper(ITestDataContext db, Action<ITestDataContext, byte[], int> test, int calls)
 		{
 			var value = RunTest(db, test, calls);
-			GC.Collect();
 
-			byte[] target;
-			Assert.False(value.TryGetTarget(out target));
+			GC.Collect();
+#if NETSTANDARD
+			GC.WaitForPendingFinalizers();
+			GC.Collect();
+#endif
+
+			Assert.False(value.IsAlive);
 		}
 
-		private static WeakReference<byte[]> RunTest(ITestDataContext db, Action<ITestDataContext, byte[], int> test, int calls)
+		private static WeakReference RunTest(ITestDataContext db, Action<ITestDataContext, byte[], int> test, int calls)
 		{
 			var value = new byte[] { 1, 2, 3 };
 			test(db, value, calls);
-			return new WeakReference<byte[]>(value);
+			return new WeakReference(value);
 		}
 
 		/// <summary>
