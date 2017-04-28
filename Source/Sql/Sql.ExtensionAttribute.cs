@@ -374,6 +374,11 @@ namespace LinqToDB
 				PreferServerSide = true;
 			}
 
+			public ExtensionAttribute(Type builderType): this(string.Empty, string.Empty)
+			{
+				BuilderType = builderType;
+			}
+
 			static T GetExpressionValue<T>(Expression expr)
 			{
 				var lambda = System.Linq.Expressions.Expression.Lambda<Func<T>>(expr);
