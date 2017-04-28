@@ -3695,9 +3695,8 @@ namespace LinqToDB.SqlQuery
 								{
 									objs.Add(expr, expr);
 									p.Name = GetAlias(p.Name, "p");
+									Parameters.Add(p);
 								}
-
-								Parameters.Add(p);
 							}
 							else
 								IsParameterDependent = true;
