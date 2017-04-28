@@ -70,6 +70,7 @@ namespace Tests.UserTests
 			}
 		}
 
+#if !NETSTANDARD
 		[Issue256TestSource]
 		public void SimpleTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
@@ -81,6 +82,7 @@ namespace Tests.UserTests
 		{
 			Test(context, action, 3);
 		}
+#endif
 
 		public void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
 		{
@@ -113,10 +115,6 @@ namespace Tests.UserTests
 			var value = RunTest(db, test, calls);
 
 			GC.Collect();
-#if NETSTANDARD
-			GC.WaitForPendingFinalizers();
-			GC.Collect();
-#endif
 
 			Assert.False(value.IsAlive);
 		}
