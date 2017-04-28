@@ -279,11 +279,18 @@ namespace Tests
 			readonly bool     _includeLinqService;
 			readonly string[] _providerNames;
 
-			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService)
+			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService, int caseNumber)
 			{
 				var name = method.Name + "." + provider;
 				if (isLinqService)
 					name += ".LinqService";
+
+				// numerate cases starting from second case to preserve naming for most of tests
+				if (caseNumber > 0)
+				{
+					name += "." + caseNumber;
+					test.FullName += "." + caseNumber;
+				}
 
 				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
 			}
@@ -309,7 +316,7 @@ namespace Tests
 				{
 					var isIgnore = !UserProviders.ContainsKey(provider);
 
-
+					var caseNumber = 0;
 					foreach (var parameters in GetParameters(provider))
 					{
 						var data = new TestCaseParameters(parameters);
@@ -320,7 +327,7 @@ namespace Tests
 							attr.ApplyToTest(test);
 
 						test.Properties.Set(PropertyNames.Category, provider);
-						SetName(test, method, provider, false);
+						SetName(test, method, provider, false, caseNumber++);
 
 						if (isIgnore)
 						{
@@ -339,17 +346,18 @@ namespace Tests
 
 					if (!isIgnore && _includeLinqService)
 					{
-						foreach (var paremeters in GetParameters(provider + ".LinqService"))
+						var linqCaseNumber = 0;
+						foreach (var parameters in GetParameters(provider + ".LinqService"))
 						{
 
-							var data = new TestCaseParameters(paremeters);
+							var data = new TestCaseParameters(parameters);
 							test = builder.BuildTestMethod(method, suite, data);
 
 							foreach (var attr in explic)
 								attr.ApplyToTest(test);
 
 							test.Properties.Set(PropertyNames.Category, provider);
-							SetName(test, method, provider, true);
+							SetName(test, method, provider, true, linqCaseNumber++);
 
 							yield return test;
 						}
