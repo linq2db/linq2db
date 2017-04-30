@@ -48,7 +48,8 @@ namespace LinqToDB.DataProvider
 		/// For ON condition primary key fields used.
 		/// UPDATE operation generated if there are any updateable columns (and only for them): NOT PK AND (identity OR !SkipOnUpdate).
 		/// INSERT operation generated for following columns: identity OR !SkipOnInsert.
-		/// DELETE operation generated if corresponding flag is set and could include optional condition.
+		/// DELETE operation generated if corresponding flag is set and could include optional condition. It is generated
+		/// as WHEN NOT MATCHED BY SOURCE match clause, which is supported only by SQL Server.
 		/// </summary>
 		/// <typeparam name="T">Target table mapping class.</typeparam>
 		/// <param name="deletePredicate">Optional DELETE operation condition.</param>
