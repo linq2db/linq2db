@@ -13,6 +13,10 @@ namespace LinqToDB.DataProvider
 	using SqlQuery;
 	using SqlProvider;
 
+	/// <summary>
+	/// Basic MERGE operation implementation for all providers.
+	/// For provider-specific logic create child class.
+	/// </summary>
 	public class BasicMerge
 	{
 		protected class ColumnInfo
@@ -39,6 +43,18 @@ namespace LinqToDB.DataProvider
 			return Execute(dataConnection);
 		}
 
+		/// <summary>
+		/// Builds MERGE INTO command text.
+		/// For ON condition primary key fields used.
+		/// UPDATE operation generated if there are any updateable columns (and only for them): NOT PK AND (identity OR !SkipOnUpdate).
+		/// INSERT operation generated for following columns: identity OR !SkipOnInsert.
+		/// DELETE operation generated if corresponding flag is set and could include optional condition.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="deletePredicate">Optional DELETE operation condition.</param>
+		/// <param name="delete">Should MERGE command include DELETE operation or not.</param>
+		/// <param name="source">Source data.</param>
+		/// <returns>True if command built and false if source is empty and command execution not required.</returns>
 		protected virtual bool BuildCommand<T>(
 			DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -156,10 +172,12 @@ namespace LinqToDB.DataProvider
 
 				if (deletePredicate != null)
 				{
+					// generate SQL for delete condition
 					var inlineParameters = dataConnection.InlineParameters;
 
 					try
 					{
+						// toggle parameters embedding as literals
 						dataConnection.InlineParameters = true;
 
 						var q   = dataConnection.GetTable<T>().Where(deletePredicate);
@@ -272,6 +290,12 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
+		/// <summary>
+		/// Generates USING source statement with direct VALUES.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="source">Source data collection.</param>
+		/// <returns>Returns true on success an false if source is empty.</returns>
 		protected virtual bool BuildUsing<T>(DataConnection dataConnection, IEnumerable<T> source)
 		{
 			var table          = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -345,6 +369,15 @@ namespace LinqToDB.DataProvider
 			return hasData;
 		}
 
+		/// <summary>
+		/// Generates USING source statement using union subquery with dummy select for each source record for databases
+		/// that doesn't support VALUES in source.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="source">Source data collection.</param>
+		/// <param name="top">TOP 1 clause equivalent for current database engine.</param>
+		/// <param name="fromDummyTable">Database engine-specific dummy table for FROM statement with at least one record.</param>
+		/// <returns>Returns true on success an false if source is empty.</returns>
 		protected bool BuildUsing2<T>(DataConnection dataConnection, IEnumerable<T> source, string top, string fromDummyTable)
 		{
 			var table          = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -413,6 +446,10 @@ namespace LinqToDB.DataProvider
 			return hasData;
 		}
 
+		/// <summary>
+		/// Executes generated MERGE query against database connection.
+		/// </summary>
+		/// <returns>Returns total number of affected records - inserted, updated or deleted.</returns>
 		protected virtual int Execute(DataConnection dataConnection)
 		{
 			var cmd = StringBuilder.AppendLine().ToString();
