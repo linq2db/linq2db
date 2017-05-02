@@ -15,7 +15,11 @@ namespace LinqToDB.DataProvider.Firebird
 		static void SetNonQueryParameter(IQueryElement element)
 		{
 			if (element.ElementType == QueryElementType.SqlParameter)
-				((SqlParameter)element).IsQueryParameter = false;
+			{
+				var p = (SqlParameter) element;
+				if (p.SystemType == null || p.SystemType.IsScalar(false))
+					p.IsQueryParameter = false;
+			}
 		}
 
 		private bool SearchSelectClause(IQueryElement element)
@@ -31,7 +35,9 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (element.ElementType == QueryElementType.SqlParameter)
 			{
-				((SqlParameter)element).IsQueryParameter = false;
+				var p = (SqlParameter)element;
+				if (p.SystemType == null || p.SystemType.IsScalar(false))
+					p.IsQueryParameter = false;
 				return false;
 			}
 

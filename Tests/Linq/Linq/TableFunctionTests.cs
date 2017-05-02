@@ -158,7 +158,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource("Northwind"), Category("FreeText")]
 		public void FreeTextTable1(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -173,7 +173,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource("Northwind"), Category("FreeText")]
 		public void FreeTextTable2(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -188,7 +188,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource("Northwind"), Category("FreeText")]
 		public void FreeTextTable3(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -203,7 +203,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource("Northwind"), Category("FreeText")]
 		public void FreeText1(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -219,7 +219,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource("Northwind"), Category("FreeText")]
 		public void FreeText2(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -235,7 +235,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource("Northwind"), Category("FreeText")]
 		public void FreeText3(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -251,7 +251,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource("Northwind"), Category("FreeText")]
 		public void FreeText4(string context)
 		{
 			using (var db = new NorthwindDB(context))

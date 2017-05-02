@@ -3,11 +3,11 @@ using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
-
-// ReSharper disable CheckNamespace
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
+	using System.Linq.Expressions;
 	using Extensions;
 	using SqlQuery;
 
@@ -92,6 +92,11 @@ namespace LinqToDB
 			public virtual ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
 			{
 				return new SqlExpression(member.GetMemberType(), Expression ?? member.Name, Precedence, ConvertArgs(member, args)) { CanBeNull = CanBeNull };
+			}
+
+			public virtual ISqlExpression GetExpression(MappingSchema mapping, Expression expression, Func<Expression, ISqlExpression> converter)
+			{
+				return null;
 			}
 		}
 	}

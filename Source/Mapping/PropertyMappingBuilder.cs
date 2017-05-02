@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
 {
@@ -23,6 +24,9 @@ namespace LinqToDB.Mapping
 			_entity       = entity;
 			_memberGetter = memberGetter;
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
+
+			if (_memberInfo.ReflectedTypeEx() != typeof(T))
+				_memberInfo = typeof(T).GetMemberEx(_memberInfo) ?? _memberInfo;
 		}
 
 		readonly Expression<Func<T,object>> _memberGetter;

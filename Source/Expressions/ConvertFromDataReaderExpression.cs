@@ -107,8 +107,9 @@ namespace LinqToDB.Expressions
 			}
 
 			// Add check null expression.
+			// Note: Oracle may return wrong IsDBNullAllowed, so added additional check toType != type, that means nullable type
 			//
-			if (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)
+			if (toType != type || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true))
 			{
 				ex = Condition(
 					Call(dataReaderExpr, _isDBNullInfo, Constant(idx)),

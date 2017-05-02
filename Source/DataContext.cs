@@ -245,6 +245,11 @@ namespace LinqToDB
 
 		void IDisposable.Dispose()
 		{
+			Close();
+		}
+
+		void Close()
+		{
 			if (_dataConnection != null)
 			{
 				if (OnClosing != null)
@@ -256,6 +261,11 @@ namespace LinqToDB
 				_dataConnection.Dispose();
 				_dataConnection = null;
 			}
+		}
+
+		void IDataContext.Close()
+		{
+			Close();
 		}
 
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)

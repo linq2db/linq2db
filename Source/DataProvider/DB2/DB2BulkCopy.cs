@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.DB2
 				if (_bulkCopyCreator != null)
 				{
 					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-					var rd      = new BulkCopyReader(dataConnection.DataProvider, columns, source);
+					var rd      = new BulkCopyReader(dataConnection.DataProvider, dataConnection.MappingSchema, columns, source);
 					var rc      = new BulkCopyRowsCopied();
 
 					var bcOptions = 0; // Default

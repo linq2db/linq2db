@@ -301,14 +301,17 @@
     <Compile Include="SqlQuery\SqlTableT.cs" />
     <Compile Include="SqlQuery\SqlTableType.cs" />
     <Compile Include="SqlQuery\SqlValue.cs" />
+    <Compile Include="Sql\Sql.Analytic.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.ExtensionAttribute.cs" />
     <Compile Include="Sql\Sql.FunctionAttribute.cs" />
     <Compile Include="Sql\Sql.GroupBy.cs" />
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
+    <Compile Include="TakeHints.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.snk" />

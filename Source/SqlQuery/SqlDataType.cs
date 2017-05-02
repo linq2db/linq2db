@@ -331,6 +331,10 @@ namespace LinqToDB.SqlQuery
 				case DataType.Time             : return DbTime;
 				case DataType.DateTime2        : return DbDateTime2;
 				case DataType.DateTimeOffset   : return DbDateTimeOffset;
+				case DataType.UInt16           : return DbUInt16;
+				case DataType.UInt32           : return DbUInt32;
+				case DataType.UInt64           : return DbUInt64;
+
 			}
 
 			throw new InvalidOperationException();
@@ -375,6 +379,9 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType DbInt64          = new SqlDataType(DataType.Int64,          typeof(Int64),                  0, 0,                0);
 		public static readonly SqlDataType DbInt32          = new SqlDataType(DataType.Int32,          typeof(Int32),                  0, 0,                0);
 		public static readonly SqlDataType DbInt16          = new SqlDataType(DataType.Int16,          typeof(Int16),                  0, 0,                0);
+		public static readonly SqlDataType DbUInt64         = new SqlDataType(DataType.UInt64,         typeof(UInt64),                 0, 0,                0);
+		public static readonly SqlDataType DbUInt32         = new SqlDataType(DataType.UInt32,         typeof(UInt32),                 0, 0,                0);
+		public static readonly SqlDataType DbUInt16         = new SqlDataType(DataType.UInt16,         typeof(UInt16),                 0, 0,                0);
 		public static readonly SqlDataType DbSByte          = new SqlDataType(DataType.SByte,          typeof(SByte),                  0, 0,                0);
 		public static readonly SqlDataType DbByte           = new SqlDataType(DataType.Byte,           typeof(Byte),                   0, 0,                0);
 		public static readonly SqlDataType DbBoolean        = new SqlDataType(DataType.Boolean,        typeof(Boolean),                0, 0,                0);

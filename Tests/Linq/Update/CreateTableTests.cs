@@ -20,7 +20,7 @@ namespace Tests.xUpdate
 			public DateTime? CreatedOn;
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.OracleNative)]
 		public void CreateTable1(string context)
 		{
 			using (var db = GetDataContext(context))

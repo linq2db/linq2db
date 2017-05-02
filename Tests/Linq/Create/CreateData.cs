@@ -211,7 +211,7 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2          (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
 		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix     (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
 		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void Oracle       (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
-		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");      }
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL   (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
 		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql        (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
 		[Test, IncludeDataContextSource(TestProvName.MySql57)]       public void MySql57      (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
@@ -267,6 +267,24 @@ namespace Tests._Create
 					});
 			}
 #endif
+		}
+
+		void FirebirdAction(IDbConnection connection)
+		{
+			using (var conn = LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(connection))
+			{
+				conn.Execute(@"
+					UPDATE PERSON
+					SET
+						FIRSTNAME = @FIRSTNAME,
+						LASTNAME  = @LASTNAME
+					WHERE PERSONID = 4",
+					new
+					{
+						FIRSTNAME = "Jürgen",
+						LASTNAME  = "König",
+					});
+			}
 		}
 
 		static void SQLiteAction(IDbConnection connection)

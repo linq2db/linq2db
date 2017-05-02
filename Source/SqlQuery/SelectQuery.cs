@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
@@ -168,31 +169,82 @@ namespace LinqToDB.SqlQuery
 				set { _alias = value; }
 			}
 
+			private bool   _underlyingColumnSet = false;
+			private Column _underlyingColumn;
+			private Column  UnderlyingColumn
+			{
+				get
+				{
+					if (_underlyingColumnSet)
+						return _underlyingColumn;
+
+					var columns = new List<Column>(10);
+
+					var column = Expression as Column;
+
+					while (column != null)
+					{
+						if (column._underlyingColumn != null)
+						{
+							columns.Add(column._underlyingColumn);
+							break;
+						}
+
+						columns.Add(column);
+						column = column.Expression as Column;
+					}
+
+					_underlyingColumnSet = true;
+					if (columns.Count == 0)
+						return null;
+
+					_underlyingColumn = columns[columns.Count - 1];
+
+					for (var i = 0; i < columns.Count - 1; i++)
+					{
+						var c = columns[i];
+						c._underlyingColumn    = _underlyingColumn;
+						c._underlyingColumnSet = true;
+					}
+
+					return _underlyingColumn;
+				}
+			}
+
 			public bool Equals(Column other)
 			{
+				if (other == null)
+					return false;
+
 				if (!object.Equals(Parent, other.Parent))
 					return false;
 
-				var found =
-					Expression.Equals(other.Expression)
-					|| new QueryVisitor().Find(other, e =>
-						{
-							switch(e.ElementType)
-							{
-								case QueryElementType.Column: return ((Column)e).Expression.Equals(Expression);
-							}
-							return false;
-						}) != null
-					|| new QueryVisitor().Find(Expression, e =>
-						{
-							switch (e.ElementType)
-							{
-								case QueryElementType.Column: return ((Column)e).Expression.Equals(other.Expression);
-							}
-							return false;
-						}) != null;
+				if (Expression.Equals(other.Expression))
+					return true;
 
-				return found;
+				//return false;
+				return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
+
+				//var found =
+				//	
+				//	|| new QueryVisitor().Find(other, e =>
+				//		{
+				//			switch(e.ElementType)
+				//			{
+				//				case QueryElementType.Column: return ((Column)e).Expression.Equals(Expression);
+				//			}
+				//			return false;
+				//		}) != null
+				//	|| new QueryVisitor().Find(Expression, e =>
+				//		{
+				//			switch (e.ElementType)
+				//			{
+				//				case QueryElementType.Column: return ((Column)e).Expression.Equals(other.Expression);
+				//			}
+				//			return false;
+				//		}) != null;
+
+				//return found;
 			}
 
 			public override string ToString()
@@ -1814,13 +1866,13 @@ namespace LinqToDB.SqlQuery
 
 			public SelectClause Field(SqlField field)
 			{
-				AddOrGetColumn(new Column(SelectQuery, field));
+				AddOrFindColumn(new Column(SelectQuery, field));
 				return this;
 			}
 
 			public SelectClause Field(SqlField field, string alias)
 			{
-				AddOrGetColumn(new Column(SelectQuery, field, alias));
+				AddOrFindColumn(new Column(SelectQuery, field, alias));
 				return this;
 			}
 
@@ -1831,7 +1883,7 @@ namespace LinqToDB.SqlQuery
 
 				subQuery.ParentSelect = SelectQuery;
 
-				AddOrGetColumn(new Column(SelectQuery, subQuery));
+				AddOrFindColumn(new Column(SelectQuery, subQuery));
 				return this;
 			}
 
@@ -1842,73 +1894,73 @@ namespace LinqToDB.SqlQuery
 
 				selectQuery.ParentSelect = SelectQuery;
 
-				AddOrGetColumn(new Column(SelectQuery, selectQuery, alias));
+				AddOrFindColumn(new Column(SelectQuery, selectQuery, alias));
 				return this;
 			}
 
 			public SelectClause Expr(ISqlExpression expr)
 			{
-				AddOrGetColumn(new Column(SelectQuery, expr));
+				AddOrFindColumn(new Column(SelectQuery, expr));
 				return this;
 			}
 
 			public SelectClause Expr(ISqlExpression expr, string alias)
 			{
-				AddOrGetColumn(new Column(SelectQuery, expr, alias));
+				AddOrFindColumn(new Column(SelectQuery, expr, alias));
 				return this;
 			}
 
 			public SelectClause Expr(string expr, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(null, expr, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(null, expr, values)));
 				return this;
 			}
 
 			public SelectClause Expr(Type systemType, string expr, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, values)));
 				return this;
 			}
 
 			public SelectClause Expr(string expr, int priority, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(null, expr, priority, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(null, expr, priority, values)));
 				return this;
 			}
 
 			public SelectClause Expr(Type systemType, string expr, int priority, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
 				return this;
 			}
 
 			public SelectClause Expr(string alias, string expr, int priority, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(null, expr, priority, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(null, expr, priority, values)));
 				return this;
 			}
 
 			public SelectClause Expr(Type systemType, string alias, string expr, int priority, params ISqlExpression[] values)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
 				return this;
 			}
 
 			public SelectClause Expr<T>(ISqlExpression expr1, string operation, ISqlExpression expr2)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2)));
 				return this;
 			}
 
 			public SelectClause Expr<T>(ISqlExpression expr1, string operation, ISqlExpression expr2, int priority)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority)));
+				AddOrFindColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority)));
 				return this;
 			}
 
 			public SelectClause Expr<T>(string alias, ISqlExpression expr1, string operation, ISqlExpression expr2, int priority)
 			{
-				AddOrGetColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority), alias));
+				AddOrFindColumn(new Column(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority), alias));
 				return this;
 			}
 
@@ -1917,7 +1969,7 @@ namespace LinqToDB.SqlQuery
 				if (expr is Column && ((Column)expr).Parent == SelectQuery)
 					throw new InvalidOperationException();
 
-				return Columns.IndexOf(AddOrGetColumn(new Column(SelectQuery, expr)));
+				return AddOrFindColumn(new Column(SelectQuery, expr));
 			}
 
 			public int AddNew(ISqlExpression expr)
@@ -1931,14 +1983,21 @@ namespace LinqToDB.SqlQuery
 
 			public int Add(ISqlExpression expr, string alias)
 			{
-				return Columns.IndexOf(AddOrGetColumn(new Column(SelectQuery, expr, alias)));
+				return AddOrFindColumn(new Column(SelectQuery, expr, alias));
 			}
 
-			Column AddOrGetColumn(Column col)
+			/// <summary>
+			/// Adds column if it is not added yet.
+			/// <returns>Returns index of column in Columns list.</returns>
+			int AddOrFindColumn(Column col)
 			{
-				foreach (var c in Columns)
-					if (c.Equals(col))
-						return col;
+				for (var i = 0; i < Columns.Count; i++)
+				{
+					if (Columns[i].Equals(col))
+					{
+						return i;
+					}
+				}
 
 #if DEBUG
 
@@ -1981,10 +2040,9 @@ namespace LinqToDB.SqlQuery
 				}
 
 #endif
-
 				Columns.Add(col);
 
-				return col;
+				return Columns.Count - 1;
 			}
 
 			readonly List<Column> _columns = new List<Column>();
@@ -2017,19 +2075,22 @@ namespace LinqToDB.SqlQuery
 
 #region Take
 
-			public SelectClause Take(int value)
+			public SelectClause Take(int value, TakeHints? hints)
 			{
 				TakeValue = new SqlValue(value);
+				TakeHints = hints;
 				return this;
 			}
 
-			public SelectClause Take(ISqlExpression value)
+			public SelectClause Take(ISqlExpression value, TakeHints? hints)
 			{
+				TakeHints = hints;
 				TakeValue = value;
 				return this;
 			}
 
-			public ISqlExpression TakeValue { get; set; }
+			public ISqlExpression TakeValue { get; private set; }
+			public TakeHints?     TakeHints { get; private set; }
 
 #endregion
 
@@ -2121,13 +2182,14 @@ namespace LinqToDB.SqlQuery
 				if (Columns.Count == 0)
 					sb.Append("\t*, \n");
 				else
-					foreach (var c in Columns)
+					for (var i = 0; i < Columns.Count; i++)
 					{
+						var c = Columns[i];
 						sb.Append("\t");
 						((IQueryElement)c).ToString(sb, dic);
 						sb
 							.Append(" as ")
-							.Append(c.Alias ?? "c" + (Columns.IndexOf(c) + 1))
+							.Append(c.Alias ?? "c" + (i + 1))
 							.Append(", \n");
 					}
 
@@ -2236,6 +2298,8 @@ namespace LinqToDB.SqlQuery
 
 						if (field.ColumnDescriptor != null)
 						{
+							if (field.ColumnDescriptor.DataType != DataType.Undefined && p.DataType == DataType.Undefined)
+								p.DataType = field.ColumnDescriptor.DataType;
 //							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbTypeSet)
 //								p.DbType = field.ColumnDescriptorptor.MapMemberInfo.DbType;
 //
@@ -3277,7 +3341,7 @@ namespace LinqToDB.SqlQuery
 
 #region ProcessParameters
 
-		public SelectQuery ProcessParameters()
+		public SelectQuery ProcessParameters(MappingSchema mappingSchema)
 		{
 			if (IsParameterDependent)
 			{
@@ -3330,7 +3394,7 @@ namespace LinqToDB.SqlQuery
 							break;
 
 						case QueryElementType.InListPredicate :
-							return ConvertInListPredicate((Predicate.InList)e);
+							return ConvertInListPredicate(mappingSchema, (Predicate.InList)e);
 					}
 
 					return null;
@@ -3362,7 +3426,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		static Predicate ConvertInListPredicate(Predicate.InList p)
+		static Predicate ConvertInListPredicate(MappingSchema mappingSchema, Predicate.InList p)
 		{
 			if (p.Values == null || p.Values.Count == 0)
 				return new Predicate.Expr(new SqlValue(p.IsNot));
@@ -3395,7 +3459,7 @@ namespace LinqToDB.SqlQuery
 							foreach (var item in items)
 							{
 								var value = cd.MemberAccessor.GetValue(item);
-								values.Add(cd.MappingSchema.GetSqlValue(cd.MemberType, value));
+								values.Add(mappingSchema.GetSqlValue(cd.MemberType, value));
 							}
 
 							if (values.Count == 0)
@@ -3418,7 +3482,7 @@ namespace LinqToDB.SqlQuery
 									var value = cd.MemberAccessor.GetValue(item);
 									var cond  = value == null ?
 										new Condition(false, new Predicate.IsNull  (field, false)) :
-										new Condition(false, new Predicate.ExprExpr(field, Predicate.Operator.Equal, cd.MappingSchema.GetSqlValue(value)));
+										new Condition(false, new Predicate.ExprExpr(field, Predicate.Operator.Equal, mappingSchema.GetSqlValue(value)));
 
 									itemCond.Conditions.Add(cond);
 								}

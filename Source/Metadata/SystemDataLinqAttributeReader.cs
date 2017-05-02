@@ -60,12 +60,12 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
 			where T : Attribute
 		{
 			if (typeof(T) == typeof(ColumnAttribute))
 			{
-				var attrs = _reader.GetAttributes<System.Data.Linq.Mapping.ColumnAttribute>(memberInfo, inherit);
+				var attrs = _reader.GetAttributes<System.Data.Linq.Mapping.ColumnAttribute>(type, memberInfo, inherit);
 
 				if (attrs.Length == 1)
 				{
@@ -84,12 +84,12 @@ namespace LinqToDB.Metadata
 			}
 			else if (typeof(T) == typeof(AssociationAttribute))
 			{
-				var ta = _reader.GetAttributes<System.Data.Linq.Mapping.TableAttribute>(memberInfo.DeclaringType, inherit);
+				var ta = _reader.GetAttributes<System.Data.Linq.Mapping.TableAttribute>(type, memberInfo.DeclaringType, inherit);
 
 				if (ta.Length == 1)
 				{
 					return _reader
-						.GetAttributes<System.Data.Linq.Mapping.AssociationAttribute>(memberInfo, inherit)
+						.GetAttributes<System.Data.Linq.Mapping.AssociationAttribute>(type, memberInfo, inherit)
 						.Select(a => (T)(Attribute)new AssociationAttribute { ThisKey = a.ThisKey, OtherKey = a.OtherKey, Storage = a.Storage })
 						.ToArray();
 				}

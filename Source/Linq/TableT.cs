@@ -12,12 +12,12 @@ namespace LinqToDB.Linq
 
 		public Table(IDataContext dataContext)
 		{
-			Init(dataContext == null ? null : new DataContextInfo(dataContext), null);
+			Init(dataContext == null ? null : new DataContextInfo(dataContext, false), null);
 		}
 
 		public Table(IDataContext dataContext, Expression expression)
 		{
-			Init(dataContext == null ? null : new DataContextInfo(dataContext), expression);
+			Init(dataContext == null ? null : new DataContextInfo(dataContext, false), expression);
 		}
 
 #if !SILVERLIGHT
