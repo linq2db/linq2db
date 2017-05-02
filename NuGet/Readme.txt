@@ -8,6 +8,8 @@ Optimized using different MappingSchemas: https://github.com/linq2db/linq2db/iss
 Added CROSS JOIN support
 Added support TAKE hints support: https://github.com/linq2db/linq2db/issues/560
 Added protection from writing GroubBy queries which leads to unexpected behaviour: https://github.com/linq2db/linq2db/issues/365
+String.Length() now converted to SQL functions, returning number of symbols, not bytes: https://github.com/linq2db/linq2db/issues/343
+Fluent mapping enchantments (fixed inheritance & changing attributes several times) 
 
 Number of bug fixies and optimizations
 
