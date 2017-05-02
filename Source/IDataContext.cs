@@ -33,6 +33,8 @@ namespace LinqToDB
 		string              GetSqlText         (object query);
 		IDataContext        Clone              (bool forNestedQuery);
 
+		void                                   Close();
 		event EventHandler  OnClosing;
+
 	}
 }
