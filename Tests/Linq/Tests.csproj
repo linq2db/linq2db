@@ -261,8 +261,11 @@
     <Compile Include="Data\MiniProfilerTests.cs" />
     <Compile Include="Data\TransactionTests.cs" />
     <Compile Include="Data\ProcedureTests.cs" />
+    <Compile Include="Linq\AnalyticTests.cs" />
+    <Compile Include="Linq\GenericExtensionsTests.cs" />
     <Compile Include="Linq\InterfaceTests.cs" />
     <Compile Include="Linq\JoinOptimizeTests.cs" />
+    <Compile Include="Linq\SqlExtensionTests.cs" />
     <Compile Include="Samples\DataContextDecoratorTests.cs" />
     <Compile Include="OrmBattle\Helper\ExpressionUtils.cs" />
     <Compile Include="OrmBattle\Helper\GenericEqualityComparer.cs" />
