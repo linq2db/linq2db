@@ -232,7 +232,9 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertExpressionTree(Expression expression)
 		{
-			var expr = AggregateExpression(expression);
+			var expr = Configuration.Linq.UseBinaryAggregateExpression
+				? AggregateExpression(expression)
+				: expression;
 
 			expr = ConvertParameters (expr);
 			expr = ExposeExpression  (expr);
