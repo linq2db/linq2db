@@ -1,3 +1,15 @@
+LINQ to DB 1.8.0  Release Notes
+---------------------------------
+
+Added support for Window Functions: https://github.com/linq2db/linq2db/pull/613
+Now ObjectDisposedException would be thrown while trying to used disposed IDataContext instance: https://github.com/linq2db/linq2db/issues/445
+Added experimental support to optimize big logical expressions: https://github.com/linq2db/linq2db/issues/447
+Optimized using different MappingSchemas: https://github.com/linq2db/linq2db/issues/615
+Added CROSS JOIN support
+Added support TAKE hints support: https://github.com/linq2db/linq2db/issues/560
+
+Number of bug fixies and optimizations
+
 LINQ to DB 1.7.6  Release Notes
 ---------------------------------
 
