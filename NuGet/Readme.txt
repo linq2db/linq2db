@@ -7,6 +7,7 @@ Added experimental support to optimize big logical expressions: https://github.c
 Optimized using different MappingSchemas: https://github.com/linq2db/linq2db/issues/615
 Added CROSS JOIN support
 Added support TAKE hints support: https://github.com/linq2db/linq2db/issues/560
+Added protection from writing GroubBy queries which leads to unexpected behaviour: https://github.com/linq2db/linq2db/issues/365
 
 Number of bug fixies and optimizations
 
