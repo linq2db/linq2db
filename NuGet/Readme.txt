@@ -11,7 +11,7 @@ Added protection from writing GroubBy queries which leads to unexpected behaviou
 String.Length() now converted to SQL functions, returning number of symbols, not bytes: https://github.com/linq2db/linq2db/issues/343
 Fluent mapping enchantments (fixed inheritance & changing attributes several times) 
 
-Number of bug fixies and optimizations
+Number of bug fixes and optimizations
 
 LINQ to DB 1.7.6  Release Notes
 ---------------------------------
