@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 #if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;

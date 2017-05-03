@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
@@ -57,7 +58,7 @@ namespace LinqToDB.Linq
 			if (_contexts != null)
 			{
 				foreach (var context in _contexts)
-					context.DataContextInfo.DataContext.Dispose();
+					context.DataContextInfo.DataContext.Close();
 
 				_contexts = null;
 			}

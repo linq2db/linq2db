@@ -100,7 +100,7 @@ namespace LinqToDB.DataProvider.SapHana
 				for (var i = 0; i < columns.Count; i++)
 					dbc.ColumnMappings.Add((dynamic) _columnMappingCreator(i, columns[i].ColumnName));
 
-				var rd = new BulkCopyReader(_dataProvider, columns, source);
+				var rd = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
 
 				TraceAction(
 					dataConnection,

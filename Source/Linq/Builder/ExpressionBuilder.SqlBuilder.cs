@@ -895,6 +895,10 @@ namespace LinqToDB.Linq.Builder
 							if (attr.InlineParameters)
 								DataContextInfo.DataContext.InlineParameters = true;
 
+							var sqlExpression = attr.GetExpression(MappingSchema, e, _ => ConvertToSql(context, _));
+							if (sqlExpression != null)
+								return Convert(context, sqlExpression);
+
 							var parms = new List<ISqlExpression>();
 
 							if (e.Object != null)
@@ -2357,6 +2361,37 @@ namespace LinqToDB.Linq.Builder
 
 						BuildSearchCondition(context, e.Left,  conditions);
 						BuildSearchCondition(context, e.Right, conditions);
+
+						break;
+					}
+
+				case BinaryAggregateExpression.AggregateExpressionType :
+					{
+						var e = (BinaryAggregateExpression)expression;
+
+						var aggregateCondition = new SelectQuery.SearchCondition();
+						var isOr = e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse;
+
+						foreach (var expr in e.Expressions)
+						{
+							var currentItems = new SelectQuery.SearchCondition();
+							BuildSearchCondition(context, expr,  currentItems.Conditions);
+
+							if (aggregateCondition.Precedence != currentItems.Precedence)
+							{
+								aggregateCondition.Conditions.Add(new SelectQuery.Condition(false, currentItems, isOr));
+							}
+							else
+							{
+								if (isOr)
+									foreach (var c in currentItems.Conditions)
+										c.IsOr = true;
+
+								aggregateCondition.Conditions.AddRange(currentItems.Conditions);
+							}
+						}
+
+						conditions.Add(new SelectQuery.Condition(false, aggregateCondition));
 
 						break;
 					}

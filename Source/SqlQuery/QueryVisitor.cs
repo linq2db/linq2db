@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
+	using System.Linq;
+
 	public class QueryVisitor
 	{
 		#region Visit
@@ -699,8 +701,8 @@ namespace LinqToDB.SqlQuery
 
 			switch (element.ElementType)
 			{
-				case QueryElementType.SqlFunction       : return Find(((SqlFunction)                element).Parameters,      find);
-				case QueryElementType.SqlExpression     : return Find(((SqlExpression)              element).Parameters,      find);
+				case QueryElementType.SqlFunction       : return Find(((SqlFunction)                   element).Parameters,      find);
+				case QueryElementType.SqlExpression     : return Find(((SqlExpression)                 element).Parameters,      find);
 				case QueryElementType.Column            : return Find(((SelectQuery.Column)            element).Expression,      find);
 				case QueryElementType.SearchCondition   : return Find(((SelectQuery.SearchCondition)   element).Conditions,      find);
 				case QueryElementType.Condition         : return Find(((SelectQuery.Condition)         element).Predicate,       find);
@@ -712,7 +714,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.GroupByClause     : return Find(((SelectQuery.GroupByClause)     element).Items,           find);
 				case QueryElementType.OrderByClause     : return Find(((SelectQuery.OrderByClause)     element).Items,           find);
 				case QueryElementType.OrderByItem       : return Find(((SelectQuery.OrderByItem)       element).Expression,      find);
-				case QueryElementType.Union             : return Find(((SelectQuery.Union)             element).SelectQuery,        find);
+				case QueryElementType.Union             : return Find(((SelectQuery.Union)             element).SelectQuery,     find);
 				case QueryElementType.FuncLikePredicate : return Find(((SelectQuery.Predicate.FuncLike)element).Function,        find);
 
 				case QueryElementType.SqlBinaryExpression:
