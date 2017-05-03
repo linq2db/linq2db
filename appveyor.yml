@@ -1,7 +1,7 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.7.7
+  packageVersion: 1.8.0
   matrix:
     - buildConfiguration: dotNet
       solutionName: linq2db.4.5.sln

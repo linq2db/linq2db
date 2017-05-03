@@ -36,6 +36,9 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Prevents to use constructions like q.GroupBy(_ => _.SomeValue) which leads to unexpected behaviour.
 			/// </summary>
+			/// <remarks>
+			/// https://github.com/linq2db/linq2db/issues/365
+			/// </remarks>
 			public static bool GuardGrouping = false;
 
 			/// <summary>
