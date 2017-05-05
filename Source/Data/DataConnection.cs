@@ -596,6 +596,7 @@ namespace LinqToDB.Data
 #region Command
 
 		public string LastQuery;
+		public event EventHandler<string> LastQueryChanged;
 
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
@@ -608,6 +609,9 @@ namespace LinqToDB.Data
 
 			DataProvider.InitCommand(this, commandType, sql, parameters);
 			LastQuery = Command.CommandText;
+			if (LastQueryChanged != null)
+				LastQueryChanged(this, LastQuery);
+			
 		}
 
 		private int? _commandTimeout;
