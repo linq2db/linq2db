@@ -15,7 +15,7 @@ using LinqToDB.DataProvider;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	public class MergeTests : TestBase
+	public partial class MergeTests : TestBase
 	{
 		class FakeTable<TEntity> : ITable<TEntity>
 		{
@@ -222,7 +222,7 @@ namespace Tests.xUpdate
 					() => MergeExtensions.Merge<Child>(null),
 
 					() => MergeExtensions.Merge<Child, Child>(null)
-				}.Select((data, i) => new TestCaseData(data).SetName($"MergeApiNullParameter.{i}"));
+				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.API.Null Parameters.{i}"));
 			}
 		}
 
@@ -317,7 +317,7 @@ namespace Tests.xUpdate
 					new object[] { withBySourceValidator, merge.DeleteBySource(_ => true).UpdateBySource(_ => _) },
 					new object[] { withBySourceValidator, merge.UpdateBySource(_ => true, _ => _).DeleteBySource() },
 					new object[] { withBySourceValidator, merge.DeleteBySource(_ => true).DeleteBySource() }
-				}.Select((data, i) => new TestCaseData(data).SetName($"MergeOperationsValidationPositive.{i}"));
+				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.Validation.Positive.{i}"));
 			}
 		}
 
@@ -378,7 +378,7 @@ namespace Tests.xUpdate
 					new object[] { withBySourceValidator, merge.UpdateBySource(_ => _).DeleteBySource(_ => true), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
 					new object[] { withBySourceValidator, merge.DeleteBySource().UpdateBySource(_ => true, _ => _), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
 					new object[] { withBySourceValidator, merge.UpdateBySource(_ => _).UpdateBySource(_ => true, _ => _), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
-				}.Select((data, i) => new TestCaseData(data).SetName($"MergeOperationsValidationNegative.{i}"));
+				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.Validation.Negative.{i}"));
 			}
 		}
 

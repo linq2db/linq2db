@@ -287,6 +287,21 @@ namespace LinqToDB.Data
 
 		#region Merge
 
+		/// <summary>
+		/// Executes following merge operations in specified order:
+		/// - Update
+		/// - Insert
+		/// - Delete By Source.
+		/// Method could be used only with SQL Server.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="dataConnection">Data connection instance.</param>
+		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
+		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
+		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="databaseName">Optional target table's database name.</param>
+		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this DataConnection dataConnection, IQueryable<T> source, Expression<Func<T,bool>> predicate,
 			string tableName = null, string databaseName = null, string schemaName = null)
@@ -295,6 +310,21 @@ namespace LinqToDB.Data
 			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate), tableName, databaseName, schemaName);
 		}
 
+		/// <summary>
+		/// Executes following merge operations in specified order:
+		/// - Update
+		/// - Insert
+		/// - Delete By Source.
+		/// Method could be used only for with Server.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="dataConnection">Data connection instance.</param>
+		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
+		/// <param name="source">Source data to merge into target table.</param>
+		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="databaseName">Optional target table's database name.</param>
+		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this DataConnection dataConnection, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
@@ -303,6 +333,21 @@ namespace LinqToDB.Data
 			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source, tableName, databaseName, schemaName);
 		}
 
+		/// <summary>
+		/// Executes following merge operations in specified order:
+		/// - Update
+		/// - Insert
+		/// - Delete By Source (optional).
+		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only for with Server.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="dataConnection">Data connection instance.</param>
+		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
+		/// <param name="source">Source data to merge into target table.</param>
+		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="databaseName">Optional target table's database name.</param>
+		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this DataConnection dataConnection, bool delete, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
@@ -311,6 +356,18 @@ namespace LinqToDB.Data
 			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source, tableName, databaseName, schemaName);
 		}
 
+		/// <summary>
+		/// Executes following merge operations in specified order:
+		/// - Update
+		/// - Insert.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="dataConnection">Data connection instance.</param>
+		/// <param name="source">Source data to merge into target table.</param>
+		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="databaseName">Optional target table's database name.</param>
+		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this DataConnection dataConnection, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
@@ -319,6 +376,21 @@ namespace LinqToDB.Data
 			return dataConnection.DataProvider.Merge(dataConnection, null, false, source, tableName, databaseName, schemaName);
 		}
 
+		/// <summary>
+		/// Executes following merge operations in specified order:
+		/// - Update
+		/// - Insert
+		/// - Delete By Source.
+		/// Method could be used only with SQL Server.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="source">Source data to merge into target table. All source data will be loaded from server for command generation.</param>
+		/// <param name="predicate">Filter, applied both to source and delete operation. Required.</param>
+		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="databaseName">Optional target table's database name.</param>
+		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this ITable<T> table, IQueryable<T> source, Expression<Func<T,bool>> predicate,
 			string tableName = null, string databaseName = null, string schemaName = null)
@@ -338,6 +410,21 @@ namespace LinqToDB.Data
 				schemaName ?? tbl.SchemaName);
 		}
 
+		/// <summary>
+		/// Executes following merge operations in specified order:
+		/// - Update
+		/// - Insert
+		/// - Delete By Source.
+		/// Method could be used only for with Server.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="predicate">Filter, applied to delete operation. Optional.</param>
+		/// <param name="source">Source data to merge into target table.</param>
+		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="databaseName">Optional target table's database name.</param>
+		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this ITable<T> table, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
@@ -357,6 +444,21 @@ namespace LinqToDB.Data
 				schemaName ?? tbl.SchemaName);
 		}
 
+		/// <summary>
+		/// Executes following merge operations in specified order:
+		/// - Update
+		/// - Insert
+		/// - Delete By Source (optional).
+		/// If delete operation enabled by <paramref name="delete"/> parameter - method could be used only for with Server.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="delete">If true, merge command will include delete by source operation without condition.</param>
+		/// <param name="source">Source data to merge into target table.</param>
+		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="databaseName">Optional target table's database name.</param>
+		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this ITable<T> table, bool delete, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
@@ -376,6 +478,18 @@ namespace LinqToDB.Data
 				schemaName ?? tbl.SchemaName);
 		}
 
+		/// <summary>
+		/// Executes following merge operations in specified order:
+		/// - Update
+		/// - Insert.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="table">Target table.</param>
+		/// <param name="source">Source data to merge into target table.</param>
+		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="databaseName">Optional target table's database name.</param>
+		/// <param name="schemaName">Optional target table's schema name.</param>
+		/// <returns>Returns number of affected target records.</returns>
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this ITable<T> table, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)

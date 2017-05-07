@@ -328,6 +328,7 @@
     <Compile Include="DataProvider\OracleTests.cs" />
     <Compile Include="Linq\TableFunctionTests.cs" />
     <Compile Include="Linq\VisualBasicTests.cs" />
+    <Compile Include="Update\MergeTests.OldApiTests.cs" />
     <Compile Include="Update\MergeTests.cs" />
     <Compile Include="Update\OldMergeTests.cs" />
     <Compile Include="Update\UpdateTests.cs" />
