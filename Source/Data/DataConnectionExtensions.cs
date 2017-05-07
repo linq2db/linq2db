@@ -292,8 +292,7 @@ namespace LinqToDB.Data
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return dataConnection.GetTable<T>().From(source.Where(predicate)).Update().Insert().DeleteBySource(predicate).Merge();
-			//return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate), tableName, databaseName, schemaName);
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate), tableName, databaseName, schemaName);
 		}
 
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
@@ -301,8 +300,7 @@ namespace LinqToDB.Data
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return dataConnection.GetTable<T>().From(source).Update().Insert().DeleteBySource(predicate).Merge();
-			//return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source, tableName, databaseName, schemaName);
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source, tableName, databaseName, schemaName);
 		}
 
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
@@ -310,10 +308,7 @@ namespace LinqToDB.Data
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return delete
-				? dataConnection.GetTable<T>().From(source).Update().Insert().DeleteBySource().Merge()
-				: dataConnection.GetTable<T>().From(source).Update().Insert().Merge();
-			//return dataConnection.DataProvider.Merge(dataConnection, null, delete, source, tableName, databaseName, schemaName);
+			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source, tableName, databaseName, schemaName);
 		}
 
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
@@ -321,8 +316,7 @@ namespace LinqToDB.Data
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return dataConnection.GetTable<T>().From(source).Update().Insert().Merge();
-			//return dataConnection.DataProvider.Merge(dataConnection, null, false, source, tableName, databaseName, schemaName);
+			return dataConnection.DataProvider.Merge(dataConnection, null, false, source, tableName, databaseName, schemaName);
 		}
 
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
@@ -330,19 +324,18 @@ namespace LinqToDB.Data
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return table.From(source.Where(predicate)).Update().Insert().DeleteBySource(predicate).Merge();
-			//if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException("table");
 
-			//var tbl            = (Table<T>)table;
-			//var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var tbl = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
 
-			//if (dataConnection == null)
-			//	throw new ArgumentException("DataContext must be of DataConnection type.");
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
 
-			//return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate),
-			//	tableName    ?? tbl.TableName,
-			//	databaseName ?? tbl.DatabaseName,
-			//	schemaName   ?? tbl.SchemaName);
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate),
+				tableName ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName ?? tbl.SchemaName);
 		}
 
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
@@ -350,19 +343,18 @@ namespace LinqToDB.Data
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return table.From(source).Update().Insert().DeleteBySource(predicate).Merge();
-			//if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException("table");
 
-			//var tbl            = (Table<T>)table;
-			//var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var tbl = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
 
-			//if (dataConnection == null)
-			//	throw new ArgumentException("DataContext must be of DataConnection type.");
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
 
-			//return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source,
-			//	tableName    ?? tbl.TableName,
-			//	databaseName ?? tbl.DatabaseName,
-			//	schemaName   ?? tbl.SchemaName);
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source,
+				tableName ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName ?? tbl.SchemaName);
 		}
 
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
@@ -370,21 +362,18 @@ namespace LinqToDB.Data
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return delete
-				? table.From(source).Update().Insert().DeleteBySource().Merge()
-				: table.From(source).Update().Insert().Merge();
-			//if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException("table");
 
-			//var tbl            = (Table<T>)table;
-			//var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var tbl = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
 
-			//if (dataConnection == null)
-			//	throw new ArgumentException("DataContext must be of DataConnection type.");
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
 
-			//return dataConnection.DataProvider.Merge(dataConnection, null, delete, source,
-			//	tableName    ?? tbl.TableName,
-			//	databaseName ?? tbl.DatabaseName,
-			//	schemaName   ?? tbl.SchemaName);
+			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source,
+				tableName ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName ?? tbl.SchemaName);
 		}
 
 		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
@@ -392,19 +381,18 @@ namespace LinqToDB.Data
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return table.From(source).Update().Insert().Merge();
-			//if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException("table");
 
-			//var tbl            = (Table<T>)table;
-			//var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var tbl = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
 
-			//if (dataConnection == null)
-			//	throw new ArgumentException("DataContext must be of DataConnection type.");
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
 
-			//return dataConnection.DataProvider.Merge(dataConnection, null, false, source,
-			//	tableName    ?? tbl.TableName,
-			//	databaseName ?? tbl.DatabaseName,
-			//	schemaName   ?? tbl.SchemaName);
+			return dataConnection.DataProvider.Merge(dataConnection, null, false, source,
+				tableName ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName ?? tbl.SchemaName);
 		}
 
 		#endregion

@@ -17,6 +17,7 @@ namespace LinqToDB.DataProvider
 	/// Basic MERGE operation implementation for all providers.
 	/// For provider-specific logic create child class.
 	/// </summary>
+	[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 	public class BasicMerge
 	{
 		protected class ColumnInfo

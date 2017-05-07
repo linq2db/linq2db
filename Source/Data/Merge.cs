@@ -10,24 +10,42 @@ namespace LinqToDB.Data
 	public static class MergeExtensions
 	{
 		#region From
-		public static IMergeSource<TSource> From<TTarget, TSource>(
+		public static IMergeSource<TTarget, TSource> From<TTarget, TSource>(
 			this ITable<TTarget> target,
 			IEnumerable<TSource> source,
 			Expression<Func<TTarget, TSource, bool>> matchPredicate)
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (target == null)
+				throw new ArgumentNullException(nameof(target));
+
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			if (matchPredicate == null)
+				throw new ArgumentNullException(nameof(matchPredicate));
+
+			return new MergeDefinition<TTarget, TSource>(target, source, matchPredicate);
 		}
 
-		public static IMergeSource<TSource> From<TTarget, TSource>(
+		public static IMergeSource<TTarget, TSource> From<TTarget, TSource>(
 			this ITable<TTarget> target,
 			IQueryable<TSource> source,
 			Expression<Func<TTarget, TSource, bool>> matchPredicate)
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (target == null)
+				throw new ArgumentNullException(nameof(target));
+
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			if (matchPredicate == null)
+				throw new ArgumentNullException(nameof(matchPredicate));
+
+			return new MergeDefinition<TTarget, TSource>(target, source, matchPredicate);
 		}
 
 		public static IMergeSource<TEntity> From<TEntity>(
@@ -35,22 +53,43 @@ namespace LinqToDB.Data
 			IEnumerable<TEntity> source)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (target == null)
+				throw new ArgumentNullException(nameof(target));
+
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			return new MergeDefinition<TEntity, TEntity>(target, source, null);
 		}
 
 		public static IMergeSource<TEntity> From<TEntity>(this ITable<TEntity> target, IQueryable<TEntity> source)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (target == null)
+				throw new ArgumentNullException(nameof(target));
+
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			return new MergeDefinition<TEntity, TEntity>(target, source, null);
 		}
 
 		public static IMergeSource<TEntity> From<TEntity>(
 			this ITable<TEntity> target,
 			IEnumerable<TEntity> source,
-			Expression<Func<TEntity, TEntity, bool>> matchPredicatee)
+			Expression<Func<TEntity, TEntity, bool>> matchPredicate)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (target == null)
+				throw new ArgumentNullException(nameof(target));
+
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			if (matchPredicate == null)
+				throw new ArgumentNullException(nameof(matchPredicate));
+
+			return new MergeDefinition<TEntity, TEntity>(target, source, matchPredicate);
 		}
 
 		public static IMergeSource<TEntity> From<TEntity>(
@@ -59,7 +98,16 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, TEntity, bool>> matchPredicate)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (target == null)
+				throw new ArgumentNullException(nameof(target));
+
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			if (matchPredicate == null)
+				throw new ArgumentNullException(nameof(matchPredicate));
+
+			return new MergeDefinition<TEntity, TEntity>(target, source, matchPredicate);
 		}
 		#endregion
 
@@ -67,7 +115,11 @@ namespace LinqToDB.Data
 		public static IMerge<TEntity> Insert<TEntity>(this IMergeSource<TEntity> merge)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Insert(null, null));
 		}
 
 		public static IMerge<TEntity> Insert<TEntity>(
@@ -75,7 +127,14 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, bool>> predicate)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Insert(predicate, null));
 		}
 
 		public static IMerge<TEntity> Insert<TEntity>(
@@ -83,7 +142,14 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, TEntity>> create)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (create == null)
+				throw new ArgumentNullException(nameof(create));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Insert(null, create));
 		}
 
 		public static IMerge<TEntity> Insert<TEntity>(
@@ -92,7 +158,17 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, TEntity>> create)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			if (create == null)
+				throw new ArgumentNullException(nameof(create));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Insert(predicate, create));
 		}
 
 		public static IMerge<TTarget, TSource> Insert<TTarget, TSource>(
@@ -101,7 +177,14 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (create == null)
+				throw new ArgumentNullException(nameof(create));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.Insert(null, create));
 		}
 
 		public static IMerge<TTarget, TSource> Insert<TTarget, TSource>(
@@ -111,7 +194,17 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			if (create == null)
+				throw new ArgumentNullException(nameof(create));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.Insert(predicate, create));
 		}
 		#endregion
 
@@ -119,7 +212,11 @@ namespace LinqToDB.Data
 		public static IMerge<TEntity> Update<TEntity>(this IMergeSource<TEntity> merge)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Update(null, null));
 		}
 
 		public static IMerge<TEntity> Update<TEntity>(
@@ -127,7 +224,14 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, TEntity, bool>> predicate)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Update(predicate, null));
 		}
 
 		public static IMerge<TEntity> Update<TEntity>(
@@ -135,7 +239,14 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, TEntity, TEntity>> update)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (update == null)
+				throw new ArgumentNullException(nameof(update));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Update(null, update));
 		}
 
 		public static IMerge<TEntity> Update<TEntity>(
@@ -144,7 +255,17 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, TEntity, TEntity>> update)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			if (update == null)
+				throw new ArgumentNullException(nameof(update));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Update(predicate, update));
 		}
 
 		public static IMerge<TTarget, TSource> Update<TTarget, TSource>(
@@ -153,7 +274,14 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (update == null)
+				throw new ArgumentNullException(nameof(update));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.Update(null, update));
 		}
 
 		public static IMerge<TTarget, TSource> Update<TTarget, TSource>(
@@ -163,7 +291,17 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			if (update == null)
+				throw new ArgumentNullException(nameof(update));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.Update(predicate, update));
 		}
 		#endregion
 
@@ -171,7 +309,11 @@ namespace LinqToDB.Data
 		public static IMerge<TEntity> Delete<TEntity>(this IMergeSource<TEntity> merge)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Delete(null));
 		}
 
 		public static IMerge<TEntity> Delete<TEntity>(
@@ -179,14 +321,25 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, TEntity, bool>> predicate)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.Delete(predicate));
 		}
 
 		public static IMerge<TTarget, TSource> Delete<TTarget, TSource>(this IMergeSource<TTarget, TSource> merge)
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.Delete(null));
 		}
 
 		public static IMerge<TTarget, TSource> Delete<TTarget, TSource>(
@@ -195,7 +348,14 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.Delete(predicate));
 		}
 		#endregion
 
@@ -205,7 +365,14 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, TEntity>> update)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (update == null)
+				throw new ArgumentNullException(nameof(update));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.UpdateBySource(null, update));
 		}
 
 		public static IMerge<TEntity> UpdateBySource<TEntity>(
@@ -214,7 +381,17 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, TEntity>> update)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			if (update == null)
+				throw new ArgumentNullException(nameof(update));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.UpdateBySource(predicate, update));
 		}
 
 		public static IMerge<TTarget, TSource> UpdateBySource<TTarget, TSource>(
@@ -223,7 +400,14 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (update == null)
+				throw new ArgumentNullException(nameof(update));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(null, update));
 		}
 
 		public static IMerge<TTarget, TSource> UpdateBySource<TTarget, TSource>(
@@ -233,7 +417,17 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			if (update == null)
+				throw new ArgumentNullException(nameof(update));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(predicate, update));
 		}
 		#endregion
 
@@ -241,7 +435,11 @@ namespace LinqToDB.Data
 		public static IMerge<TEntity> DeleteBySource<TEntity>(this IMergeSource<TEntity> merge)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.DeleteBySource(null));
 		}
 
 		public static IMerge<TEntity> DeleteBySource<TEntity>(
@@ -249,14 +447,25 @@ namespace LinqToDB.Data
 			Expression<Func<TEntity, bool>> predicate)
 				where TEntity : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.DeleteBySource(predicate));
 		}
 
 		public static IMerge<TTarget, TSource> DeleteBySource<TTarget, TSource>(this IMergeSource<TTarget, TSource> merge)
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(null));
 		}
 
 		public static IMerge<TTarget, TSource> DeleteBySource<TTarget, TSource>(
@@ -265,7 +474,14 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			throw new NotImplementedException();
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(predicate));
 		}
 		#endregion
 
@@ -274,31 +490,54 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			var definition = (MergeDefinition<TTarget, TSource>)merge;
+
 			throw new NotImplementedException();
 		}
 
 		public static int Merge<TEntity>(this IMerge<TEntity> merge)
-			where TEntity : class
+				where TEntity : class
 		{
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
 			throw new NotImplementedException();
 		}
 		#endregion
 	}
 
+	/// <summary>
+	/// Represents merge operation source and target configutation without operations.
+	/// </summary>
 	public interface IMergeSource<TTarget, TSource>
 	{
 	}
 
+	/// <summary>
+	/// Represents merge operation source and target configutation without operations.
+	/// </summary>
 	public interface IMergeSource<TEntity>
 	{
 	}
 
+	/// <summary>
+	/// Represents merge operation configuration.
+	/// </summary>
 	public interface IMerge<TTarget, TSource> : IMergeSource<TTarget, TSource>
 	{
 	}
 
+	/// <summary>
+	/// Represents merge operation configuration.
+	/// </summary>
 	public interface IMerge<TEntity> : IMergeSource<TEntity>
 	{
 	}
 
+	//internal class MergeBuilder<TTarget, TSource> : IMerge<TTarget, TSource>, IMerge<TTarget>
+	//{
+	//}
 }
