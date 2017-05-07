@@ -39,5 +39,9 @@ namespace LinqToDB.DataProvider
 		                                          string tableName, string databaseName, string schemaName)
 			where T : class;
 
+
+		int Merge<TTarget, TSource>(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
+			where TTarget : class
+			where TSource : class;
 	}
 }

@@ -495,7 +495,13 @@ namespace LinqToDB.Data
 
 			var definition = (MergeDefinition<TTarget, TSource>)merge;
 
-			throw new NotImplementedException();
+
+			var dataConnection = definition.Target.DataContextInfo.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.Merge(dataConnection, definition);
 		}
 
 		public static int Merge<TEntity>(this IMerge<TEntity> merge)
@@ -504,7 +510,7 @@ namespace LinqToDB.Data
 			if (merge == null)
 				throw new ArgumentNullException(nameof(merge));
 
-			throw new NotImplementedException();
+			return Merge<TEntity, TEntity>((MergeDefinition<TEntity, TEntity>)merge);
 		}
 		#endregion
 	}
@@ -536,8 +542,4 @@ namespace LinqToDB.Data
 	public interface IMerge<TEntity> : IMergeSource<TEntity>
 	{
 	}
-
-	//internal class MergeBuilder<TTarget, TSource> : IMerge<TTarget, TSource>, IMerge<TTarget>
-	//{
-	//}
 }

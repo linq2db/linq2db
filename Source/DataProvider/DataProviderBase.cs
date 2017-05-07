@@ -424,6 +424,7 @@ namespace LinqToDB.DataProvider
 
 #region Merge
 
+		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
 			where T : class
@@ -431,6 +432,29 @@ namespace LinqToDB.DataProvider
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#endregion
+		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
+			where TTarget : class
+			where TSource : class
+		{
+			if (dataConnection == null)
+				throw new ArgumentNullException(nameof(dataConnection));
+
+			if (merge == null)
+				throw new ArgumentNullException(nameof(merge));
+
+			var builder = MergeBuilder;
+
+			var definition = (MergeDefinition<TTarget, TSource>)merge;
+
+			builder.Validate(definition, Name);
+
+			var cmd = builder.BuildCommand(definition);
+
+			return dataConnection.Execute(cmd, builder.Parameters);
+		}
+
+		protected virtual BasicMergeBuilder MergeBuilder => new BasicMergeBuilder();
+
+		#endregion
 	}
 }
