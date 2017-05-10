@@ -45,6 +45,7 @@ void GenerateTypesFromMetadata()
 		from t in Tables.Values
 		where GenerateSchemaAsType && t.Schema != null && !t.TableSchema.IsDefaultSchema
 		group t by t.Schema into gr
+		orderby gr.Key
 		let typeName = SchemaNameMapping.TryGetValue(gr.Key, out schemaName) ? schemaName : gr.Key
 		select new
 		{
