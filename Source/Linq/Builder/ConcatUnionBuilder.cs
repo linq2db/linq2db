@@ -120,7 +120,16 @@ namespace LinqToDB.Linq.Builder
 
 					var em = members.FirstOrDefault(m =>
 						m.Member.SequenceInfo != null &&
-						m.Member.SequenceInfo.CompareLastMember(info));
+						m.Info2 == null &&
+						m.Member.SequenceInfo.CompareMembers(info));
+
+					if (em == null)
+					{
+						em = members.FirstOrDefault(m =>
+							m.Member.SequenceInfo != null &&
+							m.Info2 == null &&
+							m.Member.SequenceInfo.CompareLastMember(info));
+					}
 
 					if (em == null)
 					{

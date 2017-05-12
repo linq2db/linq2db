@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.IO;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -25,7 +26,13 @@ namespace Tests._Create
 		{
 			Console.WriteLine("=== " + name + " === \n");
 
-			var text = File.ReadAllText(Path.GetFullPath(@"Database\Create Scripts\" + name + ".sql"));
+			var scriptFolder = Path.Combine(Path.GetFullPath("."), "Database", "Create Scripts");
+			Console.WriteLine("Script folder exists: {1}; {0}", scriptFolder, Directory.Exists(scriptFolder));
+
+			var sqlFileName  = Path.GetFullPath(Path.Combine(scriptFolder, Path.ChangeExtension(name, "sql")));
+			Console.WriteLine("Sql file exists: {1}; {0}", sqlFileName, File.Exists(sqlFileName));
+
+			var text = File.ReadAllText(sqlFileName);
 
 			while (true)
 			{
@@ -37,7 +44,15 @@ namespace Tests._Create
 					break;
 			}
 
-			var cmds = text.Replace("\r", "").Replace(divider, "\x1").Split('\x1');
+			var cmds = text
+				.Replace("\r",    "")
+				.Replace(divider, "\x1")
+				.Split  ('\x1')
+				.Select (c => c.Trim())
+				.Where  (c => !string.IsNullOrEmpty(c))
+				.ToArray();
+
+			Console.WriteLine("Commands count: {0}", cmds.Length);
 
 			Exception exception = null;
 
@@ -45,13 +60,8 @@ namespace Tests._Create
 			{
 				//db.CommandTimeout = 20;
 
-				foreach (var cmd in cmds)
+				foreach (var command in cmds)
 				{
-					var command = cmd.Trim();
-
-					if (command.Length == 0)
-						continue;
-
 					try 
 					{
 						Console.WriteLine(command);
@@ -60,11 +70,12 @@ namespace Tests._Create
 					}
 					catch (Exception ex)
 					{
+						Console.WriteLine(ex.Message);
+
 						if (command.TrimStart().StartsWith("DROP"))
 							Console.WriteLine("\nnot too OK\n");
 						else
 						{
-							Console.WriteLine(ex.Message);
 							Console.WriteLine("\nFAILED\n");
 
 							if (exception == null)
@@ -200,7 +211,7 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2          (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
 		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix     (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
 		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void Oracle       (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
-		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");      }
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL   (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
 		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql        (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
 		[Test, IncludeDataContextSource(TestProvName.MySql57)]       public void MySql57      (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
@@ -256,6 +267,24 @@ namespace Tests._Create
 					});
 			}
 #endif
+		}
+
+		void FirebirdAction(IDbConnection connection)
+		{
+			using (var conn = LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(connection))
+			{
+				conn.Execute(@"
+					UPDATE PERSON
+					SET
+						FIRSTNAME = @FIRSTNAME,
+						LASTNAME  = @LASTNAME
+					WHERE PERSONID = 4",
+					new
+					{
+						FIRSTNAME = "Jürgen",
+						LASTNAME  = "König",
+					});
+			}
 		}
 
 		static void SQLiteAction(IDbConnection connection)

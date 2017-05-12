@@ -317,12 +317,14 @@ namespace LinqToDB
 
 		#region String Functions
 
-		[Sql.Function(                             PreferServerSide = true)]
-		[Sql.Function(PN.Access,    "Len",         PreferServerSide = true)]
-		[Sql.Function(PN.Firebird,  "Char_Length", PreferServerSide = true)]
-		[Sql.Function(PN.SqlServer, "Len",         PreferServerSide = true)]
-		[Sql.Function(PN.SqlCe,     "Len",         PreferServerSide = true)]
-		[Sql.Function(PN.Sybase,    "Len",         PreferServerSide = true)]
+		[Sql.Function  (                                                   PreferServerSide = true)]
+		[Sql.Function  (PN.Access,    "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.Firebird,  "Char_Length",                       PreferServerSide = true)]
+		[Sql.Function  (PN.SqlServer, "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.SqlCe,     "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.Sybase,    "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.MySql,     "Char_Length",                       PreferServerSide = true)]
+		[Sql.Expression(PN.DB2LUW,    "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true)]
 		public static int? Length(string str)
 		{
 			return str == null ? null : (int?)str.Length;

@@ -35,6 +35,7 @@ using NUnit.Framework.Internal.Builders;
 namespace Tests
 {
 	using Model;
+	using System.Text.RegularExpressions;
 
 	public class TestBase
 	{
@@ -53,10 +54,18 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
-				Console.WriteLine("{0}: {1}", s2, s1);
-				Debug.WriteLine(s1, s2);
+				if (traceCount < 1000)
+				{
+					Console.WriteLine("{0}: {1}", s2, s1);
+					Debug.WriteLine(s1, s2);
+				}
+#if MONO
+				else
+					Console.Write("z");
+#else
 				if (traceCount++ > 1000)
 					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+#endif
 			};
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
@@ -64,6 +73,10 @@ namespace Tests
 			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
 			ProjectPath = FindProjectPath(assemblyPath);
+
+#if !NETSTANDARD && !MONO
+			SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+#endif
 
 #if NETSTANDARD
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
@@ -99,13 +112,17 @@ namespace Tests
 					.Where (s => s.Length > 0 && !s.StartsWith("--"))
 					.Select(s =>
 					{
+						var isDefault = s.StartsWith("!");
+						if (isDefault)
+							s = s.Substring(1);
+
 						var ss = s.Split('*');
 						switch (ss.Length)
 						{
 							case 0 : return null;
-							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0]        };
-							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0]        };
-							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim() };
+							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0],        IsDefault = isDefault };
+							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0],        IsDefault = isDefault };
+							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim(), IsDefault = isDefault };
 						}
 					})
 					.ToDictionary(i => i.Name);
@@ -120,7 +137,7 @@ namespace Tests
 			//DataConnection.SetConnectionStrings(config);
 
 #if NETSTANDARD
-			DataConnection.DefaultSettings = TxtSettings.Instance;
+			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
 			foreach (var provider in UserProviders.Values)
@@ -139,6 +156,14 @@ namespace Tests
 					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
 #endif
 
+			var defaultConfiguration = UserProviders.Where(_ => _.Value.IsDefault).Select(_ => _.Key).FirstOrDefault();
+			if (!string.IsNullOrEmpty(defaultConfiguration))
+			{
+				DataConnection.DefaultConfiguration       = defaultConfiguration;
+#if NETSTANDARD
+				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
+#endif
+			}
 
 			DataConnection.TurnTraceSwitchOn();
 
@@ -171,14 +196,14 @@ namespace Tests
 			return basePath;
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
 #endif
 
 		static void OpenHost()
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 			if (_isHostOpen)
 				return;
 
@@ -212,6 +237,7 @@ namespace Tests
 			public string Name;
 			public string ConnectionString;
 			public string ProviderName;
+			public bool   IsDefault;
 		}
 
 		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
@@ -306,11 +332,10 @@ namespace Tests
 						}
 
 						hasTest = true;
-
 						yield return test;
 
 					}
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 
 					if (!isIgnore && _includeLinqService)
 					{
@@ -333,7 +358,9 @@ namespace Tests
 				}
 
 				if (!hasTest)
+				{
 					yield return test;
+				}
 			}
 		}
 
@@ -374,10 +401,10 @@ namespace Tests
 		[AttributeUsage(AttributeTargets.Method)]
 		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public NorthwindDataContextAttribute(bool excludeSqlite) : base(
+			public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false) : base(
 				excludeSqlite
 				? new[] { "Northwind" }
-				: new[] { "Northwind", "NorthwindSqlite" })
+				:  ( excludeSqliteMs  ? new[] { "Northwind", "NorthwindSqlite" } : new[] { "Northwind", "NorthwindSqlite",  "NorthwindSqliteMs"}))
 			{
 			}
 
@@ -390,7 +417,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONO
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -470,7 +497,7 @@ namespace Tests
 			}
 		}
 
-		protected const int MaxPersonID = 3;
+		protected const int MaxPersonID = 4;
 
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
@@ -704,7 +731,7 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
 		#region Inheritance Parent/Child Model
 
@@ -740,7 +767,7 @@ namespace Tests
 		
 		#endregion
 
-		#region Northwind
+#region Northwind
 
 		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
@@ -929,6 +956,58 @@ namespace Tests
 		}
 		#endregion
 
+		[Sql.Function("VERSION", ServerSideOnly = true)]
+		private static string MySqlVersion()
+		{
+			throw new InvalidOperationException();
+		}
+
+		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
+		{
+			if (db.ContextID == "MySql" || db.ContextID == "MySql.LinqService")
+			{
+				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
+				// them from expected data too
+				var version = db.Types.Select(_ => MySqlVersion()).First();
+				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
+				if (match.Success)
+				{
+					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
+
+					if (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604)
+					{
+						var adjusted = new List<LinqDataTypes2>();
+						foreach (var record in data)
+						{
+							var copy = new LinqDataTypes2()
+							{
+								ID             = record.ID,
+								MoneyValue     = record.MoneyValue,
+								DateTimeValue  = record.DateTimeValue,
+								DateTimeValue2 = record.DateTimeValue2,
+								BoolValue      = record.BoolValue,
+								GuidValue      = record.GuidValue,
+								SmallIntValue  = record.SmallIntValue,
+								IntValue       = record.IntValue,
+								BigIntValue    = record.BigIntValue,
+							};
+
+							if (copy.DateTimeValue != null)
+							{
+								copy.DateTimeValue = copy.DateTimeValue.Value.AddMilliseconds(-copy.DateTimeValue.Value.Millisecond);
+							}
+
+							adjusted.Add(copy);
+						}
+
+						return adjusted;
+					}
+				}
+			}
+
+			return data;
+		}
+
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
 			var resultList   = result.  ToList();
@@ -1022,6 +1101,48 @@ namespace Tests
 		public void Dispose()
 		{
 			Configuration.Linq.AllowMultipleQuery = false;
+		}
+	}
+
+	public class GuardGrouping : IDisposable
+	{
+		public GuardGrouping()
+		{
+			Configuration.Linq.GuardGrouping = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.GuardGrouping = false;
+		}
+	}
+
+	public class WithoutJoinOptimization : IDisposable
+	{
+		public WithoutJoinOptimization()
+		{
+			Configuration.Linq.OptimizeJoins = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.OptimizeJoins = true;
+		}
+	}
+
+	public class LocalTable<T> : IDisposable
+	{
+		private IDataContext _db;
+
+		public LocalTable(IDataContext db)
+		{
+			_db = db;
+			_db.CreateTable<T>();
+		}
+
+		public void Dispose()
+		{
+			_db.DropTable<T>();
 		}
 	}
 }

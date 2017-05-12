@@ -897,6 +897,65 @@ namespace LinqToDB
 					new[] { source.Expression, Expression.Quote(count) }));
 		}
 
+		static readonly MethodInfo _takeMethodInfo2 = MemberHelper.MethodOf(() => Take<int>(null,null,TakeHints.Percent)).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// <see cref="System.Linq.Enumerable.Take{TSource}(System.Collections.Generic.IEnumerable{TSource}, int)"/>
+		/// Using this method may cause runtime <see cref="LinqException"/> if take hints are not supported by database
+		/// </summary>
+		/// <remarks>
+		/// Hints are not supported with <see cref="System.Linq.Enumerable.Skip{TSource}(System.Collections.Generic.IEnumerable{TSource}, int)"/>
+		/// </remarks>
+		/// <typeparam name="TSource"></typeparam>
+		/// <param name="source">source</param>
+		/// <param name="count">number of records to take</param>
+		/// <param name="hints"><see cref="TakeHints"/> hints for SQL Take expression</param>
+		/// <returns></returns>
+		[LinqTunnel]
+		public static IQueryable<TSource> Take<TSource>(
+			[NotNull]                this IQueryable<TSource> source,
+			[NotNull, InstantHandle] Expression<Func<int>>    count,
+			[NotNull]                TakeHints                hints)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (count  == null) throw new ArgumentNullException("count");
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					_takeMethodInfo2.MakeGenericMethod(new[] { typeof(TSource) }),
+					new[] { source.Expression, Expression.Quote(count), Expression.Constant(hints) }));
+		}
+
+		static readonly MethodInfo _takeMethodInfo3 = MemberHelper.MethodOf(() => Take<int>(null,0,TakeHints.Percent)).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// <see cref="System.Linq.Enumerable.Take{TSource}(System.Collections.Generic.IEnumerable{TSource}, int)"/>
+		/// Using this method may cause runtime <see cref="LinqException"/> if take hints are not supported by database
+		/// </summary>
+		/// <remarks>
+		/// Hints are not supported with <see cref="System.Linq.Enumerable.Skip{TSource}(System.Collections.Generic.IEnumerable{TSource}, int)"/>
+		/// </remarks>
+		/// <typeparam name="TSource"></typeparam>
+		/// <param name="source">source</param>
+		/// <param name="count">number of records to take</param>
+		/// <param name="hints"><see cref="TakeHints"/> hints for SQL Take expression</param>
+		/// <returns></returns>
+		[LinqTunnel]
+		public static IQueryable<TSource> Take<TSource>(
+			[NotNull]                this IQueryable<TSource> source,
+			[NotNull]                int                      count,
+			[NotNull]                TakeHints                hints)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					_takeMethodInfo3.MakeGenericMethod(new[] { typeof(TSource) }),
+					new[] { source.Expression, Expression.Constant(count), Expression.Constant(hints) }));
+		}
+
 		static readonly MethodInfo _skipMethodInfo = MemberHelper.MethodOf(() => Skip<int>(null,null)).GetGenericMethodDefinition();
 
 		[LinqTunnel]

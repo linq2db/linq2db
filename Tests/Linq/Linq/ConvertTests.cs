@@ -528,7 +528,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select Convert.ToString(t.MoneyValue) where p.Length > 0 select p.Replace(',', '.').TrimEnd('0', '.'));
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource, Category("WindowsOnly")]
 		public void ByteToString(string context)
 		{
 			using (var db = GetDataContext(context))

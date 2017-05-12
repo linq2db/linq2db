@@ -119,6 +119,7 @@
     <Compile Include="ExpressionMethodAttribute.cs" />
     <Compile Include="Expressions\ChangeTypeExpression.cs" />
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
+    <Compile Include="Expressions\BinaryAggregateExpression.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\GetItemExpression.cs" />
@@ -292,6 +293,7 @@
     <Compile Include="SqlQuery\SqlException.cs" />
     <Compile Include="SqlQuery\SqlExpression.cs" />
     <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
+    <Compile Include="SqlQuery\QueryHelper.cs" />
     <Compile Include="SqlQuery\SqlField.cs" />
     <Compile Include="SqlQuery\SqlFunction.cs" />
     <Compile Include="SqlQuery\SqlParameter.cs" />
@@ -299,14 +301,17 @@
     <Compile Include="SqlQuery\SqlTableT.cs" />
     <Compile Include="SqlQuery\SqlTableType.cs" />
     <Compile Include="SqlQuery\SqlValue.cs" />
+    <Compile Include="Sql\Sql.Analytic.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.ExtensionAttribute.cs" />
     <Compile Include="Sql\Sql.FunctionAttribute.cs" />
     <Compile Include="Sql\Sql.GroupBy.cs" />
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
+    <Compile Include="TakeHints.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.snk" />

@@ -1,7 +1,13 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.7.6
+  packageVersion: 1.8.0
+  matrix:
+    - buildConfiguration: dotNet
+      solutionName: linq2db.4.5.sln
+    - buildConfiguration: dotNetCore
+      solutionName: linq2db.core.sln
+
 
 version: $(packageVersion).{build}
 
@@ -40,24 +46,57 @@ nuget:
 
 before_build:
 - cmd: nuget restore linq2db.4.5.sln
+- cmd: dotnet restore 
+- cmd: 7z e Data\northwind.sql.zip
+- cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2012SP1 -i "northwind.sql" > nul
 
-build:
-  project: linq2db.4.5.sln
-  publish_nuget: false
-  verbosity: minimal
+build_script:
+  - msbuild %solutionName%  /property:Configuration=Release
+
 
 after_build:
-- cmd: cd Source
-- cmd: Compile.bat
-- cmd: cd ..
-- ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
+- ps: |
+    if ($env:buildConfiguration -eq "dotNetCore")
+    {
+        if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
+        {
+           dotnet pack --no-build Source/project.json -c=Release
+        }
+        else
+        {
+           dotnet pack --no-build Source/project.json --version-suffix="rc$env:APPVEYOR_BUILD_NUMBER" -c=Release
+        }
+    }
+    else
+    {
+       cd Source
+       .\Compile.bat
+       cd ..
+       nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
+    }
 
 artifacts:
 - path: \**\linq2db*.nupkg
 
-test: 
-  assemblies:
-    - \Tests\**\linq2db.Tests.dll
+test_script:
+- ps: |
+    if ($env:buildConfiguration -eq "dotNetCore")
+    {
+        dotnet test tests\linq -c Release -f netcoreapp1.0 --where "cat != FreeText"
+        $test1res = $LASTEXITCODE 
+        # upload results to AppVeyor
+        $wc = New-Object 'System.Net.WebClient'
+        $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
+        Push-AppveyorArtifact (Resolve-Path .\TestResult.xml)
+        # try nunit3 
+        # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net40\win7-x64\linq2db.Tests.dll) --x86
+        # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net45\win7-x64\linq2db.Tests.dll) --x86
+        IF ($test1res -ne 0) { exit -1 }
+    }
+    else
+    {
+        nunit3-console .\Tests\Linq\bin\Release\linq2db.Tests.dll --result="TestResult.xml;format=AppVeyor" --x86 --where "cat != FreeText"
+    }
 
 before_test:
 - ps: |

@@ -35,10 +35,10 @@ namespace LinqToDB.Metadata
 			return _readers.SelectMany(r => r.GetAttributes<T>(type, inherit)).ToArray();
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit)
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
 			where T : Attribute
 		{
-			return _readers.SelectMany(r => r.GetAttributes<T>(memberInfo, inherit)).ToArray();
+			return _readers.SelectMany(r => r.GetAttributes<T>(type, memberInfo, inherit)).ToArray();
 		}
 	}
 }

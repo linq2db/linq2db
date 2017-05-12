@@ -232,8 +232,11 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertExpressionTree(Expression expression)
 		{
-			var expr = ConvertParameters(expression);
+			var expr = Configuration.Linq.UseBinaryAggregateExpression
+				? AggregateExpression(expression)
+				: expression;
 
+			expr = ConvertParameters (expr);
 			expr = ExposeExpression  (expr);
 			expr = OptimizeExpression(expr);
 
@@ -271,7 +274,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (isQueryable)
 					{
-						var p = sequence.ExpressionsToReplace.SingleOrDefault(s => s.Path.NodeType == ExpressionType.Parameter);
+						var p = sequence.ExpressionsToReplace.Single(s => s.Path.NodeType == ExpressionType.Parameter);
 
 						return Expression.Call(
 							((MethodCallExpression)expr).Method.DeclaringType,
@@ -291,6 +294,48 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#region ConvertParameters
+
+		Expression AggregateExpression(Expression expression)
+		{
+			return expression.Transform(expr =>
+			{
+				switch (expr.NodeType)
+				{
+					case ExpressionType.Or      :
+					case ExpressionType.And     :
+					case ExpressionType.OrElse  :
+					case ExpressionType.AndAlso :
+						{
+							var stack  = new Stack<Expression>();
+							var items  = new List<Expression>();
+							var binary = (BinaryExpression) expr;
+
+							stack.Push(binary.Right);
+							stack.Push(binary.Left);
+							while (stack.Count > 0)
+							{
+								var item = stack.Pop();
+								if (item.NodeType == expr.NodeType)
+								{
+									binary  = (BinaryExpression) item;
+									stack.Push(binary.Right);
+									stack.Push(binary.Left);
+								}
+								else
+									items.Add(item);
+							}
+
+							if (items.Count > 2)
+							{
+								return new BinaryAggregateExpression(expr.NodeType, expr.Type, items.ToArray());
+							}
+							break;
+						}
+				}
+
+				return expr;
+			});
+		}
 
 		Expression ConvertParameters(Expression expression)
 		{
@@ -332,7 +377,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var me = (MemberExpression)expr;
-							var l  = ConvertMethodExpression(me.Member);
+							var l  = ConvertMethodExpression(me.Member.ReflectedTypeEx(), me.Member);
 
 							if (l != null)
 							{
@@ -421,8 +466,13 @@ namespace LinqToDB.Linq.Builder
 							var isList = typeof(ICollection).IsAssignableFromEx(me.Member.DeclaringType);
 
 							if (!isList)
+								isList =
+									me.Member.DeclaringType.IsGenericTypeEx() &&
+									me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(ICollection<>);
+
+							if (!isList)
 								isList = me.Member.DeclaringType.GetInterfacesEx()
-									.Any(t => t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == typeof(IList<>));
+									.Any(t => t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == typeof(ICollection<>));
 
 							if (isList)
 							{
@@ -474,7 +524,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = ConvertMethodExpression(call.Method);
+							var l = ConvertMethodExpression(call.Method.ReflectedTypeEx(), call.Method);
 
 							if (l != null)
 								return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));
@@ -500,9 +550,9 @@ namespace LinqToDB.Linq.Builder
 			return new TransformInfo(expr);
 		}
 
-		LambdaExpression ConvertMethodExpression(MemberInfo mi)
+		LambdaExpression ConvertMethodExpression(Type type, MemberInfo mi)
 		{
-			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(mi, a => a.Configuration);
+			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
 
 			if (attr != null)
 			{
@@ -1225,7 +1275,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, _ => {});
+				var expr = ReplaceParameter(exas, expression, _ => {}).ValueExpression;
 
 				if (expr.Find(e => e.NodeType == ExpressionType.Parameter && e != p) != null)
 					return expression;

@@ -18,12 +18,6 @@ namespace Tests.Model
 		}
 
 		public TestDataConnection()
-
-#if NETSTANDARD
-			: base("SQLiteMs")
-#else
-			: base(ProviderName.SQLite)
-#endif
 		{
 		}
 

@@ -310,7 +310,7 @@ namespace LinqToDB.Common
 			{
 				var fromFields = @from.GetFieldsEx()
 					.Where (f => (f.Attributes & EnumField) == EnumField)
-					.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
+					.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(from, f, a => a.Configuration) })
 					.ToList();
 
 				{
@@ -364,7 +364,7 @@ namespace LinqToDB.Common
 				{
 					var toFields = to.GetFieldsEx()
 						.Where (f => (f.Attributes & EnumField) == EnumField)
-						.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
+						.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(to, f, a => a.Configuration) })
 						.ToList();
 
 					var dic = new Dictionary<EnumValues,EnumValues>();
@@ -596,7 +596,7 @@ namespace LinqToDB.Common
 			(
 				from f in type.GetFieldsEx()
 				where (f.Attributes & EnumField) == EnumField
-				let attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration)
+				let attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, f, a => a.Configuration)
 				select
 				(
 					from a in attrs

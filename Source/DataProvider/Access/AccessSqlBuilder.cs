@@ -28,6 +28,7 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		public override bool IsNestedJoinSupported     { get { return false; } }
+		public override bool WrapJoinCondition         { get { return true;  } }
 
 		#region Skip / Take Support
 
@@ -145,7 +146,7 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override bool ParenthesizeJoin()
+		protected override bool ParenthesizeJoin(List<SelectQuery.JoinedTable> tsJoins)
 		{
 			return true;
 		}

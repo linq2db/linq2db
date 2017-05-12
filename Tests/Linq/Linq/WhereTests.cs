@@ -1198,9 +1198,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
-					   Types2
+					   AdjustExpectedData(db, Types2
 						.Where(_ => _.DateTimeValue.Value.Date == new DateTime(2009, 9, 20).Date)
-						.Select(_ => _),
+						.Select(_ => _)),
 					db.Types2
 						.Where(_ => _.DateTimeValue.Value.Date == new DateTime(2009, 9, 20).Date)
 						.Select(_ => _));

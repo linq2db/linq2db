@@ -290,6 +290,7 @@
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
+    <Compile Include="Expressions\BinaryAggregateExpression.cs" />
     <Compile Include="Extensions\MappingExtensions.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
@@ -398,11 +399,14 @@
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
     <Compile Include="SqlQuery\ObjectSqlExpression.cs" />
+    <Compile Include="SqlQuery\QueryHelper.cs" />
     <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
+    <Compile Include="Sql\Sql.Analytic.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.ExtensionAttribute.cs" />
     <Compile Include="Sql\Sql.FunctionAttribute.cs" />
     <Compile Include="Sql\Sql.GroupBy.cs" />
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
@@ -471,6 +475,7 @@
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
     <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
+    <Compile Include="TakeHints.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

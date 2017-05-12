@@ -441,6 +441,10 @@ namespace LinqToDB.Linq
 				}
 
 				p.SqlParameter.Value = value;
+
+				var dataType = p.DataTypeAccessor(expr, parameters);
+				if (dataType != DataType.Undefined)
+					p.SqlParameter.DataType = dataType;
 			}
 		}
 
@@ -453,8 +457,8 @@ namespace LinqToDB.Linq
 
 			if (!_enumConverters.TryGetValue(valueType, out converter))
 			{
-				var toType = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
-				var convExpr = MappingSchema.GetConvertExpression(valueType, toType);
+				var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
+				var convExpr  = MappingSchema.GetConvertExpression(valueType, toType);
 				var convParam = Expression.Parameter(typeof(object));
 
 				var lex = Expression.Lambda<Func<object, object>>(
@@ -462,6 +466,8 @@ namespace LinqToDB.Linq
 					convParam);
 
 				converter = lex.Compile();
+
+				_enumConverters.GetOrAdd(valueType, converter);
 			}
 
 			return converter(value);
@@ -548,13 +554,20 @@ namespace LinqToDB.Linq
 				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
 			}
 
+			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
+
 			var expr = dataContext.MappingSchema.GetConvertExpression(field.SystemType, typeof(DataParameter), createDefault: false);
 
 			if (expr != null)
-				getter = Expression.PropertyOrField(expr.GetBody(getter), "Value");
+			{
+				var body = expr.GetBody(getter);
+
+				getter             = Expression.PropertyOrField(body, "Value");
+				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
+			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+				dataContext, getter, dataTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
 
 			return param;
 		}
@@ -815,11 +828,12 @@ namespace LinqToDB.Linq
 				SelectQuery = insertQuery,
 				Parameters  = Queries[0].Parameters
 					.Select(p => new ParameterAccessor
-						{
-							Expression   = p.Expression,
-							Accessor     = p.Accessor,
-							SqlParameter = dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null
-						})
+						(
+							p.Expression,
+							p.Accessor,
+							p.DataTypeAccessor,
+							dic.ContainsKey(p.SqlParameter) ? (SqlParameter)dic[p.SqlParameter] : null
+						))
 					.Where(p => p.SqlParameter != null)
 					.ToList(),
 			});
@@ -1177,56 +1191,59 @@ namespace LinqToDB.Linq
 
 			var isFaulted = false;
 
-			foreach (var dr in data)
+			try
 			{
-				var mapper = mapInfo.Mapper;
-
-				if (mapper == null)
+				foreach (var dr in data)
 				{
-					mapInfo.MapperExpression = mapInfo.Expression.Transform(e =>
+					var mapper = mapInfo.Mapper;
+
+					if (mapper == null)
 					{
-						var ex = e as ConvertFromDataReaderExpression;
-						return ex != null ? ex.Reduce(dr) : e;
-					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
+						mapInfo.MapperExpression = mapInfo.Expression.Transform(e =>
+						{
+							var ex = e as ConvertFromDataReaderExpression;
+							return ex != null ? ex.Reduce(dr) : e;
+						}) as Expression<Func<QueryContext, IDataContext, IDataReader, Expression, object[], T>>;
 
-					// IT : # MapperExpression.Compile()
-					//
-					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
+						// IT : # MapperExpression.Compile()
+						//
+						mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
+					}
+
+					T result;
+
+					try
+					{
+						result = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+					}
+					catch (FormatException)
+					{
+						if (isFaulted)
+							throw;
+
+						isFaulted = true;
+
+						mapInfo.Mapper = mapInfo.Expression.Compile();
+						result = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+					}
+					catch (InvalidCastException)
+					{
+						if (isFaulted)
+							throw;
+
+						isFaulted = true;
+
+						mapInfo.Mapper = mapInfo.Expression.Compile();
+						result = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+					}
+
+					yield return result;
 				}
-
-				T result;
-				
-				try
-				{
-					result = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
-				}
-				catch (FormatException)
-				{
-					if (isFaulted)
-						throw;
-
-					isFaulted = true;
-
-					mapInfo.Mapper = mapInfo.Expression.Compile();
-					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
-				}
-				catch (InvalidCastException)
-				{
-					if (isFaulted)
-						throw;
-
-					isFaulted = true;
-
-					mapInfo.Mapper = mapInfo.Expression.Compile();
-					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
-				}
-				finally
-				{
-					if (closeQueryContext)
-						queryContext.Close();
-				}
-
-				yield return result;
+			}
+			finally
+			{
+				if (closeQueryContext)
+					queryContext.Close();
 			}
 		}
 
@@ -1313,8 +1330,22 @@ namespace LinqToDB.Linq
 
 	public class ParameterAccessor
 	{
-		public Expression                       Expression;
-		public Func<Expression,object[],object> Accessor;
-		public SqlParameter                     SqlParameter;
+		public ParameterAccessor(
+			Expression                           expression,
+			Func<Expression, object[], object>   accessor,
+			Func<Expression, object[], DataType> dataTypeAccessor,
+			SqlParameter                         sqlParameter
+			)
+		{
+			Expression       = expression;
+			Accessor         = accessor;
+			DataTypeAccessor = dataTypeAccessor;
+			SqlParameter     = sqlParameter;
+		}
+
+		public          Expression                         Expression;
+		public readonly Func<Expression,object[],object>   Accessor;
+		public readonly Func<Expression,object[],DataType> DataTypeAccessor;
+		public readonly SqlParameter                       SqlParameter;
 	}
 }

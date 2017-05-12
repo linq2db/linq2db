@@ -22,8 +22,18 @@ namespace LinqToDB.Data
 	{
 		#region .ctor
 
-		public DataConnection() : this(null)
+		public DataConnection() : this((string)null)
 		{
+		}
+
+		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this((string)null)
+		{
+			AddMappingSchema(mappingSchema);
+		}
+
+		public DataConnection(string configurationString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this(configurationString)
+		{
+			AddMappingSchema(mappingSchema);
 		}
 
 		public DataConnection(string configurationString)
@@ -40,6 +50,12 @@ namespace LinqToDB.Data
 			DataProvider     = ci.DataProvider;
 			ConnectionString = ci.ConnectionString;
 			_mappingSchema   = DataProvider.MappingSchema;
+		}
+
+		public DataConnection([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+			: this(providerName, connectionString)
+		{
+			AddMappingSchema(mappingSchema);
 		}
 
 		public DataConnection([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
@@ -59,6 +75,13 @@ namespace LinqToDB.Data
 			_mappingSchema   = DataProvider.MappingSchema;
 		}
 
+		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+			: this(dataProvider, connectionString)
+		{
+			AddMappingSchema(mappingSchema);
+		}
+
+
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
 		{
 			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
@@ -69,6 +92,12 @@ namespace LinqToDB.Data
 			DataProvider     = dataProvider;
 			_mappingSchema   = DataProvider.MappingSchema;
 			ConnectionString = connectionString;
+		}
+
+		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbConnection connection, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+			: this(dataProvider, connection)
+		{
+			AddMappingSchema(mappingSchema);
 		}
 
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbConnection connection)
@@ -85,6 +114,12 @@ namespace LinqToDB.Data
 			DataProvider   = dataProvider;
 			_mappingSchema = DataProvider.MappingSchema;
 			_connection    = connection;
+		}
+
+		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbTransaction transaction, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+			: this(dataProvider, transaction)
+		{
+			AddMappingSchema(mappingSchema);
 		}
 
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbTransaction transaction)
@@ -933,8 +968,17 @@ namespace LinqToDB.Data
 
 #region System.IDisposable Members
 
+		protected bool Disposed { get; private set; }
+
+		protected void ThrowOnDisposed()
+		{
+			if (Disposed)
+				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed");
+		}
+
 		public void Dispose()
 		{
+			Disposed = true;
 			Close();
 		}
 

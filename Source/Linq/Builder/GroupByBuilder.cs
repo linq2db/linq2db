@@ -80,15 +80,15 @@ namespace LinqToDB.Linq.Builder
 			foreach (var sql in groupSql)
 				sequence.SelectQuery.GroupBy.Expr(sql.Sql);
 
-			new QueryVisitor().Visit(sequence.SelectQuery.From, e =>
-			{
-				if (e.ElementType == QueryElementType.JoinedTable)
-				{
-					var jt = (SelectQuery.JoinedTable)e;
-					if (jt.JoinType == SelectQuery.JoinType.Inner)
-						jt.IsWeak = false;
-				}
-			});
+//			new QueryVisitor().Visit(sequence.SelectQuery.From, e =>
+//			{
+//				if (e.ElementType == QueryElementType.JoinedTable)
+//				{
+//					var jt = (SelectQuery.JoinedTable)e;
+//					if (jt.JoinType == SelectQuery.JoinType.Inner)
+//						jt.IsWeak = false;
+//				}
+//			});
 
 			var element = new SelectContext (buildInfo.Parent, elementSelector, sequence/*, key*/);
 			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element);
@@ -211,6 +211,20 @@ namespace LinqToDB.Linq.Builder
 			{
 				public Expression GetGrouping(GroupByContext context)
 				{
+					if (Configuration.Linq.GuardGrouping)
+					{
+						if (context._element.Lambda.Parameters.Count == 1                   && 
+							context._element.Body == context._element.Lambda.Parameters[0])
+						{
+							var ex = new LinqToDBException(
+								"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
+								"Set Configuration.Linq.GuardGrouping = false to disable this check."
+								);
+							ex.HelpLink = "https://github.com/linq2db/linq2db/issues/365";
+							throw ex;
+						}
+					}
+
 					var parameters = context.Builder.CurrentSqlParameters
 						.Select((p,i) => new { p, i })
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
@@ -348,9 +362,17 @@ namespace LinqToDB.Linq.Builder
 
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
-							return ReferenceEquals(levelExpression, expression) ?
+							var isBlockDisable = Builder.IsBlockDisable;
+
+							Builder.IsBlockDisable = true;
+
+							var r = ReferenceEquals(levelExpression, expression) ?
 								_key.BuildExpression(null,       0) :
 								_key.BuildExpression(expression, level + 1);
+
+							Builder.IsBlockDisable = isBlockDisable;
+
+							return r;
 						}
 					}
 				}

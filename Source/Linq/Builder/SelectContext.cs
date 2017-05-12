@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 		public MethodCallExpression MethodCall;
 #endif
 
-		public IBuildContext[]   Sequence    { get; set; }
+		public IBuildContext[]   Sequence    { get; private set; }
 		public LambdaExpression  Lambda      { get; set; }
 		public Expression        Body        { get; set; }
 		public ExpressionBuilder Builder     { get; private set; }
@@ -85,6 +85,11 @@ namespace LinqToDB.Linq.Builder
 				if (_expressionIndex.TryGetValue(key, out info))
 				{
 					var idx  = Parent == null ? info[0].Index : Parent.ConvertToParentIndex(info[0].Index, this);
+
+					var expr = (expression ?? Body);
+					if (IsExpression(expr, level, RequestFor.Object).Result)
+						return Builder.BuildExpression(this, expr);
+
 					return Builder.BuildSql((expression ?? Body).Type, idx);
 				}
 			}
@@ -487,7 +492,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					switch (flags)
 					{
-						case ConvertFlags.Field : throw new NotImplementedException();
+						case ConvertFlags.Field : 
 						case ConvertFlags.Key   :
 						case ConvertFlags.All   :
 							{

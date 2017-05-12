@@ -33,12 +33,21 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				var path = typeof(SQLiteTools).AssemblyEx().GetPath();
 
-				if (!File.Exists(Path.Combine(path, AssemblyName + ".dll")) &&
-					(Type.GetType("Mono.Runtime") != null || File.Exists(Path.Combine(path, "Mono.Data.Sqlite.dll"))))
+				if (!File.Exists(Path.Combine(path, AssemblyName + ".dll")))
 				{
-					AssemblyName   = "Mono.Data.Sqlite";
-					ConnectionName = "SqliteConnection";
-					DataReaderName = "SqliteDataReader";
+					if (Type.GetType("Mono.Runtime") != null || File.Exists(Path.Combine(path, "Mono.Data.Sqlite.dll")))
+					{
+						AssemblyName   = "Mono.Data.Sqlite";
+						ConnectionName = "SqliteConnection";
+						DataReaderName = "SqliteDataReader";
+					}
+					else if (File.Exists(Path.Combine(path, "Microsoft.Data.Sqlite.dll")))
+					{
+						AssemblyName   = "Microsoft.Data.Sqlite";
+						ConnectionName = "SqliteConnection";
+						DataReaderName = "SqliteDataReader";
+						 
+					}
 				}
 			}
 			catch (Exception)

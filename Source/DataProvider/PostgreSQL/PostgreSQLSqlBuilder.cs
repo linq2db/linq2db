@@ -74,6 +74,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (type.Type == typeof(string))
 						goto case DataType.NVarChar;
 					break;
+				case DataType.Json           : StringBuilder.Append("json");          break;
+				case DataType.BinaryJson     : StringBuilder.Append("jsonb");         break;
 				default                      : base.BuildDataType(type); break;
 			}
 		}

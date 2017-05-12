@@ -25,6 +25,14 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
+		public static bool IsConstant(MethodCallExpression methodCall)
+		{
+			if (!methodCall.IsQueryable("Contains"))
+				return false;
+
+			return methodCall.IsQueryable(false) == false;
+		}
+
 		class ContainsContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;

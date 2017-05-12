@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -17,6 +18,10 @@ namespace LinqToDB.Mapping
 
 			_builder      = builder;
 			Configuration = configuration;
+
+			// We'll reset cache here, because there is no need to create builder if you don't want to change something
+			_builder.MappingSchema.ResetEntityDescriptor(typeof(T));
+
 		}
 
 		readonly FluentMappingBuilder _builder;
@@ -42,7 +47,7 @@ namespace LinqToDB.Mapping
 		public TA[] GetAttributes<TA>(MemberInfo memberInfo)
 			where TA : Attribute
 		{
-			return _builder.GetAttributes<TA>(memberInfo);
+			return _builder.GetAttributes<TA>(typeof(T), memberInfo);
 		}
 
 		public TA[] GetAttributes<TA>(Func<TA,string> configGetter)
@@ -252,13 +257,18 @@ namespace LinqToDB.Mapping
 			Func<bool,TA>              getNew,
 			Action<bool,TA>            modifyExisting,
 			Func<TA,string>            configGetter,
-			Func<TA,TA>                overrideAttribute = null)
+			Func<TA,TA>                overrideAttribute = null,
+			Func<IEnumerable<TA>, TA>  existingGetter    = null
+			)
 			where TA : Attribute
 		{
 			var ex = func.Body;
 
 			if (ex is UnaryExpression)
 				ex = ((UnaryExpression)ex).Operand;
+
+			if (existingGetter == null)
+				existingGetter = GetExisting;
 
 			Action<Expression,bool> setAttr = (e,m) =>
 			{
@@ -267,18 +277,18 @@ namespace LinqToDB.Mapping
 					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
 
 				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T))
-					memberInfo = typeof(T).GetPropertyEx(memberInfo.Name);
+					memberInfo = typeof(T).GetMemberEx(memberInfo);
 
 				if (memberInfo == null)
 					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));
 
-				var attrs = GetAttributes(memberInfo, configGetter);
+				var attr = existingGetter(GetAttributes(memberInfo, configGetter));
 
-				if (attrs.Length == 0)
+				if (attr == null)
 				{
 					if (overrideAttribute != null)
 					{
-						var attr = _builder.MappingSchema.GetAttribute(memberInfo, configGetter);
+						attr = existingGetter(_builder.MappingSchema.GetAttributes(typeof(T), memberInfo, configGetter));
 
 						if (attr != null)
 						{
@@ -294,7 +304,7 @@ namespace LinqToDB.Mapping
 					_builder.HasAttribute(memberInfo, getNew(m));
 				}
 				else
-					modifyExisting(m, attrs[0]);
+					modifyExisting(m, attr);
 			};
 
 			if (processNewExpression && ex.NodeType == ExpressionType.New)
@@ -312,6 +322,12 @@ namespace LinqToDB.Mapping
 			setAttr(ex, false);
 
 			return this;
+		}
+
+		private TA GetExisting<TA>(IEnumerable<TA> attrs)
+			where TA : Attribute
+		{
+			return attrs.FirstOrDefault();
 		}
 	}
 }

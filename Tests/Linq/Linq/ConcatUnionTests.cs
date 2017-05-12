@@ -660,7 +660,7 @@ namespace Tests.Linq
 					select c.Parent.ParentID);
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource, Category("WindowsOnly")]
 		public void ConcatToString(string context)
 		{
 			string pattern = "1";
@@ -672,6 +672,83 @@ namespace Tests.Linq
 					,
 					(from p in db.Person where Sql.Like(p.FirstName, "1") select p.FirstName).Concat(
 					(from p in db.Person where p.ID.ToString().Contains(pattern) select p.FirstName)).Take(10));
+		}
+
+		[Test, DataContextSource]
+		public void ConcatWithUnion(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					Parent.Select(c => new Parent {ParentID = c.ParentID}). Union(
+					Parent.Select(c => new Parent {ParentID = c.ParentID})).Concat(
+					Parent.Select(c => new Parent {ParentID = c.ParentID}). Union(
+					Parent.Select(c => new Parent {ParentID = c.ParentID})
+						)
+					),
+					db.Parent.Select(c => new Parent {ParentID = c.ParentID}). Union(
+					db.Parent.Select(c => new Parent {ParentID = c.ParentID})).Concat(
+					db.Parent.Select(c => new Parent {ParentID = c.ParentID}). Union(
+					db.Parent.Select(c => new Parent {ParentID = c.ParentID})
+						)
+					)
+				);
+		}
+
+		[Test, DataContextSource]
+		public void UnionWithObjects(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 =
+					from p in db.Parent
+					from p2 in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var q2 =
+					from p in db.Parent
+					from p2 in db.Parent
+					join c in db.Child on p2.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var q = q1.Union(q2);
+
+				var qe1 = 
+					from p in Parent
+					from p2 in Parent
+					join c in Child on p.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var qe2 =
+					from p in Parent
+					from p2 in Parent
+					join c in Child on p2.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var qe = qe1.Union(qe2);
+
+				AreEqual(qe, q);
+			}
 		}
 	}
 }

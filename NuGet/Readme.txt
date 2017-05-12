@@ -1,3 +1,18 @@
+LINQ to DB 1.8.0  Release Notes
+---------------------------------
+
+Added support for Window (Analytic) Functions: https://github.com/linq2db/linq2db/pull/613
+Now ObjectDisposedException will be thrown while trying to use disposed IDataContext instance: https://github.com/linq2db/linq2db/issues/445
+Added experimental support for big logical expressions optimization: https://github.com/linq2db/linq2db/issues/447
+Optimized use of different MappingSchemas: https://github.com/linq2db/linq2db/issues/615
+Added CROSS JOIN support
+Added support of TAKE hints: https://github.com/linq2db/linq2db/issues/560
+Added protection from writing GroupBy queries that lead to unexpected behaviour: https://github.com/linq2db/linq2db/issues/365
+MySql: string.Length is now properly returns number of characters instead of size in bytes when used in query: https://github.com/linq2db/linq2db/issues/343
+Fluent mapping enchantments (fixed inheritance & changing attributes several times) 
+
+Number of bug fixes and optimizations
+
 LINQ to DB 1.7.6  Release Notes
 ---------------------------------
 
@@ -14,7 +29,7 @@ F# options support
 What's new in 1.0.7.5
 ---------------------
 
-Added JOIN LITERAL support for PostgreSQL.
+Added JOIN LATERAL support for PostgreSQL.
 
 
 

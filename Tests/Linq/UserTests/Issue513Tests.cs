@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue513Tests : TestBase
 	{
-		[Test, DataContextSource]
+		[Test, DataContextSource, Category("WindowsOnly")]
 		public void Simple(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -25,7 +25,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs), Category("WindowsOnly")]
 		public void Test(string context)
 		{
 			using (var semaphore = new Semaphore(0, 10))

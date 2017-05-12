@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -777,6 +778,64 @@ namespace Tests.xUpdate
 			using (var db = new DataConnection(context))
 			{
 				var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
+				Assert.AreNotEqual(Guid.Empty, id);
+			}
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+		public void InsertWithGuidIdentityOutput(string context)
+		{
+			try
+			{
+				SqlServerConfiguration.GenerateScopeIdentity = false;
+				using (var db = new DataConnection(context))
+				{
+					var id = (Guid) db.InsertWithIdentity(new GuidID {Field1 = 1});
+					Assert.AreNotEqual(Guid.Empty, id);
+				}
+			}
+			finally
+			{
+				SqlServerConfiguration.GenerateScopeIdentity = true;
+			}
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
+		public void InsertWithIdentityOutput(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					SqlServerConfiguration.GenerateScopeIdentity = false;
+					for (var i = 0; i < 2; i++)
+					{
+						db.Person.Delete(p => p.ID > MaxPersonID);
+
+						var person = new Person
+						{
+							FirstName = "John" + i,
+							LastName  = "Shepard",
+							Gender    = Gender.Male
+						};
+
+						var id = db.InsertWithIdentity(person);
+
+						Assert.NotNull(id);
+
+						var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
+
+						Assert.NotNull(john);
+						Assert.AreEqual(id, john.ID);
+					}
+				}
+				finally
+				{
+					db.Person.Delete(p => p.ID > MaxPersonID);
+					SqlServerConfiguration.GenerateScopeIdentity = true;
+				}
 			}
 		}
 
@@ -1066,6 +1125,35 @@ namespace Tests.xUpdate
 				finally
 				{
 					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Insert15(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
+
+				try
+				{
+					db.Insert(new ComplexPerson
+						{
+							Name = new FullName
+							{
+								FirstName = "Insert15",
+								LastName  = "Insert15"
+							},
+							Gender = Gender.Male,
+						});
+
+					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Count();
+					Assert.AreEqual(1, cnt);
+				}
+				finally
+				{
+					db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
 				}
 			}
 		}
