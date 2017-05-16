@@ -28,4 +28,4 @@ del *.nupkg
 ..\Redist\NuGet Pack linq2db.DB2.nuspec
 ..\Redist\NuGet Pack linq2db.Informix.nuspec
 
-del *.ttinclude
+rem del *.ttinclude
