@@ -19,7 +19,7 @@
 		</summary>
 		<tags>linq linq2db DB2 LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db.t4models" version="1.8.0"/>
+			<dependency id="linq2db.t4models" version="1.8.0-*"/>
 		</dependencies>
 	</metadata>
 	<files>
