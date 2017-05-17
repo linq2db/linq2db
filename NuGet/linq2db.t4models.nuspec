@@ -16,6 +16,10 @@
 			linq linq2db LinqToDB ORM database DB T4 datamodel SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
 			Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+
+		<contentFiles>
+			<files include="**/content/**/*.*" buildAction="None" />
+		</contentFiles>
 	</metadata>
 	<files>
 		<file src="..\packages\linq2db.1.8.0\lib\net40\linq2db.dll"    target="tools" />
@@ -46,7 +50,4 @@
 		<file src="..\Templates\Validation.ttinclude"                  target="content\LinqToDB.Templates" />
 		<file src="LinqToDB.Tools.ttinclude"                           target="content\LinqToDB.Templates" />
 	</files>
-	<contentFiles>
-		<files include="**/content/**/*.*" buildAction="None" />
-	</contentFiles>
 </package>
