@@ -46,4 +46,7 @@
 		<file src="..\Templates\Validation.ttinclude"                  target="content\LinqToDB.Templates" />
 		<file src="LinqToDB.Tools.ttinclude"                           target="content\LinqToDB.Templates" />
 	</files>
+	<contentFiles>
+		<files include="**/content/**/*.*" buildAction="None" />
+	</contentFiles>
 </package>
