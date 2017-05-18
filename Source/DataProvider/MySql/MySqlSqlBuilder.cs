@@ -270,6 +270,12 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
+		protected override void BuildUnion(int commandNumber, IList<SelectQuery.Union> unions, StringBuilder sb, bool skipAlias)
+		{
+			sb.AppendLine("SELECT * FROM ");
+			base.BuildUnion(commandNumber, unions, sb, skipAlias);
+		}
+
 #if !SILVERLIGHT
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
