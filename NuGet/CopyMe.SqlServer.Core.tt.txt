@@ -1,0 +1,54 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                           #>
+<#@ output extension=".generated.cs"                                                  #>
+<#@ include file="$(SolutionDir).tools\linq2db.t4models\LinqToDB.Templates\LinqToDB.SqlServer.Tools.ttinclude" #>
+<#@ include file="$(SolutionDir).tools\linq2db.t4models\LinqToDB.Templates\PluralizationService.ttinclude"     #>
+<#
+	/*
+		1. Copy this file to a folder where you would like to generate your data model,
+		   rename it, and delete .txt extension. For example:
+
+			MyProject
+				DataModels
+					MyDatabase.tt
+
+		2. Modify the connection settings below to connect to your database.
+
+		3. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="MyDatabase" providerName="System.Data.SqlClient" 
+					connectionString="Data Source=.;Database=MyDatabase;User Id=User;Password=TestPassword;" />
+			</connectionStrings>
+
+		4. To access your database use the following code:
+
+			using (var db = new MyDatabaseDB())
+			{
+				var q =
+					from c in db.Customers
+					select c;
+
+				foreach (var c in q)
+					Console.WriteLine(c.ContactName);
+			}
+
+		5. See more at https://github.com/linq2db/t4models
+
+		If you need to use the Microsoft.SqlServer.Types namespace, install the Microsoft.SqlServer.Types nuget, 
+		and replace the following include at the top of this file:
+
+			"$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlServer.Tools.ttinclude"
+
+		with
+
+			"$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude"
+	*/
+
+	NamespaceName = "DataModels";
+
+	LoadSqlServerMetadata("MyServer", "MyDatabase", "User", "Password");
+//	LoadSqlServerMetadata(".", "MyDatabase"); // Integrated Security
+//	LoadSqlServerMetadata(string connectionString);
+
+	GenerateModel();
+#>

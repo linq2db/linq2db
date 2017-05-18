@@ -32,7 +32,7 @@
 					Console.WriteLine(c.ContactName);
 			}
 
-		5. See more at https://github.com/linq2db/t4models/blob/master/Templates/ReadMe.LinqToDB.md.
+		5. See more at https://github.com/linq2db/t4models
 	*/
 
 	NamespaceName = "DataModels";

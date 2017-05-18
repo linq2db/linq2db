@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.SqlServer</id>
-		<version>1.7.5</version>
+		<version>1.8.0</version>
 		<title>LINQ to SqlServer</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -18,14 +18,16 @@
 		</summary>
 		<tags>linq linq2db SqlServer LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db"          />
-			<dependency id="linq2db.t4models" />
+			<dependency id="linq2db.t4models" version="1.8.0"/>
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\packages\Microsoft.SqlServer.Types.11.0.2\lib\Net20\Microsoft.SqlServer.Types.dll" target="tools" />
-		<file src="LinqToDB.SqlServer.SqlTypes.Tools.ttinclude"                                          target="content\LinqToDB.Templates" />
-		<file src="LinqToDB.SqlServer.Tools.ttinclude"                                                   target="content\LinqToDB.Templates" />
-		<file src="CopyMe.SqlServer.tt.txt"                                                              target="content\LinqToDB.Templates" />
+		<file src="..\packages\Microsoft.SqlServer.Types.14.0.314.76\lib\Net40\Microsoft.SqlServer.Types.dll" target="tools" />
+		<file src="LinqToDB.SqlServer.SqlTypes.Tools.ttinclude"                                               target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.SqlServer.Tools.ttinclude"                                                        target="content\LinqToDB.Templates" />
+		<file src="CopyMe.SqlServer.tt.txt"                                                                   target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                                                                  target="tools" />
+		<file src="CopyMe.SqlServer.Core.tt.txt"                                                              target="tools" />
 	</files>
 </package>

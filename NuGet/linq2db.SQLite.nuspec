@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.SQLite</id>
-		<version>1.7.5</version>
+		<version>1.8.0</version>
 		<title>LINQ to SQLite</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -18,9 +18,7 @@
 		</summary>
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="System.Data.SQLite.Core" />
-			<dependency id="linq2db"                 />
-			<dependency id="linq2db.t4models"        />
+			<dependency id="linq2db.t4models" version="1.8.0"/>
 		</dependencies>
 	</metadata>
 	<files>
@@ -28,5 +26,8 @@
 		<file src="..\packages\System.Data.SQLite.Core.1.0.103\build\net40\x86\SQLite.Interop.dll" target="tools" />
 		<file src="LinqToDB.SQLite.Tools.ttinclude"                                                target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SQLite.tt.txt"                                                           target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                                                       target="tools" />
+		<file src="CopyMe.SQLite.Core.tt.txt"                                                      target="tools" />
 	</files>
 </package>
