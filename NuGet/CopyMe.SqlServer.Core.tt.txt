@@ -32,7 +32,7 @@
 					Console.WriteLine(c.ContactName);
 			}
 
-		5. See more at https://github.com/linq2db/t4models/blob/master/Templates/ReadMe.LinqToDB.md.
+		5. See more at https://github.com/linq2db/t4models
 
 		If you need to use the Microsoft.SqlServer.Types namespace, install the Microsoft.SqlServer.Types nuget, 
 		and replace the following include at the top of this file:
