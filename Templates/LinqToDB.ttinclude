@@ -45,6 +45,7 @@ void GenerateTypesFromMetadata()
 		from t in Tables.Values
 		where GenerateSchemaAsType && t.Schema != null && !t.TableSchema.IsDefaultSchema
 		group t by t.Schema into gr
+		orderby gr.Key
 		let typeName = SchemaNameMapping.TryGetValue(gr.Key, out schemaName) ? schemaName : gr.Key
 		select new
 		{
@@ -381,7 +382,7 @@ void GenerateTypesFromMetadata()
 			{
 				var associations = new MemberGroup { Region = "Associations" };
 
-				foreach (var key in keys)
+				foreach (var key in keys.OrderBy(k => k.MemberName))
 				{
 					key.Comment.Add("/ <summary>");
 					key.Comment.Add("/ " + key.KeyName);

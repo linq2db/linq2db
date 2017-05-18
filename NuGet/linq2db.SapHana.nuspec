@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.SapHana</id>
-		<version>1.7.5</version>
+		<version>1.8.0</version>
 		<title>LINQ to SAP HANA</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -19,13 +19,14 @@
 		</summary>
 		<tags>linq linq2db SapHana LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db"          />
-			<dependency id="linq2db.t4models" />
+			<dependency id="linq2db.t4models" version="1.8.0"/>
 		</dependencies>
 	</metadata>
 	<files>
 		<file src="..\Redist\SapHana\Sap.Data.Hana.v4.5.dll" target="tools" />
 		<file src="LinqToDB.SapHana.Tools.ttinclude"         target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SapHana.tt.txt"                    target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                 target="tools" />
 	</files>
 </package>

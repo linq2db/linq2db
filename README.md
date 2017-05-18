@@ -1,7 +1,48 @@
-# t4models
-To create a data model template take a look at one of the CopyMe.XXX.tt.txt file in your LinqToDB.Templates project folder.
+# T4 Models
 
-* Use the following initialization before you call the LoadMetadata() method.
+T4 models are used to generate POCO's C# code using your database structure.
+
+### Build status
+* Master: [![Build status](https://ci.appveyor.com/api/projects/status/ld4cv53wyfi4qtqm/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/t4models/branch/master)
+* Current: [![Build status](https://ci.appveyor.com/api/projects/status/ld4cv53wyfi4qtqm?svg=true)](https://ci.appveyor.com/project/igor-tkachev/t4models)
+
+## Installation
+
+Firstly you should install one of tools packages into your project:
+
+`Install-Package linq2db.XXX`
+
+Where XXX is one of supported databases, for example:
+
+`Install-Package linq2db.SqlServer`
+
+This also will install needed linq2db packages:
+* linq2db.t4models
+* linq2db 
+
+But **not** data provider packages (install them only if needed to compile your project, T4 models ships it's own data provider assemblies).
+
+### .Net Core specific 
+
+Because of .Net Core projects do not support NuGet content files all stuff is not copied into project's folder, so to run T4 templates you'll need:
+* open `$(SolutionDir).tools\linq2db.t4models` in Explorer 
+* copy `CopyMe.XXX.Core.tt.txt` to your project's folder or subfolder, then you should use it instead of `CopyMe.XXX.tt.txt`
+
+# Running
+
+After package installing you will see new `LinqToDB.Templates` folder in your project, this folder contains all needed T4 stuff to generate your model. Also would be created new folder in tour solution: `$(SolutionDir).tools\linq2db.t4models`, it is used to store and link assemblies, needed for generation (linq2db.dll and data provider assemblies).
+
+To create a data model template take a look at one of the CopyMe.XXX.tt.txt file in your LinqToDB.Templates project folder. Copy this file to needed project location and rename it, like `MyModel.tt`
+
+There are few main steps in this file:
+1. Configuring generation process (read below)
+1. Loading metadata - this is a call to `LoadMatadata()` function - it connects to your database and fetches all needed metadata (table structure, views, and so on)
+1. Customizing generation process (read below)
+1. Calling `GenerateModel()` - this will run model generation 
+
+## Configuring generation process
+
+Use the following initialization **before** you call the `LoadMetadata()` method.
 
 ```c#
 NamespaceName            = "DataModels";       // Namespace of the generated classes.
@@ -38,6 +79,8 @@ GenerateDbTypes                     = false;   // If true, generates the DbType 
 GenerateObsoleteAttributeForAliases = false;   // If true, generates [Obsolete] attribute for aliases.
 IsCompactColumnAliases              = true;    // If true, column alias compact view.
 
+NormalizeNames                      = true;    // convert some_name to SomeName for types and members
+
 GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" }; // Defines excluded schemas.
 GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines only included schemas.
 
@@ -45,7 +88,9 @@ GetSchemaOptions.ExcludedCatalogs = new[] { "TestUser", "SYSSTAT" }; // Defines 
 GetSchemaOptions.IncludedCatalogs = new[] { "TestUser", "SYS" };     // Defines only included catalogs.
 ```
 
-* Use the following code to modify your model befor you call the GenerateModel() method.
+## Customizing generation process
+
+Use the following code to modify your model **before** you call the `GenerateModel()` method.
 
 ```c#
 GetTable("Person").TypeName = "MyName";                                             // Replaces table name.
@@ -70,7 +115,7 @@ foreach (var t in Tables.Values)
 			c.MemberName = "ID";
 ```
 
-* Useful members and data structues.
+## Useful members and data structures
 
 ```c#
 Dictionary<string,Table>     Tables     = new Dictionary<string,Table>    ();

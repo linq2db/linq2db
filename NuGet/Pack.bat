@@ -1,7 +1,7 @@
 @rem cd ..\..\linq2db\Source
 @rem call Compile.bat
 
-cd ..\..\linq2db.t4models\ToolsGenerator
+cd ..\ToolsGenerator
 
 %windir%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe ToolsGenerator.csproj /property:Configuration=Release
 

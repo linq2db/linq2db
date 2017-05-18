@@ -1,8 +1,8 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.7.6
-  linq2dbVersion: 1.7.6
+  packageVersion: 1.8.0
+  linq2dbVersion: 1.8.0
 
 version: $(packageVersion).{build}
 
@@ -11,6 +11,12 @@ cache:
 
 init:
 - cmd: git config --global core.autocrlf true
+- ps: |
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release") 
+    {
+        $env:packageVersion = "$env:packageVersion-rc$env:appveyor_build_number"
+    }
+
 
 nuget:
   account_feed: false
@@ -45,3 +51,6 @@ deploy:
     secure: oTYw2IwTnz4qMD8c/MR/6mo+Nx3wa5Pp8MYfsKBCKCVuU6QCHlj+6QMXpnQses8G
   on:
     branch: release
+
+skip_commits:
+  message: /skip_ci./      # Regex for matching commit message

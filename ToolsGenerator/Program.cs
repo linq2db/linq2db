@@ -34,7 +34,7 @@ namespace ToolsGenerator
 			nugetDir = Path.Combine(nugetDir, "NuGet");
 
 			CreateToolsFile(nugetDir, "linq2db.t4models.nuspec", "LinqToDB.Tools.ttinclude",
-				@"<#@ assembly name=""$(SolutionDir)packages\linq2db.t4models.{0}\tools\linq2db.dll"" #>");
+				@"<#@ assembly name=""$(SolutionDir).tools\linq2db.t4models\linq2db.dll"" #>");
 
 			CreateProviderFile (nugetDir, "Access");
 			CreateProviderFile (nugetDir, "Firebird",                 "FirebirdSql.Data.FirebirdClient.dll");
@@ -52,7 +52,7 @@ namespace ToolsGenerator
 			CreateProviderFile (nugetDir, "PostgreSQL",               "Npgsql.dll", "Mono.Security.dll");
 
 			CreateProviderFile(nugetDir, "SqlCe",
-				@"<#@ assembly name=""$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll"" #>");
+				@"<#@ assembly name=""$(SolutionDir).tools\System.Data.SqlServerCe.dll"" #>");
 
 			return 0;
 		}
@@ -84,7 +84,7 @@ namespace ToolsGenerator
 							return t;
 						else
 							return string.Format(
-								@"<#@ assembly name=""$(SolutionDir)packages\linq2db.{0}.{1}\tools\{2}"" #>",
+								@"<#@ assembly name=""$(SolutionDir).tools\linq2db.t4models\{2}"" #>",
 								nuspec,
 								version,
 								t);

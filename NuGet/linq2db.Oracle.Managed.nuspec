@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.Oracle.Managed</id>
-		<version>1.7.5</version>
+		<version>1.8.0</version>
 		<title>LINQ to Oracle (ODP.NET) Managed</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -19,14 +19,14 @@
 		</summary>
 		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="Oracle.ManagedDataAccess" />
-			<dependency id="linq2db"                  />
-			<dependency id="linq2db.t4models"         />
+			<dependency id="linq2db.t4models" version="1.8.0"/>
 		</dependencies>
 	</metadata>
 	<files>
 		<file src="..\packages\Oracle.ManagedDataAccess.12.1.24160719\lib\net40\Oracle.ManagedDataAccess.dll" target="tools" />
 		<file src="LinqToDB.Oracle.Managed.Tools.ttinclude"                                                   target="content\LinqToDB.Templates" />
 		<file src="CopyMe.Oracle.Managed.tt.txt"                                                              target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                                                                  target="tools" />
 	</files>
 </package>
