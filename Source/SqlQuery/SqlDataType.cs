@@ -441,7 +441,7 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType CharArray        = new SqlDataType(DataType.NVarChar,       typeof(Char[]),      GetMaxLength,               0,  0);
 		public static readonly SqlDataType DateTimeOffset   = DbDateTimeOffset;
 		public static readonly SqlDataType TimeSpan         = DbTime;
-        public static readonly SqlDataType DbDictionary     = new SqlDataType(DataType.Dictionary,      typeof(Dictionary<string, string>), 0,          0,  0);
+        public static readonly SqlDataType DbDictionary     = new SqlDataType(DataType.Dictionary,     typeof(Dictionary<string, string>), 0,          0,  0);
 
 #if !SILVERLIGHT && !NETFX_CORE
         public static readonly SqlDataType SqlByte          = new SqlDataType(DataType.Byte,           typeof(SqlByte),                0,               0,  0);
