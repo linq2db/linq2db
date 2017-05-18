@@ -28,6 +28,6 @@
 		<file src="LinqToDB.Sybase.Tools.ttinclude"               target="content\LinqToDB.Templates" />
 		<file src="CopyMe.Sybase.tt.txt"                          target="content\LinqToDB.Templates" />
 
-		<file src="init.ps1"                                      target="tools\init.ps1" />
+		<file src="init.ps1"                                      target="tools" />
 	</files>
 </package>

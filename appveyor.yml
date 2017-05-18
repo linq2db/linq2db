@@ -53,4 +53,4 @@ deploy:
     branch: release
 
 skip_commits:
-  message: /doc./      # Regex for matching commit message
+  message: /skip_ci./      # Regex for matching commit message

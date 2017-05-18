@@ -34,7 +34,7 @@
 	</metadata>
 	<files>
 		<file src="..\packages\linq2db.1.8.0\lib\net40\linq2db.dll"    target="tools" />
-		<file src="init.ps1"                                           target="tools\init.ps1" />
+		<file src="init.ps1"                                           target="tools" />
 
 		<file src="..\ReadMe.md"                                       target="content\LinqToDB.Templates" />
 		<file src="..\Templates\*.ttinclude"                           target="content\LinqToDB.Templates" />

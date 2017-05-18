@@ -27,6 +27,6 @@
 		<file src="LinqToDB.Oracle.x64.Tools.ttinclude"                                                       target="content\LinqToDB.Templates" />
 		<file src="CopyMe.Oracle.x64.tt.txt"                                                                  target="content\LinqToDB.Templates" />
 
-		<file src="init.ps1"                                                                                  target="tools\init.ps1" />
+		<file src="init.ps1"                                                                                  target="tools" />
 	</files>
 </package>

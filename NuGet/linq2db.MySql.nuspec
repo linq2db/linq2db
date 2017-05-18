@@ -26,7 +26,7 @@
 		<file src="LinqToDB.MySql.Tools.ttinclude"                        target="content\LinqToDB.Templates" />
 		<file src="CopyMe.MySql.tt.txt"                                   target="content\LinqToDB.Templates" />
 
-		<file src="init.ps1"                                              target="tools\init.ps1" />
+		<file src="init.ps1"                                              target="tools" />
 		<file src="CopyMe.MySql.Core.tt.txt"                              target="tools" />
-	</files>
+ 	</files>
 </package>

@@ -26,7 +26,7 @@
 		<file src="LinqToDB.Firebird.Tools.ttinclude"                                                                      target="content\LinqToDB.Templates" />
 		<file src="CopyMe.Firebird.tt.txt"                                                                                 target="content\LinqToDB.Templates" />
 
-		<file src="init.ps1"                                                                                               target="tools\init.ps1" />
+		<file src="init.ps1"                                                                                               target="tools" />
 		<file src="CopyMe.Firebird.Core.tt.txt"                                                                            target="tools" />
 	</files>
 </package>

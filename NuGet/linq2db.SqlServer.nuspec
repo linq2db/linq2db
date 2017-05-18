@@ -27,7 +27,7 @@
 		<file src="LinqToDB.SqlServer.Tools.ttinclude"                                                        target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SqlServer.tt.txt"                                                                   target="content\LinqToDB.Templates" />
 
-		<file src="init.ps1"                                                                                  target="tools\init.ps1" />
+		<file src="init.ps1"                                                                                  target="tools" />
 		<file src="CopyMe.SqlServer.Core.tt.txt"                                                              target="tools" />
 	</files>
 </package>

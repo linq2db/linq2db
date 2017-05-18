@@ -27,7 +27,7 @@
 		<file src="LinqToDB.Informix.Tools.ttinclude"   target="content\LinqToDB.Templates" />
 		<file src="CopyMe.Informix.tt.txt"              target="content\LinqToDB.Templates" />
 
-		<file src="init.ps1"                            target="tools\init.ps1" />
+		<file src="init.ps1"                            target="tools" />
 
 	</files>
 </package>
