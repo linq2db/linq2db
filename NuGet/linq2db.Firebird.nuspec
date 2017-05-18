@@ -23,7 +23,10 @@
 	</metadata>
 	<files>
 		<file src="..\packages\FirebirdSql.Data.FirebirdClient.5.6.0\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll" target="tools" />
-    <file src="LinqToDB.Firebird.Tools.ttinclude"                                                                      target="content\LinqToDB.Templates" />
-    <file src="CopyMe.Firebird.tt.txt"                                                                                 target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.Firebird.Tools.ttinclude"                                                                      target="content\LinqToDB.Templates" />
+		<file src="CopyMe.Firebird.tt.txt"                                                                                 target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                                                                               target="tools\init.ps1" />
+		<file src="CopyMe.Firebird.Core.tt.txt"                                                                            target="tools" />
 	</files>
 </package>

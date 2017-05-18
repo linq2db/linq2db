@@ -26,5 +26,7 @@
 		<file src="..\Redist\SapHana\Sap.Data.Hana.v4.5.dll" target="tools" />
 		<file src="LinqToDB.SapHana.Tools.ttinclude"         target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SapHana.tt.txt"                    target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                 target="tools\init.ps1" />
 	</files>
 </package>

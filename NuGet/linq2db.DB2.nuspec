@@ -26,5 +26,7 @@
 		<file src="..\Redist\IBM\IBM.Data.DB2.dll" target="tools" />
 		<file src="LinqToDB.DB2.Tools.ttinclude"   target="content\LinqToDB.Templates" />
 		<file src="CopyMe.DB2.tt.txt"              target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                       target="tools\init.ps1" />
 	</files>
 </package>

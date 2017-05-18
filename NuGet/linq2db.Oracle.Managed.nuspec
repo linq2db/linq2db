@@ -26,5 +26,7 @@
 		<file src="..\packages\Oracle.ManagedDataAccess.12.1.24160719\lib\net40\Oracle.ManagedDataAccess.dll" target="tools" />
 		<file src="LinqToDB.Oracle.Managed.Tools.ttinclude"                                                   target="content\LinqToDB.Templates" />
 		<file src="CopyMe.Oracle.Managed.tt.txt"                                                              target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                                                                  target="tools\init.ps1" />
 	</files>
 </package>

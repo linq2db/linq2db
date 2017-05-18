@@ -26,5 +26,8 @@
 		<file src="..\packages\System.Data.SQLite.Core.1.0.103\build\net40\x86\SQLite.Interop.dll" target="tools" />
 		<file src="LinqToDB.SQLite.Tools.ttinclude"                                                target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SQLite.tt.txt"                                                           target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                                                       target="tools\init.ps1" />
+		<file src="CopyMe.SQLite.Core.tt.txt"                                                      target="tools" />
 	</files>
 </package>

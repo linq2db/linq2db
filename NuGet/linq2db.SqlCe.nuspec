@@ -25,5 +25,7 @@
 		<file src="..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" target="tools" />
 		<file src="LinqToDB.SqlCe.Tools.ttinclude"                                                           target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SqlCe.tt.txt"                                                                      target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                                                                 target="tools\init.ps1" />
 	</files>
 </package>

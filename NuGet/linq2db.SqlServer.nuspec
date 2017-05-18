@@ -22,9 +22,12 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\packages\Microsoft.SqlServer.Types.11.0.2\lib\Net20\Microsoft.SqlServer.Types.dll" target="tools" />
-		<file src="LinqToDB.SqlServer.SqlTypes.Tools.ttinclude"                                          target="content\LinqToDB.Templates" />
-		<file src="LinqToDB.SqlServer.Tools.ttinclude"                                                   target="content\LinqToDB.Templates" />
-		<file src="CopyMe.SqlServer.tt.txt"                                                              target="content\LinqToDB.Templates" />
+		<file src="..\packages\Microsoft.SqlServer.Types.14.0.314.76\lib\Net40\Microsoft.SqlServer.Types.dll" target="tools" />
+		<file src="LinqToDB.SqlServer.SqlTypes.Tools.ttinclude"                                               target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.SqlServer.Tools.ttinclude"                                                        target="content\LinqToDB.Templates" />
+		<file src="CopyMe.SqlServer.tt.txt"                                                                   target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                                                                  target="tools\init.ps1" />
+		<file src="CopyMe.SqlServer.Core.tt.txt"                                                              target="tools" />
 	</files>
 </package>

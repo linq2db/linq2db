@@ -26,5 +26,8 @@
 		<file src="..\packages\Npgsql.2.2.6\lib\net40\Mono.Security.dll" target="tools" />
 		<file src="LinqToDB.PostgreSQL.Tools.ttinclude"                  target="content\LinqToDB.Templates" />
 		<file src="CopyMe.PostgreSQL.tt.txt"                             target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                             target="tools\init.ps1" />
+		<file src="CopyMe.PostgreSQL.Core.tt.txt"                        target="tools" />
 	</files>
 </package>

@@ -27,5 +27,7 @@
 		<file src="..\Redist\Sybase\sybdrvado20.dll"              target="tools" />
 		<file src="LinqToDB.Sybase.Tools.ttinclude"               target="content\LinqToDB.Templates" />
 		<file src="CopyMe.Sybase.tt.txt"                          target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                      target="tools\init.ps1" />
 	</files>
 </package>
