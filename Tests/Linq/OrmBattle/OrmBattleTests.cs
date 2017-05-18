@@ -561,6 +561,7 @@ namespace Tests.OrmBattle
 				.Where(o => o.OrderDate != null)
 				.Select(o => o.RequiredDate)
 				.Distinct()
+				.OrderByDescending(_ => _)
 				.Skip(10);
 			var result = db.Order
 				.OrderBy(o => o.OrderDate)
@@ -570,6 +571,7 @@ namespace Tests.OrmBattle
 				.Where(o => o.OrderDate != null)
 				.Select(o => o.RequiredDate)
 				.Distinct()
+				.OrderByDescending(_ => _)
 				.Skip(10);
 			var originalList = original.ToList();
 			var resultList = result.ToList();

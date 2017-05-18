@@ -210,7 +210,7 @@ namespace Tests.Linq
 					select new { p.ParentID, c.ChildID });
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana, ProviderName.Access, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void Contains1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -223,7 +223,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana, ProviderName.Access, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void Contains2(string context)
 		{
 			using (var db = GetDataContext(context))
