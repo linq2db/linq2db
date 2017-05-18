@@ -2,6 +2,10 @@
 
 T4 models are used to generate POCO's C# code using your database structure.
 
+### Build status
+* Master: [![Build status](https://ci.appveyor.com/api/projects/status/ld4cv53wyfi4qtqm/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/t4models/branch/master)
+* Current: [![Build status](https://ci.appveyor.com/api/projects/status/ld4cv53wyfi4qtqm?svg=true)](https://ci.appveyor.com/project/igor-tkachev/t4models)
+
 ## Installation
 
 Firstly you should install one of tools packages into your project:
