@@ -564,6 +564,16 @@ namespace LinqToDB.SqlQuery
 				{
 					var sc = (SelectQuery.SearchCondition)cond.Predicate;
 					OptimizeSearchCondition(sc);
+					if (sc.Conditions.Count == 0)
+					{
+						if (cond.IsOr)
+						{
+							searchCondition.Conditions.Clear();
+							break;
+						}
+						searchCondition.Conditions.RemoveAt(i);
+						--i;
+					}
 				}
 			}
 		}
