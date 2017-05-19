@@ -13,7 +13,8 @@ namespace Tests.UserTests
 			public TestDataContextSourceAttribute() : base(
 				ProviderName.Access, ProviderName.SQLite, ProviderName.Oracle,
 				ProviderName.MySql, ProviderName.Sybase, 
-				ProviderName.OracleNative, ProviderName.OracleManaged)
+				ProviderName.OracleNative, ProviderName.OracleManaged,
+				TestProvName.MySql57)
 			{
 			}
 		}

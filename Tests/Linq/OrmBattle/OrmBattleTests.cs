@@ -39,25 +39,25 @@ namespace Tests.OrmBattle
 			using (db)
 				db = null;
 
-			// LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-			db = new NorthwindDB(context);
-
-			Customers = db.Customer.ToList();
-			Employees = db.Employee.ToList();
-			Order = db.Order.ToList();
-			Products = db.Product.ToList();
-
-			foreach (var o in Order)
+			using (new DisableLogging())
 			{
-				o.Customer = Customers.SingleOrDefault(c => c.CustomerID == o.CustomerID);
-				o.Employee = Employees.SingleOrDefault(e => e.EmployeeID == o.EmployeeID);
+				// LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+				db = new NorthwindDB(context);
+
+				Customers = db.Customer.ToList();
+				Employees = db.Employee.ToList();
+				Order = db.Order.ToList();
+				Products = db.Product.ToList();
+
+				foreach (var o in Order)
+				{
+					o.Customer = Customers.SingleOrDefault(c => c.CustomerID == o.CustomerID);
+					o.Employee = Employees.SingleOrDefault(e => e.EmployeeID == o.EmployeeID);
+				}
+
+				foreach (var c in Customers)
+					c.Orders = Order.Where(o => c.CustomerID == o.CustomerID).ToList();
 			}
-
-			foreach (var c in Customers)
-				c.Orders = Order.Where(o => c.CustomerID == o.CustomerID).ToList();
-
-			DataConnection.TurnTraceSwitchOn();
-			DataConnection.WriteTraceLine = (s, s1) => Console.WriteLine(s, s1);
 
 			_currentContext = context;
 		}
@@ -66,7 +66,6 @@ namespace Tests.OrmBattle
 		protected void TearDown()
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
-			DataConnection.TraceSwitch = null;
 			_currentContext = null;
 			using (db)
 				db = null;
@@ -1217,11 +1216,11 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result =
-				from o in db.Order
+				(from o in db.Order
 				where
 				db.Customer.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
 				db.Employee.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
-				select o;
+				select o).ToList();
 			var expected =
 				from o in Order
 				where
@@ -1269,7 +1268,7 @@ namespace Tests.OrmBattle
 		public void AnyTest(string context)
 		{
 			Setup(context);
-			var result = db.Customer.Where(c => c.Orders.Any(o => o.Freight > 400));
+			var result = db.Customer.Where(c => c.Orders.Any(o => o.Freight > 400)).ToList();
 			var expected = Customers.Where(c => c.Orders.Any(o => o.Freight > 400));
 			Assert.AreEqual(0, expected.Except(result).Count());
 			Assert.AreEqual(10, result.ToList().Count);
