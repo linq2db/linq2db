@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using LinqToDB;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -14,7 +13,8 @@ namespace Tests.UserTests
 				ProviderName.Access, ProviderName.SQLite, ProviderName.Oracle,
 				ProviderName.MySql, ProviderName.Sybase, 
 				ProviderName.OracleNative, ProviderName.OracleManaged,
-				TestProvName.MySql57)
+				TestProvName.MySql57,
+				TestProvName.SQLiteMs)
 			{
 			}
 		}
