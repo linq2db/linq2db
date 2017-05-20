@@ -64,24 +64,33 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		Type _npgsqlDate;
 		Type _npgsqlDateTime;
 
+		CommandBehavior _commandBehavior = CommandBehavior.Default;
+
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			BitStringType         = connectionType.AssemblyEx().GetType("NpgsqlTypes.BitString",         false);
-			NpgsqlIntervalType    = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlInterval",    false);
-			NpgsqlInetType        = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlInet",        true);
-			NpgsqlTimeType        = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlTime",        false);
-			NpgsqlTimeTZType      = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlTimeTZ",      false);
-			NpgsqlPointType       = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlPoint",       true);
-			NpgsqlLSegType        = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlLSeg",        true);
-			NpgsqlBoxType         = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlBox",         true);
-			NpgsqlPathType        = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlPath",        true);
-			_npgsqlTimeStamp      = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlTimeStamp",   false);
-			_npgsqlTimeStampTZ    = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlTimeStampTZ", false);
-			_npgsqlDate           = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlDate",        true);
-			_npgsqlDateTime       = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlDateTime",    false);
-			NpgsqlMacAddressType  = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlMacAddress",  false);
-			NpgsqlCircleType      = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlCircle",      true);
-			NpgsqlPolygonType     = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlPolygon",     true);
+			var npgSql = connectionType.AssemblyEx();
+
+			BitStringType         = npgSql.GetType("NpgsqlTypes.BitString",         false);
+			NpgsqlIntervalType    = npgSql.GetType("NpgsqlTypes.NpgsqlInterval",    false);
+			NpgsqlInetType        = npgSql.GetType("NpgsqlTypes.NpgsqlInet",        true);
+			NpgsqlTimeType        = npgSql.GetType("NpgsqlTypes.NpgsqlTime",        false);
+			NpgsqlTimeTZType      = npgSql.GetType("NpgsqlTypes.NpgsqlTimeTZ",      false);
+			NpgsqlPointType       = npgSql.GetType("NpgsqlTypes.NpgsqlPoint",       true);
+			NpgsqlLSegType        = npgSql.GetType("NpgsqlTypes.NpgsqlLSeg",        true);
+			NpgsqlBoxType         = npgSql.GetType("NpgsqlTypes.NpgsqlBox",         true);
+			NpgsqlPathType        = npgSql.GetType("NpgsqlTypes.NpgsqlPath",        true);
+			_npgsqlTimeStamp      = npgSql.GetType("NpgsqlTypes.NpgsqlTimeStamp",   false);
+			_npgsqlTimeStampTZ    = npgSql.GetType("NpgsqlTypes.NpgsqlTimeStampTZ", false);
+			_npgsqlDate           = npgSql.GetType("NpgsqlTypes.NpgsqlDate",        true);
+			_npgsqlDateTime       = npgSql.GetType("NpgsqlTypes.NpgsqlDateTime",    false);
+			NpgsqlMacAddressType  = npgSql.GetType("NpgsqlTypes.NpgsqlMacAddress",  false);
+			NpgsqlCircleType      = npgSql.GetType("NpgsqlTypes.NpgsqlCircle",      true);
+			NpgsqlPolygonType     = npgSql.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
+
+			if (npgSql.GetName().Version >= new Version(3, 2, 2))
+			{
+				_commandBehavior = CommandBehavior.KeyInfo;
+			}
 
 			if (BitStringType        != null) SetProviderField(BitStringType,        BitStringType,        "GetBitString");
 			if (NpgsqlIntervalType   != null) SetProviderField(NpgsqlIntervalType,   NpgsqlIntervalType,   "GetInterval");
@@ -251,7 +260,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-#region BulkCopy
+		public override CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
+		{
+			return commandBehavior | _commandBehavior;
+		}
+
+		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)

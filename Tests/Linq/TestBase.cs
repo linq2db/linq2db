@@ -1001,6 +1001,7 @@ namespace Tests
 								SmallIntValue  = record.SmallIntValue,
 								IntValue       = record.IntValue,
 								BigIntValue    = record.BigIntValue,
+								StringValue    = record.StringValue
 							};
 
 							if (copy.DateTimeValue != null)
