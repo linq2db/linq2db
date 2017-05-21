@@ -1609,7 +1609,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: [Test, DataContextSource]
+		[Test, DataContextSource]
 		public void GroupByDate1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1634,7 +1634,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: [Test, DataContextSource]
+		[Test, DataContextSource]
 		public void GroupByDate2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1655,6 +1655,31 @@ namespace Tests.Linq
 						Total = grp.Sum(_ => _.MoneyValue),
 						year  = grp.Key.Year,
 						month = grp.Key.Month
+					});
+			}
+		}
+
+		[Test, DataContextSource]
+		public void GroupByDate3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types2
+					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue.Value.Year, t.DateTimeValue.Value.Month, 1) }   into grp
+					select new
+					{
+						Total = grp.Sum(_ => _.MoneyValue),
+						year  = grp.Key.Date.Value.Year,
+						month = grp.Key.Date.Value.Month
+					},
+					from t in db.Types2
+					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue.Value.Year, t.DateTimeValue.Value.Month, 1) } into grp
+					select new
+					{
+						Total = grp.Sum(_ => _.MoneyValue),
+						year  = grp.Key.Date.Value.Year,
+						month = grp.Key.Date.Value.Month
 					});
 			}
 		}

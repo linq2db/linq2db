@@ -36,7 +36,25 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Prevents to use constructions like q.GroupBy(_ => _.SomeValue) which leads to unexpected behaviour.
 			/// </summary>
+			/// <remarks>
+			/// https://github.com/linq2db/linq2db/issues/365
+			/// </remarks>
 			public static bool GuardGrouping = false;
+
+			/// <summary>
+			/// Experimental
+			/// Used to optimize big logical operations with great number of operands like expr1.and.axpr2...and.exprN into to one <see cref="LinqToDB.Expressions.BinaryAggregateExpression"/>.
+			/// This saves from deep recursion in visitors.
+			/// <remarks>
+			/// Default: <value>true</value>
+			/// </remarks>
+			/// </summary>
+			/// <remarks>
+			/// See: 
+			/// https://github.com/linq2db/linq2db/issues/447
+			/// https://github.com/linq2db/linq2db/pull/563
+			/// </remarks>
+			public static bool UseBinaryAggregateExpression = true;
 		}
 
 		public static class LinqService

@@ -64,8 +64,14 @@ namespace LinqToDB.Linq.Builder
 
 							var ma = (MemberExpression)expr;
 
-							if (Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member) != null)
+							var l  = Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member);
+							if (l != null)
+							{
+								// In Grouping KeyContext whe have to perform calculation on server side
+								if (Contexts.Any(c => c is GroupByBuilder.KeyContext))
+									return new TransformInfo(BuildSql(context, expr));
 								break;
+							}
 
 							if (ma.Member.IsNullableValueMember())
 								break;

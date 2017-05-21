@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 				var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 				var sb      = _dataProvider.CreateSqlBuilder();
-				var rd      = new BulkCopyReader(_dataProvider, columns, source);
+				var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
 				var sqlopt  = SqlBulkCopyOptions.Default;
 				var rc      = new BulkCopyRowsCopied();
 

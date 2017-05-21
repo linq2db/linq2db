@@ -118,6 +118,7 @@
     <Compile Include="ExpressionMethodAttribute.cs" />
     <Compile Include="Expressions\ChangeTypeExpression.cs" />
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
+    <Compile Include="Expressions\BinaryAggregateExpression.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\GetItemExpression.cs" />
@@ -298,9 +299,11 @@
     <Compile Include="SqlQuery\SqlTableT.cs" />
     <Compile Include="SqlQuery\SqlTableType.cs" />
     <Compile Include="SqlQuery\SqlValue.cs" />
+    <Compile Include="Sql\Sql.Analytic.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.ExtensionAttribute.cs" />
     <Compile Include="Sql\Sql.FunctionAttribute.cs" />
     <Compile Include="Sql\Sql.GroupBy.cs" />
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
