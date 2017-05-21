@@ -688,6 +688,94 @@ namespace Tests.Merge
 				AssertRow(InitialSourceData[3], result[4], null, 216);
 			}
 		}
+
+		[MergeDataContextSource]
+		public void AnonymousSourceInsertWithPredicate(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).Select(_ => new
+					{
+						Key = _.OtherId,
+						Field01 = _.OtherField1,
+						Field02 = _.OtherField2,
+						Field03 = _.OtherField3,
+						Field04 = _.OtherField4,
+						Field05 = _.OtherField5,
+					}), (t, s) => t.Id == s.Key)
+					.Insert(s => s.Field04 == 216, s => new TestMapping1()
+					{
+						Id = s.Key,
+						Field1 = s.Field01,
+						Field2 = s.Field02,
+						Field3 = s.Field03,
+						Field4 = s.Field04,
+						Field5 = s.Field05
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void AnonymousListSourceInsertWithPredicate(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).ToList().Select(_ => new
+					{
+						Key = _.OtherId,
+						Field01 = _.OtherField1,
+						Field02 = _.OtherField2,
+						Field03 = _.OtherField3,
+						Field04 = _.OtherField4,
+						Field05 = _.OtherField5,
+					}), (t, s) => t.Id == s.Key)
+					.Insert(s => s.Field04 == 216, s => new TestMapping1()
+					{
+						Id = s.Key,
+						Field1 = s.Field01,
+						Field2 = s.Field02,
+						Field3 = s.Field03,
+						Field4 = s.Field04,
+						Field5 = s.Field05
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
 		#endregion
 	}
 }

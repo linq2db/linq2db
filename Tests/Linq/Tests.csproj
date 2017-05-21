@@ -334,6 +334,7 @@
     <Compile Include="Update\MergeTests.Issues.cs" />
     <Compile Include="Update\MergeTests.Operations.Update.cs" />
     <Compile Include="Update\MergeTests.Operations.Delete.cs" />
+    <Compile Include="Update\MergeTests.Operations.Parameters.cs" />
     <Compile Include="Update\MergeTests.Operations.UpdateBySource.cs" />
     <Compile Include="Update\MergeTests.Operations.DeleteBySource.cs" />
     <Compile Include="Update\MergeTests.Operations.Insert.cs" />

@@ -229,6 +229,9 @@ namespace Tests.Merge
 		[IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void Issue200InUpdate(string context)
 		{
+			// TODO: remove after issue 673 fixed
+			LinqToDB.Common.Configuration.Linq.UseBinaryAggregateExpression = false;
+
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{

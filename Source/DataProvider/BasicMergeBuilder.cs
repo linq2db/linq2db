@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		private string GeneratePredicateByTargetAndSource(Expression<Func<TTarget, TSource, bool>> predicate)
+		private void GeneratePredicateByTargetAndSource(Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			var query = _connection.GetTable<TTarget>()
 				.SelectMany(_ => _connection.GetTable<TSource>(), (t, s) => new { t, s });
@@ -109,9 +109,6 @@ namespace LinqToDB.DataProvider
 
 			var tableSet = new HashSet<SqlTable>();
 			var tables = new List<SqlTable>();
-
-			var targetTable = (SqlTable)sql.From.Tables[0].Source;
-			var sourceTable = (SqlTable)sql.From.Tables[1].Source;
 
 			// find target/source tables
 			new QueryVisitor().Visit(sql.From, e =>
@@ -125,50 +122,55 @@ namespace LinqToDB.DataProvider
 				}
 			});
 
-			var whereClause = new QueryVisitor().Convert(sql.Where, e =>
+			if (tables.Count > 2)
 			{
-				if (e.ElementType == QueryElementType.SqlField)
+				var targetTable = (SqlTable)sql.From.Tables[0].Source;
+				var sourceTable = (SqlTable)sql.From.Tables[1].Source;
+
+				var whereClause = new QueryVisitor().Convert(sql.Where, e =>
 				{
-					var fld = (SqlField)e;
-					var tbl = (SqlTable)fld.Table;
-
-					if (tbl != targetTable && tbl != sourceTable && tableSet.Contains(tbl))
+					if (e.ElementType == QueryElementType.SqlField)
 					{
-						throw new NotImplementedException("TODO:Associations Support");
-						//var tempCopy = sql.Clone();
-						//var tempTables = new List<SelectQuery.TableSource>();
+						var fld = (SqlField)e;
+						var tbl = (SqlTable)fld.Table;
 
-						//new QueryVisitor().Visit(tempCopy.From, ee =>
-						//{
-						//	if (ee.ElementType == QueryElementType.TableSource)
-						//		tempTables.Add((SelectQuery.TableSource)ee);
-						//});
+						if (tbl != targetTable && tbl != sourceTable && tableSet.Contains(tbl))
+						{
+							var tempCopy = sql.Clone();
+							var tempTables = new List<SelectQuery.TableSource>();
 
-						//var tt = tempTables[tables.IndexOf(tbl)];
+							new QueryVisitor().Visit(tempCopy.From, ee =>
+							{
+								if (ee.ElementType == QueryElementType.TableSource)
+									tempTables.Add((SelectQuery.TableSource)ee);
+							});
 
-						//tempCopy.Select.Columns.Clear();
-						//tempCopy.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
+							var tt = tempTables[tables.IndexOf(tbl)];
 
-						//tempCopy.Where.SearchCondition.Conditions.Clear();
+							tempCopy.Select.Columns.Clear();
+							tempCopy.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
 
-						//// TODO: here we need to choose [0] or [1]
-						//var keys = tempCopy.From.Tables[0].Source.GetKeys(true);
+							tempCopy.Where.SearchCondition.Conditions.Clear();
 
-						//// TODO: same here
-						//foreach (SqlField key in keys)
-						//	tempCopy.Where.Field(key).Equal.Field(targetTable.Fields[key.Name]);
+							// TODO: here we need to choose [0] or [1]
+							var keys = tempCopy.From.Tables[0].Source.GetKeys(true);
 
-						//tempCopy.ParentSelect = sql;
+							// TODO: same here
+							foreach (SqlField key in keys)
+								tempCopy.Where.Field(key).Equal.Field(targetTable.Fields[key.Name]);
 
-						//return tempCopy;
+							tempCopy.ParentSelect = sql;
+
+							return tempCopy;
+						}
 					}
-				}
 
-				return e;
-			}).SearchCondition.Conditions.ToList();
+					return e;
+				}).SearchCondition.Conditions.ToList();
 
-			sql.Where.SearchCondition.Conditions.Clear();
-			sql.Where.SearchCondition.Conditions.AddRange(whereClause);
+				sql.Where.SearchCondition.Conditions.Clear();
+				sql.Where.SearchCondition.Conditions.AddRange(whereClause);
+			}
 
 			sql.From.Tables[0].Alias = _targetAlias;
 			sql.From.Tables[1].Alias = _sourceAlias;
@@ -176,31 +178,23 @@ namespace LinqToDB.DataProvider
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
 
-			var pq = (DataConnection.PreparedQuery)ContextInfo.DataContext
-				.SetQuery(new QueryContext()
-				{
-					SelectQuery = sql,
-					SqlParameters = sql.Parameters.ToArray()
-				});
+			_sqlBuilder.BuildWhereSearchCondition(sql, Command);
 
-			var cmd = pq.Commands[0];
-
-			return cmd.Substring(cmd.IndexOf("WHERE") + "WHERE".Length);
+			Command.Append(" ");
 		}
 
-		private string GenerateSingleTablePredicate<TTable>(Expression<Func<TTable, bool>> predicate, string tableAlias)
+		private void GenerateSingleTablePredicate<TTable>(Expression<Func<TTable, bool>> predicate, string tableAlias)
 			where TTable : class
 		{
 			var qry = _connection.GetTable<TTable>().Where(predicate);
 			var ctx = qry.GetContext();
 			var sql = ctx.SelectQuery;
 
+			// code below moves joined association tables to where condition
 			var tableSet = new HashSet<SqlTable>();
 			var tables = new List<SqlTable>();
 
-			var table = (SqlTable)sql.From.Tables[0].Source;
-
-			// find target table
+			// collect tables, referenced in FROM clause
 			new QueryVisitor().Visit(sql.From, e =>
 			{
 				if (e.ElementType == QueryElementType.TableSource)
@@ -212,68 +206,70 @@ namespace LinqToDB.DataProvider
 				}
 			});
 
-			// handle relations
-			var whereClause = new QueryVisitor().Convert(sql.Where, e =>
+			if (tables.Count > 1)
 			{
-				if (e.ElementType == QueryElementType.SqlField)
+				var table = (SqlTable)sql.From.Tables[0].Source;
+
+				//// rewrite WHERE condition
+				var whereClause = new QueryVisitor().Convert(sql.Where, e =>
 				{
-					var fld = (SqlField)e;
-					var tbl = (SqlTable)fld.Table;
-
-					// table is not table from FROM clause
-					if (tbl != table && tableSet.Contains(tbl))
+					// for table field references from association tables we must rewrite them with subquery
+					if (e.ElementType == QueryElementType.SqlField)
 					{
-						var tempCopy = sql.Clone();
-						var tempTables = new List<SelectQuery.TableSource>();
+						var fld = (SqlField)e;
+						var tbl = (SqlTable)fld.Table;
 
-						// create list of tables for query copy
-						new QueryVisitor().Visit(tempCopy.From, ee =>
-					{
-						if (ee.ElementType == QueryElementType.TableSource)
-							tempTables.Add((SelectQuery.TableSource)ee);
-					});
+						// table is an association table, used in FROM clause - generate subquery
+						if (tbl != table && tableSet.Contains(tbl))
+						{
+							var tempCopy = sql.Clone();
+							var tempTables = new List<SelectQuery.TableSource>();
 
-						// map non-FROM table to table in query copy
-						var tt = tempTables[tables.IndexOf(tbl)];
+							// create copy of tables from main FROM clause for subquery clause
+							new QueryVisitor().Visit(tempCopy.From, ee =>
+							{
+								if (ee.ElementType == QueryElementType.TableSource)
+									tempTables.Add((SelectQuery.TableSource)ee);
+							});
 
-						tempCopy.Select.Columns.Clear();
-						tempCopy.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
+							// main table reference in subquery
+							var tt = tempTables[tables.IndexOf(tbl)];
 
-						tempCopy.Where.SearchCondition.Conditions.Clear();
+							tempCopy.Select.Columns.Clear();
+							tempCopy.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
 
-						var keys = tempCopy.From.Tables[0].Source.GetKeys(true);
+							// create new WHERE for subquery
+							tempCopy.Where.SearchCondition.Conditions.Clear();
 
-						foreach (SqlField key in keys)
-							tempCopy.Where.Field(key).Equal.Field(table.Fields[key.Name]);
+							var keys = tempCopy.From.Tables[0].Source.GetKeys(true);
 
-						tempCopy.ParentSelect = sql;
+							// add joining condition over association keys
+							foreach (SqlField key in keys)
+								tempCopy.Where.Field(key).Equal.Field(table.Fields[key.Name]);
 
-						return tempCopy;
+							// set main query as parent
+							tempCopy.ParentSelect = sql;
+
+							return tempCopy;
+						}
 					}
-				}
 
-				return e;
-			}).SearchCondition.Conditions.ToList();
+					return e;
+				}).SearchCondition.Conditions.ToList();
 
-			sql.Where.SearchCondition.Conditions.Clear();
-			sql.Where.SearchCondition.Conditions.AddRange(whereClause);
+				// replace WHERE condition with new one
+				sql.Where.SearchCondition.Conditions.Clear();
+				sql.Where.SearchCondition.Conditions.AddRange(whereClause);
+			}
 
 			sql.From.Tables[0].Alias = tableAlias;
 
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
 
-			var pq = (DataConnection.PreparedQuery)ContextInfo.DataContext
-				.SetQuery(new QueryContext()
-				{
-					SelectQuery = sql,
-					SqlParameters = sql.Parameters.ToArray()
-				});
+			_sqlBuilder.BuildWhereSearchCondition(sql, Command);
 
-			var cmd = pq.Commands[0];
-
-			// TODO: use sql builder
-			return cmd.Substring(cmd.IndexOf("WHERE") + "WHERE".Length);
+			Command.Append(" ");
 		}
 
 		private class QueryContext : IQueryContext
@@ -331,7 +327,7 @@ namespace LinqToDB.DataProvider
 					first = false;
 
 					Command
-						.AppendFormat("\t{0}", columnName);
+						.AppendFormat("\t{0}", _sqlBuilder.Convert(columnName, ConvertType.NameToQueryFieldAlias));
 				}
 
 				Command
@@ -475,7 +471,7 @@ namespace LinqToDB.DataProvider
 			if (_merge.MatchPredicate == null)
 				GenerateDefaultMatchPredicate();
 			else
-				Command.Append(GeneratePredicateByTargetAndSource(_merge.MatchPredicate));
+				GeneratePredicateByTargetAndSource(_merge.MatchPredicate);
 
 			Command.AppendLine(")");
 		}
@@ -554,9 +550,10 @@ namespace LinqToDB.DataProvider
 				.Append("WHEN MATCHED ");
 
 			if (predicate != null)
-				Command
-					.Append("AND ")
-					.Append(GeneratePredicateByTargetAndSource(predicate));
+			{
+				Command.Append("AND ");
+				GeneratePredicateByTargetAndSource(predicate);
+			}
 
 			Command
 				.AppendLine("THEN DELETE");
@@ -571,9 +568,10 @@ namespace LinqToDB.DataProvider
 				.Append("WHEN NOT MATCHED By Source ");
 
 			if (predicate != null)
-				Command
-					.Append("AND ")
-					.Append(GenerateSingleTablePredicate(predicate, _targetAlias));
+			{
+				Command.Append("AND ");
+				GenerateSingleTablePredicate(predicate, _targetAlias);
+			}
 
 			Command
 				.AppendLine("THEN DELETE");
@@ -590,9 +588,10 @@ namespace LinqToDB.DataProvider
 				.Append("WHEN NOT MATCHED ");
 
 			if (predicate != null)
-				Command
-					.Append("AND ")
-					.Append(GenerateSingleTablePredicate(predicate, _sourceAlias));
+			{
+				Command.Append("AND ");
+				GenerateSingleTablePredicate(predicate, _sourceAlias);
+			}
 
 			Command
 				.AppendLine("THEN INSERT");
@@ -737,9 +736,10 @@ namespace LinqToDB.DataProvider
 				.Append("WHEN MATCHED ");
 
 			if (predicate != null)
-				Command
-					.Append("AND ")
-					.Append(GeneratePredicateByTargetAndSource(predicate));
+			{
+				Command.Append("AND ");
+				GeneratePredicateByTargetAndSource(predicate);
+			}
 
 			Command.AppendLine(" THEN UPDATE");
 
@@ -771,9 +771,10 @@ namespace LinqToDB.DataProvider
 				.Append("WHEN NOT MATCHED By Source ");
 
 			if (predicate != null)
-				Command
-					.Append("AND ")
-					.Append(GenerateSingleTablePredicate(predicate, _targetAlias));
+			{
+				Command.Append("AND ");
+				GenerateSingleTablePredicate(predicate, _targetAlias);
+			}
 
 			Command.AppendLine("THEN UPDATE");
 
