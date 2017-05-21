@@ -24,6 +24,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			Expression<Func<TSource, bool>> predicate,
 			Expression<Func<TSource, TTarget>> create)
 		{
+			// no need to check if we called second time or first ast sql server doesn't support multiple operations
+			// of the same type
 			_hasIdentityInsert = TargetDescriptor.Columns.Any(c => c.IsIdentity);
 
 			if (_hasIdentityInsert)

@@ -20,31 +20,6 @@ namespace LinqToDB.DataProvider
 		where TTarget : class
 		where TSource : class
 	{
-		#region Parameters
-		private int _parameterCnt;
-
-		private string GetNextParameterName()
-		{
-			return $"p{_parameterCnt++}";
-		}
-
-		private void SaveParameters(IEnumerable<SqlParameter> parameters)
-		{
-			foreach (var param in parameters)
-			{
-				param.Name = GetNextParameterName();
-				_parameters.Add(new DataParameter(param.Name, param.Value, param.DataType));
-			}
-		}
-
-		private readonly List<DataParameter> _parameters = new List<DataParameter>();
-
-		/// <summary>
-		/// List of generated command parameters.
-		/// </summary>
-		public DataParameter[] Parameters => _parameters.ToArray();
-		#endregion
-
 		#region .ctor
 		private readonly MergeDefinition<TTarget, TSource> _merge;
 
@@ -96,8 +71,8 @@ namespace LinqToDB.DataProvider
 
 		#region MERGE : Predicates
 		private IQueryable<TTuple> AddConditionOverSourceAndTarget<TTuple>(
-							IQueryable<TTuple> query,
-							Expression<Func<TTarget, TSource, bool>> predicate)
+									IQueryable<TTuple> query,
+									Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			var p = Expression.Parameter(typeof(TTuple));
 
@@ -419,7 +394,7 @@ namespace LinqToDB.DataProvider
 						Command.Append(",");
 
 					var column = _sourceDescriptor.Columns[i];
-					var value = column.GetValue(item);
+					var value = column.GetValue(ContextInfo.MappingSchema, item);
 
 					// avoid parameters in source due to low limits for parameters number in providers
 					if (!valueConverter.TryConvert(Command, columnTypes[i], value))
@@ -606,6 +581,28 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Operations: INSERT
+		protected virtual void GenerateInsert(
+					Expression<Func<TSource, bool>> predicate,
+					Expression<Func<TSource, TTarget>> create)
+		{
+			Command
+				.AppendLine()
+				.Append("WHEN NOT MATCHED ");
+
+			if (predicate != null)
+				Command
+					.Append("AND ")
+					.Append(GenerateSingleTablePredicate(predicate, _sourceAlias));
+
+			Command
+				.AppendLine("THEN INSERT");
+
+			if (create != null)
+				GenerateCustomInsert(create);
+			else
+				GenerateDefaultInsert();
+		}
+
 		private void GenerateCustomInsert(Expression<Func<TSource, TTarget>> create)
 		{
 			var insertExpression = Expression.Call(
@@ -673,28 +670,6 @@ namespace LinqToDB.DataProvider
 			Command
 				.AppendLine()
 				.AppendLine("\t)");
-		}
-
-		protected virtual void GenerateInsert(
-			Expression<Func<TSource, bool>> predicate,
-			Expression<Func<TSource, TTarget>> create)
-		{
-			Command
-				.AppendLine()
-				.Append("WHEN NOT MATCHED ");
-
-			if (predicate != null)
-				Command
-					.Append("AND ")
-					.Append(GenerateSingleTablePredicate(predicate, _sourceAlias));
-
-			Command
-				.AppendLine("THEN INSERT");
-
-			if (create != null)
-				GenerateCustomInsert(create);
-			else
-				GenerateDefaultInsert();
 		}
 		#endregion
 
@@ -788,8 +763,8 @@ namespace LinqToDB.DataProvider
 
 		#region Operations: UPDATE BY SOURCE
 		private void GenerateUpdateBySource(
-			Expression<Func<TTarget, bool>> predicate,
-			Expression<Func<TTarget, TTarget>> update)
+					Expression<Func<TTarget, bool>> predicate,
+					Expression<Func<TTarget, TTarget>> update)
 		{
 			Command
 				.AppendLine()
@@ -815,6 +790,31 @@ namespace LinqToDB.DataProvider
 			SaveParameters(query.Parameters);
 
 			_sqlBuilder.BuildUpdateSetHelper(query, Command);
+		}
+		#endregion
+
+		#region Parameters
+		private readonly List<DataParameter> _parameters = new List<DataParameter>();
+
+		private int _parameterCnt;
+
+		/// <summary>
+		/// List of generated command parameters.
+		/// </summary>
+		public DataParameter[] Parameters => _parameters.ToArray();
+
+		private string GetNextParameterName()
+		{
+			return $"p{_parameterCnt++}";
+		}
+
+		private void SaveParameters(IEnumerable<SqlParameter> parameters)
+		{
+			foreach (var param in parameters)
+			{
+				param.Name = GetNextParameterName();
+				_parameters.Add(new DataParameter(param.Name, param.Value, param.DataType));
+			}
 		}
 		#endregion
 
@@ -904,7 +904,7 @@ namespace LinqToDB.DataProvider
 
 		#region Validation
 		private static MergeOperationType[] _matchedTypes = new[]
-		{
+				{
 			MergeOperationType.Delete,
 			MergeOperationType.Update
 		};

@@ -261,11 +261,7 @@ namespace Tests.Merge
 					.FromSame(testData, (t, s) => t.datetime2DataType == s.datetime2DataType
 						&& t.datetimeoffsetDataType == s.datetimeoffsetDataType
 						&& t.datetime2DataType == testData[0].datetime2DataType
-						&& t.datetimeoffsetDataType == testData[0].datetimeoffsetDataType
-						)
-					//&& t.datetimeoffsetDataType == testData[0].datetimeoffsetDataType
-					//&& s.datetime2DataType == testData[0].datetime2DataType
-					//&& s.datetimeoffsetDataType == testData[0].datetimeoffsetDataType)
+						&& t.datetimeoffsetDataType == testData[0].datetimeoffsetDataType)
 					.Update((t, s) => new AllTypes2()
 					{
 						datetimeoffsetDataType = dto2,
