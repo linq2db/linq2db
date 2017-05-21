@@ -270,7 +270,7 @@ namespace LinqToDB.DataProvider
 				}
 
 				StringBuilder
-					.AppendLine("-- delete rows that are in the target but not in the sourse")
+					.AppendLine("-- delete rows that are in the target but not in the source")
 					.AppendLine("WHEN NOT MATCHED BY Source {0}THEN".Args(predicate))
 					.AppendLine("\tDELETE")
 					;

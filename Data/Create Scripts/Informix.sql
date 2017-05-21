@@ -152,7 +152,7 @@ CREATE TABLE AllTypes
 	datetimeDataType datetime year to second NULL,
 	intervalDataType interval hour to second NULL,
 
-    byteDataType     byte                    NULL,
+	byteDataType     byte                    NULL,
 
 	PRIMARY KEY(ID)
 )
@@ -242,5 +242,36 @@ CREATE TABLE TestFKUnique (
 	ID4 INT NOT NULL,
 	FOREIGN KEY (ID1,ID2) REFERENCES TestUnique (ID1,ID2),
 	FOREIGN KEY (ID3,ID4) REFERENCES TestUnique (ID3,ID4)
+)
+GO
+
+
+DROP TABLE testmerge1
+GO
+DROP TABLE testmerge2
+GO
+
+CREATE TABLE testmerge1
+(
+	id       int          NOT NULL,
+	field1   int              NULL,
+	field2   int              NULL,
+	field3   int              NULL,
+	field4   int              NULL,
+	field5   int              NULL,
+
+	PRIMARY KEY(id)
+)
+GO
+CREATE TABLE testmerge2
+(
+	id       int          NOT NULL,
+	field1   int              NULL,
+	field2   int              NULL,
+	field3   int              NULL,
+	field4   int              NULL,
+	field5   int              NULL,
+
+	PRIMARY KEY(id2)
 )
 GO

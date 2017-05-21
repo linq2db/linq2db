@@ -66,7 +66,13 @@ namespace LinqToDB.Data
 			_operations = operations;
 		}
 
+		public IEnumerable<TSource> EnumerableSource => _enumerableSource;
+
+		public Expression<Func<TTarget, TSource, bool>> MatchPredicate => _matchPredicate;
+
 		public Operation[] Operations => _operations;
+
+		public IQueryable<TSource> QueryableSource => _queryableSource;
 
 		public ITable<TTarget> Target => _target;
 

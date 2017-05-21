@@ -286,3 +286,29 @@ INSERT INTO AllTypes (binaryDataType)
 VALUES (NULL)
 
 GO
+
+DROP TABLE testmerge1
+GO
+DROP TABLE testmerge2
+GO
+
+CREATE TABLE testmerge1
+(
+	id       Int      NOT NULL CONSTRAINT PK_testmerge1 PRIMARY KEY,
+	field1   Int          NULL,
+	field2   Int          NULL,
+	field3   Int          NULL,
+	field4   Int          NULL,
+	field5   Int          NULL
+)
+GO
+CREATE TABLE testmerge2
+(
+	id       Int      NOT NULL CONSTRAINT PK_testmerge2 PRIMARY KEY,
+	field1   Int          NULL,
+	field2   Int          NULL,
+	field3   Int          NULL,
+	field4   Int          NULL,
+	field5   Int          NULL
+)
+GO

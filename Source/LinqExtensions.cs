@@ -203,7 +203,7 @@ namespace LinqToDB
 
 		#region Update
 
-		static readonly MethodInfo _updateMethodInfo = MemberHelper.MethodOf(() => Update<int,int>(null, (ITable<int>)null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo _updateMethodInfo = MemberHelper.MethodOf(() => Update<int,int>(null, (ITable<int>)null, null)).GetGenericMethodDefinition();
 
 		public static int Update<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -221,7 +221,7 @@ namespace LinqToDB
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
-		static readonly MethodInfo _updateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo _updateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
 
 		public static int Update<T>(
 			[NotNull]                this IQueryable<T>    source,
@@ -636,7 +636,7 @@ namespace LinqToDB
 
 		#region SelectInsertable
 
-		static readonly MethodInfo _insertMethodInfo3 =
+		internal static readonly MethodInfo _insertMethodInfo3 =
 			MemberHelper.MethodOf(() => Insert<int,int>(null,null,null)).GetGenericMethodDefinition();
 
 		public static int Insert<TSource,TTarget>(

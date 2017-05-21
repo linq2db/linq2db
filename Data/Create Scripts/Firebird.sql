@@ -706,3 +706,29 @@ CREATE TABLE "CamelCaseName"
 	"NAME 5" VARCHAR(20)
 )
 COMMIT;
+
+
+DROP TABLE testmerge1;                            COMMIT;
+DROP TABLE testmerge2;                            COMMIT;
+
+CREATE TABLE testmerge1
+(
+	id     INTEGER     NOT NULL PRIMARY KEY,
+	field1 INTEGER,
+	field2 INTEGER,
+	field3 INTEGER,
+	field4 INTEGER,
+	field5 INTEGER
+);
+COMMIT;
+
+CREATE TABLE testmerge2
+(
+	id     INTEGER     NOT NULL PRIMARY KEY,
+	field1 INTEGER,
+	field2 INTEGER,
+	field3 INTEGER,
+	field4 INTEGER,
+	field5 INTEGER
+);
+COMMIT;

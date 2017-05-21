@@ -214,14 +214,26 @@ namespace LinqToDB.Data
 
 				for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 				{
-					sb
-						.AppendLine()
-						.AppendFormat("Exception: {0}", ex.GetType())
-						.AppendLine()
-						.AppendFormat("Message  : {0}", ex.Message)
-						.AppendLine()
-						.AppendLine(ex.StackTrace)
-						;
+					try
+					{
+						sb
+							.AppendLine()
+							.AppendFormat("Exception: {0}", ex.GetType())
+							.AppendLine()
+							.AppendFormat("Message  : {0}", ex.Message)
+							.AppendLine()
+							.AppendLine(ex.StackTrace)
+							;
+					}
+					catch
+					{
+						// AseException.Message fails for currently used provider due to very sad bug
+						// in AseErrorCollection.Message property
+						sb
+							.AppendLine()
+							.AppendFormat("Failed while tried to log failure {0}", ex.GetType())
+							;
+					}
 				}
 
 				WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);

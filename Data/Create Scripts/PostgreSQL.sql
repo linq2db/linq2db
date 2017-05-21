@@ -439,3 +439,31 @@ CREATE TABLE TestSameName
 	ID serial NOT NULL PRIMARY KEY
 )
 GO
+
+DROP TABLE IF EXISTS "testmerge1"
+GO
+
+DROP TABLE IF EXISTS "testmerge2"
+GO
+
+CREATE TABLE "testmerge1"
+(
+	"id"		INTEGER	PRIMARY KEY,
+	"field1"	INTEGER	NULL,
+	"field2"	INTEGER	NULL,
+	"field3"	INTEGER	NULL,
+	"field4"	INTEGER	NULL,
+	"field5"	INTEGER	NULL
+)
+GO
+
+CREATE TABLE "testmerge2"
+(
+	"id"		INTEGER	PRIMARY KEY,
+	"field1"	INTEGER	NULL,
+	"field2"	INTEGER	NULL,
+	"field3"	INTEGER	NULL,
+	"field4"	INTEGER	NULL,
+	"field5"	INTEGER	NULL
+)
+GO

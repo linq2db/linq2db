@@ -583,7 +583,7 @@ namespace LinqToDB.Linq
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID, tableName, databaseName, schemaName };
 
 			if (!ObjectOperation<T>.Insert.TryGetValue(key, out ei))
 				lock (_sync)

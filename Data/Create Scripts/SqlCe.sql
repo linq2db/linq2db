@@ -187,3 +187,30 @@ SELECT
 	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)
 
 GO
+
+-- merge test tables
+DROP TABLE testmerge1
+GO
+DROP TABLE testmerge2
+GO
+
+CREATE TABLE testmerge1
+(
+	id		int          NOT NULL CONSTRAINT PK_testmerge1 PRIMARY KEY,
+	field1	int              NULL,
+	field2	int              NULL,
+	field3	int              NULL,
+	field4	int              NULL,
+	field5	int              NULL
+)
+GO
+CREATE TABLE testmerge2
+(
+	id		int          NOT NULL CONSTRAINT PK_testmerge2 PRIMARY KEY,
+	field1	int              NULL,
+	field2	int              NULL,
+	field3	int              NULL,
+	field4	int              NULL,
+	field5	int              NULL
+)
+GO

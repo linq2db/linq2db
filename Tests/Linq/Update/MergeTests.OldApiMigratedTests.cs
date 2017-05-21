@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using LinqToDB.DataProvider;
 
-namespace Tests.xUpdate
+namespace Tests.Merge
 {
 	// Regression tests converted from tests for previous version of Merge API to new API.
 	public partial class MergeTests
@@ -24,7 +24,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.GetTable<LinqDataTypes2>().From(db.Types2)
+				db.GetTable<LinqDataTypes2>().FromSame(db.Types2)
 					.Update().Insert()
 					.Merge();
 			}
@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.GetTable<Person>().From(new Person[] { })
+				db.GetTable<Person>().FromSame(new Person[] { })
 					.Update().Insert()
 					.Merge();
 			}
@@ -50,8 +50,9 @@ namespace Tests.xUpdate
 		public void MergeWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.GetTable<LinqDataTypes2>().From(db.Types2)
+				db.GetTable<LinqDataTypes2>().FromSame(db.Types2)
 					.Update().Insert().DeleteBySource()
 					.Merge();
 			}
@@ -64,8 +65,9 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate1(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.GetTable<LinqDataTypes2>().From(db.Types2.Where(t => t.ID > 5))
+				db.GetTable<LinqDataTypes2>().FromSame(db.Types2.Where(t => t.ID > 5))
 					.Update().Insert().DeleteBySource(t => t.ID > 5)
 					.Merge();
 			}
@@ -78,9 +80,26 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate3(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				var patient = db.Patient.First();
-				db.GetTable<Person>().From(db.Person.Where(t => t.Patient == patient))
+				db.Insert(new Person()
+				{
+					FirstName = "Не ASCII",
+					Gender = Gender.Unknown,
+					LastName = "Last Name",
+					MiddleName = "Mid"
+				});
+
+				var person = db.Person.First();
+
+				db.Insert(new Patient()
+				{
+					PersonID = person.ID,
+					Diagnosis = "Negative"
+				});
+
+				var patient = db.Patient.Where(_ => _.PersonID == person.ID).First();
+				db.GetTable<Person>().FromSame(db.Person.Where(t => t.Patient == patient))
 					.Update().Insert().DeleteBySource(t => t.Patient == patient)
 					.Merge();
 			}
@@ -93,10 +112,27 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate4(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				var patient = db.Patient.First().PersonID;
+				db.Insert(new Person()
+				{
+					FirstName = "Не ASCII",
+					Gender = Gender.Unknown,
+					LastName = "Last Name",
+					MiddleName = "Mid"
+				});
+
+				var person = db.Person.First();
+
+				db.InsertOrReplace(new Patient()
+				{
+					PersonID = person.ID,
+					Diagnosis = "Negative"
+				});
+
+				var patient = person.ID;
 				var merge = db.GetTable<Person>()
-					.From(db.Person.Where(t => t.Patient.PersonID == patient))
+					.FromSame(db.Person.Where(t => t.Patient.PersonID == patient))
 					.Update()
 					.Insert()
 					.DeleteBySource(t => t.Patient.PersonID == patient);
@@ -113,10 +149,11 @@ namespace Tests.xUpdate
 		public void MergeWithDeletePredicate5(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				db.GetTable<Child>()
-					.From(db.Child.Where(t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22)))
-					.Update()
+					.FromSame(db.Child.Where(t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22)))
+					//.Update()
 					.Insert()
 					.DeleteBySource(t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22))
 					.Merge();
@@ -150,7 +187,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-					db.GetTable<AllType>().From(db.GetTable<AllType>().Where(t => t.ID == id)).Update().Insert().Merge();
+					db.GetTable<AllType>().FromSame(db.GetTable<AllType>().Where(t => t.ID == id)).Update().Insert().Merge();
 				}
 				finally
 				{
@@ -170,7 +207,7 @@ namespace Tests.xUpdate
 				try
 				{
 					db.GetTable<AllType>()
-						.From(new[]
+						.FromSame(new[]
 						{
 							new AllType
 							{

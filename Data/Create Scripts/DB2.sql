@@ -250,3 +250,29 @@ BEGIN
 	OPEN C1;
 END
 GO
+
+DROP TABLE "testmerge1"
+GO
+DROP TABLE "testmerge2"
+GO
+
+CREATE TABLE "testmerge1"
+(
+	"id"       INTEGER       PRIMARY KEY NOT NULL,
+	"field1"   INTEGER                       NULL,
+	"field2"   INTEGER                       NULL,
+	"field3"   INTEGER                       NULL,
+	"field4"   INTEGER                       NULL,
+	"field5"   INTEGER                       NULL
+)
+GO
+CREATE TABLE "testmerge2"
+(
+	"id"       INTEGER       PRIMARY KEY NOT NULL,
+	"field1"   INTEGER                       NULL,
+	"field2"   INTEGER                       NULL,
+	"field3"   INTEGER                       NULL,
+	"field4"   INTEGER                       NULL,
+	"field5"   INTEGER                       NULL
+)
+GO

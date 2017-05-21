@@ -305,7 +305,7 @@ CREATE COLUMN TABLE "AllTypes"
 	"dateDataType" DATE NULL,
 	"timeDataType" TIME NULL,
 	"seconddateDataType" SECONDDATE NULL,
-	"timestampDataType" TIMESTAMP NULL,	
+	"timestampDataType" TIMESTAMP NULL,
 
 	"charDataType" CHAR(1) NULL,
 	"varcharDataType" VARCHAR(20) NULL,
@@ -320,7 +320,7 @@ CREATE COLUMN TABLE "AllTypes"
 
 	"blobDataType" BLOB NULL,
 	"clobDataType" CLOB NULL,
-	"nclobDataType" NCLOB NULL,		
+	"nclobDataType" NCLOB NULL,
 	PRIMARY KEY ("ID")
 );;
 
@@ -525,3 +525,29 @@ CREATE COLUMN TABLE "IndexTable2" (
 	PRIMARY KEY ("PKField1", "PKField2")
 );;
 ALTER TABLE "IndexTable2" ADD CONSTRAINT "FK_Patient2_IndexTable" FOREIGN KEY ("PKField1", "PKField2") REFERENCES "IndexTable" ("PKField1", "PKField2") ON UPDATE CASCADE ON DELETE CASCADE;;
+
+CALL DROPEXISTINGTABLE('testmerge1', CURRENT_SCHEMA);;
+CALL DROPEXISTINGTABLE('testmerge2', CURRENT_SCHEMA);;
+
+CREATE TABLE "testmerge1"
+(
+	"id"       INTEGER        NOT NULL,
+	"field1"   INTEGER            NULL,
+	"field2"   INTEGER            NULL,
+	"field3"   INTEGER            NULL,
+	"field4"   INTEGER            NULL,
+	"field5"   INTEGER            NULL,
+	
+	PRIMARY KEY ("id")
+);;
+CREATE TABLE "testmerge2"
+(
+	"id"       INTEGER        NOT NULL,
+	"field1"   INTEGER            NULL,
+	"field2"   INTEGER            NULL,
+	"field3"   INTEGER            NULL,
+	"field4"   INTEGER            NULL,
+	"field5"   INTEGER            NULL,
+	
+	PRIMARY KEY ("id")
+);;

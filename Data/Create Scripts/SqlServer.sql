@@ -790,3 +790,32 @@ GO
 
 -- SKIP SqlServer.2005 END
 
+
+-- merge test tables
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('testmerge1') AND type in (N'U'))
+BEGIN DROP TABLE testmerge1 END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('testmerge2') AND type in (N'U'))
+BEGIN DROP TABLE testmerge2 END
+GO
+CREATE TABLE testmerge1
+(
+	id		int NOT NULL CONSTRAINT PK_testmerge1 PRIMARY KEY CLUSTERED,
+	field1	int NULL,
+	field2	int NULL,
+	field3	int NULL,
+	field4	int NULL,
+	field5	int NULL
+)
+GO
+
+CREATE TABLE testmerge2
+(
+	id		int NOT NULL CONSTRAINT PK_testmerge2 PRIMARY KEY CLUSTERED,
+	field1	int NULL,
+	field2	int NULL,
+	field3	int NULL,
+	field4	int NULL,
+	field5	int NULL
+)
+GO

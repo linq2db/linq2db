@@ -48,7 +48,7 @@ namespace LinqToDB.Data
 			return new MergeDefinition<TTarget, TSource>(target, source, matchPredicate);
 		}
 
-		public static IMergeSource<TEntity> From<TEntity>(
+		public static IMergeSource<TEntity> FromSame<TEntity>(
 			this ITable<TEntity> target,
 			IEnumerable<TEntity> source)
 				where TEntity : class
@@ -62,7 +62,7 @@ namespace LinqToDB.Data
 			return new MergeDefinition<TEntity, TEntity>(target, source, null);
 		}
 
-		public static IMergeSource<TEntity> From<TEntity>(this ITable<TEntity> target, IQueryable<TEntity> source)
+		public static IMergeSource<TEntity> FromSame<TEntity>(this ITable<TEntity> target, IQueryable<TEntity> source)
 				where TEntity : class
 		{
 			if (target == null)
@@ -74,7 +74,7 @@ namespace LinqToDB.Data
 			return new MergeDefinition<TEntity, TEntity>(target, source, null);
 		}
 
-		public static IMergeSource<TEntity> From<TEntity>(
+		public static IMergeSource<TEntity> FromSame<TEntity>(
 			this ITable<TEntity> target,
 			IEnumerable<TEntity> source,
 			Expression<Func<TEntity, TEntity, bool>> matchPredicate)
@@ -92,7 +92,7 @@ namespace LinqToDB.Data
 			return new MergeDefinition<TEntity, TEntity>(target, source, matchPredicate);
 		}
 
-		public static IMergeSource<TEntity> From<TEntity>(
+		public static IMergeSource<TEntity> FromSame<TEntity>(
 			this ITable<TEntity> target,
 			IQueryable<TEntity> source,
 			Expression<Func<TEntity, TEntity, bool>> matchPredicate)

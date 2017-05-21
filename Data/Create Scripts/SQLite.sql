@@ -155,3 +155,25 @@ SELECT
 	       10
 
 GO
+
+-- merge test tables
+DROP TABLE IF EXISTS testmerge1;
+DROP TABLE IF EXISTS testmerge2;
+CREATE TABLE testmerge1
+(
+	id		integer      NOT NULL CONSTRAINT PK_testmerge1,
+	field1	integer          NULL,
+	field2	integer          NULL,
+	field3	integer          NULL,
+	field4	integer          NULL,
+	field5	integer          NULL
+);
+CREATE TABLE testmerge2
+(
+	id		integer      NOT NULL CONSTRAINT PK_testmerge2,
+	field1	integer          NULL,
+	field2	integer          NULL,
+	field3	integer          NULL,
+	field4	integer          NULL,
+	field5	integer          NULL
+);

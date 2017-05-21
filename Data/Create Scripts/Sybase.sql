@@ -1,24 +1,12 @@
-﻿USE master
-GO
-
-DROP DATABASE TestData
-GO
-
-CREATE DATABASE TestData
-GO
-
-USE TestData
-GO
-
-IF OBJECT_ID('dbo.Doctor') IS NOT NULL
+﻿IF OBJECT_ID('dbo.Doctor') IS NOT NULL
 BEGIN DROP TABLE Doctor END
 GO
 
-IF OBJECT_ID('dbo.InheritanceParent') IS NOT NULL
+IF OBJECT_ID('dbo.Patient') IS NOT NULL
 BEGIN DROP TABLE Patient END
 GO
 
-IF OBJECT_ID('dbo.Patient') IS NOT NULL
+IF OBJECT_ID('dbo.InheritanceParent') IS NOT NULL
 BEGIN DROP TABLE InheritanceParent END
 GO
 
@@ -221,3 +209,34 @@ SELECT
 	        1,         2, Cast(3 as varbinary)
 
 GO
+
+-- merge test tables
+IF OBJECT_ID('dbo.testmerge1') IS NOT NULL
+BEGIN DROP TABLE testmerge1 END
+GO
+IF OBJECT_ID('dbo.testmerge2') IS NOT NULL
+BEGIN DROP TABLE testmerge2 END
+GO
+
+CREATE TABLE testmerge1
+(
+	id		int NOT NULL,
+	field1	int NULL,
+	field2	int NULL,
+	field3	int NULL,
+	field4	int NULL,
+	field5	int NULL,
+	CONSTRAINT PK_testmerge1 PRIMARY KEY CLUSTERED (id)
+)
+GO
+
+CREATE TABLE testmerge2
+(
+	id		int NOT NULL,
+	field1	int NULL,
+	field2	int NULL,
+	field3	int NULL,
+	field4	int NULL,
+	field5	int NULL,
+	CONSTRAINT PK_testmerge2 PRIMARY KEY CLUSTERED (id)
+)

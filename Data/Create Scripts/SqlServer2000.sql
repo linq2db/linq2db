@@ -409,22 +409,22 @@ INSERT INTO AllTypes
 	xmlDataType
 )
 SELECT
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,    NULL, NULL,   NULL,  NULL,  NULL,
-	     NULL,      NULL,
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
-	     NULL,      NULL,  NULL,
-	     NULL,      NULL,
-	     NULL,      NULL,  NULL,
-	     NULL
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,    NULL, NULL,   NULL,  NULL,  NULL,
+		 NULL,      NULL,
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
+		 NULL,      NULL,  NULL,
+		 NULL,      NULL,
+		 NULL,      NULL,  NULL,
+		 NULL
 UNION ALL
 SELECT
 	 1000000,    9999999,     1,   25555, 2222222, 100000, 7777777,  100, 100000, 20.31, 16.2,
 	Cast('2012-12-12 12:12:12' as datetime),
-	           Cast('2012-12-12 12:12:12' as smalldatetime),
-	      '1',     '234', '567', '23233',  '3323',  '111',
-	        1,         2, Cast(3 as varbinary),
+			   Cast('2012-12-12 12:12:12' as smalldatetime),
+		  '1',     '234', '567', '23233',  '3323',  '111',
+			1,         2, Cast(3 as varbinary),
 	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier),
-	                  10,
+					  10,
 	  '22322',    '3333',  2345,
 	'<root><element strattr="strvalue" intattr="12345"/></root>'
 
@@ -591,4 +591,33 @@ SELECT -12345678901234.56789012345678,                           NULL,          
 SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
 SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL
 
+GO
+
+-- merge test tables
+DROP TABLE testmerge1
+GO
+
+DROP TABLE testmerge2
+GO
+
+CREATE TABLE testmerge1
+(
+	id        int NOT NULL CONSTRAINT PK_testmerge1 PRIMARY KEY CLUSTERED,
+	field1    int NULL,
+	field2    int NULL,
+	field3    int NULL,
+	field4    int NULL,
+	field5    int NULL
+)
+GO
+
+CREATE TABLE testmerge2
+(
+	id        int NOT NULL CONSTRAINT PK_testmerge2 PRIMARY KEY CLUSTERED,
+	field1    int NULL,
+	field2    int NULL,
+	field3    int NULL,
+	field4    int NULL,
+	field5    int NULL
+)
 GO

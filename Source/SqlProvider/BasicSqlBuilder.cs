@@ -356,6 +356,13 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		internal virtual void BuildUpdateSetHelper(SelectQuery qry, StringBuilder sb)
+		{
+			SelectQuery = qry;
+			StringBuilder = sb;
+			BuildUpdateSet();
+		}
+
 		protected virtual void BuildUpdateSet()
 		{
 			AppendIndent()
@@ -402,6 +409,13 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOutputSubclause()
 		{
+		}
+
+		internal virtual void BuildInsertClauseHelper(SelectQuery qry, StringBuilder sb)
+		{
+			SelectQuery = qry;
+			StringBuilder = sb;
+			BuildInsertClause(null, false);
 		}
 
 		protected virtual void BuildInsertClause(string insertText, bool appendTableName)

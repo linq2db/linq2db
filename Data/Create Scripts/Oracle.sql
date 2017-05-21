@@ -894,3 +894,29 @@ SELECT  12345678901234.5678901234567,                            NULL,          
 SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual
 
 /
+-- merge test tables
+DROP TABLE testmerge1
+/
+DROP TABLE testmerge2
+/
+
+CREATE TABLE testmerge1
+(
+	id		NUMBER	NOT NULL PRIMARY KEY,
+	field1	NUMBER	NULL,
+	field2	NUMBER	NULL,
+	field3	NUMBER	NULL,
+	field4	NUMBER	NULL,
+	field5	NUMBER	NULL
+)
+/
+CREATE TABLE testmerge2
+(
+	id		NUMBER	NOT NULL PRIMARY KEY,
+	field1	NUMBER	NULL,
+	field2	NUMBER	NULL,
+	field3	NUMBER	NULL,
+	field4	NUMBER	NULL,
+	field5	NUMBER	NULL
+)
+/

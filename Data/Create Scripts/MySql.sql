@@ -349,3 +349,33 @@ AS
 	FROM `Person`
 	WHERE (`Person`.`Gender` = 'M')
 GO
+
+-- merge test tables
+DROP TABLE IF EXISTS testmerge1
+GO
+DROP TABLE IF EXISTS testmerge2
+GO
+CREATE TABLE testmerge1
+(
+	id       int          NOT NULL,
+	field1   int              NULL,
+	field2   int              NULL,
+	field3   int              NULL,
+	field4   int              NULL,
+	field5   int              NULL,
+
+	 CONSTRAINT PK_testmerge1 PRIMARY KEY CLUSTERED (id)
+)
+GO
+CREATE TABLE testmerge2
+(
+	id       int          NOT NULL,
+	field1   int              NULL,
+	field2   int              NULL,
+	field3   int              NULL,
+	field4   int              NULL,
+	field5   int              NULL,
+
+	 CONSTRAINT PK_testmerge2 PRIMARY KEY CLUSTERED (id)
+)
+GO
