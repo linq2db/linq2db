@@ -370,5 +370,103 @@ namespace Tests.Merge
 				Assert.IsNull(result[3].Field5);
 			}
 		}
+
+		[MergeDataContextSource]
+		public void UpdateReservedAndCaseNames(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).Select(_ => new
+					{
+						order = _.OtherId,
+						delete = _.OtherField1,
+						Delete1 = _.OtherField2,
+						Field = _.OtherField3,
+						field1 = _.OtherField4,
+						As = _.OtherField5,
+					}), (t, s) => t.Id == s.order)
+					.Update((t, s) => s.field1 == 214, (t, s) => new TestMapping1()
+					{
+						Id = s.order,
+						Field1 = s.delete,
+						Field2 = s.Delete1,
+						Field3 = s.Field,
+						Field4 = s.field1,
+						Field5 = s.As
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(4, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+
+				Assert.AreEqual(4, result[3].Id);
+				Assert.AreEqual(5, result[3].Field1);
+				Assert.AreEqual(7, result[3].Field2);
+				Assert.IsNull(result[3].Field3);
+				Assert.AreEqual(214, result[3].Field4);
+				Assert.IsNull(result[3].Field5);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void UpdateReservedAndCaseNamesFromList(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).ToList().Select(_ => new
+					{
+						@in = _.OtherId,
+						join = _.OtherField1,
+						outer = _.OtherField2,
+						inner = _.OtherField3,
+						with = _.OtherField4,
+						left = _.OtherField5,
+					}), (t, s) => t.Id == s.@in)
+					.Update((t, s) => s.with == 214, (t, s) => new TestMapping1()
+					{
+						Id = s.@in,
+						Field1 = s.join,
+						Field2 = s.outer,
+						Field3 = s.inner,
+						Field4 = s.with,
+						Field5 = s.left
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(4, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+
+				Assert.AreEqual(4, result[3].Id);
+				Assert.AreEqual(5, result[3].Field1);
+				Assert.AreEqual(7, result[3].Field2);
+				Assert.IsNull(result[3].Field3);
+				Assert.AreEqual(214, result[3].Field4);
+				Assert.IsNull(result[3].Field5);
+			}
+		}
 	}
 }

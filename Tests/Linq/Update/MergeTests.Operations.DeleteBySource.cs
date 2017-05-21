@@ -174,5 +174,63 @@ namespace Tests.Merge
 				AssertRow(InitialTargetData[3], result[2], null, null);
 			}
 		}
+
+		[MergeDataContextSource]
+		public void DeleteBySourceReservedAndCaseNames(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).Select(_ => new
+					{
+						select = _.OtherId
+					}), (t, s) => s.select == t.Id)
+					.DeleteBySource(t => t.Id == 2)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[2], result[1], null, 203);
+				AssertRow(InitialTargetData[3], result[2], null, null);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void DeleteBySourceReservedAndCaseNamesFromList(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).ToList().Select(_ => new
+					{
+						INSERT = _.OtherId
+					}), (t, s) => s.INSERT == t.Id)
+					.DeleteBySource(t => t.Id == 2)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[2], result[1], null, 203);
+				AssertRow(InitialTargetData[3], result[2], null, null);
+			}
+		}
 	}
 }

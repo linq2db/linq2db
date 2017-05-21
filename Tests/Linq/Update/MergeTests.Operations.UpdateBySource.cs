@@ -308,5 +308,117 @@ namespace Tests.Merge
 				Assert.IsNull(result[3].Field5);
 			}
 		}
+
+		[MergeDataContextSource]
+		public void UpdateBySourceReservedAndCaseNames(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).Select(_ => new
+					{
+						From = _.OtherId,
+						Order = _.OtherField1,
+						Field = _.OtherField2,
+						field3 = _.OtherField3,
+						Select = _.OtherField4,
+						Delete = _.OtherField5
+					}), (t, s) => t.Id == s.From)
+					.UpdateBySource(t => t.Field1 == 2, t => new TestMapping1()
+					{
+						Id = t.Id,
+						Field1 = t.Field5,
+						Field2 = t.Field4,
+						Field3 = t.Field3,
+						Field4 = t.Field2,
+						Field5 = t.Field1
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(4, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+
+				Assert.AreEqual(2, result[1].Id);
+				Assert.IsNull(result[1].Field1);
+				Assert.IsNull(result[1].Field2);
+				Assert.IsNull(result[1].Field3);
+				Assert.IsNull(result[1].Field4);
+				Assert.AreEqual(2, result[1].Field5);
+
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+
+				Assert.AreEqual(4, result[3].Id);
+				Assert.AreEqual(5, result[3].Field1);
+				Assert.AreEqual(6, result[3].Field2);
+				Assert.IsNull(result[3].Field3);
+				Assert.IsNull(result[3].Field4);
+				Assert.IsNull(result[3].Field5);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void UpdateBySourceReservedAndCaseNamesFromList(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).ToList().Select(_ => new
+					{
+						From = _.OtherId,
+						Order = _.OtherField1,
+						Field = _.OtherField2,
+						field2 = _.OtherField3,
+						Select = _.OtherField4,
+						Delete = _.OtherField5
+					}), (t, s) => t.Id == s.From)
+					.UpdateBySource(t => t.Field1 == 2, t => new TestMapping1()
+					{
+						Id = t.Id,
+						Field1 = t.Field5,
+						Field2 = t.Field4,
+						Field3 = t.Field3,
+						Field4 = t.Field2,
+						Field5 = t.Field1
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(4, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+
+				Assert.AreEqual(2, result[1].Id);
+				Assert.IsNull(result[1].Field1);
+				Assert.IsNull(result[1].Field2);
+				Assert.IsNull(result[1].Field3);
+				Assert.IsNull(result[1].Field4);
+				Assert.AreEqual(2, result[1].Field5);
+
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+
+				Assert.AreEqual(4, result[3].Id);
+				Assert.AreEqual(5, result[3].Field1);
+				Assert.AreEqual(6, result[3].Field2);
+				Assert.IsNull(result[3].Field3);
+				Assert.IsNull(result[3].Field4);
+				Assert.IsNull(result[3].Field5);
+			}
+		}
 	}
 }

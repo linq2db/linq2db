@@ -186,5 +186,73 @@ namespace Tests.Merge
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 			}
 		}
+
+		[MergeDataContextSource]
+		public void DeleteReservedAndCaseNames(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).Select(_ => new
+					{
+						select = _.OtherId,
+						Field = _.OtherField1,
+						field1 = _.OtherField2,
+						insert = _.OtherField3,
+						order = _.OtherField4,
+						by = _.OtherField5,
+					}), (t, s) => s.select == t.Id)
+					.Delete((t, s) => s.select == 4)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void DeleteReservedAndCaseNamesFromList(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db).ToList().Select(_ => new
+					{
+						update = _.OtherId,
+						Update1 = _.OtherField1,
+						UPDATE2 = _.OtherField2,
+						uPDATE3 = _.OtherField3,
+						UpDaTe4 = _.OtherField4,
+						upDATE5 = _.OtherField5,
+					}), (t, s) => s.update == t.Id)
+					.Delete((t, s) => s.update == 4)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+			}
+		}
 	}
 }
