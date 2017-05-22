@@ -1,10 +1,7 @@
 ﻿namespace LinqToDB.Expressions
 {
 	using System;
-	using System.Linq;
 	using System.Linq.Expressions;
-
-	using LinqToDB.Extensions;
 
 	public class BinaryAggregateExpression : Expression
 	{

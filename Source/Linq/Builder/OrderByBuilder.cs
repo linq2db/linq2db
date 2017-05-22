@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (sequence.SelectQuery.Select.TakeValue != null ||
 				sequence.SelectQuery.Select.SkipValue != null ||
-				sequence.SelectQuery.Select.IsDistinct && !builder.DataContextInfo.SqlProviderFlags.IsDistinctOrderBySupported)
+				sequence.SelectQuery.Select.IsDistinct /*&& !builder.DataContextInfo.SqlProviderFlags.IsDistinctOrderBySupported */)
 				sequence = new SubQueryContext(sequence);
 
 			var lambda  = (LambdaExpression)methodCall.Arguments[1].Unwrap();

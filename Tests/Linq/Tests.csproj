@@ -373,6 +373,7 @@
     <Compile Include="UserTests\Issue133Tests.cs" />
     <Compile Include="UserTests\Issue192Tests.cs" />
     <Compile Include="UserTests\Issue175Tests.cs" />
+    <Compile Include="UserTests\Issue269Tests.cs" />
     <Compile Include="UserTests\Issue271Tests.cs" />
     <Compile Include="UserTests\Issue358Tests.cs" />
     <Compile Include="UserTests\Issue356Tests.cs" />
@@ -395,6 +396,7 @@
     <Compile Include="UserTests\Issue533Tests.cs" />
     <Compile Include="UserTests\Issue548Tests.cs" />
     <Compile Include="UserTests\Issue569Tests.cs" />
+    <Compile Include="UserTests\Issue667Tests.cs" />
     <Compile Include="UserTests\LetTests.cs" />
     <Compile Include="UserTests\MultiPartIdentifierTests.cs" />
     <Compile Include="UserTests\SelectManyDeleteTests.cs" />

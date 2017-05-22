@@ -9,7 +9,7 @@
 	public class AnalyticTests : TestBase
 	{
 		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, 
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
 		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))
