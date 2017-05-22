@@ -15,7 +15,7 @@ namespace Tests.UserTests
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.DB2,
 				TestProvName.MySql57,
-				TestProvName.SQLiteMs)
+				TestProvName.SQLiteMs, ProviderName.SqlServer2000, TestProvName.MariaDB)
 			{
 			}
 		}
