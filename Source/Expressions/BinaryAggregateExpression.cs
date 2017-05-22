@@ -32,7 +32,7 @@
 		public override Expression Reduce()
 		{
 			var result = _expressions[0];
-			for (int i = 1; i < _expressions.Length - 1; i++)
+			for (int i = 1; i < _expressions.Length; i++)
 			{
 				result = Expression.MakeBinary(AggregateType, result, _expressions[i]);
 			}
