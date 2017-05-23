@@ -1,4 +1,5 @@
 ﻿using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
@@ -8,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace LinqToDB.DataProvider
@@ -71,8 +73,8 @@ namespace LinqToDB.DataProvider
 
 		#region MERGE : Predicates
 		private IQueryable<TTuple> AddConditionOverSourceAndTarget<TTuple>(
-									IQueryable<TTuple> query,
-									Expression<Func<TTarget, TSource, bool>> predicate)
+											IQueryable<TTuple> query,
+											Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			var p = Expression.Parameter(typeof(TTuple));
 
@@ -362,10 +364,7 @@ namespace LinqToDB.DataProvider
 
 		private void GenerateSourceDirectValues(IEnumerable<TSource> source)
 		{
-			var paramIndex = 0;
 			var hasData = false;
-
-			var paramName = _sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
 			var columnTypes = GetSourceColumnTypes();
 
@@ -395,15 +394,13 @@ namespace LinqToDB.DataProvider
 					// avoid parameters in source due to low limits for parameters number in providers
 					if (!valueConverter.TryConvert(Command, columnTypes[i], value))
 					{
-						var name = paramName == "?" ? paramName : paramName + ++paramIndex;
+						var name = GetNextParameterName();
 
-						Command.Append(name);
+						var fullName = _sqlBuilder.Convert(name, ConvertType.NameToQueryParameter).ToString();
 
-						_parameters.Add(new DataParameter(
-							paramName == "?" ? paramName : "p" + paramIndex,
-							value,
-							column.DataType));
-						throw new NotImplementedException("Parameters2");
+						Command.Append(fullName);
+
+						_parameters.Add(new DataParameter(name, value, column.DataType));
 					}
 				}
 
@@ -420,15 +417,13 @@ namespace LinqToDB.DataProvider
 		{
 			Command.Append("(");
 
-			var ctx = queryableSource.GetContext();
+			var ctx = queryableSource.GetMergeContext();
 			var query = ctx.SelectQuery;
 
-			var info = ctx.ConvertToIndex(null, 0, ConvertFlags.All).ToArray();
-
-			//ctx.SetParameters();
+			// update list of selected fields
+			var info = ctx.FixSelectList();
 
 			query.Select.Columns.Clear();
-
 			foreach (var column in info)
 			{
 				var columnDescriptor = _sourceDescriptor.Columns.Where(_ => _.MemberInfo == column.Members[0]).Single();
@@ -436,6 +431,26 @@ namespace LinqToDB.DataProvider
 				var alias = (string)_sqlBuilder.Convert(columnDescriptor.ColumnName, ConvertType.NameToQueryField);
 				query.Select.Columns.Add(new SelectQuery.Column(query, column.Sql, alias));
 			}
+
+			// bind parameters
+			query.Parameters.Clear();
+			new QueryVisitor().VisitAll(query, expr =>
+			{
+				switch (expr.ElementType)
+				{
+					case QueryElementType.SqlParameter:
+						{
+							var p = (SqlParameter)expr;
+							if (p.IsQueryParameter)
+								query.Parameters.Add(p);
+
+							break;
+						}
+				}
+			});
+
+			ctx.SetParameters();
+			SaveParameters(query.Parameters);
 
 			var queryContext = new QueryContext()
 			{
@@ -580,8 +595,8 @@ namespace LinqToDB.DataProvider
 
 		#region Operations: INSERT
 		protected virtual void GenerateInsert(
-					Expression<Func<TSource, bool>> predicate,
-					Expression<Func<TSource, TTarget>> create)
+							Expression<Func<TSource, bool>> predicate,
+							Expression<Func<TSource, TTarget>> create)
 		{
 			Command
 				.AppendLine()
@@ -763,8 +778,8 @@ namespace LinqToDB.DataProvider
 
 		#region Operations: UPDATE BY SOURCE
 		private void GenerateUpdateBySource(
-					Expression<Func<TTarget, bool>> predicate,
-					Expression<Func<TTarget, TTarget>> update)
+							Expression<Func<TTarget, bool>> predicate,
+							Expression<Func<TTarget, TTarget>> update)
 		{
 			Command
 				.AppendLine()
@@ -905,7 +920,7 @@ namespace LinqToDB.DataProvider
 
 		#region Validation
 		private static MergeOperationType[] _matchedTypes = new[]
-				{
+						{
 			MergeOperationType.Delete,
 			MergeOperationType.Update
 		};
@@ -1024,5 +1039,84 @@ namespace LinqToDB.DataProvider
 			}
 		}
 		#endregion
+	}
+
+	internal static class MergeSourceExtensions
+	{
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => GetMergeContext((IQueryable<int>)null)).GetGenericMethodDefinition();
+
+		public static MergeContextParser.Context GetMergeContext<TSource>(this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			return source.Provider.Execute<MergeContextParser.Context>(
+				Expression.Call(
+					null,
+					_methodInfo.MakeGenericMethod(typeof(TSource)),
+					new[] { source.Expression }));
+		}
+	}
+
+	internal class MergeContextParser : ISequenceBuilder
+	{
+		public int BuildCounter { get; set; }
+
+		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			var call = (MethodCallExpression)buildInfo.Expression;
+			return new Context(builder.BuildSequence(new BuildInfo(buildInfo, call.Arguments[0])));
+		}
+
+		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			var call = buildInfo.Expression as MethodCallExpression;
+			return call != null && call.Method.Name == "GetMergeContext";
+		}
+
+		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
+		{
+			return null;
+		}
+
+		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));
+		}
+
+		public class Context : PassThroughContext
+		{
+			public Action SetParameters;
+
+			private Action UpdateParameters;
+
+			public Context(IBuildContext context) : base(context)
+			{
+			}
+
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			{
+				query.DoNotChache = true;
+				query.SetNonQueryQuery();
+
+				SetParameters = () => query.SetParameters(Builder.Expression, null, 0);
+
+				query.GetElement = (ctx, db, expr, ps) => this;
+
+				UpdateParameters = () =>
+				{
+					query.Queries[0].Parameters.Clear();
+					query.Queries[0].Parameters.AddRange(Builder.CurrentSqlParameters);
+				};
+			}
+
+			public SqlInfo[] FixSelectList()
+			{
+				var columns = base.ConvertToIndex(null, 1, ConvertFlags.All);
+
+				UpdateParameters();
+
+				return columns;
+			}
+		}
 	}
 }
