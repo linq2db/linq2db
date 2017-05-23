@@ -667,5 +667,50 @@ namespace Tests.Linq
 				Assert.IsNotEmpty(r.Name.LastName);
 			}
 		}
+
+		[Test, DataContextSource]
+		public void SelectNullableTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var e = new LinqDataTypes2() { ID = 1000, BoolValue = false };
+					db.Insert(e);
+
+					var e2 = db.Types2.First(_ => _.ID == 1000);
+
+					Assert.AreEqual(e, e2);
+				}
+				finally
+				{
+					db.Types2.Where(_ => _.ID == 1000).Delete();
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void SelectNullableTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var en = new LinqDataTypes2() { ID = 1000, BoolValue = false };
+					db.Insert(en);
+
+					var e  = new LinqDataTypes()  { ID = 1000, BoolValue = false };
+
+					var e2 = db.Types.First(_ => _.ID == 1000);
+
+					Assert.AreEqual(e, e2);
+				}
+				finally
+				{
+					db.Types2.Where(_ => _.ID == 1000).Delete();
+				}
+			}
+		}
+
 	}
 }

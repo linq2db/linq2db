@@ -761,7 +761,7 @@ namespace LinqToDB.Data
 
 		internal IDataReader ExecuteReader()
 		{
-			return ExecuteReader(CommandBehavior.Default);
+			return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 		}
 
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
@@ -983,5 +983,10 @@ namespace LinqToDB.Data
 		}
 
 #endregion
+
+		internal CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
+		{
+			return DataProvider.GetCommandBehavior(commandBehavior);
+		}
 	}
 }
