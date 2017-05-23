@@ -1098,7 +1098,7 @@ namespace LinqToDB.DataProvider
 				query.DoNotChache = true;
 				query.SetNonQueryQuery();
 
-				SetParameters = () => query.SetParameters(Builder.Expression, null, 0);
+				SetParameters = () => query.SetParameters(query.Expression, null, 0);
 
 				query.GetElement = (ctx, db, expr, ps) => this;
 

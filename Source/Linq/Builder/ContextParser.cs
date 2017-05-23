@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 				query.SetNonQueryQuery();
 
 				SqlOptimizer  = query.SqlOptimizer;
-				SetParameters = () => query.SetParameters(Builder.Expression, null, 0);
+				SetParameters = () => query.SetParameters(query.Expression, null, 0);
 
 				query.GetElement = (ctx,db,expr,ps) => this;
 			}
