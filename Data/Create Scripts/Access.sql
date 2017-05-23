@@ -232,7 +232,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    OleObject NULL,
 	SmallIntValue  smallint,
 	IntValue       int       NULL,
-	BigIntValue    long      NULL
+	BigIntValue    long      NULL,
+	StringValue    Text(50)  NULL
 )
 GO
 

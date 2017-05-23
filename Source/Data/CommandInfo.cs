@@ -52,6 +52,11 @@ namespace LinqToDB.Data
 			Parameters     = GetDataParameters(dataConnection, parameters);
 		}
 
+		private CommandBehavior GetCommandBehavior()
+		{
+			return DataConnection.GetCommandBehavior(CommandBehavior);
+		}
+
 		#endregion
 
 		#region Query with object reader
@@ -69,7 +74,7 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = DataConnection.ExecuteReader(CommandBehavior))
+			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
 				while (rd.Read())
 					yield return objectReader(rd);
 		}
@@ -116,7 +121,7 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = await DataConnection.ExecuteReaderAsync(CommandBehavior, cancellationToken))
+			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken))
 				while (await rd.ReadAsync(cancellationToken))
 					action(objectReader(rd));
 		}
@@ -140,7 +145,7 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = DataConnection.ExecuteReader(CommandBehavior))
+			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
 			{
 				if (rd.Read())
 				{
@@ -214,7 +219,7 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = await DataConnection.ExecuteReaderAsync(CommandBehavior, cancellationToken))
+			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken))
 			{
 				if (await rd.ReadAsync(cancellationToken))
 				{
@@ -341,7 +346,7 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = DataConnection.ExecuteReader(CommandBehavior))
+			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
 			{
 				if (rd.Read())
 				{
@@ -388,7 +393,7 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = await DataConnection.ExecuteReaderAsync(CommandBehavior, cancellationToken))
+			using (var rd = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken))
 			{
 				if (await rd.ReadAsync(cancellationToken))
 				{
@@ -425,7 +430,7 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			return new DataReader { CommandInfo = this, Reader = DataConnection.ExecuteReader(CommandBehavior) };
+			return new DataReader { CommandInfo = this, Reader = DataConnection.ExecuteReader(GetCommandBehavior()) };
 		}
 
 		internal IEnumerable<T> ExecuteQuery<T>(IDataReader rd, string sql)
@@ -494,7 +499,7 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(CommandBehavior, cancellationToken) };
+			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(GetCommandBehavior(), cancellationToken) };
 		}
 
 		internal async Task ExecuteQueryAsync<T>(DbDataReader rd, string sql, Action<T> action, CancellationToken cancellationToken)

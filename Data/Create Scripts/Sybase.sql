@@ -120,7 +120,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    binary(500)   NULL,
 	SmallIntValue  smallint      NULL,
 	IntValue       int           NULL,
-	BigIntValue    bigint        NULL
+	BigIntValue    bigint        NULL,
+	StringValue    nvarchar(50)  NULL
 )
 GO
 

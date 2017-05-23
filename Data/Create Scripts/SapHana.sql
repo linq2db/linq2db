@@ -454,7 +454,8 @@ CREATE COLUMN TABLE "LinqDataTypes"
 	"BinaryValue" VARBINARY(5000) NULL,
 	"SmallIntValue" SMALLINT,
 	"IntValue" INTEGER NULL,
-	"BigIntValue" BIGINT NULL
+	"BigIntValue" BIGINT NULL,
+	"StringValue" NVARCHAR(50) NULL
 );;
 
 CALL DROPEXISTINGTABLE('BulkInsertLowerCaseColumns', CURRENT_SCHEMA);;
