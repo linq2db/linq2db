@@ -15,6 +15,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		private bool _hasIdentityInsert;
 
+		protected override int MaxOperationsCount => 3;
+
+		protected override bool SameTypeOperationsAllowed => false;
+
 		public SqlServerMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
 			: base(merge, providerName)
 		{
