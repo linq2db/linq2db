@@ -402,6 +402,7 @@
     <Compile Include="SqlQuery\QueryHelper.cs" />
     <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
+    <Compile Include="SqlQuery\SqlFlags.cs" />
     <Compile Include="Sql\Sql.Analytic.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
