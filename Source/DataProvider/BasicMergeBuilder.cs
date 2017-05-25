@@ -73,8 +73,8 @@ namespace LinqToDB.DataProvider
 
 		#region MERGE : Predicates
 		private IQueryable<TTuple> AddConditionOverSourceAndTarget<TTuple>(
-											IQueryable<TTuple> query,
-											Expression<Func<TTarget, TSource, bool>> predicate)
+															IQueryable<TTuple> query,
+															Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			var p = Expression.Parameter(typeof(TTuple));
 
@@ -109,73 +109,9 @@ namespace LinqToDB.DataProvider
 			var ctx = query.GetContext();
 			var sql = ctx.SelectQuery;
 
-			var tableSet = new HashSet<SqlTable>();
-			var tables = new List<SqlTable>();
+			var selectContext = (SelectContext)ctx.Context;
 
-			// find target/source tables
-			new QueryVisitor().Visit(sql.From, e =>
-			{
-				if (e.ElementType == QueryElementType.TableSource)
-				{
-					var et = (SelectQuery.TableSource)e;
-
-					tableSet.Add((SqlTable)et.Source);
-					tables.Add((SqlTable)et.Source);
-				}
-			});
-
-			if (tables.Count > 2)
-			{
-				var targetTable = (SqlTable)sql.From.Tables[0].Source;
-				var sourceTable = (SqlTable)sql.From.Tables[1].Source;
-
-				var whereClause = new QueryVisitor().Convert(sql.Where, e =>
-				{
-					if (e.ElementType == QueryElementType.SqlField)
-					{
-						var fld = (SqlField)e;
-						var tbl = (SqlTable)fld.Table;
-
-						if (tbl != targetTable && tbl != sourceTable && tableSet.Contains(tbl))
-						{
-							var tempCopy = sql.Clone();
-							var tempTables = new List<SelectQuery.TableSource>();
-
-							new QueryVisitor().Visit(tempCopy.From, ee =>
-							{
-								if (ee.ElementType == QueryElementType.TableSource)
-									tempTables.Add((SelectQuery.TableSource)ee);
-							});
-
-							var tt = tempTables[tables.IndexOf(tbl)];
-
-							tempCopy.Select.Columns.Clear();
-							tempCopy.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
-
-							tempCopy.Where.SearchCondition.Conditions.Clear();
-
-							// TODO: here we need to choose [0] or [1]
-							var keys = tempCopy.From.Tables[0].Source.GetKeys(true);
-
-							// TODO: same here
-							foreach (SqlField key in keys)
-								tempCopy.Where.Field(key).Equal.Field(targetTable.Fields[key.Name]);
-
-							tempCopy.ParentSelect = sql;
-
-							return tempCopy;
-						}
-					}
-
-					return e;
-				}).SearchCondition.Conditions.ToList();
-
-				sql.Where.SearchCondition.Conditions.Clear();
-				sql.Where.SearchCondition.Conditions.AddRange(whereClause);
-			}
-
-			sql.From.Tables[0].Alias = _targetAlias;
-			sql.From.Tables[1].Alias = _sourceAlias;
+			MoveJoinsToSubqueries(sql, _targetAlias, _sourceAlias, QueryElement.Where);
 
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
@@ -192,79 +128,7 @@ namespace LinqToDB.DataProvider
 			var ctx = qry.GetContext();
 			var sql = ctx.SelectQuery;
 
-			// code below moves joined association tables to where condition
-			var tableSet = new HashSet<SqlTable>();
-			var tables = new List<SqlTable>();
-
-			// collect tables, referenced in FROM clause
-			new QueryVisitor().Visit(sql.From, e =>
-			{
-				if (e.ElementType == QueryElementType.TableSource)
-				{
-					var et = (SelectQuery.TableSource)e;
-
-					tableSet.Add((SqlTable)et.Source);
-					tables.Add((SqlTable)et.Source);
-				}
-			});
-
-			if (tables.Count > 1)
-			{
-				var table = (SqlTable)sql.From.Tables[0].Source;
-
-				//// rewrite WHERE condition
-				var whereClause = new QueryVisitor().Convert(sql.Where, e =>
-				{
-					// for table field references from association tables we must rewrite them with subquery
-					if (e.ElementType == QueryElementType.SqlField)
-					{
-						var fld = (SqlField)e;
-						var tbl = (SqlTable)fld.Table;
-
-						// table is an association table, used in FROM clause - generate subquery
-						if (tbl != table && tableSet.Contains(tbl))
-						{
-							var tempCopy = sql.Clone();
-							var tempTables = new List<SelectQuery.TableSource>();
-
-							// create copy of tables from main FROM clause for subquery clause
-							new QueryVisitor().Visit(tempCopy.From, ee =>
-							{
-								if (ee.ElementType == QueryElementType.TableSource)
-									tempTables.Add((SelectQuery.TableSource)ee);
-							});
-
-							// main table reference in subquery
-							var tt = tempTables[tables.IndexOf(tbl)];
-
-							tempCopy.Select.Columns.Clear();
-							tempCopy.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
-
-							// create new WHERE for subquery
-							tempCopy.Where.SearchCondition.Conditions.Clear();
-
-							var keys = tempCopy.From.Tables[0].Source.GetKeys(true);
-
-							// add joining condition over association keys
-							foreach (SqlField key in keys)
-								tempCopy.Where.Field(key).Equal.Field(table.Fields[key.Name]);
-
-							// set main query as parent
-							tempCopy.ParentSelect = sql;
-
-							return tempCopy;
-						}
-					}
-
-					return e;
-				}).SearchCondition.Conditions.ToList();
-
-				// replace WHERE condition with new one
-				sql.Where.SearchCondition.Conditions.Clear();
-				sql.Where.SearchCondition.Conditions.AddRange(whereClause);
-			}
-
-			sql.From.Tables[0].Alias = tableAlias;
+			MoveJoinsToSubqueries(sql, tableAlias, null, QueryElement.Where);
 
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
@@ -595,8 +459,8 @@ namespace LinqToDB.DataProvider
 
 		#region Operations: INSERT
 		protected virtual void GenerateInsert(
-							Expression<Func<TSource, bool>> predicate,
-							Expression<Func<TSource, TTarget>> create)
+											Expression<Func<TSource, bool>> predicate,
+											Expression<Func<TSource, TTarget>> create)
 		{
 			Command
 				.AppendLine()
@@ -617,6 +481,10 @@ namespace LinqToDB.DataProvider
 				GenerateDefaultInsert();
 		}
 
+		protected virtual void OnInsertWithIdentity()
+		{
+		}
+
 		private void GenerateCustomInsert(Expression<Func<TSource, TTarget>> create)
 		{
 			var insertExpression = Expression.Call(
@@ -633,12 +501,22 @@ namespace LinqToDB.DataProvider
 			var query = qry.Queries[0].SelectQuery;
 
 			query.Insert.Into.Alias = _targetAlias;
-			query.From.Tables[0].Alias = _sourceAlias;
+
+			// we need Insert type for proper query cloning (maybe this is a bug in clone function?)
+			query.QueryType = QueryType.Insert;
+
+			MoveJoinsToSubqueries(query, _sourceAlias, null, QueryElement.InsertSetter);
+
+			// we need InsertOrUpdate for sql builder to generate values clause
 			query.QueryType = QueryType.InsertOrUpdate;
 
 			qry.SetParameters(insertExpression, null, 0);
 
 			SaveParameters(query.Parameters);
+
+			if (IsIdentityInsertSupported
+				&& query.Insert.Items.Any(_ => _.Column is SqlField && ((SqlField)_.Column).IsIdentity))
+				OnInsertWithIdentity();
 
 			_sqlBuilder.BuildInsertClauseHelper(query, Command);
 		}
@@ -648,6 +526,9 @@ namespace LinqToDB.DataProvider
 			var insertColumns = _targetColumns
 				.Where(c => IsIdentityInsertSupported && c.Column.IsIdentity || !c.Column.SkipOnInsert)
 				.ToList();
+
+			if (IsIdentityInsertSupported && TargetDescriptor.Columns.Any(c => c.IsIdentity))
+				OnInsertWithIdentity();
 
 			Command.AppendLine("\t(");
 
@@ -688,6 +569,144 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Operations: UPDATE
+		private static IQueryElement ConvertToSubquery(
+					SelectQuery sql,
+					IQueryElement element,
+					HashSet<SqlTable> tableSet,
+					List<SqlTable> tables,
+					SqlTable firstTable,
+					SqlTable secondTable)
+		{
+			// for table field references from association tables we must rewrite them with subquery
+			if (element.ElementType == QueryElementType.SqlField)
+			{
+				var fld = (SqlField)element;
+				var tbl = (SqlTable)fld.Table;
+
+				// table is an association table, used in FROM clause - generate subquery
+				if (tbl != firstTable && (secondTable == null || tbl != secondTable) && tableSet.Contains(tbl))
+				{
+					var tempCopy = sql.Clone();
+					tempCopy.QueryType = QueryType.Select;
+					var tempTables = new List<SelectQuery.TableSource>();
+
+					// create copy of tables from main FROM clause for subquery clause
+					new QueryVisitor().Visit(tempCopy.From, ee =>
+					{
+						if (ee.ElementType == QueryElementType.TableSource)
+							tempTables.Add((SelectQuery.TableSource)ee);
+					});
+
+					// main table reference in subquery
+					var tt = tempTables[tables.IndexOf(tbl)];
+
+					tempCopy.Select.Columns.Clear();
+					tempCopy.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
+
+					// create new WHERE for subquery
+					tempCopy.Where.SearchCondition.Conditions.Clear();
+
+					var firstTableKeys = tempCopy.From.Tables[0].Source.GetKeys(true);
+
+					foreach (SqlField key in firstTableKeys)
+						tempCopy.Where.Field(key).Equal.Field(firstTable.Fields[key.Name]);
+
+					if (secondTable != null)
+					{
+						var secondTableKeys = tempCopy.From.Tables[0].Joins[0].Table.Source.GetKeys(true);
+
+						foreach (SqlField key in secondTableKeys)
+							tempCopy.Where.Field(key).Equal.Field(secondTable.Fields[key.Name]);
+					}
+
+					// set main query as parent
+					tempCopy.ParentSelect = sql;
+
+					return tempCopy;
+				}
+			}
+
+			return element;
+		}
+
+		private static void MoveJoinsToSubqueries(
+			SelectQuery sql,
+			string firstTableAlias,
+			string secondTableAlias,
+			QueryElement part)
+		{
+			var baseTablesCount = secondTableAlias == null ? 1 : 2;
+
+			// collect tables, referenced in FROM clause
+			var tableSet = new HashSet<SqlTable>();
+			var tables = new List<SqlTable>();
+			new QueryVisitor().Visit(sql.From, e =>
+			{
+				if (e.ElementType == QueryElementType.TableSource)
+				{
+					var et = (SelectQuery.TableSource)e;
+
+					tableSet.Add((SqlTable)et.Source);
+					tables.Add((SqlTable)et.Source);
+				}
+			});
+
+			if (tables.Count > baseTablesCount)
+			{
+				var firstTable = (SqlTable)sql.From.Tables[0].Source;
+				var secondTable = baseTablesCount > 1
+					? (SqlTable)sql.From.Tables[0].Joins[0].Table.Source
+					: null;
+
+				switch (part)
+				{
+					case QueryElement.Where:
+						// replace references to fields from associated tables to subqueries in where clause
+						var whereClause = new QueryVisitor()
+							.Convert(sql.Where, element => ConvertToSubquery(sql, element, tableSet, tables, firstTable, secondTable))
+							.SearchCondition.Conditions.ToList();
+
+						// replace WHERE condition with new one
+						sql.Where.SearchCondition.Conditions.Clear();
+						sql.Where.SearchCondition.Conditions.AddRange(whereClause);
+						break;
+					case QueryElement.InsertSetter:
+						for (var i = 0; i < sql.Insert.Items.Count; i++)
+						{
+							sql.Insert.Items[i] = new QueryVisitor()
+								.Convert(sql.Insert.Items[i], element => ConvertToSubquery(sql, element, tableSet, tables, firstTable, secondTable));
+						}
+						break;
+					case QueryElement.UpdateSetter:
+						for (var i = 0; i < sql.Update.Items.Count; i++)
+						{
+							sql.Update.Items[i] = new QueryVisitor()
+								.Convert(sql.Update.Items[i], element => ConvertToSubquery(sql, element, tableSet, tables, firstTable, secondTable));
+						}
+						break;
+					default:
+						throw new InvalidOperationException();
+				}
+			}
+
+			sql.From.Tables[0].Alias = firstTableAlias;
+
+			if (secondTableAlias != null)
+			{
+				if (tables.Count > baseTablesCount)
+					sql.From.Tables[0].Joins[0].Table.Alias = secondTableAlias;
+				else
+					sql.From.Tables[1].Alias = secondTableAlias;
+			}
+		}
+
+		private enum QueryElement
+		{
+			Where,
+			InsertSetter,
+			UpdateSetter
+		}
+
 		private void GenerateCustomUpdate(Expression<Func<TTarget, TSource, TTarget>> update)
 		{
 			// build update query
@@ -703,8 +722,8 @@ namespace LinqToDB.DataProvider
 			var qry = Query<int>.GetQuery(ContextInfo, updateExpression);
 			var query = qry.Queries[0].SelectQuery;
 			query.Update.Table.Alias = _targetAlias;
-			query.From.Tables[0].Alias = _targetAlias;
-			query.From.Tables[1].Alias = _sourceAlias;
+
+			MoveJoinsToSubqueries(query, _targetAlias, _sourceAlias, QueryElement.UpdateSetter);
 
 			qry.SetParameters(updateExpression, null, 0);
 			SaveParameters(query.Parameters);
@@ -778,8 +797,8 @@ namespace LinqToDB.DataProvider
 
 		#region Operations: UPDATE BY SOURCE
 		private void GenerateUpdateBySource(
-							Expression<Func<TTarget, bool>> predicate,
-							Expression<Func<TTarget, TTarget>> update)
+											Expression<Func<TTarget, bool>> predicate,
+											Expression<Func<TTarget, TTarget>> update)
 		{
 			Command
 				.AppendLine()
@@ -800,7 +819,8 @@ namespace LinqToDB.DataProvider
 
 			var qry = Query<int>.GetQuery(ContextInfo, updateExpression);
 			var query = qry.Queries[0].SelectQuery;
-			query.From.Tables[0].Alias = _targetAlias;
+
+			MoveJoinsToSubqueries(query, _targetAlias, null, QueryElement.UpdateSetter);
 
 			qry.SetParameters(updateExpression, null, 0);
 			SaveParameters(query.Parameters);
@@ -920,7 +940,7 @@ namespace LinqToDB.DataProvider
 
 		#region Validation
 		private static MergeOperationType[] _matchedTypes = new[]
-						{
+										{
 			MergeOperationType.Delete,
 			MergeOperationType.Update
 		};

@@ -516,28 +516,28 @@ namespace LinqToDB.Data
 	}
 
 	/// <summary>
-	/// Represents merge operation source and target configutation without operations.
+	/// Represents merge command source and target configutation without operations.
 	/// </summary>
 	public interface IMergeSource<TTarget, TSource>
 	{
 	}
 
 	/// <summary>
-	/// Represents merge operation source and target configutation without operations.
+	/// Represents merge command source and target configutation without operations.
 	/// </summary>
 	public interface IMergeSource<TEntity>
 	{
 	}
 
 	/// <summary>
-	/// Represents merge operation configuration.
+	/// Represents merge command configuration.
 	/// </summary>
 	public interface IMerge<TTarget, TSource> : IMergeSource<TTarget, TSource>
 	{
 	}
 
 	/// <summary>
-	/// Represents merge operation configuration.
+	/// Represents merge command configuration.
 	/// </summary>
 	public interface IMerge<TEntity> : IMergeSource<TEntity>
 	{

@@ -1,7 +1,5 @@
 ﻿using LinqToDB.Data;
-using System.Linq;
 using System;
-using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -24,18 +22,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		protected override void GenerateInsert(
-			Expression<Func<TSource, bool>> predicate,
-			Expression<Func<TSource, TTarget>> create)
+		protected override void OnInsertWithIdentity()
 		{
-			// no need to check if we called second time or first ast sql server doesn't support multiple operations
-			// of the same type
-			_hasIdentityInsert = TargetDescriptor.Columns.Any(c => c.IsIdentity);
-
-			if (_hasIdentityInsert)
+			if (!_hasIdentityInsert)
+			{
+				_hasIdentityInsert = true;
 				Command.Insert(0, string.Format("SET IDENTITY_INSERT {0} ON{1}", TargetTableName, Environment.NewLine));
-
-			base.GenerateInsert(predicate, create);
+			}
 		}
 
 		protected override void GenerateTerminator()
