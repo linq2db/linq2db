@@ -101,7 +101,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[MergeDataContextSource(TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void UpdateWithConditionDeleteWithConditionUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -209,7 +209,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[MergeDataContextSource(TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))

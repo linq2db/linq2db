@@ -19,21 +19,21 @@ namespace Tests.Merge
 	{
 		public class MergeDataContextSourceAttribute : DataContextSourceAttribute
 		{
-			private static string[] Unsupported = new[]
+			private static string[] Unsupported = new []
 			{
 				ProviderName.Access,
 				ProviderName.SqlCe,
 				ProviderName.SQLite,
 				TestProvName.SQLiteMs,
+				ProviderName.SqlServer,
+				ProviderName.SqlServer2000,
+				ProviderName.SqlServer2005,
 				ProviderName.PostgreSQL,
 				ProviderName.PostgreSQL92,
 				ProviderName.PostgreSQL93,
 				ProviderName.MySql,
-				TestProvName.MariaDB,
 				TestProvName.MySql57,
-				ProviderName.SqlServer,
-				ProviderName.SqlServer2000,
-				ProviderName.SqlServer2005
+				TestProvName.MariaDB
 			};
 
 			public MergeDataContextSourceAttribute(params string[] except)
