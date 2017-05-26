@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.MySql
 					IsProviderSpecific = system || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase)
 				}
 			).Concat(
-				from t in views.AsEnumerable()
+                from t in views.AsEnumerable().Where(t => t.Field<string>("TABLE_SCHEMA") != "sys")
 				let catalog = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
 				select new TableInfo
