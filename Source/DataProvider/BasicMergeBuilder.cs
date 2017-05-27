@@ -1001,7 +1001,7 @@ namespace LinqToDB.DataProvider
 		{
 			// validate operations limit
 			if (MaxOperationsCount > 0 && _merge.Operations.Length > MaxOperationsCount)
-				throw new LinqToDBException(string.Format("Merge cannot contain more than {MaxOperationsCount} operations for {0} provider.", _providerName));
+				throw new LinqToDBException(string.Format("Merge cannot contain more than {1} operations for {0} provider.", _providerName, MaxOperationsCount));
 
 			// - validate that specified operations supported by provider
 			// - validate that operations don't have conditions if provider doesn't support them
