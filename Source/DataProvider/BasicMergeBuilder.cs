@@ -1,5 +1,6 @@
 ﻿using LinqToDB.Data;
 using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
@@ -721,7 +722,7 @@ namespace LinqToDB.DataProvider
 
 			var updateExpression = Expression.Call(
 				null,
-				LinqExtensions._updateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GenericTypeArguments[0], typeof(TTarget) }),
+				LinqExtensions._updateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
 			var qry = Query<int>.GetQuery(ContextInfo, updateExpression);
