@@ -16,7 +16,7 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		[MergeDataContextSource]
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void ImlicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -56,7 +56,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// identity insert for DB2 is not supported for now (some db2 versions support it)
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void ExplicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))

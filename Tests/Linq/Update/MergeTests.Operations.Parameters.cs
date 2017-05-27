@@ -272,14 +272,15 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// db2 provider inlines scalar parameters (sometimes...)
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void TestParametersInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
 				PrepareData(db);
 
-				var param = 123;
+				var param = new { val = 123 };
 
 				var table = GetTarget(db);
 
@@ -288,7 +289,7 @@ namespace Tests.Merge
 					.Insert(s => s.Id == 5, s => new TestMapping1()
 					{
 						Id = s.Id,
-						Field1 = param
+						Field1 = param.val
 					})
 					.Merge();
 
@@ -298,7 +299,7 @@ namespace Tests.Merge
 				var result = GetTarget(db).Where(_ => _.Id == 5).ToList();
 
 				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(param, result[0].Field1);
+				Assert.AreEqual(param.val, result[0].Field1);
 			}
 		}
 

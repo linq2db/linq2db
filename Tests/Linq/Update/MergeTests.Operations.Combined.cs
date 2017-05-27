@@ -233,10 +233,10 @@ namespace Tests.Merge
 
 				Assert.AreEqual(4, result.Count);
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, null);
-				AssertRow(InitialSourceData[0], result[3], null, null);
+				AssertRow(InitialTargetData[1], result[0], null, null);
+				AssertRow(InitialTargetData[2], result[1], null, 203);
+				AssertRow(InitialSourceData[2], result[2], null, null);
+				AssertRow(InitialSourceData[3], result[3], null, 216);
 			}
 		}
 	}
