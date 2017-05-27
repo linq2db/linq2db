@@ -17,9 +17,7 @@ namespace Tests.Merge
 	// Regression tests converted from tests for previous version of Merge API to new API.
 	public partial class MergeTests
 	{
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs,
-			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, TestProvName.MariaDB, TestProvName.MySql57)]
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void Merge(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -30,9 +28,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs,
-			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void MergeWithEmptySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -43,10 +39,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		[MergeBySourceDataContextSource]
 		public void MergeWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -58,10 +51,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		[MergeBySourceDataContextSource]
 		public void MergeWithDeletePredicate1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -73,10 +63,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		[MergeBySourceDataContextSource]
 		public void MergeWithDeletePredicate3(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -105,10 +92,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		[MergeBySourceDataContextSource]
 		public void MergeWithDeletePredicate4(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -142,10 +126,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		[MergeBySourceDataContextSource]
 		public void MergeWithDeletePredicate5(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -171,10 +152,9 @@ namespace Tests.Merge
 			public string ncharDataType;
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		// ASE: alltypes table must be fixed
+		// DB2: ncharDataType field absent
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void MergeChar1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -196,10 +176,9 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		// ASE: alltypes table must be fixed
+		// DB2: ncharDataType field absent
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void MergeChar2(string context)
 		{
 			using (var db = new TestDataConnection(context))

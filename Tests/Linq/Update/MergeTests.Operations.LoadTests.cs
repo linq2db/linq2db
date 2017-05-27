@@ -16,10 +16,22 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		private const int ROWS = 5000;
+		// ASE: you may need to increace memory procedure cache sizes like that:
+		// exec sp_configure 'max memory', NEW_MEMORY_SIZE
+		// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
+		[IncludeDataContextSource(false, ProviderName.Sybase)]
+		public void NotSoBigSource(string context)
+		{
+			RunTest(context, 2000);
+		}
 
-		[MergeDataContextSource]
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void BigSource(string context)
+		{
+			RunTest(context, 5000);
+		}
+
+		private void RunTest(string context, int size)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -28,22 +40,22 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetBigSource())
+					.FromSame(GetBigSource(size))
 					.Insert()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(ROWS, rows);
+				AssertRowCount(size, rows, context);
 
-				Assert.AreEqual(ROWS + 4, result.Count);
+				Assert.AreEqual(size + 4, result.Count);
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
 
-				for (var i = 4; i < ROWS + 4; i++)
+				for (var i = 4; i < size + 4; i++)
 				{
 					Assert.AreEqual(i + 1, result[i].Id);
 					Assert.AreEqual(i + 2, result[i].Field1);
@@ -55,9 +67,9 @@ namespace Tests.Merge
 			}
 		}
 
-		private IEnumerable<TestMapping1> GetBigSource()
+		private IEnumerable<TestMapping1> GetBigSource(int size)
 		{
-			for (var i = 0; i < ROWS; i++)
+			for (var i = 0; i < size; i++)
 			{
 				yield return new TestMapping1()
 				{

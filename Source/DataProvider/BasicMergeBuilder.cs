@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider
 		where TSource : class
 	{
 		#region .ctor
-		private readonly MergeDefinition<TTarget, TSource> _merge;
+		private MergeDefinition<TTarget, TSource> _merge;
 
 		public BasicMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
 		{
@@ -74,8 +74,8 @@ namespace LinqToDB.DataProvider
 
 		#region MERGE : Predicates
 		private IQueryable<TTuple> AddConditionOverSourceAndTarget<TTuple>(
-															IQueryable<TTuple> query,
-															Expression<Func<TTarget, TSource, bool>> predicate)
+																	IQueryable<TTuple> query,
+																	Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			var p = Expression.Parameter(typeof(TTuple));
 
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider
 		{
 			Command.Append("USING ");
 
-			if (_merge.QueryableSource != null && SuportsSourceSubquery)
+			if (_merge.QueryableSource != null && SuportsSourceSubQuery)
 				GenerateSourceSubquery(_merge.QueryableSource);
 			else
 			{
@@ -171,7 +171,7 @@ namespace LinqToDB.DataProvider
 				if (SupportsSourceDirectValues)
 					GenerateSourceDirectValues(source);
 				else
-					GenerateSourceSubqueryValues(source);
+					GenerateSourceSubQueryValues(source);
 			}
 		}
 
@@ -332,9 +332,54 @@ namespace LinqToDB.DataProvider
 			GenerateAsSource(null);
 		}
 
-		private void GenerateSourceSubqueryValues(IEnumerable<TSource> source)
+		private void GenerateSourceSubQueryValues(IEnumerable<TSource> source)
 		{
-			throw new NotImplementedException("GenerateSourceSubqueryValues");
+			var hasData = false;
+
+			var columnTypes = GetSourceColumnTypes();
+
+			var valueConverter = ContextInfo.MappingSchema.ValueToSqlConverter;
+
+			foreach (var item in source)
+			{
+				if (hasData)
+					Command
+						.AppendLine()
+						.AppendLine("\t\tUNION ALL");
+				else
+					Command
+						.AppendLine("(");
+
+				hasData = true;
+
+				Command.Append("\tSELECT ");
+
+				for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
+				{
+					if (i > 0)
+						Command.Append(",");
+
+					var column = _sourceDescriptor.Columns[i];
+					var value = column.GetValue(ContextInfo.MappingSchema, item);
+
+					// avoid parameters in source due to low limits for parameters number in providers
+					if (!valueConverter.TryConvert(Command, columnTypes[i], value))
+					{
+						var name = GetNextParameterName();
+
+						var fullName = _sqlBuilder.Convert(name, ConvertType.NameToQueryParameter).ToString();
+
+						Command.Append(fullName);
+
+						_parameters.Add(new DataParameter(name, value, column.DataType));
+					}
+				}
+			}
+
+			if (hasData)
+				GenerateAsSource(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
+			else
+				GenerateEmptySource();
 		}
 
 		private SqlDataType[] GetSourceColumnTypes()
@@ -462,8 +507,8 @@ namespace LinqToDB.DataProvider
 
 		#region Operations: INSERT
 		protected virtual void GenerateInsert(
-											Expression<Func<TSource, bool>> predicate,
-											Expression<Func<TSource, TTarget>> create)
+													Expression<Func<TSource, bool>> predicate,
+													Expression<Func<TSource, TTarget>> create)
 		{
 			Command
 				.AppendLine()
@@ -575,13 +620,20 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Operations: UPDATE
+		private enum QueryElement
+		{
+			Where,
+			InsertSetter,
+			UpdateSetter
+		}
+
 		private static IQueryElement ConvertToSubquery(
-					SelectQuery sql,
-					IQueryElement element,
-					HashSet<SqlTable> tableSet,
-					List<SqlTable> tables,
-					SqlTable firstTable,
-					SqlTable secondTable)
+							SelectQuery sql,
+							IQueryElement element,
+							HashSet<SqlTable> tableSet,
+							List<SqlTable> tables,
+							SqlTable firstTable,
+							SqlTable secondTable)
 		{
 			// for table field references from association tables we must rewrite them with subquery
 			if (element.ElementType == QueryElementType.SqlField)
@@ -706,13 +758,6 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		private enum QueryElement
-		{
-			Where,
-			InsertSetter,
-			UpdateSetter
-		}
-
 		private void GenerateCustomUpdate(Expression<Func<TTarget, TSource, TTarget>> update)
 		{
 			// build update query
@@ -803,8 +848,8 @@ namespace LinqToDB.DataProvider
 
 		#region Operations: UPDATE BY SOURCE
 		private void GenerateUpdateBySource(
-											Expression<Func<TTarget, bool>> predicate,
-											Expression<Func<TTarget, TTarget>> update)
+													Expression<Func<TTarget, bool>> predicate,
+													Expression<Func<TTarget, TTarget>> update)
 		{
 			Command
 				.AppendLine()
@@ -871,6 +916,8 @@ namespace LinqToDB.DataProvider
 
 		private readonly string _targetAlias = "Target";
 
+		private StringBuilder _command = new StringBuilder();
+
 		private DataConnection _connection;
 
 		private EntityDescriptor _sourceDescriptor;
@@ -879,8 +926,6 @@ namespace LinqToDB.DataProvider
 
 		private ColumnInfo[] _targetColumns;
 
-		private StringBuilder _command = new StringBuilder();
-
 		protected StringBuilder Command
 		{
 			get
@@ -888,6 +933,8 @@ namespace LinqToDB.DataProvider
 				return _command;
 			}
 		}
+
+		protected int EnumerableSourceSize { get; private set; }
 
 		/// <summary>
 		/// If true, provider allows to set values of identity columns on insert operation.
@@ -903,7 +950,7 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// If true, provider allows to generate subquery as a source element of merge command.
 		/// </summary>
-		protected virtual bool SuportsSourceSubquery
+		protected virtual bool SuportsSourceSubQuery
 		{
 			get
 			{
@@ -969,9 +1016,16 @@ namespace LinqToDB.DataProvider
 				target.TableName ?? TargetDescriptor.TableName);
 			TargetTableName = sb.ToString();
 
+			_merge = AddExtraCommands(_merge);
+
 			GenerateCommand();
 
 			return Command.ToString();
+		}
+
+		protected virtual MergeDefinition<TTarget, TSource> AddExtraCommands(MergeDefinition<TTarget, TSource> merge)
+		{
+			return merge;
 		}
 
 		private class ColumnInfo
@@ -984,7 +1038,7 @@ namespace LinqToDB.DataProvider
 
 		#region Validation
 		private static MergeOperationType[] _matchedTypes = new[]
-										{
+												{
 			MergeOperationType.Delete,
 			MergeOperationType.Update
 		};
@@ -1065,7 +1119,7 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// Validates command configuration to not violate common or provider-specific rules.
 		/// </summary>
-		public virtual void Validate()
+		public void Validate()
 		{
 			// validate operations limit
 			if (MaxOperationsCount > 0 && _merge.Operations.Length > MaxOperationsCount)

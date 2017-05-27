@@ -43,7 +43,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void OtherSourceAssociationInDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -70,7 +71,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void OtherSourceAssociationInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -109,7 +111,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void OtherSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -148,7 +151,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: fails to parse valid(!) query
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void OtherSourceAssociationInMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -189,7 +193,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void OtherSourceAssociationInUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -304,7 +309,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void OtherSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -369,7 +375,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void SameSourceAssociationInDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -396,7 +403,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void SameSourceAssociationInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -435,7 +443,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void SameSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -474,7 +483,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: fails to parse valid(!) query
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void SameSourceAssociationInMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -515,7 +525,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void SameSourceAssociationInUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -630,7 +641,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void SameSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))

@@ -18,13 +18,13 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (target == null)
-				throw new ArgumentNullException(nameof(target));
+				throw new ArgumentNullException("target");
 
 			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+				throw new ArgumentNullException("source");
 
 			if (matchPredicate == null)
-				throw new ArgumentNullException(nameof(matchPredicate));
+				throw new ArgumentNullException("matchPredicate");
 
 			return new MergeDefinition<TTarget, TSource>(target, source, matchPredicate);
 		}
@@ -37,13 +37,13 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (target == null)
-				throw new ArgumentNullException(nameof(target));
+				throw new ArgumentNullException("target");
 
 			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+				throw new ArgumentNullException("source");
 
 			if (matchPredicate == null)
-				throw new ArgumentNullException(nameof(matchPredicate));
+				throw new ArgumentNullException("matchPredicate");
 
 			return new MergeDefinition<TTarget, TSource>(target, source, matchPredicate);
 		}
@@ -54,10 +54,10 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (target == null)
-				throw new ArgumentNullException(nameof(target));
+				throw new ArgumentNullException("target");
 
 			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+				throw new ArgumentNullException("source");
 
 			return new MergeDefinition<TEntity, TEntity>(target, source, null);
 		}
@@ -66,10 +66,10 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (target == null)
-				throw new ArgumentNullException(nameof(target));
+				throw new ArgumentNullException("target");
 
 			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+				throw new ArgumentNullException("source");
 
 			return new MergeDefinition<TEntity, TEntity>(target, source, null);
 		}
@@ -81,13 +81,13 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (target == null)
-				throw new ArgumentNullException(nameof(target));
+				throw new ArgumentNullException("target");
 
 			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+				throw new ArgumentNullException("source");
 
 			if (matchPredicate == null)
-				throw new ArgumentNullException(nameof(matchPredicate));
+				throw new ArgumentNullException("matchPredicate");
 
 			return new MergeDefinition<TEntity, TEntity>(target, source, matchPredicate);
 		}
@@ -99,13 +99,13 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (target == null)
-				throw new ArgumentNullException(nameof(target));
+				throw new ArgumentNullException("target");
 
 			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+				throw new ArgumentNullException("source");
 
 			if (matchPredicate == null)
-				throw new ArgumentNullException(nameof(matchPredicate));
+				throw new ArgumentNullException("matchPredicate");
 
 			return new MergeDefinition<TEntity, TEntity>(target, source, matchPredicate);
 		}
@@ -116,7 +116,7 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Insert(null, null));
@@ -128,10 +128,10 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Insert(predicate, null));
@@ -143,10 +143,10 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (create == null)
-				throw new ArgumentNullException(nameof(create));
+				throw new ArgumentNullException("create");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Insert(null, create));
@@ -159,13 +159,13 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			if (create == null)
-				throw new ArgumentNullException(nameof(create));
+				throw new ArgumentNullException("create");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Insert(predicate, create));
@@ -178,10 +178,10 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (create == null)
-				throw new ArgumentNullException(nameof(create));
+				throw new ArgumentNullException("create");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Insert(null, create));
@@ -195,13 +195,13 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			if (create == null)
-				throw new ArgumentNullException(nameof(create));
+				throw new ArgumentNullException("create");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Insert(predicate, create));
@@ -213,7 +213,7 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Update(null, null));
@@ -225,10 +225,10 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Update(predicate, null));
@@ -240,10 +240,10 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (update == null)
-				throw new ArgumentNullException(nameof(update));
+				throw new ArgumentNullException("update");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Update(null, update));
@@ -256,13 +256,13 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			if (update == null)
-				throw new ArgumentNullException(nameof(update));
+				throw new ArgumentNullException("update");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Update(predicate, update));
@@ -275,10 +275,10 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (update == null)
-				throw new ArgumentNullException(nameof(update));
+				throw new ArgumentNullException("update");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Update(null, update));
@@ -292,13 +292,13 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			if (update == null)
-				throw new ArgumentNullException(nameof(update));
+				throw new ArgumentNullException("update");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Update(predicate, update));
@@ -310,7 +310,7 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Delete(null));
@@ -322,10 +322,10 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.Delete(predicate));
@@ -336,7 +336,7 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Delete(null));
@@ -349,10 +349,10 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Delete(predicate));
@@ -366,10 +366,10 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (update == null)
-				throw new ArgumentNullException(nameof(update));
+				throw new ArgumentNullException("update");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.UpdateBySource(null, update));
@@ -382,13 +382,13 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			if (update == null)
-				throw new ArgumentNullException(nameof(update));
+				throw new ArgumentNullException("update");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.UpdateBySource(predicate, update));
@@ -401,10 +401,10 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (update == null)
-				throw new ArgumentNullException(nameof(update));
+				throw new ArgumentNullException("update");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(null, update));
@@ -418,13 +418,13 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			if (update == null)
-				throw new ArgumentNullException(nameof(update));
+				throw new ArgumentNullException("update");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(predicate, update));
@@ -436,7 +436,7 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.DeleteBySource(null));
@@ -448,10 +448,10 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
 				MergeDefinition<TEntity, TEntity>.Operation.DeleteBySource(predicate));
@@ -462,7 +462,7 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(null));
@@ -475,10 +475,10 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			if (predicate == null)
-				throw new ArgumentNullException(nameof(predicate));
+				throw new ArgumentNullException("predicate");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(predicate));
@@ -491,7 +491,7 @@ namespace LinqToDB.Data
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			var definition = (MergeDefinition<TTarget, TSource>)merge;
 
@@ -508,7 +508,7 @@ namespace LinqToDB.Data
 				where TEntity : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			return Merge<TEntity, TEntity>((MergeDefinition<TEntity, TEntity>)merge);
 		}

@@ -199,5 +199,14 @@ namespace Tests.Merge
 				AssertRow(InitialSourceData[3], result2[3], null, 216);
 			}
 		}
+
+		private void AssertRowCount(int expected, int actual, string context)
+		{
+			// another sybase quirk, nothing surprising
+			if (context == ProviderName.Sybase)
+				Assert.LessOrEqual(expected, actual);
+			else
+				Assert.AreEqual(expected, actual);
+		}
 	}
 }

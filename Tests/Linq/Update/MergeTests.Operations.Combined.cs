@@ -74,7 +74,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: ASE just don't like this query...
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void UpdateWithConditionDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -122,13 +123,19 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(3, rows);
+				AssertRowCount(3, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, null);
+				AssertRow(InitialTargetData[1], result[0], null, null);
+				AssertRow(InitialTargetData[2], result[1], null, 203);
+
+				Assert.AreEqual(4, result[2].Id);
+				Assert.AreEqual(222, result[2].Field1);
+				Assert.AreEqual(6, result[2].Field2);
+				Assert.IsNull(result[2].Field3);
+				Assert.IsNull(result[2].Field4);
+				Assert.IsNull(result[2].Field5);
 			}
 		}
 
@@ -229,7 +236,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(5, rows);
+				AssertRowCount(5, rows, context);
 
 				Assert.AreEqual(4, result.Count);
 

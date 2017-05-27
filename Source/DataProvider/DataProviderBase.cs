@@ -442,10 +442,10 @@ namespace LinqToDB.DataProvider
 			where TSource : class
 		{
 			if (dataConnection == null)
-				throw new ArgumentNullException(nameof(dataConnection));
+				throw new ArgumentNullException("dataConnection");
 
 			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+				throw new ArgumentNullException("merge");
 
 			var builder = GetMergeBuilder(merge);
 

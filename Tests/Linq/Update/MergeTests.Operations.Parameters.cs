@@ -17,7 +17,8 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		[MergeDataContextSource]
+		// ASE: ASE just don't like this query...
+		[MergeDataContextSource(ProviderName.Sybase)]
 		public void TestParameters1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -159,7 +160,8 @@ namespace Tests.Merge
 					.Update()
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
+
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
 			}
 		}
@@ -180,7 +182,8 @@ namespace Tests.Merge
 					.Update((t, s) => t.Id == param)
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
+
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
 			}
 		}
@@ -201,7 +204,8 @@ namespace Tests.Merge
 					.Insert(s => s.Id == param)
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
+
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
 			}
 		}
@@ -222,7 +226,8 @@ namespace Tests.Merge
 					.Delete((t, s) => s.Id == param)
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
+
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
 			}
 		}
@@ -293,7 +298,8 @@ namespace Tests.Merge
 					})
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
+
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
 
 				var result = GetTarget(db).Where(_ => _.Id == 5).ToList();
@@ -322,7 +328,8 @@ namespace Tests.Merge
 					})
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
+
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
 
 				var result = GetTarget(db).Where(_ => _.Id == 4).ToList();
@@ -401,7 +408,8 @@ namespace Tests.Merge
 					})
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
+
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
 
 				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();

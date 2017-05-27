@@ -7,6 +7,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		where TTarget : class
 		where TSource : class
 	{
+		private bool _hasIdentityInsert;
+
+		public SqlServerMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
+			: base(merge, providerName)
+		{
+		}
+
 		protected override bool BySourceOperationsSupported
 		{
 			get
@@ -22,8 +29,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				return true;
 			}
 		}
-
-		private bool _hasIdentityInsert;
 
 		protected override int MaxOperationsCount
 		{
@@ -41,9 +46,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public SqlServerMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
-			: base(merge, providerName)
+		protected override void GenerateTerminator()
 		{
+			Command.Append(";");
+			if (_hasIdentityInsert)
+				Command.AppendFormat("SET IDENTITY_INSERT {0} OFF", TargetTableName).AppendLine();
 		}
 
 		protected override void OnInsertWithIdentity()
@@ -53,13 +60,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				_hasIdentityInsert = true;
 				Command.Insert(0, string.Format("SET IDENTITY_INSERT {0} ON{1}", TargetTableName, Environment.NewLine));
 			}
-		}
-
-		protected override void GenerateTerminator()
-		{
-			Command.Append(";");
-			if (_hasIdentityInsert)
-				Command.AppendFormat("SET IDENTITY_INSERT {0} OFF", TargetTableName).AppendLine();
 		}
 	}
 }
