@@ -843,7 +843,13 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// List of generated command parameters.
 		/// </summary>
-		public DataParameter[] Parameters => _parameters.ToArray();
+		public DataParameter[] Parameters
+		{
+			get
+			{
+				return _parameters.ToArray();
+			}
+		}
 
 		private string GetNextParameterName()
 		{
@@ -873,22 +879,48 @@ namespace LinqToDB.DataProvider
 
 		private ColumnInfo[] _targetColumns;
 
-		protected StringBuilder Command { get; private set; } = new StringBuilder();
+		private StringBuilder _command = new StringBuilder();
+
+		protected StringBuilder Command
+		{
+			get
+			{
+				return _command;
+			}
+		}
 
 		/// <summary>
 		/// If true, provider allows to set values of identity columns on insert operation.
 		/// </summary>
-		protected virtual bool IsIdentityInsertSupported => false;
+		protected virtual bool IsIdentityInsertSupported
+		{
+			get
+			{
+				return false;
+			}
+		}
 
 		/// <summary>
 		/// If true, provider allows to generate subquery as a source element of merge command.
 		/// </summary>
-		protected virtual bool SuportsSourceSubquery => true;
+		protected virtual bool SuportsSourceSubquery
+		{
+			get
+			{
+				return true;
+			}
+		}
 
 		/// <summary>
 		/// If true, provider supports list of VALUES as a source element of merge command.
 		/// </summary>
-		protected virtual bool SupportsSourceDirectValues => true;
+		protected virtual bool SupportsSourceDirectValues
+		{
+			get
+			{
+				return true;
+			}
+		}
 
 		protected EntityDescriptor TargetDescriptor { get; private set; }
 
@@ -897,7 +929,13 @@ namespace LinqToDB.DataProvider
 		/// </summary>
 		protected string TargetTableName { get; private set; }
 
-		private IDataContextInfo ContextInfo => _merge.Target.DataContextInfo;
+		private IDataContextInfo ContextInfo
+		{
+			get
+			{
+				return _merge.Target.DataContextInfo;
+			}
+		}
 
 		/// <summary>
 		/// Generates SQL and parameters for merge command.
@@ -968,31 +1006,61 @@ namespace LinqToDB.DataProvider
 		/// If true, merge command could include DeleteBySource and UpdateBySource operations. Those operations
 		/// supported only by SQL Server.
 		/// </summary>
-		protected virtual bool BySourceOperationsSupported => false;
+		protected virtual bool BySourceOperationsSupported
+		{
+			get
+			{
+				return false;
+			}
+		}
 
 		/// <summary>
 		/// If true, merge command could include Delete operation. This operation is a part of SQL 2008 standard.
 		/// </summary>
-		protected virtual bool DeleteOperationSupported => true;
+		protected virtual bool DeleteOperationSupported
+		{
+			get
+			{
+				return true;
+			}
+		}
 
 		/// <summary>
 		/// Maximum number of oprations, allowed in single merge command. If value is less than one - there is no limits
 		/// on number of commands. This option is used by providers that have limitations on number of operations like
 		/// SQL Server.
 		/// </summary>
-		protected virtual int MaxOperationsCount => 0;
+		protected virtual int MaxOperationsCount
+		{
+			get
+			{
+				return 0;
+			}
+		}
 
 		/// <summary>
 		/// If true, merge command operations could have predicates. This is a part of SQL 2008 standard.
 		/// </summary>
-		protected virtual bool OperationPerdicateSupported => true;
+		protected virtual bool OperationPerdicateSupported
+		{
+			get
+			{
+				return true;
+			}
+		}
 
 		/// <summary>
 		/// If true, merge command could have multiple operations of the same type with predicates with upt to one
 		/// command without predicate. This option is used by providers that doesn't allow multiple operations of the
 		/// same type like SQL Server.
 		/// </summary>
-		protected virtual bool SameTypeOperationsAllowed => true;
+		protected virtual bool SameTypeOperationsAllowed
+		{
+			get
+			{
+				return true;
+			}
+		}
 
 		/// <summary>
 		/// Validates command configuration to not violate common or provider-specific rules.
