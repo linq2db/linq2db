@@ -154,7 +154,7 @@ namespace Tests.Merge
 		{
 			new TestMapping1() { Id = 3,              Field2 = 3,  Field3 = 113                             },
 			new TestMapping1() { Id = 4, Field1 = 5,  Field2 = 7,                Field4 = 214               },
-			new TestMapping1() { Id = 5, Field1 = 10, Field2 = 11,                             Field5 = 315 },
+			new TestMapping1() { Id = 5, Field1 = 10, Field2 = 4,                             Field5 = 315 },
 			new TestMapping1() { Id = 6,                           Field3 = 116, Field4 = 216, Field5 = 316 },
 		};
 

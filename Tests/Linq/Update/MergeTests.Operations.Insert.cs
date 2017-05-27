@@ -105,7 +105,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// DB2 doesn't like match condition like that
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void SameSourceInsertFromTableWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -134,6 +135,35 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource]
+		public void SameSourceInsertFromTableWithMatchAlternative(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db), (t, s) => t.Id == s.Id - 1)
+					.Insert()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		// DB2 doesn't like match condition like that
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void SameSourceInsertFromQueryWithSelectAndMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -171,6 +201,48 @@ namespace Tests.Merge
 				Assert.IsNull(result[4].Field2);
 				Assert.IsNull(result[4].Field3);
 				Assert.AreEqual(15, result[4].Field4);
+				Assert.IsNull(result[4].Field5);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void SameSourceInsertFromQueryWithSelectAndMatchAlternative(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db).Select(_ => new TestMapping1()
+					{
+						Id = _.Id,
+						Field1 = _.Field3,
+						Field2 = _.Field4,
+						Field3 = _.Id + _.Id,
+						Field4 = _.Id + _.Id + _.Id,
+						Field5 = _.Field5
+					}), (t, s) => t.Id == s.Id - 1)
+					.Insert()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+
+				Assert.AreEqual(InitialSourceData[3].Id, result[4].Id);
+				Assert.IsNull(result[4].Field1);
+				Assert.AreEqual(216, result[4].Field2);
+				Assert.IsNull(result[4].Field3);
+				Assert.AreEqual(18, result[4].Field4);
 				Assert.IsNull(result[4].Field5);
 			}
 		}
@@ -231,7 +303,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// DB2 doesn't like match condition like that
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void SameSourceInsertFromCollectionWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -242,6 +315,34 @@ namespace Tests.Merge
 
 				var rows = table
 					.FromSame(InitialSourceData, (t, s) => t.Id == s.Id || s.Field1 != null)
+					.Insert()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void SameSourceInsertFromCollectionWithMatchAlternative(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(InitialSourceData, (t, s) => t.Id == s.Id - 1)
 					.Insert()
 					.Merge();
 
@@ -370,7 +471,7 @@ namespace Tests.Merge
 				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
 				// SkipInsert is ignored by explicit insert. Is it correct?
 				//Assert.IsNull(result[4].Field3);
-				Assert.AreEqual(11, result[4].Field3);
+				Assert.AreEqual(4, result[4].Field3);
 				Assert.AreEqual(999, result[4].Field4);
 				//Assert.IsNull(result[4].Field5);
 				Assert.AreEqual(888, result[4].Field5);
@@ -425,7 +526,7 @@ namespace Tests.Merge
 				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
 				// SkipInsert is ignored by explicit insert. Is it correct?
 				//Assert.IsNull(result[4].Field3);
-				Assert.AreEqual(11, result[4].Field3);
+				Assert.AreEqual(4, result[4].Field3);
 				Assert.AreEqual(999, result[4].Field4);
 				//Assert.IsNull(result[4].Field5);
 				Assert.AreEqual(888, result[4].Field5);
@@ -506,7 +607,7 @@ namespace Tests.Merge
 				Assert.IsNull(result[4].Field1);
 				Assert.IsNull(result[4].Field2);
 				Assert.AreEqual(InitialSourceData[2].Field3, result[4].Field3);
-				Assert.AreEqual(11, result[4].Field4);
+				Assert.AreEqual(4, result[4].Field4);
 				Assert.AreEqual(10, result[4].Field5);
 			}
 		}
