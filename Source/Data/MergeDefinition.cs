@@ -204,7 +204,13 @@ namespace LinqToDB.Data
 				}
 			}
 
-			public MergeOperationType Type => _type;
+			public MergeOperationType Type
+			{
+				get
+				{
+					return _type;
+				}
+			}
 
 			public Expression<Func<TTarget, TTarget>> UpdateBySourceExpression
 			{

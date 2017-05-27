@@ -56,8 +56,9 @@ namespace Tests.Merge
 			}
 		}
 
-		// identity insert for DB2 is not supported for now (some db2 versions support it)
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// identity DB2: insert for DB2 is not supported for now (some db2 versions support it)
+		// ASE: server just dies ("Enterprise Quality")
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Sybase)]
 		public void ExplicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))

@@ -1114,7 +1114,7 @@ namespace LinqToDB.DataProvider
 
 			// validate that there is no duplicate operations (by type) if provider doesn't support them
 			if (!SameTypeOperationsAllowed && _merge.Operations.GroupBy(_ => _.Type).Any(_ => _.Count() > 1))
-				throw new LinqToDBException($"Multiple operations of the same type are not supported by {_providerName} provider.");
+				throw new LinqToDBException(string.Format("Multiple operations of the same type are not supported by {0} provider.", _providerName));
 		}
 
 		private void ValidateGroupConditions(MergeOperationType[] groupTypes)
