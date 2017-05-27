@@ -60,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 			new MergeContextParser         (),
 #endif
 		};
