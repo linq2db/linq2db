@@ -66,15 +66,45 @@ namespace LinqToDB.Data
 			_operations = operations;
 		}
 
-		public IEnumerable<TSource> EnumerableSource => _enumerableSource;
+		public IEnumerable<TSource> EnumerableSource
+		{
+			get
+			{
+				return _enumerableSource;
+			}
+		}
 
-		public Expression<Func<TTarget, TSource, bool>> MatchPredicate => _matchPredicate;
+		public Expression<Func<TTarget, TSource, bool>> MatchPredicate
+		{
+			get
+			{
+				return _matchPredicate;
+			}
+		}
 
-		public Operation[] Operations => _operations;
+		public Operation[] Operations
+		{
+			get
+			{
+				return _operations;
+			}
+		}
 
-		public IQueryable<TSource> QueryableSource => _queryableSource;
+		public IQueryable<TSource> QueryableSource
+		{
+			get
+			{
+				return _queryableSource;
+			}
+		}
 
-		public ITable<TTarget> Target => _target;
+		public ITable<TTarget> Target
+		{
+			get
+			{
+				return _target;
+			}
+		}
 
 		public MergeDefinition<TTarget, TSource> AddOperation(Operation operation)
 		{
@@ -122,9 +152,21 @@ namespace LinqToDB.Data
 				_updateBySource = updateBySource;
 			}
 
-			public Expression<Func<TTarget, bool>> BySourcePredicate => _bySourcePredicate;
+			public Expression<Func<TTarget, bool>> BySourcePredicate
+			{
+				get
+				{
+					return _bySourcePredicate;
+				}
+			}
 
-			public Expression<Func<TSource, TTarget>> CreateExpression => _create;
+			public Expression<Func<TSource, TTarget>> CreateExpression
+			{
+				get
+				{
+					return _create;
+				}
+			}
 
 			public bool HasCondition
 			{
@@ -146,15 +188,39 @@ namespace LinqToDB.Data
 				}
 			}
 
-			public Expression<Func<TTarget, TSource, bool>> MatchedPredicate => _matchedPredicate;
+			public Expression<Func<TTarget, TSource, bool>> MatchedPredicate
+			{
+				get
+				{
+					return _matchedPredicate;
+				}
+			}
 
-			public Expression<Func<TSource, bool>> NotMatchedPredicate => _notMatchedPredicate;
+			public Expression<Func<TSource, bool>> NotMatchedPredicate
+			{
+				get
+				{
+					return _notMatchedPredicate;
+				}
+			}
 
 			public MergeOperationType Type => _type;
 
-			public Expression<Func<TTarget, TTarget>> UpdateBySourceExpression => _updateBySource;
+			public Expression<Func<TTarget, TTarget>> UpdateBySourceExpression
+			{
+				get
+				{
+					return _updateBySource;
+				}
+			}
 
-			public Expression<Func<TTarget, TSource, TTarget>> UpdateExpression => _update;
+			public Expression<Func<TTarget, TSource, TTarget>> UpdateExpression
+			{
+				get
+				{
+					return _update;
+				}
+			}
 
 			public static Operation Delete(
 				Expression<Func<TTarget, TSource, bool>> predicate)

@@ -7,15 +7,39 @@ namespace LinqToDB.DataProvider.SqlServer
 		where TTarget : class
 		where TSource : class
 	{
-		protected override bool BySourceOperationsSupported => true;
+		protected override bool BySourceOperationsSupported
+		{
+			get
+			{
+				return true;
+			}
+		}
 
-		protected override bool IsIdentityInsertSupported => true;
+		protected override bool IsIdentityInsertSupported
+		{
+			get
+			{
+				return true;
+			}
+		}
 
 		private bool _hasIdentityInsert;
 
-		protected override int MaxOperationsCount => 3;
+		protected override int MaxOperationsCount
+		{
+			get
+			{
+				return 3;
+			}
+		}
 
-		protected override bool SameTypeOperationsAllowed => false;
+		protected override bool SameTypeOperationsAllowed
+		{
+			get
+			{
+				return false;
+			}
+		}
 
 		public SqlServerMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
 			: base(merge, providerName)

@@ -847,7 +847,7 @@ namespace LinqToDB.DataProvider
 
 		private string GetNextParameterName()
 		{
-			return $"p{_parameterCnt++}";
+			return string.Format("p{0}", _parameterCnt++);
 		}
 
 		private void SaveParameters(IEnumerable<SqlParameter> parameters)
@@ -1001,7 +1001,7 @@ namespace LinqToDB.DataProvider
 		{
 			// validate operations limit
 			if (MaxOperationsCount > 0 && _merge.Operations.Length > MaxOperationsCount)
-				throw new LinqToDBException($"Merge cannot contain more than {MaxOperationsCount} operations for {_providerName} provider.");
+				throw new LinqToDBException(string.Format("Merge cannot contain more than {MaxOperationsCount} operations for {0} provider.", _providerName));
 
 			// - validate that specified operations supported by provider
 			// - validate that operations don't have conditions if provider doesn't support them
@@ -1011,29 +1011,29 @@ namespace LinqToDB.DataProvider
 				{
 					case MergeOperationType.Delete:
 						if (!DeleteOperationSupported)
-							throw new LinqToDBException($"Merge Delete operation is not supported by {_providerName} provider.");
+							throw new LinqToDBException(string.Format("Merge Delete operation is not supported by {0} provider.", _providerName));
 						if (!OperationPerdicateSupported && operation.MatchedPredicate != null)
-							throw new LinqToDBException($"Merge operation conditions are not supported by {_providerName} provider.");
+							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", _providerName));
 						break;
 					case MergeOperationType.Insert:
 						if (!OperationPerdicateSupported && operation.NotMatchedPredicate != null)
-							throw new LinqToDBException($"Merge operation conditions are not supported by {_providerName} provider.");
+							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", _providerName));
 						break;
 					case MergeOperationType.Update:
 						if (!OperationPerdicateSupported && operation.MatchedPredicate != null)
-							throw new LinqToDBException($"Merge operation conditions are not supported by {_providerName} provider.");
+							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", _providerName));
 						break;
 					case MergeOperationType.DeleteBySource:
 						if (!BySourceOperationsSupported)
-							throw new LinqToDBException($"Merge Delete By Source operation is not supported by {_providerName} provider.");
+							throw new LinqToDBException(string.Format("Merge Delete By Source operation is not supported by {0} provider.", _providerName));
 						if (!OperationPerdicateSupported && operation.BySourcePredicate != null)
-							throw new LinqToDBException($"Merge operation conditions are not supported by {_providerName} provider.");
+							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", _providerName));
 						break;
 					case MergeOperationType.UpdateBySource:
 						if (!BySourceOperationsSupported)
-							throw new LinqToDBException($"Merge Update By Source operation is not supported by {_providerName} provider.");
+							throw new LinqToDBException(string.Format("Merge Update By Source operation is not supported by {0} provider.", _providerName));
 						if (!OperationPerdicateSupported && operation.BySourcePredicate != null)
-							throw new LinqToDBException($"Merge operation conditions are not supported by {_providerName} provider.");
+							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", _providerName));
 						break;
 				}
 			}
