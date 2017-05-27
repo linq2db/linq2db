@@ -27,7 +27,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs,
+			ProviderName.Access, ProviderName.Informix,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.PostgreSQL,
+			ProviderName.SQLite, TestProvName.SQLiteMs,
 			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithEmptySource(string context)
 		{
