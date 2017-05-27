@@ -16,7 +16,7 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void OtherSourceAssociationInDeleteBySourcePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -227,7 +227,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void OtherSourceAssociationInUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -266,7 +266,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void OtherSourceAssociationInUpdateBySourcePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -342,7 +342,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void SameSourceAssociationInDeleteBySourcePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -553,7 +553,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void SameSourceAssociationInUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -592,7 +592,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void SameSourceAssociationInUpdateBySourcePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))

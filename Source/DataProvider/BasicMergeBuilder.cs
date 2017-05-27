@@ -88,6 +88,8 @@ namespace LinqToDB.DataProvider
 		private void GenerateDefaultMatchPredicate()
 		{
 			var first = true;
+			var targetAlias = (string)_sqlBuilder.Convert(_targetAlias, ConvertType.NameToQueryTableAlias);
+			var sourceAlias = (string)_sqlBuilder.Convert(_sourceAlias, ConvertType.NameToQueryTableAlias);
 			foreach (var column in _targetColumns.Where(c => c.Column.IsPrimaryKey))
 			{
 				if (!first)
@@ -95,7 +97,7 @@ namespace LinqToDB.DataProvider
 
 				first = false;
 				Command
-					.AppendFormat("\tTarget.{0} = Source.{0}", column.Name);
+					.AppendFormat("\t{1}.{0} = {2}.{0}", column.Name, targetAlias, sourceAlias);
 			}
 		}
 
@@ -174,7 +176,7 @@ namespace LinqToDB.DataProvider
 
 		private void GenerateAsSource(IEnumerable<string> columnNames)
 		{
-			Command.AppendFormat(") {0}", _sourceAlias);
+			Command.AppendFormat(") {0}", _sqlBuilder.Convert(_sourceAlias, ConvertType.NameToQueryTableAlias));
 
 			if (columnNames != null)
 			{
@@ -223,7 +225,7 @@ namespace LinqToDB.DataProvider
 				.Append(" FROM ")
 				.Append(TargetTableName)
 				.Append(" WHERE 1 = 0) ")
-				.AppendLine(_sourceAlias);
+				.AppendLine((string)_sqlBuilder.Convert(_sourceAlias, ConvertType.NameToQueryTableAlias));
 		}
 
 		private void GenerateSourceDirectValues(IEnumerable<TSource> source)
@@ -361,7 +363,7 @@ namespace LinqToDB.DataProvider
 				.Append("MERGE INTO ")
 				.Append(TargetTableName)
 				.Append(" ")
-				.AppendLine(_targetAlias);
+				.AppendLine((string)_sqlBuilder.Convert(_targetAlias, ConvertType.NameToQueryTableAlias));
 		}
 
 		protected virtual void GenerateOperation(MergeDefinition<TTarget, TSource>.Operation operation)
@@ -559,7 +561,10 @@ namespace LinqToDB.DataProvider
 						.AppendLine();
 
 				first = false;
-				Command.AppendFormat("\t\t{1}.{0}", column.Name, _sourceAlias);
+				Command.AppendFormat(
+					"\t\t{1}.{0}",
+					column.Name,
+					_sqlBuilder.Convert(_sourceAlias, ConvertType.NameToQueryTableAlias));
 			}
 
 			Command
@@ -754,7 +759,7 @@ namespace LinqToDB.DataProvider
 					Command
 						.AppendFormat("\t\t{0} ", column.Name)
 						.Append(' ', maxLen - column.Name.Length)
-						.AppendFormat("= {1}.{0}", column.Name, _sourceAlias);
+						.AppendFormat("= {1}.{0}", column.Name, _sqlBuilder.Convert(_sourceAlias, ConvertType.NameToQueryTableAlias));
 				}
 			}
 			else

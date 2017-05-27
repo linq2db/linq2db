@@ -16,7 +16,7 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void SameSourceUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -63,7 +63,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void SameSourceUpdateBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -104,7 +104,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void OtherSourceUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -150,7 +150,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void OtherSourceUpdateBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -197,7 +197,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void AnonymousSourceUpdateBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -253,7 +253,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void AnonymousListSourceUpdateBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -309,7 +309,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void UpdateBySourceReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -365,7 +365,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void UpdateBySourceReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))

@@ -132,7 +132,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void InsertUpdateBySourceWithConditionDeleteBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -168,7 +168,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void InsertDeleteUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))

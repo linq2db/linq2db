@@ -64,7 +64,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void TestParameters2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -105,7 +105,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void TestParametersInListSourceProperty(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -227,7 +227,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void TestParametersInDeleteBySourceCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -248,7 +248,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void TestParametersInUpdateBySourceCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -331,7 +331,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[MergeBySourceDataContextSource]
 		public void TestParametersInUpdateBySourceExpression(string context)
 		{
 			using (var db = new TestDataConnection(context))
