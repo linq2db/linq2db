@@ -715,6 +715,70 @@ namespace Tests.Merge
 			}
 		}
 
+		[MergeUpdateWithDeleteDataContextSource]
+		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var rows = db.Person
+					.FromSame(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
+					.UpdateWithDelete(
+						(t, s) => new Model.Person()
+						{
+							LastName = s.LastName
+						},
+						(t, s) => s.Patient.Diagnosis == "very sick" && t.Patient.Diagnosis == "very sick")
+					.Merge();
+
+				var result = db.Person.OrderBy(_ => _.ID).ToList();
+
+				Assert.AreEqual(3, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertPerson(AssociationPersons[0], result[0]);
+				AssertPerson(AssociationPersons[1], result[1]);
+				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(AssociationPersons[4], result[3]);
+				AssertPerson(AssociationPersons[5], result[4]);
+			}
+		}
+
+		[MergeUpdateWithDeleteDataContextSource]
+		public void OtherSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var rows = db.Person
+					.From(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
+					.UpdateWithDelete(
+						(t, s) => new Model.Person()
+						{
+							FirstName = s.FirstName
+						},
+						(t, s) => s.Patient.Diagnosis == "very sick" && t.Patient.Diagnosis == "very sick")
+					.Merge();
+
+				var result = db.Person.OrderBy(_ => _.ID).ToList();
+
+				Assert.AreEqual(3, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertPerson(AssociationPersons[0], result[0]);
+				AssertPerson(AssociationPersons[1], result[1]);
+				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(AssociationPersons[4], result[3]);
+				AssertPerson(AssociationPersons[5], result[4]);
+			}
+		}
+
 		#region Test Data
 		private static readonly Doctor[] AssociationDoctors = new[]
 						{

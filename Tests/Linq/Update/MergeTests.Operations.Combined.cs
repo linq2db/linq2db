@@ -75,7 +75,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: ASE just don't like this query...
-		[MergeDataContextSource(ProviderName.Sybase)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void UpdateWithConditionDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -102,7 +102,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[MergeDataContextSource(TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void UpdateWithConditionDeleteWithConditionUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -216,7 +217,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[MergeDataContextSource(TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -244,6 +246,362 @@ namespace Tests.Merge
 				AssertRow(InitialTargetData[2], result[1], null, 203);
 				AssertRow(InitialSourceData[2], result[2], null, null);
 				AssertRow(InitialSourceData[3], result[3], null, 216);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void UpdateInsert(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Update()
+					.Insert()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(6, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+				AssertRow(InitialSourceData[1], result[3], null, null);
+				AssertRow(InitialSourceData[2], result[4], null, null);
+				AssertRow(InitialSourceData[3], result[5], null, 216);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void DeleteIsert(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Delete()
+					.Insert()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(4, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[2], result[2], null, null);
+				AssertRow(InitialSourceData[3], result[3], null, 216);
+			}
+		}
+
+		// ASE: doesn't like query
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void DeleteWithConditionUpdate(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Delete((t, s) => s.Id == 4)
+					.Update()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(2, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+			}
+		}
+
+		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		public void UpdateWithDeleteWithDeleteCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.UpdateWithDelete((t, s) => s.Id == 4)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(2, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+			}
+		}
+
+		// ASE: doesn't like query
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void InsertUpdateWithConditionDeleteWithCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Insert()
+					.Update((t, s) => t.Id == 3)
+					.Delete((t, s) => s.Id == 4)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+				AssertRow(InitialSourceData[2], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		[MergeUpdateWithDeleteDataContextSource]
+		public void InsertUpdateWithDelete(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Insert()
+					.UpdateWithDelete((t, s) => t.Id == 3 || s.Id == 4, (t, s) => s.Id == 4)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+				AssertRow(InitialSourceData[2], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		// ASE: doesn't like query
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void InsertDeleteWithConditionUpdate(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Insert()
+					.Delete((t, s) => s.Id == 4)
+					.Update()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+				AssertRow(InitialSourceData[2], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		// ASE: doesn't like query
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void UpdateWithConditionInsertDeleteWithCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Update((t, s) => t.Id == 3)
+					.Insert()
+					.Delete((t, s) => s.Id == 4)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+				AssertRow(InitialSourceData[2], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		// ASE: doesn't like query
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void UpdateWithConditionDeleteWithConditionInsert(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Update((t, s) => t.Id == 3)
+					.Delete((t, s) => s.Id == 4)
+					.Insert()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+				AssertRow(InitialSourceData[2], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		// ASE: doesn't like query
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void DeleteWithConditionUpdateWithConditionInsert(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Delete((t, s) => s.Id == 4)
+					.Update((t, s) => t.Id == 3)
+					.Insert()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+				AssertRow(InitialSourceData[2], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		// ASE: doesn't like query
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void DeleteWithConditionInsertUpdateWithCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Delete((t, s) => s.Id == 4)
+					.Insert()
+					.Update((t, s) => t.Id == 3)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+				AssertRow(InitialSourceData[2], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
+			}
+		}
+
+		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		public void UpdateWithDeleteInsert(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.UpdateWithDelete((t, s) => t.Id == 3 || t.Id == 4, (t, s) => s.Id == 4)
+					.Insert()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialSourceData[0], result[2], null, 203);
+				AssertRow(InitialSourceData[2], result[3], null, null);
+				AssertRow(InitialSourceData[3], result[4], null, 216);
 			}
 		}
 	}

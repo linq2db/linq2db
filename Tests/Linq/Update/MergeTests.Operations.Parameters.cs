@@ -18,7 +18,7 @@ namespace Tests.Merge
 	public partial class MergeTests
 	{
 		// ASE: ASE just don't like this query...
-		[MergeDataContextSource(ProviderName.Sybase)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void TestParameters1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -144,7 +144,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// Oracle: optimized by provider
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInMatchCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -166,7 +167,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// Oracle: optimized by provider
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInUpdateCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -188,7 +190,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// Oracle: optimized by provider
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInInsertCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -277,8 +280,9 @@ namespace Tests.Merge
 			}
 		}
 
-		// db2 provider inlines scalar parameters (sometimes...)
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// Oracle, DB2: optimized by provider
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -368,7 +372,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// Oracle: optimized by provider
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInSourceFilter(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -416,6 +421,29 @@ namespace Tests.Merge
 
 				Assert.AreEqual(1, result.Count);
 				Assert.AreEqual(333, result[0].Field1);
+			}
+		}
+
+		// Provider optimize scalar parameters
+		//[IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void TestParametersInUpdateWithDeleteDeleteCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var param = 4;
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.UpdateWithDelete((t, s) => t.Id == param)
+					.Merge();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
 			}
 		}
 	}

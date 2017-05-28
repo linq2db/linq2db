@@ -82,6 +82,31 @@ namespace Tests.Merge
 					() => MergeExtensions.Update<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t),
 					() => MergeExtensions.Update<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null),
 
+					() => MergeExtensions.UpdateWithDelete<Child>(null, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child, bool>>)null),
+
+					() => MergeExtensions.UpdateWithDelete<Child>(null, (t, s) => true, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child, bool>>)null, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (t, s) => true, (Expression<Func<Child, Child, bool>>)null),
+
+					() => MergeExtensions.UpdateWithDelete<Child>(null, (t, s) => t, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child, Child>>)null, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (t, s) => t, (Expression<Func<Child, Child, bool>>)null),
+
+					() => MergeExtensions.UpdateWithDelete<Child>(null, (t, s) => true, (t, s) => t, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), null, (t, s) => t, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (t, s) => true, null, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (t, s) => true, (t, s) => t, (Expression<Func<Child, Child, bool>>)null),
+
+					() => MergeExtensions.UpdateWithDelete<Child, Child>(null, (t, s) => t, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (Expression<Func<Child, Child, Child>>)null, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => t, (Expression<Func<Child, Child, bool>>)null),
+
+					() => MergeExtensions.UpdateWithDelete<Child, Child>(null, (t, s) => true, (t, s) => t, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null, (t, s) => true),
+					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, (t, s) => t, (Expression<Func<Child, Child, bool>>)null),
+
 					() => MergeExtensions.Delete<Child>(null),
 
 					() => MergeExtensions.Delete<Child>(null, (t, s) => true),

@@ -17,6 +17,14 @@ namespace Tests.Merge
 	[TestFixture]
 	public partial class MergeTests : TestBase
 	{
+		public class MergeUpdateWithDeleteDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		{
+			public MergeUpdateWithDeleteDataContextSourceAttribute()
+				: base(false, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)
+			{
+			}
+		}
+
 		public class MergeBySourceDataContextSourceAttribute : IncludeDataContextSourceAttribute
 		{
 			public MergeBySourceDataContextSourceAttribute()

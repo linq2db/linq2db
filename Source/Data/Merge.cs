@@ -305,6 +305,128 @@ namespace LinqToDB.Data
 		}
 		#endregion
 
+		#region Update
+		public static IMerge<TEntity> UpdateWithDelete<TEntity>(
+			this IMergeSource<TEntity> merge,
+			Expression<Func<TEntity, TEntity, bool>> deletePredicate)
+				where TEntity : class
+		{
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			if (deletePredicate == null)
+				throw new ArgumentNullException("deletePredicate");
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.UpdateWithDelete(null, null, deletePredicate));
+		}
+
+		public static IMerge<TEntity> UpdateWithDelete<TEntity>(
+			this IMergeSource<TEntity> merge,
+			Expression<Func<TEntity, TEntity, bool>> predicate,
+			Expression<Func<TEntity, TEntity, bool>> deletePredicate)
+				where TEntity : class
+		{
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			if (predicate == null)
+				throw new ArgumentNullException("predicate");
+
+			if (deletePredicate == null)
+				throw new ArgumentNullException("deletePredicate");
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.UpdateWithDelete(predicate, null, deletePredicate));
+		}
+
+		public static IMerge<TEntity> UpdateWithDelete<TEntity>(
+			this IMergeSource<TEntity> merge,
+			Expression<Func<TEntity, TEntity, TEntity>> update,
+			Expression<Func<TEntity, TEntity, bool>> deletePredicate)
+				where TEntity : class
+		{
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			if (update == null)
+				throw new ArgumentNullException("update");
+
+			if (deletePredicate == null)
+				throw new ArgumentNullException("deletePredicate");
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.UpdateWithDelete(null, update, deletePredicate));
+		}
+
+		public static IMerge<TEntity> UpdateWithDelete<TEntity>(
+			this IMergeSource<TEntity> merge,
+			Expression<Func<TEntity, TEntity, bool>> updatePredicate,
+			Expression<Func<TEntity, TEntity, TEntity>> update,
+			Expression<Func<TEntity, TEntity, bool>> deletePredicate)
+				where TEntity : class
+		{
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			if (updatePredicate == null)
+				throw new ArgumentNullException("updatePredicate");
+
+			if (update == null)
+				throw new ArgumentNullException("update");
+
+			if (deletePredicate == null)
+				throw new ArgumentNullException("deletePredicate");
+
+			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
+				MergeDefinition<TEntity, TEntity>.Operation.UpdateWithDelete(updatePredicate, update, deletePredicate));
+		}
+
+		public static IMerge<TTarget, TSource> UpdateWithDelete<TTarget, TSource>(
+			this IMergeSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, TSource, TTarget>> update,
+			Expression<Func<TTarget, TSource, bool>> deletePredicate)
+				where TTarget : class
+				where TSource : class
+		{
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			if (update == null)
+				throw new ArgumentNullException("update");
+
+			if (deletePredicate == null)
+				throw new ArgumentNullException("deletePredicate");
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(null, update, deletePredicate));
+		}
+
+		public static IMerge<TTarget, TSource> UpdateWithDelete<TTarget, TSource>(
+			this IMergeSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, TSource, bool>> updatePredicate,
+			Expression<Func<TTarget, TSource, TTarget>> update,
+			Expression<Func<TTarget, TSource, bool>> deletePredicate)
+				where TTarget : class
+				where TSource : class
+		{
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			if (updatePredicate == null)
+				throw new ArgumentNullException("updatePredicate");
+
+			if (update == null)
+				throw new ArgumentNullException("update");
+
+			if (deletePredicate == null)
+				throw new ArgumentNullException("deletePredicate");
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
+				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(updatePredicate, update, deletePredicate));
+		}
+		#endregion
+
 		#region Delete
 		public static IMerge<TEntity> Delete<TEntity>(this IMergeSource<TEntity> merge)
 				where TEntity : class

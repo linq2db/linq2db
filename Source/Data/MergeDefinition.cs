@@ -1,5 +1,4 @@
-﻿using LinqToDB.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,6 +10,7 @@ namespace LinqToDB.Data
 		Insert,
 		Update,
 		Delete,
+		UpdateWithDelete,
 		UpdateBySource,
 		DeleteBySource
 	}
@@ -124,6 +124,8 @@ namespace LinqToDB.Data
 
 			private readonly Expression<Func<TTarget, TSource, bool>> _matchedPredicate;
 
+			private readonly Expression<Func<TTarget, TSource, bool>> _matchedPredicate2;
+
 			private readonly Expression<Func<TSource, bool>> _notMatchedPredicate;
 
 			private readonly MergeOperationType _type;
@@ -135,7 +137,8 @@ namespace LinqToDB.Data
 			private Operation(
 				MergeOperationType type,
 				Expression<Func<TSource, bool>> notMatchedPredicate,
-				Expression<Func<TTarget, TSource, bool>> matchedPredicate,
+				Expression<Func<TTarget, TSource, bool>> matchedPredicate1,
+				Expression<Func<TTarget, TSource, bool>> matchedPredicate2,
 				Expression<Func<TTarget, bool>> bySourcePredicate,
 				Expression<Func<TSource, TTarget>> create,
 				Expression<Func<TTarget, TSource, TTarget>> update,
@@ -144,7 +147,8 @@ namespace LinqToDB.Data
 				_type = type;
 
 				_notMatchedPredicate = notMatchedPredicate;
-				_matchedPredicate = matchedPredicate;
+				_matchedPredicate = matchedPredicate1;
+				_matchedPredicate2 = matchedPredicate2;
 				_bySourcePredicate = bySourcePredicate;
 
 				_create = create;
@@ -177,6 +181,8 @@ namespace LinqToDB.Data
 						case MergeOperationType.Delete:
 						case MergeOperationType.Update:
 							return _matchedPredicate != null;
+						case MergeOperationType.UpdateWithDelete:
+							return _matchedPredicate != null || _matchedPredicate2 != null;
 						case MergeOperationType.Insert:
 							return _notMatchedPredicate != null;
 						case MergeOperationType.DeleteBySource:
@@ -193,6 +199,14 @@ namespace LinqToDB.Data
 				get
 				{
 					return _matchedPredicate;
+				}
+			}
+
+			public Expression<Func<TTarget, TSource, bool>> MatchedPredicate2
+			{
+				get
+				{
+					return _matchedPredicate2;
 				}
 			}
 
@@ -231,34 +245,42 @@ namespace LinqToDB.Data
 			public static Operation Delete(
 				Expression<Func<TTarget, TSource, bool>> predicate)
 			{
-				return new Operation(MergeOperationType.Delete, null, predicate, null, null, null, null);
+				return new Operation(MergeOperationType.Delete, null, predicate, null, null, null, null, null);
 			}
 
 			public static Operation DeleteBySource(
 				Expression<Func<TTarget, bool>> predicate)
 			{
-				return new Operation(MergeOperationType.DeleteBySource, null, null, predicate, null, null, null);
+				return new Operation(MergeOperationType.DeleteBySource, null, null, null, predicate, null, null, null);
 			}
 
 			public static Operation Insert(
 				Expression<Func<TSource, bool>> predicate,
 				Expression<Func<TSource, TTarget>> create)
 			{
-				return new Operation(MergeOperationType.Insert, predicate, null, null, create, null, null);
+				return new Operation(MergeOperationType.Insert, predicate, null, null, null, create, null, null);
 			}
 
 			public static Operation Update(
 				Expression<Func<TTarget, TSource, bool>> predicate,
 				Expression<Func<TTarget, TSource, TTarget>> udpate)
 			{
-				return new Operation(MergeOperationType.Update, null, predicate, null, null, udpate, null);
+				return new Operation(MergeOperationType.Update, null, predicate, null, null, null, udpate, null);
+			}
+
+			public static Operation UpdateWithDelete(
+				Expression<Func<TTarget, TSource, bool>> updatePredicate,
+				Expression<Func<TTarget, TSource, TTarget>> udpate,
+				Expression<Func<TTarget, TSource, bool>> deletePredicate)
+			{
+				return new Operation(MergeOperationType.UpdateWithDelete, null, updatePredicate, deletePredicate, null, null, udpate, null);
 			}
 
 			public static Operation UpdateBySource(
 				Expression<Func<TTarget, bool>> predicate,
 				Expression<Func<TTarget, TTarget>> udpate)
 			{
-				return new Operation(MergeOperationType.UpdateBySource, null, null, predicate, null, null, udpate);
+				return new Operation(MergeOperationType.UpdateBySource, null, null, null, predicate, null, null, udpate);
 			}
 		}
 	}

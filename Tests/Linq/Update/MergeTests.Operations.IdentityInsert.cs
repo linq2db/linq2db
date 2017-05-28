@@ -16,7 +16,9 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// DB2, Oracle: not supported
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void ImlicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -58,7 +60,9 @@ namespace Tests.Merge
 
 		// identity DB2: insert for DB2 is not supported for now (some db2 versions support it)
 		// ASE: server just dies ("Enterprise Quality")
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Sybase)]
+		// Oracle: not supported
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Sybase,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void ExplicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -66,13 +70,13 @@ namespace Tests.Merge
 			{
 				PrepareAssociationsData(db);
 
-				var lastId = db.Person.Select(_ => _.ID).Max() + 1;
+				var nextId = db.Person.Select(_ => _.ID).Max() + 1;
 
 				var rows = db.Person
 					.FromSame(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.Insert(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
 					{
-						ID = lastId + 1,
+						ID = nextId + 1,
 						FirstName = "Inserted 1",
 						LastName = "Inserted 2",
 						Gender = Gender.Male
@@ -92,7 +96,7 @@ namespace Tests.Merge
 				AssertPerson(AssociationPersons[4], result[4]);
 				AssertPerson(AssociationPersons[5], result[5]);
 
-				Assert.AreEqual(lastId + 1, result[6].ID);
+				Assert.AreEqual(nextId + 1, result[6].ID);
 				Assert.AreEqual(Gender.Male, result[6].Gender);
 				Assert.AreEqual("Inserted 1", result[6].FirstName);
 				Assert.AreEqual("Inserted 2", result[6].LastName);

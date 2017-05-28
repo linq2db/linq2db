@@ -60,6 +60,12 @@ namespace Tests.Merge
 					new object[] { new ValidationTestMergeBuilder(merge.UpdateBySource(_ => _).DeleteBySource(_ => true)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
 					new object[] { new ValidationTestMergeBuilder(merge.DeleteBySource().UpdateBySource(_ => true, _ => _)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
 					new object[] { new ValidationTestMergeBuilder(merge.UpdateBySource(_ => _).UpdateBySource(_ => true, _ => _)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+
+					// DeleteWithUpdate related validations
+					new object[] { new ValidationTestMergeBuilder(merge.Update((t, s) => true).Delete((t, s) => true)).WithUpdateWithDelete(), "Delete and Update operations in the same Merge command not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWithDelete((t, s) => true, (t, s) => true)), "UpdateWithDelete operation not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWithDelete((t, s) => true, (t, s) => true).Update((t, s) => t)).WithUpdateWithDelete(), "Update operation with UpdateWithDelete operation in the same Merge command not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWithDelete((t, s) => true, (t, s) => true).Delete((t, s) => true)).WithUpdateWithDelete(), "Delete operation with UpdateWithDelete operation in the same Merge command not supported by TestProvider provider." },
 				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.Validation.Negative.{i}"));
 			}
 		}
@@ -110,7 +116,11 @@ namespace Tests.Merge
 					new ValidationTestMergeBuilder(merge.UpdateBySource(_ => true, _ => _).UpdateBySource(_ => _)).WithBySource(),
 					new ValidationTestMergeBuilder(merge.DeleteBySource(_ => true).UpdateBySource(_ => _)).WithBySource(),
 					new ValidationTestMergeBuilder(merge.UpdateBySource(_ => true, _ => _).DeleteBySource()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.DeleteBySource(_ => true).DeleteBySource()).WithBySource()
+					new ValidationTestMergeBuilder(merge.DeleteBySource(_ => true).DeleteBySource()).WithBySource(),
+
+					// DeleteWithUpdate validation
+					new ValidationTestMergeBuilder(merge.Update((t, s) => true).Delete()),
+					new ValidationTestMergeBuilder(merge.UpdateWithDelete((t, s) => true)).WithUpdateWithDelete(),
 				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.Validation.Positive.{i}"));
 			}
 		}
@@ -137,6 +147,8 @@ namespace Tests.Merge
 
 			private bool _duplicateSameTypeOperations = true;
 
+			private bool _updateWithDeleteOperationSupported = false;
+
 			// initialize with SQL:2008 defaults (same as base class)
 			private int _operationsLimit = 0;
 
@@ -150,15 +162,59 @@ namespace Tests.Merge
 			{
 			}
 
-			protected override bool BySourceOperationsSupported => _bySourceOperationsSupported;
+			protected override bool BySourceOperationsSupported
+			{
+				get
+				{
+					return _bySourceOperationsSupported;
+				}
+			}
 
-			protected override bool DeleteOperationSupported => _deleteOperationSupported;
+			protected override bool DeleteOperationSupported
+			{
+				get
+				{
+					return _deleteOperationSupported;
+				}
+			}
 
-			protected override int MaxOperationsCount => _operationsLimit;
+			protected override int MaxOperationsCount
+			{
+				get
+				{
+					return _operationsLimit;
+				}
+			}
 
-			protected override bool OperationPerdicateSupported => _conditionsSupported;
+			protected override bool OperationPerdicateSupported
+			{
+				get
+				{
+					return _conditionsSupported;
+				}
+			}
 
-			protected override bool SameTypeOperationsAllowed => _duplicateSameTypeOperations;
+			protected override bool SameTypeOperationsAllowed
+			{
+				get
+				{
+					return _duplicateSameTypeOperations;
+				}
+			}
+
+			protected override bool UpdateWithDeleteOperationSupported
+			{
+				get
+				{
+					return _updateWithDeleteOperationSupported;
+				}
+			}
+
+			public ValidationTestMergeBuilder WithUpdateWithDelete()
+			{
+				_updateWithDeleteOperationSupported = true;
+				return this;
+			}
 
 			public ValidationTestMergeBuilder WithBySource()
 			{
