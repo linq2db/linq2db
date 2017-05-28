@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 #endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -128,6 +128,11 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#endregion
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(IMerge<TTarget, TSource> merge)
+		{
+			return new FirebirdMergeBuilder<TTarget, TSource>(merge, Name);
+		}
+
+		#endregion
 	}
 }

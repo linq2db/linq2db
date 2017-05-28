@@ -16,16 +16,24 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		// ASE: you may need to increace memory procedure cache sizes like that:
-		// exec sp_configure 'max memory', NEW_MEMORY_SIZE
-		// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
 		[IncludeDataContextSource(false, ProviderName.Sybase)]
-		public void NotSoBigSource(string context)
+		public void SybaseBigSource(string context)
 		{
+			// ASE: you may need to increace memory procedure cache sizes like that:
+			// exec sp_configure 'max memory', NEW_MEMORY_SIZE
+			// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
 			RunTest(context, 2000);
 		}
 
-		[MergeDataContextSource(ProviderName.Sybase)]
+		[IncludeDataContextSource(false, ProviderName.Firebird)]
+		public void FirebirdBigSource(string context)
+		{
+			// hard limit around 100 records
+			// also big queries could kill connection with server
+			RunTest(context, 100);
+		}
+
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
 		public void BigSource(string context)
 		{
 			RunTest(context, 5000);

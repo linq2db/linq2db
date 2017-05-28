@@ -78,6 +78,7 @@
     <Compile Include="Configuration\ILinqToDBSettings.cs" />
     <Compile Include="Configuration\NamedValue.cs" />
     <Compile Include="DataProvider\BasicMergeBuilder.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdMergeBuilder.cs" />
     <Compile Include="DataProvider\Oracle\OracleMergeBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
