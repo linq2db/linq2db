@@ -70,7 +70,7 @@ namespace LinqToDB.Expressions
 				if (mapType != ex.Type)
 				{
 					// Use only defined convert
-					var econv = mappingSchema.GetConvertExpression(ex.Type, toType, false, false);
+					var econv = mappingSchema.GetConvertExpression(ex.Type, type, false, false);
 					if (econv == null)
 					{
 						econv = mappingSchema.GetConvertExpression(ex.Type, mapType, false);
