@@ -195,28 +195,33 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access, ProviderName.SapHana)]
+			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access, ProviderName.SapHana)]
 		public void NewGuid(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.Types.Delete(_ => _.ID > 1000);
-				db.Types.Insert(() => new LinqDataTypes
+				try
 				{
-					ID            = 1001,
-					MoneyValue    = 1001,
-					DateTimeValue = Sql.CurrentTimestamp,
-					BoolValue     = true,
-					GuidValue     = Sql.NewGuid(),
-					BinaryValue   = new Binary(new byte[] { 1 }),
-					SmallIntValue = 1001
-				});
+					db.Types.Delete(_ => _.ID > 1000);
+					db.Types.Insert(() => new LinqDataTypes
+					{
+						ID = 1001,
+						MoneyValue = 1001,
+						DateTimeValue = Sql.CurrentTimestamp,
+						BoolValue = true,
+						GuidValue = Sql.NewGuid(),
+						BinaryValue = new Binary(new byte[] { 1 }),
+						SmallIntValue = 1001
+					});
 
-				var guid = db.Types.Single(_ => _.ID == 1001).GuidValue;
+					var guid = db.Types.Single(_ => _.ID == 1001).GuidValue;
 
-				Assert.AreEqual(1001, db.Types.Single(_ => _.GuidValue == guid).ID);
-
-				db.Types.Delete(_ => _.ID > 1000);
+					Assert.AreEqual(1001, db.Types.Single(_ => _.GuidValue == guid).ID);
+				}
+				finally
+				{
+					db.Types.Delete(_ => _.ID > 1000);
+				}
 			}
 		}
 
@@ -333,7 +338,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql,
-				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3)]
 		public void DateTime22(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -354,7 +359,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql,
-				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3)]
 		public void DateTime23(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -378,7 +383,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, TestProvName.MariaDB,
-				TestProvName.MariaDB, TestProvName.MySql57, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana)]
+				TestProvName.MariaDB, TestProvName.MySql57, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.Firebird3)]
 		public void DateTime24(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -472,7 +477,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Value = p.Value1.GetValueOrDefault() });
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.Sybase), Category("WindowsOnly")]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Sybase), Category("WindowsOnly")]
 		public void Unicode(string context)
 		{
 			using (var db = GetDataContext(context))

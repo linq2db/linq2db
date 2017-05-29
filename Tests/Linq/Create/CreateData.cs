@@ -212,6 +212,7 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix     (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
 		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void Oracle       (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
 		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
+		[Test, IncludeDataContextSource(TestProvName.Firebird3)]     public void Firebird3    (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL   (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
 		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql        (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
 		[Test, IncludeDataContextSource(TestProvName.MySql57)]       public void MySql57      (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }

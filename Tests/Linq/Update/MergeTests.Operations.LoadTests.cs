@@ -33,7 +33,14 @@ namespace Tests.Merge
 			RunTest(context, 100);
 		}
 
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		[IncludeDataContextSource(false, TestProvName.Firebird3)]
+		public void Firebird3BigSource(string context)
+		{
+			// hard limit around 250 records
+			RunTest(context, 250);
+		}
+
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, TestProvName.Firebird3)]
 		public void BigSource(string context)
 		{
 			RunTest(context, 5000);

@@ -16,7 +16,7 @@ namespace Tests.xUpdate
 	public class OldMergeTests : TestBase
 	{
 		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs,
+			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, TestProvName.Firebird3, ProviderName.SQLite, TestProvName.SQLiteMs,
 			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void Merge(string context)
 		{
@@ -39,7 +39,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDelete(string context)
 		{
@@ -51,7 +51,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana, TestProvName.Firebird3,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate1(string context)
 		{
@@ -63,7 +63,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana, TestProvName.Firebird3,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate2(string context)
 		{
@@ -75,7 +75,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate3(string context)
 		{
@@ -88,7 +88,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate4(string context)
 		{
@@ -103,7 +103,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate5(string context)
 		{

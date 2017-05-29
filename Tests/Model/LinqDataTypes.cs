@@ -93,9 +93,9 @@ namespace Tests.Model
 			if (ReferenceEquals(this, other)) return true;
 			return
 				other.ID                     == ID                     &&
- 				other.MoneyValue             == MoneyValue             &&
- 				other.BoolValue              == BoolValue              &&
- 				other.GuidValue              == GuidValue              &&				
+				other.MoneyValue             == MoneyValue             &&
+				other.BoolValue              == BoolValue              &&
+				other.GuidValue              == GuidValue              &&				
 				other.StringValue            == StringValue            &&
 				other.DateTimeValue.HasValue == DateTimeValue.HasValue &&
 				(other.DateTimeValue == null ||

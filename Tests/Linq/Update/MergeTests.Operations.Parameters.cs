@@ -282,7 +282,8 @@ namespace Tests.Merge
 
 		// Oracle, DB2: optimized by provider
 		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird)]
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Firebird, TestProvName.Firebird3)]
 		public void TestParametersInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))

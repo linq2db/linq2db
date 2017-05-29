@@ -8,5 +8,6 @@ namespace Tests
 		public const string MariaDB       = "MariaDB";
 		public const string MySql57       = "MySql57";
 		public const string SQLiteMs      = "SQLiteMs";
+		public const string Firebird3     = "Firebird3";
 	}
 }
