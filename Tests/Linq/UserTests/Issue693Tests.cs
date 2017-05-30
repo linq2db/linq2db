@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -23,11 +20,11 @@ namespace Tests.UserTests
 		{
 			[SequenceName(ProviderName.Firebird, "PersonID")]
 			[Column("PersonID"), Identity, PrimaryKey]
-			public int      ID         { get; set; }
+			        public int     ID         { get; set; }
 
 			[Column]public Gender  Gender     { get; set; }
-			[Column]public string FirstName  { get; set; }
-			[Column]public Test? MiddleName { get; set; }
+			[Column]public string  FirstName  { get; set; }
+			[Column]public Test?   MiddleName { get; set; }
 			[Column]public string  LastName   { get; set; }
 		}
 
@@ -47,13 +44,14 @@ namespace Tests.UserTests
 				return null;
 			});
 
-			MappingSchema.Default.SetConverter<Test?, DataParameter>((obj) =>
+			ms.SetConverter<Test?, DataParameter>((obj) =>
 			{
 				if (obj != null)
 					return new DataParameter { Value = obj.ToString() };
 				return new DataParameter { Value = DBNull.Value };
 			});
-			MappingSchema.Default.SetConverter<string, Test?>((txt) =>
+
+			ms.SetConverter<string, Test?>((txt) =>
 			{
 				if (string.IsNullOrEmpty(txt))
 					return null;
@@ -61,40 +59,34 @@ namespace Tests.UserTests
 			});
 
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, ms))
+			using (new DeletePerson(db))
 			{
-				try
+				var obj = new Entity533
 				{
-					var obj = new Entity533
-					{
-						FirstName = "a",
-						MiddleName = Test.A,
-						LastName  = "b",
-						Gender = Gender.Male
-					};
+					FirstName  = "a",
+					MiddleName = Test.A,
+					LastName   = "b",
+					Gender     = Gender.Male
+				};
 
-					var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
 
-					var obj2 = new Entity533
-					{
-						FirstName = "c",
-						MiddleName = null,
-						LastName = "d",
-						Gender = Gender.Male
-					};
-
-					var id2 = Convert.ToInt32(db.InsertWithIdentity(obj2));
-
-					var obj3 = db.GetTable<Entity533>().First(_ => _.ID == id1);
-					var obj4 = db.GetTable<Entity533>().First(_ => _.ID == id2);
-
-					Assert.IsNull(obj4.MiddleName);
-					Assert.NotNull(obj3.MiddleName);
-				}
-				finally
+				var obj2 = new Entity533
 				{
-					db.Person.Delete(_ => _.ID > MaxPersonID);
-				}
+					FirstName  = "c",
+					MiddleName = null,
+					LastName   = "d",
+					Gender     = Gender.Male
+				};
+
+				var id2 = Convert.ToInt32(db.InsertWithIdentity(obj2));
+
+				var obj3 = db.GetTable<Entity533>().First(_ => _.ID == id1);
+				var obj4 = db.GetTable<Entity533>().First(_ => _.ID == id2);
+
+				Assert.IsNull (obj4.MiddleName);
+				Assert.NotNull(obj3.MiddleName);
 			}
 		}
 	}
