@@ -481,35 +481,27 @@ namespace Tests.Linq
 		public void Unicode(string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
 			{
 				db.BeginTransaction();
 
-				try
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
+				var id =
+					db.Person
+						.InsertWithIdentity(() => new Person
+						{
+							FirstName = "擊敗奴隸",
+							LastName  = "Юникодкин",
+							Gender    = Gender.Male
+						});
 
-					var id =
-						db.Person
-							.InsertWithIdentity(() => new Person
-							{
-								FirstName = "擊敗奴隸",
-								LastName  = "Юникодкин",
-								Gender    = Gender.Male
-							});
+				Assert.NotNull(id);
 
-					Assert.NotNull(id);
+				var person = db.Person.Single(p => p.FirstName == "擊敗奴隸" && p.LastName == "Юникодкин");
 
-					var person = db.Person.Single(p => p.FirstName == "擊敗奴隸" && p.LastName == "Юникодкин");
-
-					Assert.NotNull (person);
-					Assert.AreEqual(id, person.ID);
-					Assert.AreEqual("擊敗奴隸", person.FirstName);
-					Assert.AreEqual("Юникодкин", person.LastName);
-				}
-				finally
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
-				}
+				Assert.NotNull (person);
+				Assert.AreEqual(id, person.ID);
+				Assert.AreEqual("擊敗奴隸", person.FirstName);
+				Assert.AreEqual("Юникодкин", person.LastName);
 			}
 		}
 

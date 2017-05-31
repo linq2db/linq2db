@@ -19,23 +19,23 @@
 					join c in db.Child on p.ParentID equals c.ParentID 
 					select new
 					{
-						Rank1     = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
-						RowNumber = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1).ThenBy(c.ChildID).ThenByDesc(c.ParentID).ToValue(),
-						DenseRank = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
-						Sum       = Sql.Ext.Sum(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
-						Avg       = Sql.Ext.Average<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+						Rank1       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
+						RowNumber   = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1).ThenBy(c.ChildID).ThenByDesc(c.ParentID).ToValue(),
+						DenseRank   = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+						Sum         = Sql.Ext.Sum(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+						Avg         = Sql.Ext.Average<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 
-						Count1     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count2     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count4     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count6     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.Between.UnboundedPreceding.And.ValuePreceding(3).ToValue(),
-						Count7     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.CurrentRow.And.UnboundedFollowing.ToValue(),
-						Count8     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.None).Rows.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count9     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.UnboundedPreceding.ToValue(),
-						Count10    = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.CurrentRow.ToValue(),
-						Count11    = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.ValuePreceding(1).ToValue(),
-						Count12    = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count14    = Sql.Ext.Count().Over().ToValue(),
+						Count1      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count2      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count4      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count6      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.Between.UnboundedPreceding.And.ValuePreceding(3).ToValue(),
+						Count7      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.CurrentRow.And.UnboundedFollowing.ToValue(),
+						Count8      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.None).Rows.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count9      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.UnboundedPreceding.ToValue(),
+						Count10     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.CurrentRow.ToValue(),
+						Count11     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.ValuePreceding(1).ToValue(),
+						Count12     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count14     = Sql.Ext.Count().Over().ToValue(),
 
 						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() + 
 									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
@@ -43,6 +43,31 @@
 									  Sql.Ext.Count().Over().ToValue(),
 					};
 				var res = q.ToArray();
+				Assert.IsNotEmpty(res);
+			}
+		}
+
+		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			 ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
+		public void TestSubqueryOptimization(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var subq =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select new
+					{
+						Rank      = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
+						RowNumber = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1).ThenBy(c.ChildID).ThenByDesc(c.ParentID).ToValue(),
+						DenseRank = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+					};
+
+				var q = from sq in subq
+					where sq.Rank > 0
+					select sq;
+
+				var res = q.ToList();
 				Assert.IsNotEmpty(res);
 			}
 		}
@@ -57,25 +82,25 @@
 					join c in db.Child on p.ParentID equals c.ParentID 
 					select new
 					{
-						Rank1     = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
-						Rank2     = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1, Sql.NullsPosition.Last).ThenBy(c.ChildID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
-						RowNumber = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1, Sql.NullsPosition.First).ThenBy(c.ChildID).ThenByDesc(c.ParentID, Sql.NullsPosition.First).ToValue(),
-						DenseRank = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+						Rank1       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
+						Rank2       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1, Sql.NullsPosition.Last).ThenBy(c.ChildID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
+						RowNumber   = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1, Sql.NullsPosition.First).ThenBy(c.ChildID).ThenByDesc(c.ParentID, Sql.NullsPosition.First).ToValue(),
+						DenseRank   = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 
-						Count1     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count2     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count3     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID, Sql.NullsPosition.First).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count4     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count5     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID, Sql.NullsPosition.Last).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count6     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.ValuePreceding(3).ToValue(),
-						Count7     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.CurrentRow.And.UnboundedFollowing.ToValue(),
-						Count8     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.None).Rows.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count9     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.First).Range.UnboundedPreceding.ToValue(),
-						Count10    = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.First).Range.CurrentRow.ToValue(),
-						Count11    = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.First).Range.ValuePreceding(1).ToValue(),
-						Count12    = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count13    = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1, Sql.NullsPosition.First).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-						Count14    = Sql.Ext.Count().Over().ToValue(),
+						Count1      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count2      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count3      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenBy(c.ChildID, Sql.NullsPosition.First).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count4      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count5      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).ThenByDesc(c.ChildID, Sql.NullsPosition.Last).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count6      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.ValuePreceding(3).ToValue(),
+						Count7      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.CurrentRow.And.UnboundedFollowing.ToValue(),
+						Count8      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.None).Rows.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count9      = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.First).Range.UnboundedPreceding.ToValue(),
+						Count10     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.First).Range.CurrentRow.ToValue(),
+						Count11     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1, Sql.NullsPosition.First).Range.ValuePreceding(1).ToValue(),
+						Count12     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count13     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1, Sql.NullsPosition.First).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						Count14     = Sql.Ext.Count().Over().ToValue(),
 
 						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() + 
 									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
@@ -103,55 +128,55 @@
 
 						// Testing conversion. Average may fail with Overflow error
 
-						AvgD1     = Sql.Ext.Average<decimal>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgD2     = Sql.Ext.Average<decimal>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgD3     = Sql.Ext.Average<decimal>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgD4     = Sql.Ext.Average<decimal>(p.Value1, Sql.AggregateModifier.All).Over().ToValue(),
+						AvgD1      = Sql.Ext.Average<decimal>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgD2      = Sql.Ext.Average<decimal>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgD3      = Sql.Ext.Average<decimal>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgD4      = Sql.Ext.Average<decimal>(p.Value1, Sql.AggregateModifier.All).Over().ToValue(),
 
-						AvgDN1    = Sql.Ext.Average<decimal?>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgDN2    = Sql.Ext.Average<decimal?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgDN3    = Sql.Ext.Average<decimal?>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgDN4    = Sql.Ext.Average<decimal?>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
+						AvgDN1     = Sql.Ext.Average<decimal?>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgDN2     = Sql.Ext.Average<decimal?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgDN3     = Sql.Ext.Average<decimal?>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgDN4     = Sql.Ext.Average<decimal?>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
 
-						AvgIN1    = Sql.Ext.Average<int?>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgIN2    = Sql.Ext.Average<int?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgIN3    = Sql.Ext.Average<int?>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgIN4    = Sql.Ext.Average<int?>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
+						AvgIN1     = Sql.Ext.Average<int?>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgIN2     = Sql.Ext.Average<int?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgIN3     = Sql.Ext.Average<int?>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgIN4     = Sql.Ext.Average<int?>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
 
-						AvgI1     = Sql.Ext.Average<int>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgI2     = Sql.Ext.Average<int>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgI3     = Sql.Ext.Average<int>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgI4     = Sql.Ext.Average<int>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
+						AvgI1      = Sql.Ext.Average<int>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgI2      = Sql.Ext.Average<int>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgI3      = Sql.Ext.Average<int>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgI4      = Sql.Ext.Average<int>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
 
-						AvgL1     = Sql.Ext.Average<long>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgL2     = Sql.Ext.Average<long>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgL3     = Sql.Ext.Average<long>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgL4     = Sql.Ext.Average<long>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
+						AvgL1      = Sql.Ext.Average<long>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgL2      = Sql.Ext.Average<long>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgL3      = Sql.Ext.Average<long>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgL4      = Sql.Ext.Average<long>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
 
 						AvgLN1     = Sql.Ext.Average<long?>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						AvgLN2     = Sql.Ext.Average<long?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						AvgLN3     = Sql.Ext.Average<long?>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						AvgLN4     = Sql.Ext.Average<long?>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
 
-						AvgF1     = Sql.Ext.Average<float>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgF2     = Sql.Ext.Average<float>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgF3     = Sql.Ext.Average<float>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgF4     = Sql.Ext.Average<float>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
+						AvgF1      = Sql.Ext.Average<float>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgF2      = Sql.Ext.Average<float>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgF3      = Sql.Ext.Average<float>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgF4      = Sql.Ext.Average<float>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
 
-						AvgFN1    = Sql.Ext.Average<float?>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgFN2    = Sql.Ext.Average<float?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgFN3    = Sql.Ext.Average<float?>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgFN4    = Sql.Ext.Average<float?>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
+						AvgFN1     = Sql.Ext.Average<float?>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgFN2     = Sql.Ext.Average<float?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgFN3     = Sql.Ext.Average<float?>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgFN4     = Sql.Ext.Average<float?>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
 
-						AvgDO1    = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgDO2    = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgDO3    = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgDO4    = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
+						AvgDO1     = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgDO2     = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgDO3     = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgDO4     = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
 
-						AvgDON1   = Sql.Ext.Average<double?>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgDON2   = Sql.Ext.Average<double?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgDON3   = Sql.Ext.Average<double?>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						AvgDON4   = Sql.Ext.Average<double?>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
+						AvgDON1    = Sql.Ext.Average<double?>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgDON2    = Sql.Ext.Average<double?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgDON3    = Sql.Ext.Average<double?>(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						AvgDON4    = Sql.Ext.Average<double?>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
 
 						// modifications
 
@@ -236,7 +261,7 @@
 						CovarPop2    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						CovarPop3    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().ToValue(),
 
-						CovarPop4   = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
+						CovarPop4    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
