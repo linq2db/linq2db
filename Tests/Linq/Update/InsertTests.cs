@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -886,6 +887,24 @@ namespace Tests.xUpdate
 					db.Person. Delete(p => p.ID       == id);
 				}
 			}
+		}
+
+		[Test]
+		public void InsertOrReplaceWithIdentity()
+		{
+			Assert.Throws<LinqException>(() =>
+			{
+				using (var db = new TestDataConnection())
+				{
+					var p = new Person()
+					{
+						FirstName = Guid.NewGuid().ToString(),
+						ID = 1000,
+					};
+
+					db.InsertOrReplace(p);
+				}
+			});
 		}
 
 		[Test, DataContextSource]
