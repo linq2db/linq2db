@@ -75,7 +75,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: ASE just don't like this query...
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void UpdateWithConditionDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -103,7 +104,8 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void UpdateWithConditionDeleteWithConditionUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -218,7 +220,8 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -308,7 +311,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: doesn't like query
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void DeleteWithConditionUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -362,7 +366,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: doesn't like query
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void InsertUpdateWithConditionDeleteWithCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -422,7 +427,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: doesn't like query
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void InsertDeleteWithConditionUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -453,7 +459,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: doesn't like query
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void UpdateWithConditionInsertDeleteWithCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -484,7 +491,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: doesn't like query
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void UpdateWithConditionDeleteWithConditionInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -515,7 +523,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: doesn't like query
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void DeleteWithConditionUpdateWithConditionInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -546,7 +555,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: doesn't like query
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void DeleteWithConditionInsertUpdateWithCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))

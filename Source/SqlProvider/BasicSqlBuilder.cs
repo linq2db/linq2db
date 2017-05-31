@@ -888,6 +888,12 @@ namespace LinqToDB.SqlProvider
 			BuildEndCreateTableStatement(SelectQuery.CreateTable);
 		}
 
+		internal void BuildTypeName(StringBuilder sb, SqlDataType type)
+		{
+			StringBuilder = sb;
+			BuildDataType(type, true);
+		}
+
 		protected virtual void BuildCreateTableFieldType(SqlField field)
 		{
 			BuildDataType(new SqlDataType(

@@ -44,7 +44,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
 		public void OtherSourceAssociationInDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -72,7 +72,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
 		public void OtherSourceAssociationInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -111,8 +111,47 @@ namespace Tests.Merge
 			}
 		}
 
+		[MergeDataContextSource]
+		public void OtherSourceAssociationInInsertCreate2(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var rows = db.Person
+					.From(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.Insert(s => new Model.Person()
+					{
+						FirstName = s.Patient.Diagnosis,
+						LastName = "Inserted 2",
+						Gender = Gender.Unknown
+					})
+					.Merge();
+
+				var result = db.Person.OrderBy(_ => _.ID).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(7, result.Count);
+
+				AssertPerson(AssociationPersons[0], result[0]);
+				AssertPerson(AssociationPersons[1], result[1]);
+				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(AssociationPersons[3], result[3]);
+				AssertPerson(AssociationPersons[4], result[4]);
+				AssertPerson(AssociationPersons[5], result[5]);
+
+				Assert.AreEqual(AssociationPersons[5].ID + 1, result[6].ID);
+				Assert.AreEqual(Gender.Unknown, result[6].Gender);
+				Assert.AreEqual("sick", result[6].FirstName);
+				Assert.AreEqual("Inserted 2", result[6].LastName);
+				Assert.IsNull(result[6].MiddleName);
+			}
+		}
+
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
 		public void OtherSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -310,7 +349,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
 		public void OtherSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -376,7 +415,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
 		public void SameSourceAssociationInDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -404,7 +443,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
 		public void SameSourceAssociationInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -443,8 +482,47 @@ namespace Tests.Merge
 			}
 		}
 
-		// ASE: server dies
 		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		public void SameSourceAssociationInInsertCreate2(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareAssociationsData(db);
+
+				var rows = db.Person
+					.FromSame(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.Insert(s => new Model.Person()
+					{
+						FirstName = s.Patient.Diagnosis,
+						LastName = "Inserted 2",
+						Gender = Gender.Unknown
+					})
+					.Merge();
+
+				var result = db.Person.OrderBy(_ => _.ID).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(7, result.Count);
+
+				AssertPerson(AssociationPersons[0], result[0]);
+				AssertPerson(AssociationPersons[1], result[1]);
+				AssertPerson(AssociationPersons[2], result[2]);
+				AssertPerson(AssociationPersons[3], result[3]);
+				AssertPerson(AssociationPersons[4], result[4]);
+				AssertPerson(AssociationPersons[5], result[5]);
+
+				Assert.AreEqual(AssociationPersons[5].ID + 1, result[6].ID);
+				Assert.AreEqual(Gender.Unknown, result[6].Gender);
+				Assert.AreEqual("sick", result[6].FirstName);
+				Assert.AreEqual("Inserted 2", result[6].LastName);
+				Assert.IsNull(result[6].MiddleName);
+			}
+		}
+
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
 		public void SameSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -642,7 +720,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
 		public void SameSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))

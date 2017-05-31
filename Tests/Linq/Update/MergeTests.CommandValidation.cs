@@ -186,7 +186,7 @@ namespace Tests.Merge
 				}
 			}
 
-			protected override bool OperationPerdicateSupported
+			protected override bool OperationPredicateSupported
 			{
 				get
 				{

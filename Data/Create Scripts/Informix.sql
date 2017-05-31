@@ -266,13 +266,13 @@ CREATE TABLE testmerge1
 GO
 CREATE TABLE testmerge2
 (
-	id       int          NOT NULL,
+	id      int          NOT NULL,
 	field1   int              NULL,
 	field2   int              NULL,
 	field3   int              NULL,
 	field4   int              NULL,
 	field5   int              NULL,
 
-	PRIMARY KEY(id2)
+	PRIMARY KEY(id)
 )
 GO

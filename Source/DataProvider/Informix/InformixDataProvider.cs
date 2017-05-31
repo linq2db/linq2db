@@ -40,6 +40,10 @@ namespace LinqToDB.DataProvider.Informix
 				SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
 				SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
 				SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
+
+				SetField<IDataReader, float  >((r, i) => GetFloat  (r, i));
+				SetField<IDataReader, double >((r, i) => GetDouble (r, i));
+				SetField<IDataReader, decimal>((r, i) => GetDecimal(r, i));
 			}
 
 			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
@@ -47,59 +51,20 @@ namespace LinqToDB.DataProvider.Informix
 
 		static float GetFloat(IDataReader dr, int idx)
 		{
-#if !NETSTANDARD
-			var current = Thread.CurrentThread.CurrentCulture;
-
-			if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
-				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-#endif
-
-			var value = dr.GetFloat(idx);
-
-#if !NETSTANDARD
-			if (current != CultureInfo.InvariantCulture)
-				Thread.CurrentThread.CurrentCulture = current;
-#endif
-
-			return value;
+			using (new InformixCultureFixRegion())
+				return dr.GetFloat(idx);
 		}
 
 		static double GetDouble(IDataReader dr, int idx)
 		{
-#if !NETSTANDARD
-			var current = Thread.CurrentThread.CurrentCulture;
-
-			if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
-				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-#endif
-
-			var value = dr.GetDouble(idx);
-
-#if !NETSTANDARD
-			if (current != CultureInfo.InvariantCulture)
-				Thread.CurrentThread.CurrentCulture = current;
-#endif
-
-			return value;
+			using (new InformixCultureFixRegion())
+				return dr.GetDouble(idx);
 		}
 
 		static decimal GetDecimal(IDataReader dr, int idx)
 		{
-#if !NETSTANDARD
-			var current = Thread.CurrentThread.CurrentCulture;
-
-			if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
-				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-#endif
-
-			var value = dr.GetDecimal(idx);
-
-#if !NETSTANDARD
-			if (current != CultureInfo.InvariantCulture)
-				Thread.CurrentThread.CurrentCulture = current;
-#endif
-
-			return value;
+			using (new InformixCultureFixRegion())
+				return dr.GetDecimal(idx);
 		}
 
 		Type _ifxBlob;
@@ -234,7 +199,7 @@ namespace LinqToDB.DataProvider.Informix
 
 #endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -245,6 +210,11 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#endregion
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(IMerge<TTarget, TSource> merge)
+		{
+			return new InformixMergeBuilder<TTarget, TSource>(merge, Name);
+		}
+
+		#endregion
 	}
 }

@@ -66,7 +66,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void SameSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -146,7 +146,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void SameSourceUpdateWithPredicateAndUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -233,7 +233,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void OtherSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -273,7 +273,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void AnonymousSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -322,7 +322,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void AnonymousListSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -371,7 +371,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void UpdateReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -420,7 +420,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void UpdateReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))

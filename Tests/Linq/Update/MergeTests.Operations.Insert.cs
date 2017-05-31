@@ -389,7 +389,7 @@ namespace Tests.Merge
 		#endregion
 
 		#region Insert<TEntity>(predicate)
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void SameSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -488,7 +488,7 @@ namespace Tests.Merge
 		#endregion
 
 		#region Insert<TEntity>(predicate, create)
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void SameSourceInsertWithPredicateAndCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -755,7 +755,7 @@ namespace Tests.Merge
 		#endregion
 
 		#region Insert<TTarget, TSource>(predicate, create)
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void OtherSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -790,7 +790,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void AnonymousSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -834,7 +834,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void AnonymousListSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -878,7 +878,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void InsertReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -922,7 +922,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void InsertReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))

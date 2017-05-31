@@ -27,8 +27,10 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
+			// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
+			// this is fine as long as we use it only for \0 character
 			stringBuilder
-				.Append("char(")
+				.Append("chr(")
 				.Append(value)
 				.Append(")")
 				;

@@ -18,7 +18,8 @@ namespace Tests.Merge
 	public partial class MergeTests
 	{
 		// ASE: ASE just don't like this query...
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void TestParameters1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -61,7 +62,7 @@ namespace Tests.Merge
 					.Delete((t, s) => t.Field3 != parameterValues.Val2)
 					.Merge();
 
-				Assert.AreEqual(8, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(8, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -102,7 +103,7 @@ namespace Tests.Merge
 					.DeleteBySource(t => t.Field3 != parameterValues.Val2)
 					.Merge();
 
-				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -138,7 +139,7 @@ namespace Tests.Merge
 				}
 				catch (SqlException ex)
 				{
-					Assert.AreEqual(4, db.LastQuery.Count(_ => _ == '@'));
+					Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 					Assert.AreEqual(8011, ex.Number);
 				}
 			}
@@ -163,12 +164,18 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
+		private static char GetParameterToken(string context)
+		{
+			return context == ProviderName.Informix ? '?' : '@';
+		}
+
 		// Oracle: optimized by provider
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void TestParametersInUpdateCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -186,12 +193,13 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
 		// Oracle: optimized by provider
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Firebird, ProviderName.Informix)]
 		public void TestParametersInInsertCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -209,11 +217,11 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void TestParametersInDeleteCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -231,7 +239,7 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -252,7 +260,7 @@ namespace Tests.Merge
 					.Merge();
 
 				Assert.AreEqual(1, rows);
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -276,14 +284,14 @@ namespace Tests.Merge
 					.Merge();
 
 				Assert.AreEqual(1, rows);
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
-		// Oracle, DB2: optimized by provider
+		// Oracle, DB2, FB3: optimized by provider
 		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS,
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Firebird, TestProvName.Firebird3)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
 		public void TestParametersInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -305,7 +313,7 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 5).ToList();
 
@@ -314,7 +322,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void TestParametersInUpdateExpression(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -335,7 +343,7 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 4).ToList();
 
@@ -364,7 +372,7 @@ namespace Tests.Merge
 					.Merge();
 
 				Assert.AreEqual(1, rows);
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 1).ToList();
 
@@ -391,7 +399,7 @@ namespace Tests.Merge
 					.Merge();
 
 				Assert.AreEqual(1, rows);
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -416,7 +424,7 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 
@@ -444,7 +452,7 @@ namespace Tests.Merge
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == '@'));
+				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 	}

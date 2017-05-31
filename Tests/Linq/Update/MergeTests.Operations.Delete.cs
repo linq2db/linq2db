@@ -41,7 +41,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void SameSourceDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -93,7 +93,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void OtherSourceDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -119,7 +119,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void AnonymousSourceDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -153,7 +153,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void AnonymousListSourceDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -187,7 +187,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void DeleteReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -221,7 +221,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
 		public void DeleteReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))
