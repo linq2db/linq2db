@@ -54,7 +54,7 @@ GO
 
 CREATE TABLE "Doctor"
 (
-	"PersonID" INTEGER     references "Person"("PersonID") NOT NULL,
+	"PersonID" INTEGER     primary key references "Person"("PersonID") NOT NULL,
 	"Taxonomy" VARCHAR(50) NOT NULL
 )
 GO
@@ -66,7 +66,7 @@ GO
 
 CREATE TABLE "Patient"
 (
-	"PersonID"  INTEGER      references "Person"("PersonID") NOT NULL,
+	"PersonID"  INTEGER      primary key references "Person"("PersonID") NOT NULL,
 	"Diagnosis" VARCHAR(256) NOT NULL
 )
 GO

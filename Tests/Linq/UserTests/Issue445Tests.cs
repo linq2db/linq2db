@@ -90,6 +90,21 @@ namespace Tests.UserTests
 			});
 		}
 
+		[Test, IssueContextSourceAttribute]
+		private IEnumerable<Person> GetPersonsFromDisposed3(string context)
+		{
+			using (var db = GetDataContext(context))
+				return db.GetTable<Person>().Where(_ => _.ID == 1).AsEnumerable();
+		}
+
+		[Test, IssueContextSourceAttribute]
+		public void ObjectDisposedException3(string context)
+		{
+			Assert.Throws<ObjectDisposedException>(() =>
+			{
+				AreEqual(Person.Where(_ => _.ID == 1), GetPersonsFromDisposed3(context));
+			});
+		}
 		private IEnumerable<Person> GetPersonsFromDisposed2(string context)
 		{
 			using (var db = new DataContext(context))
