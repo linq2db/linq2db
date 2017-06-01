@@ -393,6 +393,7 @@
     <Compile Include="UserTests\MultiPartIdentifierTests.cs" />
     <Compile Include="UserTests\SelectManyDeleteTests.cs" />
     <Compile Include="UserTests\SelectManyUpdateTests.cs" />
+    <Compile Include="UserTests\SQLiteDateTime.cs" />
     <Compile Include="UserTests\UnknownSqlTests.cs" />
     <Compile Include="UserTests\UnnecessaryInnerJoinTests.cs" />
   </ItemGroup>
