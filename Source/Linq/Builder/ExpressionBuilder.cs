@@ -96,6 +96,10 @@ namespace LinqToDB.Linq.Builder
 			ParameterExpression[] compiledParameters)
 		{
 			_query               = query;
+
+			if (Configuration.Linq.UseBinaryAggregateExpression)
+				expression = AggregateExpression(expression);
+
 			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
 			CompiledParameters   = compiledParameters;
@@ -232,9 +236,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertExpressionTree(Expression expression)
 		{
-			var expr = Configuration.Linq.UseBinaryAggregateExpression
-				? AggregateExpression(expression)
-				: expression;
+			var expr = expression;
 
 			expr = ConvertParameters (expr);
 			expr = ExposeExpression  (expr);

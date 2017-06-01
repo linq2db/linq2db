@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -46,39 +43,32 @@ namespace Tests.UserTests
 				if (obj == null) return null;
 				                 return obj.Value;
 			});
-
-			MappingSchema.Default.SetConverter<MyString, DataParameter>((obj) =>
+			ms.SetConverter<MyString, DataParameter>((obj) =>
 			{
 				if (obj == null) return new DataParameter {                    DataType = DataType.NVarChar };
 				                 return new DataParameter { Value = obj.Value, DataType = DataType.NVarChar };
 			});
-			MappingSchema.Default.SetConverter<string, MyString>((txt) =>
+			ms.SetConverter<string, MyString>((txt) =>
 			{
 				if (string.IsNullOrEmpty(txt)) return null;
 				                               return new MyString { Value = txt };
 			});
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, ms))
+			using (new DeletePerson(db))
 			{
-				try
+				var obj = new Entity533
 				{
-					var obj = new Entity533
-					{
-						FirstName = new MyString { Value = "FirstName533" },
-						LastName  = new MyString { Value = "LastName533" },
-					};
+					FirstName = new MyString { Value = "FirstName533" },
+					LastName  = new MyString { Value = "LastName533" },
+				};
 
-					var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
 
-					var obj2 = db.GetTable<Entity533>().First(_ => _.ID == id1);
+				var obj2 = db.GetTable<Entity533>().First(_ => _.ID == id1);
 
-					Assert.IsNull  (obj2.MiddleName);
-					Assert.AreEqual(obj.FirstName.Value, obj2.FirstName.Value);
-				}
-				finally
-				{
-					db.Person.Delete(_ => _.ID > MaxPersonID);
-				}
+				Assert.IsNull  (obj2.MiddleName);
+				Assert.AreEqual(obj.FirstName.Value, obj2.FirstName.Value);
 			}
 		}
 	}

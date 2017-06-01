@@ -13,8 +13,9 @@ namespace Tests.UserTests
 				ProviderName.Access, ProviderName.SQLite, ProviderName.Oracle,
 				ProviderName.MySql, ProviderName.Sybase, 
 				ProviderName.OracleNative, ProviderName.OracleManaged,
+				ProviderName.DB2,
 				TestProvName.MySql57,
-				TestProvName.SQLiteMs)
+				TestProvName.SQLiteMs, ProviderName.SqlServer2000, TestProvName.MariaDB)
 			{
 			}
 		}

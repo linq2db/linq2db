@@ -374,6 +374,7 @@
     <Compile Include="UserTests\Issue133Tests.cs" />
     <Compile Include="UserTests\Issue192Tests.cs" />
     <Compile Include="UserTests\Issue175Tests.cs" />
+    <Compile Include="UserTests\Issue228Tests.cs" />
     <Compile Include="UserTests\Issue269Tests.cs" />
     <Compile Include="UserTests\Issue271Tests.cs" />
     <Compile Include="UserTests\Issue358Tests.cs" />
@@ -385,6 +386,7 @@
     <Compile Include="UserTests\Issue445Tests.cs" />
     <Compile Include="UserTests\Issue421.cs" />
     <Compile Include="UserTests\Issue461Tests.cs" />
+    <Compile Include="UserTests\Issue693Tests.cs" />
     <Compile Include="UserTests\Issue531Tests.cs" />
     <Compile Include="UserTests\Issue357Tests.cs" />
     <Compile Include="UserTests\Issue352Tests.cs" />
@@ -402,6 +404,7 @@
     <Compile Include="UserTests\MultiPartIdentifierTests.cs" />
     <Compile Include="UserTests\SelectManyDeleteTests.cs" />
     <Compile Include="UserTests\SelectManyUpdateTests.cs" />
+    <Compile Include="UserTests\SQLiteDateTime.cs" />
     <Compile Include="UserTests\UnknownSqlTests.cs" />
     <Compile Include="UserTests\UnnecessaryInnerJoinTests.cs" />
   </ItemGroup>

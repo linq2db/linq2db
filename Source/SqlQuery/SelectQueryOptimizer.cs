@@ -899,15 +899,25 @@ namespace LinqToDB.SqlQuery
 
 		static bool IsAggregationFunction(IQueryElement expr)
 		{
-			if (expr is SqlFunction)
-				switch (((SqlFunction)expr).Name)
+			var func = expr as SqlFunction;
+			if (func != null)
+			{ 
+				switch (func.Name)
 				{
 					case "Count"   :
 					case "Average" :
 					case "Min"     :
 					case "Max"     :
 					case "Sum"     : return true;
+					default        : return false;
 				}
+			}
+
+			var sqlExpr = expr as SqlExpression;
+			if (sqlExpr != null)
+			{
+				return sqlExpr.SqlFlags.HasFlag(SqlFlags.Aggregate);
+			}
 
 			return false;
 		}

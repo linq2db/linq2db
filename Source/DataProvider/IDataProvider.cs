@@ -28,6 +28,7 @@ namespace LinqToDB.DataProvider
 		void               SetParameter          (IDbDataParameter parameter, string name, DataType dataType, object value);
 		Type               ConvertParameterType  (Type type, DataType dataType);
 		bool               IsCompatibleConnection(IDbConnection connection);
+		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
 
 #if !NETSTANDARD
 		ISchemaProvider    GetSchemaProvider     ();

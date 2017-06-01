@@ -2365,33 +2365,36 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 
-				case BinaryAggregateExpression.AggregateExpressionType :
+				case ExpressionType.Extension :
 					{
-						var e = (BinaryAggregateExpression)expression;
-
-						var aggregateCondition = new SelectQuery.SearchCondition();
-						var isOr = e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse;
-
-						foreach (var expr in e.Expressions)
+						var e = expression as BinaryAggregateExpression;
+						if (e != null)
 						{
-							var currentItems = new SelectQuery.SearchCondition();
-							BuildSearchCondition(context, expr,  currentItems.Conditions);
 
-							if (aggregateCondition.Precedence != currentItems.Precedence)
-							{
-								aggregateCondition.Conditions.Add(new SelectQuery.Condition(false, currentItems, isOr));
-							}
-							else
-							{
-								if (isOr)
-									foreach (var c in currentItems.Conditions)
-										c.IsOr = true;
+							var aggregateCondition = new SelectQuery.SearchCondition();
+							var isOr = e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse;
 
-								aggregateCondition.Conditions.AddRange(currentItems.Conditions);
+							foreach (var expr in e.Expressions)
+							{
+								var currentItems = new SelectQuery.SearchCondition();
+								BuildSearchCondition(context, expr, currentItems.Conditions);
+
+								if (aggregateCondition.Precedence != currentItems.Precedence)
+								{
+									aggregateCondition.Conditions.Add(new SelectQuery.Condition(false, currentItems, isOr));
+								}
+								else
+								{
+									if (isOr)
+										foreach (var c in currentItems.Conditions)
+											c.IsOr = true;
+
+									aggregateCondition.Conditions.AddRange(currentItems.Conditions);
+								}
 							}
+
+							conditions.Add(new SelectQuery.Condition(false, aggregateCondition));
 						}
-
-						conditions.Add(new SelectQuery.Condition(false, aggregateCondition));
 
 						break;
 					}

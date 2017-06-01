@@ -230,7 +230,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    blob,
 	SmallIntValue  smallint,
 	IntValue       int,
-	BigIntValue    bigint
+	BigIntValue    bigint,
+	StringValue    VARCHAR(50)
 )
 COMMIT;
 

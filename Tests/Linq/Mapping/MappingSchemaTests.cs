@@ -2,7 +2,9 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -393,6 +395,34 @@ namespace Tests.Mapping
 			Assert.That(mapType, Is.EqualTo(typeof(int?)));
 			var convertedValue = Converter.ChangeType(null, mapType, schema);
 			Assert.IsNull(convertedValue);
+		}
+
+		public class PkTable
+		{
+			[PrimaryKey, Identity]
+			[DataType(DataType.DateTime)]
+			public int Id;
+		}
+
+		[Column("ParentId", "Parent.Id")]
+		public class FkTable
+		{
+			[PrimaryKey]
+			public int Id;
+
+			public PkTable Parent;
+		}
+
+		[Test]
+		public void DoNotUseComplexAttributes()
+		{
+			var ed = MappingSchema.Default.GetEntityDescriptor(typeof(FkTable));
+			var c  = ed.Columns.Single(_ => _.ColumnName == "ParentId");
+
+			Assert.False(c.IsPrimaryKey);
+			Assert.False(c.IsIdentity);
+			Assert.AreEqual(DataType.DateTime, c.DataType);
+
 		}
 	}
 }
