@@ -753,7 +753,7 @@ namespace LinqToDB.Linq
 							}
 							else if (field.IsIdentity)
 							{
-								throw new LinqException("InsertOrUpdate method does not support identity field '{0}.{1}'.", sqlTable.Name, field.Name);
+								throw new LinqException("InsertOrReplace method does not support identity field '{0}.{1}'.", sqlTable.Name, field.Name);
 							}
 						}
 
@@ -763,7 +763,7 @@ namespace LinqToDB.Linq
 						var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys).ToList();
 
 						if (keys.Count == 0)
-							throw new LinqException("InsertOrUpdate method requires the '{0}' table to have a primary key.", sqlTable.Name);
+							throw new LinqException("InsertOrReplace method requires the '{0}' table to have a primary key.", sqlTable.Name);
 
 						var q =
 						(
@@ -775,7 +775,7 @@ namespace LinqToDB.Linq
 						var missedKey = keys.Except(q.Select(i => i.k)).FirstOrDefault();
 
 						if (missedKey != null)
-							throw new LinqException("InsertOrUpdate method requires the '{0}.{1}' field to be included in the insert setter.",
+							throw new LinqException("InsertOrReplace method requires the '{0}.{1}' field to be included in the insert setter.",
 								sqlTable.Name,
 								missedKey.Name);
 
