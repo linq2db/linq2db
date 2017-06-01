@@ -1217,7 +1217,7 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// Validates command configuration to not violate common or provider-specific rules.
 		/// </summary>
-		public void Validate()
+		public virtual void Validate()
 		{
 			// validate operations limit
 			if (MaxOperationsCount > 0 && Merge.Operations.Length > MaxOperationsCount)

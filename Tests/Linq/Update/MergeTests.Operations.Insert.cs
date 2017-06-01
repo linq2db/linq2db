@@ -105,8 +105,8 @@ namespace Tests.Merge
 			}
 		}
 
-		// DB2 doesn't like match condition like that
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// DB2 and SAP HANA doesn't like match condition like that
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.SapHana)]
 		public void SameSourceInsertFromTableWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -162,8 +162,8 @@ namespace Tests.Merge
 			}
 		}
 
-		// DB2 doesn't like match condition like that
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// DB2 and SAP HANA doesn't like match condition like that
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.SapHana)]
 		public void SameSourceInsertFromQueryWithSelectAndMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -303,8 +303,8 @@ namespace Tests.Merge
 			}
 		}
 
-		// DB2 doesn't like match condition like that
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// DB2 and SAP HANA doesn't like match condition like that
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.SapHana)]
 		public void SameSourceInsertFromCollectionWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -389,7 +389,7 @@ namespace Tests.Merge
 		#endregion
 
 		#region Insert<TEntity>(predicate)
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -488,7 +488,7 @@ namespace Tests.Merge
 		#endregion
 
 		#region Insert<TEntity>(predicate, create)
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceInsertWithPredicateAndCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -755,7 +755,7 @@ namespace Tests.Merge
 		#endregion
 
 		#region Insert<TTarget, TSource>(predicate, create)
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -790,7 +790,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void AnonymousSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -834,7 +834,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void AnonymousListSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -878,7 +878,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void InsertReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -922,7 +922,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void InsertReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))

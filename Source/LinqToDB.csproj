@@ -83,6 +83,7 @@
     <Compile Include="DataProvider\Informix\InformixMergeBuilder.cs" />
     <Compile Include="DataProvider\Oracle\OracleMergeBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaMergeBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerMergeBuilder.cs" />
     <Compile Include="DataProvider\Sybase\SybaseMergeBuilder.cs" />

@@ -159,5 +159,10 @@ namespace LinqToDB.DataProvider.SapHana
 				options,
 				source);
 		}
+
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(IMerge<TTarget, TSource> merge)
+		{
+			return new SapHanaMergeBuilder<TTarget, TSource>(merge, Name);
+		}
 	}
 }

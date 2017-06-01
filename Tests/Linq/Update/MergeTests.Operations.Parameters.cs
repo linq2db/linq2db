@@ -19,7 +19,7 @@ namespace Tests.Merge
 	{
 		// ASE: ASE just don't like this query...
 		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Firebird, ProviderName.Informix)]
+			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParameters1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -170,12 +170,12 @@ namespace Tests.Merge
 
 		private static char GetParameterToken(string context)
 		{
-			return context == ProviderName.Informix ? '?' : '@';
+			return context == ProviderName.Informix ? '?' : (context == ProviderName.SapHana ? ':' : '@');
 		}
 
 		// Oracle: optimized by provider
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Firebird, ProviderName.Informix)]
+			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParametersInUpdateCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -199,7 +199,7 @@ namespace Tests.Merge
 
 		// Oracle: optimized by provider
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Firebird, ProviderName.Informix)]
+			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParametersInInsertCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -221,7 +221,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParametersInDeleteCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -291,7 +291,7 @@ namespace Tests.Merge
 		// Oracle, DB2, FB3: optimized by provider
 		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS,
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParametersInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -322,7 +322,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParametersInUpdateExpression(string context)
 		{
 			using (var db = new TestDataConnection(context))

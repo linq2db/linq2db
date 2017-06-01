@@ -44,7 +44,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceAssociationInDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -72,7 +72,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceAssociationInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -151,7 +151,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -349,7 +349,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -415,7 +415,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceAssociationInDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -443,7 +443,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceAssociationInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -522,7 +522,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -720,7 +720,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))

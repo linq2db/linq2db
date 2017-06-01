@@ -528,6 +528,7 @@ CREATE COLUMN TABLE "IndexTable2" (
 ALTER TABLE "IndexTable2" ADD CONSTRAINT "FK_Patient2_IndexTable" FOREIGN KEY ("PKField1", "PKField2") REFERENCES "IndexTable" ("PKField1", "PKField2") ON UPDATE CASCADE ON DELETE CASCADE;;
 
 CALL DROPEXISTINGTABLE('testmerge1', CURRENT_SCHEMA);;
+
 CALL DROPEXISTINGTABLE('testmerge2', CURRENT_SCHEMA);;
 
 CREATE TABLE "testmerge1"
@@ -541,6 +542,7 @@ CREATE TABLE "testmerge1"
 	
 	PRIMARY KEY ("id")
 );;
+
 CREATE TABLE "testmerge2"
 (
 	"id"       INTEGER        NOT NULL,

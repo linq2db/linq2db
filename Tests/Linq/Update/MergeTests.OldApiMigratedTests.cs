@@ -141,15 +141,21 @@ namespace Tests.Merge
 			}
 		}
 
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
 		[Table("AllTypes")]
 		class AllType
 		{
 			[PrimaryKey, Identity]
 			public int ID;
 			[Column(DataType = DataType.Char, Length = 1)]
+			[Column("CHARDATATYPE", DataType = DataType.Char, Length = 1, Configuration = ProviderName.DB2)]
 			public char charDataType;
 			[Column(DataType = DataType.NChar, Length = 20)]
+			[Column("NCHARDATATYPE", DataType = DataType.NChar, Length = 20, Configuration = ProviderName.DB2)]
 			public string ncharDataType;
+			[Column(DataType = DataType.NVarChar, Length = 20)]
+			[Column("NVARCHARDATATYPE", DataType = DataType.NVarChar, Length = 20, Configuration = ProviderName.DB2)]
+			public string nvarcharDataType;
 		}
 
 		// ASE: alltypes table must be fixed
@@ -158,6 +164,7 @@ namespace Tests.Merge
 		public void MergeChar1(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
 				{
@@ -165,14 +172,7 @@ namespace Tests.Merge
 					ncharDataType = "\x0"
 				}));
 
-				try
-				{
-					db.GetTable<AllType>().FromSame(db.GetTable<AllType>().Where(t => t.ID == id)).Update().Insert().Merge();
-				}
-				finally
-				{
-					db.GetTable<AllType>().Delete(t => t.ID == id);
-				}
+				db.GetTable<AllType>().FromSame(db.GetTable<AllType>().Where(t => t.ID == id)).Update().Insert().Merge();
 			}
 		}
 
@@ -182,25 +182,54 @@ namespace Tests.Merge
 		public void MergeChar2(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				try
-				{
-					db.GetTable<AllType>()
-						.FromSame(new[]
+				db.GetTable<AllType>()
+					.FromSame(new[]
+					{
+						new AllType
 						{
-							new AllType
-							{
-								ID            = 10,
-								charDataType  = '\x0',
-								ncharDataType = "\x0"
-							}
-						}).Update().Insert()
-						.Merge();
-				}
-				finally
-				{
-					db.GetTable<AllType>().Delete(t => t.ID == 10);
-				}
+							ID            = 10,
+							charDataType  = '\x0',
+							ncharDataType = "\x0"
+						}
+					}).Update().Insert()
+					.Merge();
+			}
+		}
+
+		// extra test to check MergeChar* fixes (but we really need to implement excessive types tests for all providers)
+		// SAP HANA: something wrong with \0 in strings
+		// Sybase: AllTypes table must be fixed
+		// DB2: something doesn't work
+		[MergeDataContextSource(ProviderName.SapHana, ProviderName.Sybase, ProviderName.DB2)]
+		public void MergeString(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var lastId = db.GetTable<AllType>().Select(_ => _.ID).Max();
+
+				var rows = db.GetTable<AllType>()
+					.FromSame(new[]
+					{
+						new AllType()
+						{
+							ID = lastId + 1,
+							charDataType = '\x0',
+							ncharDataType = "\x0",
+							nvarcharDataType = "test\x0it"
+						}
+					})
+					.Insert().Merge();
+
+				Assert.AreEqual(1, rows);
+
+				var row = db.GetTable<AllType>().OrderByDescending(_ => _.ID).Take(1).Single();
+
+				Assert.AreEqual('\0', row.charDataType);
+				Assert.AreEqual("\0", row.ncharDataType);
+				Assert.AreEqual("test\0it", row.nvarcharDataType);
 			}
 		}
 	}

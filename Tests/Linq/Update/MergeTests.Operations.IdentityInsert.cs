@@ -18,7 +18,8 @@ namespace Tests.Merge
 	{
 		// DB2, Oracle: not supported
 		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.Informix)]
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void ImlicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -62,7 +63,8 @@ namespace Tests.Merge
 		// ASE: server just dies ("Enterprise Quality")
 		// Oracle: not supported
 		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Sybase,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.Informix)]
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void ExplicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -105,7 +107,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void ExplicitNoIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))

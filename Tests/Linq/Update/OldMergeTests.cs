@@ -17,7 +17,7 @@ namespace Tests.xUpdate
 	{
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, TestProvName.Firebird3, ProviderName.SQLite, TestProvName.SQLiteMs,
-			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, TestProvName.MariaDB, TestProvName.MySql57)]
+			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana)]
 		public void Merge(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -39,7 +39,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDelete(string context)
 		{
@@ -75,7 +75,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate3(string context)
 		{
@@ -88,7 +88,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate4(string context)
 		{
@@ -103,7 +103,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate5(string context)
 		{
@@ -117,13 +117,13 @@ namespace Tests.xUpdate
 		class AllType
 		{
 			[PrimaryKey, Identity] public int ID;
-			[Column(DataType = DataType.Char,  Length = 1)]   public char   charDataType;
-			[Column(DataType = DataType.NChar, Length = 20)]  public string ncharDataType;
+			[Column(DataType = DataType.Char,  Length = 1)]  public char   charDataType;
+			[Column(DataType = DataType.NChar, Length = 20)] public string ncharDataType;
 		}
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeChar1(string context)
 		{
@@ -148,7 +148,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeChar2(string context)
 		{
@@ -172,5 +172,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+		
 	}
 }
