@@ -6,7 +6,6 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using SqlQuery;
 
-
 	public class InformixMappingSchema : MappingSchema
 	{
 		public InformixMappingSchema() : this(ProviderName.Informix)
