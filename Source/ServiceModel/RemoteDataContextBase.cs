@@ -297,13 +297,17 @@ namespace LinqToDB.ServiceModel
 
 		object IDataContext.SetQuery(IQueryContext queryContext)
 		{
+			ThrowOnDisposed();
+
 			return new QueryContext { Query = queryContext };
 		}
 
 		int IDataContext.ExecuteNonQuery(object query)
 		{
+			ThrowOnDisposed();
+
 			var ctx  = (QueryContext)query;
-			var q    = ctx.Query.SelectQuery.ProcessParameters();
+			var q    = ctx.Query.SelectQuery.ProcessParameters(MappingSchema);
 			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints);
 
 			if (_batchCounter > 0)
@@ -319,6 +323,8 @@ namespace LinqToDB.ServiceModel
 
 		object IDataContext.ExecuteScalar(object query)
 		{
+			ThrowOnDisposed();
+
 			if (_batchCounter > 0)
 				throw new LinqException("Incompatible batch operation.");
 
@@ -326,7 +332,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q = ctx.Query.SelectQuery.ProcessParameters();
+			var q = ctx.Query.SelectQuery.ProcessParameters(MappingSchema);
 
 			return ctx.Client.ExecuteScalar(
 				Configuration,
@@ -335,6 +341,8 @@ namespace LinqToDB.ServiceModel
 
 		IDataReader IDataContext.ExecuteReader(object query)
 		{
+			ThrowOnDisposed();
+
 			if (_batchCounter > 0)
 				throw new LinqException("Incompatible batch operation.");
 
@@ -342,7 +350,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q      = ctx.Query.SelectQuery.ProcessParameters();
+			var q      = ctx.Query.SelectQuery.ProcessParameters(MappingSchema);
 			var ret    = ctx.Client.ExecuteReader(
 				Configuration,
 				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints));
@@ -353,6 +361,8 @@ namespace LinqToDB.ServiceModel
 
 		public void ReleaseQuery(object query)
 		{
+			ThrowOnDisposed();
+
 			var ctx = (QueryContext)query;
 
 			if (ctx.Client != null)
@@ -361,6 +371,8 @@ namespace LinqToDB.ServiceModel
 
 		string IDataContext.GetSqlText(object query)
 		{
+			ThrowOnDisposed();
+
 			var ctx        = (QueryContext)query;
 			var sqlBuilder = ((IDataContext)this).CreateSqlProvider();
 			var sb         = new StringBuilder();
@@ -429,15 +441,37 @@ namespace LinqToDB.ServiceModel
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
+			ThrowOnDisposed();
+
 			return Clone();
 		}
 
 		public event EventHandler OnClosing;
 
-		public void Dispose()
+		protected bool Disposed { get; private set; }
+
+		protected void ThrowOnDisposed()
+		{
+			if (Disposed)
+				throw new ObjectDisposedException("RemoteDataContext", "IDataContext is disposed");
+		}
+
+		void IDataContext.Close()
+		{
+			Close();
+		}
+
+		private void Close()
 		{
 			if (OnClosing != null)
 				OnClosing(this, EventArgs.Empty);
+		}
+
+		public void Dispose()
+		{
+			Disposed = true;
+
+			Close();
 		}
 	}
 }

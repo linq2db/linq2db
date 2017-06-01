@@ -213,6 +213,8 @@ namespace LinqToDB.DataProvider.DB2
 						value    = ((Guid)value).ToByteArray();
 						dataType = DataType.VarBinary;
 					}
+					if (value == null)
+						dataType = DataType.VarBinary;
 					break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :

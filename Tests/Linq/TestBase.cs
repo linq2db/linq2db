@@ -35,6 +35,7 @@ using NUnit.Framework.Internal.Builders;
 namespace Tests
 {
 	using Model;
+	using System.Text.RegularExpressions;
 
 	public class TestBase
 	{
@@ -53,7 +54,7 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
-				if (traceCount < 1000)
+				 if (traceCount < 10000)
 				{
 					Console.WriteLine("{0}: {1}", s2, s1);
 					Debug.WriteLine(s1, s2);
@@ -62,7 +63,7 @@ namespace Tests
 				else
 					Console.Write("z");
 #else
-				if (traceCount++ > 1000)
+				if (traceCount++ > 10000)
 					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
 #endif
 			};
@@ -476,6 +477,7 @@ namespace Tests
 			get
 			{
 				if (_types == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_types = db.Types.ToList();
 
@@ -489,6 +491,7 @@ namespace Tests
 			get
 			{
 				if (_types2 == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_types2 = db.Types2.ToList();
 
@@ -496,7 +499,7 @@ namespace Tests
 			}
 		}
 
-		protected const int MaxPersonID = 4;
+		protected internal const int MaxPersonID = 4;
 
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
@@ -505,6 +508,7 @@ namespace Tests
 			{
 				if (_person == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_person = db.Person.ToList();
 
@@ -523,6 +527,7 @@ namespace Tests
 			{
 				if (_patient == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_patient = db.Patient.ToList();
 
@@ -541,6 +546,7 @@ namespace Tests
 			{
 				if (_doctor == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_doctor = db.Doctor.ToList();
 				}
@@ -557,6 +563,7 @@ namespace Tests
 			get
 			{
 				if (_parent == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						db.Parent.Delete(c => c.ParentID >= 1000);
@@ -670,6 +677,7 @@ namespace Tests
 			get
 			{
 				if (_child == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						db.Child.Delete(c => c.ParentID >= 1000);
@@ -696,6 +704,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						_grandChild = db.GrandChild.ToList();
@@ -715,6 +724,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild1 == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						_grandChild1 = db.GrandChild1.ToList();
@@ -741,6 +751,7 @@ namespace Tests
 			{
 				if (_inheritanceParent == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_inheritanceParent = db.InheritanceParent.ToList();
 				}
@@ -756,6 +767,7 @@ namespace Tests
 			{
 				if (_inheritanceChild == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
 				}
@@ -953,7 +965,60 @@ namespace Tests
 				}
 			}
 		}
-#endregion
+		#endregion
+
+		[Sql.Function("VERSION", ServerSideOnly = true)]
+		private static string MySqlVersion()
+		{
+			throw new InvalidOperationException();
+		}
+
+		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
+		{
+			if (db.ContextID == "MySql" || db.ContextID == "MySql.LinqService")
+			{
+				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
+				// them from expected data too
+				var version = db.Types.Select(_ => MySqlVersion()).First();
+				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
+				if (match.Success)
+				{
+					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
+
+					if (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604)
+					{
+						var adjusted = new List<LinqDataTypes2>();
+						foreach (var record in data)
+						{
+							var copy = new LinqDataTypes2()
+							{
+								ID             = record.ID,
+								MoneyValue     = record.MoneyValue,
+								DateTimeValue  = record.DateTimeValue,
+								DateTimeValue2 = record.DateTimeValue2,
+								BoolValue      = record.BoolValue,
+								GuidValue      = record.GuidValue,
+								SmallIntValue  = record.SmallIntValue,
+								IntValue       = record.IntValue,
+								BigIntValue    = record.BigIntValue,
+								StringValue    = record.StringValue
+							};
+
+							if (copy.DateTimeValue != null)
+							{
+								copy.DateTimeValue = copy.DateTimeValue.Value.AddMilliseconds(-copy.DateTimeValue.Value.Millisecond);
+							}
+
+							adjusted.Add(copy);
+						}
+
+						return adjusted;
+					}
+				}
+			}
+
+			return data;
+		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
@@ -1064,6 +1129,19 @@ namespace Tests
 		}
 	}
 
+	public class DisableLogging : IDisposable
+	{
+		public DisableLogging()
+		{
+			DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+		}
+
+		public void Dispose()
+		{
+			DataConnection.TurnTraceSwitchOn();
+		}
+	}
+
 	public class WithoutJoinOptimization : IDisposable
 	{
 		public WithoutJoinOptimization()
@@ -1091,5 +1169,25 @@ namespace Tests
 		{
 			_db.DropTable<T>();
 		}
+	}
+
+	public class DeletePerson : IDisposable
+	{
+		private IDataContext _db;
+
+		public DeletePerson(IDataContext db)
+		{
+			_db = db;
+			Delete(_db);
+		}
+
+		public void Dispose()
+		{
+			Delete(_db);
+		}
+
+		private readonly Func<IDataContext, int> Delete =
+			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
+
 	}
 }

@@ -761,7 +761,7 @@ namespace LinqToDB.Data
 
 		internal IDataReader ExecuteReader()
 		{
-			return ExecuteReader(CommandBehavior.Default);
+			return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 		}
 
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
@@ -968,11 +968,25 @@ namespace LinqToDB.Data
 
 #region System.IDisposable Members
 
+		protected bool Disposed { get; private set; }
+
+		protected void ThrowOnDisposed()
+		{
+			if (Disposed)
+				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed");
+		}
+
 		public void Dispose()
 		{
+			Disposed = true;
 			Close();
 		}
 
 #endregion
+
+		internal CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
+		{
+			return DataProvider.GetCommandBehavior(commandBehavior);
+		}
 	}
 }

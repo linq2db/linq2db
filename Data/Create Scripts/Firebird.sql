@@ -106,7 +106,8 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 COMMIT;
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
 COMMIT;
-INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M');
+-- INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M');
+INSERT INTO Person (FirstName, LastName, Gender) VALUES (_utf8 x'4AC3BC7267656E', _utf8 x'4BC3B66E6967',     'M');
 COMMIT;
 
 -- Doctor Table Extension
@@ -229,7 +230,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    blob,
 	SmallIntValue  smallint,
 	IntValue       int,
-	BigIntValue    bigint
+	BigIntValue    bigint,
+	StringValue    VARCHAR(50)
 )
 COMMIT;
 

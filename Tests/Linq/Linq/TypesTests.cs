@@ -308,8 +308,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t,
-					from t in db.Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t);
+					AdjustExpectedData(db,	from t in    Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t),
+											from t in db.Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t);
 		}
 
 		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
@@ -404,8 +404,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types2 where new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) }.Contains(t.DateTimeValue) select t,
-					from t in db.Types2 where new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) }.Contains(t.DateTimeValue) select t);
+					AdjustExpectedData(db,	from t in    Types2 where new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) }.Contains(t.DateTimeValue) select t),
+											from t in db.Types2 where new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) }.Contains(t.DateTimeValue) select t);
 		}
 
 		[Test, DataContextSource(ProviderName.Access)]
@@ -415,8 +415,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types2 where arr.Contains(t.DateTimeValue) select t,
-					from t in db.Types2 where arr.Contains(t.DateTimeValue) select t);
+					AdjustExpectedData(db,	from t in    Types2 where arr.Contains(t.DateTimeValue) select t),
+											from t in db.Types2 where arr.Contains(t.DateTimeValue) select t);
 		}
 
 		[Test, DataContextSource(ProviderName.Access)]
@@ -426,8 +426,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types2 where arr.Contains(t.DateTimeValue) select t,
-					from t in db.Types2 where arr.Contains(t.DateTimeValue) select t);
+					AdjustExpectedData(db,	from t in    Types2 where arr.Contains(t.DateTimeValue) select t),
+											from t in db.Types2 where arr.Contains(t.DateTimeValue) select t);
 		}
 
 		[Test, DataContextSource]
@@ -476,35 +476,27 @@ namespace Tests.Linq
 		public void Unicode(string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
 			{
 				db.BeginTransaction();
 
-				try
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
+				var id =
+					db.Person
+						.InsertWithIdentity(() => new Person
+						{
+							FirstName = "擊敗奴隸",
+							LastName  = "Юникодкин",
+							Gender    = Gender.Male
+						});
 
-					var id =
-						db.Person
-							.InsertWithIdentity(() => new Person
-							{
-								FirstName = "擊敗奴隸",
-								LastName  = "Юникодкин",
-								Gender    = Gender.Male
-							});
+				Assert.NotNull(id);
 
-					Assert.NotNull(id);
+				var person = db.Person.Single(p => p.FirstName == "擊敗奴隸" && p.LastName == "Юникодкин");
 
-					var person = db.Person.Single(p => p.FirstName == "擊敗奴隸" && p.LastName == "Юникодкин");
-
-					Assert.NotNull (person);
-					Assert.AreEqual(id, person.ID);
-					Assert.AreEqual("擊敗奴隸", person.FirstName);
-					Assert.AreEqual("Юникодкин", person.LastName);
-				}
-				finally
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
-				}
+				Assert.NotNull (person);
+				Assert.AreEqual(id, person.ID);
+				Assert.AreEqual("擊敗奴隸", person.FirstName);
+				Assert.AreEqual("Юникодкин", person.LastName);
 			}
 		}
 
@@ -598,8 +590,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types2 where (t.BoolValue ?? false) select t,
-					from t in db.Types2 where t.BoolValue.Value      select t);
+					AdjustExpectedData(db,	from t in    Types2 where (t.BoolValue ?? false) select t),
+											from t in db.Types2 where t.BoolValue.Value      select t);
 		}
 
 		[Test, DataContextSource]
@@ -607,8 +599,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types2 where (t.BoolValue ?? false) select t,
-					from t in db.Types2 where t.BoolValue == true    select t);
+					AdjustExpectedData(db,	from t in    Types2 where (t.BoolValue ?? false) select t),
+											from t in db.Types2 where t.BoolValue == true    select t);
 		}
 
 		[Test, DataContextSource]
@@ -616,8 +608,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types2 where (t.BoolValue ?? false) select t,
-					from t in db.Types2 where true == t.BoolValue    select t);
+					AdjustExpectedData(db,	from t in    Types2 where (t.BoolValue ?? false) select t),
+											from t in db.Types2 where true == t.BoolValue    select t);
 		}
 
 		[Test, DataContextSource]

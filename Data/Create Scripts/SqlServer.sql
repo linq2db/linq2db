@@ -382,10 +382,13 @@ CREATE TABLE AllTypes
 
 	charDataType             char(1)           NULL,
 	varcharDataType          varchar(20)       NULL,
-	textDataType             text              NULL,
+	-- explicit collation set for legacy text types as they doesn't support *_SC collations and this script will
+	-- fail if database has such collation
+	textDataType             text  COLLATE Latin1_General_CI_AS NULL,
 	ncharDataType            nchar(20)         NULL,
 	nvarcharDataType         nvarchar(20)      NULL,
-	ntextDataType            ntext             NULL,
+	-- see textDataType column notes
+	ntextDataType            ntext COLLATE Latin1_General_CI_AS NULL,
 
 	binaryDataType           binary            NULL,
 	varbinaryDataType        varbinary         NULL,
@@ -605,7 +608,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    varbinary(5000),
 	SmallIntValue  smallint,
 	IntValue       int NULL,
-	BigIntValue    bigint NULL
+	BigIntValue    bigint NULL,
+	StringValue    nvarchar(50) NULL
 )
 GO
 -- SKIP SqlServer.2005 END
@@ -625,7 +629,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    varbinary(5000) NULL,
 	SmallIntValue  smallint,
 	IntValue       int             NULL,
-	BigIntValue    bigint          NULL
+	BigIntValue    bigint          NULL,
+	StringValue    nvarchar(50)    NULL
 )
 GO
 -- SKIP SqlAzure.2012 END

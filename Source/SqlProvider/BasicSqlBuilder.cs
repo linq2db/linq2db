@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 #if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;
@@ -1665,7 +1666,10 @@ namespace LinqToDB.SqlProvider
 					// start building next bucked
 					firstValue = true;
 					StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
-					StringBuilder.Append(" OR ");
+					if (predicate.IsNot)
+						StringBuilder.Append(" AND ");
+					else
+						StringBuilder.Append(" OR ");
 				}
 
 				var val = value;

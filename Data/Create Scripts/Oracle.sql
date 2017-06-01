@@ -623,7 +623,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    blob         NULL,
 	SmallIntValue  smallint,
 	IntValue       int          NULL,
-	BigIntValue    number(20,0) NULL
+	BigIntValue    number(20,0) NULL,
+	StringValue    VARCHAR2(50) NULL
 )
 /
 

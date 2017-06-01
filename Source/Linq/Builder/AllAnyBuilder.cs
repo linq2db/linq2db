@@ -19,6 +19,12 @@ namespace LinqToDB.Linq.Builder
 
 			if (methodCall.Arguments.Count == 2)
 			{
+				if (sequence.SelectQuery.Select.TakeValue != null ||
+				    sequence.SelectQuery.Select.SkipValue != null)
+				{
+					sequence = new SubQueryContext(sequence);
+				}
+
 				var condition = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
 				if (methodCall.Method.Name == "All")

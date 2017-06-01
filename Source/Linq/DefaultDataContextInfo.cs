@@ -29,7 +29,7 @@ namespace LinqToDB.Linq
 
 		public IDataContextInfo Clone(bool forNestedQuery)
 		{
-			return new DataContextInfo(DataContext.Clone(forNestedQuery));
+			return new DataContextInfo(DataContext.Clone(forNestedQuery), true);
 		}
 
 		static readonly IDataProvider _dataProvider = DataConnection.GetDataProvider(DataConnection.DefaultConfiguration);
