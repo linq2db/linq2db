@@ -414,7 +414,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ctx = Builder.GetSubQuery(this, call);
 
-					if (Builder.DataContextInfo.SqlProviderFlags.IsSubQueryColumnSupported)
+					if (Builder.DataContextInfo.DataContext.SqlProviderFlags.IsSubQueryColumnSupported)
 						return ctx.SelectQuery;
 
 					var join = ctx.SelectQuery.CrossApply();

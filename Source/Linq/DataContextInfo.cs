@@ -21,19 +21,6 @@ namespace LinqToDB.Linq
 
 		public IDataContext     DataContext      { get; private set; }
 		public bool             DisposeContext   { get; private set; }
-		public string           ContextID        { get { return DataContext.ContextID;        } }
-		public MappingSchema    MappingSchema    { get { return DataContext.MappingSchema;    } }
-		public SqlProviderFlags SqlProviderFlags { get { return DataContext.SqlProviderFlags; } }
-
-		public ISqlBuilder CreateSqlBuilder()
-		{
-			return DataContext.CreateSqlProvider();
-		}
-
-		public ISqlOptimizer GetSqlOptimizer()
-		{
-			return DataContext.GetSqlOptimizer();
-		}
 
 		public IDataContextInfo Clone(bool forNestedQuery)
 		{

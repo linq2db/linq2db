@@ -71,11 +71,6 @@ namespace LinqToDB.Linq
 
 		#region Execute
 
-		IEnumerable<T> Execute(IDataContextInfo dataContextInfo, Expression expression)
-		{
-			return GetQuery(expression, true).GetIEnumerable(null, dataContextInfo, expression, Parameters);
-		}
-
 		Query<T> GetQuery(Expression expression, bool cache)
 		{
 			if (cache && Info != null)
@@ -153,12 +148,12 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			return Execute(DataContextInfo, Expression).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(null, DataContextInfo, Expression, Parameters).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return Execute(DataContextInfo, Expression).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(null, DataContextInfo, Expression, Parameters).GetEnumerator();
 		}
 
 		#endregion

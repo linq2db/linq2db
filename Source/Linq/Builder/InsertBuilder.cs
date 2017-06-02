@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 							sequence.SelectQuery.Insert.Items,
 							sequence);
 
-						sequence.SelectQuery.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
+						sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
 						sequence.SelectQuery.From.Tables.Clear();
 
 						break;
@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var field in q)
 			{
-				var expr = builder.DataContextInfo.CreateSqlBuilder().GetIdentityExpression(insert.Into);
+				var expr = builder.DataContextInfo.DataContext.CreateSqlProvider().GetIdentityExpression(insert.Into);
 
 				if (expr != null)
 				{

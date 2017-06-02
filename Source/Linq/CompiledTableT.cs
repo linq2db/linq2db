@@ -41,8 +41,8 @@ namespace LinqToDB.Linq
 				query             = _lastQuery;
 			}
 
-			var contextID     = dataContextInfo.ContextID;
-			var mappingSchema = dataContextInfo.MappingSchema;
+			var contextID     = dataContextInfo.DataContext.ContextID;
+			var mappingSchema = dataContextInfo.DataContext.MappingSchema;
 
 			if (lastContextID != contextID || lastMappingSchema != mappingSchema)
 				query = null;
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq
 
 						if (query == null)
 						{
-							query = new Query<T>(dataContextInfo, _expression);
+							query = new Query<T>(dataContextInfo.DataContext, _expression);
 
 							query = new ExpressionBuilder(query, dataContextInfo, _expression, _lambda.Parameters.ToArray())
 								.Build<T>();

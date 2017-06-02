@@ -189,8 +189,8 @@ namespace LinqToDB.Linq.Builder
 			sql.Select.Take(expr, hints);
 
 			if (sql.Select.SkipValue != null &&
-				 DataContextInfo.SqlProviderFlags.IsTakeSupported &&
-				!DataContextInfo.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
+				 DataContextInfo.DataContext.SqlProviderFlags.IsTakeSupported &&
+				!DataContextInfo.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
 			{
 				if (context.SelectQuery.Select.SkipValue is SqlParameter && sql.Select.TakeValue is SqlValue)
 				{
@@ -219,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive)), hints);
 			}
 
-			if (!DataContextInfo.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
+			if (!DataContextInfo.DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
 			{
 				var p = sql.Select.TakeValue as SqlParameter;
 
@@ -2677,12 +2677,12 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)
 		{
-			return DataContextInfo.GetSqlOptimizer().ConvertExpression(expr);
+			return DataContextInfo.DataContext.GetSqlOptimizer().ConvertExpression(expr);
 		}
 
 		public ISqlPredicate Convert(IBuildContext context, ISqlPredicate predicate)
 		{
-			return DataContextInfo.GetSqlOptimizer().ConvertPredicate(context.SelectQuery, predicate);
+			return DataContextInfo.DataContext.GetSqlOptimizer().ConvertPredicate(context.SelectQuery, predicate);
 		}
 
 		internal ISqlExpression ConvertSearchCondition(IBuildContext context, ISqlExpression sqlExpression)

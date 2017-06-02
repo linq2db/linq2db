@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else if (!sequence.SelectQuery.GroupBy.IsEmpty)
 			{
-				if (!builder.DataContextInfo.SqlProviderFlags.IsSybaseBuggyGroupBy)
+				if (!builder.DataContextInfo.DataContext.SqlProviderFlags.IsSybaseBuggyGroupBy)
 					sequence.SelectQuery.Select.Add(new SqlValue(0));
 				else
 					foreach (var item in sequence.SelectQuery.GroupBy.Items)

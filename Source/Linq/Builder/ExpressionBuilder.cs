@@ -140,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 
 		public MappingSchema MappingSchema
 		{
-			get { return DataContextInfo.MappingSchema; }
+			get { return DataContextInfo.DataContext.MappingSchema; }
 		}
 
 		#endregion
