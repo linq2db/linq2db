@@ -367,6 +367,7 @@
     <Compile Include="UserTests\CompareNullableCharTests.cs" />
     <Compile Include="UserTests\ConverterInsertTests.cs" />
     <Compile Include="UserTests\CreateDecimalTableColumnTests.cs" />
+    <Compile Include="UserTests\ExpressionVisitorExtensionTests.cs" />
     <Compile Include="UserTests\FirstOrDefaultNullReferenceExceptionTests.cs" />
     <Compile Include="UserTests\GenericsFilterTests.cs" />
     <Compile Include="UserTests\GroupBySubqueryTests.cs" />
