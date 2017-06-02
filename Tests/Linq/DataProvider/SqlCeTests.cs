@@ -455,6 +455,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
 		public void Issue695Test(string context)
 		{
@@ -468,7 +469,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(1, t.Columns.Count(_ => _.IsPrimaryKey));
 				Assert.AreEqual(1, t.ForeignKeys.Count);
 			}
-
 		}
+#endif
 	}
 }
