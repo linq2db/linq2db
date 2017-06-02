@@ -62,7 +62,9 @@ namespace LinqToDB.Linq
 
 						if (query == null)
 						{
-							query = new ExpressionBuilder(new Query<T>(), dataContextInfo, _expression, _lambda.Parameters.ToArray())
+							query = new Query<T>(dataContextInfo, _expression);
+
+							query = new ExpressionBuilder(query, dataContextInfo, _expression, _lambda.Parameters.ToArray())
 								.Build<T>();
 
 							_infos.Add(key, query);

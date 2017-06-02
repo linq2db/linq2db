@@ -213,10 +213,18 @@ namespace LinqToDB.DataProvider.DB2
 						value    = ((Guid)value).ToByteArray();
 						dataType = DataType.VarBinary;
 					}
+					if (value == null)
+						dataType = DataType.VarBinary;
 					break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					if (value is Guid) value = ((Guid)value).ToByteArray();
+					else if (parameter.Size == 0 && value != null && value.GetType().Name == "DB2Binary")
+					{
+						dynamic v = value;
+						if (v.IsNull)
+							value = DBNull.Value;
+					}
 					break;
 				case DataType.Blob       :
 					base.SetParameter(parameter, "@" + name, dataType, value);
@@ -227,7 +235,7 @@ namespace LinqToDB.DataProvider.DB2
 			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
 		DB2BulkCopy _bulkCopy;
 
@@ -243,9 +251,9 @@ namespace LinqToDB.DataProvider.DB2
 				source);
 		}
 
-#endregion
+		#endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -256,6 +264,6 @@ namespace LinqToDB.DataProvider.DB2
 			return new DB2Merge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#endregion
+		#endregion
 	}
 }

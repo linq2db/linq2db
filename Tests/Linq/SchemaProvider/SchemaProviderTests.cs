@@ -297,5 +297,27 @@ namespace Tests.SchemaProvider
 				Assert.IsEmpty(sc.Tables.SelectMany(_ => _.ForeignKeys).Where(_ => _.MemberName.Any(char.IsDigit)));
 			}
 		}
+
+		[Test, DataContextSource(false)]
+		public void PrimaryForeignKeyTest(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var p = db.DataProvider.GetSchemaProvider();
+				var s = p.GetSchema(db);
+
+				var fkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
+				var pkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
+
+				Assert.AreEqual(1, fkCountDoctor);
+				Assert.AreEqual(1, pkCountDoctor);
+
+				var fkCountPerson = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
+				var pkCountPerson = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
+
+				Assert.AreEqual(2, fkCountPerson);
+				Assert.AreEqual(1, pkCountPerson);
+			}
+		}
 	}
 }

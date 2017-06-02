@@ -53,10 +53,10 @@ GO
 
 CREATE TABLE "Doctor"
 (
-	"PersonID" INTEGER     NOT NULL,
+	"PersonID" INTEGER     PRIMARY KEY NOT NULL,
 	"Taxonomy" VARCHAR(50) NOT NULL,
-	FOREIGN KEY "FK_Doctor_Person" ("PersonID")
-	REFERENCES "Person"
+
+	FOREIGN KEY "FK_Doctor_Person" ("PersonID") REFERENCES "Person"
 )
 GO
 
@@ -93,8 +93,10 @@ GO
 
 CREATE TABLE "Patient"
 (
-	"PersonID"  INTEGER      NOT NULL,
-	"Diagnosis" VARCHAR(256) NOT NULL
+	"PersonID"  INTEGER      PRIMARY KEY NOT NULL,
+	"Diagnosis" VARCHAR(256) NOT NULL,
+
+	FOREIGN KEY "FK_Patient_Person" ("PersonID") REFERENCES "Person"
 )
 GO
 
@@ -125,13 +127,14 @@ CREATE TABLE "LinqDataTypes"
 	"ID"             int,
 	"MoneyValue"     decimal(10,4),
 	"DateTimeValue"  timestamp,
-	"DateTimeValue2" timestamp  NULL,
+	"DateTimeValue2" timestamp   NULL,
 	"BoolValue"      smallint,
 	"GuidValue"      char(16) for bit DATA,
-	"BinaryValue"    blob(5000) NULL,
+	"BinaryValue"    blob(5000)  NULL,
 	"SmallIntValue"  smallint,
-	"IntValue"       int        NULL,
-	"BigIntValue"    bigint     NULL
+	"IntValue"       int         NULL,
+	"BigIntValue"    bigint      NULL,
+	"StringValue"    VARCHAR(50) NULL
 )
 GO
 

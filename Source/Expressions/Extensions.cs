@@ -7,6 +7,44 @@ namespace LinqToDB.Expressions
 {
 	public static class Extensions
 	{
+		#region GetDebugView
+
+		private static Func<Expression,string> _getDebugView;
+
+		/// <summary>
+		/// Gets the DebugView internal property value of provided expression.
+		/// </summary>
+		/// <param name="expression">Expression to get DebugView.</param>
+		/// <returns>DebugView value.</returns>
+		public static string GetDebugView(this Expression expression)
+		{
+			if (_getDebugView == null)
+			{
+				var p = Expression.Parameter(typeof(Expression));
+
+				try
+				{
+					var l = Expression.Lambda<Func<Expression,string>>(
+						Expression.PropertyOrField(p, "DebugView"),
+						p);
+
+					_getDebugView = l.Compile();
+				}
+				catch (ArgumentException)
+				{
+					var l = Expression.Lambda<Func<Expression,string>>(
+						Expression.Call(p, MemberHelper.MethodOf<Expression>(e => e.ToString())),
+						p);
+
+					_getDebugView = l.Compile();
+				}
+			}
+
+			return _getDebugView(expression);
+		}
+
+		#endregion
+
 		#region GetCount
 
 		public static int GetCount(this Expression expr, Func<Expression,bool> func)
@@ -290,15 +328,15 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Extension:
 					{
-						if (expr.CanReduce)
-							Visit(expr.Reduce(), func);
-						break;
-					}
+						var aggregate = expr as BinaryAggregateExpression;
+						if (aggregate != null)
+							Visit(aggregate.Expressions, func);
+						else
+						{
+							if (expr.CanReduce)
+								Visit(expr.Reduce(), func);
+						}
 
-				case BinaryAggregateExpression.AggregateExpressionType:
-					{
-						var e = (BinaryAggregateExpression)expr;
-						Visit(e.Expressions, func);
 						break;
 					}
 			}
@@ -575,15 +613,14 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Extension:
 					{
-						if (expr.CanReduce)
-							Visit(expr.Reduce(), func);
-						break;
-					}
-
-				case BinaryAggregateExpression.AggregateExpressionType:
-					{
-						var e = (BinaryAggregateExpression)expr;
-						Visit(e.Expressions, func);
+						var aggregate = expr as BinaryAggregateExpression;
+						if (aggregate != null)
+							Visit(aggregate.Expressions, func);
+						else
+						{
+							if (expr.CanReduce)
+								Visit(expr.Reduce(), func);
+						}
 						break;
 					}
 			}
@@ -860,16 +897,15 @@ namespace LinqToDB.Expressions
 					}
 
 				case ExpressionType.Extension:
-					if (expr.CanReduce)
-						return Find(expr.Reduce(), func);
-					break;
-
-				case BinaryAggregateExpression.AggregateExpressionType:
+					var aggregate = expr as BinaryAggregateExpression;
+					if (aggregate != null)
+						return Find(aggregate.Expressions, func);
+					else
 					{
-						var e = (BinaryAggregateExpression)expr;
-
-						return Find(e.Expressions, func);
+						if (expr.CanReduce)
+							return Find(expr.Reduce(), func);
 					}
+					break;
 			}
 
 			return null;
@@ -1165,7 +1201,6 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.DebugInfo:
 				case ExpressionType.Default  :
-				case ExpressionType.Extension:
 				case ExpressionType.Constant :
 				case ExpressionType.Parameter: return expr;
 
@@ -1253,15 +1288,18 @@ namespace LinqToDB.Expressions
 						return e.Update(b, c, f, t);
 					}
 
-				case BinaryAggregateExpression.AggregateExpressionType:
+				case ExpressionType.Extension:
 					{
-						var e = (BinaryAggregateExpression)expr;
-						var a = Transform(e.Expressions, func);
-						if (!ReferenceEquals(e.Expressions, a))
+						var aggregate = expr as BinaryAggregateExpression;
+						if (aggregate != null)
 						{
-							return e.Update(a.ToArray());
+							var a = Transform(aggregate.Expressions, func);
+							if (!ReferenceEquals(aggregate.Expressions, a))
+							{
+								return aggregate.Update(a.ToArray());
+							}
 						}
-						return e;
+						return expr;
 					}
 			}
 
@@ -1549,7 +1587,6 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.DebugInfo:
 				case ExpressionType.Default  :
-				case ExpressionType.Extension:
 				case ExpressionType.Constant :
 				case ExpressionType.Parameter: return ti.Expression;
 
@@ -1637,16 +1674,19 @@ namespace LinqToDB.Expressions
 						return e.Update(b, c, f, t);
 					}
 
-				case BinaryAggregateExpression.AggregateExpressionType:
+				case ExpressionType.Extension:
+				{
+					var aggregate = expr as BinaryAggregateExpression;
+					if (aggregate != null)
 					{
-						var e = (BinaryAggregateExpression)expr;
-						var a = Transform2(e.Expressions, func);
-						if (!ReferenceEquals(e.Expressions, a))
+						var a = Transform2(aggregate.Expressions, func);
+						if (!ReferenceEquals(aggregate.Expressions, a))
 						{
-							return e.Update(a.ToArray());
+							return aggregate.Update(a.ToArray());
 						}
-						return e;
 					}
+					return expr;
+				}
 			}
 
 			throw new InvalidOperationException();

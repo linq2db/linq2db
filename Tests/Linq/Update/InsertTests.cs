@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -608,31 +609,23 @@ namespace Tests.xUpdate
 		public void InsertWithIdentity1(string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
 			{
-				try
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
+				var id =
+					db.Person
+						.InsertWithIdentity(() => new Person
+						{
+							FirstName = "John",
+							LastName  = "Shepard",
+							Gender    = Gender.Male
+						});
 
-					var id =
-						db.Person
-							.InsertWithIdentity(() => new Person
-							{
-								FirstName = "John",
-								LastName  = "Shepard",
-								Gender    = Gender.Male
-							});
+				Assert.NotNull(id);
 
-					Assert.NotNull(id);
+				var john = db.Person.Single(p => p.FirstName == "John" && p.LastName == "Shepard");
 
-					var john = db.Person.Single(p => p.FirstName == "John" && p.LastName == "Shepard");
-
-					Assert.NotNull (john);
-					Assert.AreEqual(id, john.ID);
-				}
-				finally
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
-				}
+				Assert.NotNull (john);
+				Assert.AreEqual(id, john.ID);
 			}
 		}
 
@@ -640,29 +633,21 @@ namespace Tests.xUpdate
 		public void InsertWithIdentity2(string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
 			{
-				try
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
+				var id = db
+					.Into(db.Person)
+						.Value(p => p.FirstName, () => "John")
+						.Value(p => p.LastName,  () => "Shepard")
+						.Value(p => p.Gender,    () => Gender.Male)
+					.InsertWithIdentity();
 
-					var id = db
-						.Into(db.Person)
-							.Value(p => p.FirstName, () => "John")
-							.Value(p => p.LastName,  () => "Shepard")
-							.Value(p => p.Gender,    () => Gender.Male)
-						.InsertWithIdentity();
+				Assert.NotNull(id);
 
-					Assert.NotNull(id);
+				var john = db.Person.Single(p => p.FirstName == "John" && p.LastName == "Shepard");
 
-					var john = db.Person.Single(p => p.FirstName == "John" && p.LastName == "Shepard");
-
-					Assert.NotNull (john);
-					Assert.AreEqual(id, john.ID);
-				}
-				finally
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
-				}
+				Assert.NotNull (john);
+				Assert.AreEqual(id, john.ID);
 			}
 		}
 
@@ -670,29 +655,21 @@ namespace Tests.xUpdate
 		public void InsertWithIdentity3(string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
 			{
-				try
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
+				var id = db
+					.Into(db.Person)
+						.Value(p => p.FirstName, "John")
+						.Value(p => p.LastName,  "Shepard")
+						.Value(p => p.Gender,    Gender.Male)
+					.InsertWithIdentity();
 
-					var id = db
-						.Into(db.Person)
-							.Value(p => p.FirstName, "John")
-							.Value(p => p.LastName,  "Shepard")
-							.Value(p => p.Gender,    Gender.Male)
-						.InsertWithIdentity();
+				Assert.NotNull(id);
 
-					Assert.NotNull(id);
+				var john = db.Person.Single(p => p.FirstName == "John" && p.LastName == "Shepard");
 
-					var john = db.Person.Single(p => p.FirstName == "John" && p.LastName == "Shepard");
-
-					Assert.NotNull (john);
-					Assert.AreEqual(id, john.ID);
-				}
-				finally
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
-				}
+				Assert.NotNull (john);
+				Assert.AreEqual(id, john.ID);
 			}
 		}
 
@@ -700,32 +677,25 @@ namespace Tests.xUpdate
 		public void InsertWithIdentity4(string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
 			{
-				try
+				for (var i = 0; i < 2; i++)
 				{
-					for (var i = 0; i < 2; i++)
-					{
-						db.Person.Delete(p => p.ID > MaxPersonID);
 
-						var id = db.InsertWithIdentity(
-							new Person
-							{
-								FirstName = "John" + i,
-								LastName  = "Shepard",
-								Gender    = Gender.Male
-							});
+					var id = db.InsertWithIdentity(
+						new Person
+						{
+							FirstName = "John" + i,
+							LastName  = "Shepard",
+							Gender    = Gender.Male
+						});
 
-						Assert.NotNull(id);
+					Assert.NotNull(id);
 
-						var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
+					var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
 
-						Assert.NotNull (john);
-						Assert.AreEqual(id, john.ID);
-					}
-				}
-				finally
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
+					Assert.NotNull (john);
+					Assert.AreEqual(id, john.ID);
 				}
 			}
 		}
@@ -734,33 +704,25 @@ namespace Tests.xUpdate
 		public void InsertWithIdentity5(string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
 			{
-				try
+				for (var i = 0; i < 2; i++)
 				{
-					for (var i = 0; i < 2; i++)
+					var person = new Person
 					{
-						db.Person.Delete(p => p.ID > MaxPersonID);
+						FirstName = "John" + i,
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					};
 
-						var person = new Person
-						{
-							FirstName = "John" + i,
-							LastName  = "Shepard",
-							Gender    = Gender.Male
-						};
+					var id = db.InsertWithIdentity(person);
 
-						var id = db.InsertWithIdentity(person);
+					Assert.NotNull(id);
 
-						Assert.NotNull(id);
+					var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
 
-						var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
-
-						Assert.NotNull (john);
-						Assert.AreEqual(id, john.ID);
-					}
-				}
-				finally
-				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
+					Assert.NotNull (john);
+					Assert.AreEqual(id, john.ID);
 				}
 			}
 		}
@@ -806,14 +768,13 @@ namespace Tests.xUpdate
 		public void InsertWithIdentityOutput(string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
 			{
 				try
 				{
 					SqlServerConfiguration.GenerateScopeIdentity = false;
 					for (var i = 0; i < 2; i++)
 					{
-						db.Person.Delete(p => p.ID > MaxPersonID);
-
 						var person = new Person
 						{
 							FirstName = "John" + i,
@@ -833,7 +794,6 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Person.Delete(p => p.ID > MaxPersonID);
 					SqlServerConfiguration.GenerateScopeIdentity = true;
 				}
 			}
@@ -927,6 +887,24 @@ namespace Tests.xUpdate
 					db.Person. Delete(p => p.ID       == id);
 				}
 			}
+		}
+
+		[Test]
+		public void InsertOrReplaceWithIdentity()
+		{
+			Assert.Throws<LinqException>(() =>
+			{
+				using (var db = new TestDataConnection())
+				{
+					var p = new Person()
+					{
+						FirstName = Guid.NewGuid().ToString(),
+						ID = 1000,
+					};
+
+					db.InsertOrReplace(p);
+				}
+			});
 		}
 
 		[Test, DataContextSource]

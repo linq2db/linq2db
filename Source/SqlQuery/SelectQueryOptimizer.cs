@@ -899,15 +899,25 @@ namespace LinqToDB.SqlQuery
 
 		static bool IsAggregationFunction(IQueryElement expr)
 		{
-			if (expr is SqlFunction)
-				switch (((SqlFunction)expr).Name)
+			var func = expr as SqlFunction;
+			if (func != null)
+			{ 
+				switch (func.Name)
 				{
 					case "Count"   :
 					case "Average" :
 					case "Min"     :
 					case "Max"     :
 					case "Sum"     : return true;
+					default        : return false;
 				}
+			}
+
+			var sqlExpr = expr as SqlExpression;
+			if (sqlExpr != null)
+			{
+				return sqlExpr.SqlFlags.HasFlag(SqlFlags.Aggregate);
+			}
 
 			return false;
 		}
@@ -928,7 +938,7 @@ namespace LinqToDB.SqlQuery
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(c => IsAggregationFunction(c.Expression));
 
-				if (isApplySupported && (isAgg || sql.Select.TakeValue != null || sql.Select.SkipValue != null))
+				if (isApplySupported && (isAgg || sql.Select.HasModifier))
 					return;
 
 				var searchCondition = new List<SelectQuery.Condition>(sql.Where.SearchCondition.Conditions);
@@ -937,6 +947,10 @@ namespace LinqToDB.SqlQuery
 
 				if (!ContainsTable(tableSource.Source, sql))
 				{
+					if (!(joinTable.JoinType == SelectQuery.JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
+						&& sql.Select.HasModifier)
+						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
+
 					joinTable.JoinType = joinTable.JoinType == SelectQuery.JoinType.CrossApply ? SelectQuery.JoinType.Inner : SelectQuery.JoinType.Left;
 					joinTable.Condition.Conditions.AddRange(searchCondition);
 				}
