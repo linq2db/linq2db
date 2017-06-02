@@ -91,7 +91,7 @@ namespace Tests.UserTests
 		}
 
 		[Test, IssueContextSourceAttribute]
-		private IEnumerable<Person> GetPersonsFromDisposed3(string context)
+		public IEnumerable<Person> GetPersonsFromDisposed3(string context)
 		{
 			using (var db = GetDataContext(context))
 				return db.GetTable<Person>().Where(_ => _.ID == 1).AsEnumerable();
