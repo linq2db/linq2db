@@ -938,7 +938,7 @@ namespace LinqToDB.SqlQuery
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(c => IsAggregationFunction(c.Expression));
 
-				if (isApplySupported && (isAgg || sql.Select.TakeValue != null || sql.Select.SkipValue != null))
+				if (isApplySupported && (isAgg || sql.Select.HasModifier))
 					return;
 
 				var searchCondition = new List<SelectQuery.Condition>(sql.Where.SearchCondition.Conditions);
@@ -947,6 +947,10 @@ namespace LinqToDB.SqlQuery
 
 				if (!ContainsTable(tableSource.Source, sql))
 				{
+					if (!(joinTable.JoinType == SelectQuery.JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
+						&& sql.Select.HasModifier)
+						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
+
 					joinTable.JoinType = joinTable.JoinType == SelectQuery.JoinType.CrossApply ? SelectQuery.JoinType.Inner : SelectQuery.JoinType.Left;
 					joinTable.Condition.Conditions.AddRange(searchCondition);
 				}
