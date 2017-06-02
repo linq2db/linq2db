@@ -310,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 					select new
 					{
 						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
+						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal, Builder.DataContext)
 					}
 				).ToList();
 
@@ -457,7 +457,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
 							Name       = cd.MemberName,
-							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
+							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContext)
 						}
 					).ToList()).ToList();
 
@@ -837,7 +837,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				public Expression GetExpression(Expression parent, AssociatedTableContext association)
 				{
-					var expression = association.Builder.DataContextInfo.DataContext.GetTable<T>();
+					var expression = association.Builder.DataContext.GetTable<T>();
 
 					var loadWith = association.GetLoadWith();
 
@@ -1425,7 +1425,7 @@ namespace LinqToDB.Linq.Builder
 					var lContext = Expression.Parameter(typeof(IDataContext), "ctx");
 					var lParent  = Expression.Parameter(typeof(object), "parentObject");
 
-					var tableExpression = builder.DataContextInfo.DataContext.GetTable<T>();
+					var tableExpression = builder.DataContext.GetTable<T>();
 
 					var loadWith = tableContext.GetLoadWith();
 

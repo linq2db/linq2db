@@ -281,7 +281,7 @@ namespace LinqToDB.Linq.Builder
 							new[] { context.Builder.DataReaderLocal },
 							new[]
 							{
-								Expression.Assign(dataReaderLocal, Expression.Convert(ExpressionBuilder.DataReaderParam, context.Builder.DataContextInfo.DataContext.DataReaderType)),
+								Expression.Assign(dataReaderLocal, Expression.Convert(ExpressionBuilder.DataReaderParam, context.Builder.DataContext.DataReaderType)),
 								keyExpr
 							});
 					}
@@ -414,7 +414,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ctx = Builder.GetSubQuery(this, call);
 
-					if (Builder.DataContextInfo.DataContext.SqlProviderFlags.IsSubQueryColumnSupported)
+					if (Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported)
 						return ctx.SelectQuery;
 
 					var join = ctx.SelectQuery.CrossApply();

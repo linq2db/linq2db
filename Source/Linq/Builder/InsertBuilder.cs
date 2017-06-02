@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var field in q)
 			{
-				var expr = builder.DataContextInfo.DataContext.CreateSqlProvider().GetIdentityExpression(insert.Into);
+				var expr = builder.DataContext.CreateSqlProvider().GetIdentityExpression(insert.Into);
 
 				if (expr != null)
 				{

@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
+	using Data;
 	using Extensions;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>
@@ -23,7 +24,7 @@ namespace LinqToDB.Linq
 
 			DataContextInfo = dataContextInfo;
 #else
-			DataContextInfo = dataContextInfo ?? new DefaultDataContextInfo();
+			DataContextInfo = dataContextInfo ?? new DataContextInfo(new DataConnection(), true);
 #endif
 			Expression      = expression      ?? Expression.Constant(this);
 		}

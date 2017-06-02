@@ -189,8 +189,8 @@ namespace LinqToDB.Linq.Builder
 			sql.Select.Take(expr, hints);
 
 			if (sql.Select.SkipValue != null &&
-				 DataContextInfo.DataContext.SqlProviderFlags.IsTakeSupported &&
-				!DataContextInfo.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
+				 DataContext.SqlProviderFlags.IsTakeSupported &&
+				!DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
 			{
 				if (context.SelectQuery.Select.SkipValue is SqlParameter && sql.Select.TakeValue is SqlValue)
 				{
@@ -219,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive)), hints);
 			}
 
-			if (!DataContextInfo.DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
+			if (!DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
 			{
 				var p = sql.Select.TakeValue as SqlParameter;
 
@@ -890,10 +890,10 @@ namespace LinqToDB.Linq.Builder
 
 						if (attr != null)
 						{
-							var inlineParameters = DataContextInfo.DataContext.InlineParameters;
+							var inlineParameters = DataContext.InlineParameters;
 
 							if (attr.InlineParameters)
-								DataContextInfo.DataContext.InlineParameters = true;
+								DataContext.InlineParameters = true;
 
 							var sqlExpression = attr.GetExpression(MappingSchema, e, _ => ConvertToSql(context, _));
 							if (sqlExpression != null)
@@ -934,7 +934,7 @@ namespace LinqToDB.Linq.Builder
 								}
 							}
 
-							DataContextInfo.DataContext.InlineParameters = inlineParameters;
+							DataContext.InlineParameters = inlineParameters;
 
 							return Convert(context, attr.GetExpression(e.Method, parms.ToArray()));
 						}
@@ -1263,7 +1263,7 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
 			p = CreateParameterAccessor(
-				DataContextInfo.DataContext, newExpr.ValueExpression, newExpr.DataTypeExpression, expr, ExpressionParam, ParametersParam, name, buildParameterType);
+				DataContext, newExpr.ValueExpression, newExpr.DataTypeExpression, expr, ExpressionParam, ParametersParam, name, buildParameterType);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1908,7 +1908,7 @@ namespace LinqToDB.Linq.Builder
 			var vte  = ReplaceParameter(_expressionAccessors, ex, _ => { });
 			var par  = vte.ValueExpression;
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
-			var p    = CreateParameterAccessor(DataContextInfo.DataContext, expr, vte.DataTypeExpression, expr, ExpressionParam, ParametersParam, member.Name);
+			var p    = CreateParameterAccessor(DataContext, expr, vte.DataTypeExpression, expr, ExpressionParam, ParametersParam, member.Name);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -2140,7 +2140,7 @@ namespace LinqToDB.Linq.Builder
 						LikeStart        = start,
 						LikeEnd          = end,
 						ReplaceLike      = p.ReplaceLike,
-						IsQueryParameter = !(DataContextInfo.DataContext.InlineParameters && ep.Expression.Type.IsScalar(false))
+						IsQueryParameter = !(DataContext.InlineParameters && ep.Expression.Type.IsScalar(false))
 					}
 				);
 
@@ -2677,12 +2677,12 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)
 		{
-			return DataContextInfo.DataContext.GetSqlOptimizer().ConvertExpression(expr);
+			return DataContext.GetSqlOptimizer().ConvertExpression(expr);
 		}
 
 		public ISqlPredicate Convert(IBuildContext context, ISqlPredicate predicate)
 		{
-			return DataContextInfo.DataContext.GetSqlOptimizer().ConvertPredicate(context.SelectQuery, predicate);
+			return DataContext.GetSqlOptimizer().ConvertPredicate(context.SelectQuery, predicate);
 		}
 
 		internal ISqlExpression ConvertSearchCondition(IBuildContext context, ISqlExpression sqlExpression)

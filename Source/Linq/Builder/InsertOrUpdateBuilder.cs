@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				if (Builder.DataContextInfo.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
+				if (Builder.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
 					query.SetNonQueryQuery();
 				else
 					query.MakeAlternativeInsertOrUpdate(SelectQuery);

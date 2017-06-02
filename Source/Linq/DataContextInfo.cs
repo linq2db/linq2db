@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Data;
 
 namespace LinqToDB.Linq
 {
@@ -33,7 +34,9 @@ namespace LinqToDB.Linq
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return new DataContextInfo(dataContext, false);
 #else
-			return dataContext == null ? (IDataContextInfo)new DefaultDataContextInfo() : new DataContextInfo(dataContext, false);
+			return dataContext == null ?
+				new DataContextInfo(new DataConnection(), true) :
+				new DataContextInfo(dataContext, false);
 #endif
 		}
 	}

@@ -332,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Type type, int idx)
 		{
-			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal, DataContextInfo.DataContext);
+			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal, DataContext);
 		}
 
 		#endregion

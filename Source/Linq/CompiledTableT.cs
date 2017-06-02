@@ -64,7 +64,7 @@ namespace LinqToDB.Linq
 						{
 							query = new Query<T>(dataContextInfo.DataContext, _expression);
 
-							query = new ExpressionBuilder(query, dataContextInfo, _expression, _lambda.Parameters.ToArray())
+							query = new ExpressionBuilder(query, dataContextInfo.DataContext, _expression, _lambda.Parameters.ToArray())
 								.Build<T>();
 
 							_infos.Add(key, query);

@@ -159,7 +159,7 @@ namespace LinqToDB.Linq
 
 						try
 						{
-							query = new ExpressionBuilder(query, dataContextInfo, expr, null).Build<T>();
+							query = new ExpressionBuilder(query, dataContextInfo.DataContext, expr, null).Build<T>();
 						}
 						catch (Exception)
 						{
