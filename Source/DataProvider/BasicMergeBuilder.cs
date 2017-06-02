@@ -234,7 +234,7 @@ namespace LinqToDB.DataProvider
 					first = false;
 
 					Command
-						.AppendFormat("{0}", GenerateSourceColumnAlias(columnName));
+						.AppendFormat("{0}", GenerateSourceColumnAlias(columnName, true));
 				}
 
 				Command
@@ -263,7 +263,7 @@ namespace LinqToDB.DataProvider
 
 				Command
 					.Append(" ")
-					.Append(GenerateSourceColumnAlias(TargetDescriptor.Columns[i].ColumnName));
+					.Append(GenerateSourceColumnAlias(TargetDescriptor.Columns[i].ColumnName, true));
 			}
 
 			Command
@@ -289,10 +289,14 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		private string GenerateSourceColumnAlias(string columnName)
+		private string GenerateSourceColumnAlias(string columnName, bool returnEscaped)
 		{
 			var alias = "src" + _sourceAliases.Count;
 			_sourceAliases.Add(columnName, alias);
+
+			if (returnEscaped)
+				alias = (string)SqlBuilder.Convert(alias, ConvertType.NameToQueryFieldAlias);
+
 			return alias;
 		}
 
@@ -328,7 +332,7 @@ namespace LinqToDB.DataProvider
 					AddSourceValue(valueConverter, column, columnTypes[i], value);
 
 					if (!SupportsColumnAliasesInTableAlias)
-						Command.AppendFormat(" {0}", GenerateSourceColumnAlias(column.ColumnName));
+						Command.AppendFormat(" {0}", GenerateSourceColumnAlias(column.ColumnName, true));
 				}
 
 				Command.Append(")");
@@ -355,7 +359,7 @@ namespace LinqToDB.DataProvider
 			{
 				var columnDescriptor = _sourceDescriptor.Columns.Where(_ => _.MemberInfo == column.Members[0]).Single();
 
-				var alias = GenerateSourceColumnAlias(columnDescriptor.ColumnName);
+				var alias = GenerateSourceColumnAlias(columnDescriptor.ColumnName, false);
 				query.Select.Columns.Add(new SelectQuery.Column(query, column.Sql, alias));
 			}
 
@@ -425,7 +429,7 @@ namespace LinqToDB.DataProvider
 					AddSourceValue(valueConverter, column, columnTypes[i], value);
 
 					if (!SupportsColumnAliasesInTableAlias)
-						Command.AppendFormat(" {0}", GenerateSourceColumnAlias(column.ColumnName));
+						Command.AppendFormat(" {0}", GenerateSourceColumnAlias(column.ColumnName, true));
 				}
 
 				if (FakeSourceTable != null)
