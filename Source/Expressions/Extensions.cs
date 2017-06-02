@@ -7,6 +7,44 @@ namespace LinqToDB.Expressions
 {
 	public static class Extensions
 	{
+		#region GetDebugView
+
+		private static Func<Expression,string> _getDebugView;
+
+		/// <summary>
+		/// Gets the DebugView internal property value of provided expression.
+		/// </summary>
+		/// <param name="expression">Expression to get DebugView.</param>
+		/// <returns>DebugView value.</returns>
+		public static string GetDebugView(this Expression expression)
+		{
+			if (_getDebugView == null)
+			{
+				var p = Expression.Parameter(typeof(Expression));
+
+				try
+				{
+					var l = Expression.Lambda<Func<Expression,string>>(
+						Expression.PropertyOrField(p, "DebugView"),
+						p);
+
+					_getDebugView = l.Compile();
+				}
+				catch (ArgumentException)
+				{
+					var l = Expression.Lambda<Func<Expression,string>>(
+						Expression.Call(p, MemberHelper.MethodOf<Expression>(e => e.ToString())),
+						p);
+
+					_getDebugView = l.Compile();
+				}
+			}
+
+			return _getDebugView(expression);
+		}
+
+		#endregion
+
 		#region GetCount
 
 		public static int GetCount(this Expression expr, Func<Expression,bool> func)

@@ -310,6 +310,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return new SqlServerMergeBuilder<TTarget, TSource>(merge, Name);
 		}
-		#endregion
+#endregion
 	}
 }

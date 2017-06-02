@@ -27,6 +27,14 @@ namespace LinqToDB.ServiceModel
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ConcurrentDictionary<string,ConfigurationInfo>();
 
+		class RemoteMappingSchema : MappingSchema
+		{
+			public RemoteMappingSchema(string configuration, MappingSchema mappingSchema)
+				: base(configuration, mappingSchema)
+			{
+			}
+		}
+
 		ConfigurationInfo _configurationInfo;
 
 		ConfigurationInfo GetConfigurationInfo()
@@ -52,7 +60,7 @@ namespace LinqToDB.ServiceModel
 					else
 					{
 						var type = Type.GetType(info.MappingSchemaType);
-						ms = (MappingSchema)Activator.CreateInstance(type);
+						ms = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
 					}
 
 					_configurationInfo = new ConfigurationInfo

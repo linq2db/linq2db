@@ -114,7 +114,7 @@ COMMIT;
 
 CREATE TABLE Doctor
 (
-	PersonID INTEGER     NOT NULL,
+	PersonID INTEGER     NOT NULL PRIMARY KEY,
 	Taxonomy VARCHAR(50) NOT NULL,
 		CONSTRAINT FK_Doctor_Person FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 			ON DELETE CASCADE
@@ -128,7 +128,7 @@ COMMIT;
 
 CREATE TABLE Patient
 (
-	PersonID  int           NOT NULL,
+	PersonID  int           NOT NULL PRIMARY KEY,
 	Diagnosis VARCHAR(256)  NOT NULL,
 	FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 			ON DELETE CASCADE

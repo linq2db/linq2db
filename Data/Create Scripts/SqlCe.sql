@@ -1,4 +1,8 @@
-﻿DROP TABLE Patient
+﻿DROP TABLE Issue695
+GO
+DROP TABLE Issue695Parent
+GO
+DROP TABLE Patient
 GO
 DROP TABLE Doctor
 GO
@@ -187,6 +191,29 @@ SELECT
 	        1,         2, Cast(3 as varbinary),
 	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)
 
+GO
+
+CREATE TABLE Issue695Parent
+(
+	ID          int NOT NULL 
+			CONSTRAINT PK_Issue695 PRIMARY KEY
+)
+GO
+
+CREATE TABLE Issue695
+(
+	ID          int NOT NULL 
+			CONSTRAINT PK_Issue695 PRIMARY KEY
+			CONSTRAINT FK_Issue695_Parent --FOREIGN KEY
+			REFERENCES Issue695Parent ([ID])
+			ON UPDATE CASCADE
+			ON DELETE CASCADE,
+
+	UniqueValue int NOT NULL
+)
+GO
+
+CREATE UNIQUE INDEX IX_UniqueValue ON Issue695 (UniqueValue)
 GO
 DROP TABLE testmerge1
 GO
