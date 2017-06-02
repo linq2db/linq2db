@@ -55,11 +55,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test]//, DataContextSource]
-		public void TestSql(/*string context*/)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestSql(string context)
 		{
-			var context = ProviderName.SQLite;
-
 			var query1 = GetSql(context);
 			var query2 = GetSql(context);
 			var query3 = GetSql(context);
@@ -70,20 +68,5 @@ namespace Tests.UserTests
 
 			Assert.AreEqual(query1, query2);
 		}
-
-//		[Test]
-//		public void TestStack()
-//		{
-//			for (var j = 0; j < 100; j++)
-//				using (var db = RelationalDbManager.Create(Path.GetFullPath("lightstation.db")))
-//				{
-//					var matchSymbolIds = new List<long>();
-//
-//					var queryable = GenerateQuery(db, new DateTime(2010, 3, 5))
-//						.Where(x => matchSymbolIds.Contains(x.ID));
-//					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-//					queryable.ToList();
-//				}
-//		}
 	}
 }
