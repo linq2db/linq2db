@@ -949,7 +949,7 @@ namespace LinqToDB.SqlQuery
 				{
 					if (!(joinTable.JoinType == SelectQuery.JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
 						&& sql.Select.HasModifier)
-						throw new LinqToDBException("CROSS/OUTER APPLY join can not be converted to INNER/LEFT join");
+						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
 
 					joinTable.JoinType = joinTable.JoinType == SelectQuery.JoinType.CrossApply ? SelectQuery.JoinType.Inner : SelectQuery.JoinType.Left;
 					joinTable.Condition.Conditions.AddRange(searchCondition);
