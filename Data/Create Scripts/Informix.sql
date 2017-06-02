@@ -60,8 +60,9 @@ CREATE TABLE Doctor
 (
 	PersonID int          NOT NULL,
 	Taxonomy nvarchar(50) NOT NULL,
-	FOREIGN KEY (PersonID)
-	REFERENCES Person (PersonID)
+
+	PRIMARY KEY (PersonID),
+	FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 )
 GO
 
@@ -73,7 +74,10 @@ GO
 CREATE TABLE Patient
 (
 	PersonID  int           NOT NULL,
-	Diagnosis nvarchar(100) NOT NULL
+	Diagnosis nvarchar(100) NOT NULL,
+
+	PRIMARY KEY (PersonID),
+	FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 )
 GO
 
