@@ -324,7 +324,7 @@ namespace Tests.Merge
 						From = _.OtherId,
 						Order = _.OtherField1,
 						Field = _.OtherField2,
-						field3 = _.OtherField3,
+						field = _.OtherField3,
 						Select = _.OtherField4,
 						Delete = _.OtherField5
 					}), (t, s) => t.Id == s.From)
@@ -380,7 +380,7 @@ namespace Tests.Merge
 						From = _.OtherId,
 						Order = _.OtherField1,
 						Field = _.OtherField2,
-						field2 = _.OtherField3,
+						field = _.OtherField3,
 						Select = _.OtherField4,
 						Delete = _.OtherField5
 					}), (t, s) => t.Id == s.From)

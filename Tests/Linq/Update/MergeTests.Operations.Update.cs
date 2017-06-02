@@ -385,18 +385,18 @@ namespace Tests.Merge
 					{
 						order = _.OtherId,
 						delete = _.OtherField1,
-						Delete1 = _.OtherField2,
+						Delete = _.OtherField2,
 						Field = _.OtherField3,
-						field1 = _.OtherField4,
-						As = _.OtherField5,
+						field = _.OtherField4,
+						As = _.OtherField5
 					}), (t, s) => t.Id == s.order)
-					.Update((t, s) => s.field1 == 214, (t, s) => new TestMapping1()
+					.Update((t, s) => s.field == 214, (t, s) => new TestMapping1()
 					{
 						Id = s.order,
 						Field1 = s.delete,
-						Field2 = s.Delete1,
+						Field2 = s.Delete,
 						Field3 = s.Field,
-						Field4 = s.field1,
+						Field4 = s.field,
 						Field5 = s.As
 					})
 					.Merge();
@@ -438,6 +438,7 @@ namespace Tests.Merge
 						inner = _.OtherField3,
 						with = _.OtherField4,
 						left = _.OtherField5,
+						Left = _.OtherField2
 					}), (t, s) => t.Id == s.@in)
 					.Update((t, s) => s.with == 214, (t, s) => new TestMapping1()
 					{

@@ -187,7 +187,8 @@ namespace Tests.Merge
 				var rows = table
 					.From(GetSource2(db).Select(_ => new
 					{
-						select = _.OtherId
+						select = _.OtherId,
+						Select = _.OtherField1
 					}), (t, s) => s.select == t.Id)
 					.DeleteBySource(t => t.Id == 2)
 					.Merge();
@@ -216,7 +217,8 @@ namespace Tests.Merge
 				var rows = table
 					.From(GetSource2(db).ToList().Select(_ => new
 					{
-						INSERT = _.OtherId
+						INSERT = _.OtherId,
+						insert = _.OtherField2
 					}), (t, s) => s.INSERT == t.Id)
 					.DeleteBySource(t => t.Id == 2)
 					.Merge();

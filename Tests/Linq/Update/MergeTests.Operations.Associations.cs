@@ -891,31 +891,34 @@ namespace Tests.Merge
 
 		private void PrepareAssociationsData(TestDataConnection db)
 		{
-			db.Patient.Delete();
-			db.Doctor.Delete();
-			db.Person.Delete();
-
-			var id = 1;
-			foreach (var person in AssociationPersons)
+			using (new DisableLogging())
 			{
-				person.ID = id++;
-				person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
-			}
+				db.Patient.Delete();
+				db.Doctor.Delete();
+				db.Person.Delete();
 
-			AssociationDoctors[0].PersonID = AssociationPersons[4].ID;
-			AssociationDoctors[1].PersonID = AssociationPersons[5].ID;
+				var id = 1;
+				foreach (var person in AssociationPersons)
+				{
+					person.ID = id++;
+					person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
+				}
 
-			foreach (var doctor in AssociationDoctors)
-			{
-				db.Insert(doctor);
-			}
+				AssociationDoctors[0].PersonID = AssociationPersons[4].ID;
+				AssociationDoctors[1].PersonID = AssociationPersons[5].ID;
 
-			AssociationPatients[0].PersonID = AssociationPersons[2].ID;
-			AssociationPatients[1].PersonID = AssociationPersons[3].ID;
+				foreach (var doctor in AssociationDoctors)
+				{
+					db.Insert(doctor);
+				}
 
-			foreach (var patient in AssociationPatients)
-			{
-				db.Insert(patient);
+				AssociationPatients[0].PersonID = AssociationPersons[2].ID;
+				AssociationPatients[1].PersonID = AssociationPersons[3].ID;
+
+				foreach (var patient in AssociationPatients)
+				{
+					db.Insert(patient);
+				}
 			}
 		}
 		#endregion

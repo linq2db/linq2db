@@ -891,16 +891,16 @@ namespace Tests.Merge
 					.From(GetSource2(db).Select(_ => new
 					{
 						field = _.OtherId,
-						Field1 = _.OtherField1,
+						Field = _.OtherField1,
 						and = _.OtherField2,
 						or = _.OtherField3,
 						between = _.OtherField4,
-						@case = _.OtherField5,
+						@case = _.OtherField5
 					}), (t, s) => t.Id == s.field)
 					.Insert(s => s.between == 216, s => new TestMapping1()
 					{
 						Id = s.field,
-						Field1 = s.Field1,
+						Field1 = s.Field,
 						Field2 = s.and,
 						Field3 = s.or,
 						Field4 = s.between,
@@ -937,16 +937,16 @@ namespace Tests.Merge
 						@as = _.OtherId,
 						take = _.OtherField1,
 						skip = _.OtherField2,
-						Skip1 = _.OtherField3,
+						Skip = _.OtherField3,
 						insert = _.OtherField4,
-						SELECT = _.OtherField5,
+						SELECT = _.OtherField5
 					}), (t, s) => t.Id == s.@as)
 					.Insert(s => s.insert == 216, s => new TestMapping1()
 					{
 						Id = s.@as,
 						Field1 = s.take,
 						Field2 = s.skip,
-						Field3 = s.Skip1,
+						Field3 = s.Skip,
 						Field4 = s.insert,
 						Field5 = s.SELECT
 					})

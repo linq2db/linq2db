@@ -137,16 +137,19 @@ namespace Tests.Merge
 
 		private void PrepareData(TestDataConnection db)
 		{
-			GetTarget(db).Delete();
-			foreach (var record in InitialTargetData)
+			using (new DisableLogging())
 			{
-				db.Insert(record, "testmerge1");
-			}
+				GetTarget(db).Delete();
+				foreach (var record in InitialTargetData)
+				{
+					db.Insert(record, "testmerge1");
+				}
 
-			GetSource1(db).Delete();
-			foreach (var record in InitialSourceData)
-			{
-				db.Insert(record, "testmerge2");
+				GetSource1(db).Delete();
+				foreach (var record in InitialSourceData)
+				{
+					db.Insert(record, "testmerge2");
+				}
 			}
 		}
 

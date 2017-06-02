@@ -17,7 +17,7 @@ namespace Tests.Merge
 	public partial class MergeTests
 	{
 		[MergeDataContextSource(ProviderName.SapHana)]
-		public void IsertUpdate(string context)
+		public void InsertUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -47,7 +47,7 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(ProviderName.Firebird, ProviderName.SapHana)]
-		public void IsertDelete(string context)
+		public void InsertDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -283,7 +283,7 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(ProviderName.Firebird, ProviderName.SapHana)]
-		public void DeleteIsert(string context)
+		public void DeleteInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
