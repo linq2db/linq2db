@@ -23,21 +23,34 @@ namespace LinqToDB.Linq
 
 		public abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
+		protected Query(IDataContextInfo dataContextInfo, Expression expression)
+		{
+			ContextID        = dataContextInfo.ContextID;
+			Expression       = expression;
+			MappingSchema    = dataContextInfo.MappingSchema;
+			ConfigurationID  = dataContextInfo.MappingSchema.ConfigurationID;
+			SqlOptimizer     = dataContextInfo.GetSqlOptimizer();
+			SqlProviderFlags = dataContextInfo.SqlProviderFlags;
+		}
+
 		#endregion
 
 		#region Compare
 
-		public string           ContextID;
-		public Expression       Expression;
-		public MappingSchema    MappingSchema;
-		public SqlProviderFlags SqlProviderFlags;
+		public readonly string           ContextID;
+		public readonly Expression       Expression;
+		public readonly MappingSchema    MappingSchema;
+		public readonly string           ConfigurationID;
+		public readonly ISqlOptimizer    SqlOptimizer;
+		public readonly SqlProviderFlags SqlProviderFlags;
 
 		public bool Compare(string contextID, MappingSchema mappingSchema, Expression expr)
 		{
 			return
-				ContextID.Length == contextID.Length &&
-				ContextID        == contextID        &&
-				MappingSchema    == mappingSchema    &&
+				ContextID.Length       == contextID.Length &&
+				ContextID              == contextID        &&
+				ConfigurationID.Length == mappingSchema.ConfigurationID.Length &&
+				ConfigurationID        == mappingSchema.ConfigurationID &&
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
@@ -72,8 +85,10 @@ namespace LinqToDB.Linq
 	{
 		#region Init
 
-		public Query()
+		public Query(IDataContextInfo dataContextInfo, Expression expression)
+			: base(dataContextInfo, expression)
 		{
+			// IT : # check
 			GetIEnumerable = MakeEnumerable;
 		}
 
@@ -84,12 +99,6 @@ namespace LinqToDB.Linq
 				SelectQuery = parseContext.SelectQuery,
 				Parameters  = sqlParameters,
 			});
-
-			ContextID        = parseContext.Builder.DataContextInfo.ContextID;
-			MappingSchema    = parseContext.Builder.MappingSchema;
-			SqlProviderFlags = parseContext.Builder.DataContextInfo.SqlProviderFlags;
-			SqlOptimizer     = parseContext.Builder.DataContextInfo.GetSqlOptimizer();
-			Expression       = parseContext.Builder.OriginalExpression;
 		}
 
 		void ClearParameters()
@@ -103,10 +112,9 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public          bool              DoNotChache;
-		public          Query<T>          Next;
-		public readonly List<QueryInfo>   Queries = new List<QueryInfo>(1);
-		public          ISqlOptimizer     SqlOptimizer;
+		public          bool            DoNotChache;
+		public          Query<T>        Next;
+		public readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
 
 		public Func<QueryContext,IDataContextInfo,Expression,object[],object>         GetElement;
 		public Func<QueryContext,IDataContextInfo,Expression,object[],IEnumerable<T>> GetIEnumerable;
@@ -147,9 +155,11 @@ namespace LinqToDB.Linq
 #endif
 						}
 
+						query = new Query<T>(dataContextInfo, expr);
+
 						try
 						{
-							query = new ExpressionBuilder(new Query<T>(), dataContextInfo, expr, null).Build<T>();
+							query = new ExpressionBuilder(query, dataContextInfo, expr, null).Build<T>();
 						}
 						catch (Exception)
 						{
@@ -583,7 +593,7 @@ namespace LinqToDB.Linq
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.Insert.TryGetValue(key, out ei))
 				lock (_sync)
@@ -598,12 +608,9 @@ namespace LinqToDB.Linq
 
 						sqlQuery.Insert.Into = sqlTable;
 
-						ei = new Query<int>
+						ei = new Query<int>(dataContextInfo, null)
 						{
-							MappingSchema = dataContextInfo.MappingSchema,
-							ContextID     = dataContextInfo.ContextID,
-							SqlOptimizer  = dataContextInfo.GetSqlOptimizer(),
-							Queries       = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						foreach (var field in sqlTable.Fields)
@@ -645,7 +652,7 @@ namespace LinqToDB.Linq
 
 			Query<object> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.InsertWithIdentity.TryGetValue(key, out ei))
 				lock (_sync)
@@ -657,12 +664,9 @@ namespace LinqToDB.Linq
 						sqlQuery.Insert.Into         = sqlTable;
 						sqlQuery.Insert.WithIdentity = true;
 
-						ei = new Query<object>
+						ei = new Query<object>(dataContextInfo, null)
 						{
-							MappingSchema = dataContextInfo.MappingSchema,
-							ContextID     = dataContextInfo.ContextID,
-							SqlOptimizer  = dataContextInfo.GetSqlOptimizer(),
-							Queries       = { new Query<object>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new Query<object>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						foreach (var field in sqlTable.Fields)
@@ -704,7 +708,7 @@ namespace LinqToDB.Linq
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.InsertOrUpdate.TryGetValue(key, out ei))
 			{
@@ -723,13 +727,9 @@ namespace LinqToDB.Linq
 
 						sqlQuery.From.Table(sqlTable);
 
-						ei = new Query<int>
+						ei = new Query<int>(dataContextInfo, null)
 						{
-							MappingSchema    = dataContextInfo.MappingSchema,
-							ContextID        = dataContextInfo.ContextID,
-							SqlOptimizer     = dataContextInfo.GetSqlOptimizer(),
-							Queries          = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } },
-							SqlProviderFlags = dataContextInfo.SqlProviderFlags,
+							Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
@@ -753,7 +753,7 @@ namespace LinqToDB.Linq
 							}
 							else if (field.IsIdentity)
 							{
-								throw new LinqException("InsertOrUpdate method does not support identity field '{0}.{1}'.", sqlTable.Name, field.Name);
+								throw new LinqException("InsertOrReplace method does not support identity field '{0}.{1}'.", sqlTable.Name, field.Name);
 							}
 						}
 
@@ -763,7 +763,7 @@ namespace LinqToDB.Linq
 						var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys).ToList();
 
 						if (keys.Count == 0)
-							throw new LinqException("InsertOrUpdate method requires the '{0}' table to have a primary key.", sqlTable.Name);
+							throw new LinqException("InsertOrReplace method requires the '{0}' table to have a primary key.", sqlTable.Name);
 
 						var q =
 						(
@@ -775,7 +775,7 @@ namespace LinqToDB.Linq
 						var missedKey = keys.Except(q.Select(i => i.k)).FirstOrDefault();
 
 						if (missedKey != null)
-							throw new LinqException("InsertOrUpdate method requires the '{0}.{1}' field to be included in the insert setter.",
+							throw new LinqException("InsertOrReplace method requires the '{0}.{1}' field to be included in the insert setter.",
 								sqlTable.Name,
 								missedKey.Name);
 
@@ -866,7 +866,7 @@ namespace LinqToDB.Linq
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.Update.TryGetValue(key, out ei))
 				lock (_sync)
@@ -877,12 +877,9 @@ namespace LinqToDB.Linq
 
 						sqlQuery.From.Table(sqlTable);
 
-						ei = new Query<int>
+						ei = new Query<int>(dataContextInfo, null)
 						{
-							MappingSchema = dataContextInfo.MappingSchema,
-							ContextID     = dataContextInfo.ContextID,
-							SqlOptimizer  = dataContextInfo.GetSqlOptimizer(),
-							Queries       = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
@@ -940,7 +937,7 @@ namespace LinqToDB.Linq
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
 				lock (_sync)
@@ -951,12 +948,9 @@ namespace LinqToDB.Linq
 
 						sqlQuery.From.Table(sqlTable);
 
-						ei = new Query<int>
+						ei = new Query<int>(dataContextInfo, null)
 						{
-							MappingSchema = dataContextInfo.MappingSchema,
-							ContextID     = dataContextInfo.ContextID,
-							SqlOptimizer  = dataContextInfo.GetSqlOptimizer(),
-							Queries       = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
@@ -1010,12 +1004,9 @@ namespace LinqToDB.Linq
 			sqlQuery.CreateTable.StatementFooter = statementFooter;
 			sqlQuery.CreateTable.DefaulNullable  = defaulNullable;
 
-			var query = new Query<int>
+			var query = new Query<int>(dataContextInfo, null)
 			{
-				MappingSchema = dataContextInfo.MappingSchema,
-				ContextID     = dataContextInfo.ContextID,
-				SqlOptimizer  = dataContextInfo.GetSqlOptimizer(),
-				Queries       = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+				Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 			};
 
 			query.SetNonQueryQuery();
@@ -1046,12 +1037,9 @@ namespace LinqToDB.Linq
 			sqlQuery.CreateTable.Table  = sqlTable;
 			sqlQuery.CreateTable.IsDrop = true;
 
-			var query = new Query<int>
+			var query = new Query<int>(dataContextInfo, null)
 			{
-				MappingSchema = dataContextInfo.MappingSchema,
-				ContextID     = dataContextInfo.ContextID,
-				SqlOptimizer  = dataContextInfo.GetSqlOptimizer(),
-				Queries       = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+				Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 			};
 
 			query.SetNonQueryQuery();

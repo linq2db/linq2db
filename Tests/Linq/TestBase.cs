@@ -499,7 +499,7 @@ namespace Tests
 			}
 		}
 
-		protected const int MaxPersonID = 4;
+		protected internal const int MaxPersonID = 4;
 
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
@@ -1001,6 +1001,7 @@ namespace Tests
 								SmallIntValue  = record.SmallIntValue,
 								IntValue       = record.IntValue,
 								BigIntValue    = record.BigIntValue,
+								StringValue    = record.StringValue
 							};
 
 							if (copy.DateTimeValue != null)
@@ -1168,5 +1169,25 @@ namespace Tests
 		{
 			_db.DropTable<T>();
 		}
+	}
+
+	public class DeletePerson : IDisposable
+	{
+		private IDataContext _db;
+
+		public DeletePerson(IDataContext db)
+		{
+			_db = db;
+			Delete(_db);
+		}
+
+		public void Dispose()
+		{
+			Delete(_db);
+		}
+
+		private readonly Func<IDataContext, int> Delete =
+			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
+
 	}
 }

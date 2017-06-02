@@ -1666,7 +1666,10 @@ namespace LinqToDB.SqlProvider
 					// start building next bucked
 					firstValue = true;
 					StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
-					StringBuilder.Append(" OR ");
+					if (predicate.IsNot)
+						StringBuilder.Append(" AND ");
+					else
+						StringBuilder.Append(" OR ");
 				}
 
 				var val = value;
@@ -2712,12 +2715,12 @@ namespace LinqToDB.SqlProvider
 
 			if (t1 != null)
 			{
-				if (parameter.Size != 0)
+				if (parameter.Size > 0)
 				{
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Size).Append(')');
 				}
-				else if (parameter.Precision != 0)
+				else if (parameter.Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Precision).Append(',').Append(parameter.Scale).Append(')');

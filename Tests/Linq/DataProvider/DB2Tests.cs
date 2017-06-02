@@ -89,7 +89,7 @@ namespace Tests.DataProvider
 				            TestType<DB2Blob>      (conn, "blobDataType",      DataType.VarBinary, skipNotNull:true);
 				            TestType<DB2Xml>       (conn, "xmlDataType",       DataType.Xml, skipPass:true);
 
-				Assert.That(TestType<DB2Decimal?>     (conn, "decimalDataType",   DataType.Decimal).  ToString(),   Is.EqualTo(new DB2Decimal(9999999m).ToString()));
+				Assert.That(TestType<DB2Decimal?>     (conn, "decimalDataType",   DataType.Decimal).  ToString(), Is.EqualTo(new DB2Decimal(9999999m).ToString()));
 				Assert.That(TestType<DB2Binary>       (conn, "varbinaryDataType", DataType.VarBinary).ToString(), Is.EqualTo(new DB2Binary(new byte[] { 49, 50, 51, 52 }).ToString()));
 				Assert.That(TestType<DB2DecimalFloat?>(conn, "decfloatDataType",  DataType.Decimal).  ToString(), Is.EqualTo(new DB2DecimalFloat(8888888m).ToString()));
 			}
