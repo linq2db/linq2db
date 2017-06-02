@@ -1,4 +1,6 @@
-﻿DROP TABLE Patient
+﻿DROP TABLE Issue695
+GO
+DROP TABLE Patient
 GO
 DROP TABLE Doctor
 GO
@@ -187,9 +189,6 @@ SELECT
 	        1,         2, Cast(3 as varbinary),
 	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)
 
-GO
-
-DROP TABLE Issue695
 GO
 
 CREATE TABLE Issue695
