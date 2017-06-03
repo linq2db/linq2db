@@ -1015,7 +1015,7 @@ namespace LinqToDB.Data
 		protected void ThrowOnDisposed()
 		{
 			if (Disposed)
-				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed");
+				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		public void Dispose()

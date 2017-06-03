@@ -461,7 +461,7 @@ namespace LinqToDB.ServiceModel
 		protected void ThrowOnDisposed()
 		{
 			if (Disposed)
-				throw new ObjectDisposedException("RemoteDataContext", "IDataContext is disposed");
+				throw new ObjectDisposedException("RemoteDataContext", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		void IDataContext.Close()

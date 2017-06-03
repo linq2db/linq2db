@@ -499,7 +499,7 @@ namespace Tests.Linq
 			[Column, NotNull] public int CategoryId;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void Stuff2(string context)
 		{
 			using (var db = GetDataContext(context))
