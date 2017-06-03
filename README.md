@@ -23,8 +23,8 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 
 * Release builds can be found on [NuGet](https://www.nuget.org/packages?q=linq2db)
 * [MyGet](https://www.myget.org/gallery/linq2db)
- * V2 `https://www.myget.org/F/linq2db/api/v2`
- * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
+  * V2 `https://www.myget.org/F/linq2db/api/v2`
+  * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
 
 # Let's get started
 
