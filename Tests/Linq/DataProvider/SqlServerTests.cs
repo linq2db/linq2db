@@ -1227,5 +1227,25 @@ namespace Tests.DataProvider
 				SqlServerTools.DataReaderGetDecimal = func;
 			}
 		}
+
+		[Test, SqlServerDataContext]
+		public void SelectTableWithHintTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(Person, db.Person.With("TABLOCK"));
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void UpdateTableWithHintTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(Person.Count(), db.Person.Set(_ => _.FirstName, _ => _.FirstName).Update());
+				Assert.AreEqual(Person.Count(), db.Person.With("TABLOCK").Set(_ => _.FirstName, _ => _.FirstName).Update());
+			}
+		}
+
 	}
 }
