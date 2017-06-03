@@ -746,9 +746,41 @@ namespace LinqToDB.DataProvider
 			var target = query.From.Tables[0];
 			target.Alias = _targetAlias;
 
-			var source = subQuery.From.Tables[1];
+			SelectQuery.TableSource source = null;
+
+			if (subQuery.From.Tables.Count == 2)
+			{
+				// without associations
+				source = subQuery.From.Tables[1];
+				query.From.Tables.Add(source);
+			}
+			else
+			{
+				// with associations
+				source = subQuery.From.Tables[0].Joins[0].Table;
+
+				// collect tables, referenced in FROM clause
+				var tableSet = new HashSet<SqlTable>();
+				var tables = new List<SqlTable>();
+				new QueryVisitor().Visit(subQuery.From, e =>
+				{
+					if (e.ElementType == QueryElementType.TableSource)
+					{
+						var et = (SelectQuery.TableSource)e;
+
+						tableSet.Add((SqlTable)et.Source);
+						tables.Add((SqlTable)et.Source);
+					}
+				});
+
+				for (var i = 0; i < query.Update.Items.Count; i++)
+				{
+					query.Update.Items[i] = new QueryVisitor()
+						.Convert(query.Update.Items[i], element => ConvertToSubquery(subQuery, element, tableSet, tables, (SqlTable)target.Source, (SqlTable)source.Source));
+				}
+			}
+
 			source.Alias = SourceAlias;
-			query.From.Tables.Add(source);
 
 			SetSourceColumnAliases(query.Update, source.Source);
 		}

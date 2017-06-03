@@ -18,8 +18,10 @@ namespace Tests.Merge
 	public partial class MergeTests
 	{
 		// ASE: ASE just don't like this query...
+		// DB2: match condition invalid
 		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana,
+			ProviderName.DB2zOS, ProviderName.DB2LUW, ProviderName.DB2)]
 		public void TestParameters1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -63,6 +65,53 @@ namespace Tests.Merge
 					.Merge();
 
 				Assert.AreEqual(8, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+			}
+		}
+
+		[MergeDataContextSource()]
+		public void TestParameters3(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var parameterValues = new
+				{
+					Val1 = 1,
+					Val2 = 2,
+					Val3 = 3,
+					Val4 = 4,
+					Val5 = 5
+				};
+
+				var table = GetTarget(db);
+
+				table
+					.From(GetSource2(db)
+						.Where(_ => _.OtherId != parameterValues.Val5)
+						.Select(_ => new
+						{
+							Id = _.OtherId,
+							Field1 = _.OtherField1,
+							Field2 = _.OtherField2,
+							Field3 = _.OtherField3,
+							Field4 = _.OtherField4,
+							Field5 = _.OtherField5,
+							Field7 = parameterValues.Val2
+						}), (t, s) => t.Id == s.Id)
+					.Insert(s => s.Field7 == parameterValues.Val1 + s.Id, s => new TestMapping1()
+					{
+						Id = s.Id + parameterValues.Val5,
+						Field1 = s.Field1
+					})
+					.Update((t, s) => s.Id == parameterValues.Val3, (t, s) => new TestMapping1()
+					{
+						Field4 = parameterValues.Val5
+					})
+					.Delete((t, s) => t.Field3 != parameterValues.Val2)
+					.Merge();
+
+				Assert.AreEqual(7, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 

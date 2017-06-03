@@ -191,7 +191,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: fails to parse valid(!) query
-		[MergeDataContextSource(ProviderName.Sybase)]
+		// DB2: joins in match not supported
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void OtherSourceAssociationInMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -562,7 +563,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: fails to parse valid(!) query
-		[MergeDataContextSource(ProviderName.Sybase)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.DB2zOS, ProviderName.DB2LUW, ProviderName.DB2)]
 		public void SameSourceAssociationInMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
