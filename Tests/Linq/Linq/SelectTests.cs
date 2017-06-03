@@ -215,7 +215,7 @@ namespace Tests.Linq
 					.Select(p4 => new Person { ID = p4.p11.ID, FirstName = p4.p3.p1.FirstName }));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
 		public void MultipleSelect11(string context)
 		{
 			var dt = DateTime.Now;
