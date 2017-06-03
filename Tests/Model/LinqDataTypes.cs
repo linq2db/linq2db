@@ -71,16 +71,17 @@ namespace Tests.Model
 	[Table("LinqDataTypes")]
 	public class LinqDataTypes2 : IEquatable<LinqDataTypes2>, IComparable
 	{
-		[PrimaryKey] public int       ID;
-		[Column]     public decimal   MoneyValue;
-		[Column(DataType = LinqToDB.DataType.DateTime)]		public DateTime? DateTimeValue;
-		[Column]     public DateTime? DateTimeValue2;
-		[Column]     public bool?     BoolValue;
-		[Column]     public Guid?     GuidValue;
-		[Column]     public short?    SmallIntValue;
-		[Column]     public int?      IntValue;
-		[Column]     public long?     BigIntValue;
-		[Column]     public string    StringValue;
+		[PrimaryKey]                                    public int       ID;
+		[Column]                                        public decimal   MoneyValue;
+		// type it explicitly, because SQL Server 2005+ provider maps DateTime .Net type DataType.DateTime2 by default
+		[Column(DataType = LinqToDB.DataType.DateTime)] public DateTime? DateTimeValue;
+		[Column]                                        public DateTime? DateTimeValue2;
+		[Column]                                        public bool?     BoolValue;
+		[Column]                                        public Guid?     GuidValue;
+		[Column]                                        public short?    SmallIntValue;
+		[Column]                                        public int?      IntValue;
+		[Column]                                        public long?     BigIntValue;
+		[Column]                                        public string    StringValue;
 
 		public override bool Equals(object obj)
 		{
@@ -95,7 +96,7 @@ namespace Tests.Model
 				other.ID                     == ID                     &&
 				other.MoneyValue             == MoneyValue             &&
 				other.BoolValue              == BoolValue              &&
-				other.GuidValue              == GuidValue              &&				
+				other.GuidValue              == GuidValue              &&
 				other.StringValue            == StringValue            &&
 				other.DateTimeValue.HasValue == DateTimeValue.HasValue &&
 				(other.DateTimeValue == null ||

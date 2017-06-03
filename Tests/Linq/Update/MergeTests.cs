@@ -61,23 +61,23 @@ namespace Tests.Merge
 		[Table("merge1")]
 		class TestMapping1
 		{
-			[Column("id")]
+			[Column("Id")]
 			[PrimaryKey]
 			public int Id;
 
-			[Column("field1")]
+			[Column("Field1")]
 			public int? Field1;
 
-			[Column("field2")]
+			[Column("Field2")]
 			public int? Field2;
 
-			[Column("field3", SkipOnInsert = true)]
+			[Column("Field3", SkipOnInsert = true)]
 			public int? Field3;
 
-			[Column("field4", SkipOnUpdate = true)]
+			[Column("Field4", SkipOnUpdate = true)]
 			public int? Field4;
 
-			[Column("field5", SkipOnInsert = true, SkipOnUpdate = true)]
+			[Column("Field5", SkipOnInsert = true, SkipOnUpdate = true)]
 			public int? Field5;
 
 			[Column("fake", Configuration = "Other")]
@@ -87,23 +87,23 @@ namespace Tests.Merge
 		[Table("merge2")]
 		class TestMapping2
 		{
-			[Column("id")]
+			[Column("Id")]
 			[PrimaryKey]
 			public int OtherId;
 
-			[Column("field1", SkipOnInsert = true)]
+			[Column("Field1", SkipOnInsert = true)]
 			public int? OtherField1;
 
-			[Column("field2", SkipOnInsert = true, SkipOnUpdate = true)]
+			[Column("Field2", SkipOnInsert = true, SkipOnUpdate = true)]
 			public int? OtherField2;
 
-			[Column("field3", SkipOnUpdate = true)]
+			[Column("Field3", SkipOnUpdate = true)]
 			public int? OtherField3;
 
-			[Column("field4")]
+			[Column("Field4")]
 			public int? OtherField4;
 
-			[Column("field5")]
+			[Column("Field5")]
 			public int? OtherField5;
 
 			[Column("fake", Configuration = "Other")]
@@ -112,12 +112,12 @@ namespace Tests.Merge
 
 		private static ITable<TestMapping1> GetTarget(TestDataConnection db)
 		{
-			return db.GetTable<TestMapping1>().TableName("testmerge1");
+			return db.GetTable<TestMapping1>().TableName("TestMerge1");
 		}
 
 		private static ITable<TestMapping1> GetSource1(TestDataConnection db)
 		{
-			return db.GetTable<TestMapping1>().TableName("testmerge2");
+			return db.GetTable<TestMapping1>().TableName("TestMerge2");
 		}
 
 		private static ITable<TestMapping2> GetSource2(TestDataConnection db)
@@ -142,13 +142,13 @@ namespace Tests.Merge
 				GetTarget(db).Delete();
 				foreach (var record in InitialTargetData)
 				{
-					db.Insert(record, "testmerge1");
+					db.Insert(record, "TestMerge1");
 				}
 
 				GetSource1(db).Delete();
 				foreach (var record in InitialSourceData)
 				{
-					db.Insert(record, "testmerge2");
+					db.Insert(record, "TestMerge2");
 				}
 			}
 		}

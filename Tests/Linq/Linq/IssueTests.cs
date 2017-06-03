@@ -457,7 +457,7 @@ namespace Tests.Linq
 			[NotNull]                                  public string FirstName { get; set; }
 			[NotNull]                                  public string LastName;
 			[Nullable]                                 public string MiddleName;
-													   public char   Gender;
+			                                           public char   Gender;
 		}
 
 		[Test, DataContextSource(TestProvName.SQLiteMs)]

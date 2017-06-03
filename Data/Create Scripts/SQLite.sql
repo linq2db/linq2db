@@ -160,23 +160,23 @@ SELECT
 GO
 
 -- merge test tables
-DROP TABLE IF EXISTS testmerge1;
-DROP TABLE IF EXISTS testmerge2;
-CREATE TABLE testmerge1
+DROP TABLE IF EXISTS TestMerge1;
+DROP TABLE IF EXISTS TestMerge2;
+CREATE TABLE TestMerge1
 (
-	id		integer      NOT NULL CONSTRAINT PK_testmerge1,
-	field1	integer          NULL,
-	field2	integer          NULL,
-	field3	integer          NULL,
-	field4	integer          NULL,
-	field5	integer          NULL
+	Id		integer      NOT NULL CONSTRAINT PK_TestMerge1,
+	Field1	integer          NULL,
+	Field2	integer          NULL,
+	Field3	integer          NULL,
+	Field4	integer          NULL,
+	Field5	integer          NULL
 );
-CREATE TABLE testmerge2
+CREATE TABLE TestMerge2
 (
-	id		integer      NOT NULL CONSTRAINT PK_testmerge2,
-	field1	integer          NULL,
-	field2	integer          NULL,
-	field3	integer          NULL,
-	field4	integer          NULL,
-	field5	integer          NULL
+	Id		integer      NOT NULL CONSTRAINT PK_TestMerge2,
+	Field1	integer          NULL,
+	Field2	integer          NULL,
+	Field3	integer          NULL,
+	Field4	integer          NULL,
+	Field5	integer          NULL
 );

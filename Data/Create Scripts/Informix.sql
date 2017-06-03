@@ -251,32 +251,32 @@ CREATE TABLE TestFKUnique (
 GO
 
 
-DROP TABLE testmerge1
+DROP TABLE TestMerge1
 GO
-DROP TABLE testmerge2
+DROP TABLE TestMerge2
 GO
 
-CREATE TABLE testmerge1
+CREATE TABLE TestMerge1
 (
-	id       int          NOT NULL,
-	field1   int              NULL,
-	field2   int              NULL,
-	field3   int              NULL,
-	field4   int              NULL,
-	field5   int              NULL,
+	Id       int          NOT NULL,
+	Field1   int              NULL,
+	Field2   int              NULL,
+	Field3   int              NULL,
+	Field4   int              NULL,
+	Field5   int              NULL,
 
-	PRIMARY KEY(id)
+	PRIMARY KEY(Id)
 )
 GO
-CREATE TABLE testmerge2
+CREATE TABLE TestMerge2
 (
-	id      int          NOT NULL,
-	field1   int              NULL,
-	field2   int              NULL,
-	field3   int              NULL,
-	field4   int              NULL,
-	field5   int              NULL,
+	Id       int          NOT NULL,
+	Field1   int              NULL,
+	Field2   int              NULL,
+	Field3   int              NULL,
+	Field4   int              NULL,
+	Field5   int              NULL,
 
-	PRIMARY KEY(id)
+	PRIMARY KEY(Id)
 )
 GO

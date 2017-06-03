@@ -352,31 +352,31 @@ AS
 GO
 
 -- merge test tables
-DROP TABLE IF EXISTS testmerge1
+DROP TABLE IF EXISTS TestMerge1
 GO
-DROP TABLE IF EXISTS testmerge2
+DROP TABLE IF EXISTS TestMerge2
 GO
-CREATE TABLE testmerge1
+CREATE TABLE TestMerge1
 (
-	id       int          NOT NULL,
-	field1   int              NULL,
-	field2   int              NULL,
-	field3   int              NULL,
-	field4   int              NULL,
-	field5   int              NULL,
+	Id       int          NOT NULL,
+	Field1   int              NULL,
+	Field2   int              NULL,
+	Field3   int              NULL,
+	Field4   int              NULL,
+	Field5   int              NULL,
 
-	 CONSTRAINT PK_testmerge1 PRIMARY KEY CLUSTERED (id)
+	 CONSTRAINT PK_TestMerge1 PRIMARY KEY CLUSTERED (Id)
 )
 GO
-CREATE TABLE testmerge2
+CREATE TABLE TestMerge2
 (
-	id       int          NOT NULL,
-	field1   int              NULL,
-	field2   int              NULL,
-	field3   int              NULL,
-	field4   int              NULL,
-	field5   int              NULL,
+	Id       int          NOT NULL,
+	Field1   int              NULL,
+	Field2   int              NULL,
+	Field3   int              NULL,
+	Field4   int              NULL,
+	Field5   int              NULL,
 
-	 CONSTRAINT PK_testmerge2 PRIMARY KEY CLUSTERED (id)
+	 CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED (Id)
 )
 GO

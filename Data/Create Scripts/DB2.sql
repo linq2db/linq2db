@@ -254,28 +254,28 @@ BEGIN
 END
 GO
 
-DROP TABLE "testmerge1"
+DROP TABLE "TestMerge1"
 GO
-DROP TABLE "testmerge2"
+DROP TABLE "TestMerge2"
 GO
 
-CREATE TABLE "testmerge1"
+CREATE TABLE "TestMerge1"
 (
-	"id"       INTEGER       PRIMARY KEY NOT NULL,
-	"field1"   INTEGER                       NULL,
-	"field2"   INTEGER                       NULL,
-	"field3"   INTEGER                       NULL,
-	"field4"   INTEGER                       NULL,
-	"field5"   INTEGER                       NULL
+	"Id"       INTEGER       PRIMARY KEY NOT NULL,
+	"Field1"   INTEGER                       NULL,
+	"Field2"   INTEGER                       NULL,
+	"Field3"   INTEGER                       NULL,
+	"Field4"   INTEGER                       NULL,
+	"Field5"   INTEGER                       NULL
 )
 GO
-CREATE TABLE "testmerge2"
+CREATE TABLE "TestMerge2"
 (
-	"id"       INTEGER       PRIMARY KEY NOT NULL,
-	"field1"   INTEGER                       NULL,
-	"field2"   INTEGER                       NULL,
-	"field3"   INTEGER                       NULL,
-	"field4"   INTEGER                       NULL,
-	"field5"   INTEGER                       NULL
+	"Id"       INTEGER       PRIMARY KEY NOT NULL,
+	"Field1"   INTEGER                       NULL,
+	"Field2"   INTEGER                       NULL,
+	"Field3"   INTEGER                       NULL,
+	"Field4"   INTEGER                       NULL,
+	"Field5"   INTEGER                       NULL
 )
 GO

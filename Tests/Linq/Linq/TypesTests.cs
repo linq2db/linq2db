@@ -205,12 +205,12 @@ namespace Tests.Linq
 					db.Types.Delete(_ => _.ID > 1000);
 					db.Types.Insert(() => new LinqDataTypes
 					{
-						ID = 1001,
-						MoneyValue = 1001,
+						ID            = 1001,
+						MoneyValue    = 1001,
 						DateTimeValue = Sql.CurrentTimestamp,
-						BoolValue = true,
-						GuidValue = Sql.NewGuid(),
-						BinaryValue = new Binary(new byte[] { 1 }),
+						BoolValue     = true,
+						GuidValue     = Sql.NewGuid(),
+						BinaryValue   = new Binary(new byte[] { 1 }),
 						SmallIntValue = 1001
 					});
 

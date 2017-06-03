@@ -208,7 +208,7 @@ namespace LinqToDB.Data
 			switch (info.TraceInfoStep)
 			{
 				case TraceInfoStep.BeforeExecute:
-				WriteTraceLine(info.SqlText, TraceSwitch.DisplayName);
+					WriteTraceLine(info.SqlText, TraceSwitch.DisplayName);
 					break;
 
 				case TraceInfoStep.AfterExecute:
@@ -220,62 +220,63 @@ namespace LinqToDB.Data
 					break;
 
 				case TraceInfoStep.Error:
-			{
-				var sb = new StringBuilder();
+					{
+						var sb = new StringBuilder();
 
-				for (var ex = info.Exception; ex != null; ex = ex.InnerException)
-				{
-					try
-					{
-					sb
-						.AppendLine()
-							.AppendLine("Exception: {0}".Args(ex.GetType()))
-							.AppendLine("Message  : {0}".Args(ex.Message))
-						.AppendLine(ex.StackTrace)
-						;
-				}
-					catch
-					{
-						// AseException.Message fails for currently used provider due to very sad bug
-						// in AseErrorCollection.Message property
-						sb
-							.AppendLine()
-							.AppendFormat("Failed while tried to log failure {0}", ex.GetType())
-							;
+						for (var ex = info.Exception; ex != null; ex = ex.InnerException)
+						{
+							try
+							{
+								sb
+									.AppendLine()
+										.AppendLine("Exception: {0}".Args(ex.GetType()))
+										.AppendLine("Message  : {0}".Args(ex.Message))
+									.AppendLine(ex.StackTrace)
+									;
+							}
+							catch
+							{
+								// Sybase provider could generate exception that will throw another exception when you
+								// try to access Message property due to bug in AseErrorCollection.Message property.
+								// There it tries to fetch error from first element of list without checking wether
+								// list contains any elements or not
+								sb
+									.AppendLine()
+									.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
+									;
+							}
+						}
+
+						WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
 					}
-				}
-
-				WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-					
-			}
 
 					break;
 
 				case TraceInfoStep.MapperCreated:
-			{
-					var sb = new StringBuilder();
+					{
+						var sb = new StringBuilder();
 
-					if (Configuration.Linq.TraceMapperExpression && info.MapperExpression != null)
-						sb.AppendLine(info.MapperExpression.GetDebugView());
+						if (Configuration.Linq.TraceMapperExpression && info.MapperExpression != null)
+							sb.AppendLine(info.MapperExpression.GetDebugView());
 
-					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-			}
+						WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+					}
 
 					break;
 
 				case TraceInfoStep.Completed:
-			{
-					var sb = new StringBuilder();
+					{
+						var sb = new StringBuilder();
 
-					sb.Append("Total Execution Time: {0}.".Args(info.ExecutionTime));
+						sb.Append("Total Execution Time: {0}.".Args(info.ExecutionTime));
 
-					if (info.RecordsAffected != null)
-						sb.Append(" Rows Count: {0}.".Args(info.RecordsAffected));
+						if (info.RecordsAffected != null)
+							sb.Append(" Rows Count: {0}.".Args(info.RecordsAffected));
 
-					sb.AppendLine();
+						sb.AppendLine();
 
-					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-				}
+						WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+					}
 
 					break;
 			}

@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override void GenerateUpdateWithDelete(
+		protected override void BuildUpdateWithDelete(
 			Expression<Func<TTarget, TSource, bool>> updatePredicate,
 			Expression<Func<TTarget, TSource, TTarget>> updateExpression,
 			Expression<Func<TTarget, TSource, bool>> deletePredicate)
@@ -88,21 +88,21 @@ namespace LinqToDB.DataProvider.Oracle
 				.AppendLine("WHEN MATCHED THEN UPDATE");
 
 			if (updateExpression != null)
-				GenerateCustomUpdate(updateExpression);
+				BuildCustomUpdate(updateExpression);
 			else
-				GenerateDefaultUpdate();
+				BuildDefaultUpdate();
 
 			if (updatePredicate != null)
 			{
 				Command.Append(" WHERE ");
-				GeneratePredicateByTargetAndSource(updatePredicate);
+				BuildPredicateByTargetAndSource(updatePredicate);
 			}
 
 			Command.Append(" DELETE WHERE ");
-			GeneratePredicateByTargetAndSource(deletePredicate);
+			BuildPredicateByTargetAndSource(deletePredicate);
 		}
 
-		protected override void GenerateInsert(
+		protected override void BuildInsert(
 			Expression<Func<TSource, bool>> predicate,
 			Expression<Func<TSource, TTarget>> create)
 		{
@@ -111,18 +111,18 @@ namespace LinqToDB.DataProvider.Oracle
 				.Append("WHEN NOT MATCHED THEN INSERT");
 
 			if (create != null)
-				GenerateCustomInsert(create);
+				BuildCustomInsert(create);
 			else
-				GenerateDefaultInsert();
+				BuildDefaultInsert();
 
 			if (predicate != null)
 			{
 				Command.Append(" WHERE ");
-				GenerateSingleTablePredicate(predicate, SourceAlias, true);
+				BuildSingleTablePredicate(predicate, SourceAlias, true);
 			}
 		}
 
-		protected override void GenerateDelete(Expression<Func<TTarget, TSource, bool>> predicate)
+		protected override void BuildDelete(Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			GenerateFakeUpdate(predicate);
 
@@ -133,7 +133,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (predicate != null)
 			{
 				Command.Append(" WHERE ");
-				GeneratePredicateByTargetAndSource(predicate);
+				BuildPredicateByTargetAndSource(predicate);
 			}
 		}
 
@@ -152,16 +152,16 @@ namespace LinqToDB.DataProvider.Oracle
 				.Select(c => Expression.Bind(c.MemberInfo, Expression.PropertyOrField(targetParam, c.MemberName))));
 
 			var update = Expression.Lambda<Func<TTarget, TSource, TTarget>>(body, targetParam, sourceParam);
-			GenerateCustomUpdate(update);
+			BuildCustomUpdate(update);
 
 			if (predicate != null)
 			{
 				Command.Append(" WHERE ");
-				GeneratePredicateByTargetAndSource(predicate);
+				BuildPredicateByTargetAndSource(predicate);
 			}
 		}
 
-		protected override void GenerateUpdate(
+		protected override void BuildUpdate(
 			Expression<Func<TTarget, TSource, bool>> predicate,
 			Expression<Func<TTarget, TSource, TTarget>> update)
 		{
@@ -170,14 +170,14 @@ namespace LinqToDB.DataProvider.Oracle
 				.AppendLine("WHEN MATCHED THEN UPDATE");
 
 			if (update != null)
-				GenerateCustomUpdate(update);
+				BuildCustomUpdate(update);
 			else
-				GenerateDefaultUpdate();
+				BuildDefaultUpdate();
 
 			if (predicate != null)
 			{
 				Command.Append(" WHERE ");
-				GeneratePredicateByTargetAndSource(predicate);
+				BuildPredicateByTargetAndSource(predicate);
 			}
 		}
 	}

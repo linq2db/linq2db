@@ -47,10 +47,10 @@ namespace LinqToDB.Linq
 		public bool Compare(string contextID, MappingSchema mappingSchema, Expression expr)
 		{
 			return
-				ContextID.Length == contextID.Length &&
-				ContextID        == contextID        &&
+				ContextID.Length       == contextID.Length                     &&
+				ContextID              == contextID                            &&
 				ConfigurationID.Length == mappingSchema.ConfigurationID.Length &&
-				ConfigurationID        == mappingSchema.ConfigurationID &&
+				ConfigurationID        == mappingSchema.ConfigurationID        &&
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
@@ -610,7 +610,7 @@ namespace LinqToDB.Linq
 
 						ei = new Query<int>(dataContextInfo, null)
 						{
-							Queries       = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						foreach (var field in sqlTable.Fields)

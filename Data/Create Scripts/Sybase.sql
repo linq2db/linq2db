@@ -212,32 +212,32 @@ SELECT
 GO
 
 -- merge test tables
-IF OBJECT_ID('dbo.testmerge1') IS NOT NULL
-BEGIN DROP TABLE testmerge1 END
+IF OBJECT_ID('dbo.TestMerge1') IS NOT NULL
+BEGIN DROP TABLE TestMerge1 END
 GO
-IF OBJECT_ID('dbo.testmerge2') IS NOT NULL
-BEGIN DROP TABLE testmerge2 END
+IF OBJECT_ID('dbo.TestMerge2') IS NOT NULL
+BEGIN DROP TABLE TestMerge2 END
 GO
 
-CREATE TABLE testmerge1
+CREATE TABLE TestMerge1
 (
-	id		int NOT NULL,
-	field1	int NULL,
-	field2	int NULL,
-	field3	int NULL,
-	field4	int NULL,
-	field5	int NULL,
-	CONSTRAINT PK_testmerge1 PRIMARY KEY CLUSTERED (id)
+	Id		int NOT NULL,
+	Field1	int NULL,
+	Field2	int NULL,
+	Field3	int NULL,
+	Field4	int NULL,
+	Field5	int NULL,
+	CONSTRAINT PK_TestMerge1 PRIMARY KEY CLUSTERED (Id)
 )
 GO
 
-CREATE TABLE testmerge2
+CREATE TABLE TestMerge2
 (
-	id		int NOT NULL,
-	field1	int NULL,
-	field2	int NULL,
-	field3	int NULL,
-	field4	int NULL,
-	field5	int NULL,
-	CONSTRAINT PK_testmerge2 PRIMARY KEY CLUSTERED (id)
+	Id		int NOT NULL,
+	Field1	int NULL,
+	Field2	int NULL,
+	Field3	int NULL,
+	Field4	int NULL,
+	Field5	int NULL,
+	CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED (Id)
 )

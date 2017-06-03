@@ -527,30 +527,30 @@ CREATE COLUMN TABLE "IndexTable2" (
 );;
 ALTER TABLE "IndexTable2" ADD CONSTRAINT "FK_Patient2_IndexTable" FOREIGN KEY ("PKField1", "PKField2") REFERENCES "IndexTable" ("PKField1", "PKField2") ON UPDATE CASCADE ON DELETE CASCADE;;
 
-CALL DROPEXISTINGTABLE('testmerge1', CURRENT_SCHEMA);;
+CALL DROPEXISTINGTABLE('TestMerge1', CURRENT_SCHEMA);;
 
-CALL DROPEXISTINGTABLE('testmerge2', CURRENT_SCHEMA);;
+CALL DROPEXISTINGTABLE('TestMerge2', CURRENT_SCHEMA);;
 
-CREATE TABLE "testmerge1"
+CREATE TABLE "TestMerge1"
 (
-	"id"       INTEGER        NOT NULL,
-	"field1"   INTEGER            NULL,
-	"field2"   INTEGER            NULL,
-	"field3"   INTEGER            NULL,
-	"field4"   INTEGER            NULL,
-	"field5"   INTEGER            NULL,
+	"Id"       INTEGER        NOT NULL,
+	"Field1"   INTEGER            NULL,
+	"Field2"   INTEGER            NULL,
+	"Field3"   INTEGER            NULL,
+	"Field4"   INTEGER            NULL,
+	"Field5"   INTEGER            NULL,
 	
-	PRIMARY KEY ("id")
+	PRIMARY KEY ("Id")
 );;
 
-CREATE TABLE "testmerge2"
+CREATE TABLE "TestMerge2"
 (
-	"id"       INTEGER        NOT NULL,
-	"field1"   INTEGER            NULL,
-	"field2"   INTEGER            NULL,
-	"field3"   INTEGER            NULL,
-	"field4"   INTEGER            NULL,
-	"field5"   INTEGER            NULL,
+	"Id"       INTEGER        NOT NULL,
+	"Field1"   INTEGER            NULL,
+	"Field2"   INTEGER            NULL,
+	"Field3"   INTEGER            NULL,
+	"Field4"   INTEGER            NULL,
+	"Field5"   INTEGER            NULL,
 	
-	PRIMARY KEY ("id")
+	PRIMARY KEY ("Id")
 );;

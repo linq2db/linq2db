@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return merge;
 		}
 
-		protected override void GenerateTerminator()
+		protected override void BuildTerminator()
 		{
 			if (_hasIdentityInsert)
 				Command.AppendFormat("SET IDENTITY_INSERT {0} OFF", TargetTableName).AppendLine();
@@ -56,6 +56,8 @@ namespace LinqToDB.DataProvider.Sybase
 			if (!_hasIdentityInsert)
 			{
 				_hasIdentityInsert = true;
+
+				// this code should be added before MERGE and command already partially generated at this stage
 				Command.Insert(0, string.Format("SET IDENTITY_INSERT {0} ON{1}", TargetTableName, Environment.NewLine));
 			}
 		}

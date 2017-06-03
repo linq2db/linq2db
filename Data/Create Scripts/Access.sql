@@ -288,28 +288,28 @@ VALUES (NULL)
 
 GO
 
-DROP TABLE testmerge1
+DROP TABLE TestMerge1
 GO
-DROP TABLE testmerge2
+DROP TABLE TestMerge2
 GO
 
-CREATE TABLE testmerge1
+CREATE TABLE TestMerge1
 (
-	id       Int      NOT NULL CONSTRAINT PK_testmerge1 PRIMARY KEY,
-	field1   Int          NULL,
-	field2   Int          NULL,
-	field3   Int          NULL,
-	field4   Int          NULL,
-	field5   Int          NULL
+	Id       Int      NOT NULL CONSTRAINT PK_TestMerge1 PRIMARY KEY,
+	Field1   Int          NULL,
+	Field2   Int          NULL,
+	Field3   Int          NULL,
+	Field4   Int          NULL,
+	Field5   Int          NULL
 )
 GO
-CREATE TABLE testmerge2
+CREATE TABLE TestMerge2
 (
-	id       Int      NOT NULL CONSTRAINT PK_testmerge2 PRIMARY KEY,
-	field1   Int          NULL,
-	field2   Int          NULL,
-	field3   Int          NULL,
-	field4   Int          NULL,
-	field5   Int          NULL
+	Id       Int      NOT NULL CONSTRAINT PK_TestMerge2 PRIMARY KEY,
+	Field1   Int          NULL,
+	Field2   Int          NULL,
+	Field3   Int          NULL,
+	Field4   Int          NULL,
+	Field5   Int          NULL
 )
 GO

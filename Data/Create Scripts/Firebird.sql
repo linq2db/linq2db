@@ -709,27 +709,27 @@ CREATE TABLE "CamelCaseName"
 COMMIT;
 
 
-DROP TABLE testmerge1;                            COMMIT;
-DROP TABLE testmerge2;                            COMMIT;
+DROP TABLE TestMerge1;                            COMMIT;
+DROP TABLE TestMerge2;                            COMMIT;
 
-CREATE TABLE testmerge1
+CREATE TABLE TestMerge1
 (
-	id     INTEGER     NOT NULL PRIMARY KEY,
-	field1 INTEGER,
-	field2 INTEGER,
-	field3 INTEGER,
-	field4 INTEGER,
-	field5 INTEGER
+	Id     INTEGER     NOT NULL PRIMARY KEY,
+	Field1 INTEGER,
+	Field2 INTEGER,
+	Field3 INTEGER,
+	Field4 INTEGER,
+	Field5 INTEGER
 );
 COMMIT;
 
-CREATE TABLE testmerge2
+CREATE TABLE TestMerge2
 (
-	id     INTEGER     NOT NULL PRIMARY KEY,
-	field1 INTEGER,
-	field2 INTEGER,
-	field3 INTEGER,
-	field4 INTEGER,
-	field5 INTEGER
+	Id     INTEGER     NOT NULL PRIMARY KEY,
+	Field1 INTEGER,
+	Field2 INTEGER,
+	Field3 INTEGER,
+	Field4 INTEGER,
+	Field5 INTEGER
 );
 COMMIT;
