@@ -1,15 +1,10 @@
 ﻿namespace LinqToDB.Expressions
 {
 	using System;
-	using System.Linq;
 	using System.Linq.Expressions;
-
-	using LinqToDB.Extensions;
 
 	public class BinaryAggregateExpression : Expression
 	{
-		public const ExpressionType AggregateExpressionType = (ExpressionType)1001;
-
 		public BinaryAggregateExpression(ExpressionType aggregateType, Type type, Expression[] expressions)
 		{
 			_aggregateType = aggregateType;
@@ -24,14 +19,25 @@
 		public          Expression[]   Expressions   { get { return _expressions;             } }
 		public          ExpressionType AggregateType { get { return _aggregateType;           } }
 		public override Type           Type          { get { return _type;                    } }
-		public override ExpressionType NodeType      { get { return AggregateExpressionType;  } }
-		public override bool           CanReduce     { get { return false;                    } }
+		public override ExpressionType NodeType      { get { return ExpressionType.Extension; } }
+		public override bool           CanReduce     { get { return true;                     } }
 
 		public BinaryAggregateExpression Update(Expression[] expressions)
 		{
 			if (ReferenceEquals(_expressions, expressions))
 				return this;
 			return new BinaryAggregateExpression(AggregateType, Type, expressions);
+		}
+
+		public override Expression Reduce()
+		{
+			var result = _expressions[0];
+			for (int i = 1; i < _expressions.Length; i++)
+			{
+				result = Expression.MakeBinary(AggregateType, result, _expressions[i]);
+			}
+
+			return result;
 		}
 	}
 }

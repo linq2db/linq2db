@@ -15,6 +15,7 @@ namespace LinqToDB.Data
 	using Common;
 	using Configuration;
 	using DataProvider;
+	using Expressions;
 
 	using Mapping;
 
@@ -204,35 +205,67 @@ namespace LinqToDB.Data
 
 		static void OnTraceInternal(TraceInfo info)
 		{
-			if (info.BeforeExecute)
+			switch (info.TraceInfoStep)
 			{
-				WriteTraceLine(info.SqlText, TraceSwitch.DisplayName);
-			}
-			else if (info.TraceLevel == TraceLevel.Error)
-			{
-				var sb = new StringBuilder();
+				case TraceInfoStep.BeforeExecute:
+					WriteTraceLine(info.SqlText, TraceSwitch.DisplayName);
+					break;
 
-				for (var ex = info.Exception; ex != null; ex = ex.InnerException)
+				case TraceInfoStep.AfterExecute:
+					WriteTraceLine(
+						info.RecordsAffected != null
+							? "Query Execution Time: {0}. Records Affected: {1}.\r\n".Args(info.ExecutionTime, info.RecordsAffected)
+							: "Query Execution Time: {0}\r\n".Args(info.ExecutionTime),
+						TraceSwitch.DisplayName);
+					break;
+
+				case TraceInfoStep.Error:
 				{
-					sb
-						.AppendLine()
-						.AppendFormat("Exception: {0}", ex.GetType())
-						.AppendLine()
-						.AppendFormat("Message  : {0}", ex.Message)
-						.AppendLine()
-						.AppendLine(ex.StackTrace)
-						;
+					var sb = new StringBuilder();
+
+					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
+					{
+						sb
+							.AppendLine()
+							.AppendLine("Exception: {0}".Args(ex.GetType()))
+							.AppendLine("Message  : {0}".Args(ex.Message))
+							.AppendLine(ex.StackTrace)
+							;
+					}
+
+					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+					
 				}
 
-				WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-			}
-			else if (info.RecordsAffected != null)
-			{
-				WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(info.ExecutionTime, info.RecordsAffected), TraceSwitch.DisplayName);
-			}
-			else
-			{
-				WriteTraceLine("Execution time: {0}\r\n".Args(info.ExecutionTime), TraceSwitch.DisplayName);
+					break;
+
+				case TraceInfoStep.MapperCreated:
+				{
+					var sb = new StringBuilder();
+
+					if (Configuration.Linq.TraceMapperExpression && info.MapperExpression != null)
+						sb.AppendLine(info.MapperExpression.GetDebugView());
+
+					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+				}
+
+					break;
+
+				case TraceInfoStep.Completed:
+				{
+					var sb = new StringBuilder();
+
+					sb.Append("Total Execution Time: {0}.".Args(info.ExecutionTime));
+
+					if (info.RecordsAffected != null)
+						sb.Append(" Rows Count: {0}.".Args(info.RecordsAffected));
+
+					sb.AppendLine();
+
+					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+				}
+
+					break;
 			}
 		}
 
@@ -542,7 +575,7 @@ namespace LinqToDB.Data
 
 #endregion
 
-#region Connection
+		#region Connection
 
 		bool          _closeConnection;
 		bool          _closeTransaction;
@@ -591,9 +624,9 @@ namespace LinqToDB.Data
 				OnClosed(this, EventArgs.Empty);
 		}
 
-#endregion
+		#endregion
 
-#region Command
+		#region Command
 
 		public string LastQuery;
 
@@ -656,9 +689,8 @@ namespace LinqToDB.Data
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo
+				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
-					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
@@ -673,7 +705,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo
+					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
@@ -689,7 +721,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTraceConnection(new TraceInfo
+					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
@@ -713,9 +745,8 @@ namespace LinqToDB.Data
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo
+				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
-					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
@@ -730,7 +761,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo
+					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
 					{
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
@@ -745,7 +776,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTraceConnection(new TraceInfo
+					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
@@ -761,7 +792,7 @@ namespace LinqToDB.Data
 
 		internal IDataReader ExecuteReader()
 		{
-			return ExecuteReader(CommandBehavior.Default);
+			return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 		}
 
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
@@ -774,9 +805,8 @@ namespace LinqToDB.Data
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo
+				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
-					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
@@ -791,7 +821,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo
+					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
 					{
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
@@ -806,7 +836,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTraceConnection(new TraceInfo
+					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
@@ -825,9 +855,9 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-#endregion
+		#endregion
 
-#region Transaction
+		#region Transaction
 
 		public IDbTransaction Transaction { get; private set; }
 		
@@ -907,9 +937,9 @@ namespace LinqToDB.Data
 			}
 		}
 
-#endregion
+		#endregion
 
-#region MappingSchema
+		#region MappingSchema
 
 		private MappingSchema _mappingSchema;
 
@@ -940,9 +970,9 @@ namespace LinqToDB.Data
 			return this;
 		}
 
-#endregion
+		#endregion
 
-#region ICloneable Members
+		#region ICloneable Members
 
 		DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection, MappingSchema mappingSchema)
 		{
@@ -964,16 +994,16 @@ namespace LinqToDB.Data
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
 		
-#endregion
+		#endregion
 
-#region System.IDisposable Members
+		#region System.IDisposable Members
 
 		protected bool Disposed { get; private set; }
 
 		protected void ThrowOnDisposed()
 		{
 			if (Disposed)
-				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed");
+				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		public void Dispose()
@@ -982,6 +1012,11 @@ namespace LinqToDB.Data
 			Close();
 		}
 
-#endregion
+		#endregion
+
+		internal CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
+		{
+			return DataProvider.GetCommandBehavior(commandBehavior);
+		}
 	}
 }

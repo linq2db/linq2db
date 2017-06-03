@@ -50,24 +50,18 @@ namespace Tests.UserTests
 		public void Issue307Test(string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
 			{
-				try
-				{
-					var obj = Entity307.Create();
-					obj.SetFirstName("FirstName307");
-					obj.LastName = "LastName307";
+				var obj = Entity307.Create();
+				obj.SetFirstName("FirstName307");
+				obj.LastName = "LastName307";
 
-					var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(obj));
 
-					var obj2 = db.GetTable<Entity307>().First(_ => _.ID == id1);
+				var obj2 = db.GetTable<Entity307>().First(_ => _.ID == id1);
 
-					Assert.IsNull(obj2.MiddleName);
-					Assert.AreEqual(obj.FirstName, obj2.FirstName);
-				}
-				finally
-				{
-					db.Person.Delete(_ => _.ID > MaxPersonID);
-				}
+				Assert.IsNull(obj2.MiddleName);
+				Assert.AreEqual(obj.FirstName, obj2.FirstName);
 			}
 		}
 	}

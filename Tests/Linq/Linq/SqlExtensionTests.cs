@@ -195,7 +195,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderOracleInformixDb2: Sql.IExtensionCallBuilder
+		class DatePartBuilderOracleInformix: Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -222,16 +222,82 @@ namespace Tests.Linq
 			}
 		}
 
+		class DatePartBuilderDB2: Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				string partStr;
+				var part = builder.GetValue<Sql.DateParts>("part");
+				switch (part)
+				{
+					case Sql.DateParts.Year        : partStr = "To_Number(To_Char({date}, 'YYYY'))";                  break;
+					case Sql.DateParts.Quarter     : partStr = "To_Number(To_Char({date}, 'Q'))";                     break;
+					case Sql.DateParts.Month       : partStr = "To_Number(To_Char({date}, 'MM'))";                    break;
+					case Sql.DateParts.DayOfYear   : partStr = "To_Number(To_Char({date}, 'DDD'))";                   break;
+					case Sql.DateParts.Day         : partStr = "To_Number(To_Char({date}, 'DD'))";                    break;
+					case Sql.DateParts.Week        : partStr = "To_Number(To_Char({date}, 'WW'))";                    break;
+					case Sql.DateParts.WeekDay     : partStr = "DayOfWeek({date})";                                   break;
+					case Sql.DateParts.Hour        : partStr = "To_Number(To_Char({date}, 'HH24'))";                  break;
+					case Sql.DateParts.Minute      : partStr = "To_Number(To_Char({date}, 'MI'))";                    break;
+					case Sql.DateParts.Second      : partStr = "To_Number(To_Char({date}, 'SS'))";                    break;
+					case Sql.DateParts.Millisecond : partStr = "To_Number(To_Char({date}, 'FF')) / 1000";             break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.Expression = partStr;
+			}
+		}
+
+		class DatePartBuilderFirebird: Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				string partStr;
+				var part = builder.GetValue<Sql.DateParts>("part");
+				switch (part)
+				{
+					case Sql.DateParts.Year        : partStr = "year";        break;
+					case Sql.DateParts.Quarter     :
+						builder.Expression = "Extract(Month from {date})";
+						builder.ResultExpression = builder.Inc(builder.Div(builder.Dec(builder.ConvertToSqlExpression(Precedence.Primary)), 3));
+						return;
+					case Sql.DateParts.Month       : partStr = "month";       break;
+					case Sql.DateParts.DayOfYear   : partStr = "yearday";     break;
+					case Sql.DateParts.Day         : partStr = "day";         break;
+					case Sql.DateParts.Week        : partStr = "week";        break;
+					case Sql.DateParts.WeekDay     : partStr = "weekday";     break;
+					case Sql.DateParts.Hour        : partStr = "hour";        break;
+					case Sql.DateParts.Minute      : partStr = "minute";      break;
+					case Sql.DateParts.Second      : partStr = "second";      break;
+					case Sql.DateParts.Millisecond : partStr = "millisecond"; break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.AddExpression("part", partStr);
+
+				switch (part)
+				{
+					case Sql.DateParts.DayOfYear:	
+					case Sql.DateParts.WeekDay:	
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
+						break;
+				}
+			}
+		}
+
+
 		[Sql.Extension(               "DatePart({part}, {date})",                 ServerSideOnly = false, BuilderType = typeof(DatePartBuilder))]
-		[Sql.Extension(PN.DB2,        "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracleInformixDb2))] // TODO: Not checked
-		[Sql.Extension(PN.Informix,   "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracleInformixDb2))] // TODO: Not checked
+		[Sql.Extension(PN.DB2,        "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
+		[Sql.Extension(PN.Informix,   "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracleInformix))] // TODO: Not checked
 		[Sql.Extension(PN.MySql,      "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderMySql))]
 		[Sql.Extension(PN.PostgreSQL, "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderPostgre))]
-		[Sql.Extension(PN.Firebird,   "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilder))]
+		[Sql.Extension(PN.Firebird,   "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderFirebird))]
 		[Sql.Extension(PN.SQLite,     "Cast(StrFTime('%{part}', {date}) as int)", ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSqLite))]
 		[Sql.Extension(PN.Access,     "DatePart('{part}', {date})",               ServerSideOnly = false, BuilderType = typeof(DatePartBuilderAccess))]
 		[Sql.Extension(PN.SapHana,    "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSapHana))]
-		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracleInformixDb2))]
+		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracleInformix))]
 		public static int? DatePart(this Sql.ISqlExtension ext, Sql.DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)

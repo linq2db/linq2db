@@ -1666,7 +1666,10 @@ namespace LinqToDB.SqlProvider
 					// start building next bucked
 					firstValue = true;
 					StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
-					StringBuilder.Append(" OR ");
+					if (predicate.IsNot)
+						StringBuilder.Append(" AND ");
+					else
+						StringBuilder.Append(" OR ");
 				}
 
 				var val = value;
@@ -1818,7 +1821,7 @@ namespace LinqToDB.SqlProvider
 								var table = GetTableAlias(ts);
 
 								table = table == null ?
-									GetPhysicalTableName(field.Table, null) :
+									GetPhysicalTableName(field.Table, null, true) :
 									Convert(table, ConvertType.NameToQueryTableAlias).ToString();
 
 								if (string.IsNullOrEmpty(table))
@@ -1863,7 +1866,7 @@ namespace LinqToDB.SqlProvider
 							throw new SqlException("Table not found for '{0}'.", column);
 						}
 
-						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(column.Parent, null);
+						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(column.Parent, null, true);
 
 						if (string.IsNullOrEmpty(tableAlias))
 							throw new SqlException("Table {0} should have an alias.", column.Parent);
@@ -2557,7 +2560,7 @@ namespace LinqToDB.SqlProvider
 			return table.PhysicalName == null ? null : Convert(table.PhysicalName, ConvertType.NameToQueryTable).ToString();
 		}
 
-		string GetPhysicalTableName(ISqlTableSource table, string alias)
+		string GetPhysicalTableName(ISqlTableSource table, string alias, bool ignoreTableExpression = false)
 		{
 			switch (table.ElementType)
 			{
@@ -2573,12 +2576,16 @@ namespace LinqToDB.SqlProvider
 
 						BuildTableName(sb, database, owner, physicalName);
 
-						if (tbl.SqlTableType == SqlTableType.Expression)
+						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
 							var values = new object[2 + (tbl.TableArguments == null ? 0 : tbl.TableArguments.Length)];
 
 							values[0] = sb.ToString();
-							values[1] = Convert(alias, ConvertType.NameToQueryTableAlias);
+
+							if (alias != null)
+								values[1] = Convert(alias, ConvertType.NameToQueryTableAlias);
+							else
+								values[1] = "";
 
 							for (var i = 2; i < values.Length; i++)
 							{
@@ -2712,12 +2719,12 @@ namespace LinqToDB.SqlProvider
 
 			if (t1 != null)
 			{
-				if (parameter.Size != 0)
+				if (parameter.Size > 0)
 				{
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Size).Append(')');
 				}
-				else if (parameter.Precision != 0)
+				else if (parameter.Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Precision).Append(',').Append(parameter.Scale).Append(')');

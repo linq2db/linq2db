@@ -59,7 +59,9 @@ DROP TABLE IF EXISTS Patient;
 CREATE TABLE Patient
 (
 	PersonID  integer       NOT NULL CONSTRAINT PK_Patient PRIMARY KEY,
-	Diagnosis nvarchar(256) NOT NULL
+	Diagnosis nvarchar(256) NOT NULL,
+
+	CONSTRAINT FK_Patient_Person FOREIGN KEY(PersonID) REFERENCES Person(PersonID)
 );
 INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution');
 
@@ -86,7 +88,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    binary(5000) NULL,
 	SmallIntValue  smallint,
 	IntValue       int          NULL,
-	BigIntValue    bigint       NULL
+	BigIntValue    bigint       NULL,
+	StringValue    nvarchar(50) NULL
 );
 
 

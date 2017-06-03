@@ -211,6 +211,18 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource]
+		public void Issue424Test3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1),
+					db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1)
+				);
+			}
+		}
+
 		// https://github.com/linq2db/linq2db/issues/498
 		//
 		[Test, DataContextSource()]

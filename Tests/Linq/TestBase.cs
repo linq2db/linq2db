@@ -54,7 +54,7 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
-				if (traceCount < 1000)
+				 if (traceCount < 10000)
 				{
 					Console.WriteLine("{0}: {1}", s2, s1);
 					Debug.WriteLine(s1, s2);
@@ -63,7 +63,7 @@ namespace Tests
 				else
 					Console.Write("z");
 #else
-				if (traceCount++ > 1000)
+				if (traceCount++ > 10000)
 					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
 #endif
 			};
@@ -477,6 +477,7 @@ namespace Tests
 			get
 			{
 				if (_types == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_types = db.Types.ToList();
 
@@ -490,6 +491,7 @@ namespace Tests
 			get
 			{
 				if (_types2 == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_types2 = db.Types2.ToList();
 
@@ -497,7 +499,7 @@ namespace Tests
 			}
 		}
 
-		protected const int MaxPersonID = 4;
+		protected internal const int MaxPersonID = 4;
 
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
@@ -506,6 +508,7 @@ namespace Tests
 			{
 				if (_person == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_person = db.Person.ToList();
 
@@ -524,6 +527,7 @@ namespace Tests
 			{
 				if (_patient == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_patient = db.Patient.ToList();
 
@@ -542,6 +546,7 @@ namespace Tests
 			{
 				if (_doctor == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_doctor = db.Doctor.ToList();
 				}
@@ -558,6 +563,7 @@ namespace Tests
 			get
 			{
 				if (_parent == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						db.Parent.Delete(c => c.ParentID >= 1000);
@@ -671,6 +677,7 @@ namespace Tests
 			get
 			{
 				if (_child == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						db.Child.Delete(c => c.ParentID >= 1000);
@@ -697,6 +704,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						_grandChild = db.GrandChild.ToList();
@@ -716,6 +724,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild1 == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						_grandChild1 = db.GrandChild1.ToList();
@@ -742,6 +751,7 @@ namespace Tests
 			{
 				if (_inheritanceParent == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_inheritanceParent = db.InheritanceParent.ToList();
 				}
@@ -757,6 +767,7 @@ namespace Tests
 			{
 				if (_inheritanceChild == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
 				}
@@ -789,6 +800,7 @@ namespace Tests
 				get
 				{
 					if (_category == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_category = db.Category.ToList();
 					return _category;
@@ -802,6 +814,7 @@ namespace Tests
 				{
 					if (_customer == null)
 					{
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_customer = db.Customer.ToList();
 
@@ -820,6 +833,7 @@ namespace Tests
 				{
 					if (_employee == null)
 					{
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 						{
 							_employee = db.Employee.ToList();
@@ -842,6 +856,7 @@ namespace Tests
 				get
 				{
 					if (_employeeTerritory == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_employeeTerritory = db.EmployeeTerritory.ToList();
 					return _employeeTerritory;
@@ -854,6 +869,7 @@ namespace Tests
 				get
 				{
 					if (_orderDetail == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_orderDetail = db.OrderDetail.ToList();
 					return _orderDetail;
@@ -867,6 +883,7 @@ namespace Tests
 				{
 					if (_order == null)
 					{
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_order = db.Order.ToList();
 
@@ -887,6 +904,7 @@ namespace Tests
 				get
 				{
 					if (_product == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_product = db.Product.ToList();
 
@@ -912,6 +930,7 @@ namespace Tests
 				get
 				{
 					if (_region == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_region = db.Region.ToList();
 					return _region;
@@ -924,6 +943,7 @@ namespace Tests
 				get
 				{
 					if (_shipper == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_shipper = db.Shipper.ToList();
 					return _shipper;
@@ -936,6 +956,7 @@ namespace Tests
 				get
 				{
 					if (_supplier == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_supplier = db.Supplier.ToList();
 					return _supplier;
@@ -948,6 +969,7 @@ namespace Tests
 				get
 				{
 					if (_territory == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_territory = db.Territory.ToList();
 					return _territory;
@@ -990,6 +1012,7 @@ namespace Tests
 								SmallIntValue  = record.SmallIntValue,
 								IntValue       = record.IntValue,
 								BigIntValue    = record.BigIntValue,
+								StringValue    = record.StringValue
 							};
 
 							if (copy.DateTimeValue != null)
@@ -1117,6 +1140,19 @@ namespace Tests
 		}
 	}
 
+	public class DisableLogging : IDisposable
+	{
+		public DisableLogging()
+		{
+			DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+		}
+
+		public void Dispose()
+		{
+			DataConnection.TurnTraceSwitchOn();
+		}
+	}
+
 	public class WithoutJoinOptimization : IDisposable
 	{
 		public WithoutJoinOptimization()
@@ -1144,5 +1180,25 @@ namespace Tests
 		{
 			_db.DropTable<T>();
 		}
+	}
+
+	public class DeletePerson : IDisposable
+	{
+		private IDataContext _db;
+
+		public DeletePerson(IDataContext db)
+		{
+			_db = db;
+			Delete(_db);
+		}
+
+		public void Dispose()
+		{
+			Delete(_db);
+		}
+
+		private readonly Func<IDataContext, int> Delete =
+			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
+
 	}
 }

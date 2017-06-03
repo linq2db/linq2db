@@ -106,6 +106,11 @@ namespace LinqToDB.DataProvider
 			return null;
 		}
 
+		public virtual CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
+		{
+			return commandBehavior;
+		}
+
 		#endregion
 
 		#region Helpers

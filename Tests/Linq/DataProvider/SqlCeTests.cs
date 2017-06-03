@@ -454,5 +454,41 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+#if !NETSTANDARD
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void Issue695Test(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var sp = db.DataProvider.GetSchemaProvider();
+				var sh = sp.GetSchema(db);
+				var t  = sh.Tables.Single(_ => _.TableName.Equals("Issue695", StringComparison.OrdinalIgnoreCase));
+
+				Assert.AreEqual(2, t.Columns.Count);
+				Assert.AreEqual(1, t.Columns.Count(_ => _.IsPrimaryKey));
+				Assert.AreEqual(1, t.ForeignKeys.Count);
+			}
+		}
+#endif
+
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void SelectTableWithHintTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(Person, db.Person.With("TABLOCK"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void UpdateTableWithHintTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(Person.Count(),  db.Person.                Set(_ => _.FirstName, _ => _.FirstName).Update());
+				Assert.AreEqual(Person.Count(),  db.Person.With("TABLOCK").Set(_ => _.FirstName, _ => _.FirstName).Update());
+			}
+		}
 	}
 }

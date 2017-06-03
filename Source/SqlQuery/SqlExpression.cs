@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
-		public SqlExpression(Type systemType, string expr, int precedence, params ISqlExpression[] parameters)
+		public SqlExpression(Type systemType, string expr, int precedence, SqlFlags sqlFlags, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException("parameters");
 
@@ -18,6 +18,12 @@ namespace LinqToDB.SqlQuery
 			Expr       = expr;
 			Precedence = precedence;
 			Parameters = parameters;
+			SqlFlags   = sqlFlags;
+		}
+
+		public SqlExpression(Type systemType, string expr, int precedence, params ISqlExpression[] parameters)
+			: this(systemType, expr, precedence, SqlFlags.None, parameters)
+		{
 		}
 
 		public SqlExpression(string expr, int precedence, params ISqlExpression[] parameters)
@@ -39,6 +45,7 @@ namespace LinqToDB.SqlQuery
 		public string           Expr       { get; private set; }
 		public int              Precedence { get; private set; }
 		public ISqlExpression[] Parameters { get; private set; }
+		public SqlFlags         SqlFlags   { get; private set; }
 
 		#region Overrides
 

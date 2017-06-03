@@ -184,10 +184,11 @@ namespace LinqToDB
 				: this(null, expr, SqlQuery.Precedence.Unknown, 0, parameters)
 			{
 			}
-
-			public Type    SystemType { get; set; }
-			public string  Expr       { get; set; }
-			public int     Precedence { get; set; }
+			 
+			public Type     SystemType { get; set; }
+			public string   Expr       { get; set; }
+			public int      Precedence { get; set; }
+			public SqlFlags SqlFlags   { get; set; }
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
 			{
@@ -348,7 +349,7 @@ namespace LinqToDB
 
 				public ISqlExpression ConvertToSqlExpression(int precedence)
 				{
-					return BuildSqlExpression(Extension, Extension.SystemType, precedence);
+					return BuildSqlExpression(Extension, Extension.SystemType, precedence, Extension.SqlFlags);
 				}
 
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
@@ -360,8 +361,9 @@ namespace LinqToDB
 
 			}
 
-			public Type   BuilderType     { get; set; }
-			public int    ChainPrecedence { get; set; }
+			public Type      BuilderType     { get; set; }
+			public int       ChainPrecedence { get; set; }
+			public SqlFlags  SqlFlags    { get; set; }
 
 			public ExtensionAttribute(string expression): this(string.Empty, expression)
 			{
@@ -369,6 +371,7 @@ namespace LinqToDB
 
 			public ExtensionAttribute(string configuration, string expression) : base(configuration, expression)
 			{
+				SqlFlags         = SqlFlags.None;
 				ExpectExpression = true;
 				ServerSideOnly   = true;
 				PreferServerSide = true;
@@ -440,7 +443,6 @@ namespace LinqToDB
 
 				}
 
-				chains.Reverse();
 				return chains;
 			}
 
@@ -507,7 +509,11 @@ namespace LinqToDB
 				else if (member is PropertyInfo)
 					type = ((PropertyInfo)member).PropertyType;
 
-				var extension = new SqlExtension(type, Expression, Precedence, ChainPrecedence);
+				var extension = new SqlExtension(type, Expression, Precedence, ChainPrecedence)
+				{
+					SqlFlags = SqlFlags
+				};
+
 				SqlExtensionParam result = null;
 
 				if (method != null)
@@ -634,7 +640,7 @@ namespace LinqToDB
 				}
 			}
 
-			public static SqlExpression BuildSqlExpression(SqlExtension root, Type systemType, int precedence)
+			public static SqlExpression BuildSqlExpression(SqlExtension root, Type systemType, int precedence, SqlFlags sqlFlags)
 			{
 				var sb             = new StringBuilder();
 				var resolvedParams = new Dictionary<SqlExtensionParam, string>();
@@ -697,14 +703,17 @@ namespace LinqToDB
 					return result;
 				};
 
-				var expr = ResolveExpressionValues(root.Expr, valueProvider);
+				var expr          = ResolveExpressionValues(root.Expr, valueProvider);
+				var sqlExpression = new SqlExpression(systemType, expr, precedence, sqlFlags, newParams.ToArray());
 
-				return new SqlExpression(systemType, expr, precedence, newParams.ToArray());
+				return sqlExpression;
 			}
 
 			public override ISqlExpression GetExpression(MappingSchema mapping, Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				var helper = new ConvertHelper(converter);
+
+				// chain starts from the tail
 				var chain  = BuildFunctionsChain(mapping, expression, helper);
 
 				if (chain.Count == 0)
@@ -724,19 +733,33 @@ namespace LinqToDB
 				var mainExtension = main.Extension;
 
 				// suggesting type
-				var type = ordered.Select(c => c.Extension.SystemType).FirstOrDefault(t => t != null);
+				var type = chain
+					.Where(c => c.Extension != null)
+					.Select(c => c.Extension.SystemType)
+					.FirstOrDefault(t => t != null && mapping.IsScalarType(t));
+
 				if (type == null)
-					type = chain.Where(c => c.Expression != null).Select(c => c.Expression.SystemType).FirstOrDefault(t => t != null);
+					type = chain
+						.Where(c => c.Expression != null)
+						.Select(c => c.Expression.SystemType)
+						.FirstOrDefault(t => t != null && mapping.IsScalarType(t));
 
-				mainExtension.SystemType = type ??expression.Type;
+				mainExtension.SystemType = type ?? expression.Type;
 
-				foreach (var c in chain.Where(c => c.Extension != mainExtension))
+				// aggregating flags 
+				var sqlFlags = ordered.Select(c => c.Extension.SqlFlags).Aggregate((a, b) => a | b);
+
+				// add parameters in reverse order
+				for (int i = chain.Count - 1; i >= 0; i--)
 				{
+					var c = chain[i];
+					if (c.Extension == mainExtension)
+						continue;
 					mainExtension.AddParameter(c);
 				}
 
 				//TODO: Precedence calculation
-				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType, mainExtension.Precedence);
+				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType, mainExtension.Precedence, sqlFlags);
 
 				return res;
 			}
