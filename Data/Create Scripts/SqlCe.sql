@@ -222,21 +222,21 @@ GO
 
 CREATE TABLE TestMerge1
 (
-	Id		int          NOT NULL CONSTRAINT PK_TestMerge1 PRIMARY KEY,
-	Field1	int              NULL,
-	Field2	int              NULL,
-	Field3	int              NULL,
-	Field4	int              NULL,
-	Field5	int              NULL
+	Id     int          NOT NULL CONSTRAINT PK_TestMerge1 PRIMARY KEY,
+	Field1 int              NULL,
+	Field2 int              NULL,
+	Field3 int              NULL,
+	Field4 int              NULL,
+	Field5 int              NULL
 )
 GO
 CREATE TABLE TestMerge2
 (
-	Id		int          NOT NULL CONSTRAINT PK_TestMerge2 PRIMARY KEY,
-	Field1	int              NULL,
-	Field2	int              NULL,
-	Field3	int              NULL,
-	Field4	int              NULL,
-	Field5	int              NULL
+	Id     int          NOT NULL CONSTRAINT PK_TestMerge2 PRIMARY KEY,
+	Field1 int              NULL,
+	Field2 int              NULL,
+	Field3 int              NULL,
+	Field4 int              NULL,
+	Field5 int              NULL
 )
 GO
