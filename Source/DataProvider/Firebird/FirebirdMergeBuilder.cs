@@ -26,5 +26,13 @@ namespace LinqToDB.DataProvider.Firebird
 				return "rdb$database";
 			}
 		}
+
+		protected override bool ProviderUsesAlternativeUpdate
+		{
+			get
+			{
+				return true;
+			}
+		}
 	}
 }

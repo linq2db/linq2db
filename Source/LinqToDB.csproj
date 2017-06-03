@@ -78,6 +78,7 @@
     <Compile Include="Configuration\ILinqToDBSettings.cs" />
     <Compile Include="Configuration\NamedValue.cs" />
     <Compile Include="DataProvider\BasicMergeBuilder.cs" />
+    <Compile Include="DataProvider\DB2\DB2MergeBuilder.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdMergeBuilder.cs" />
     <Compile Include="DataProvider\Informix\InformixCultureFixRegion.cs" />
     <Compile Include="DataProvider\Informix\InformixMergeBuilder.cs" />

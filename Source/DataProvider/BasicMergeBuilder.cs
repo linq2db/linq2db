@@ -724,15 +724,33 @@ namespace LinqToDB.DataProvider
 
 			var qry = Query<int>.GetQuery(ContextInfo, updateExpression);
 			var query = qry.Queries[0].SelectQuery;
-			query.Update.Table.Alias = _targetAlias;
 
-			var tables = MoveJoinsToSubqueries(query, _targetAlias, SourceAlias, QueryElement.UpdateSetter);
-			SetSourceColumnAliases(query.Update, tables.Item2.Source);
+			if (ProviderUsesAlternativeUpdate)
+				UpdateAlternativeUpdateQuery(query);
+			else
+			{
+				var tables = MoveJoinsToSubqueries(query, _targetAlias, SourceAlias, QueryElement.UpdateSetter);
+				SetSourceColumnAliases(query.Update, tables.Item2.Source);
+			}
 
 			qry.SetParameters(updateExpression, null, 0);
 			SaveParameters(query.Parameters);
 
 			SqlBuilder.BuildUpdateSetHelper(query, Command);
+		}
+
+		private void UpdateAlternativeUpdateQuery(SelectQuery query)
+		{
+			var subQuery = (SelectQuery)new QueryVisitor().Find(query.Where.SearchCondition, e => e.ElementType == QueryElementType.SqlQuery);
+
+			var target = query.From.Tables[0];
+			target.Alias = _targetAlias;
+
+			var source = subQuery.From.Tables[1];
+			source.Alias = SourceAlias;
+			query.From.Tables.Add(source);
+
+			SetSourceColumnAliases(query.Update, source.Source);
 		}
 
 		protected void GenerateDefaultUpdate()
@@ -1176,6 +1194,18 @@ namespace LinqToDB.DataProvider
 		{
 			MergeOperationType.Insert
 		};
+
+		/// <summary>
+		/// For providers, that use <see cref="BasicSqlOptimizer.GetAlternativeUpdate"/> method to build
+		/// UPDATE FROM query, this property should be set to true.
+		/// </summary>
+		protected virtual bool ProviderUsesAlternativeUpdate
+		{
+			get
+			{
+				return false;
+			}
+		}
 
 		/// <summary>
 		/// If true, merge command could include DeleteBySource and UpdateBySource operations. Those operations

@@ -11,6 +11,14 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
+		protected override bool ProviderUsesAlternativeUpdate
+		{
+			get
+			{
+				return true;
+			}
+		}
+
 		protected override bool DeleteOperationSupported
 		{
 			get

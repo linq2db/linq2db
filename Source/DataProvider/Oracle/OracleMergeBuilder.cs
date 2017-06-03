@@ -70,6 +70,14 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
+		protected override bool ProviderUsesAlternativeUpdate
+		{
+			get
+			{
+				return true;
+			}
+		}
+
 		protected override void GenerateUpdateWithDelete(
 			Expression<Func<TTarget, TSource, bool>> updatePredicate,
 			Expression<Func<TTarget, TSource, TTarget>> updateExpression,

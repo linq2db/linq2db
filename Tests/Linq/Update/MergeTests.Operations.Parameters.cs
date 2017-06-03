@@ -322,7 +322,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana,
+			ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
 		public void TestParametersInUpdateExpression(string context)
 		{
 			using (var db = new TestDataConnection(context))

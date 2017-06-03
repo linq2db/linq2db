@@ -14,6 +14,14 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
+		protected override bool ProviderUsesAlternativeUpdate
+		{
+			get
+			{
+				return true;
+			}
+		}
+
 		protected override bool OperationPredicateSupported
 		{
 			get
