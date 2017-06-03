@@ -104,7 +104,6 @@ namespace Tests.Merge
 					.FromSame(GetSource1(db))
 					.UpdateWithDelete((t, s) => new TestMapping1()
 					{
-						Id = t.Id + s.Id,
 						Field1 = t.Field1 + s.Field1,
 						Field2 = t.Field2 + s.Field2,
 						Field3 = t.Field3 + s.Field3,
@@ -144,7 +143,6 @@ namespace Tests.Merge
 					.FromSame(GetSource1(db))
 					.UpdateWithDelete((t, s) => s.Id == 3 || t.Id == 4, (t, s) => new TestMapping1()
 					{
-						Id = t.Id + 123,
 						Field1 = t.Field1 + s.Field5,
 						Field2 = t.Field2 + s.Field4,
 						Field3 = t.Field3 + s.Field3,
@@ -183,7 +181,6 @@ namespace Tests.Merge
 				var rows = table.From(GetSource2(db), (t, s) => t.Id == s.OtherId)
 					.UpdateWithDelete((t, s) => new TestMapping1()
 					{
-						Id = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField2,
 						Field3 = s.OtherField3,
@@ -222,7 +219,6 @@ namespace Tests.Merge
 				var rows = table.From(GetSource2(db), (t, s) => t.Id == s.OtherId)
 					.UpdateWithDelete((t, s) => s.OtherField4 == 214 || t.Id == 3, (t, s) => new TestMapping1()
 					{
-						Id = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField2,
 						Field3 = s.OtherField3,
@@ -270,7 +266,6 @@ namespace Tests.Merge
 					}), (t, s) => t.Id == s.Key)
 					.UpdateWithDelete((t, s) => s.Field04 == 214 || t.Id == 3, (t, s) => new TestMapping1()
 					{
-						Id = s.Key,
 						Field1 = s.Field01,
 						Field2 = s.Field02,
 						Field3 = s.Field03,
@@ -318,7 +313,6 @@ namespace Tests.Merge
 					}), (t, s) => t.Id == s.Key)
 					.UpdateWithDelete((t, s) => s.Field04 == 214 || s.Key == 3, (t, s) => new TestMapping1()
 					{
-						Id = s.Key,
 						Field1 = s.Field01,
 						Field2 = s.Field02,
 						Field3 = s.Field03,
@@ -366,7 +360,6 @@ namespace Tests.Merge
 					}), (t, s) => t.Id == s.order)
 					.UpdateWithDelete((t, s) => s.field1 == 214 || s.order == 3, (t, s) => new TestMapping1()
 					{
-						Id = s.order,
 						Field1 = s.delete,
 						Field2 = s.Delete1,
 						Field3 = s.Field,
@@ -414,7 +407,6 @@ namespace Tests.Merge
 					}), (t, s) => t.Id == s.@in)
 					.UpdateWithDelete((t, s) => s.with == 214 || t.Id == 3, (t, s) => new TestMapping1()
 					{
-						Id = s.@in,
 						Field1 = s.join,
 						Field2 = s.outer,
 						Field3 = s.inner,
@@ -438,6 +430,38 @@ namespace Tests.Merge
 				Assert.IsNull(result[2].Field3);
 				Assert.AreEqual(214, result[2].Field4);
 				Assert.IsNull(result[2].Field5);
+			}
+		}
+
+		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		public void UpdateWithDeleteDeleteByConditionOnUpdatedField(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.From(GetSource2(db), (t, s) => t.Id == s.OtherId)
+					.UpdateWithDelete((t, s) => new TestMapping1()
+					{
+						Field1 = t.Field1 + s.OtherField1 + 345
+					}, (t, s) => t.Field1 == 346)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(1, result.Count);
+
+				Assert.AreEqual(4, result[0].Id);
+				Assert.AreEqual(5, result[0].Field1);
+				Assert.AreEqual(7, result[0].Field2);
+				Assert.IsNull(result[0].Field3);
+				Assert.AreEqual(214, result[0].Field4);
+				Assert.IsNull(result[0].Field5);
 			}
 		}
 	}

@@ -84,6 +84,7 @@ namespace LinqToDB.DataProvider.Oracle
 			Expression<Func<TTarget, TSource, bool>> deletePredicate)
 		{
 			Command
+				.AppendLine()
 				.AppendLine("WHEN MATCHED THEN UPDATE");
 
 			if (updateExpression != null)
@@ -106,6 +107,7 @@ namespace LinqToDB.DataProvider.Oracle
 			Expression<Func<TSource, TTarget>> create)
 		{
 			Command
+				.AppendLine()
 				.Append("WHEN NOT MATCHED THEN INSERT");
 
 			if (create != null)
@@ -124,7 +126,9 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			GenerateFakeUpdate(predicate);
 
-			Command.Append(" DELETE");
+			Command
+				.AppendLine()
+				.Append(" DELETE");
 
 			if (predicate != null)
 			{
@@ -136,6 +140,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private void GenerateFakeUpdate(Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			Command
+				.AppendLine()
 				.AppendLine("WHEN MATCHED THEN UPDATE");
 
 			var targetParam = Expression.Parameter(typeof(TTarget), "t");

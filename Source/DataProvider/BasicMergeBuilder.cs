@@ -414,8 +414,6 @@ namespace LinqToDB.DataProvider
 					Command
 						.AppendLine("(");
 
-				hasData = true;
-
 				Command.Append("\tSELECT ");
 
 				for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
@@ -429,8 +427,10 @@ namespace LinqToDB.DataProvider
 					AddSourceValue(valueConverter, column, columnTypes[i], value);
 
 					if (!SupportsColumnAliasesInTableAlias)
-						Command.AppendFormat(" {0}", GenerateSourceColumnAlias(column.ColumnName, true));
+						Command.AppendFormat(" {0}", hasData ? GetEscapedSourceColumnAlias(column.ColumnName) : GenerateSourceColumnAlias(column.ColumnName, true));
 				}
+
+				hasData = true;
 
 				if (FakeSourceTable != null)
 				{

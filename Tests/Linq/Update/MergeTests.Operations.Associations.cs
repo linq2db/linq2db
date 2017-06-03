@@ -839,7 +839,7 @@ namespace Tests.Merge
 					.UpdateWithDelete(
 						(t, s) => new Model.Person()
 						{
-							FirstName = s.FirstName
+							LastName = s.FirstName
 						},
 						(t, s) => s.Patient.Diagnosis == "very sick" && t.Patient.Diagnosis == "very sick")
 					.Merge();
