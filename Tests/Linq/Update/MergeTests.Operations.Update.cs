@@ -66,7 +66,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource]//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -99,7 +99,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// Oracle: updates field, used in match
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void SameSourceUpdateWithUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -146,7 +147,53 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource]
+		public void SameSourceUpdateWithUpdateOracle(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Update((t, s) => new TestMapping1()
+					{
+						Field1 = t.Field1 + s.Field1,
+						Field2 = t.Field2 + s.Field2,
+						Field3 = t.Field3 + s.Field3,
+						Field4 = t.Field4 + s.Field4,
+						Field5 = t.Field5 + s.Field5
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(4, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+
+				Assert.AreEqual(3, result[2].Id);
+				Assert.IsNull(result[2].Field1);
+				Assert.AreEqual(6, result[2].Field2);
+				Assert.IsNull(result[2].Field3);
+				Assert.IsNull(result[2].Field4);
+				Assert.IsNull(result[2].Field5);
+
+				Assert.AreEqual(4, result[3].Id);
+				Assert.AreEqual(10, result[3].Field1);
+				Assert.AreEqual(13, result[3].Field2);
+				Assert.IsNull(result[3].Field3);
+				Assert.IsNull(result[3].Field4);
+				Assert.IsNull(result[3].Field5);
+			}
+		}
+
+		[MergeDataContextSource]//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceUpdateWithPredicateAndUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -159,7 +206,6 @@ namespace Tests.Merge
 					.FromSame(GetSource1(db))
 					.Update((t, s) => s.Id == 3, (t, s) => new TestMapping1()
 					{
-						Id = 123,
 						Field1 = t.Field1 + s.Field5,
 						Field2 = t.Field2 + s.Field4,
 						Field3 = t.Field3 + s.Field3,
@@ -176,14 +222,15 @@ namespace Tests.Merge
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[3], result[2], null, null);
 
-				Assert.AreEqual(123, result[3].Id);
-				Assert.IsNull(result[3].Field1);
-				Assert.IsNull(result[3].Field2);
-				Assert.IsNull(result[3].Field3);
-				Assert.AreEqual(206, result[3].Field4);
-				Assert.IsNull(result[3].Field5);
+				Assert.AreEqual(3, result[2].Id);
+				Assert.IsNull(result[2].Field1);
+				Assert.IsNull(result[2].Field2);
+				Assert.IsNull(result[2].Field3);
+				Assert.AreEqual(206, result[2].Field4);
+				Assert.IsNull(result[2].Field5);
+
+				AssertRow(InitialTargetData[3], result[3], null, null);
 			}
 		}
 
@@ -199,7 +246,6 @@ namespace Tests.Merge
 				var rows = table.From(GetSource2(db), (t, s) => t.Id == s.OtherId)
 					.Update((t, s) => new TestMapping1()
 					{
-						Id = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField2,
 						Field3 = s.OtherField3,
@@ -233,7 +279,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource]//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -245,7 +291,6 @@ namespace Tests.Merge
 				var rows = table.From(GetSource2(db), (t, s) => t.Id == s.OtherId)
 					.Update((t, s) => s.OtherField4 == 214, (t, s) => new TestMapping1()
 					{
-						Id = s.OtherId,
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField2,
 						Field3 = s.OtherField3,
@@ -273,7 +318,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource]//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void AnonymousSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -294,7 +339,6 @@ namespace Tests.Merge
 					}), (t, s) => t.Id == s.Key)
 					.Update((t, s) => s.Field04 == 214, (t, s) => new TestMapping1()
 					{
-						Id = s.Key,
 						Field1 = s.Field01,
 						Field2 = s.Field02,
 						Field3 = s.Field03,
@@ -322,7 +366,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource]//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void AnonymousListSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -343,7 +387,6 @@ namespace Tests.Merge
 					}), (t, s) => t.Id == s.Key)
 					.Update((t, s) => s.Field04 == 214, (t, s) => new TestMapping1()
 					{
-						Id = s.Key,
 						Field1 = s.Field01,
 						Field2 = s.Field02,
 						Field3 = s.Field03,
@@ -371,7 +414,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource]//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void UpdateReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -392,7 +435,6 @@ namespace Tests.Merge
 					}), (t, s) => t.Id == s.order)
 					.Update((t, s) => s.field == 214, (t, s) => new TestMapping1()
 					{
-						Id = s.order,
 						Field1 = s.delete,
 						Field2 = s.Delete,
 						Field3 = s.Field,
@@ -420,7 +462,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource]//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void UpdateReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -442,7 +484,6 @@ namespace Tests.Merge
 					}), (t, s) => t.Id == s.@in)
 					.Update((t, s) => s.with == 214, (t, s) => new TestMapping1()
 					{
-						Id = s.@in,
 						Field1 = s.join,
 						Field2 = s.outer,
 						Field3 = s.inner,

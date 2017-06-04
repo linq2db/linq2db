@@ -16,7 +16,7 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void SameSourceUpdateWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -59,7 +59,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void SameSourceUpdateWithDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -91,7 +91,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void SameSourceUpdateWithDeleteWithUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -109,19 +109,19 @@ namespace Tests.Merge
 						Field3 = t.Field3 + s.Field3,
 						Field4 = t.Field4 + s.Field4,
 						Field5 = t.Field5 + s.Field5
-					}, (t, s) => t.Id == 8)
+					}, (t, s) => t.Field1 == 10)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(3, rows, context);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 
-				Assert.AreEqual(6, result[2].Id);
+				Assert.AreEqual(3, result[2].Id);
 				Assert.IsNull(result[2].Field1);
 				Assert.AreEqual(6, result[2].Field2);
 				Assert.IsNull(result[2].Field3);
@@ -130,7 +130,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void SameSourceUpdateWithDeleteWithPredicateAndUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -153,23 +153,23 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(3, rows, context);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 
-				Assert.AreEqual(127, result[2].Id);
+				Assert.AreEqual(4, result[2].Id);
 				Assert.IsNull(result[2].Field1);
-				Assert.IsNull(result[2].Field2);
+				Assert.AreEqual(220, result[2].Field2);
 				Assert.IsNull(result[2].Field3);
-				Assert.AreEqual(206, result[2].Field4);
+				Assert.IsNull(result[2].Field4);
 				Assert.IsNull(result[2].Field5);
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void OtherSourceUpdateWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -191,7 +191,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(3, rows, context);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
@@ -207,7 +207,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void OtherSourceUpdateWithDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -229,7 +229,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(3, rows, context);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
@@ -245,7 +245,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void AnonymousSourceUpdateWithDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -276,7 +276,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(3, rows, context);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
@@ -292,7 +292,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void AnonymousListSourceUpdateWithDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -323,7 +323,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(3, rows, context);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
@@ -339,7 +339,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void UpdateWithDeleteReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -370,7 +370,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(3, rows, context);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
@@ -386,7 +386,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void UpdateWithDeleteReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -417,7 +417,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(3, rows, context);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
@@ -433,7 +433,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[MergeUpdateWithDeleteDataContextSource]
 		public void UpdateWithDeleteDeleteByConditionOnUpdatedField(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -447,21 +447,18 @@ namespace Tests.Merge
 					.UpdateWithDelete((t, s) => new TestMapping1()
 					{
 						Field1 = t.Field1 + s.OtherField1 + 345
-					}, (t, s) => t.Field1 == 346)
+					}, (t, s) => t.Field1 == 355)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(1, result.Count);
+				Assert.AreEqual(3, result.Count);
 
-				Assert.AreEqual(4, result[0].Id);
-				Assert.AreEqual(5, result[0].Field1);
-				Assert.AreEqual(7, result[0].Field2);
-				Assert.IsNull(result[0].Field3);
-				Assert.AreEqual(214, result[0].Field4);
-				Assert.IsNull(result[0].Field5);
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
 			}
 		}
 	}

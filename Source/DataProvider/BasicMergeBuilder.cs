@@ -348,50 +348,61 @@ namespace LinqToDB.DataProvider
 		{
 			Command.Append("(");
 
-			var ctx = queryableSource.GetMergeContext();
-			var query = ctx.SelectQuery;
-
-			// update list of selected fields
-			var info = ctx.FixSelectList();
-
-			query.Select.Columns.Clear();
-			foreach (var column in info)
+			var inlineParameters = _connection.InlineParameters;
+			try
 			{
-				var columnDescriptor = _sourceDescriptor.Columns.Where(_ => _.MemberInfo == column.Members[0]).Single();
+				_connection.InlineParameters = !SupportsParametersInSource;
 
-				var alias = CreateSourceColumnAlias(columnDescriptor.ColumnName, false);
-				query.Select.Columns.Add(new SelectQuery.Column(query, column.Sql, alias));
-			}
+				var ctx = queryableSource.GetMergeContext();
+				var query = ctx.SelectQuery;
 
-			// bind parameters
-			query.Parameters.Clear();
-			new QueryVisitor().VisitAll(query, expr =>
-			{
-				switch (expr.ElementType)
+				// update list of selected fields
+				var info = ctx.FixSelectList();
+
+				query.Select.Columns.Clear();
+				foreach (var column in info)
 				{
-					case QueryElementType.SqlParameter:
-						{
-							var p = (SqlParameter)expr;
-							if (p.IsQueryParameter)
-								query.Parameters.Add(p);
+					var columnDescriptor = _sourceDescriptor.Columns.Where(_ => _.MemberInfo == column.Members[0]).Single();
 
-							break;
-						}
+					var alias = CreateSourceColumnAlias(columnDescriptor.ColumnName, false);
+					query.Select.Columns.Add(new SelectQuery.Column(query, column.Sql, alias));
 				}
-			});
 
-			ctx.SetParameters();
-			SaveParameters(query.Parameters);
+				// bind parameters
+				query.Parameters.Clear();
+				new QueryVisitor().VisitAll(query, expr =>
+				{
+					switch (expr.ElementType)
+					{
+						case QueryElementType.SqlParameter:
+							{
+								var p = (SqlParameter)expr;
+								if (p.IsQueryParameter)
+									query.Parameters.Add(p);
 
-			var queryContext = new QueryContext()
+								break;
+							}
+					}
+				});
+
+				ctx.SetParameters();
+
+				SaveParameters(query.Parameters);
+
+				var queryContext = new QueryContext()
+				{
+					SelectQuery = query,
+					SqlParameters = query.Parameters.ToArray()
+				};
+
+				var preparedQuery = (DataConnection.PreparedQuery)ContextInfo.DataContext.SetQuery(queryContext);
+
+				Command.Append(preparedQuery.Commands[0]);
+			}
+			finally
 			{
-				SelectQuery = query,
-				SqlParameters = query.Parameters.ToArray()
-			};
-
-			var preparedQuery = (DataConnection.PreparedQuery)ContextInfo.DataContext.SetQuery(queryContext);
-
-			Command.Append(preparedQuery.Commands[0]);
+				_connection.InlineParameters = inlineParameters;
+			}
 
 			BuildAsSourceClause(null);
 		}
@@ -557,6 +568,7 @@ namespace LinqToDB.DataProvider
 		protected virtual void BuildDelete(Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			Command
+				.AppendLine()
 				.Append("WHEN MATCHED ");
 
 			if (predicate != null)
@@ -574,6 +586,7 @@ namespace LinqToDB.DataProvider
 		private void BuildDeleteBySource(Expression<Func<TTarget, bool>> predicate)
 		{
 			Command
+				.AppendLine()
 				.Append("WHEN NOT MATCHED By Source ");
 
 			if (predicate != null)
@@ -680,6 +693,7 @@ namespace LinqToDB.DataProvider
 					Expression<Func<TSource, TTarget>> create)
 		{
 			Command
+				.AppendLine()
 				.Append("WHEN NOT MATCHED ");
 
 			if (predicate != null)
@@ -822,6 +836,7 @@ namespace LinqToDB.DataProvider
 					Expression<Func<TTarget, TSource, TTarget>> update)
 		{
 			Command
+				.AppendLine()
 				.Append("WHEN MATCHED ");
 
 			if (predicate != null)
@@ -994,6 +1009,7 @@ namespace LinqToDB.DataProvider
 							Expression<Func<TTarget, TTarget>> update)
 		{
 			Command
+				.AppendLine()
 				.Append("WHEN NOT MATCHED By Source ");
 
 			if (predicate != null)
@@ -1047,6 +1063,7 @@ namespace LinqToDB.DataProvider
 			foreach (var param in parameters)
 			{
 				param.Name = GetNextParameterName();
+
 				_parameters.Add(new DataParameter(param.Name, param.Value, param.DataType));
 			}
 		}
@@ -1164,6 +1181,17 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
+		/// <summary>
+		/// If false, parameters in source subquery select list must have type.
+		/// </summary>
+		protected virtual bool SupportsParametersInSource
+		{
+			get
+			{
+				return true;
+			}
+		}
+
 		protected EntityDescriptor TargetDescriptor { get; private set; }
 
 		/// <summary>
@@ -1195,16 +1223,9 @@ namespace LinqToDB.DataProvider
 				target.TableName ?? TargetDescriptor.TableName);
 			TargetTableName = sb.ToString();
 
-			Merge = AddExtraCommands(Merge);
-
 			BuildCommandText();
 
 			return Command.ToString();
-		}
-
-		protected virtual MergeDefinition<TTarget, TSource> AddExtraCommands(MergeDefinition<TTarget, TSource> merge)
-		{
-			return merge;
 		}
 		#endregion
 

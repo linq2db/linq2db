@@ -16,10 +16,10 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		// DB2, Oracle: not supported
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		// DB2, Firebird, Oracle: identity instert not supported
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		//ProviderName.Informix, ProviderName.SapHana)]
 		public void ImlicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -59,12 +59,13 @@ namespace Tests.Merge
 			}
 		}
 
-		// identity DB2: insert for DB2 is not supported for now (some db2 versions support it)
-		// ASE: server just dies ("Enterprise Quality")
-		// Oracle: not supported
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Sybase,
+		// DB2, Firebird: identity instert not supported
+		// ASE: server dies
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Sybase)]
+		//(, ProviderName.Sybase,
+		//	ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void ExplicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -107,7 +108,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Sybase)]
+		//(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void ExplicitNoIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))

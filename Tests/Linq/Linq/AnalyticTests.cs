@@ -9,7 +9,7 @@
 	public class AnalyticTests : TestBase
 	{
 		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, 
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
 		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -48,7 +48,7 @@
 		}
 
 		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			 ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
+			 ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
 		public void TestSubqueryOptimization(string context)
 		{
 			using (var db = GetDataContext(context))

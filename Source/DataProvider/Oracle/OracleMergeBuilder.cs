@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			get
 			{
+				// this is Oracle-specific operation
 				return true;
 			}
 		}
@@ -26,7 +27,17 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			get
 			{
-				return 3;
+				// Oracle can have one insert and one update clause only
+				return 2;
+			}
+		}
+
+		protected override bool DeleteOperationSupported
+		{
+			get
+			{
+				// there is no independent delete in Oracle merge
+				return false;
 			}
 		}
 
@@ -34,6 +45,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			get
 			{
+				// Oracle can have one insert and one update clause only
 				return false;
 			}
 		}
@@ -42,6 +54,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			get
 			{
+				// VALUES(...) clause is not supported in MERGE source
 				return false;
 			}
 		}
@@ -50,6 +63,8 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			get
 			{
+				// table with exactly one record for client-side source generation
+				// bad thing that user can change this table, but broken merge will be minor issue in this case
 				return "dual";
 			}
 		}
@@ -58,6 +73,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			get
 			{
+				// dual table owner
 				return "sys";
 			}
 		}
@@ -66,6 +82,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			get
 			{
+				// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
 				return false;
 			}
 		}
@@ -74,6 +91,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			get
 			{
+				// oracle doesn't support INSERT FROM
 				return true;
 			}
 		}
@@ -119,45 +137,6 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				Command.Append(" WHERE ");
 				BuildSingleTablePredicate(predicate, SourceAlias, true);
-			}
-		}
-
-		protected override void BuildDelete(Expression<Func<TTarget, TSource, bool>> predicate)
-		{
-			GenerateFakeUpdate(predicate);
-
-			Command
-				.AppendLine()
-				.Append(" DELETE");
-
-			if (predicate != null)
-			{
-				Command.Append(" WHERE ");
-				BuildPredicateByTargetAndSource(predicate);
-			}
-		}
-
-		private void GenerateFakeUpdate(Expression<Func<TTarget, TSource, bool>> predicate)
-		{
-			Command
-				.AppendLine()
-				.AppendLine("WHEN MATCHED THEN UPDATE");
-
-			var targetParam = Expression.Parameter(typeof(TTarget), "t");
-			var sourceParam = Expression.Parameter(typeof(TSource), "s");
-
-			var body = Expression.MemberInit(
-				Expression.New(typeof(TTarget)),
-				TargetDescriptor.Columns.Where(_ => !_.SkipOnUpdate && !_.IsIdentity)
-				.Select(c => Expression.Bind(c.MemberInfo, Expression.PropertyOrField(targetParam, c.MemberName))));
-
-			var update = Expression.Lambda<Func<TTarget, TSource, TTarget>>(body, targetParam, sourceParam);
-			BuildCustomUpdate(update);
-
-			if (predicate != null)
-			{
-				Command.Append(" WHERE ");
-				BuildPredicateByTargetAndSource(predicate);
 			}
 		}
 

@@ -44,7 +44,9 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase)]
+		//(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceAssociationInDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -52,27 +54,27 @@ namespace Tests.Merge
 			{
 				PrepareAssociationsData(db);
 
-				var rows = db.Person
-					.From(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.Delete((t, s) => s.Patient.Diagnosis.Contains("very") && t.Patient.Diagnosis.Contains("very"))
+				var rows = db.Patient
+					.From(db.Patient, (t, s) => t.PersonID == s.PersonID && s.Diagnosis.Contains("very"))
+					.Delete((t, s) => s.Person.FirstName == "first 4" && t.Person.FirstName == "first 4")
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.Patient.OrderBy(_ => _.PersonID).ToList();
 
 				Assert.AreEqual(1, rows);
 
-				Assert.AreEqual(5, result.Count);
+				Assert.AreEqual(1, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[4], result[3]);
-				AssertPerson(AssociationPersons[5], result[4]);
+				Assert.AreEqual(AssociationPatients[0].PersonID, result[0].PersonID);
+				Assert.AreEqual(AssociationPatients[0].Diagnosis, result[0].Diagnosis);
 			}
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		// Oracle: associations in insert setter
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Sybase)]
+		//(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceAssociationInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -111,7 +113,10 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// ASE: server dies
+		// Oracle: associations in insert setters
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Sybase)]
 		public void OtherSourceAssociationInInsertCreate2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -151,7 +156,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Sybase)]
+		//(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -190,9 +196,8 @@ namespace Tests.Merge
 			}
 		}
 
-		// ASE: fails to parse valid(!) query
-		// DB2: joins in match not supported
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// ASE, DB2: Associations in match not supported
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
 		public void OtherSourceAssociationInMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -246,7 +251,7 @@ namespace Tests.Merge
 					.From(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.Update((t, s) => new Model.Person()
 					{
-						FirstName = "first " + s.Patient.Diagnosis,
+						MiddleName = "first " + s.Patient.Diagnosis,
 						LastName = "last " + t.Patient.Diagnosis
 					})
 					.Merge();
@@ -263,9 +268,9 @@ namespace Tests.Merge
 
 				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
 				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual("first very sick", result[3].FirstName);
+				Assert.AreEqual("first 4", result[3].FirstName);
 				Assert.AreEqual("last very sick", result[3].LastName);
-				Assert.AreEqual(AssociationPersons[3].MiddleName, result[3].MiddleName);
+				Assert.AreEqual("first very sick", result[3].MiddleName);
 
 				AssertPerson(AssociationPersons[4], result[4]);
 				AssertPerson(AssociationPersons[5], result[5]);
@@ -350,7 +355,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Sybase)]
+		//(, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -363,7 +369,7 @@ namespace Tests.Merge
 					.Update((t, s) => s.Patient.Diagnosis == t.Patient.Diagnosis && t.Patient.Diagnosis.Contains("very"),
 						(t, s) => new Model.Person()
 						{
-							FirstName = "Updated"
+							LastName = "Updated"
 						})
 					.Merge();
 
@@ -379,8 +385,8 @@ namespace Tests.Merge
 
 				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
 				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual("Updated", result[3].FirstName);
-				Assert.AreEqual(AssociationPersons[3].LastName, result[3].LastName);
+				Assert.AreEqual("first 4", result[3].FirstName);
+				Assert.AreEqual("Updated", result[3].LastName);
 				Assert.AreEqual(AssociationPersons[3].MiddleName, result[3].MiddleName);
 
 				AssertPerson(AssociationPersons[4], result[4]);
@@ -416,7 +422,9 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase)]
+		//(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceAssociationInDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -424,27 +432,27 @@ namespace Tests.Merge
 			{
 				PrepareAssociationsData(db);
 
-				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.Delete((t, s) => s.Patient.Diagnosis.Contains("very") && t.Patient.Diagnosis.Contains("very"))
+				var rows = db.Patient
+					.FromSame(db.Patient, (t, s) => t.PersonID == s.PersonID && s.Diagnosis.Contains("very"))
+					.Delete((t, s) => s.Person.FirstName == "first 4" && t.Person.FirstName == "first 4")
 					.Merge();
 
-				var result = db.Person.OrderBy(_ => _.ID).ToList();
+				var result = db.Patient.OrderBy(_ => _.PersonID).ToList();
 
 				Assert.AreEqual(1, rows);
 
-				Assert.AreEqual(5, result.Count);
+				Assert.AreEqual(1, result.Count);
 
-				AssertPerson(AssociationPersons[0], result[0]);
-				AssertPerson(AssociationPersons[1], result[1]);
-				AssertPerson(AssociationPersons[2], result[2]);
-				AssertPerson(AssociationPersons[4], result[3]);
-				AssertPerson(AssociationPersons[5], result[4]);
+				Assert.AreEqual(AssociationPatients[0].PersonID, result[0].PersonID);
+				Assert.AreEqual(AssociationPatients[0].Diagnosis, result[0].Diagnosis);
 			}
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		// Oracle: associations in instert setters
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Sybase)]
+		//(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceAssociationInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -483,7 +491,11 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird)]
+		// ASE: server dies
+		// Oracle: associations in instert setters
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Sybase)]
+		//(ProviderName.Sybase, ProviderName.Firebird)]
 		public void SameSourceAssociationInInsertCreate2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -523,7 +535,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Sybase)]
+		//(, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -562,8 +575,8 @@ namespace Tests.Merge
 			}
 		}
 
-		// ASE: fails to parse valid(!) query
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.DB2zOS, ProviderName.DB2LUW, ProviderName.DB2)]
+		// ASE, DB2: Associations in match not supported
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
 		public void SameSourceAssociationInMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -617,7 +630,7 @@ namespace Tests.Merge
 					.FromSame(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
 					.Update((t, s) => new Model.Person()
 					{
-						FirstName = "first " + s.Patient.Diagnosis,
+						MiddleName = "first " + s.Patient.Diagnosis,
 						LastName = "last " + t.Patient.Diagnosis
 					})
 					.Merge();
@@ -634,9 +647,9 @@ namespace Tests.Merge
 
 				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
 				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual("first very sick", result[3].FirstName);
+				Assert.AreEqual("first 4", result[3].FirstName);
 				Assert.AreEqual("last very sick", result[3].LastName);
-				Assert.AreEqual(AssociationPersons[3].MiddleName, result[3].MiddleName);
+				Assert.AreEqual("first very sick", result[3].MiddleName);
 
 				AssertPerson(AssociationPersons[4], result[4]);
 				AssertPerson(AssociationPersons[5], result[5]);
@@ -721,7 +734,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Sybase)]
+		//(, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -734,7 +748,7 @@ namespace Tests.Merge
 					.Update((t, s) => s.Patient.Diagnosis.Contains("very") && t.Patient.Diagnosis.Contains("very"),
 						(t, s) => new Model.Person()
 						{
-							FirstName = "Updated"
+							MiddleName = "Updated"
 						})
 					.Merge();
 
@@ -750,9 +764,9 @@ namespace Tests.Merge
 
 				Assert.AreEqual(AssociationPersons[3].ID, result[3].ID);
 				Assert.AreEqual(AssociationPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual("Updated", result[3].FirstName);
+				Assert.AreEqual(AssociationPersons[3].FirstName, result[3].FirstName);
 				Assert.AreEqual(AssociationPersons[3].LastName, result[3].LastName);
-				Assert.AreEqual(AssociationPersons[3].MiddleName, result[3].MiddleName);
+				Assert.AreEqual("Updated", result[3].MiddleName);
 
 				AssertPerson(AssociationPersons[4], result[4]);
 				AssertPerson(AssociationPersons[5], result[5]);
@@ -814,7 +828,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(3, rows);
+				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(5, result.Count);
 
@@ -846,7 +860,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(3, rows);
+				Assert.AreEqual(1, rows);
 
 				Assert.AreEqual(5, result.Count);
 
@@ -860,7 +874,7 @@ namespace Tests.Merge
 
 		#region Test Data
 		private static readonly Doctor[] AssociationDoctors = new[]
-						{
+		{
 			new Doctor() { PersonID = 3, Taxonomy = "Dr. Lector" },
 			new Doctor() { PersonID = 4, Taxonomy = "Dr. who???" },
 		};
@@ -902,7 +916,11 @@ namespace Tests.Merge
 				foreach (var person in AssociationPersons)
 				{
 					person.ID = id++;
-					person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
+
+					if (db.ConfigurationString == TestProvName.Firebird3 + "sdf")
+						person.ID = Convert.ToInt32(db.Insert(person));
+					else
+						person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
 				}
 
 				AssociationDoctors[0].PersonID = AssociationPersons[4].ID;

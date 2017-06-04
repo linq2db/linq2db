@@ -246,5 +246,20 @@ namespace Tests.Merge
 				return this;
 			}
 		}
+
+		[DataContextSource(false, ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Sybase,
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			TestProvName.SqlAzure, ProviderName.Informix, ProviderName.SapHana,
+			ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+		public void NotSupportedProviders(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var table = GetTarget(db);
+
+				Assert.Throws<LinqToDBException>(() => table.FromSame(GetSource1(db)).Insert().Merge());
+			}
+		}
 	}
 }

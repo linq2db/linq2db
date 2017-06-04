@@ -17,11 +17,12 @@ namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		// ASE: ASE just don't like this query...
-		// DB2: match condition invalid
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana,
-			ProviderName.DB2zOS, ProviderName.DB2LUW, ProviderName.DB2)]
+		// ASE: just fails
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase)]
+		//(ProviderName.Sybase, ,
+		//ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana,
+			//ProviderName.DB2)]
 		public void TestParameters1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -33,7 +34,7 @@ namespace Tests.Merge
 					Val1 = 1,
 					Val2 = 2,
 					Val3 = 3,
-					Val4 = 4,
+					Val4 = 34,
 					Val5 = 5
 				};
 
@@ -61,14 +62,23 @@ namespace Tests.Merge
 					{
 						Field4 = parameterValues.Val5
 					})
-					.Delete((t, s) => t.Field3 != parameterValues.Val2)
+					.Delete((t, s) => t.Field3 == parameterValues.Val2 + 123)
 					.Merge();
 
-				Assert.AreEqual(8, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var parametersCount = 8;
+
+				if (context == ProviderName.DB2)
+					parametersCount = 6;
+				else if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
+					parametersCount = 4;
+
+				Assert.AreEqual(parametersCount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
-		[MergeDataContextSource()]
+		// ASE: just fails
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase)]
 		public void TestParameters3(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -111,7 +121,14 @@ namespace Tests.Merge
 					.Delete((t, s) => t.Field3 != parameterValues.Val2)
 					.Merge();
 
-				Assert.AreEqual(7, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var parametersCount = 7;
+
+				if (context == ProviderName.DB2)
+					parametersCount = 5;
+				else if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
+					parametersCount = 3;
+
+				Assert.AreEqual(parametersCount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -195,7 +212,7 @@ namespace Tests.Merge
 		}
 
 		// Oracle: optimized by provider
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		[MergeDataContextSource]//(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInMatchCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -219,12 +236,23 @@ namespace Tests.Merge
 
 		private static char GetParameterToken(string context)
 		{
-			return context == ProviderName.Informix ? '?' : (context == ProviderName.SapHana ? ':' : '@');
+			switch (context)
+			{
+				case ProviderName.Informix:
+					return '?';
+				case ProviderName.SapHana:
+				case ProviderName.Oracle:
+				case ProviderName.OracleManaged:
+				case ProviderName.OracleNative:
+					return ':';
+			}
+
+			return '@';
 		}
 
 		// Oracle: optimized by provider
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource]//(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		//ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParametersInUpdateCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -247,8 +275,8 @@ namespace Tests.Merge
 		}
 
 		// Oracle: optimized by provider
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource]//(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		//ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParametersInInsertCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -270,7 +298,9 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+			ProviderName.Sybase)]
+		//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParametersInDeleteCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -337,10 +367,10 @@ namespace Tests.Merge
 			}
 		}
 
-		// Oracle, DB2, FB3: optimized by provider
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix, ProviderName.SapHana)]
+		// excluded providers use literal instead of parameter
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+			//, ProviderName.Informix, ProviderName.SapHana)]
 		public void TestParametersInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -371,8 +401,11 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana,
-			ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// excluded providers use literal instead of parameter
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		//(, ProviderName.Informix, ProviderName.SapHana,
+		//)]
 		public void TestParametersInUpdateExpression(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -432,7 +465,10 @@ namespace Tests.Merge
 		}
 
 		// Oracle: optimized by provider
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+
+		// FB: firebird supports this parameter, but for now we disable all parameters in source for Firebird
+		[MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
+		//(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInSourceFilter(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -453,7 +489,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		// FB: firebird doesn't support parameters in source select list
+		[MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
 		public void TestParametersInSourceSelect(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -468,7 +505,7 @@ namespace Tests.Merge
 					.From(GetSource1(db).Select(_ => new { _.Id, Val = param }), (t, s) => t.Id == s.Id && t.Id == s.Val)
 					.Update((t, s) => new TestMapping1()
 					{
-						Field1 = s.Val * 111
+						Field1 = s.Val + 111
 					})
 					.Merge();
 
@@ -479,12 +516,12 @@ namespace Tests.Merge
 				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 
 				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(333, result[0].Field1);
+				Assert.AreEqual(114, result[0].Field1);
 			}
 		}
 
 		// Provider optimize scalar parameters
-		//[IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		[IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInUpdateWithDeleteDeleteCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))

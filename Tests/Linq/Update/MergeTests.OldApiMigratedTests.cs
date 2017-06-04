@@ -17,6 +17,7 @@ namespace Tests.Merge
 	// Regression tests converted from tests for previous version of Merge API to new API.
 	public partial class MergeTests
 	{
+		// ASE: just fails
 		[MergeDataContextSource(ProviderName.Sybase)]
 		public void Merge(string context)
 		{
@@ -28,6 +29,7 @@ namespace Tests.Merge
 			}
 		}
 
+		// ASE: just fails
 		[MergeDataContextSource(ProviderName.Sybase)]
 		public void MergeWithEmptySource(string context)
 		{
@@ -151,16 +153,14 @@ namespace Tests.Merge
 			[Column("CHARDATATYPE", DataType = DataType.Char, Length = 1, Configuration = ProviderName.DB2)]
 			public char charDataType;
 			[Column(DataType = DataType.NChar, Length = 20)]
-			[Column("NCHARDATATYPE", DataType = DataType.NChar, Length = 20, Configuration = ProviderName.DB2)]
 			public string ncharDataType;
 			[Column(DataType = DataType.NVarChar, Length = 20)]
-			[Column("NVARCHARDATATYPE", DataType = DataType.NVarChar, Length = 20, Configuration = ProviderName.DB2)]
 			public string nvarcharDataType;
 		}
 
 		// ASE: alltypes table must be fixed
-		// DB2: ncharDataType field absent
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// DB2: ncharDataType field missing in AllTypes
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
 		public void MergeChar1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -177,8 +177,8 @@ namespace Tests.Merge
 		}
 
 		// ASE: alltypes table must be fixed
-		// DB2: ncharDataType field absent
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS)]
+		// DB2: ncharDataType field missing in AllTypes
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
 		public void MergeChar2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -200,9 +200,11 @@ namespace Tests.Merge
 
 		// extra test to check MergeChar* fixes (but we really need to implement excessive types tests for all providers)
 		// SAP HANA: something wrong with \0 in strings
-		// Sybase: AllTypes table must be fixed
-		// DB2: something doesn't work
-		[MergeDataContextSource(ProviderName.SapHana, ProviderName.Sybase, ProviderName.DB2)]
+
+		// ASE: AllTypes table must be fixed
+		// DB2: ncharDataType and nvarcharDataType fields missing in AllTypes
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
+		//(ProviderName.SapHana, ProviderName.Sybase, )]
 		public void MergeString(string context)
 		{
 			using (var db = new TestDataConnection(context))

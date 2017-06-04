@@ -41,7 +41,6 @@ namespace Tests.Merge
 				ProviderName.SqlCe,
 				ProviderName.SQLite,
 				TestProvName.SQLiteMs,
-				ProviderName.SqlServer,
 				ProviderName.SqlServer2000,
 				ProviderName.SqlServer2005,
 				ProviderName.PostgreSQL,
@@ -122,7 +121,7 @@ namespace Tests.Merge
 
 		private static ITable<TestMapping2> GetSource2(TestDataConnection db)
 		{
-			return db.GetTable<TestMapping2>().TableName("testmerge2");
+			return db.GetTable<TestMapping2>().TableName("TestMerge2");
 		}
 
 		private void AssertRow(TestMapping1 expected, TestMapping1 actual, int? exprected3, int? exprected4)

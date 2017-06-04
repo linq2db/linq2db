@@ -459,9 +459,8 @@ namespace LinqToDB.DataProvider
 		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(IMerge<TTarget, TSource> merge)
 			where TTarget : class
 			where TSource : class
-
 		{
-			return new BasicMergeBuilder<TTarget, TSource>(merge, Name);
+			return new UnsupportedMergeBuilder<TTarget, TSource>(merge, Name);
 		}
 
 		#endregion

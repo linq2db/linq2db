@@ -20,6 +20,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			get
 			{
+				// Sybase supports implicit identify insert
 				return true;
 			}
 		}
@@ -28,21 +29,9 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			get
 			{
+				// Doesn't support VALUES(...) syntax in MERGE source
 				return false;
 			}
-		}
-
-		protected override MergeDefinition<TTarget, TSource> AddExtraCommands(MergeDefinition<TTarget, TSource> merge)
-		{
-			if (merge.Operations.Length > 0 && merge.Operations.All(_ => _.Type == MergeOperationType.Delete))
-			{
-				// Sybase doesn't like merge with only delete commands, so we will add fake update
-				// if it will fail - user can always add it manually
-				return (MergeDefinition<TTarget, TSource>)((IMerge<TTarget, TSource>)merge)
-					.Update((t, s) => false, FakeUpdate());
-			}
-
-			return merge;
 		}
 
 		protected override void BuildTerminator()
@@ -62,17 +51,12 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		private Expression<Func<TTarget, TSource, TTarget>> FakeUpdate()
+		public override void Validate()
 		{
-			var targetParam = Expression.Parameter(typeof(TTarget), "t");
-			var sourceParam = Expression.Parameter(typeof(TSource), "s");
+			base.Validate();
 
-			var body = Expression.MemberInit(
-				Expression.New(typeof(TTarget)),
-				TargetDescriptor.Columns.Where(_ => !_.SkipOnUpdate && !_.IsIdentity)
-				.Select(c => Expression.Bind(c.MemberInfo, Expression.PropertyOrField(targetParam, c.MemberName))));
-
-			return Expression.Lambda<Func<TTarget, TSource, TTarget>>(body, targetParam, sourceParam);
+			if (Merge.Operations.All(_ => _.Type == MergeOperationType.Delete))
+				throw new LinqToDBException(string.Format("Merge only with Delete operations not supported by {0} provider.", ProviderName));
 		}
 	}
 }

@@ -22,7 +22,8 @@ namespace Tests.Model
 			FirstName = firstName;
 		}
 
-		[SequenceName(ProviderName.Firebird, "PersonID")]
+		// Firebird: it duplicates identity generation trigger job
+		//[SequenceName(ProviderName.Firebird, "PersonID")]
 		[Column("PersonID"), Identity, PrimaryKey] public int    ID;
 		[NotNull]                                  public string FirstName { get; set; }
 		[NotNull]                                  public string LastName;

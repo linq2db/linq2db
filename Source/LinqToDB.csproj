@@ -86,6 +86,7 @@
     <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
     <Compile Include="DataProvider\SapHana\SapHanaMergeBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
+    <Compile Include="DataProvider\UnsupportedMergeBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerMergeBuilder.cs" />
     <Compile Include="DataProvider\Sybase\SybaseMergeBuilder.cs" />
     <Compile Include="Data\Merge.cs" />

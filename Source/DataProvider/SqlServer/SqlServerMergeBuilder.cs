@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			get
 			{
+				// SQL Server-only commands
 				return true;
 			}
 		}
@@ -26,6 +27,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			get
 			{
+				// SQL Server supports explicit identity insert
 				return true;
 			}
 		}
@@ -34,6 +36,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			get
 			{
+				// Only 3 operations per command supported
 				return 3;
 			}
 		}
@@ -42,20 +45,24 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			get
 			{
+				// all operations should have different types
 				return false;
 			}
 		}
 
 		protected override void BuildTerminator()
 		{
+			// merge command must be terminated with semicolon
 			Command.AppendLine(";");
 
+			// disable explicit identity insert
 			if (_hasIdentityInsert)
 				Command.AppendFormat("SET IDENTITY_INSERT {0} OFF", TargetTableName).AppendLine();
 		}
 
 		protected override void OnInsertWithIdentity()
 		{
+			// enable explicit identity insert
 			if (!_hasIdentityInsert)
 			{
 				_hasIdentityInsert = true;
