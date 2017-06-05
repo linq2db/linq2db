@@ -30,28 +30,28 @@ namespace Tests.Linq
 			return db.Types.Select(_ => DbName()).First();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void TableName(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>().TableName("Parent").ToList();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void DatabaseName(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().DatabaseName(GetDatabaseName(db)).ToList();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void OwnerName(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().SchemaName("dbo").ToList();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void AllNames(string context)
 		{
 			using (var db = GetDataContext(context))

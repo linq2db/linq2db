@@ -171,7 +171,7 @@ namespace LinqToDB.SqlQuery
 
 			private bool   _underlyingColumnSet = false;
 			private Column _underlyingColumn;
-			private Column  UnderlyingColumn
+			public  Column  UnderlyingColumn
 			{
 				get
 				{

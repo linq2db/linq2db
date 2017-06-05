@@ -800,6 +800,7 @@ namespace Tests
 				get
 				{
 					if (_category == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_category = db.Category.ToList();
 					return _category;
@@ -813,6 +814,7 @@ namespace Tests
 				{
 					if (_customer == null)
 					{
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_customer = db.Customer.ToList();
 
@@ -831,6 +833,7 @@ namespace Tests
 				{
 					if (_employee == null)
 					{
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 						{
 							_employee = db.Employee.ToList();
@@ -853,6 +856,7 @@ namespace Tests
 				get
 				{
 					if (_employeeTerritory == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_employeeTerritory = db.EmployeeTerritory.ToList();
 					return _employeeTerritory;
@@ -865,6 +869,7 @@ namespace Tests
 				get
 				{
 					if (_orderDetail == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_orderDetail = db.OrderDetail.ToList();
 					return _orderDetail;
@@ -878,6 +883,7 @@ namespace Tests
 				{
 					if (_order == null)
 					{
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_order = db.Order.ToList();
 
@@ -898,6 +904,7 @@ namespace Tests
 				get
 				{
 					if (_product == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_product = db.Product.ToList();
 
@@ -923,6 +930,7 @@ namespace Tests
 				get
 				{
 					if (_region == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_region = db.Region.ToList();
 					return _region;
@@ -935,6 +943,7 @@ namespace Tests
 				get
 				{
 					if (_shipper == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_shipper = db.Shipper.ToList();
 					return _shipper;
@@ -947,6 +956,7 @@ namespace Tests
 				get
 				{
 					if (_supplier == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_supplier = db.Supplier.ToList();
 					return _supplier;
@@ -959,6 +969,7 @@ namespace Tests
 				get
 				{
 					if (_territory == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_territory = db.Territory.ToList();
 					return _territory;

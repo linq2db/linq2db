@@ -356,6 +356,7 @@
     <Compile Include="Linq\GroupByTests.cs" />
     <Compile Include="Exceptions\JoinTests.cs" />
     <Compile Include="Linq\JoinTests.cs" />
+    <Compile Include="Linq\JoinToLimitedTests.cs" />
     <Compile Include="Linq\DateTimeFunctionsTests.cs" />
     <Compile Include="Linq\SelectManyTests.cs" />
     <Compile Include="Linq\StringFunctionTests.cs" />
@@ -385,7 +386,7 @@
     <Compile Include="UserTests\Issue445Tests.cs" />
     <Compile Include="UserTests\Issue421.cs" />
     <Compile Include="UserTests\Issue461Tests.cs" />
-    <Compile Include="UserTests\Issue693Tests.cs" />
+    <Compile Include="UserTests\Issue241Tests.cs" />
     <Compile Include="UserTests\Issue531Tests.cs" />
     <Compile Include="UserTests\Issue357Tests.cs" />
     <Compile Include="UserTests\Issue352Tests.cs" />
