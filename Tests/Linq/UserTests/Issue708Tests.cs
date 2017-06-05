@@ -5,58 +5,24 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	[LinqToDB.Mapping.TableAttribute("Substitutions", IsColumnAttributeRequired = false)]
-	public class Substitution
-	{
-		[LinqToDB.Mapping.PrimaryKeyAttribute()]
-		public Guid Id { get; set; }
-
-		public Guid UserId { get; set; }
-
-		[LinqToDB.Mapping.AssociationAttribute(ThisKey = "UserId", OtherKey = "Id")]
-		public User User { get; set; }
-
-		public DateTime StartDate { get; set; }
-
-		public DateTime EndDate { get; set; }
-	}
-
-	[LinqToDB.Mapping.TableAttribute("Users", IsColumnAttributeRequired = false)]
-	public class User
-	{
-		public Guid Id { get; set; }
-	}
-
-	public class SubstitutionUsers
-	{
-		public Guid UserId { get; set; }
-		public Guid SubstitutionId { get; set; }
-	}
 
 	[TestFixture]
 	public class Issue708Tests : TestBase
 	{
 		[Test, DataContextSource]
-		public void Test(string context)
+		public void Test2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				User user = new User();
-				user.Id = Guid.Empty;
-				
+				var id = 1;
 
-				var subQuery = from substitutionUsers in db.GetTable<SubstitutionUsers>()
-					where substitutionUsers.UserId == user.Id
-					select substitutionUsers.SubstitutionId;
+				var parents1 =    Parent.Where(_ => _.ParentID == id).Select(_ => _.ParentID);
+				var parents2 = db.Parent.Where(_ => _.ParentID == id).Select(_ => _.ParentID);
 
-				var query = from substitution in db.GetTable<Substitution>()
-							where subQuery.Contains(substitution.Id) &&
-					      substitution.StartDate <= DateTime.Now &&
-					      substitution.EndDate >= DateTime.Now
-					select substitution.User;
+				var query1 =    Child.Where(_ => parents1.Contains(_.ChildID) && _.ChildID >= 0 && _.ChildID <= 100);
+				var query2 = db.Child.Where(_ => parents2.Contains(_.ChildID) && _.ChildID >= 0 && _.ChildID <= 100);
 
-				Assert.IsEmpty(query.ToList());
-
+				AreEqual(query1, query2);
 			}
 		}
 	}
