@@ -17,8 +17,7 @@ namespace Tests.Merge
 	public partial class MergeTests
 	{
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase)]
-		//(ProviderName.Firebird, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.SapHana, ProviderName.Firebird, ProviderName.Firebird)]
 		public void SameSourceDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -44,8 +43,7 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase)]
-		//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -73,8 +71,7 @@ namespace Tests.Merge
 
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-			TestProvName.SqlAzure)]
-		//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			TestProvName.SqlAzure, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceDeleteWithPredicateDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -101,8 +98,7 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase)]
-		//(ProviderName.Firebird, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.SapHana, ProviderName.Firebird)]
 		public void OtherSourceDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -129,8 +125,7 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase)]
-		//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void OtherSourceDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -157,8 +152,7 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase)]
-		//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void AnonymousSourceDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -194,8 +188,7 @@ namespace Tests.Merge
 
 		// Oracle: implicit Delete to UpdateWithDelete conversion failed here
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase)]
-		//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void AnonymousListSourceDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -230,8 +223,7 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase)]
-		//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -266,8 +258,7 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase)]
-		//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))

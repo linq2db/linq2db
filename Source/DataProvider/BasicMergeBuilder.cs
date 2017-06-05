@@ -340,8 +340,10 @@ namespace LinqToDB.DataProvider
 
 			if (hasData)
 				BuildAsSourceClause(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
-			else
+			else if (EmptySourceSupported)
 				BuildEmptySource();
+			else
+				NoopCommand = true;
 		}
 
 		private void BuildSourceSubQuery(IQueryable<TSource> queryableSource)
@@ -452,8 +454,10 @@ namespace LinqToDB.DataProvider
 
 			if (hasData)
 				BuildAsSourceClause(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
-			else
+			else if (EmptySourceSupported)
 				BuildEmptySource();
+			else
+				NoopCommand = true;
 		}
 
 		private string GetEscapedSourceColumnAlias(string columnName)
@@ -552,6 +556,9 @@ namespace LinqToDB.DataProvider
 			BuildMergeInto();
 
 			BuildSource();
+
+			if (NoopCommand)
+				return;
 
 			BuildMatch();
 
@@ -1053,6 +1060,12 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
+		/// <summary>
+		/// If true, command execution must return 0 without request to database.
+		/// </summary>
+		public bool NoopCommand { get; private set; }
+
+
 		private string GetNextParameterName()
 		{
 			return string.Format("p{0}", _parameterCnt++);
@@ -1142,6 +1155,18 @@ namespace LinqToDB.DataProvider
 			get
 			{
 				return false;
+			}
+		}
+
+		/// <summary>
+		/// If true, builder will generate command for empty enumerable source;
+		/// otherwise command generation will be interrupted and 0 result returned without request to database.
+		/// </summary>
+		protected virtual bool EmptySourceSupported
+		{
+			get
+			{
+				return true;
 			}
 		}
 

@@ -19,10 +19,7 @@ namespace Tests.Merge
 	{
 		// ASE: just fails
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase)]
-		//(ProviderName.Sybase, ,
-		//ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana,
-			//ProviderName.DB2)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParameters1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -78,7 +75,7 @@ namespace Tests.Merge
 
 		// ASE: just fails
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParameters3(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -211,8 +208,7 @@ namespace Tests.Merge
 			}
 		}
 
-		// Oracle: optimized by provider
-		[MergeDataContextSource]//(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		[MergeDataContextSource]
 		public void TestParametersInMatchCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -250,9 +246,7 @@ namespace Tests.Merge
 			return '@';
 		}
 
-		// Oracle: optimized by provider
-		[MergeDataContextSource]//(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-		//ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParametersInUpdateCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -274,9 +268,7 @@ namespace Tests.Merge
 			}
 		}
 
-		// Oracle: optimized by provider
-		[MergeDataContextSource]//(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-		//ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParametersInInsertCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -299,8 +291,7 @@ namespace Tests.Merge
 		}
 
 		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase)]
-		//(ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParametersInDeleteCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -369,8 +360,8 @@ namespace Tests.Merge
 
 		// excluded providers use literal instead of parameter
 		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
-			//, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Informix,
+			ProviderName.SapHana)]
 		public void TestParametersInInsertCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -403,9 +394,8 @@ namespace Tests.Merge
 
 		// excluded providers use literal instead of parameter
 		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		//(, ProviderName.Informix, ProviderName.SapHana,
-		//)]
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Informix,
+			ProviderName.SapHana)]
 		public void TestParametersInUpdateExpression(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -464,11 +454,8 @@ namespace Tests.Merge
 			}
 		}
 
-		// Oracle: optimized by provider
-
-		// FB: firebird supports this parameter, but for now we disable all parameters in source for Firebird
-		[MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		//(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		// FB, INFORMIX: supports this parameter, but for now we disable all parameters in source for them
+		[MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
 		public void TestParametersInSourceFilter(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -489,8 +476,8 @@ namespace Tests.Merge
 			}
 		}
 
-		// FB: firebird doesn't support parameters in source select list
-		[MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
+		// FB, INFORMIX: doesn't support parameters in source select list
+		[MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
 		public void TestParametersInSourceSelect(string context)
 		{
 			using (var db = new TestDataConnection(context))

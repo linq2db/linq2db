@@ -199,12 +199,10 @@ namespace Tests.Merge
 		}
 
 		// extra test to check MergeChar* fixes (but we really need to implement excessive types tests for all providers)
-		// SAP HANA: something wrong with \0 in strings
-
 		// ASE: AllTypes table must be fixed
 		// DB2: ncharDataType and nvarcharDataType fields missing in AllTypes
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
-		//(ProviderName.SapHana, ProviderName.Sybase, )]
+		// Informix, SAP: looks like \0 terminates string
+		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
 		public void MergeString(string context)
 		{
 			using (var db = new TestDataConnection(context))

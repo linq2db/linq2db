@@ -15,6 +15,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			get
 			{
+				// INSERT FROM not supported
 				return true;
 			}
 		}
@@ -23,6 +24,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			get
 			{
+				// delete operations not supported
 				return false;
 			}
 		}
@@ -31,6 +33,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			get
 			{
+				// operation conditions not supported
 				return false;
 			}
 		}
@@ -39,6 +42,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			get
 			{
+				// VALUES(...) syntax in MERGE source not supported
 				return false;
 			}
 		}
@@ -47,6 +51,8 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			get
 			{
+				// predefined table with 1 record
+				// unfortunatelly, user could change this table
 				return "DUMMY";
 			}
 		}
@@ -55,6 +61,16 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			get
 			{
+				// TABLE_ALIAS(COLUMN_ALIAS, ...) syntax not supported
+				return false;
+			}
+		}
+
+		protected override bool EmptySourceSupported
+		{
+			get
+			{
+				// It doesn't make sense to fix empty source generation as it will take too much effort for nothing
 				return false;
 			}
 		}
@@ -63,7 +79,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			base.Validate();
 
-			// it is not stated in documentation
+			// it is not documented, but Update should go first
 			if (Merge.Operations.Length == 2 && Merge.Operations[0].Type == MergeOperationType.Insert)
 				throw new LinqToDBException(string.Format("Merge Insert operation must be placed after Update operation for {0} provider.", ProviderName));
 		}

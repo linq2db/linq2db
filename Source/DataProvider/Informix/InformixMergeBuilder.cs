@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			get
 			{
+				// Informix doesn't support INSERT FROM
 				return true;
 			}
 		}
@@ -26,6 +27,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			get
 			{
+				// operation conditions not supported
 				return false;
 			}
 		}
@@ -34,6 +36,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			get
 			{
+				// VALUES(...) syntax not supported in MERGE source
 				return false;
 			}
 		}
@@ -45,6 +48,15 @@ namespace LinqToDB.DataProvider.Informix
 				// or
 				// sysmaster:'informix'.sysdual
 				return "table(set{1})";
+			}
+		}
+
+		protected override bool SupportsParametersInSource
+		{
+			get
+			{
+				// parameters in source select list not supported
+				return false;
 			}
 		}
 
@@ -65,6 +77,8 @@ namespace LinqToDB.DataProvider.Informix
 				return;
 			}
 
+			// Informix NULL values are typed and usually it can type them from context
+			// source select is one of those places where it cannot infer type, so we should specify it explicitly
 			Command.Append("NULL::");
 			if (column.DbType != null)
 				Command.Append(column.DbType);

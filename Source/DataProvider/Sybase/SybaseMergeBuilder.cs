@@ -34,6 +34,15 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
+		protected override bool EmptySourceSupported
+		{
+			get
+			{
+				// It doesn't make sense to fix empty source generation as it will take too much effort for nothing
+				return false;
+			}
+		}
+
 		protected override void BuildTerminator()
 		{
 			if (_hasIdentityInsert)

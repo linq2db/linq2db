@@ -18,9 +18,9 @@ namespace Tests.Merge
 	{
 		// DB2, Firebird, Oracle: identity instert not supported
 		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
-			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		//ProviderName.Informix, ProviderName.SapHana)]
-		public void ImlicitIdentityInsert(string context)
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.Informix, ProviderName.SapHana)]
+		public void ImplicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
@@ -63,9 +63,7 @@ namespace Tests.Merge
 		// ASE: server dies
 		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase)]
-		//(, ProviderName.Sybase,
-		//	ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
 		public void ExplicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -108,8 +106,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase)]
-		//(ProviderName.Sybase, ProviderName.Firebird, ProviderName.Informix, ProviderName.SapHana)]
+		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void ExplicitNoIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))

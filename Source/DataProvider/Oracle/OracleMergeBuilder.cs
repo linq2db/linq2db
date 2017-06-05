@@ -96,6 +96,15 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
+		protected override bool EmptySourceSupported
+		{
+			get
+			{
+				// It doesn't make sense to fix empty source generation as it will take too much effort for nothing
+				return false;
+			}
+		}
+
 		protected override void BuildUpdateWithDelete(
 			Expression<Func<TTarget, TSource, bool>> updatePredicate,
 			Expression<Func<TTarget, TSource, TTarget>> updateExpression,

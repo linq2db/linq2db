@@ -453,6 +453,9 @@ namespace LinqToDB.DataProvider
 
 			var cmd = builder.BuildCommand();
 
+			if (builder.NoopCommand)
+				return 0;
+
 			return dataConnection.Execute(cmd, builder.Parameters);
 		}
 
