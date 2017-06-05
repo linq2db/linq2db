@@ -49,7 +49,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		// Sybase escalates TOP 1 closure in subquery to all query
+		[Test, DataContextSource(ProviderName.Sybase)]
 		public void LeftJoinLimited(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -68,7 +69,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		// Sybase escalates TOP 1 closure in subquery to all query
+		[Test, DataContextSource(ProviderName.Sybase)]
 		public void LeftJoinLimitedWhere(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -471,5 +471,24 @@ namespace Tests.DataProvider
 			}
 		}
 #endif
+
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void SelectTableWithHintTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(Person, db.Person.With("TABLOCK"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void UpdateTableWithHintTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(Person.Count(),  db.Person.                Set(_ => _.FirstName, _ => _.FirstName).Update());
+				Assert.AreEqual(Person.Count(),  db.Person.With("TABLOCK").Set(_ => _.FirstName, _ => _.FirstName).Update());
+			}
+		}
 	}
 }

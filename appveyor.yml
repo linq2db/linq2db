@@ -1,7 +1,7 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.8.0
+  packageVersion: 1.8.2
   matrix:
     - buildConfiguration: dotNet
       solutionName: linq2db.4.5.sln
@@ -121,3 +121,7 @@ deploy:
     secure: oTYw2IwTnz4qMD8c/MR/6mo+Nx3wa5Pp8MYfsKBCKCVuU6QCHlj+6QMXpnQses8G
   on:
     branch: release
+
+
+skip_commits:
+  message: /ci skip/      # Regex for matching commit message
