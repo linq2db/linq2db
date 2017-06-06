@@ -47,7 +47,8 @@ namespace LinqToDB.Common
 			/// Used to optimize big logical operations with great number of operands like expr1.and.axpr2...and.exprN into to one <see cref="LinqToDB.Expressions.BinaryAggregateExpression"/>.
 			/// This saves from deep recursion in visitors.
 			/// <remarks>
-			/// Default: <value>true</value>
+			/// Default: <value>false</value>
+			/// Switched off in 1.8.2 as unstable
 			/// </remarks>
 			/// </summary>
 			/// <remarks>
@@ -55,7 +56,7 @@ namespace LinqToDB.Common
 			/// https://github.com/linq2db/linq2db/issues/447
 			/// https://github.com/linq2db/linq2db/pull/563
 			/// </remarks>
-			public static bool UseBinaryAggregateExpression = true;
+			public static bool UseBinaryAggregateExpression = false;
 		}
 
 		public static class LinqService

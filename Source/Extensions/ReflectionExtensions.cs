@@ -634,7 +634,7 @@ namespace LinqToDB.Extensions
 			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ConcurrentDictionary<Type,T[]>();
 		}
 
-#region Attributes cache
+		#region Attributes cache
 
 		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ConcurrentDictionary<Type, object[]>();
 
@@ -700,7 +700,7 @@ namespace LinqToDB.Extensions
 				GetAttributesTreeInternal(list, type.BaseTypeEx());
 		}
 
-#endregion
+		#endregion
 
 		/// <summary>
 		/// Returns an array of custom attributes applied to a type.
@@ -1153,7 +1153,7 @@ namespace LinqToDB.Extensions
 		
 #endregion
 
-#region MethodInfo extensions
+		#region MethodInfo extensions
 
 		public static PropertyInfo GetPropertyInfo(this MethodInfo method)
 		{
@@ -1174,9 +1174,9 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-#endregion
+		#endregion
 
-#region MemberInfo extensions
+		#region MemberInfo extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
@@ -1326,7 +1326,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-#endregion
+		#endregion
 
 	}
 }

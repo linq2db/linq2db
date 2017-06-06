@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
 {
-	public class QueryContext
+	class QueryContext
 	{
 		public class DataContextContext
 		{

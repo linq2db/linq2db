@@ -216,9 +216,6 @@
     <Compile Include="DataProvider\Sybase\SybaseTools.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
-    <Compile Include="Linq\DefaultDataContextInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Linq\ExpressionQuery.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="DataProvider\Access\AccessDataProvider.cs" />
