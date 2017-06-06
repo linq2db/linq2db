@@ -46,9 +46,77 @@ namespace LinqToDB.Expressions
 
 		#region EqualsTo
 
-		internal static bool EqualsTo(this Expression expr1, Expression expr2, Dictionary<Expression,QueryableAccessor> queryableAccessorDic)
+		internal static bool EqualsToOld(this Expression expr1, Expression expr2, Dictionary<Expression,QueryableAccessor> queryableAccessorDic)
 		{
 			return EqualsTo(expr1, expr2, new EqualsToInfo { QueryableAccessorDic = queryableAccessorDic });
+		}
+
+		internal static bool EqualsTo(this Expression ex1, Expression ex2, Dictionary<Expression,QueryableAccessor> queryableAccessorDic)
+		{
+			if (ex1 == null || ex2 == null || ex1.NodeType != ex2.NodeType || ex1.Type != ex2.Type)
+				return false;
+
+			var info = new EqualsToInfo { QueryableAccessorDic = queryableAccessorDic };
+
+			using (var e1 = ex1.EnumerateParentFirst().GetEnumerator())
+			using (var e2 = ex2.EnumerateParentFirst().GetEnumerator())
+			{
+				while (true)
+				{
+					var m1 = e1.MoveNext();
+					var m2 = e2.MoveNext();
+					if (m1 != m2)
+						return false;
+					if (!m1)
+						return true;
+
+					var expr1 = e1.Current;
+					var expr2 = e2.Current;
+
+					if (expr1 == null || expr2 == null || expr1.NodeType != expr2.NodeType || expr1.Type != expr2.Type)
+						return false;
+
+					switch (expr1.NodeType)
+					{
+						case ExpressionType.ArrayLength:
+						case ExpressionType.Convert:
+						case ExpressionType.ConvertChecked:
+						case ExpressionType.Negate:
+						case ExpressionType.NegateChecked:
+						case ExpressionType.Not:
+						case ExpressionType.Quote:
+						case ExpressionType.TypeAs:
+						case ExpressionType.UnaryPlus:
+							if (((UnaryExpression)expr1).Method != ((UnaryExpression)expr2).Method)
+								return false;
+							break;
+						case ExpressionType.Constant:
+							if (!EqualsToX((ConstantExpression) expr1, (ConstantExpression) expr2, info))
+								return false;
+							break;
+						case ExpressionType.MemberAccess:
+							if (!EqualsToX((MemberExpression) expr1, (MemberExpression) expr2, info))
+								return false;
+							break;
+						case ExpressionType.MemberInit:
+							if (((MemberInitExpression)expr1).Bindings.Count != ((MemberInitExpression)expr2).Bindings.Count)
+								return false;
+							break;
+						case ExpressionType.Call:
+							if (!EqualsToX((MethodCallExpression) expr1, (MethodCallExpression) expr2, info, false))
+								return false;
+							break;
+						case ExpressionType.Parameter: 
+							if (((ParameterExpression) expr1).Name != ((ParameterExpression) expr2).Name)
+								return false;
+							break;
+						case ExpressionType.TypeIs:
+							if (((TypeBinaryExpression)expr1).TypeOperand != ((TypeBinaryExpression)expr2).TypeOperand)
+								return false;
+							break;
+					}
+				}
+			}
 		}
 
 		class EqualsToInfo
@@ -387,7 +455,7 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info, bool compareArguments = true)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count || expr1.Method != expr2.Method)
 				return false;
@@ -403,9 +471,10 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
-			for (var i = 0; i < expr1.Arguments.Count; i++)
-				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
-					return false;
+			if (compareArguments)
+				for (var i = 0; i < expr1.Arguments.Count; i++)
+					if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+						return false;
 
 			return true;
 		}

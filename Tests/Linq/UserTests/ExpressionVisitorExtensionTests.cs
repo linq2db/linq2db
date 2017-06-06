@@ -11,13 +11,11 @@ namespace Tests.UserTests
 	{
 		class TestExpressionVisitor : ExpressionVisitor
 		{
-			private readonly IEnumerable<Expression> _enumerable;
 			private readonly IEnumerator<Expression> _enumerator;
 
 			public TestExpressionVisitor(IEnumerable<Expression> enumerable)
 			{
-				_enumerable = enumerable;
-				_enumerator = _enumerable.GetEnumerator();
+				_enumerator = enumerable.GetEnumerator();
 			}
 
 			public override Expression Visit(Expression node)
