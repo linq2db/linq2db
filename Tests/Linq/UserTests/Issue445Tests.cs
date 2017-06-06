@@ -55,26 +55,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IssueContextSourceAttribute(false)]
-		public void ConnectionClosed4(string context)
-		{
-			for   (var i = 0; i < 1000; i++)
-			using (var db = (DataConnection)GetDataContext(context))
-			{
-				AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>(true).Where(_ => _.ID == 1));
-			}
-		}
-
-		[Test, IssueContextSourceAttribute(false)]
-		public void ConnectionClosed5(string context)
-		{
-			for (var i = 0; i < 1000; i++)
-			{
-				var db = (DataConnection)GetDataContext(context);
-				AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>(true).Where(_ => _.ID == 1));
-			}
-		}
-
 		private IEnumerable<Person> GetPersonsFromDisposed1(string context)
 		{
 			using (var db = GetDataContext(context))

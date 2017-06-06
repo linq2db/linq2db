@@ -3,17 +3,8 @@ using LinqToDB.Data;
 
 namespace LinqToDB.Linq
 {
-	using Mapping;
-	using SqlProvider;
-
 	class DataContextInfo : IDataContextInfo
 	{
-		//public DataContextInfo(IDataContext dataContext)
-		//{
-		//	DataContext    = dataContext;
-		//	DisposeContext = false;
-		//}
-
 		public DataContextInfo(IDataContext dataContext, bool disposeContext)
 		{
 			DataContext    = dataContext;

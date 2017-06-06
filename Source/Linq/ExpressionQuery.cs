@@ -77,7 +77,7 @@ namespace LinqToDB.Linq
 			if (cache && Info != null)
 				return Info;
 
-			var info = Query<T>.GetQuery(DataContextInfo, expression);
+			var info = Query<T>.GetQuery(DataContextInfo.DataContext, expression);
 
 			if (cache)
 				Info = info;

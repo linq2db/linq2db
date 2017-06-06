@@ -133,15 +133,15 @@ namespace LinqToDB.Linq
 
 		const int CacheSize = 100;
 
-		public static Query<T> GetQuery(IDataContextInfo dataContextInfo, Expression expr)
+		public static Query<T> GetQuery(IDataContext dataContext, Expression expr)
 		{
-			var query = FindQuery(dataContextInfo.DataContext, expr);
+			var query = FindQuery(dataContext, expr);
 
 			if (query == null)
 			{
 				lock (_sync)
 				{
-					query = FindQuery(dataContextInfo.DataContext, expr);
+					query = FindQuery(dataContext, expr);
 
 					if (query == null)
 					{
@@ -155,11 +155,11 @@ namespace LinqToDB.Linq
 #endif
 						}
 
-						query = new Query<T>(dataContextInfo.DataContext, expr);
+						query = new Query<T>(dataContext, expr);
 
 						try
 						{
-							query = new ExpressionBuilder(query, dataContextInfo.DataContext, expr, null).Build<T>();
+							query = new ExpressionBuilder(query, dataContext, expr, null).Build<T>();
 						}
 						catch (Exception)
 						{
@@ -1013,7 +1013,7 @@ namespace LinqToDB.Linq
 
 			query.GetElement(null, dataContextInfo, Expression.Constant(null), null);
 
-			ITable<T> table = new Table<T>(dataContextInfo);
+			ITable<T> table = new Table<T>(dataContextInfo.DataContext);
 
 			if (tableName    != null) table = table.TableName   (tableName);
 			if (databaseName != null) table = table.DatabaseName(databaseName);
@@ -1230,7 +1230,9 @@ namespace LinqToDB.Linq
 			}
 			finally
 			{
-				if (closeQueryContext)
+				if (dataContextInfo.DataContext.CloseAfterUse)
+					dataContextInfo.DataContext.Close();
+				else if (closeQueryContext)
 					queryContext.Close();
 			}
 		}
