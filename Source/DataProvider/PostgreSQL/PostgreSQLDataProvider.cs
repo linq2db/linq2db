@@ -87,6 +87,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlCircleType      = npgSql.GetType("NpgsqlTypes.NpgsqlCircle",      true);
 			NpgsqlPolygonType     = npgSql.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
 
+			// https://github.com/linq2db/linq2db/pull/718
 			//if (npgSql.GetName().Version >= new Version(3, 1, 9))
 			//{
 			//	_commandBehavior = CommandBehavior.KeyInfo;
