@@ -87,10 +87,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlCircleType      = npgSql.GetType("NpgsqlTypes.NpgsqlCircle",      true);
 			NpgsqlPolygonType     = npgSql.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
 
-			if (npgSql.GetName().Version >= new Version(3, 1, 9))
-			{
-				_commandBehavior = CommandBehavior.KeyInfo;
-			}
+			//if (npgSql.GetName().Version >= new Version(3, 1, 9))
+			//{
+			//	_commandBehavior = CommandBehavior.KeyInfo;
+			//}
 
 			if (BitStringType        != null) SetProviderField(BitStringType,        BitStringType,        "GetBitString");
 			if (NpgsqlIntervalType   != null) SetProviderField(NpgsqlIntervalType,   NpgsqlIntervalType,   "GetInterval");
