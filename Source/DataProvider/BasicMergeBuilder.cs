@@ -256,7 +256,7 @@ namespace LinqToDB.DataProvider
 					Command.Append(", ");
 
 				AddSourceValue(
-					ContextInfo.MappingSchema.ValueToSqlConverter,
+					ContextInfo.DataContext.MappingSchema.ValueToSqlConverter,
 					_sourceDescriptor.Columns[i],
 					columnTypes[i],
 					null);
@@ -306,7 +306,7 @@ namespace LinqToDB.DataProvider
 
 			var columnTypes = GetSourceColumnTypes();
 
-			var valueConverter = ContextInfo.MappingSchema.ValueToSqlConverter;
+			var valueConverter = ContextInfo.DataContext.MappingSchema.ValueToSqlConverter;
 
 			foreach (var item in source)
 			{
@@ -327,7 +327,7 @@ namespace LinqToDB.DataProvider
 						Command.Append(",");
 
 					var column = _sourceDescriptor.Columns[i];
-					var value = column.GetValue(ContextInfo.MappingSchema, item);
+					var value = column.GetValue(ContextInfo.DataContext.MappingSchema, item);
 
 					AddSourceValue(valueConverter, column, columnTypes[i], value);
 
@@ -415,7 +415,7 @@ namespace LinqToDB.DataProvider
 
 			var columnTypes = GetSourceColumnTypes();
 
-			var valueConverter = ContextInfo.MappingSchema.ValueToSqlConverter;
+			var valueConverter = ContextInfo.DataContext.MappingSchema.ValueToSqlConverter;
 
 			foreach (var item in source)
 			{
@@ -435,7 +435,7 @@ namespace LinqToDB.DataProvider
 						Command.Append(",");
 
 					var column = _sourceDescriptor.Columns[i];
-					var value = column.GetValue(ContextInfo.MappingSchema, item);
+					var value = column.GetValue(ContextInfo.DataContext.MappingSchema, item);
 
 					AddSourceValue(valueConverter, column, columnTypes[i], value);
 
@@ -620,7 +620,7 @@ namespace LinqToDB.DataProvider
 					Expression.Quote(create)
 				});
 
-			var qry = Query<int>.GetQuery(ContextInfo, insertExpression);
+			var qry = Query<int>.GetQuery(ContextInfo.DataContext, insertExpression);
 			var query = qry.Queries[0].SelectQuery;
 
 			query.Insert.Into.Alias = _targetAlias;
@@ -743,7 +743,7 @@ namespace LinqToDB.DataProvider
 				LinqExtensions._updateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
-			var qry = Query<int>.GetQuery(ContextInfo, updateExpression);
+			var qry = Query<int>.GetQuery(ContextInfo.DataContext, updateExpression);
 			var query = qry.Queries[0].SelectQuery;
 
 			if (ProviderUsesAlternativeUpdate)
@@ -762,7 +762,7 @@ namespace LinqToDB.DataProvider
 
 		private void BuildAlternativeUpdateQuery(SelectQuery query)
 		{
-			var subQuery = (SelectQuery)new QueryVisitor().Find(query.Where.SearchCondition, e => e.ElementType == QueryElementType.SqlQuery);
+			var subQuery = (SelectQuery)QueryVisitor.Find(query.Where.SearchCondition, e => e.ElementType == QueryElementType.SqlQuery);
 
 			var target = query.From.Tables[0];
 			target.Alias = _targetAlias;
@@ -794,11 +794,7 @@ namespace LinqToDB.DataProvider
 					}
 				});
 
-				for (var i = 0; i < query.Update.Items.Count; i++)
-				{
-					query.Update.Items[i] = new QueryVisitor()
-						.Convert(query.Update.Items[i], element => ConvertToSubquery(subQuery, element, tableSet, tables, (SqlTable)target.Source, (SqlTable)source.Source));
-				}
+				((ISqlExpressionWalkable)query.Update).Walk(true, element => ConvertToSubquery(subQuery, element, tableSet, tables, (SqlTable)target.Source, (SqlTable)source.Source));
 			}
 
 			source.Alias = SourceAlias;
@@ -860,9 +856,9 @@ namespace LinqToDB.DataProvider
 				BuildDefaultUpdate();
 		}
 
-		private static IQueryElement ConvertToSubquery(
+		private static ISqlExpression ConvertToSubquery(
 							SelectQuery sql,
-							IQueryElement element,
+							ISqlExpression element,
 							HashSet<SqlTable> tableSet,
 							List<SqlTable> tables,
 							SqlTable firstTable,
@@ -949,35 +945,23 @@ namespace LinqToDB.DataProvider
 					? (SqlTable)sql.From.Tables[0].Joins[0].Table.Source
 					: null;
 
+				ISqlExpressionWalkable queryPart;
 				switch (part)
 				{
 					case QueryElement.Where:
-						// replace references to fields from associated tables to subqueries in where clause
-						var whereClause = new QueryVisitor()
-							.Convert(sql.Where, element => ConvertToSubquery(sql, element, tableSet, tables, firstTable, secondTable))
-							.SearchCondition.Conditions.ToList();
-
-						// replace WHERE condition with new one
-						sql.Where.SearchCondition.Conditions.Clear();
-						sql.Where.SearchCondition.Conditions.AddRange(whereClause);
+						queryPart = sql.Where;
 						break;
 					case QueryElement.InsertSetter:
-						for (var i = 0; i < sql.Insert.Items.Count; i++)
-						{
-							sql.Insert.Items[i] = new QueryVisitor()
-								.Convert(sql.Insert.Items[i], element => ConvertToSubquery(sql, element, tableSet, tables, firstTable, secondTable));
-						}
+						queryPart = sql.Insert;
 						break;
 					case QueryElement.UpdateSetter:
-						for (var i = 0; i < sql.Update.Items.Count; i++)
-						{
-							sql.Update.Items[i] = new QueryVisitor()
-								.Convert(sql.Update.Items[i], element => ConvertToSubquery(sql, element, tableSet, tables, firstTable, secondTable));
-						}
+						queryPart = sql.Update;
 						break;
 					default:
 						throw new InvalidOperationException();
 				}
+
+				queryPart.Walk(true, element => ConvertToSubquery(sql, element, tableSet, tables, firstTable, secondTable));
 			}
 
 			var table1 = sql.From.Tables[0];
@@ -1032,7 +1016,7 @@ namespace LinqToDB.DataProvider
 				LinqExtensions._updateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
-			var qry = Query<int>.GetQuery(ContextInfo, updateExpression);
+			var qry = Query<int>.GetQuery(ContextInfo.DataContext, updateExpression);
 			var query = qry.Queries[0].SelectQuery;
 
 			MoveJoinsToSubqueries(query, _targetAlias, null, QueryElement.UpdateSetter);
@@ -1231,11 +1215,11 @@ namespace LinqToDB.DataProvider
 		public virtual string BuildCommand()
 		{
 			// prepare required objects
-			SqlBuilder = (BasicSqlBuilder)ContextInfo.CreateSqlBuilder();
+			SqlBuilder = (BasicSqlBuilder)ContextInfo.DataContext.CreateSqlProvider();
 
-			_sourceDescriptor = TargetDescriptor = ContextInfo.MappingSchema.GetEntityDescriptor(typeof(TTarget));
+			_sourceDescriptor = TargetDescriptor = ContextInfo.DataContext.MappingSchema.GetEntityDescriptor(typeof(TTarget));
 			if (typeof(TTarget) != typeof(TSource))
-				_sourceDescriptor = ContextInfo.MappingSchema.GetEntityDescriptor(typeof(TSource));
+				_sourceDescriptor = ContextInfo.DataContext.MappingSchema.GetEntityDescriptor(typeof(TSource));
 
 			_connection = ContextInfo.DataContext as DataConnection;
 

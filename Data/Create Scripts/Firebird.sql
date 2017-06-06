@@ -367,6 +367,9 @@ AS BEGIN
 END
 COMMIT;
 
+-- skip initial rows
+SELECT GEN_ID(AllTypesID, 2) FROM RDB$DATABASE;
+COMMIT;
 
 CREATE VIEW PersonView
 AS

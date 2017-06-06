@@ -86,13 +86,13 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				if (columnType.DataType == DataType.Undefined)
 				{
-					columnType = ContextInfo.MappingSchema.GetDataType(column.StorageType);
+					columnType = ContextInfo.DataContext.MappingSchema.GetDataType(column.StorageType);
 
 					if (columnType.DataType == DataType.Undefined)
 					{
 						var canBeNull = column.CanBeNull;
 
-						columnType = ContextInfo.MappingSchema.GetUnderlyingDataType(column.StorageType, ref canBeNull);
+						columnType = ContextInfo.DataContext.MappingSchema.GetUnderlyingDataType(column.StorageType, ref canBeNull);
 					}
 				}
 
