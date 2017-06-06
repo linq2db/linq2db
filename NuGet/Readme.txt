@@ -1,3 +1,21 @@
+LINQ to DB 1.8.2  Release Notes
+---------------------------------
+Configuration.Linq.UseBinaryAggregateExpression is set to false by default as supposed to be unstable
+
+LINQ to DB 1.8.1  Release Notes
+---------------------------------
+Fixed issue with !IEnumerable.Contains (#228)
+Fixed GROUP BY DateTime.Year (#264, #652)
+Fixed query optimization (#269)
+Fixed BinaryAggregateExpression (#667)
+Fixed nullable enums support (#693)
+
+Improved Npgsql 3.2 support (#665)
+Improved JOIN build (#676)
+Improved SqlCe support (#695 )
+
+Minor changes (#664 #696)
+
 LINQ to DB 1.8.0  Release Notes
 ---------------------------------
 

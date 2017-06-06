@@ -120,6 +120,8 @@ namespace LinqToDB.Linq.Builder
 					? (leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql))
 					: (leftJoin ? SelectQuery.LeftJoin  (sql) : SelectQuery.InnerJoin(sql));
 
+				join.JoinedTable.CanConvertApply = false;
+
 				if (!isApplyJoin)
 				{
 					join.JoinedTable.Condition.Conditions.AddRange(sql.Where.SearchCondition.Conditions);

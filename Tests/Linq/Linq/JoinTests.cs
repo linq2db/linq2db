@@ -861,7 +861,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void StackOverflow(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -880,10 +880,11 @@ namespace Tests.Linq
 				}
 
 				var list = q.ToList();
+				Assert.IsNotEmpty(list);
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
 		public void ApplyJoin(string context)
 		{
 			using (var db = GetDataContext(context))
