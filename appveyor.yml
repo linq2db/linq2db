@@ -1,8 +1,8 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.8.1
-  linq2dbVersion: 1.8.1
+  packageVersion: 1.8.2
+  linq2dbVersion: 1.8.2
 
 version: $(packageVersion).{build}
 
@@ -53,4 +53,4 @@ deploy:
     branch: release
 
 skip_commits:
-  message: /skip_ci./      # Regex for matching commit message
+  message: /ci skip./      # Regex for matching commit message

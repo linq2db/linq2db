@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.t4models</id>
-		<version>1.8.1</version>
+		<version>1.8.2</version>
 		<title>LINQ to DB T4 Models</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -23,17 +23,17 @@
 		<dependencies>
 			
 			<group targetFramework="netstandard1.6">
-				<dependency id="linq2db.Core" version="1.8.1"/>
+				<dependency id="linq2db.Core" version="1.8.2"/>
 			</group>
 			
 			<group targetFramework="net40">
-				<dependency id="linq2db" version="1.8.1"/>
+				<dependency id="linq2db" version="1.8.2"/>
 			</group>
 
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\packages\linq2db.1.8.1\lib\net40\linq2db.dll"    target="tools" />
+		<file src="..\packages\linq2db.1.8.2\lib\net40\linq2db.dll"    target="tools" />
 		<file src="init.ps1"                                           target="tools" />
 
 		<file src="..\ReadMe.md"                                       target="content\LinqToDB.Templates" />
