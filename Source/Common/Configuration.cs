@@ -55,7 +55,7 @@ namespace LinqToDB.Common
 			/// https://github.com/linq2db/linq2db/issues/447
 			/// https://github.com/linq2db/linq2db/pull/563
 			/// </remarks>
-			public static bool UseBinaryAggregateExpression = true;
+			public static bool UseBinaryAggregateExpression = false;
 		}
 
 		public static class LinqService
