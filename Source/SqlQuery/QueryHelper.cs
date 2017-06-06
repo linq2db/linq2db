@@ -51,7 +51,7 @@ namespace LinqToDB.SqlQuery
 		public static SelectQuery.JoinedTable FindJoin(this SelectQuery query,
 			Func<SelectQuery.JoinedTable, bool> match)
 		{
-			return new QueryVisitor().Find(query, e =>
+			return QueryVisitor.Find(query, e =>
 			{
 				if (e.ElementType == QueryElementType.JoinedTable)
 				{

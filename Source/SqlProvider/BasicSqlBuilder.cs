@@ -1361,49 +1361,7 @@ namespace LinqToDB.SqlProvider
 			switch (predicate.ElementType)
 			{
 				case QueryElementType.ExprExprPredicate:
-					{
-						var expr = (SelectQuery.Predicate.ExprExpr)predicate;
-
-						switch (expr.Operator)
-						{
-							case SelectQuery.Predicate.Operator.Equal   :
-							case SelectQuery.Predicate.Operator.NotEqual:
-								{
-									ISqlExpression e = null;
-
-									if (expr.Expr1 is IValueContainer && ((IValueContainer)expr.Expr1).Value == null)
-										e = expr.Expr2;
-									else if (expr.Expr2 is IValueContainer && ((IValueContainer)expr.Expr2).Value == null)
-										e = expr.Expr1;
-
-									if (e != null)
-									{
-										BuildExpression(GetPrecedence(expr), e);
-										StringBuilder.Append(expr.Operator == SelectQuery.Predicate.Operator.Equal ? " IS NULL" : " IS NOT NULL");
-										return;
-									}
-
-									break;
-								}
-						}
-
-						BuildExpression(GetPrecedence(expr), expr.Expr1);
-
-						switch (expr.Operator)
-						{
-							case SelectQuery.Predicate.Operator.Equal         : StringBuilder.Append(" = ");  break;
-							case SelectQuery.Predicate.Operator.NotEqual      : StringBuilder.Append(" <> "); break;
-							case SelectQuery.Predicate.Operator.Greater       : StringBuilder.Append(" > ");  break;
-							case SelectQuery.Predicate.Operator.GreaterOrEqual: StringBuilder.Append(" >= "); break;
-							case SelectQuery.Predicate.Operator.NotGreater    : StringBuilder.Append(" !> "); break;
-							case SelectQuery.Predicate.Operator.Less          : StringBuilder.Append(" < ");  break;
-							case SelectQuery.Predicate.Operator.LessOrEqual   : StringBuilder.Append(" <= "); break;
-							case SelectQuery.Predicate.Operator.NotLess       : StringBuilder.Append(" !< "); break;
-						}
-
-						BuildExpression(GetPrecedence(expr), expr.Expr2);
-					}
-
+					BuildPredicateX((SelectQuery.Predicate.ExprExpr) predicate);
 					break;
 
 				case QueryElementType.LikePredicate:
@@ -1412,32 +1370,29 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.BetweenPredicate:
 					{
-						var p = (SelectQuery.Predicate.Between)predicate;
-						BuildExpression(GetPrecedence(p), p.Expr1);
-						if (p.IsNot) StringBuilder.Append(" NOT");
+						BuildExpression(GetPrecedence((SelectQuery.Predicate.Between)predicate), ((SelectQuery.Predicate.Between)predicate).Expr1);
+						if (((SelectQuery.Predicate.Between)predicate).IsNot) StringBuilder.Append(" NOT");
 						StringBuilder.Append(" BETWEEN ");
-						BuildExpression(GetPrecedence(p), p.Expr2);
+						BuildExpression(GetPrecedence((SelectQuery.Predicate.Between)predicate), ((SelectQuery.Predicate.Between)predicate).Expr2);
 						StringBuilder.Append(" AND ");
-						BuildExpression(GetPrecedence(p), p.Expr3);
+						BuildExpression(GetPrecedence((SelectQuery.Predicate.Between)predicate), ((SelectQuery.Predicate.Between)predicate).Expr3);
 					}
 
 					break;
 
 				case QueryElementType.IsNullPredicate:
 					{
-						var p = (SelectQuery.Predicate.IsNull)predicate;
-						BuildExpression(GetPrecedence(p), p.Expr1);
-						StringBuilder.Append(p.IsNot ? " IS NOT NULL" : " IS NULL");
+						BuildExpression(GetPrecedence((SelectQuery.Predicate.IsNull)predicate), ((SelectQuery.Predicate.IsNull)predicate).Expr1);
+						StringBuilder.Append(((SelectQuery.Predicate.IsNull)predicate).IsNot ? " IS NOT NULL" : " IS NULL");
 					}
 
 					break;
 
 				case QueryElementType.InSubQueryPredicate:
 					{
-						var p = (SelectQuery.Predicate.InSubQuery)predicate;
-						BuildExpression(GetPrecedence(p), p.Expr1);
-						StringBuilder.Append(p.IsNot ? " NOT IN " : " IN ");
-						BuildExpression(GetPrecedence(p), p.SubQuery);
+						BuildExpression(GetPrecedence((SelectQuery.Predicate.InSubQuery)predicate), ((SelectQuery.Predicate.InSubQuery)predicate).Expr1);
+						StringBuilder.Append(((SelectQuery.Predicate.InSubQuery)predicate).IsNot ? " NOT IN " : " IN ");
+						BuildExpression(GetPrecedence((SelectQuery.Predicate.InSubQuery)predicate), ((SelectQuery.Predicate.InSubQuery)predicate).SubQuery);
 					}
 
 					break;
@@ -1447,11 +1402,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.FuncLikePredicate:
-					{
-						var f = (SelectQuery.Predicate.FuncLike)predicate;
-						BuildExpression(f.Function.Precedence, f.Function);
-					}
-
+					BuildExpression(((SelectQuery.Predicate.FuncLike)predicate).Function.Precedence, ((SelectQuery.Predicate.FuncLike)predicate).Function);
 					break;
 
 				case QueryElementType.SearchCondition:
@@ -1462,10 +1413,14 @@ namespace LinqToDB.SqlProvider
 					{
 						var p = (SelectQuery.Predicate.NotExpr)predicate;
 
-						if (p.IsNot)
+						if (((SelectQuery.Predicate.NotExpr)predicate).IsNot)
 							StringBuilder.Append("NOT ");
 
-						BuildExpression(p.IsNot ? Precedence.LogicalNegation : GetPrecedence(p), p.Expr1);
+						BuildExpression(
+							((SelectQuery.Predicate.NotExpr)predicate).IsNot
+								? Precedence.LogicalNegation
+								: GetPrecedence((SelectQuery.Predicate.NotExpr)predicate),
+							((SelectQuery.Predicate.NotExpr)predicate).Expr1);
 					}
 
 					break;
@@ -1493,6 +1448,48 @@ namespace LinqToDB.SqlProvider
 				default:
 					throw new InvalidOperationException();
 			}
+		}
+
+		void BuildPredicateX(SelectQuery.Predicate.ExprExpr expr)
+		{
+			switch (expr.Operator)
+			{
+				case SelectQuery.Predicate.Operator.Equal:
+				case SelectQuery.Predicate.Operator.NotEqual:
+				{
+					ISqlExpression e = null;
+
+					if (expr.Expr1 is IValueContainer && ((IValueContainer) expr.Expr1).Value == null)
+						e = expr.Expr2;
+					else if (expr.Expr2 is IValueContainer && ((IValueContainer) expr.Expr2).Value == null)
+						e = expr.Expr1;
+
+					if (e != null)
+					{
+						BuildExpression(GetPrecedence(expr), e);
+						StringBuilder.Append(expr.Operator == SelectQuery.Predicate.Operator.Equal ? " IS NULL" : " IS NOT NULL");
+						return;
+					}
+
+					break;
+				}
+			}
+
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+
+			switch (expr.Operator)
+			{
+				case SelectQuery.Predicate.Operator.Equal          : StringBuilder.Append(" = ");  break;
+				case SelectQuery.Predicate.Operator.NotEqual       : StringBuilder.Append(" <> "); break;
+				case SelectQuery.Predicate.Operator.Greater        : StringBuilder.Append(" > ");  break;
+				case SelectQuery.Predicate.Operator.GreaterOrEqual : StringBuilder.Append(" >= "); break;
+				case SelectQuery.Predicate.Operator.NotGreater     : StringBuilder.Append(" !> "); break;
+				case SelectQuery.Predicate.Operator.Less           : StringBuilder.Append(" < ");  break;
+				case SelectQuery.Predicate.Operator.LessOrEqual    : StringBuilder.Append(" <= "); break;
+				case SelectQuery.Predicate.Operator.NotLess        : StringBuilder.Append(" !< "); break;
+			}
+
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
 		}
 
 		static SqlField GetUnderlayingField(ISqlExpression expr)

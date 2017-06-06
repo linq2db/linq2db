@@ -98,6 +98,8 @@ namespace LinqToDB
 			}
 		}
 
+		public bool CloseAfterUse { get; set; }
+
 		internal int LockDbManagerCounter;
 
 		DataConnection _dataConnection;
