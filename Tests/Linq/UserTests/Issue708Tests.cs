@@ -43,7 +43,7 @@ namespace Tests.UserTests
 			{
 				User user = new User();
 				user.Id = Guid.Empty;
-				
+
 
 				var subQuery = from substitutionUsers in db.GetTable<SubstitutionUsers>()
 					where substitutionUsers.UserId == user.Id
@@ -55,8 +55,7 @@ namespace Tests.UserTests
 					      substitution.EndDate >= DateTime.Now
 					select substitution.User;
 
-				Assert.IsEmpty(query.ToList());
-
+				Assert.DoesNotThrow(() => Console.WriteLine(query.ToString()));
 			}
 		}
 	}
