@@ -224,10 +224,12 @@ namespace Tests.Merge
 					throw new NotImplementedException();
 				}
 
+#if !NETSTANDARD
 				ISchemaProvider IDataProvider.GetSchemaProvider()
 				{
 					throw new NotImplementedException();
 				}
+#endif
 
 				ISqlOptimizer IDataProvider.GetSqlOptimizer()
 				{
