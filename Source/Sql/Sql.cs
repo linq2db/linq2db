@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
 using System.Reflection;
-
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
 using PN = LinqToDB.ProviderName;
@@ -1063,6 +1063,17 @@ namespace LinqToDB
 		public static bool FreeText(object table, string text)
 		{
 			throw new LinqException("'FreeText' is only server-side method.");
+		}
+
+		[Sql.Expression(ProviderName.MySql, "{0} REGEXP {1}")]
+		[Sql.Expression(ProviderName.SQLite, "{0} REGEXP {1}")]
+		[Sql.Expression(ProviderName.PostgreSQL, "{0} SIMILAR TO {1}")]
+		[Sql.Expression(ProviderName.Oracle, "REGEXP_LIKE ({0}, {1})")]
+		[Sql.Expression(ProviderName.SapHana, "{0} LIKE_REGEXPR {1}")]
+		[Sql.Expression(ProviderName.SqlServer, "dbo.RegexMatch({0}, {1})")]
+		public static bool RegExp(string data, string regex)
+		{
+			return new Regex(regex).IsMatch(data);
 		}
 
 		#endregion
