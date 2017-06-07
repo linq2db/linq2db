@@ -846,7 +846,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
+		[Test, OracleDataContextWithBulkCopy(ParallelScope = ParallelScope.None)]
 		public void BulkCopyLinqTypesMultipleRows(string context, bool useAlternativeBulkCopy)
 		{
 			try
@@ -876,7 +876,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
+		[Test, OracleDataContextWithBulkCopy(ParallelScope = ParallelScope.None)]
 		public void BulkCopyRetrieveSequencesProviderSpecific(string context, bool useAlternativeBulkCopy)
 		{
 			try
@@ -1060,7 +1060,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContextWithBulkCopy]
+		[Test, OracleDataContextWithBulkCopy(ParallelScope = ParallelScope.None)]
 		public void BulkCopy21MultipleRows(string context, bool useAlternativeBulkCopy)
 		{
 			try
