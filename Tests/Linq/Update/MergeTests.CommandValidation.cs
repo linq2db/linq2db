@@ -11,6 +11,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Tests.Model;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+using System.Data;
 
 namespace Tests.Merge
 {
@@ -139,6 +142,129 @@ namespace Tests.Merge
 
 		public class ValidationTestMergeBuilder : BasicMergeBuilder<Child, Child>
 		{
+			private class FakeDataProvider : IDataProvider
+			{
+				string IDataProvider.ConnectionNamespace
+				{
+					get
+					{
+						throw new NotImplementedException();
+					}
+				}
+
+				Type IDataProvider.DataReaderType
+				{
+					get
+					{
+						throw new NotImplementedException();
+					}
+				}
+
+				MappingSchema IDataProvider.MappingSchema
+				{
+					get
+					{
+						return null;
+					}
+				}
+
+				string IDataProvider.Name
+				{
+					get
+					{
+						return "TestProvider";
+					}
+				}
+
+				SqlProviderFlags IDataProvider.SqlProviderFlags
+				{
+					get
+					{
+						throw new NotImplementedException();
+					}
+				}
+
+				BulkCopyRowsCopied IDataProvider.BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+				{
+					throw new NotImplementedException();
+				}
+
+				Type IDataProvider.ConvertParameterType(Type type, DataType dataType)
+				{
+					throw new NotImplementedException();
+				}
+
+				IDbConnection IDataProvider.CreateConnection(string connectionString)
+				{
+					throw new NotImplementedException();
+				}
+
+				ISqlBuilder IDataProvider.CreateSqlBuilder()
+				{
+					throw new NotImplementedException();
+				}
+
+				void IDataProvider.DisposeCommand(DataConnection dataConnection)
+				{
+					throw new NotImplementedException();
+				}
+
+				CommandBehavior IDataProvider.GetCommandBehavior(CommandBehavior commandBehavior)
+				{
+					throw new NotImplementedException();
+				}
+
+				object IDataProvider.GetConnectionInfo(DataConnection dataConnection, string parameterName)
+				{
+					throw new NotImplementedException();
+				}
+
+				Expression IDataProvider.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+				{
+					throw new NotImplementedException();
+				}
+
+				ISchemaProvider IDataProvider.GetSchemaProvider()
+				{
+					throw new NotImplementedException();
+				}
+
+				ISqlOptimizer IDataProvider.GetSqlOptimizer()
+				{
+					throw new NotImplementedException();
+				}
+
+				void IDataProvider.InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
+				{
+					throw new NotImplementedException();
+				}
+
+				bool IDataProvider.IsCompatibleConnection(IDbConnection connection)
+				{
+					throw new NotImplementedException();
+				}
+
+				bool? IDataProvider.IsDBNullAllowed(IDataReader reader, int idx)
+				{
+					throw new NotImplementedException();
+				}
+
+				int IDataProvider.Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName)
+				{
+					throw new NotImplementedException();
+				}
+
+				int IDataProvider.Merge<TTarget, TSource>(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
+				{
+					throw new NotImplementedException();
+				}
+
+				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+				{
+					throw new NotImplementedException();
+				}
+			}
+
 			private bool _bySourceOperationsSupported = false;
 
 			private bool _conditionsSupported = true;
@@ -153,12 +279,12 @@ namespace Tests.Merge
 			private int _operationsLimit = 0;
 
 			public ValidationTestMergeBuilder(IMerge<Child, Child> merge)
-				: base(merge, "TestProvider")
+				: base(new DataConnection(new FakeDataProvider(), string.Empty), merge)
 			{
 			}
 
 			public ValidationTestMergeBuilder(IMerge<Child> merge)
-				: base((MergeDefinition<Child, Child>)merge, "TestProvider")
+				: base(new DataConnection(new FakeDataProvider(), string.Empty), (MergeDefinition<Child, Child>)merge)
 			{
 			}
 

@@ -6,8 +6,8 @@ namespace LinqToDB.DataProvider.Firebird
 		where TTarget : class
 		where TSource : class
 	{
-		public FirebirdMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
-			: base(merge, providerName)
+		public FirebirdMergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+			: base(connection, merge)
 		{
 		}
 

@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using LinqToDB.DataProvider;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -1018,11 +1019,13 @@ namespace LinqToDB.Data
 
 			var definition = (MergeDefinition<TTarget, TSource>)merge;
 
-
-			var dataConnection = definition.Target.DataContextInfo.DataContext as DataConnection;
-
-			if (dataConnection == null)
-				throw new ArgumentException("DataContext must be of DataConnection type.");
+			DataConnection dataConnection;
+			if (definition.Target.DataContextInfo.DataContext is DataConnection)
+				dataConnection = (DataConnection)definition.Target.DataContextInfo.DataContext;
+			else if (definition.Target.DataContextInfo.DataContext is DataContext)
+				dataConnection = ((DataContext)definition.Target.DataContextInfo.DataContext).GetDataConnection();
+			else
+				throw new ArgumentException("DataContext must be of DataConnection or DataContext type.");
 
 			return dataConnection.DataProvider.Merge(dataConnection, definition);
 		}

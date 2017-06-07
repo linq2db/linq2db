@@ -9,8 +9,8 @@ namespace LinqToDB.DataProvider.Informix
 		where TTarget : class
 		where TSource : class
 	{
-		public InformixMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
-			: base(merge, providerName)
+		public InformixMergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+			: base(connection, merge)
 		{
 		}
 

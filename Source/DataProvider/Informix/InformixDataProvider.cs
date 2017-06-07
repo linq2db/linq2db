@@ -210,9 +210,11 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(IMerge<TTarget, TSource> merge)
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection,
+			IMerge<TTarget, TSource> merge)
 		{
-			return new InformixMergeBuilder<TTarget, TSource>(merge, Name);
+			return new InformixMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

@@ -26,10 +26,11 @@ namespace LinqToDB.DataProvider
 		#region .ctor
 		protected MergeDefinition<TTarget, TSource> Merge { get; private set; }
 
-		public BasicMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
+		public BasicMergeBuilder(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
 		{
+			_connection = dataConnection;
 			Merge = (MergeDefinition<TTarget, TSource>)merge;
-			ProviderName = providerName;
+			ProviderName = dataConnection.DataProvider.Name;
 		}
 		#endregion
 
@@ -546,6 +547,7 @@ namespace LinqToDB.DataProvider
 			Expression<Func<TTarget, TSource, TTarget>> updateExpression,
 			Expression<Func<TTarget, TSource, bool>> deletePredicate)
 		{
+			// must be implemented by descendant that supports this operation
 			throw new NotImplementedException();
 		}
 
@@ -1220,8 +1222,6 @@ namespace LinqToDB.DataProvider
 			_sourceDescriptor = TargetDescriptor = ContextInfo.DataContext.MappingSchema.GetEntityDescriptor(typeof(TTarget));
 			if (typeof(TTarget) != typeof(TSource))
 				_sourceDescriptor = ContextInfo.DataContext.MappingSchema.GetEntityDescriptor(typeof(TSource));
-
-			_connection = ContextInfo.DataContext as DataConnection;
 
 			var target = (Table<TTarget>)Merge.Target;
 			var sb = new StringBuilder();

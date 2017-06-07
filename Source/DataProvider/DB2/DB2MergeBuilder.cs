@@ -6,8 +6,8 @@ namespace LinqToDB.DataProvider.DB2
 		where TTarget : class
 		where TSource : class
 	{
-		public DB2MergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
-			: base(merge, providerName)
+		public DB2MergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+			: base(connection, merge)
 		{
 		}
 

@@ -447,7 +447,7 @@ namespace LinqToDB.DataProvider
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			var builder = GetMergeBuilder(merge);
+			var builder = GetMergeBuilder(dataConnection, merge);
 
 			builder.Validate();
 
@@ -459,11 +459,13 @@ namespace LinqToDB.DataProvider
 			return dataConnection.Execute(cmd, builder.Parameters);
 		}
 
-		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(IMerge<TTarget, TSource> merge)
+		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection,
+			IMerge<TTarget, TSource> merge)
 			where TTarget : class
 			where TSource : class
 		{
-			return new UnsupportedMergeBuilder<TTarget, TSource>(merge, Name);
+			return new UnsupportedMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

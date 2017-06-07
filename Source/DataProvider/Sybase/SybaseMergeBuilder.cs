@@ -1,7 +1,6 @@
 ﻿using LinqToDB.Data;
 using System;
 using System.Linq;
-using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -11,8 +10,8 @@ namespace LinqToDB.DataProvider.Sybase
 	{
 		private bool _hasIdentityInsert;
 
-		public SybaseMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
-			: base(merge, providerName)
+		public SybaseMergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+			: base(connection, merge)
 		{
 		}
 

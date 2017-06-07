@@ -1,7 +1,6 @@
-﻿using System;
+﻿using LinqToDB.Data;
+using System;
 using System.Linq.Expressions;
-using LinqToDB.Data;
-using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -9,8 +8,8 @@ namespace LinqToDB.DataProvider.Oracle
 		where TTarget : class
 		where TSource : class
 	{
-		public OracleMergeBuilder(IMerge<TTarget, TSource> merge, string providerName)
-			: base(merge, providerName)
+		public OracleMergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+			: base(connection, merge)
 		{
 		}
 

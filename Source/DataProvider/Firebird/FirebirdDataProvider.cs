@@ -128,9 +128,11 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(IMerge<TTarget, TSource> merge)
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection,
+			IMerge<TTarget, TSource> merge)
 		{
-			return new FirebirdMergeBuilder<TTarget, TSource>(merge, Name);
+			return new FirebirdMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 		#endregion

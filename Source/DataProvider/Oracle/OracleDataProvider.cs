@@ -641,9 +641,11 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(IMerge<TTarget, TSource> merge)
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection, 
+			IMerge<TTarget, TSource> merge)
 		{
-			return new OracleMergeBuilder<TTarget, TSource>(merge, Name);
+			return new OracleMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 

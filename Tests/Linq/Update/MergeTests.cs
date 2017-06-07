@@ -109,17 +109,17 @@ namespace Tests.Merge
 			public int OtherFake;
 		}
 
-		private static ITable<TestMapping1> GetTarget(TestDataConnection db)
+		private static ITable<TestMapping1> GetTarget(IDataContext db)
 		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge1");
 		}
 
-		private static ITable<TestMapping1> GetSource1(TestDataConnection db)
+		private static ITable<TestMapping1> GetSource1(IDataContext db)
 		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge2");
 		}
 
-		private static ITable<TestMapping2> GetSource2(TestDataConnection db)
+		private static ITable<TestMapping2> GetSource2(IDataContext db)
 		{
 			return db.GetTable<TestMapping2>().TableName("TestMerge2");
 		}
@@ -134,7 +134,7 @@ namespace Tests.Merge
 			Assert.IsNull(actual.Field5);
 		}
 
-		private void PrepareData(TestDataConnection db)
+		private void PrepareData(IDataContext db)
 		{
 			using (new DisableLogging())
 			{

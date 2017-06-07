@@ -469,11 +469,8 @@ namespace Tests.Merge
 				Assert.AreEqual(InitialSourceData[2].Id + 10, result[4].Id);
 				Assert.AreEqual(123, result[4].Field1);
 				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
-				// SkipInsert is ignored by explicit insert. Is it correct?
-				//Assert.IsNull(result[4].Field3);
 				Assert.AreEqual(4, result[4].Field3);
 				Assert.AreEqual(999, result[4].Field4);
-				//Assert.IsNull(result[4].Field5);
 				Assert.AreEqual(888, result[4].Field5);
 
 				Assert.AreEqual(InitialSourceData[3].Id + 10, result[5].Id);
@@ -481,7 +478,55 @@ namespace Tests.Merge
 				Assert.AreEqual(InitialSourceData[3].Field1, result[5].Field2);
 				Assert.IsNull(result[5].Field3);
 				Assert.AreEqual(999, result[5].Field4);
-				//Assert.IsNull(result[5].Field5);
+				Assert.AreEqual(888, result[5].Field5);
+			}
+		}
+
+		[MergeDataContextSource]
+		public void DataContextTest(string context)
+		{
+			using (var db = new DataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.FromSame(GetSource1(db))
+					.Insert(_ => new TestMapping1()
+					{
+						Id = 10 + _.Id,
+						Field1 = 123,
+						Field2 = _.Field1,
+						Field3 = _.Field2,
+						Field4 = 999,
+						Field5 = 888
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(6, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+
+				Assert.AreEqual(InitialSourceData[2].Id + 10, result[4].Id);
+				Assert.AreEqual(123, result[4].Field1);
+				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
+				Assert.AreEqual(4, result[4].Field3);
+				Assert.AreEqual(999, result[4].Field4);
+				Assert.AreEqual(888, result[4].Field5);
+
+				Assert.AreEqual(InitialSourceData[3].Id + 10, result[5].Id);
+				Assert.AreEqual(123, result[5].Field1);
+				Assert.AreEqual(InitialSourceData[3].Field1, result[5].Field2);
+				Assert.IsNull(result[5].Field3);
+				Assert.AreEqual(999, result[5].Field4);
 				Assert.AreEqual(888, result[5].Field5);
 			}
 		}
