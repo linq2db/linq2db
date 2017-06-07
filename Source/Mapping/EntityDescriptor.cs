@@ -70,7 +70,7 @@ namespace LinqToDB.Mapping
 				if (aa != null)
 				{
 					Associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.Storage, aa.CanBeNull));
+						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.Storage, aa.CanBeNull, aa.OtherType));
 					continue;
 				}
 
