@@ -91,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ExpressionBuilder(
 			Query                 query,
-			IDataContextInfo      dataContext,
+			IDataContext          dataContext,
 			Expression            expression,
 			ParameterExpression[] compiledParameters)
 		{
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
 			CompiledParameters   = compiledParameters;
-			DataContextInfo      = dataContext;
+			DataContext          = dataContext;
 			OriginalExpression   = expression;
 
 			_visitedExpressions  = new HashSet<Expression>();
@@ -116,16 +116,15 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataContext.DataReaderType), "ldr");
+				DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataReaderType), "ldr");
 			}
 		}
-
 
 		#endregion
 
 		#region Public Members
 
-		public readonly IDataContextInfo      DataContextInfo;
+		public readonly IDataContext          DataContext;
 		public readonly Expression            OriginalExpression;
 		public readonly Expression            Expression;
 		public readonly ParameterExpression[] CompiledParameters;
@@ -140,7 +139,7 @@ namespace LinqToDB.Linq.Builder
 
 		public MappingSchema MappingSchema
 		{
-			get { return DataContextInfo.MappingSchema; }
+			get { return DataContext.MappingSchema; }
 		}
 
 		#endregion

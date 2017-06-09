@@ -5,8 +5,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB;
-	using LinqToDB.Common;
 	using LinqToDB.Linq;
 	using LinqToDB.SqlQuery;
 
@@ -15,11 +13,10 @@ namespace Tests.Linq
 	[TestFixture]
 	public class JoinOptimizeTests : TestBase
 	{
-
 		SelectQuery GetSelectQuery<T>(IQueryable<T> query)
 		{
 			var eq = (IExpressionQuery)query;
-			var info = Query<T>.GetQuery(eq.DataContextInfo, eq.Expression);
+			var info = Query<T>.GetQuery(eq.DataContextInfo.DataContext, eq.Expression);
 			return info.Queries.Single().SelectQuery;
 		}
 

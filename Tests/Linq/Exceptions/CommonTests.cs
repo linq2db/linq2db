@@ -25,7 +25,7 @@ namespace Tests.Exceptions
 				if (selectQuery.IsInsert && selectQuery.Insert.Into.Name == "Parent")
 				{
 					var expr =
-						new QueryVisitor().Find(selectQuery.Insert, e =>
+						QueryVisitor.Find(selectQuery.Insert, e =>
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{

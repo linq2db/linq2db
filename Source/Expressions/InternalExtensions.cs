@@ -134,16 +134,16 @@ namespace LinqToDB.Expressions
 							((ConditionalExpression)expr1).IfFalse.EqualsTo(((ConditionalExpression)expr2).IfFalse, info);
 					}
 
-				case ExpressionType.Call          : return EqualsTo((MethodCallExpression)expr1, (MethodCallExpression)expr2, info);
-				case ExpressionType.Constant      : return EqualsTo((ConstantExpression)  expr1, (ConstantExpression)  expr2, info);
-				case ExpressionType.Invoke        : return EqualsTo((InvocationExpression)expr1, (InvocationExpression)expr2, info);
-				case ExpressionType.Lambda        : return EqualsTo((LambdaExpression)    expr1, (LambdaExpression)    expr2, info);
-				case ExpressionType.ListInit      : return EqualsTo((ListInitExpression)  expr1, (ListInitExpression)  expr2, info);
-				case ExpressionType.MemberAccess  : return EqualsTo((MemberExpression)    expr1, (MemberExpression)    expr2, info);
-				case ExpressionType.MemberInit    : return EqualsTo((MemberInitExpression)expr1, (MemberInitExpression)expr2, info);
-				case ExpressionType.New           : return EqualsTo((NewExpression)       expr1, (NewExpression)       expr2, info);
+				case ExpressionType.Call          : return EqualsToX((MethodCallExpression)expr1, (MethodCallExpression)expr2, info);
+				case ExpressionType.Constant      : return EqualsToX((ConstantExpression)  expr1, (ConstantExpression)  expr2, info);
+				case ExpressionType.Invoke        : return EqualsToX((InvocationExpression)expr1, (InvocationExpression)expr2, info);
+				case ExpressionType.Lambda        : return EqualsToX((LambdaExpression)    expr1, (LambdaExpression)    expr2, info);
+				case ExpressionType.ListInit      : return EqualsToX((ListInitExpression)  expr1, (ListInitExpression)  expr2, info);
+				case ExpressionType.MemberAccess  : return EqualsToX((MemberExpression)    expr1, (MemberExpression)    expr2, info);
+				case ExpressionType.MemberInit    : return EqualsToX((MemberInitExpression)expr1, (MemberInitExpression)expr2, info);
+				case ExpressionType.New           : return EqualsToX((NewExpression)       expr1, (NewExpression)       expr2, info);
 				case ExpressionType.NewArrayBounds:
-				case ExpressionType.NewArrayInit  : return EqualsTo((NewArrayExpression)  expr1, (NewArrayExpression)  expr2, info);
+				case ExpressionType.NewArrayInit  : return EqualsToX((NewArrayExpression)  expr1, (NewArrayExpression)  expr2, info);
 				case ExpressionType.Default       : return true;
 				case ExpressionType.Parameter     : return ((ParameterExpression) expr1).Name == ((ParameterExpression) expr2).Name;
 
@@ -159,7 +159,7 @@ namespace LinqToDB.Expressions
 #if FW4 || SILVERLIGHT
 
 				case ExpressionType.Block:
-					return EqualsTo((BlockExpression)expr1, (BlockExpression)expr2, info);
+					return EqualsToX((BlockExpression)expr1, (BlockExpression)expr2, info);
 
 #endif
 			}
@@ -167,7 +167,7 @@ namespace LinqToDB.Expressions
 			throw new InvalidOperationException();
 		}
 
-		static bool EqualsTo(BlockExpression expr1, BlockExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(BlockExpression expr1, BlockExpression expr2, EqualsToInfo info)
 		{
 			for (var i = 0; i < expr1.Expressions.Count; i++)
 				if (!expr1.Expressions[i].EqualsTo(expr2.Expressions[i], info))
@@ -180,7 +180,7 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static bool EqualsTo(NewArrayExpression expr1, NewArrayExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(NewArrayExpression expr1, NewArrayExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Expressions.Count != expr2.Expressions.Count)
 				return false;
@@ -192,7 +192,7 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static bool EqualsTo(NewExpression expr1, NewExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(NewExpression expr1, NewExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count)
 				return false;
@@ -223,7 +223,7 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static bool EqualsTo(MemberInitExpression expr1, MemberInitExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(MemberInitExpression expr1, MemberInitExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Bindings.Count != expr2.Bindings.Count || !expr1.NewExpression.EqualsTo(expr2.NewExpression, info))
 				return false;
@@ -293,7 +293,7 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static bool EqualsTo(MemberExpression expr1, MemberExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(MemberExpression expr1, MemberExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Member == expr2.Member)
 			{
@@ -316,7 +316,7 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		static bool EqualsTo(ListInitExpression expr1, ListInitExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(ListInitExpression expr1, ListInitExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Initializers.Count != expr2.Initializers.Count || !expr1.NewExpression.EqualsTo(expr2.NewExpression, info))
 				return false;
@@ -337,7 +337,7 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static bool EqualsTo(LambdaExpression expr1, LambdaExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(LambdaExpression expr1, LambdaExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Parameters.Count != expr2.Parameters.Count || !expr1.Body.EqualsTo(expr2.Body, info))
 				return false;
@@ -349,7 +349,7 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static bool EqualsTo(InvocationExpression expr1, InvocationExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(InvocationExpression expr1, InvocationExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count || !expr1.Expression.EqualsTo(expr2.Expression, info))
 				return false;
@@ -361,7 +361,7 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static bool EqualsTo(ConstantExpression expr1, ConstantExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(ConstantExpression expr1, ConstantExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Value == null && expr2.Value == null)
 				return true;
@@ -387,7 +387,7 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static bool EqualsTo(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count || expr1.Method != expr2.Method)
 				return false;

@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var take     = 0;
 
-			if (!buildInfo.IsSubQuery || builder.DataContextInfo.SqlProviderFlags.IsSubQueryTakeSupported)
+			if (!buildInfo.IsSubQuery || builder.DataContext.SqlProviderFlags.IsSubQueryTakeSupported)
 				switch (methodCall.Method.Name)
 				{
 					case "First"           :
@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression == null || level == 0)
 				{
-					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported &&
+					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
 						Parent.SelectQuery.GroupBy.IsEmpty &&
 						Parent.SelectQuery.From.Tables.Count > 0)
 					{

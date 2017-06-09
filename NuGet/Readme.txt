@@ -1,3 +1,7 @@
+LINQ to DB 1.8.2  Release Notes
+---------------------------------
+Configuration.Linq.UseBinaryAggregateExpression is set to false by default as supposed to be unstable
+
 LINQ to DB 1.8.1  Release Notes
 ---------------------------------
 Fixed issue with !IEnumerable.Contains (#228)

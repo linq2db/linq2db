@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
+	using Data;
 	using Extensions;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>
@@ -23,7 +24,7 @@ namespace LinqToDB.Linq
 
 			DataContextInfo = dataContextInfo;
 #else
-			DataContextInfo = dataContextInfo ?? new DefaultDataContextInfo();
+			DataContextInfo = dataContextInfo ?? new DataContextInfo(new DataConnection(), true);
 #endif
 			Expression      = expression      ?? Expression.Constant(this);
 		}
@@ -71,17 +72,12 @@ namespace LinqToDB.Linq
 
 		#region Execute
 
-		IEnumerable<T> Execute(IDataContextInfo dataContextInfo, Expression expression)
-		{
-			return GetQuery(expression, true).GetIEnumerable(null, dataContextInfo, expression, Parameters);
-		}
-
 		Query<T> GetQuery(Expression expression, bool cache)
 		{
 			if (cache && Info != null)
 				return Info;
 
-			var info = Query<T>.GetQuery(DataContextInfo, expression);
+			var info = Query<T>.GetQuery(DataContextInfo.DataContext, expression);
 
 			if (cache)
 				Info = info;
@@ -153,12 +149,12 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			return Execute(DataContextInfo, Expression).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(null, DataContextInfo, Expression, Parameters).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return Execute(DataContextInfo, Expression).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(null, DataContextInfo, Expression, Parameters).GetEnumerator();
 		}
 
 		#endregion
