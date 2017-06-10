@@ -78,17 +78,19 @@ namespace Tests.Linq
 
 		class Cleaner : IDisposable
 		{
+			private readonly int _records;
 			readonly ITestDataContext _db;
 
-			public Cleaner(ITestDataContext db)
+			public Cleaner(ITestDataContext db, int records = 1)
 			{
+				_records = records;
 				_db = db;
 				Clean();
 			}
 
 			private void Clean()
 			{
-				_db.GetTable<RawTable>().Where(r => r.Id == RID).Delete();
+				_db.GetTable<RawTable>().Where(r => r.Id >= RID && r.Id < RID + _records).Delete();
 			}
 
 			public void Dispose()
@@ -1401,5 +1403,429 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table("LinqDataTypes")]
+		class NullableTestTable01
+		{
+			[PrimaryKey, Column("ID")]
+			public int? Id;
+			[Column("IntValue")]
+			public NullableEnum01 Value;
+		}
+
+		[Table("LinqDataTypes")]
+		class NullableTestTable02
+		{
+			[PrimaryKey, Column("ID")]
+			public int? Id;
+			[Column("IntValue")]
+			public NullableEnum01? Value;
+		}
+
+		[Table("LinqDataTypes")]
+		class NullableTestTable03
+		{
+			[PrimaryKey, Column("ID")]
+			public int? Id;
+			[Column("StringValue")]
+			public NullableEnum02 Value;
+		}
+
+		[Table("LinqDataTypes")]
+		class NullableTestTable04
+		{
+			[PrimaryKey, Column("ID")]
+			public int? Id;
+			[Column("StringValue")]
+			public NullableEnum02? Value;
+		}
+
+		[Table("LinqDataTypes")]
+		class NullableTestTable05
+		{
+			[PrimaryKey, Column("ID")]
+			public int? Id;
+			[Column("IntValue")]
+			public NullableEnum03 Value;
+		}
+
+		[Table("LinqDataTypes")]
+		class NullableTestTable06
+		{
+			[PrimaryKey, Column("ID")]
+			public int? Id;
+			[Column("IntValue")]
+			public NullableEnum03? Value;
+		}
+
+		enum NullableEnum01
+		{
+			[MapValue(11)]
+			Value1 = 3,
+			[MapValue(22)]
+			Value2,
+			[MapValue(null)]
+			Value3
+		}
+
+		enum NullableEnum02
+		{
+			[MapValue("11")]
+			Value1 = 3,
+			[MapValue("22")]
+			Value2,
+			[MapValue(null)]
+			Value3
+		}
+
+		enum NullableEnum03
+		{
+			[MapValue(11)]
+			Value1 = 3,
+			[MapValue(0)]
+			Value2,
+			[MapValue(null)]
+			Value3
+		}
+
+		[Table("LinqDataTypes")]
+		class RawTable2
+		{
+			[PrimaryKey, Column("ID")]
+			public int Id;
+			[Column("IntValue")]
+			public int? Int32;
+			[Column("StringValue")]
+			public string String;
+		}
+
+		[DataContextSource]
+		public void NullableEnumWithNullValue01(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (new Cleaner(db, 3))
+				{
+					db.Insert(new NullableTestTable01()
+					{
+						Id = RID,
+						Value = NullableEnum01.Value1
+					});
+
+					db.Insert(new NullableTestTable01()
+					{
+						Id = RID + 1,
+						Value = NullableEnum01.Value2
+					});
+
+					db.Insert(new NullableTestTable01()
+					{
+						Id = RID + 2,
+						Value = NullableEnum01.Value3
+					});
+
+					var records = db.GetTable<NullableTestTable01>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
+					var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
+
+					Assert.AreEqual(3, records.Length);
+					Assert.AreEqual(3, rawRecords.Length);
+
+					Assert.AreEqual(RID, records[0].Id);
+					Assert.AreEqual(RID, rawRecords[0].Id);
+					Assert.AreEqual(NullableEnum01.Value1, records[0].Value);
+					Assert.AreEqual(11, rawRecords[0].Int32);
+
+					Assert.AreEqual(RID + 1, records[1].Id);
+					Assert.AreEqual(RID + 1, rawRecords[1].Id);
+					Assert.AreEqual(NullableEnum01.Value2, records[1].Value);
+					Assert.AreEqual(22, rawRecords[1].Int32);
+
+					Assert.AreEqual(RID + 2, records[2].Id);
+					Assert.AreEqual(RID + 2, rawRecords[2].Id);
+					// for non-nullable enum on read null value mapped
+					Assert.AreEqual(NullableEnum01.Value3, records[2].Value);
+					Assert.IsNull(rawRecords[2].Int32);
+				}
+			}
+		}
+
+		[DataContextSource]
+		public void NullableEnumWithNullValue02(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (new Cleaner(db, 4))
+				{
+					db.Insert(new NullableTestTable02()
+					{
+						Id = RID,
+						Value = NullableEnum01.Value1
+					});
+
+					db.Insert(new NullableTestTable02()
+					{
+						Id = RID + 1,
+						Value = NullableEnum01.Value2
+					});
+
+					db.Insert(new NullableTestTable02()
+					{
+						Id = RID + 2,
+						Value = NullableEnum01.Value3
+					});
+
+					db.Insert(new NullableTestTable02()
+					{
+						Id = RID + 3
+					});
+
+					var records = db.GetTable<NullableTestTable02>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
+					var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
+
+					Assert.AreEqual(4, records.Length);
+					Assert.AreEqual(4, rawRecords.Length);
+
+					Assert.AreEqual(RID, records[0].Id);
+					Assert.AreEqual(RID, rawRecords[0].Id);
+					Assert.AreEqual(NullableEnum01.Value1, records[0].Value);
+					Assert.AreEqual(11, rawRecords[0].Int32);
+
+					Assert.AreEqual(RID + 1, records[1].Id);
+					Assert.AreEqual(RID + 1, rawRecords[1].Id);
+					Assert.AreEqual(NullableEnum01.Value2, records[1].Value);
+					Assert.AreEqual(22, rawRecords[1].Int32);
+
+					Assert.AreEqual(RID + 2, records[2].Id);
+					Assert.AreEqual(RID + 2, rawRecords[2].Id);
+					// for nullable enum on read null is preffered before mapped value
+					Assert.IsNull(records[2].Value);
+					Assert.IsNull(rawRecords[2].Int32);
+
+					Assert.AreEqual(RID + 3, records[3].Id);
+					Assert.AreEqual(RID + 3, rawRecords[3].Id);
+					Assert.IsNull(records[3].Value);
+					Assert.IsNull(rawRecords[3].Int32);
+				}
+			}
+		}
+
+		[DataContextSource]
+		public void NullableEnumWithNullValue03(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (new Cleaner(db, 3))
+				{
+					db.Insert(new NullableTestTable03()
+					{
+						Id = RID,
+						Value = NullableEnum02.Value1
+					});
+
+					db.Insert(new NullableTestTable03()
+					{
+						Id = RID + 1,
+						Value = NullableEnum02.Value2
+					});
+
+					db.Insert(new NullableTestTable03()
+					{
+						Id = RID + 2,
+						Value = NullableEnum02.Value3
+					});
+
+					var records = db.GetTable<NullableTestTable03>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
+					var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
+
+					Assert.AreEqual(3, records.Length);
+					Assert.AreEqual(3, rawRecords.Length);
+
+					Assert.AreEqual(RID, records[0].Id);
+					Assert.AreEqual(RID, rawRecords[0].Id);
+					Assert.AreEqual(NullableEnum02.Value1, records[0].Value);
+					Assert.AreEqual("11", rawRecords[0].String);
+
+					Assert.AreEqual(RID + 1, records[1].Id);
+					Assert.AreEqual(RID + 1, rawRecords[1].Id);
+					Assert.AreEqual(NullableEnum02.Value2, records[1].Value);
+					Assert.AreEqual("22", rawRecords[1].String);
+
+					Assert.AreEqual(RID + 2, records[2].Id);
+					Assert.AreEqual(RID + 2, rawRecords[2].Id);
+					// for non-nullable enum on read null value mapped
+					Assert.AreEqual(NullableEnum02.Value3, records[2].Value);
+					Assert.IsNull(rawRecords[2].String);
+				}
+			}
+		}
+
+		[DataContextSource]
+		public void NullableEnumWithNullValue04(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (new Cleaner(db, 4))
+				{
+					db.Insert(new NullableTestTable04()
+					{
+						Id = RID,
+						Value = NullableEnum02.Value1
+					});
+
+					db.Insert(new NullableTestTable04()
+					{
+						Id = RID + 1,
+						Value = NullableEnum02.Value2
+					});
+
+					db.Insert(new NullableTestTable04()
+					{
+						Id = RID + 2,
+						Value = NullableEnum02.Value3
+					});
+
+					db.Insert(new NullableTestTable04()
+					{
+						Id = RID + 3
+					});
+
+					var records = db.GetTable<NullableTestTable04>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
+					var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
+
+					Assert.AreEqual(4, records.Length);
+					Assert.AreEqual(4, rawRecords.Length);
+
+					Assert.AreEqual(RID, records[0].Id);
+					Assert.AreEqual(RID, rawRecords[0].Id);
+					Assert.AreEqual(NullableEnum02.Value1, records[0].Value);
+					Assert.AreEqual("11", rawRecords[0].String);
+
+					Assert.AreEqual(RID + 1, records[1].Id);
+					Assert.AreEqual(RID + 1, rawRecords[1].Id);
+					Assert.AreEqual(NullableEnum02.Value2, records[1].Value);
+					Assert.AreEqual("22", rawRecords[1].String);
+
+					Assert.AreEqual(RID + 2, records[2].Id);
+					Assert.AreEqual(RID + 2, rawRecords[2].Id);
+					// for nullable enum on read null is preffered before mapped value
+					Assert.IsNull(records[2].Value);
+					Assert.IsNull(rawRecords[2].String);
+
+					Assert.AreEqual(RID + 3, records[3].Id);
+					Assert.AreEqual(RID + 3, rawRecords[3].Id);
+					Assert.IsNull(records[3].Value);
+					Assert.IsNull(rawRecords[3].Int32);
+				}
+			}
+		}
+
+		[DataContextSource]
+		public void NullableEnumWithNullValue05(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (new Cleaner(db, 3))
+				{
+					db.Insert(new NullableTestTable05()
+					{
+						Id = RID,
+						Value = NullableEnum03.Value1
+					});
+
+					db.Insert(new NullableTestTable05()
+					{
+						Id = RID + 1,
+						Value = NullableEnum03.Value2
+					});
+
+					db.Insert(new NullableTestTable05()
+					{
+						Id = RID + 2,
+						Value = NullableEnum03.Value3
+					});
+
+					var records = db.GetTable<NullableTestTable05>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
+					var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
+
+					Assert.AreEqual(3, records.Length);
+					Assert.AreEqual(3, rawRecords.Length);
+
+					Assert.AreEqual(RID, records[0].Id);
+					Assert.AreEqual(RID, rawRecords[0].Id);
+					Assert.AreEqual(NullableEnum03.Value1, records[0].Value);
+					Assert.AreEqual(11, rawRecords[0].Int32);
+
+					Assert.AreEqual(RID + 1, records[1].Id);
+					Assert.AreEqual(RID + 1, rawRecords[1].Id);
+					Assert.AreEqual(NullableEnum03.Value2, records[1].Value);
+					Assert.AreEqual(0, rawRecords[1].Int32);
+
+					Assert.AreEqual(RID + 2, records[2].Id);
+					Assert.AreEqual(RID + 2, rawRecords[2].Id);
+					// for non-nullable enum on read null value mapped
+					Assert.AreEqual(NullableEnum03.Value3, records[2].Value);
+					Assert.IsNull(rawRecords[2].Int32);
+				}
+			}
+		}
+
+		[DataContextSource]
+		public void NullableEnumWithNullValue06(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (new Cleaner(db, 4))
+				{
+					db.Insert(new NullableTestTable06()
+					{
+						Id = RID,
+						Value = NullableEnum03.Value1
+					});
+
+					db.Insert(new NullableTestTable06()
+					{
+						Id = RID + 1,
+						Value = NullableEnum03.Value2
+					});
+
+					db.Insert(new NullableTestTable06()
+					{
+						Id = RID + 2,
+						Value = NullableEnum03.Value3
+					});
+
+					db.Insert(new NullableTestTable06()
+					{
+						Id = RID + 3
+					});
+
+					var records = db.GetTable<NullableTestTable06>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
+					var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
+
+					Assert.AreEqual(4, records.Length);
+					Assert.AreEqual(4, rawRecords.Length);
+
+					Assert.AreEqual(RID, records[0].Id);
+					Assert.AreEqual(RID, rawRecords[0].Id);
+					Assert.AreEqual(NullableEnum03.Value1, records[0].Value);
+					Assert.AreEqual(11, rawRecords[0].Int32);
+
+					Assert.AreEqual(RID + 1, records[1].Id);
+					Assert.AreEqual(RID + 1, rawRecords[1].Id);
+					Assert.AreEqual(NullableEnum03.Value2, records[1].Value);
+					Assert.AreEqual(0, rawRecords[1].Int32);
+
+					Assert.AreEqual(RID + 2, records[2].Id);
+					Assert.AreEqual(RID + 2, rawRecords[2].Id);
+					// for nullable enum on read null is preffered before mapped value
+					Assert.IsNull(records[2].Value);
+					Assert.IsNull(rawRecords[2].Int32);
+
+					Assert.AreEqual(RID + 3, records[3].Id);
+					Assert.AreEqual(RID + 3, rawRecords[3].Id);
+					Assert.IsNull(records[3].Value);
+					Assert.IsNull(rawRecords[3].Int32);
+				}
+			}
+		}
 	}
 }
