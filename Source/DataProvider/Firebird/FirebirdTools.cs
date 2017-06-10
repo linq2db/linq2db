@@ -80,5 +80,15 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		#endregion
+
+		public static Func<IDataReader, int, string> GetChar = (dr, i) =>
+		{
+			var str = dr.GetString(i);
+
+			if (str.Length > 0)
+				return str[0].ToString();
+
+			return string.Empty;
+		};
 	}
 }

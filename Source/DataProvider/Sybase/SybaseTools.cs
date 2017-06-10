@@ -52,6 +52,16 @@ namespace LinqToDB.DataProvider.Sybase
 			new AssemblyResolver(assembly, AssemblyName);
 		}
 
+		public static Func<IDataReader, int, string> GetChar = (dr, i) =>
+		{
+			var str = dr.GetString(i);
+
+			if (str.Length > 0)
+				return str[0].ToString();
+
+			return string.Empty;
+		};
+
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)

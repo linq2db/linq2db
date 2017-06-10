@@ -272,5 +272,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static Func<IDataReader,int,decimal> DataReaderGetMoney   = (dr, i) => dr.GetDecimal(i);
 		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
+
+		public static Func<IDataReader, int, string> GetChar = (dr, i) =>
+		  {
+			  var str = dr.GetString(i);
+
+			  if (str.Length > 0)
+				  return str[0].ToString();
+
+			  return string.Empty;
+		  };
 	}
 }

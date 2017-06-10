@@ -32,8 +32,10 @@ namespace LinqToDB.DataProvider.Informix
 
 
 
-			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd());
-			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharFieldToType<char>("CHAR",  (r, i) => InformixTools.GetChar(r, i));
+			SetCharFieldToType<char>("NCHAR", (r, i) => InformixTools.GetChar(r, i));
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{

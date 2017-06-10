@@ -32,11 +32,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SqlProviderFlags.MaxInListValuesCount = 1000;
 
-			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
-			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharFieldToType<char>("Char",  (r, i) => OracleTools.GetChar(r, i));
+			SetCharFieldToType<char>("NChar", (r, i) => OracleTools.GetChar(r, i));
 
-//			ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal), ToType = typeof(TimeSpan) }] =
-//				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));
+			//			ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal), ToType = typeof(TimeSpan) }] =
+			//				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));
 
 			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
 		

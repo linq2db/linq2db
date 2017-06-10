@@ -28,8 +28,8 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
 
-			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
-			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
