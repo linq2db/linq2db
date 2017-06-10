@@ -1806,7 +1806,7 @@ namespace Tests.DataProvider
 		}
 
 
-		[Test, OracleDataContext()]
+		[Test, OracleDataContext]
 		public void Issue539(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1835,6 +1835,33 @@ namespace Tests.DataProvider
 				finally
 				{
 					db.GetTable<ALLTYPE2>().Delete(_ => _.ID == n);
+				}
+			}
+		}
+
+		public class Issue723Table
+		{
+			[PrimaryKey, Identity, NotNull]
+			public int Id;
+
+			public string StringValue;
+		}
+
+		[Test, OracleDataContext]
+		public void Issue723(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				try
+				{
+					db.Execute("GRANT CREATE ANY TRIGGER TO TestUser");
+					db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
+					db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
+				}
+				finally
+				{
+					db.DropTable<Issue723Table>(schemaName: "Issue723Schema");
+					db.Execute("DROP USER Issue723Schema CASCADE");
 				}
 			}
 		}

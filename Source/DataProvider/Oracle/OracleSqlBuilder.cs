@@ -330,8 +330,13 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					StringBuilder
 						.AppendFormat("CREATE OR REPLACE TRIGGER  TIDENTITY_{0}", SelectQuery.CreateTable.Table.PhysicalName)
-						.AppendLine  ()
-						.AppendFormat("BEFORE INSERT ON {0} FOR EACH ROW", SelectQuery.CreateTable.Table.PhysicalName)
+						.AppendLine()
+						.AppendFormat("BEFORE INSERT ON ");
+
+					BuildPhysicalTable(SelectQuery.CreateTable.Table, null);
+
+					StringBuilder
+						.AppendLine(" FOR EACH ROW")
 						.AppendLine  ()
 						.AppendLine  ("BEGIN")
 						.AppendFormat("\tSELECT SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName)
