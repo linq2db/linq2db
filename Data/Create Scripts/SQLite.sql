@@ -169,7 +169,25 @@ CREATE TABLE TestMerge1
 	Field2	integer          NULL,
 	Field3	integer          NULL,
 	Field4	integer          NULL,
-	Field5	integer          NULL
+	Field5	integer          NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldDateTime2  DATETIMEOFFSET(7) NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+	FieldDate       DATE              NULL,
+	FieldTime       TIME(7)           NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
 );
 CREATE TABLE TestMerge2
 (
@@ -178,5 +196,23 @@ CREATE TABLE TestMerge2
 	Field2	integer          NULL,
 	Field3	integer          NULL,
 	Field4	integer          NULL,
-	Field5	integer          NULL
+	Field5	integer          NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldDateTime2  DATETIMEOFFSET(7) NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+	FieldDate       DATE              NULL,
+	FieldTime       TIME(7)           NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
 );

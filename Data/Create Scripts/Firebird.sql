@@ -718,7 +718,25 @@ CREATE TABLE TestMerge1
 	Field2 INTEGER,
 	Field3 INTEGER,
 	Field4 INTEGER,
-	Field5 INTEGER
+	Field5 INTEGER,
+
+	FieldInt64      BIGINT,
+	FieldBoolean    CHAR(1),
+	FieldString     VARCHAR(20),
+	FieldNString    VARCHAR(20),
+	FieldChar       CHAR(1),
+	FieldNChar      NCHAR(1),
+	FieldFloat      FLOAT(24),
+	FieldDouble     FLOAT(53),
+	FieldDateTime   TIMESTAMP,
+	FieldDateTime2  TIMESTAMP,
+	FieldBinary     BLOB(20),
+	FieldGuid       CHAR(38),
+	FieldDecimal    DECIMAL(18, 10),
+	FieldDate       DATE,
+	FieldTime       TIMESTAMP,
+	FieldEnumString VARCHAR(20),
+	FieldEnumNumber INT
 );
 COMMIT;
 
@@ -729,6 +747,24 @@ CREATE TABLE TestMerge2
 	Field2 INTEGER,
 	Field3 INTEGER,
 	Field4 INTEGER,
-	Field5 INTEGER
+	Field5 INTEGER,
+
+	FieldInt64      BIGINT,
+	FieldBoolean    CHAR(1),
+	FieldString     VARCHAR(20),
+	FieldNString    VARCHAR(20),
+	FieldChar       CHAR(1),
+	FieldNChar      NCHAR(1),
+	FieldFloat      FLOAT(24),
+	FieldDouble     FLOAT(53),
+	FieldDateTime   TIMESTAMP,
+	FieldDateTime2  TIMESTAMP,
+	FieldBinary     BLOB(20),
+	FieldGuid       CHAR(38),
+	FieldDecimal    DECIMAL(18, 10),
+	FieldDate       DATE,
+	FieldTime       TIMESTAMP,
+	FieldEnumString VARCHAR(20),
+	FieldEnumNumber INT
 );
 COMMIT;

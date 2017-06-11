@@ -265,6 +265,24 @@ CREATE TABLE TestMerge1
 	Field4   int              NULL,
 	Field5   int              NULL,
 
+	FieldInt64      BIGINT                       NULL,
+	FieldBoolean    BOOLEAN                      NULL,
+	FieldString     VARCHAR(20)                  NULL,
+	FieldNString    NVARCHAR(20)                 NULL,
+	FieldChar       CHAR(1)                      NULL,
+	FieldNChar      NCHAR(1)                     NULL,
+	FieldFloat      REAL                         NULL,
+	FieldDouble     FLOAT                        NULL,
+	FieldDateTime   DATETIME YEAR TO fraction(3) NULL,
+	FieldDateTime2  DATETIME YEAR TO fraction(5) NULL,
+	FieldBinary     BYTE                         NULL,
+	FieldGuid       CHAR(36)                     NULL,
+	FieldDecimal    DECIMAL(24, 10)              NULL,
+	FieldDate       DATE                         NULL,
+	FieldTime       DATETIME HOUR TO fraction(5) NULL,
+	FieldEnumString VARCHAR(20)                  NULL,
+	FieldEnumNumber INT                          NULL,
+
 	PRIMARY KEY(Id)
 )
 GO
@@ -276,6 +294,24 @@ CREATE TABLE TestMerge2
 	Field3   int              NULL,
 	Field4   int              NULL,
 	Field5   int              NULL,
+
+	FieldInt64      BIGINT                       NULL,
+	FieldBoolean    BOOLEAN                      NULL,
+	FieldString     VARCHAR(20)                  NULL,
+	FieldNString    NVARCHAR(20)                 NULL,
+	FieldChar       CHAR(1)                      NULL,
+	FieldNChar      NCHAR(1)                     NULL,
+	FieldFloat      REAL                         NULL,
+	FieldDouble     FLOAT                        NULL,
+	FieldDateTime   DATETIME YEAR TO fraction(3) NULL,
+	FieldDateTime2  DATETIME YEAR TO fraction(5) NULL,
+	FieldBinary     BYTE                         NULL,
+	FieldGuid       CHAR(36)                     NULL,
+	FieldDecimal    DECIMAL(24, 10)              NULL,
+	FieldDate       DATE                         NULL,
+	FieldTime       DATETIME HOUR TO fraction(5) NULL,
+	FieldEnumString VARCHAR(20)                  NULL,
+	FieldEnumNumber INT                          NULL,
 
 	PRIMARY KEY(Id)
 )

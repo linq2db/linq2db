@@ -539,6 +539,24 @@ CREATE TABLE "TestMerge1"
 	"Field3"   INTEGER            NULL,
 	"Field4"   INTEGER            NULL,
 	"Field5"   INTEGER            NULL,
+
+	"FieldInt64"      BIGINT            NULL,
+	"FieldBoolean"    TINYINT           NULL,
+	"FieldString"     VARCHAR(20)       NULL,
+	"FieldNString"    NVARCHAR(20)      NULL,
+	"FieldChar"       CHAR(1)           NULL,
+	"FieldNChar"      NCHAR(1)          NULL,
+	"FieldFloat"      FLOAT(24)         NULL,
+	"FieldDouble"     FLOAT(53)         NULL,
+	"FieldDateTime"   DATETIME          NULL,
+	"FieldDateTime2"  TIMESTAMP         NULL,
+	"FieldBinary"     VARBINARY(20)     NULL,
+	"FieldGuid"       CHAR(36)          NULL,
+	"FieldDecimal"    DECIMAL(24, 10)   NULL,
+	"FieldDate"       DATE              NULL,
+	"FieldTime"       TIME              NULL,
+	"FieldEnumString" VARCHAR(20)       NULL,
+	"FieldEnumNumber" INT               NULL,
 	
 	PRIMARY KEY ("Id")
 );;
@@ -551,6 +569,24 @@ CREATE TABLE "TestMerge2"
 	"Field3"   INTEGER            NULL,
 	"Field4"   INTEGER            NULL,
 	"Field5"   INTEGER            NULL,
-	
+
+	"FieldInt64"      BIGINT            NULL,
+	"FieldBoolean"    TINYINT           NULL,
+	"FieldString"     VARCHAR(20)       NULL,
+	"FieldNString"    NVARCHAR(20)      NULL,
+	"FieldChar"       CHAR(1)           NULL,
+	"FieldNChar"      NCHAR(1)          NULL,
+	"FieldFloat"      FLOAT(24)         NULL,
+	"FieldDouble"     FLOAT(53)         NULL,
+	"FieldDateTime"   DATETIME          NULL,
+	"FieldDateTime2"  TIMESTAMP         NULL,
+	"FieldBinary"     VARBINARY(20)     NULL,
+	"FieldGuid"       CHAR(36)          NULL,
+	"FieldDecimal"    DECIMAL(24, 10)   NULL,
+	"FieldDate"       DATE              NULL,
+	"FieldTime"       TIME              NULL,
+	"FieldEnumString" VARCHAR(20)       NULL,
+	"FieldEnumNumber" INT               NULL,
+
 	PRIMARY KEY ("Id")
 );;
