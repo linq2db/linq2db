@@ -225,9 +225,7 @@ namespace LinqToDB.Common
 				if (toFields == null)
 					return null;
 
-				var fromType = @from;
-				if (@from.IsNullable())
-					fromType = @from.ToUnderlying();
+				var fromType = @from.ToUnderlying();
 
 				var fromTypeFields = toFields
 					.Select(f => new { f.OrigValue, attrs = f.MapValues.Where(a => a.Value == null || a.Value.GetType() == fromType).ToList() })
@@ -318,9 +316,7 @@ namespace LinqToDB.Common
 					.ToList();
 
 				{
-					var valueType = to;
-					if (to.IsNullable())
-						valueType = to.ToUnderlying();
+					var valueType = to.ToUnderlying();
 
 					var toTypeFields = fromFields
 						.Select(f => new { f.Field, Attrs = f.Attrs
