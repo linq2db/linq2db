@@ -302,7 +302,6 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this DataConnection dataConnection, IQueryable<T> source, Expression<Func<T,bool>> predicate,
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
@@ -325,7 +324,6 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this DataConnection dataConnection, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
@@ -348,7 +346,6 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this DataConnection dataConnection, bool delete, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
@@ -368,7 +365,6 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this DataConnection dataConnection, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
@@ -391,7 +387,6 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this ITable<T> table, IQueryable<T> source, Expression<Func<T,bool>> predicate,
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
@@ -425,7 +420,6 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this ITable<T> table, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
@@ -459,7 +453,6 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this ITable<T> table, bool delete, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
@@ -490,7 +483,6 @@ namespace LinqToDB.Data
 		/// <param name="databaseName">Optional target table's database name.</param>
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public static int Merge<T>(this ITable<T> table, IEnumerable<T> source,
 			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 

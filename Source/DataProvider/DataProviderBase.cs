@@ -429,7 +429,6 @@ namespace LinqToDB.DataProvider
 
 #region Merge
 
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
 			where T : class
