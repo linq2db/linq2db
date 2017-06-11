@@ -190,6 +190,8 @@ namespace Tests.Linq
 				|| context == ProviderName.PostgreSQL + ".LinqService"
 				|| context == ProviderName.DB2
 				|| context == ProviderName.DB2 + ".LinqService"
+				|| context == ProviderName.SQLite
+				|| context == ProviderName.SQLite + ".LinqService"
 				|| context == ProviderName.SqlCe
 				|| context == ProviderName.SqlCe + ".LinqService"
 				|| context == ProviderName.SapHana
