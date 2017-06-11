@@ -22,126 +22,84 @@ namespace Tests.Merge
 			{
 				return new TestDelegate[]
 				{
-					() => MergeExtensions.From<Child, Child>(null, new Child[0], (t, s) => true),
-					() => MergeExtensions.From<Child, Child>(new FakeTable<Child>(), (IEnumerable<Child>)null, (t, s) => true),
-					() => MergeExtensions.From<Child, Child>(new FakeTable<Child>(), new Child[0], null),
-
-					() => MergeExtensions.From<Child, Child>(null, new Child[0].AsQueryable(), (t, s) => true),
-					() => MergeExtensions.From<Child, Child>(new FakeTable<Child>(), (IQueryable<Child>)null, (t, s) => true),
-					() => MergeExtensions.From<Child, Child>(new FakeTable<Child>(), new Child[0].AsQueryable(), null),
-
-					() => MergeExtensions.FromSame<Child>(null, new Child[0]),
-					() => MergeExtensions.FromSame<Child>(new FakeTable<Child>(), (IEnumerable<Child>)null),
-
-					() => MergeExtensions.FromSame<Child>(null, new Child[0].AsQueryable()),
-					() => MergeExtensions.FromSame<Child>(new FakeTable<Child>(), (IQueryable<Child>)null),
-
-					() => MergeExtensions.FromSame<Child>(null, new Child[0], (t, s) => true),
-					() => MergeExtensions.FromSame<Child>(new FakeTable<Child>(), (IEnumerable<Child>)null, (t, s) => true),
-					() => MergeExtensions.FromSame<Child>(new FakeTable<Child>(), new Child[0], null),
-
-					() => MergeExtensions.FromSame<Child>(null, new Child[0].AsQueryable(), (t, s) => true),
-					() => MergeExtensions.FromSame<Child>(new FakeTable<Child>(), (IQueryable<Child>)null, (t, s) => true),
-					() => MergeExtensions.FromSame<Child>(new FakeTable<Child>(), new Child[0].AsQueryable(), null),
-
-					() => MergeExtensions.Insert<Child>(null),
-
-					() => MergeExtensions.Insert<Child>(null, c => true),
-					() => MergeExtensions.Insert<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, bool>>)null),
-
-					() => MergeExtensions.Insert<Child>(null, c => c),
-					() => MergeExtensions.Insert<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child>>)null),
-
-					() => MergeExtensions.Insert<Child>(null, c => true, c => c),
-					() => MergeExtensions.Insert<Child>(new FakeMergeSource<Child>(), null, c => c),
-					() => MergeExtensions.Insert<Child>(new FakeMergeSource<Child>(), c => true, null),
-
-					() => MergeExtensions.Insert<Child, Child>(null, c => c),
-					() => MergeExtensions.Insert<Child, Child>(new FakeMergeSource<Child, Child>(), (Expression<Func<Child, Child>>)null),
-
-					() => MergeExtensions.Insert<Child, Child>(null, c => true, c => c),
-					() => MergeExtensions.Insert<Child, Child>(new FakeMergeSource<Child, Child>(), null, c => c),
-					() => MergeExtensions.Insert<Child, Child>(new FakeMergeSource<Child, Child>(), c => true, null),
-
-					() => MergeExtensions.Update<Child>(null),
-
-					() => MergeExtensions.Update<Child>(null, (t, s) => true),
-					() => MergeExtensions.Update<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child, bool>>)null),
-
-					() => MergeExtensions.Update<Child>(null, (t, s) => t),
-					() => MergeExtensions.Update<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child, Child>>)null),
-
-					() => MergeExtensions.Update<Child>(null, (t, s) => true, (t, s) => t),
-					() => MergeExtensions.Update<Child>(new FakeMergeSource<Child>(), null, (t, s) => t),
-					() => MergeExtensions.Update<Child>(new FakeMergeSource<Child>(), (t, s) => true, null),
-
-					() => MergeExtensions.Update<Child, Child>(null, (t, s) => t),
-					() => MergeExtensions.Update<Child, Child>(new FakeMergeSource<Child, Child>(), (Expression<Func<Child, Child, Child>>)null),
-
-					() => MergeExtensions.Update<Child, Child>(null, (t, s) => true, (t, s) => t),
-					() => MergeExtensions.Update<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t),
-					() => MergeExtensions.Update<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null),
-
-					() => MergeExtensions.UpdateWithDelete<Child>(null, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child, bool>>)null),
-
-					() => MergeExtensions.UpdateWithDelete<Child>(null, (t, s) => true, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child, bool>>)null, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (t, s) => true, (Expression<Func<Child, Child, bool>>)null),
-
-					() => MergeExtensions.UpdateWithDelete<Child>(null, (t, s) => t, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child, Child>>)null, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (t, s) => t, (Expression<Func<Child, Child, bool>>)null),
-
-					() => MergeExtensions.UpdateWithDelete<Child>(null, (t, s) => true, (t, s) => t, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), null, (t, s) => t, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (t, s) => true, null, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child>(new FakeMergeSource<Child>(), (t, s) => true, (t, s) => t, (Expression<Func<Child, Child, bool>>)null),
-
-					() => MergeExtensions.UpdateWithDelete<Child, Child>(null, (t, s) => t, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (Expression<Func<Child, Child, Child>>)null, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => t, (Expression<Func<Child, Child, bool>>)null),
-
-					() => MergeExtensions.UpdateWithDelete<Child, Child>(null, (t, s) => true, (t, s) => t, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null, (t, s) => true),
-					() => MergeExtensions.UpdateWithDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, (t, s) => t, (Expression<Func<Child, Child, bool>>)null),
-
-					() => MergeExtensions.Delete<Child>(null),
-
-					() => MergeExtensions.Delete<Child>(null, (t, s) => true),
-					() => MergeExtensions.Delete<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child, bool>>)null),
-
-					() => MergeExtensions.Delete<Child, Child>(null),
-
-					() => MergeExtensions.Delete<Child, Child>(null, (t, s) => true),
-					() => MergeExtensions.Delete<Child, Child>(new FakeMergeSource<Child, Child>(), (Expression<Func<Child, Child, bool>>)null),
-
-					() => MergeExtensions.UpdateBySource<Child>(null, t => t),
-					() => MergeExtensions.UpdateBySource<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, Child>>)null),
-
-					() => MergeExtensions.UpdateBySource<Child>(null, t => true, t => t),
-					() => MergeExtensions.UpdateBySource<Child>(new FakeMergeSource<Child>(), null, t => t),
-					() => MergeExtensions.UpdateBySource<Child>(new FakeMergeSource<Child>(), t => true, null),
-
-					() => MergeExtensions.UpdateBySource<Child, Child>(null, t => t),
-					() => MergeExtensions.UpdateBySource<Child, Child>(new FakeMergeSource<Child, Child>(), (Expression<Func<Child, Child>>)null),
-
-					() => MergeExtensions.UpdateBySource<Child, Child>(null, t => true, t => t),
-					() => MergeExtensions.UpdateBySource<Child, Child>(new FakeMergeSource<Child, Child>(), null, t => t),
-					() => MergeExtensions.UpdateBySource<Child, Child>(new FakeMergeSource<Child, Child>(), t => true, null),
-
-					() => MergeExtensions.DeleteBySource<Child>(null),
-
-					() => MergeExtensions.DeleteBySource<Child>(null, t => true),
-					() => MergeExtensions.DeleteBySource<Child>(new FakeMergeSource<Child>(), (Expression<Func<Child, bool>>)null),
-
-					() => MergeExtensions.DeleteBySource<Child, Child>(null),
-
-					() => MergeExtensions.DeleteBySource<Child, Child>(null, t => true),
-					() => MergeExtensions.DeleteBySource<Child, Child>(new FakeMergeSource<Child, Child>(), (Expression<Func<Child, bool>>)null),
-
 					() => MergeExtensions.Merge<Child>(null),
+
+					() => MergeExtensions.MergeInto<Child, Child>(null, new FakeTable<Child>()),
+					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null),
+
+					() => MergeExtensions.Using<Child, Child>(null, new Child[0].AsQueryable()),
+					() => MergeExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null),
+
+					() => MergeExtensions.Using<Child, Child>(null, new Child[0]),
+					() => MergeExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null),
+
+					() => MergeExtensions.UsingTarget<Child>(null),
+
+					() => MergeExtensions.On<Child, Child, int>(null, t => 1, s => 1),
+					() => MergeExtensions.On<Child, Child, int>(new FakeMergeOn<Child, Child>(), null, s => 1),
+					() => MergeExtensions.On<Child, Child, int>(new FakeMergeOn<Child, Child>(), t => 1, null),
+
+					() => MergeExtensions.On<Child, Child>(null, (t, s) => true),
+					() => MergeExtensions.On<Child, Child>(new FakeMergeOn<Child, Child>(), null),
+
+					() => MergeExtensions.OnTargetKey<Child>(null),
+
+					() => MergeExtensions.InsertWhenNotMatched<Child>(null),
+
+					() => MergeExtensions.InsertWhenNotMatchedAnd<Child>(null, c => true),
+					() => MergeExtensions.InsertWhenNotMatchedAnd<Child>(new FakeMergeSource<Child, Child>(), null),
+
+					() => MergeExtensions.InsertWhenNotMatched<Child, Child>(null, c => c),
+					() => MergeExtensions.InsertWhenNotMatched<Child, Child>(new FakeMergeSource<Child, Child>(), null),
+
+					() => MergeExtensions.InsertWhenNotMatchedAnd<Child, Child>(null, c => true, c => c),
+					() => MergeExtensions.InsertWhenNotMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null, c => c),
+					() => MergeExtensions.InsertWhenNotMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), c => true, null),
+
+					() => MergeExtensions.UpdateWhenMatched<Child>(null),
+
+					() => MergeExtensions.UpdateWhenMatchedAnd<Child>(null, (t, s) => true),
+					() => MergeExtensions.UpdateWhenMatchedAnd<Child>(new FakeMergeSource<Child, Child>(), null),
+
+					() => MergeExtensions.UpdateWhenMatched<Child, Child>(null, (t, s) => t),
+					() => MergeExtensions.UpdateWhenMatched<Child, Child>(new FakeMergeSource<Child, Child>(), null),
+
+					() => MergeExtensions.UpdateWhenMatchedAnd<Child, Child>(null, (t, s) => true, (t, s) => t),
+					() => MergeExtensions.UpdateWhenMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t),
+					() => MergeExtensions.UpdateWhenMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null),
+
+					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child>(null, (t, s) => true),
+					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child>(new FakeMergeSource<Child, Child>(), null),
+
+					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child>(null, (t, s) => true, (t, s) => true),
+					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => true),
+					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null),
+
+					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child, Child>(null, (t, s) => t, (t, s) => true),
+					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => true),
+					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => t, null),
+
+					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(null, (t, s) => true, (t, s) => t, (t, s) => true),
+					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t, (t, s) => true),
+					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null, (t, s) => true),
+					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, (t, s) => t, null),
+
+					() => MergeExtensions.DeleteWhenMatched<Child, Child>(null),
+
+					() => MergeExtensions.DeleteWhenMatchedAnd<Child, Child>(null, (t, s) => true),
+					() => MergeExtensions.DeleteWhenMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null),
+
+					() => MergeExtensions.UpdateWhenNotMatchedBySource<Child, Child>(null, t => t),
+					() => MergeExtensions.UpdateWhenNotMatchedBySource<Child, Child>(new FakeMergeSource<Child, Child>(), null),
+
+					() => MergeExtensions.UpdateWhenNotMatchedBySourceAnd<Child, Child>(null, t => true, t => t),
+					() => MergeExtensions.UpdateWhenNotMatchedBySourceAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null, t => t),
+					() => MergeExtensions.UpdateWhenNotMatchedBySourceAnd<Child, Child>(new FakeMergeSource<Child, Child>(), t => true, null),
+
+					() => MergeExtensions.DeleteWhenNotMatchedBySource<Child, Child>(null),
+
+					() => MergeExtensions.DeleteWhenNotMatchedBySourceAnd<Child, Child>(null, t => true),
+					() => MergeExtensions.DeleteWhenNotMatchedBySourceAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null),
 
 					() => MergeExtensions.Merge<Child, Child>(null)
 				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.API.Null Parameters.{i}"));
@@ -154,10 +112,13 @@ namespace Tests.Merge
 			Assert.Throws<ArgumentNullException>(action);
 		}
 
-		private class FakeMergeSource<TTarget, TSource> : IMergeSource<TTarget, TSource>
+		private class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>
 		{ }
 
-		private class FakeMergeSource<TEntity> : IMergeSource<TEntity>
+		private class FakeMergeUsing<TTarget> : IMergeableUsing<TTarget>
+		{ }
+
+		private class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>
 		{ }
 
 		private class FakeTable<TEntity> : ITable<TEntity>

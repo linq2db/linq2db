@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider
 		#region .ctor
 		protected MergeDefinition<TTarget, TSource> Merge { get; private set; }
 
-		public BasicMergeBuilder(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
+		public BasicMergeBuilder(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 		{
 			_connection = dataConnection;
 			Merge = (MergeDefinition<TTarget, TSource>)merge;

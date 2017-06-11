@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Oracle
 		where TTarget : class
 		where TSource : class
 	{
-		public OracleMergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+		public OracleMergeBuilder(DataConnection connection, IMergeable<TTarget, TSource> merge)
 			: base(connection, merge)
 		{
 		}

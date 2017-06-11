@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using LinqToDB.DataProvider;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,159 +12,174 @@ namespace LinqToDB.Data
 	[PublicAPI]
 	public static class MergeExtensions
 	{
-		#region From
+		#region source/target configuration
 		/// <summary>
-		/// Configure merge command's source, which has different type compared to target, using client-side
-		/// collection of objects and custom match predicate.
+		/// Starts merge operation definition from target table.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <param name="target">Target table.</param>
+		/// <returns>Returns merge command builder, that contains only target.</returns>
+		public static IMergeableUsing<TTarget> Merge<TTarget>(this ITable<TTarget> target)
+				where TTarget : class
+		{
+			if (target == null)
+				throw new ArgumentNullException("target");
+
+			return new MergeDefinition<TTarget, TTarget>(target);
+		}
+
+		/// <summary>
+		/// Starts merge operation definition from source query.
 		/// </summary>
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
-		/// <param name="target">Merge target table.</param>
-		/// <param name="source">Merge source collection.</param>
-		/// <param name="matchPredicate">Custom merge match predicate.</param>
-		/// <returns>Returns merge command build interface.</returns>
-		public static IMergeSource<TTarget, TSource> From<TTarget, TSource>(
-			this ITable<TTarget> target,
-			IEnumerable<TSource> source,
-			Expression<Func<TTarget, TSource, bool>> matchPredicate)
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table.</param>
+		/// <returns>Returns merge command builder with source and target set.</returns>
+		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
+			this IQueryable<TSource> source,
+			ITable<TTarget> target)
 				where TTarget : class
 				where TSource : class
 		{
-			if (target == null)
-				throw new ArgumentNullException("target");
-
 			if (source == null)
 				throw new ArgumentNullException("source");
 
-			if (matchPredicate == null)
-				throw new ArgumentNullException("matchPredicate");
+			if (target == null)
+				throw new ArgumentNullException("target");
 
-			return new MergeDefinition<TTarget, TSource>(target, source, matchPredicate);
+			return new MergeDefinition<TTarget, TSource>(target, source);
 		}
 
 		/// <summary>
-		/// Configure merge command's source, which has different type compared to target, using query or table
-		/// and custom match predicate.
+		/// Adds source query to merge command definition.
 		/// </summary>
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
-		/// <param name="target">Merge target table.</param>
-		/// <param name="source">Merge source query or table.</param>
-		/// <param name="matchPredicate">Custom merge match predicate.</param>
-		/// <returns>Returns merge command build interface.</returns>
-		public static IMergeSource<TTarget, TSource> From<TTarget, TSource>(
-			this ITable<TTarget> target,
-			IQueryable<TSource> source,
-			Expression<Func<TTarget, TSource, bool>> matchPredicate)
+		/// <param name="merge">Merge command builder.</param>
+		/// <param name="source">Source data query.</param>
+		/// <returns>Returns merge command builder with source and target set.</returns>
+		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
+			this IMergeableUsing<TTarget> merge,
+			IQueryable<TSource> source)
 				where TTarget : class
 				where TSource : class
 		{
-			if (target == null)
-				throw new ArgumentNullException("target");
+			if (merge == null)
+				throw new ArgumentNullException("merge");
 
 			if (source == null)
 				throw new ArgumentNullException("source");
 
-			if (matchPredicate == null)
-				throw new ArgumentNullException("matchPredicate");
-
-			return new MergeDefinition<TTarget, TSource>(target, source, matchPredicate);
+			return ((MergeDefinition<TTarget, TTarget>)merge).AddSource(source);
 		}
 
 		/// <summary>
-		/// Configure merge command's source, which has the same type as target, using client-side collection and match
-		/// on primary key columns.
+		/// Adds source collection to merge command definition.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="target">Merge target table.</param>
-		/// <param name="source">Merge source collection.</param>
-		/// <returns>Returns merge command build interface.</returns>
-		public static IMergeSource<TEntity> FromSame<TEntity>(
-			this ITable<TEntity> target,
-			IEnumerable<TEntity> source)
-				where TEntity : class
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <param name="merge">Merge command builder.</param>
+		/// <param name="source">Source data collection.</param>
+		/// <returns>Returns merge command builder with source and target set.</returns>
+		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
+			this IMergeableUsing<TTarget> merge,
+			IEnumerable<TSource> source)
+				where TTarget : class
+				where TSource : class
 		{
-			if (target == null)
-				throw new ArgumentNullException("target");
+			if (merge == null)
+				throw new ArgumentNullException("merge");
 
 			if (source == null)
 				throw new ArgumentNullException("source");
 
-			return new MergeDefinition<TEntity, TEntity>(target, source, null);
+			return ((MergeDefinition<TTarget, TTarget>)merge).AddSource(source);
 		}
 
 		/// <summary>
-		/// Configure merge command's source, which has the same type as target, using query or table and match on primary
-		/// key columns.
+		/// Sets target table as merge command source.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="target">Merge target table.</param>
-		/// <param name="source">Merge source query or table.</param>
-		/// <returns>Returns merge command build interface.</returns>
-		public static IMergeSource<TEntity> FromSame<TEntity>(this ITable<TEntity> target, IQueryable<TEntity> source)
-				where TEntity : class
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <param name="merge">Merge command builder.</param>
+		/// <returns>Returns merge command builder with source and target set.</returns>
+		public static IMergeableOn<TTarget, TTarget> UsingTarget<TTarget>(this IMergeableUsing<TTarget> merge)
+				where TTarget : class
 		{
-			if (target == null)
-				throw new ArgumentNullException("target");
+			if (merge == null)
+				throw new ArgumentNullException("merge");
 
-			if (source == null)
-				throw new ArgumentNullException("source");
+			var builder = (MergeDefinition<TTarget, TTarget>)merge;
+			return builder.AddSource(builder.Target);
+		}
+		#endregion
 
-			return new MergeDefinition<TEntity, TEntity>(target, source, null);
+		#region On predicate
+		/// <summary>
+		/// Adds definition of matching of target and source records using key value.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <typeparam name="TKey">Source and target records join/match key type.</typeparam>
+		/// <param name="merge">Merge command builder.</param>
+		/// <param name="targetKey">Target record match key definition.</param>
+		/// <param name="sourceKey">Source record match key definition.</param>
+		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
+		public static IMergeable<TTarget, TSource> On<TTarget, TSource, TKey>(
+			this IMergeableOn<TTarget, TSource> merge,
+			Expression<Func<TTarget, TKey>> targetKey,
+			Expression<Func<TSource, TKey>> sourceKey)
+				where TTarget : class
+				where TSource : class
+		{
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			if (targetKey == null)
+				throw new ArgumentNullException("targetKey");
+
+			if (sourceKey == null)
+				throw new ArgumentNullException("sourceKey");
+
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOnKey(targetKey, sourceKey);
 		}
 
 		/// <summary>
-		/// Configure merge command's source, which has the same type as target, using client-side collection and custom
-		/// match predicate.
+		/// Adds definition of matching of target and source records using match condition.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="target">Merge target table.</param>
-		/// <param name="source">Merge source collection.</param>
-		/// <param name="matchPredicate">Custom merge match predicate.</param>
-		/// <returns>Returns merge command build interface.</returns>
-		public static IMergeSource<TEntity> FromSame<TEntity>(
-			this ITable<TEntity> target,
-			IEnumerable<TEntity> source,
-			Expression<Func<TEntity, TEntity, bool>> matchPredicate)
-				where TEntity : class
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <param name="merge">Merge command builder.</param>
+		/// <param name="matchCondition">Rule to match/join target and source records.</param>
+		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
+		public static IMergeable<TTarget, TSource> On<TTarget, TSource>(
+			this IMergeableOn<TTarget, TSource> merge,
+			Expression<Func<TTarget, TSource, bool>> matchCondition)
+				where TTarget : class
+				where TSource : class
 		{
-			if (target == null)
-				throw new ArgumentNullException("target");
+			if (merge == null)
+				throw new ArgumentNullException("merge");
 
-			if (source == null)
-				throw new ArgumentNullException("source");
+			if (matchCondition == null)
+				throw new ArgumentNullException("matchCondition");
 
-			if (matchPredicate == null)
-				throw new ArgumentNullException("matchPredicate");
-
-			return new MergeDefinition<TEntity, TEntity>(target, source, matchPredicate);
+			return ((MergeDefinition<TTarget, TSource>)merge).AddOnPredicate(matchCondition);
 		}
 
 		/// <summary>
-		/// Configure merge command's source, which has the same type as target, using query or table and custom
-		/// match predicate.
+		/// Adds definition of matching of target and source records using primary key columns.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="target">Merge target table.</param>
-		/// <param name="source">Merge source query or table.</param>
-		/// <param name="matchPredicate">Custom merge match predicate.</param>
-		/// <returns>Returns merge command build interface.</returns>
-		public static IMergeSource<TEntity> FromSame<TEntity>(
-			this ITable<TEntity> target,
-			IQueryable<TEntity> source,
-			Expression<Func<TEntity, TEntity, bool>> matchPredicate)
-				where TEntity : class
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <param name="merge">Merge command builder.</param>
+		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
+		public static IMergeable<TTarget, TTarget> OnTargetKey<TTarget>(this IMergeableOn<TTarget, TTarget> merge)
+				where TTarget : class
 		{
-			if (target == null)
-				throw new ArgumentNullException("target");
+			if (merge == null)
+				throw new ArgumentNullException("merge");
 
-			if (source == null)
-				throw new ArgumentNullException("source");
-
-			if (matchPredicate == null)
-				throw new ArgumentNullException("matchPredicate");
-
-			return new MergeDefinition<TEntity, TEntity>(target, source, matchPredicate);
+			return (MergeDefinition<TTarget, TTarget>)merge;
 		}
 		#endregion
 
@@ -175,17 +189,17 @@ namespace LinqToDB.Data
 		/// This operation inserts new record to target table using data from the same fields of source record
 		/// for each new record from source, not processed by previous operations.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
+		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Insert<TEntity>(this IMergeSource<TEntity> merge)
-				where TEntity : class
+		public static IMergeable<TTarget, TTarget> InsertWhenNotMatched<TTarget>(this IMergeableSource<TTarget, TTarget> merge)
+				where TTarget : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Insert(null, null));
+			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
+				MergeDefinition<TTarget, TTarget>.Operation.Insert(null, null));
 		}
 
 		/// <summary>
@@ -194,80 +208,23 @@ namespace LinqToDB.Data
 		/// for each new record from source that passes filtering with specified predicate, if it wasn't
 		/// processed by previous operations.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
+		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="predicate">Operation execution condition over source record.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Insert<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, bool>> predicate)
-				where TEntity : class
+		public static IMergeable<TTarget, TTarget> InsertWhenNotMatchedAnd<TTarget>(
+			this IMergeableSource<TTarget, TTarget> merge,
+			Expression<Func<TTarget, bool>> searchCondition)
+				where TTarget : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
+			if (searchCondition == null)
+				throw new ArgumentNullException("searchCondition");
 
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Insert(predicate, null));
-		}
-
-		/// <summary>
-		/// Adds new insert operation to merge and returns new merge command with added operation.
-		/// This operation inserts new record to target table using user-defined values for target columns
-		/// for each new record from source that passes filtering with specified predicate, if it wasn't
-		/// processed by previous operations.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="create">Create record expression using source record. Expression should be a call to target
-		/// record constructor with field/properties initializers to be recognized by API.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Insert<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity>> create)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (create == null)
-				throw new ArgumentNullException("create");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Insert(null, create));
-		}
-
-		/// <summary>
-		/// Adds new insert operation to merge and returns new merge command with added operation.
-		/// This operation inserts new record to target table using user-defined values for target columns
-		/// for each new record from source that passes filtering with specified predicate, if it wasn't
-		/// processed by previous operations.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over source record.</param>
-		/// <param name="create">Create record expression using source record. Expression should be a call to target
-		/// record constructor with field/properties initializers to be recognized by API.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Insert<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, bool>> predicate,
-			Expression<Func<TEntity, TEntity>> create)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
-
-			if (create == null)
-				throw new ArgumentNullException("create");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Insert(predicate, create));
+			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
+				MergeDefinition<TTarget, TTarget>.Operation.Insert(searchCondition, null));
 		}
 
 		/// <summary>
@@ -278,23 +235,23 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="create">Create record expression using source record. Expression should be a call to target
+		/// <param name="setter">Create record expression using source record. Expression should be a call to target
 		/// record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> Insert<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TSource, TTarget>> create)
+		public static IMergeable<TTarget, TSource> InsertWhenNotMatched<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TSource, TTarget>> setter)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (create == null)
-				throw new ArgumentNullException("create");
+			if (setter == null)
+				throw new ArgumentNullException("setter");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Insert(null, create));
+				MergeDefinition<TTarget, TSource>.Operation.Insert(null, setter));
 		}
 
 		/// <summary>
@@ -306,28 +263,28 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over source record.</param>
-		/// <param name="create">Create record expression using source record. Expression should be a call to target
+		/// <param name="searchCondition">Operation execution condition over source record.</param>
+		/// <param name="setter">Create record expression using source record. Expression should be a call to target
 		/// record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> Insert<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TSource, bool>> predicate,
-			Expression<Func<TSource, TTarget>> create)
+		public static IMergeable<TTarget, TSource> InsertWhenNotMatchedAnd<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TSource, bool>> searchCondition,
+			Expression<Func<TSource, TTarget>> setter)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
+			if (searchCondition == null)
+				throw new ArgumentNullException("searchCondition");
 
-			if (create == null)
-				throw new ArgumentNullException("create");
+			if (setter == null)
+				throw new ArgumentNullException("setter");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Insert(predicate, create));
+				MergeDefinition<TTarget, TSource>.Operation.Insert(searchCondition, setter));
 		}
 		#endregion
 
@@ -337,17 +294,17 @@ namespace LinqToDB.Data
 		/// This operation updates record in target table using data from the same fields of source record
 		/// for each record that was matched in source and target, if it wasn't processed by previous operations.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
+		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Update<TEntity>(this IMergeSource<TEntity> merge)
-				where TEntity : class
+		public static IMergeable<TTarget, TTarget> UpdateWhenMatched<TTarget>(this IMergeableSource<TTarget, TTarget> merge)
+				where TTarget : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Update(null, null));
+			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
+				MergeDefinition<TTarget, TTarget>.Operation.Update(null, null));
 		}
 
 		/// <summary>
@@ -356,79 +313,23 @@ namespace LinqToDB.Data
 		/// for each record that was matched in source and target and passes filtering with specified predicate,
 		/// if it wasn't processed by previous operations.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
+		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over target and source records.</param>
+		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Update<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity, bool>> predicate)
-				where TEntity : class
+		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAnd<TTarget>(
+			this IMergeableSource<TTarget, TTarget> merge,
+			Expression<Func<TTarget, TTarget, bool>> searchCondition)
+				where TTarget : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
+			if (searchCondition == null)
+				throw new ArgumentNullException("searchCondition");
 
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Update(predicate, null));
-		}
-
-		/// <summary>
-		/// Adds new update operation to merge and returns new merge command with added operation.
-		/// This operation updates record in target table using user-defined values for target columns
-		/// for each record that was matched in source and target, if it wasn't processed by previous operations.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="update">Update record expression using target and source records.
-		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Update<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity, TEntity>> update)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (update == null)
-				throw new ArgumentNullException("update");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Update(null, update));
-		}
-
-		/// <summary>
-		/// Adds new update operation to merge and returns new merge command with added operation.
-		/// This operation updates record in target table using user-defined values for target columns
-		/// for each record that was matched in source and target and passes filtering with specified predicate,
-		/// if it wasn't processed by previous operations.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over target and source records.</param>
-		/// <param name="update">Update record expression using target and source records.
-		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Update<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity, bool>> predicate,
-			Expression<Func<TEntity, TEntity, TEntity>> update)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
-
-			if (update == null)
-				throw new ArgumentNullException("update");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Update(predicate, update));
+			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
+				MergeDefinition<TTarget, TTarget>.Operation.Update(searchCondition, null));
 		}
 
 		/// <summary>
@@ -439,23 +340,23 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="update">Update record expression using target and source records.
+		/// <param name="setter">Update record expression using target and source records.
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> Update<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TSource, TTarget>> update)
+		public static IMergeable<TTarget, TSource> UpdateWhenMatched<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, TSource, TTarget>> setter)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (update == null)
-				throw new ArgumentNullException("update");
+			if (setter == null)
+				throw new ArgumentNullException("setter");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Update(null, update));
+				MergeDefinition<TTarget, TSource>.Operation.Update(null, setter));
 		}
 
 		/// <summary>
@@ -467,28 +368,28 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over target and source records.</param>
-		/// <param name="update">Update record expression using target and source records.
+		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
+		/// <param name="setter">Update record expression using target and source records.
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> Update<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TSource, bool>> predicate,
-			Expression<Func<TTarget, TSource, TTarget>> update)
+		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAnd<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, TSource, bool>> searchCondition,
+			Expression<Func<TTarget, TSource, TTarget>> setter)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
+			if (searchCondition == null)
+				throw new ArgumentNullException("searchCondition");
 
-			if (update == null)
-				throw new ArgumentNullException("update");
+			if (setter == null)
+				throw new ArgumentNullException("setter");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Update(predicate, update));
+				MergeDefinition<TTarget, TSource>.Operation.Update(searchCondition, setter));
 		}
 		#endregion
 
@@ -500,23 +401,23 @@ namespace LinqToDB.Data
 		/// for each record that was matched in source and target, if it wasn't processed by previous operations.
 		/// After that it removes updated records if they are matched by delete predicate.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
+		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="deletePredicate">Delete execution condition over updated target and source records.</param>
+		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> UpdateWithDelete<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity, bool>> deletePredicate)
-				where TEntity : class
+		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedThenDelete<TTarget>(
+			this IMergeableSource<TTarget, TTarget> merge,
+			Expression<Func<TTarget, TTarget, bool>> deleteCondition)
+				where TTarget : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (deletePredicate == null)
-				throw new ArgumentNullException("deletePredicate");
+			if (deleteCondition == null)
+				throw new ArgumentNullException("deleteCondition");
 
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.UpdateWithDelete(null, null, deletePredicate));
+			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
+				MergeDefinition<TTarget, TTarget>.Operation.UpdateWithDelete(null, null, deleteCondition));
 		}
 
 		/// <summary>
@@ -527,98 +428,28 @@ namespace LinqToDB.Data
 		/// if it wasn't processed by previous operations.
 		/// After that it removes updated records if they are matched by delete predicate.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
+		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="updatePredicate">Update execution condition over target and source records.</param>
-		/// <param name="deletePredicate">Delete execution condition over updated target and source records.</param>
+		/// <param name="searchCondition">Update execution condition over target and source records.</param>
+		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> UpdateWithDelete<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity, bool>> updatePredicate,
-			Expression<Func<TEntity, TEntity, bool>> deletePredicate)
-				where TEntity : class
+		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAndThenDelete<TTarget>(
+			this IMergeableSource<TTarget, TTarget> merge,
+			Expression<Func<TTarget, TTarget, bool>> searchCondition,
+			Expression<Func<TTarget, TTarget, bool>> deleteCondition)
+				where TTarget : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (updatePredicate == null)
-				throw new ArgumentNullException("updatePredicate");
+			if (searchCondition == null)
+				throw new ArgumentNullException("searchCondition");
 
-			if (deletePredicate == null)
-				throw new ArgumentNullException("deletePredicate");
+			if (deleteCondition == null)
+				throw new ArgumentNullException("deleteCondition");
 
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.UpdateWithDelete(updatePredicate, null, deletePredicate));
-		}
-
-		/// <summary>
-		/// IMPORTANT: This operation supported only by Oracle Database.
-		/// Adds new update with delete operation to merge and returns new merge command with added operation.
-		/// This operation updates record in target table using user-defined values for target columns
-		/// for each record that was matched in source and target, if it wasn't processed by previous operations.
-		/// After that it removes updated records if they are matched by delete predicate.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="update">Update record expression using target and source records.
-		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
-		/// <param name="deletePredicate">Delete execution condition over updated target and source records.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> UpdateWithDelete<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity, TEntity>> update,
-			Expression<Func<TEntity, TEntity, bool>> deletePredicate)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (update == null)
-				throw new ArgumentNullException("update");
-
-			if (deletePredicate == null)
-				throw new ArgumentNullException("deletePredicate");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.UpdateWithDelete(null, update, deletePredicate));
-		}
-
-		/// <summary>
-		/// IMPORTANT: This operation supported only by Oracle Database.
-		/// Adds new update with delete operation to merge and returns new merge command with added operation.
-		/// This operation updates record in target table using user-defined values for target columns
-		/// for each record that was matched in source and target and passes filtering with specified predicate,
-		/// if it wasn't processed by previous operations.
-		/// After that it removes updated records if they are matched by delete predicate.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="updatePredicate">Update execution condition over target and source records.</param>
-		/// <param name="update">Update record expression using target and source records.
-		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
-		/// <param name="deletePredicate">Delete execution condition over updated target and source records.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> UpdateWithDelete<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity, bool>> updatePredicate,
-			Expression<Func<TEntity, TEntity, TEntity>> update,
-			Expression<Func<TEntity, TEntity, bool>> deletePredicate)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (updatePredicate == null)
-				throw new ArgumentNullException("updatePredicate");
-
-			if (update == null)
-				throw new ArgumentNullException("update");
-
-			if (deletePredicate == null)
-				throw new ArgumentNullException("deletePredicate");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.UpdateWithDelete(updatePredicate, update, deletePredicate));
+			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
+				MergeDefinition<TTarget, TTarget>.Operation.UpdateWithDelete(searchCondition, null, deleteCondition));
 		}
 
 		/// <summary>
@@ -631,28 +462,28 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="update">Update record expression using target and source records.
+		/// <param name="setter">Update record expression using target and source records.
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
-		/// <param name="deletePredicate">Delete execution condition over updated target and source records.</param>
+		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> UpdateWithDelete<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TSource, TTarget>> update,
-			Expression<Func<TTarget, TSource, bool>> deletePredicate)
+		public static IMergeable<TTarget, TSource> UpdateWhenMatchedThenDelete<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, TSource, TTarget>> setter,
+			Expression<Func<TTarget, TSource, bool>> deleteCondition)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (update == null)
-				throw new ArgumentNullException("update");
+			if (setter == null)
+				throw new ArgumentNullException("setter");
 
-			if (deletePredicate == null)
-				throw new ArgumentNullException("deletePredicate");
+			if (deleteCondition == null)
+				throw new ArgumentNullException("deleteCondition");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(null, update, deletePredicate));
+				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(null, setter, deleteCondition));
 		}
 
 		/// <summary>
@@ -666,33 +497,33 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="updatePredicate">Update execution condition over target and source records.</param>
-		/// <param name="update">Update record expression using target and source records.
+		/// <param name="searchCondition">Update execution condition over target and source records.</param>
+		/// <param name="setter">Update record expression using target and source records.
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
-		/// <param name="deletePredicate">Delete execution condition over updated target and source records.</param>
+		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> UpdateWithDelete<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TSource, bool>> updatePredicate,
-			Expression<Func<TTarget, TSource, TTarget>> update,
-			Expression<Func<TTarget, TSource, bool>> deletePredicate)
+		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAndThenDelete<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, TSource, bool>> searchCondition,
+			Expression<Func<TTarget, TSource, TTarget>> setter,
+			Expression<Func<TTarget, TSource, bool>> deleteCondition)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (updatePredicate == null)
-				throw new ArgumentNullException("updatePredicate");
+			if (searchCondition == null)
+				throw new ArgumentNullException("searchCondition");
 
-			if (update == null)
-				throw new ArgumentNullException("update");
+			if (setter == null)
+				throw new ArgumentNullException("setter");
 
-			if (deletePredicate == null)
-				throw new ArgumentNullException("deletePredicate");
+			if (deleteCondition == null)
+				throw new ArgumentNullException("deleteCondition");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(updatePredicate, update, deletePredicate));
+				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(searchCondition, setter, deleteCondition));
 		}
 		#endregion
 
@@ -702,53 +533,12 @@ namespace LinqToDB.Data
 		/// This operation removes record in target table for each record that was matched in source and target,
 		/// if it wasn't processed by previous operations.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Delete<TEntity>(this IMergeSource<TEntity> merge)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Delete(null));
-		}
-
-		/// <summary>
-		/// Adds new delete operation to merge and returns new merge command with added operation.
-		/// This operation removes record in target table for each record that was matched in source and target,
-		/// if it was matched by operation predicate and wasn't processed by previous operations.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over target and source records.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> Delete<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity, bool>> predicate)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.Delete(predicate));
-		}
-
-		/// <summary>
-		/// Adds new delete operation to merge and returns new merge command with added operation.
-		/// This operation removes record in target table for each record that was matched in source and target,
-		/// if it wasn't processed by previous operations.
-		/// </summary>
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> Delete<TTarget, TSource>(this IMergeSource<TTarget, TSource> merge)
+		public static IMergeable<TTarget, TSource> DeleteWhenMatched<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge)
 				where TTarget : class
 				where TSource : class
 		{
@@ -767,22 +557,22 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over target and source records.</param>
+		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> Delete<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TSource, bool>> predicate)
+		public static IMergeable<TTarget, TSource> DeleteWhenMatchedAnd<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, TSource, bool>> searchCondition)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
+			if (searchCondition == null)
+				throw new ArgumentNullException("searchCondition");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.Delete(predicate));
+				MergeDefinition<TTarget, TSource>.Operation.Delete(searchCondition));
 		}
 		#endregion
 
@@ -793,84 +583,26 @@ namespace LinqToDB.Data
 		/// This operation updates record in target table for each record that was matched only in target
 		/// using user-defined values for target columns, if it wasn't processed by previous operations.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="update">Update record expression using target record. Expression should be a call to
-		/// target record constructor with field/properties initializers to be recognized by API.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> UpdateBySource<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, TEntity>> update)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (update == null)
-				throw new ArgumentNullException("update");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.UpdateBySource(null, update));
-		}
-
-		/// <summary>
-		/// IMPORTANT: This operation supported only by Microsoft SQL Server.
-		/// Adds new update by source operation to merge and returns new merge command with added operation.
-		/// This operation updates record in target table for each record that was matched only in target
-		/// using user-defined values for target columns, if it passed filtering by operation predicate and
-		/// wasn't processed by previous operations.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over target record.</param>
-		/// <param name="update">Update record expression using target record. Expression should be a call to
-		/// target record constructor with field/properties initializers to be recognized by API.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> UpdateBySource<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, bool>> predicate,
-			Expression<Func<TEntity, TEntity>> update)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
-
-			if (update == null)
-				throw new ArgumentNullException("update");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.UpdateBySource(predicate, update));
-		}
-
-		/// <summary>
-		/// IMPORTANT: This operation supported only by Microsoft SQL Server.
-		/// Adds new update by source operation to merge and returns new merge command with added operation.
-		/// This operation updates record in target table for each record that was matched only in target
-		/// using user-defined values for target columns, if it wasn't processed by previous operations.
-		/// </summary>
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="update">Update record expression using target record. Expression should be a call to
+		/// <param name="setter">Update record expression using target record. Expression should be a call to
 		/// target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> UpdateBySource<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TTarget>> update)
+		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySource<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, TTarget>> setter)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (update == null)
-				throw new ArgumentNullException("update");
+			if (setter == null)
+				throw new ArgumentNullException("setter");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(null, update));
+				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(null, setter));
 		}
 
 		/// <summary>
@@ -883,28 +615,28 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over target record.</param>
-		/// <param name="update">Update record expression using target record. Expression should be a call to
+		/// <param name="searchCondition">Operation execution condition over target record.</param>
+		/// <param name="setter">Update record expression using target record. Expression should be a call to
 		/// target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> UpdateBySource<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, bool>> predicate,
-			Expression<Func<TTarget, TTarget>> update)
+		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySourceAnd<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, bool>> searchCondition,
+			Expression<Func<TTarget, TTarget>> setter)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
+			if (searchCondition == null)
+				throw new ArgumentNullException("searchCondition");
 
-			if (update == null)
-				throw new ArgumentNullException("update");
+			if (setter == null)
+				throw new ArgumentNullException("setter");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(predicate, update));
+				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(searchCondition, setter));
 		}
 		#endregion
 
@@ -915,55 +647,12 @@ namespace LinqToDB.Data
 		/// This operation removes record in target table for each record that was matched only in target
 		/// and wasn't processed by previous operations.
 		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> DeleteBySource<TEntity>(this IMergeSource<TEntity> merge)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.DeleteBySource(null));
-		}
-
-		/// <summary>
-		/// IMPORTANT: This operation supported only by Microsoft SQL Server.
-		/// Adds new delete by source operation to merge and returns new merge command with added operation.
-		/// This operation removes record in target table for each record that was matched only in target
-		/// and passed filtering with operation predicate, if it wasn't processed by previous operations.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over target record.</param>
-		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TEntity> DeleteBySource<TEntity>(
-			this IMergeSource<TEntity> merge,
-			Expression<Func<TEntity, bool>> predicate)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
-
-			return ((MergeDefinition<TEntity, TEntity>)merge).AddOperation(
-				MergeDefinition<TEntity, TEntity>.Operation.DeleteBySource(predicate));
-		}
-
-		/// <summary>
-		/// IMPORTANT: This operation supported only by Microsoft SQL Server.
-		/// Adds new delete by source operation to merge and returns new merge command with added operation.
-		/// This operation removes record in target table for each record that was matched only in target
-		/// and wasn't processed by previous operations.
-		/// </summary>
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> DeleteBySource<TTarget, TSource>(this IMergeSource<TTarget, TSource> merge)
+		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySource<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge)
 				where TTarget : class
 				where TSource : class
 		{
@@ -983,22 +672,22 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over target record.</param>
+		/// <param name="searchCondition">Operation execution condition over target record.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
-		public static IMerge<TTarget, TSource> DeleteBySource<TTarget, TSource>(
-			this IMergeSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, bool>> predicate)
+		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySourceAnd<TTarget, TSource>(
+			this IMergeableSource<TTarget, TSource> merge,
+			Expression<Func<TTarget, bool>> searchCondition)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");
 
-			if (predicate == null)
-				throw new ArgumentNullException("predicate");
+			if (searchCondition == null)
+				throw new ArgumentNullException("searchCondition");
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
-				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(predicate));
+				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(searchCondition));
 		}
 		#endregion
 
@@ -1010,7 +699,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
-		public static int Merge<TTarget, TSource>(this IMerge<TTarget, TSource> merge)
+		public static int Merge<TTarget, TSource>(this IMergeable<TTarget, TSource> merge)
 				where TTarget : class
 				where TSource : class
 		{
@@ -1029,58 +718,45 @@ namespace LinqToDB.Data
 
 			return dataConnection.DataProvider.Merge(dataConnection, definition);
 		}
-
-		/// <summary>
-		/// Executes merge command and returns total number of target records, affected by merge operations.
-		/// </summary>
-		/// <typeparam name="TEntity">Target and source records type.</typeparam>
-		/// <param name="merge">Merge command definition.</param>
-		/// <returns>Returns number of target table records, affected by merge comand.</returns>
-		public static int Merge<TEntity>(this IMerge<TEntity> merge)
-				where TEntity : class
-		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			return Merge<TEntity, TEntity>((MergeDefinition<TEntity, TEntity>)merge);
-		}
 		#endregion
 	}
 
 	/// <summary>
-	/// Represents merge command source and target configutation without operations with different types for source and
-	/// target records, which cannot be executed, because it lacks operations.
+	/// Merge command builder that have only target table configured.
+	/// Only operation available for this type of builder is source configuration.
+	/// </summary>
+	/// <typeparam name="TTarget">Target record type.</typeparam>
+	public interface IMergeableUsing<TTarget>
+	{
+	}
+
+	/// <summary>
+	/// Merge command builder that have only target table and source configured.
+	/// Only operation available for this type of builder is match (ON) condition configuration.
 	/// </summary>
 	/// <typeparam name="TTarget">Target record type.</typeparam>
 	/// <typeparam name="TSource">Source record type.</typeparam>
-	public interface IMergeSource<TTarget, TSource>
+	public interface IMergeableOn<TTarget, TSource>
 	{
 	}
 
 	/// <summary>
-	/// Represents merge command source and target configutation without operations with the same type for source and
-	/// target records, which cannot be executed, because it lacks operations.
-	/// </summary>
-	/// <typeparam name="TEntity">Target and source records type.</typeparam>
-	public interface IMergeSource<TEntity>
-	{
-	}
-
-	/// <summary>
-	/// Represents merge command with operations with different types for source and target records, which could be
-	/// executed.
+	/// Merge command builder that have target table, source and match (ON) condition configured.
+	/// You can only add operations to this type of builder.
 	/// </summary>
 	/// <typeparam name="TTarget">Target record type.</typeparam>
 	/// <typeparam name="TSource">Source record type.</typeparam>
-	public interface IMerge<TTarget, TSource> : IMergeSource<TTarget, TSource>
+	public interface IMergeableSource<TTarget, TSource>
 	{
 	}
 
 	/// <summary>
-	/// Represents merge command with operations with the same type for source and target records, which could be executed.
+	/// Merge command builder that have target table, source, match (ON) condition and at least one operation configured.
+	/// You can add more operations to this type of builder or execute command.
 	/// </summary>
-	/// <typeparam name="TEntity">Target and source records type.</typeparam>
-	public interface IMerge<TEntity> : IMergeSource<TEntity>
+	/// <typeparam name="TTarget">Target record type.</typeparam>
+	/// <typeparam name="TSource">Source record type.</typeparam>
+	public interface IMergeable<TTarget, TSource> : IMergeableSource<TTarget, TSource>
 	{
 	}
 }

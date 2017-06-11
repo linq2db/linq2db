@@ -57,7 +57,12 @@ namespace Tests.Merge
 					}
 				};
 
-				var cnt = db.GetTable<AllTypes2>().FromSame(testData).Insert().Merge();
+				var cnt = db.GetTable<AllTypes2>()
+					.Merge()
+					.Using(testData)
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
 
@@ -102,9 +107,10 @@ namespace Tests.Merge
 				};
 
 				var cnt = db.GetTable<AllTypes2>()
-					.FromSame(testData, (t, s) => s.datetime2DataType == testData[0].datetime2DataType
-						&& s.datetimeoffsetDataType == testData[0].datetimeoffsetDataType)
-					.Insert()
+					.Merge()
+					.Using(testData)
+					.On((t, s) => s.datetime2DataType == testData[0].datetime2DataType && s.datetimeoffsetDataType == testData[0].datetimeoffsetDataType)
+					.InsertWhenNotMatched()
 					.Merge();
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
@@ -150,9 +156,10 @@ namespace Tests.Merge
 				};
 
 				var cnt = db.GetTable<AllTypes2>()
-					.FromSame(testData, (t, s) => s.datetime2DataType != DateTime.Now
-						&& s.datetimeoffsetDataType != DateTimeOffset.Now)
-					.Insert()
+					.Merge()
+					.Using(testData)
+					.On((t, s) => s.datetime2DataType != DateTime.Now && s.datetimeoffsetDataType != DateTimeOffset.Now)
+					.InsertWhenNotMatched()
 					.Merge();
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
@@ -201,9 +208,10 @@ namespace Tests.Merge
 				var dto2 = dto.AddTicks(3);
 
 				var cnt = db.GetTable<AllTypes2>()
-					.FromSame(testData, (t, s) => s.datetime2DataType == testData[0].datetime2DataType
-						&& s.datetimeoffsetDataType == testData[0].datetimeoffsetDataType)
-					.Insert(s => new AllTypes2()
+					.Merge()
+					.Using(testData)
+					.On((t, s) => s.datetime2DataType == testData[0].datetime2DataType && s.datetimeoffsetDataType == testData[0].datetimeoffsetDataType)
+					.InsertWhenNotMatched(s => new AllTypes2()
 					{
 						ID = s.ID,
 						datetimeoffsetDataType = dto2,
@@ -253,16 +261,23 @@ namespace Tests.Merge
 					}
 				};
 
-				db.GetTable<AllTypes2>().FromSame(testData).Insert().Merge();
+				db.GetTable<AllTypes2>()
+					.Merge()
+					.Using(testData)
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
 
 				var dt2 = dt.AddTicks(3);
 				var dto2 = dto.AddTicks(3);
 				var cnt = db.GetTable<AllTypes2>()
-					.FromSame(testData, (t, s) => t.datetime2DataType == s.datetime2DataType
+					.Merge()
+					.Using(testData)
+					.On((t, s) => t.datetime2DataType == s.datetime2DataType
 						&& t.datetimeoffsetDataType == s.datetimeoffsetDataType
 						&& t.datetime2DataType == testData[0].datetime2DataType
 						&& t.datetimeoffsetDataType == testData[0].datetimeoffsetDataType)
-					.Update((t, s) => new AllTypes2()
+					.UpdateWhenMatched((t, s) => new AllTypes2()
 					{
 						datetimeoffsetDataType = dto2,
 						datetime2DataType = dt2

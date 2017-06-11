@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider
 			where T : class;
 
 
-		int Merge<TTarget, TSource>(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
+		int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 			where TTarget : class
 			where TSource : class;
 	}

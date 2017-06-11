@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		private bool _hasIdentityInsert;
 
-		public SqlServerMergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+		public SqlServerMergeBuilder(DataConnection connection, IMergeable<TTarget, TSource> merge)
 			: base(connection, merge)
 		{
 		}

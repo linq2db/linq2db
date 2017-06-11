@@ -38,7 +38,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				table
-					.From(GetSource2(db)
+					.Merge()
+					.Using(GetSource2(db)
 						.Where(_ => _.OtherId != parameterValues.Val5)
 						.Select(_ => new
 						{
@@ -49,17 +50,22 @@ namespace Tests.Merge
 							Field4 = _.OtherField4,
 							Field5 = _.OtherField5,
 							Field7 = parameterValues.Val2
-						}), (t, s) => t.Id == s.Id || t.Id == parameterValues.Val4)
-					.Insert(s => s.Field7 == parameterValues.Val1 + s.Id, s => new TestMapping1()
-					{
-						Id = s.Id + parameterValues.Val5,
-						Field1 = s.Field1
-					})
-					.Update((t, s) => s.Id == parameterValues.Val3, (t, s) => new TestMapping1()
-					{
-						Field4 = parameterValues.Val5
-					})
-					.Delete((t, s) => t.Field3 == parameterValues.Val2 + 123)
+						}))
+					.On((t, s) => t.Id == s.Id || t.Id == parameterValues.Val4)
+					.InsertWhenNotMatchedAnd(
+						s => s.Field7 == parameterValues.Val1 + s.Id,
+						s => new TestMapping1()
+						{
+							Id = s.Id + parameterValues.Val5,
+							Field1 = s.Field1
+						})
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.Id == parameterValues.Val3,
+						(t, s) => new TestMapping1()
+						{
+							Field4 = parameterValues.Val5
+						})
+					.DeleteWhenMatchedAnd((t, s) => t.Field3 == parameterValues.Val2 + 123)
 					.Merge();
 
 				var parametersCount = 8;
@@ -94,7 +100,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				table
-					.From(GetSource2(db)
+					.Merge()
+					.Using(GetSource2(db)
 						.Where(_ => _.OtherId != parameterValues.Val5)
 						.Select(_ => new
 						{
@@ -105,17 +112,22 @@ namespace Tests.Merge
 							Field4 = _.OtherField4,
 							Field5 = _.OtherField5,
 							Field7 = parameterValues.Val2
-						}), (t, s) => t.Id == s.Id)
-					.Insert(s => s.Field7 == parameterValues.Val1 + s.Id, s => new TestMapping1()
-					{
-						Id = s.Id + parameterValues.Val5,
-						Field1 = s.Field1
-					})
-					.Update((t, s) => s.Id == parameterValues.Val3, (t, s) => new TestMapping1()
-					{
-						Field4 = parameterValues.Val5
-					})
-					.Delete((t, s) => t.Field3 != parameterValues.Val2)
+						}))
+					.On((t, s) => t.Id == s.Id)
+					.InsertWhenNotMatchedAnd(
+						s => s.Field7 == parameterValues.Val1 + s.Id,
+						s => new TestMapping1()
+						{
+							Id = s.Id + parameterValues.Val5,
+							Field1 = s.Field1
+						})
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.Id == parameterValues.Val3,
+						(t, s) => new TestMapping1()
+						{
+							Field4 = parameterValues.Val5
+						})
+					.DeleteWhenMatchedAnd((t, s) => t.Field3 != parameterValues.Val2)
 					.Merge();
 
 				var parametersCount = 7;
@@ -148,7 +160,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				table
-					.From(GetSource2(db)
+					.Merge()
+					.Using(GetSource2(db)
 						.ToList()
 						.Select(_ => new
 						{
@@ -158,12 +171,15 @@ namespace Tests.Merge
 							Field3 = _.OtherField3,
 							Field4 = _.OtherField4,
 							Field5 = _.OtherField5
-						}), (t, s) => t.Id == s.Id || t.Id == parameterValues.Val4)
-					.UpdateBySource(t => t.Id == parameterValues.Val3, t => new TestMapping1()
-					{
-						Field4 = parameterValues.Val5
-					})
-					.DeleteBySource(t => t.Field3 != parameterValues.Val2)
+						}))
+					.On((t, s) => t.Id == s.Id || t.Id == parameterValues.Val4)
+					.UpdateWhenNotMatchedBySourceAnd(
+						t => t.Id == parameterValues.Val3,
+						t => new TestMapping1()
+						{
+							Field4 = parameterValues.Val5
+						})
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Field3 != parameterValues.Val2)
 					.Merge();
 
 				Assert.AreEqual(4, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
@@ -188,14 +204,16 @@ namespace Tests.Merge
 				try
 				{
 					var rows = table
-						.From(GetSource2(db)
+						.Merge()
+						.Using(GetSource2(db)
 							.ToList()
 							.Select(_ => new
 							{
 								Id = _.OtherId,
 								Field = parameterValues.val
-							}), (t, s) => t.Id == s.Id || t.Id == 2)
-						.DeleteBySource(t => t.Field3 != 1)
+							}))
+						.On((t, s) => t.Id == s.Id || t.Id == 2)
+						.DeleteWhenNotMatchedBySourceAnd(t => t.Field3 != 1)
 						.Merge();
 
 					Assert.Fail();
@@ -220,8 +238,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db), (t, s) => t.Id == s.Id && t.Id == param)
-					.Update()
+					.Merge()
+					.Using(GetSource1(db))
+					.On((t, s) => t.Id == s.Id && t.Id == param)
+					.UpdateWhenMatched()
 					.Merge();
 
 				AssertRowCount(1, rows, context);
@@ -258,8 +278,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => t.Id == param)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd((t, s) => t.Id == param)
 					.Merge();
 
 				AssertRowCount(1, rows, context);
@@ -280,8 +302,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Insert(s => s.Id == param)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatchedAnd(s => s.Id == param)
 					.Merge();
 
 				AssertRowCount(1, rows, context);
@@ -303,8 +327,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Delete((t, s) => s.Id == param)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenMatchedAnd((t, s) => s.Id == param)
 					.Merge();
 
 				AssertRowCount(1, rows, context);
@@ -325,8 +351,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.DeleteBySource(t => t.Id == param)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == param)
 					.Merge();
 
 				Assert.AreEqual(1, rows);
@@ -346,11 +374,15 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.UpdateBySource(t => t.Id == param, t => new TestMapping1()
-					{
-						Field1 = t.Field1
-					})
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenNotMatchedBySourceAnd(
+						t => t.Id == param,
+						t => new TestMapping1()
+						{
+							Field1 = t.Field1
+						})
 					.Merge();
 
 				Assert.AreEqual(1, rows);
@@ -373,12 +405,16 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Insert(s => s.Id == 5, s => new TestMapping1()
-					{
-						Id = s.Id,
-						Field1 = param.val
-					})
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatchedAnd(
+						s => s.Id == 5,
+						s => new TestMapping1()
+						{
+							Id = s.Id,
+							Field1 = param.val
+						})
 					.Merge();
 
 				AssertRowCount(1, rows, context);
@@ -407,11 +443,15 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => s.Id == 4, (t, s) => new TestMapping1()
-					{
-						Field1 = param
-					})
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.Id == 4,
+						(t, s) => new TestMapping1()
+						{
+							Field1 = param
+						})
 					.Merge();
 
 				AssertRowCount(1, rows, context);
@@ -437,11 +477,15 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.UpdateBySource(t => t.Id == 1, t => new TestMapping1()
-					{
-						Field1 = param
-					})
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenNotMatchedBySourceAnd(
+						t => t.Id == 1,
+						t => new TestMapping1()
+						{
+							Field1 = param
+						})
 					.Merge();
 
 				Assert.AreEqual(1, rows);
@@ -467,8 +511,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db).Where(_ => _.Id == param))
-					.Update()
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == param))
+					.OnTargetKey()
+					.UpdateWhenMatched()
 					.Merge();
 
 				Assert.AreEqual(1, rows);
@@ -489,8 +535,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource1(db).Select(_ => new { _.Id, Val = param }), (t, s) => t.Id == s.Id && t.Id == s.Val)
-					.Update((t, s) => new TestMapping1()
+					.Merge()
+					.Using(GetSource1(db).Select(_ => new { _.Id, Val = param }))
+					.On((t, s) => t.Id == s.Id && t.Id == s.Val)
+					.UpdateWhenMatched((t, s) => new TestMapping1()
 					{
 						Field1 = s.Val + 111
 					})
@@ -520,8 +568,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.UpdateWithDelete((t, s) => t.Id == param)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedThenDelete((t, s) => t.Id == param)
 					.Merge();
 
 				AssertRowCount(2, rows, context);

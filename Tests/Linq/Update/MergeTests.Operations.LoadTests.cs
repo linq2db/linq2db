@@ -55,8 +55,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetBigSource(size))
-					.Insert()
+					.Merge()
+					.Using(GetBigSource(size))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();

@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider
 		where TTarget : class
 		where TSource : class
 	{
-		public UnsupportedMergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+		public UnsupportedMergeBuilder(DataConnection connection, IMergeable<TTarget, TSource> merge)
 			: base(connection, merge)
 		{
 		}

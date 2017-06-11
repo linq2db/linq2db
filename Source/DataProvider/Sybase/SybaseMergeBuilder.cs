@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Sybase
 	{
 		private bool _hasIdentityInsert;
 
-		public SybaseMergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+		public SybaseMergeBuilder(DataConnection connection, IMergeable<TTarget, TSource> merge)
 			: base(connection, merge)
 		{
 		}

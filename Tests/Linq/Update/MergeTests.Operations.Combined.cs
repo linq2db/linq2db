@@ -26,9 +26,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Insert()
-					.Update()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.UpdateWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -57,9 +59,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Insert()
-					.Delete()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.DeleteWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -87,9 +91,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => t.Id == 3)
-					.Delete()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
+					.DeleteWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -117,10 +123,12 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }))
-					.Update((t, s) => t.Id == 3)
-					.Delete((t, s) => s.Id == 1)
-					.Update((t, s) => new TestMapping1()
+					.Merge()
+					.Using(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 1)
+					.UpdateWhenMatched((t, s) => new TestMapping1()
 					{
 						Field1 = 222
 					})
@@ -154,10 +162,14 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Insert()
-					.UpdateBySource(t => t.Id == 2, t => new TestMapping1() { Field1 = 44 })
-					.DeleteBySource()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.UpdateWhenNotMatchedBySourceAnd(
+						t => t.Id == 2,
+						t => new TestMapping1() { Field1 = 44 })
+					.DeleteWhenNotMatchedBySource()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -190,10 +202,12 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Insert()
-					.Delete()
-					.UpdateBySource(t => new TestMapping1() { Field1 = 44 })
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.DeleteWhenMatched()
+					.UpdateWhenNotMatchedBySource(t => new TestMapping1() { Field1 = 44 })
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -234,12 +248,14 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }))
-					.Insert(s => s.Id == 5)
-					.Insert()
-					.Update((t, s) => t.Id == 3)
-					.Delete((t, s) => t.Id == 4)
-					.Delete()
+					.Merge()
+					.Using(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }))
+					.OnTargetKey()
+					.InsertWhenNotMatchedAnd(s => s.Id == 5)
+					.InsertWhenNotMatched()
+					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
+					.DeleteWhenMatchedAnd((t, s) => t.Id == 4)
+					.DeleteWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -265,9 +281,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update()
-					.Insert()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -297,9 +315,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => t.Id == 3)
-					.Update()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
+					.UpdateWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -326,9 +346,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Delete()
-					.Insert()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenMatched()
+					.InsertWhenNotMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -356,9 +378,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Delete((t, s) => s.Id == 4)
-					.Update()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
+					.UpdateWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -383,8 +407,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.UpdateWithDelete((t, s) => s.Id == 4)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedThenDelete((t, s) => s.Id == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -411,10 +437,12 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Insert()
-					.Update((t, s) => t.Id == 3)
-					.Delete((t, s) => s.Id == 4)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -441,9 +469,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Insert()
-					.UpdateWithDelete((t, s) => t.Id == 3 || s.Id == 4, (t, s) => s.Id == 4)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.UpdateWhenMatchedAndThenDelete((t, s) => t.Id == 3 || s.Id == 4, (t, s) => s.Id == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -472,10 +502,12 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Insert()
-					.Delete((t, s) => s.Id == 4)
-					.Update()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
+					.UpdateWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -504,10 +536,12 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => t.Id == 3)
-					.Insert()
-					.Delete((t, s) => s.Id == 4)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
+					.InsertWhenNotMatched()
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -536,10 +570,12 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => t.Id == 3)
-					.Delete((t, s) => s.Id == 4)
-					.Insert()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
+					.InsertWhenNotMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -568,10 +604,12 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Delete((t, s) => s.Id == 4)
-					.Update((t, s) => t.Id == 3)
-					.Insert()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
+					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
+					.InsertWhenNotMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -600,10 +638,12 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Delete((t, s) => s.Id == 4)
-					.Insert()
-					.Update((t, s) => t.Id == 3)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
+					.InsertWhenNotMatched()
+					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -630,9 +670,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.UpdateWithDelete((t, s) => t.Id == 3 || t.Id == 4, (t, s) => s.Id == 4)
-					.Insert()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAndThenDelete((t, s) => t.Id == 3 || t.Id == 4, (t, s) => s.Id == 4)
+					.InsertWhenNotMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();

@@ -25,8 +25,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.From(db.Person, (t, s) => t.ID == s.ID + 10)
-					.DeleteBySource(t => t.Patient.Diagnosis.Contains("very"))
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID + 10)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"))
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -54,8 +56,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Patient
-					.From(db.Patient, (t, s) => t.PersonID == s.PersonID && s.Diagnosis.Contains("very"))
-					.Delete((t, s) => s.Person.FirstName == "first 4" && t.Person.FirstName == "first 4")
+					.Merge()
+					.Using(db.Patient)
+					.On((t, s) => t.PersonID == s.PersonID && s.Diagnosis.Contains("very"))
+					.DeleteWhenMatchedAnd((t, s) => s.Person.FirstName == "first 4" && t.Person.FirstName == "first 4")
 					.Merge();
 
 				var result = db.Patient.OrderBy(_ => _.PersonID).ToList();
@@ -81,8 +85,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.From(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.Insert(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
 					{
 						FirstName = s.Patient.Diagnosis,
 						LastName = "Inserted 2",
@@ -125,8 +131,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.From(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.Insert(s => new Model.Person()
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.InsertWhenNotMatched(s => new Model.Person()
 					{
 						FirstName = s.Patient.Diagnosis,
 						LastName = "Inserted 2",
@@ -165,8 +173,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.From(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.Insert(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.InsertWhenNotMatchedAnd(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
 					{
 						FirstName = "Inserted 1",
 						LastName = "Inserted 2",
@@ -206,12 +216,12 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.From(
-						db.Person,
-						(t, s) => t.ID == s.ID
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID
 							&& t.Patient.Diagnosis.Contains("very")
 							&& s.Patient.Diagnosis.Contains("sick"))
-					.Update((t, s) => new Person()
+					.UpdateWhenMatched((t, s) => new Person()
 					{
 						MiddleName = "R.I.P."
 					})
@@ -249,8 +259,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.From(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.Update((t, s) => new Model.Person()
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
+					.UpdateWhenMatched((t, s) => new Model.Person()
 					{
 						MiddleName = "first " + s.Patient.Diagnosis,
 						LastName = "last " + t.Patient.Diagnosis
@@ -287,8 +299,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.From(db.Person, (t, s) => t.ID == s.ID + 10)
-					.UpdateBySource(t => t.FirstName == "first 3",
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID + 10)
+					.UpdateWhenNotMatchedBySourceAnd(t => t.FirstName == "first 3",
 						t => new Model.Person()
 						{
 							FirstName = "Updated",
@@ -326,8 +340,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID + 10)
-					.UpdateBySource(t => t.Patient.Diagnosis.Contains("very"),
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID + 10)
+					.UpdateWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"),
 						t => new Model.Person()
 						{
 							FirstName = "Updated"
@@ -365,8 +381,11 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.From(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.Update((t, s) => s.Patient.Diagnosis == t.Patient.Diagnosis && t.Patient.Diagnosis.Contains("very"),
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.Patient.Diagnosis == t.Patient.Diagnosis && t.Patient.Diagnosis.Contains("very"),
 						(t, s) => new Model.Person()
 						{
 							LastName = "Updated"
@@ -403,8 +422,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID + 10)
-					.DeleteBySource(t => t.Patient.Diagnosis.Contains("very"))
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID + 10)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient.Diagnosis.Contains("very"))
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -432,8 +453,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Patient
-					.FromSame(db.Patient, (t, s) => t.PersonID == s.PersonID && s.Diagnosis.Contains("very"))
-					.Delete((t, s) => s.Person.FirstName == "first 4" && t.Person.FirstName == "first 4")
+					.Merge()
+					.Using(db.Patient)
+					.On((t, s) => t.PersonID == s.PersonID && s.Diagnosis.Contains("very"))
+					.DeleteWhenMatchedAnd((t, s) => s.Person.FirstName == "first 4" && t.Person.FirstName == "first 4")
 					.Merge();
 
 				var result = db.Patient.OrderBy(_ => _.PersonID).ToList();
@@ -459,13 +482,17 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.Insert(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
-					{
-						FirstName = s.Patient.Diagnosis,
-						LastName = "Inserted 2",
-						Gender = Gender.Unknown
-					})
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.InsertWhenNotMatchedAnd(
+						s => s.Patient.Diagnosis.Contains("sick"),
+						s => new Model.Person()
+						{
+							FirstName = s.Patient.Diagnosis,
+							LastName = "Inserted 2",
+							Gender = Gender.Unknown
+						})
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -503,8 +530,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.Insert(s => new Model.Person()
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.InsertWhenNotMatched(s => new Model.Person()
 					{
 						FirstName = s.Patient.Diagnosis,
 						LastName = "Inserted 2",
@@ -543,13 +572,17 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.Insert(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
-					{
-						FirstName = "Inserted 1",
-						LastName = "Inserted 2",
-						Gender = Gender.Male
-					})
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.InsertWhenNotMatchedAnd(
+						s => s.Patient.Diagnosis.Contains("sick"),
+						s => new Model.Person()
+						{
+							FirstName = "Inserted 1",
+							LastName = "Inserted 2",
+							Gender = Gender.Male
+						})
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -584,12 +617,12 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(
-						db.Person,
-						(t, s) => t.ID == s.ID
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID
 							&& t.Patient.Diagnosis.Contains("very")
 							&& s.Patient.Diagnosis.Contains("sick"))
-					.Update((t, s) => new Person()
+					.UpdateWhenMatched((t, s) => new Person()
 					{
 						MiddleName = "R.I.P."
 					})
@@ -627,8 +660,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.Update((t, s) => new Model.Person()
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
+					.UpdateWhenMatched((t, s) => new Model.Person()
 					{
 						MiddleName = "first " + s.Patient.Diagnosis,
 						LastName = "last " + t.Patient.Diagnosis
@@ -665,8 +700,11 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID + 10)
-					.UpdateBySource(t => t.FirstName == "first 3",
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID + 10)
+					.UpdateWhenNotMatchedBySourceAnd(
+						t => t.FirstName == "first 3",
 						t => new Model.Person()
 						{
 							FirstName = "Updated",
@@ -704,8 +742,11 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID + 10)
-					.UpdateBySource(t => t.Patient.Diagnosis.Contains("very"),
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID + 10)
+					.UpdateWhenNotMatchedBySourceAnd(
+						t => t.Patient.Diagnosis.Contains("very"),
 						t => new Model.Person()
 						{
 							FirstName = "Updated"
@@ -743,8 +784,11 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.Update((t, s) => s.Patient.Diagnosis.Contains("very") && t.Patient.Diagnosis.Contains("very"),
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.Patient.Diagnosis.Contains("very") && t.Patient.Diagnosis.Contains("very"),
 						(t, s) => new Model.Person()
 						{
 							MiddleName = "Updated"
@@ -816,8 +860,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.UpdateWithDelete(
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
+					.UpdateWhenMatchedThenDelete(
 						(t, s) => new Model.Person()
 						{
 							LastName = s.LastName
@@ -848,8 +894,10 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.From(db.Person, (t, s) => t.ID == s.ID && s.FirstName == "first 4")
-					.UpdateWithDelete(
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && s.FirstName == "first 4")
+					.UpdateWhenMatchedThenDelete(
 						(t, s) => new Model.Person()
 						{
 							LastName = s.FirstName

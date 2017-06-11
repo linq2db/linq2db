@@ -26,8 +26,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db), (t, s) => s.Id == 3)
-					.Update()
+					.Merge()
+					.Using(GetSource1(db))
+					.On((t, s) => s.Id == 3)
+					.UpdateWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -76,8 +78,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => s.Id == 4)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd((t, s) => s.Id == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -112,8 +116,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => new TestMapping1()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatched((t, s) => new TestMapping1()
 					{
 						Id = t.Id + s.Id,
 						Field1 = t.Field1 + s.Field1,
@@ -159,8 +165,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => new TestMapping1()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatched((t, s) => new TestMapping1()
 					{
 						Field1 = t.Field1 + s.Field1,
 						Field2 = t.Field2 + s.Field2,
@@ -205,15 +213,19 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Update((t, s) => s.Id == 3, (t, s) => new TestMapping1()
-					{
-						Field1 = t.Field1 + s.Field5,
-						Field2 = t.Field2 + s.Field4,
-						Field3 = t.Field3 + s.Field3,
-						Field4 = t.Field4 + s.Field2,
-						Field5 = t.Field5 + s.Field1
-					})
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.Id == 3,
+						(t, s) => new TestMapping1()
+						{
+							Field1 = t.Field1 + s.Field5,
+							Field2 = t.Field2 + s.Field4,
+							Field3 = t.Field3 + s.Field3,
+							Field4 = t.Field4 + s.Field2,
+							Field5 = t.Field5 + s.Field1
+						})
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -245,8 +257,11 @@ namespace Tests.Merge
 
 				var table = GetTarget(db);
 
-				var rows = table.From(GetSource2(db), (t, s) => t.Id == s.OtherId)
-					.Update((t, s) => new TestMapping1()
+				var rows = table
+					.Merge()
+					.Using(GetSource2(db))
+					.On((t, s) => t.Id == s.OtherId)
+					.UpdateWhenMatched((t, s) => new TestMapping1()
 					{
 						Field1 = s.OtherField1,
 						Field2 = s.OtherField2,
@@ -290,15 +305,20 @@ namespace Tests.Merge
 
 				var table = GetTarget(db);
 
-				var rows = table.From(GetSource2(db), (t, s) => t.Id == s.OtherId)
-					.Update((t, s) => s.OtherField4 == 214, (t, s) => new TestMapping1()
-					{
-						Field1 = s.OtherField1,
-						Field2 = s.OtherField2,
-						Field3 = s.OtherField3,
-						Field4 = s.OtherField4,
-						Field5 = s.OtherField5
-					})
+				var rows = table
+					.Merge()
+					.Using(GetSource2(db))
+					.On((t, s) => t.Id == s.OtherId)
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.OtherField4 == 214,
+						(t, s) => new TestMapping1()
+						{
+							Field1 = s.OtherField1,
+							Field2 = s.OtherField2,
+							Field3 = s.OtherField3,
+							Field4 = s.OtherField4,
+							Field5 = s.OtherField5
+						})
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -330,7 +350,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).Select(_ => new
 					{
 						Key = _.OtherId,
 						Field01 = _.OtherField1,
@@ -338,15 +359,18 @@ namespace Tests.Merge
 						Field03 = _.OtherField3,
 						Field04 = _.OtherField4,
 						Field05 = _.OtherField5,
-					}), (t, s) => t.Id == s.Key)
-					.Update((t, s) => s.Field04 == 214, (t, s) => new TestMapping1()
-					{
-						Field1 = s.Field01,
-						Field2 = s.Field02,
-						Field3 = s.Field03,
-						Field4 = s.Field04,
-						Field5 = s.Field05
-					})
+					}))
+					.On((t, s) => t.Id == s.Key)
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.Field04 == 214,
+						(t, s) => new TestMapping1()
+						{
+							Field1 = s.Field01,
+							Field2 = s.Field02,
+							Field3 = s.Field03,
+							Field4 = s.Field04,
+							Field5 = s.Field05
+						})
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -378,7 +402,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).ToList().Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).ToList().Select(_ => new
 					{
 						Key = _.OtherId,
 						Field01 = _.OtherField1,
@@ -386,15 +411,18 @@ namespace Tests.Merge
 						Field03 = _.OtherField3,
 						Field04 = _.OtherField4,
 						Field05 = _.OtherField5,
-					}), (t, s) => t.Id == s.Key)
-					.Update((t, s) => s.Field04 == 214, (t, s) => new TestMapping1()
-					{
-						Field1 = s.Field01,
-						Field2 = s.Field02,
-						Field3 = s.Field03,
-						Field4 = s.Field04,
-						Field5 = s.Field05
-					})
+					}))
+					.On((t, s) => t.Id == s.Key)
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.Field04 == 214,
+						(t, s) => new TestMapping1()
+						{
+							Field1 = s.Field01,
+							Field2 = s.Field02,
+							Field3 = s.Field03,
+							Field4 = s.Field04,
+							Field5 = s.Field05
+						})
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -426,7 +454,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).Select(_ => new
 					{
 						order = _.OtherId,
 						delete = _.OtherField1,
@@ -434,15 +463,18 @@ namespace Tests.Merge
 						Field = _.OtherField3,
 						field = _.OtherField4,
 						As = _.OtherField5
-					}), (t, s) => t.Id == s.order)
-					.Update((t, s) => s.field == 214, (t, s) => new TestMapping1()
-					{
-						Field1 = s.delete,
-						Field2 = s.Delete,
-						Field3 = s.Field,
-						Field4 = s.field,
-						Field5 = s.As
-					})
+					}))
+					.On((t, s) => t.Id == s.order)
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.field == 214,
+						(t, s) => new TestMapping1()
+						{
+							Field1 = s.delete,
+							Field2 = s.Delete,
+							Field3 = s.Field,
+							Field4 = s.field,
+							Field5 = s.As
+						})
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -474,7 +506,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).ToList().Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).ToList().Select(_ => new
 					{
 						@in = _.OtherId,
 						join = _.OtherField1,
@@ -483,15 +516,18 @@ namespace Tests.Merge
 						with = _.OtherField4,
 						left = _.OtherField5,
 						Left = _.OtherField2
-					}), (t, s) => t.Id == s.@in)
-					.Update((t, s) => s.with == 214, (t, s) => new TestMapping1()
-					{
-						Field1 = s.join,
-						Field2 = s.outer,
-						Field3 = s.inner,
-						Field4 = s.with,
-						Field5 = s.left
-					})
+					}))
+					.On((t, s) => t.Id == s.@in)
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.with == 214,
+						(t, s) => new TestMapping1()
+						{
+							Field1 = s.join,
+							Field2 = s.outer,
+							Field3 = s.inner,
+							Field4 = s.with,
+							Field5 = s.left
+						})
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();

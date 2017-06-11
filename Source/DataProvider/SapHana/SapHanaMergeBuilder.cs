@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SapHana
 		where TTarget : class
 		where TSource : class
 	{
-		public SapHanaMergeBuilder(DataConnection connection, IMerge<TTarget, TSource> merge)
+		public SapHanaMergeBuilder(DataConnection connection, IMergeable<TTarget, TSource> merge)
 			: base(connection, merge)
 		{
 		}

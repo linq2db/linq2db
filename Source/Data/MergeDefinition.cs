@@ -15,11 +15,18 @@ namespace LinqToDB.Data
 		DeleteBySource
 	}
 
-	public class MergeDefinition<TTarget, TSource> : IMerge<TTarget, TSource>, IMerge<TTarget>
+	public class MergeDefinition<TTarget, TSource>
+		:	IMergeableUsing<TTarget>,
+			IMergeableOn<TTarget, TSource>,
+			IMergeable<TTarget, TSource>
 	{
 		private readonly IEnumerable<TSource> _enumerableSource;
 
 		private readonly Expression<Func<TTarget, TSource, bool>> _matchPredicate;
+
+		private readonly Expression _targetKey;
+		private readonly Expression _sourceKey;
+		private readonly Type _keyType;
 
 		private readonly Operation[] _operations;
 
@@ -27,28 +34,15 @@ namespace LinqToDB.Data
 
 		private readonly ITable<TTarget> _target;
 
-		public MergeDefinition(
-			ITable<TTarget> target,
-			IEnumerable<TSource> source,
-			Expression<Func<TTarget, TSource, bool>> matchPredicate)
+		public MergeDefinition(ITable<TTarget> target)
 		{
 			_target = target;
-			_enumerableSource = source;
-			_matchPredicate = matchPredicate;
-
-			_operations = new Operation[0];
 		}
 
-		public MergeDefinition(
-			ITable<TTarget> target,
-			IQueryable<TSource> source,
-			Expression<Func<TTarget, TSource, bool>> matchPredicate)
+		public MergeDefinition(ITable<TTarget> target, IQueryable<TSource> source)
 		{
 			_target = target;
 			_queryableSource = source;
-			_matchPredicate = matchPredicate;
-
-			_operations = new Operation[0];
 		}
 
 		private MergeDefinition(
@@ -56,14 +50,20 @@ namespace LinqToDB.Data
 			IEnumerable<TSource> enumerableSource,
 			IQueryable<TSource> queryableSource,
 			Expression<Func<TTarget, TSource, bool>> matchPredicate,
+			Expression targetKey,
+			Expression sourceKey,
+			Type keyType,
 			Operation[] operations)
 		{
 			_target = target;
 			_enumerableSource = enumerableSource;
 			_queryableSource = queryableSource;
 			_matchPredicate = matchPredicate;
+			_targetKey = targetKey;
+			_sourceKey = sourceKey;
+			_keyType = keyType;
 
-			_operations = operations;
+			_operations = operations ?? new Operation[0];
 		}
 
 		public IEnumerable<TSource> EnumerableSource
@@ -106,6 +106,18 @@ namespace LinqToDB.Data
 			}
 		}
 
+		public MergeDefinition<TTarget, TNewSource> AddSource<TNewSource>(IQueryable<TNewSource> source)
+			where TNewSource : class
+		{
+			return new MergeDefinition<TTarget, TNewSource>(_target, null, source, null, null, null, null, null);
+		}
+
+		public MergeDefinition<TTarget, TNewSource> AddSource<TNewSource>(IEnumerable<TNewSource> source)
+			where TNewSource : class
+		{
+			return new MergeDefinition<TTarget, TNewSource>(_target, source, null, null, null, null, null, null);
+		}
+
 		public MergeDefinition<TTarget, TSource> AddOperation(Operation operation)
 		{
 			return new MergeDefinition<TTarget, TSource>(
@@ -113,7 +125,38 @@ namespace LinqToDB.Data
 				_enumerableSource,
 				_queryableSource,
 				_matchPredicate,
+				_targetKey,
+				_sourceKey,
+				_keyType,
 				_operations.Concat(new[] { operation }).ToArray());
+		}
+
+		public MergeDefinition<TTarget, TSource> AddOnPredicate(Expression<Func<TTarget, TSource, bool>> matchPredicate)
+		{
+			return new MergeDefinition<TTarget, TSource>(
+				_target,
+				_enumerableSource,
+				_queryableSource,
+				matchPredicate,
+				null,
+				null,
+				null,
+				_operations);
+		}
+
+		public MergeDefinition<TTarget, TSource> AddOnKey<TKey>(
+			Expression<Func<TTarget, TKey>> targetKey,
+			Expression<Func<TSource, TKey>> sourceKey)
+		{
+			return new MergeDefinition<TTarget, TSource>(
+				_target,
+				_enumerableSource,
+				_queryableSource,
+				null,
+				targetKey,
+				sourceKey,
+				typeof(TKey),
+				_operations);
 		}
 
 		public class Operation

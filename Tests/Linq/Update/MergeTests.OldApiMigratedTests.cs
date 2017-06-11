@@ -23,8 +23,12 @@ namespace Tests.Merge
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.GetTable<LinqDataTypes2>().FromSame(db.Types2)
-					.Update().Insert()
+				db.GetTable<LinqDataTypes2>()
+					.Merge()
+					.Using(db.Types2)
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
 					.Merge();
 			}
 		}
@@ -35,8 +39,12 @@ namespace Tests.Merge
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.GetTable<Person>().FromSame(new Person[] { })
-					.Update().Insert()
+				db.GetTable<Person>()
+					.Merge()
+					.Using(new Person[] { })
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
 					.Merge();
 			}
 		}
@@ -47,8 +55,13 @@ namespace Tests.Merge
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				db.GetTable<LinqDataTypes2>().FromSame(db.Types2)
-					.Update().Insert().DeleteBySource()
+				db.GetTable<LinqDataTypes2>()
+					.Merge()
+					.Using(db.Types2)
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.DeleteWhenNotMatchedBySource()
 					.Merge();
 			}
 		}
@@ -59,8 +72,13 @@ namespace Tests.Merge
 			using (var db = new TestDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				db.GetTable<LinqDataTypes2>().FromSame(db.Types2.Where(t => t.ID > 5))
-					.Update().Insert().DeleteBySource(t => t.ID > 5)
+				db.GetTable<LinqDataTypes2>()
+					.Merge()
+					.Using(db.Types2.Where(t => t.ID > 5))
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.DeleteWhenNotMatchedBySourceAnd(t => t.ID > 5)
 					.Merge();
 			}
 		}
@@ -88,8 +106,13 @@ namespace Tests.Merge
 				});
 
 				var patient = db.Patient.Where(_ => _.PersonID == person.ID).First();
-				db.GetTable<Person>().FromSame(db.Person.Where(t => t.Patient == patient))
-					.Update().Insert().DeleteBySource(t => t.Patient == patient)
+				db.GetTable<Person>()
+					.Merge()
+					.Using(db.Person.Where(t => t.Patient == patient))
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient == patient)
 					.Merge();
 			}
 		}
@@ -118,10 +141,12 @@ namespace Tests.Merge
 
 				var patient = person.ID;
 				var merge = db.GetTable<Person>()
-					.FromSame(db.Person.Where(t => t.Patient.PersonID == patient))
-					.Update()
-					.Insert()
-					.DeleteBySource(t => t.Patient.PersonID == patient);
+					.Merge()
+					.Using(db.Person.Where(t => t.Patient.PersonID == patient))
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Patient.PersonID == patient);
 				merge.Merge();
 				patient++;
 				merge.Merge();
@@ -135,10 +160,11 @@ namespace Tests.Merge
 			using (db.BeginTransaction())
 			{
 				db.GetTable<Child>()
-					.FromSame(db.Child.Where(t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22)))
-					//.Update()
-					.Insert()
-					.DeleteBySource(t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22))
+					.Merge()
+					.Using(db.Child.Where(t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22)))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22))
 					.Merge();
 			}
 		}
@@ -172,7 +198,13 @@ namespace Tests.Merge
 					ncharDataType = "\x0"
 				}));
 
-				db.GetTable<AllType>().FromSame(db.GetTable<AllType>().Where(t => t.ID == id)).Update().Insert().Merge();
+				db.GetTable<AllType>()
+					.Merge()
+					.Using(db.GetTable<AllType>().Where(t => t.ID == id))
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
 			}
 		}
 
@@ -185,7 +217,8 @@ namespace Tests.Merge
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllType>()
-					.FromSame(new[]
+					.Merge()
+					.Using(new[]
 					{
 						new AllType
 						{
@@ -193,7 +226,10 @@ namespace Tests.Merge
 							charDataType  = '\x0',
 							ncharDataType = "\x0"
 						}
-					}).Update().Insert()
+					})
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
 					.Merge();
 			}
 		}
@@ -211,7 +247,8 @@ namespace Tests.Merge
 				var lastId = db.GetTable<AllType>().Select(_ => _.ID).Max();
 
 				var rows = db.GetTable<AllType>()
-					.FromSame(new[]
+					.Merge()
+					.Using(new[]
 					{
 						new AllType()
 						{
@@ -221,7 +258,9 @@ namespace Tests.Merge
 							nvarcharDataType = "test\x0it"
 						}
 					})
-					.Insert().Merge();
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
 
 				Assert.AreEqual(1, rows);
 

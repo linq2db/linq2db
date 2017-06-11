@@ -436,7 +436,7 @@ namespace LinqToDB.DataProvider
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
+		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 			where TTarget : class
 			where TSource : class
 		{
@@ -460,7 +460,7 @@ namespace LinqToDB.DataProvider
 
 		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection,
-			IMerge<TTarget, TSource> merge)
+			IMergeable<TTarget, TSource> merge)
 			where TTarget : class
 			where TSource : class
 		{
