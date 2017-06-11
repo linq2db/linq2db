@@ -192,6 +192,8 @@ namespace Tests.Linq
 				|| context == ProviderName.DB2 + ".LinqService"
 				|| context == ProviderName.SQLite
 				|| context == ProviderName.SQLite + ".LinqService"
+				|| context == TestProvName.SQLiteMs
+				|| context == TestProvName.SQLiteMs + ".LinqService"
 				|| context == ProviderName.SqlCe
 				|| context == ProviderName.SqlCe + ".LinqService"
 				|| context == ProviderName.SapHana
