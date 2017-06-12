@@ -233,7 +233,6 @@ namespace Tests.SchemaProvider
 				Assert.IsEmpty(schema1.Tables);
 				Assert.IsEmpty(schema2.Tables);
 			}
-
 		}
 
 		[Test, DataContextSource(false)]
@@ -255,9 +254,7 @@ namespace Tests.SchemaProvider
 				Assert.IsEmpty(schema1.Tables);
 				Assert.IsEmpty(schema2.Tables);
 			}
-
 		}
-
 
 		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
 		public void SchemaProviderNormalizeName(string context)

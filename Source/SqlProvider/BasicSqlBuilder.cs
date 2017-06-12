@@ -1646,10 +1646,10 @@ namespace LinqToDB.SqlProvider
 		void BuildInListValues(SelectQuery.Predicate.InList predicate, IEnumerable values)
 		{
 			var firstValue = true;
-			var len = StringBuilder.Length;
-			var hasNull = false;
-			var count = 0;
-			var longList = false;
+			var len        = StringBuilder.Length;
+			var hasNull    = false;
+			var count      = 0;
+			var longList   = false;
 
 			SqlDataType sqlDataType = null;
 
