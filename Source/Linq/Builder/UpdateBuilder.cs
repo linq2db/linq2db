@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class UpdateBuilder : MethodCallBuilder
+	 class UpdateBuilder : MethodCallBuilder
 	{
 		#region Update
 
@@ -32,6 +32,9 @@ namespace LinqToDB.Linq.Builder
 				case 2 : // int Update<T>(this IQueryable<T> source, Expression<Func<T,T>> setter)
 					{
 						CheckAssociation(sequence);
+
+						if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+							sequence = new SubQueryContext(sequence);
 
 						BuildSetter(
 							builder,
@@ -55,6 +58,9 @@ namespace LinqToDB.Linq.Builder
 							//
 							sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
 
+							if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+								sequence = new SubQueryContext(sequence);
+
 							BuildSetter(
 								builder,
 								buildInfo,
@@ -76,7 +82,7 @@ namespace LinqToDB.Linq.Builder
 								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
 
 								if (tableInfo.Result == false)
-									throw new LinqException("Expression '{0}' mast be a table.");
+									throw new LinqException("Expression '{0}' must be a table.");
 
 								into = tableInfo.Context;
 							}
@@ -404,6 +410,10 @@ namespace LinqToDB.Linq.Builder
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+				if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+					sequence = new SubQueryContext(sequence);
+
 				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var update   =                   methodCall.Arguments[2].Unwrap();
 
