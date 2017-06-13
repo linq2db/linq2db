@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsInnerJoinAsCrossSupported = false;
 
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("DBTYPE_WCHAR", (r, i) => AccessTools.GetChar(r, i));
+			SetCharFieldToType<char>("DBTYPE_WCHAR", (r, i) => DataTools.GetChar(r, i));
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));

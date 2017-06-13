@@ -34,8 +34,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("Char",  (r, i) => OracleTools.GetChar(r, i));
-			SetCharFieldToType<char>("NChar", (r, i) => OracleTools.GetChar(r, i));
+			SetCharFieldToType<char>("Char",  (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
 
 			//			ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal), ToType = typeof(TimeSpan) }] =
 			//				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));

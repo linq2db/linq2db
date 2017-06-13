@@ -24,23 +24,23 @@ namespace Tests.Linq
 			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int Id;
 
-			[Column(Configuration = ProviderName.SqlCe, IsColumn = false)]
-			[Column(Configuration = ProviderName.DB2, IsColumn = false)]
-			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
-			[Column(Configuration = ProviderName.MySql, IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57, IsColumn = false)]
-			[Column(Configuration = TestProvName.MariaDB, IsColumn = false)]
 			[Column("char20DataType")]
+			[Column(Configuration = ProviderName.SqlCe,      IsColumn = false)]
+			[Column(Configuration = ProviderName.DB2,        IsColumn = false)]
+			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
+			[Column(Configuration = ProviderName.MySql,      IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql57,    IsColumn = false)]
+			[Column(Configuration = TestProvName.MariaDB,    IsColumn = false)]
 			public string String;
 
 			[Column("ncharDataType")]
 			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
-			[Column("CHAR20DATATYPE", Configuration = ProviderName.DB2)]
-			[Column("char20datatype", Configuration = ProviderName.PostgreSQL)]
-			[Column("char20DataType", Configuration = ProviderName.MySql)]
-			[Column("char20DataType", Configuration = TestProvName.MySql57)]
-			[Column("char20DataType", Configuration = TestProvName.MariaDB)]
-			[Column(Configuration = ProviderName.Firebird, IsColumn = false)]
+			[Column("CHAR20DATATYPE",  Configuration = ProviderName.DB2)]
+			[Column("char20datatype",  Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType",  Configuration = ProviderName.MySql)]
+			[Column("char20DataType",  Configuration = TestProvName.MySql57)]
+			[Column("char20DataType",  Configuration = TestProvName.MariaDB)]
+			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string NString;
 
 			[Column("bitDataType", Configuration = ProviderName.Sybase)]
@@ -56,23 +56,23 @@ namespace Tests.Linq
 			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int Id;
 
-			[Column(Configuration = ProviderName.SqlCe, IsColumn = false)]
-			[Column(Configuration = ProviderName.DB2, IsColumn = false)]
-			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
-			[Column(Configuration = ProviderName.MySql, IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql57, IsColumn = false)]
-			[Column(Configuration = TestProvName.MariaDB, IsColumn = false)]
 			[Column("char20DataType")]
+			[Column(Configuration = ProviderName.SqlCe,      IsColumn = false)]
+			[Column(Configuration = ProviderName.DB2,        IsColumn = false)]
+			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
+			[Column(Configuration = ProviderName.MySql,      IsColumn = false)]
+			[Column(Configuration = TestProvName.MySql57,    IsColumn = false)]
+			[Column(Configuration = TestProvName.MariaDB,    IsColumn = false)]
 			public char? Char;
 
 			[Column("ncharDataType")]
 			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
-			[Column("CHAR20DATATYPE", Configuration = ProviderName.DB2)]
-			[Column("char20datatype", Configuration = ProviderName.PostgreSQL)]
-			[Column("char20DataType", Configuration = ProviderName.MySql)]
-			[Column("char20DataType", Configuration = TestProvName.MySql57)]
-			[Column("char20DataType", Configuration = TestProvName.MariaDB)]
-			[Column(Configuration = ProviderName.Firebird, IsColumn = false)]
+			[Column("CHAR20DATATYPE",  Configuration = ProviderName.DB2)]
+			[Column("char20datatype",  Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType",  Configuration = ProviderName.MySql)]
+			[Column("char20DataType",  Configuration = TestProvName.MySql57)]
+			[Column("char20DataType",  Configuration = TestProvName.MariaDB)]
+			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
 
 			[Column("bitDataType", Configuration = ProviderName.Sybase)]
@@ -160,14 +160,14 @@ namespace Tests.Linq
 		private static CharTestTable[] GetCharData(string context)
 		{
 			// filter out null-character test cases for servers/providers without support
-			if (context == ProviderName.PostgreSQL
+			if (   context == ProviderName.PostgreSQL
 				|| context == ProviderName.PostgreSQL + ".LinqService"
 				|| context == ProviderName.DB2
-				|| context == ProviderName.DB2 + ".LinqService"
+				|| context == ProviderName.DB2        + ".LinqService"
 				|| context == ProviderName.SqlCe
-				|| context == ProviderName.SqlCe + ".LinqService"
+				|| context == ProviderName.SqlCe      + ".LinqService"
 				|| context == ProviderName.SapHana
-				|| context == ProviderName.SapHana + ".LinqService")
+				|| context == ProviderName.SapHana    + ".LinqService")
 				return CharTestData.Where(_ => _.NChar != '\0').ToArray();
 
 			// I wonder why
@@ -186,18 +186,18 @@ namespace Tests.Linq
 		private static StringTestTable[] GetStringData(string context)
 		{
 			// filter out null-character test cases for servers/providers without support
-			if (context == ProviderName.PostgreSQL
+			if (   context == ProviderName.PostgreSQL
 				|| context == ProviderName.PostgreSQL + ".LinqService"
 				|| context == ProviderName.DB2
-				|| context == ProviderName.DB2 + ".LinqService"
+				|| context == ProviderName.DB2        + ".LinqService"
 				|| context == ProviderName.SQLite
-				|| context == ProviderName.SQLite + ".LinqService"
+				|| context == ProviderName.SQLite     + ".LinqService"
 				|| context == TestProvName.SQLiteMs
-				|| context == TestProvName.SQLiteMs + ".LinqService"
+				|| context == TestProvName.SQLiteMs   + ".LinqService"
 				|| context == ProviderName.SqlCe
-				|| context == ProviderName.SqlCe + ".LinqService"
+				|| context == ProviderName.SqlCe      + ".LinqService"
 				|| context == ProviderName.SapHana
-				|| context == ProviderName.SapHana + ".LinqService")
+				|| context == ProviderName.SapHana    + ".LinqService")
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")).ToArray();
 
 			// I wonder why
@@ -308,17 +308,17 @@ namespace Tests.Linq
 		private static bool SkipChar(string context)
 		{
 			return context == ProviderName.SqlCe
-				|| context == ProviderName.SqlCe + ".LinqService"
+				|| context == ProviderName.SqlCe      + ".LinqService"
 				|| context == ProviderName.DB2
-				|| context == ProviderName.DB2 + ".LinqService"
+				|| context == ProviderName.DB2        + ".LinqService"
 				|| context == ProviderName.PostgreSQL
 				|| context == ProviderName.PostgreSQL + ".LinqService"
 				|| context == ProviderName.MySql
-				|| context == ProviderName.MySql + ".LinqService"
+				|| context == ProviderName.MySql      + ".LinqService"
 				|| context == TestProvName.MySql57
-				|| context == TestProvName.MySql57 + ".LinqService"
+				|| context == TestProvName.MySql57    + ".LinqService"
 				|| context == TestProvName.MariaDB
-				|| context == TestProvName.MariaDB + ".LinqService";
+				|| context == TestProvName.MariaDB    + ".LinqService";
 		}
 	}
 }

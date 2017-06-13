@@ -30,8 +30,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharFieldToType<char>("char",  (r, i) => SQLiteTools.GetChar(r, i));
-			SetCharFieldToType<char>("nchar", (r, i) => SQLiteTools.GetChar(r, i));
+			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
