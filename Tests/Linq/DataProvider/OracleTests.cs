@@ -1857,6 +1857,7 @@ namespace Tests.DataProvider
 					db.Execute("GRANT CREATE ANY TRIGGER TO TestUser");
 					db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
 					db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
+					Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
 				}
 				finally
 				{
