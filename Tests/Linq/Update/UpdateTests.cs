@@ -727,16 +727,18 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			 ProviderName.Access,
-			 ProviderName.DB2,
-			 ProviderName.Firebird,
-			 ProviderName.Informix,
-			 ProviderName.PostgreSQL,
-			 ProviderName.SQLite, 
-			 TestProvName.SQLiteMs,
-			 ProviderName.SqlCe,
-			 ProviderName.SqlServer2000,
-			 ProviderName.SapHana
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
+			ProviderName.SapHana,
+			ProviderName.MySql,
+			TestProvName.MySql57
 		 )]
 		public void TestUpdateTakeOrdered(string context)
 		{
@@ -771,16 +773,18 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			 ProviderName.Access,
-			 ProviderName.DB2,
-			 ProviderName.Firebird,
-			 ProviderName.Informix,
-			 ProviderName.PostgreSQL,
-			 ProviderName.SQLite, 
-			 TestProvName.SQLiteMs,
-			 ProviderName.SqlCe,
-			 ProviderName.SqlServer2000,
-			 ProviderName.SapHana
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
+			ProviderName.SapHana,
+			ProviderName.MySql,
+			TestProvName.MySql57
 		 )]
 		public void TestUpdateSkipTake(string context)
 		{
@@ -818,16 +822,16 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			 ProviderName.Access,
-			 ProviderName.DB2,
-			 ProviderName.Firebird,
-			 ProviderName.Informix,
-			 ProviderName.PostgreSQL,
-			 ProviderName.SQLite, 
-			 TestProvName.SQLiteMs,
-			 ProviderName.SqlCe,
-			 ProviderName.SqlServer2000,
-			 ProviderName.SapHana
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
+			ProviderName.SapHana
 		 )]
 		public void TestUpdateTakeNotOrdered(string context)
 		{
