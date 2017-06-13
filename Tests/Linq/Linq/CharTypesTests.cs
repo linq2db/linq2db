@@ -239,7 +239,7 @@ namespace Tests.Linq
 			new CharTestTable()
 		};
 
-		[DataContextSource(false	)]
+		[DataContextSource(false)]
 		public void CharTrimming(string context)
 		{
 			using (var db = GetDataContext(context))
