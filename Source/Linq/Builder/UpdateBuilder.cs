@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	 class UpdateBuilder : MethodCallBuilder
+	class UpdateBuilder : MethodCallBuilder
 	{
 		#region Update
 
