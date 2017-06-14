@@ -15,7 +15,7 @@ namespace LinqToDB.Common
 			public static bool GenerateExpressionTest;
 			public static bool TraceMapperExpression;
 			public static bool DoNotClearOrderBys;
-			public static bool OptimizeJoins;
+			public static bool OptimizeJoins = true;
 
 			/// <summary>
 			/// If set to true unllable fields would be checked for IS NULL when comparasion type is NotEqual 
