@@ -26,8 +26,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.DeleteBySource()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenNotMatchedBySource()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -51,8 +53,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.DeleteBySource(t => t.Id == 1)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 1)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -77,8 +81,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db), (t, s) => s.OtherId == t.Id && t.Id == 3)
-					.DeleteBySource()
+					.Merge()
+					.Using(GetSource2(db))
+					.On((t, s) => s.OtherId == t.Id && t.Id == 3)
+					.DeleteWhenNotMatchedBySource()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -101,8 +107,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db), (t, s) => s.OtherId == t.Id)
-					.DeleteBySource(t => t.Id == 2)
+					.Merge()
+					.Using(GetSource2(db))
+					.On((t, s) => s.OtherId == t.Id)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 2)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -127,11 +135,13 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).Select(_ => new
 					{
 						Key = _.OtherId
-					}), (t, s) => s.Key == t.Id)
-					.DeleteBySource(t => t.Id == 2)
+					}))
+					.On((t, s) => s.Key == t.Id)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 2)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -156,11 +166,13 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).ToList().Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).ToList().Select(_ => new
 					{
 						Key = _.OtherId
-					}), (t, s) => s.Key == t.Id)
-					.DeleteBySource(t => t.Id == 2)
+					}))
+					.On((t, s) => s.Key == t.Id)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 2)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -185,12 +197,14 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).Select(_ => new
 					{
 						select = _.OtherId,
 						Select = _.OtherField1
-					}), (t, s) => s.select == t.Id)
-					.DeleteBySource(t => t.Id == 2)
+					}))
+					.On((t, s) => s.select == t.Id)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 2)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -215,12 +229,14 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).ToList().Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).ToList().Select(_ => new
 					{
 						INSERT = _.OtherId,
 						insert = _.OtherField2
-					}), (t, s) => s.INSERT == t.Id)
-					.DeleteBySource(t => t.Id == 2)
+					}))
+					.On((t, s) => s.INSERT == t.Id)
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 2)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();

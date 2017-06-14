@@ -35,13 +35,13 @@ namespace LinqToDB.DataProvider
 #endif
 
 		BulkCopyRowsCopied BulkCopy<T>           (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
+
 		int                Merge<T>              (DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
 		                                          string tableName, string databaseName, string schemaName)
 			where T : class;
 
 
-		int Merge<TTarget, TSource>(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
+		int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 			where TTarget : class
 			where TSource : class;
 	}

@@ -23,52 +23,52 @@ namespace Tests.Merge
 		{
 			get
 			{
-				var merge = new FakeTable<Child>().FromSame(new Child[0]);
+				var merge = new FakeTable<Child>().Merge().Using(new Child[0]).OnTargetKey();
 
 				return new object[][]
 				{
 					// operation count limit
-					new object[] { new ValidationTestMergeBuilder(merge.Delete().Update().Insert()).WithLimit(2), "Merge cannot contain more than 2 operations for TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenMatched().UpdateWhenMatched().InsertWhenNotMatched()).WithLimit(2), "Merge cannot contain more than 2 operations for TestProvider provider." },
 
 					// operation types support
-					new object[] { new ValidationTestMergeBuilder(merge.Delete()).WithoutDelete(), "Merge Delete operation is not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.DeleteBySource()), "Merge Delete By Source operation is not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.UpdateBySource(_ => _)), "Merge Update By Source operation is not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenMatched()).WithoutDelete(), "Merge Delete operation is not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySource()), "Merge Delete By Source operation is not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySource(_ => _)), "Merge Update By Source operation is not supported by TestProvider provider." },
 
 					// operation conditions support
-					new object[] { new ValidationTestMergeBuilder(merge.Insert(_ => true)).WithoutConditions(), "Merge operation conditions are not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.Update((t, s) => true)).WithoutConditions(), "Merge operation conditions are not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.Delete((t, s) => true)).WithoutConditions(), "Merge operation conditions are not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.DeleteBySource(_ => true)).WithoutConditions().WithBySource(), "Merge operation conditions are not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.UpdateBySource(_ => true, _ => _)).WithoutConditions().WithBySource(), "Merge operation conditions are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.InsertWhenNotMatchedAnd(_ => true)).WithoutConditions(), "Merge operation conditions are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAnd((t, s) => true)).WithoutConditions(), "Merge operation conditions are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenMatchedAnd((t, s) => true)).WithoutConditions(), "Merge operation conditions are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySourceAnd(_ => true)).WithoutConditions().WithBySource(), "Merge operation conditions are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySourceAnd(_ => true, _ => _)).WithoutConditions().WithBySource(), "Merge operation conditions are not supported by TestProvider provider." },
 
 					// more than one command of the same type not allowed
-					new object[] { new ValidationTestMergeBuilder(merge.Insert(_ => true).Insert()).WithoutDuplicates(), "Multiple operations of the same type are not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.Update((t, s) => true).Update()).WithoutDuplicates(), "Multiple operations of the same type are not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.Delete((t, s) => true).Delete()).WithoutDuplicates(), "Multiple operations of the same type are not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.DeleteBySource(_ => true).DeleteBySource()).WithoutDuplicates().WithBySource(), "Multiple operations of the same type are not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.UpdateBySource(_ => true, _ => _).UpdateBySource(_ => _)).WithoutDuplicates().WithBySource(), "Multiple operations of the same type are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.InsertWhenNotMatchedAnd(_ => true).InsertWhenNotMatched()).WithoutDuplicates(), "Multiple operations of the same type are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAnd((t, s) => true).UpdateWhenMatched()).WithoutDuplicates(), "Multiple operations of the same type are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenMatchedAnd((t, s) => true).DeleteWhenMatched()).WithoutDuplicates(), "Multiple operations of the same type are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySourceAnd(_ => true).DeleteWhenNotMatchedBySource()).WithoutDuplicates().WithBySource(), "Multiple operations of the same type are not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySourceAnd(_ => true, _ => _).UpdateWhenNotMatchedBySource(_ => _)).WithoutDuplicates().WithBySource(), "Multiple operations of the same type are not supported by TestProvider provider." },
 
 					// unconditional operations from same match groups
-					new object[] { new ValidationTestMergeBuilder(merge.Update().Delete()).WithoutDuplicates(), "Multiple unconditional Merge operations not allowed within the same match group." },
-					new object[] { new ValidationTestMergeBuilder(merge.UpdateBySource(_ => _).DeleteBySource()).WithoutDuplicates().WithBySource(), "Multiple unconditional Merge operations not allowed within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatched().DeleteWhenMatched()).WithoutDuplicates(), "Multiple unconditional Merge operations not allowed within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySource(_ => _).DeleteWhenNotMatchedBySource()).WithoutDuplicates().WithBySource(), "Multiple unconditional Merge operations not allowed within the same match group." },
 
 					// conditional operations after unconditional in the same match group
-					new object[] { new ValidationTestMergeBuilder(merge.Insert().Insert(_ => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
-					new object[] { new ValidationTestMergeBuilder(merge.Delete().Delete((t, s) => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
-					new object[] { new ValidationTestMergeBuilder(merge.Update().Delete((t, s) => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
-					new object[] { new ValidationTestMergeBuilder(merge.Delete().Update((t, s) => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
-					new object[] { new ValidationTestMergeBuilder(merge.Update().Update((t, s) => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
-					new object[] { new ValidationTestMergeBuilder(merge.DeleteBySource().DeleteBySource(_ => true)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
-					new object[] { new ValidationTestMergeBuilder(merge.UpdateBySource(_ => _).DeleteBySource(_ => true)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
-					new object[] { new ValidationTestMergeBuilder(merge.DeleteBySource().UpdateBySource(_ => true, _ => _)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
-					new object[] { new ValidationTestMergeBuilder(merge.UpdateBySource(_ => _).UpdateBySource(_ => true, _ => _)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.InsertWhenNotMatched().InsertWhenNotMatchedAnd(_ => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenMatched().DeleteWhenMatchedAnd((t, s) => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatched().DeleteWhenMatchedAnd((t, s) => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenMatched().UpdateWhenMatchedAnd((t, s) => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatched().UpdateWhenMatchedAnd((t, s) => true)), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySource().DeleteWhenNotMatchedBySourceAnd(_ => true)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySource(_ => _).DeleteWhenNotMatchedBySourceAnd(_ => true)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySource().UpdateWhenNotMatchedBySourceAnd(_ => true, _ => _)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySource(_ => _).UpdateWhenNotMatchedBySourceAnd(_ => true, _ => _)).WithBySource(), "Unconditional Merge operation cannot be followed by operation with condition within the same match group." },
 
-					// DeleteWithUpdate related validations
-					new object[] { new ValidationTestMergeBuilder(merge.Update((t, s) => true).Delete((t, s) => true)).WithUpdateWithDelete(), "Delete and Update operations in the same Merge command not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.UpdateWithDelete((t, s) => true, (t, s) => true)), "UpdateWithDelete operation not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.UpdateWithDelete((t, s) => true, (t, s) => true).Update((t, s) => t)).WithUpdateWithDelete(), "Update operation with UpdateWithDelete operation in the same Merge command not supported by TestProvider provider." },
-					new object[] { new ValidationTestMergeBuilder(merge.UpdateWithDelete((t, s) => true, (t, s) => true).Delete((t, s) => true)).WithUpdateWithDelete(), "Delete operation with UpdateWithDelete operation in the same Merge command not supported by TestProvider provider." },
+					// UpdateWithDelete related validations
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAnd((t, s) => true).DeleteWhenMatchedAnd((t, s) => true)).WithUpdateWithDelete(), "Delete and Update operations in the same Merge command not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAndThenDelete((t, s) => true, (t, s) => true)), "UpdateWithDelete operation not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAndThenDelete((t, s) => true, (t, s) => true).UpdateWhenMatched((t, s) => t)).WithUpdateWithDelete(), "Update operation with UpdateWithDelete operation in the same Merge command not supported by TestProvider provider." },
+					new object[] { new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAndThenDelete((t, s) => true, (t, s) => true).DeleteWhenMatchedAnd((t, s) => true)).WithUpdateWithDelete(), "Delete operation with UpdateWithDelete operation in the same Merge command not supported by TestProvider provider." },
 				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.Validation.Negative.{i}"));
 			}
 		}
@@ -77,53 +77,53 @@ namespace Tests.Merge
 		{
 			get
 			{
-				var merge = new FakeTable<Child>().FromSame(new Child[0]);
+				var merge = new FakeTable<Child>().Merge().Using(new Child[0]).OnTargetKey();
 
 				return new BasicMergeBuilder<Child, Child>[]
 				{
 					// operation count limit
-					new ValidationTestMergeBuilder(merge.Delete((t, s) => true).Update().Insert()),
-					new ValidationTestMergeBuilder(merge.Delete().Insert()).WithLimit(2),
+					new ValidationTestMergeBuilder(merge.DeleteWhenMatchedAnd((t, s) => true).UpdateWhenMatched().InsertWhenNotMatched()),
+					new ValidationTestMergeBuilder(merge.DeleteWhenMatched().InsertWhenNotMatched()).WithLimit(2),
 
 					// operation types support
-					new ValidationTestMergeBuilder(merge.Delete()),
-					new ValidationTestMergeBuilder(merge.Update()),
-					new ValidationTestMergeBuilder(merge.Insert()),
-					new ValidationTestMergeBuilder(merge.DeleteBySource()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.UpdateBySource(_ => _)).WithBySource(),
+					new ValidationTestMergeBuilder(merge.DeleteWhenMatched()),
+					new ValidationTestMergeBuilder(merge.UpdateWhenMatched()),
+					new ValidationTestMergeBuilder(merge.InsertWhenNotMatched()),
+					new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySource()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySource(_ => _)).WithBySource(),
 
 					// operation conditions support
-					new ValidationTestMergeBuilder(merge.Insert(_ => true)),
-					new ValidationTestMergeBuilder(merge.Update((t, s) => true)),
-					new ValidationTestMergeBuilder(merge.Delete((t, s) => true)),
-					new ValidationTestMergeBuilder(merge.DeleteBySource(_ => true)).WithBySource(),
-					new ValidationTestMergeBuilder(merge.UpdateBySource(_ => true, _ => _)).WithBySource(),
+					new ValidationTestMergeBuilder(merge.InsertWhenNotMatchedAnd(_ => true)),
+					new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAnd((t, s) => true)),
+					new ValidationTestMergeBuilder(merge.DeleteWhenMatchedAnd((t, s) => true)),
+					new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySourceAnd(_ => true)).WithBySource(),
+					new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySourceAnd(_ => true, _ => _)).WithBySource(),
 
 					// more than one command of the same type allowed
-					new ValidationTestMergeBuilder(merge.Insert(_ => true).Insert()),
-					new ValidationTestMergeBuilder(merge.Delete((t, s) => true).Delete()),
-					new ValidationTestMergeBuilder(merge.Update((t, s) => true).Update()),
-					new ValidationTestMergeBuilder(merge.DeleteBySource(_ => true).DeleteBySource()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.UpdateBySource(_ => true, _ => _).UpdateBySource(_ => _)).WithBySource(),
+					new ValidationTestMergeBuilder(merge.InsertWhenNotMatchedAnd(_ => true).InsertWhenNotMatched()),
+					new ValidationTestMergeBuilder(merge.DeleteWhenMatchedAnd((t, s) => true).DeleteWhenMatched()),
+					new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAnd((t, s) => true).UpdateWhenMatched()),
+					new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySourceAnd(_ => true).DeleteWhenNotMatchedBySource()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySourceAnd(_ => true, _ => _).UpdateWhenNotMatchedBySource(_ => _)).WithBySource(),
 
 					// unconditional operations from different match groups
-					new ValidationTestMergeBuilder(merge.Insert().Delete().DeleteBySource()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.Insert().Update().UpdateBySource(_ => _)).WithBySource(),
+					new ValidationTestMergeBuilder(merge.InsertWhenNotMatched().DeleteWhenMatched().DeleteWhenNotMatchedBySource()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.InsertWhenNotMatched().UpdateWhenMatched().UpdateWhenNotMatchedBySource(_ => _)).WithBySource(),
 
 					// unconditional operations after conditional in the same match group
-					new ValidationTestMergeBuilder(merge.Update((t, s) => true).Delete()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.Delete((t, s) => true).Update()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.Delete((t, s) => true).Delete()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.Update((t, s) => true).Update()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.Insert(_ => true).Insert()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.UpdateBySource(_ => true, _ => _).UpdateBySource(_ => _)).WithBySource(),
-					new ValidationTestMergeBuilder(merge.DeleteBySource(_ => true).UpdateBySource(_ => _)).WithBySource(),
-					new ValidationTestMergeBuilder(merge.UpdateBySource(_ => true, _ => _).DeleteBySource()).WithBySource(),
-					new ValidationTestMergeBuilder(merge.DeleteBySource(_ => true).DeleteBySource()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAnd((t, s) => true).DeleteWhenMatched()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.DeleteWhenMatchedAnd((t, s) => true).UpdateWhenMatched()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.DeleteWhenMatchedAnd((t, s) => true).DeleteWhenMatched()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAnd((t, s) => true).UpdateWhenMatched()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.InsertWhenNotMatchedAnd(_ => true).InsertWhenNotMatched()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySourceAnd(_ => true, _ => _).UpdateWhenNotMatchedBySource(_ => _)).WithBySource(),
+					new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySourceAnd(_ => true).UpdateWhenNotMatchedBySource(_ => _)).WithBySource(),
+					new ValidationTestMergeBuilder(merge.UpdateWhenNotMatchedBySourceAnd(_ => true, _ => _).DeleteWhenNotMatchedBySource()).WithBySource(),
+					new ValidationTestMergeBuilder(merge.DeleteWhenNotMatchedBySourceAnd(_ => true).DeleteWhenNotMatchedBySource()).WithBySource(),
 
-					// DeleteWithUpdate validation
-					new ValidationTestMergeBuilder(merge.Update((t, s) => true).Delete()),
-					new ValidationTestMergeBuilder(merge.UpdateWithDelete((t, s) => true)).WithUpdateWithDelete(),
+					// UpdateWithDelete validation
+					new ValidationTestMergeBuilder(merge.UpdateWhenMatchedAnd((t, s) => true).DeleteWhenMatched()),
+					new ValidationTestMergeBuilder(merge.UpdateWhenMatchedThenDelete((t, s) => true)).WithUpdateWithDelete(),
 				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.Validation.Positive.{i}"));
 			}
 		}
@@ -256,7 +256,7 @@ namespace Tests.Merge
 					throw new NotImplementedException();
 				}
 
-				int IDataProvider.Merge<TTarget, TSource>(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
+				int IDataProvider.Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 				{
 					throw new NotImplementedException();
 				}
@@ -280,13 +280,8 @@ namespace Tests.Merge
 			// initialize with SQL:2008 defaults (same as base class)
 			private int _operationsLimit = 0;
 
-			public ValidationTestMergeBuilder(IMerge<Child, Child> merge)
+			public ValidationTestMergeBuilder(IMergeable<Child, Child> merge)
 				: base(new DataConnection(new FakeDataProvider(), string.Empty), merge)
-			{
-			}
-
-			public ValidationTestMergeBuilder(IMerge<Child> merge)
-				: base(new DataConnection(new FakeDataProvider(), string.Empty), (MergeDefinition<Child, Child>)merge)
 			{
 			}
 
@@ -386,7 +381,7 @@ namespace Tests.Merge
 			{
 				var table = GetTarget(db);
 
-				Assert.Throws<LinqToDBException>(() => table.FromSame(GetSource1(db)).Insert().Merge());
+				Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 			}
 		}
 	}

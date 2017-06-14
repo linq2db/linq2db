@@ -643,7 +643,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection, 
-			IMerge<TTarget, TSource> merge)
+			IMergeable<TTarget, TSource> merge)
 		{
 			return new OracleMergeBuilder<TTarget, TSource>(connection, merge);
 		}

@@ -27,8 +27,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Delete()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -53,8 +55,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Delete((t, s) => s.Id == 4)
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -81,9 +85,11 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.FromSame(GetSource1(db))
-					.Delete((t, s) => s.Id == 4)
-					.Delete()
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
+					.DeleteWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -108,8 +114,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db), (t, s) => s.OtherId == t.Id && t.Id == 3)
-					.Delete()
+					.Merge()
+					.Using(GetSource2(db))
+					.On((t, s) => s.OtherId == t.Id && t.Id == 3)
+					.DeleteWhenMatched()
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -135,8 +143,10 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db), (t, s) => s.OtherId == t.Id)
-					.Delete((t, s) => t.Id == 4)
+					.Merge()
+					.Using(GetSource2(db))
+					.On((t, s) => s.OtherId == t.Id)
+					.DeleteWhenMatchedAnd((t, s) => t.Id == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -162,7 +172,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).Select(_ => new
 					{
 						Key = _.OtherId,
 						Field01 = _.OtherField1,
@@ -170,8 +181,9 @@ namespace Tests.Merge
 						Field03 = _.OtherField3,
 						Field04 = _.OtherField4,
 						Field05 = _.OtherField5,
-					}), (t, s) => s.Key == t.Id)
-					.Delete((t, s) => s.Key == 4)
+					}))
+					.On((t, s) => s.Key == t.Id)
+					.DeleteWhenMatchedAnd((t, s) => s.Key == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -198,7 +210,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).ToList().Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).ToList().Select(_ => new
 					{
 						Key = _.OtherId,
 						Field01 = _.OtherField1,
@@ -206,8 +219,9 @@ namespace Tests.Merge
 						Field03 = _.OtherField3,
 						Field04 = _.OtherField4,
 						Field05 = _.OtherField5,
-					}), (t, s) => s.Key == t.Id)
-					.Delete((t, s) => s.Key == 4)
+					}))
+					.On((t, s) => s.Key == t.Id)
+					.DeleteWhenMatchedAnd((t, s) => s.Key == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -233,7 +247,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).Select(_ => new
 					{
 						select = _.OtherId,
 						Field = _.OtherField1,
@@ -241,8 +256,9 @@ namespace Tests.Merge
 						insert = _.OtherField3,
 						order = _.OtherField4,
 						by = _.OtherField5
-					}), (t, s) => s.select == t.Id)
-					.Delete((t, s) => s.select == 4)
+					}))
+					.On((t, s) => s.select == t.Id)
+					.DeleteWhenMatchedAnd((t, s) => s.select == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
@@ -268,7 +284,8 @@ namespace Tests.Merge
 				var table = GetTarget(db);
 
 				var rows = table
-					.From(GetSource2(db).ToList().Select(_ => new
+					.Merge()
+					.Using(GetSource2(db).ToList().Select(_ => new
 					{
 						update = _.OtherId,
 						Update = _.OtherField1,
@@ -276,8 +293,9 @@ namespace Tests.Merge
 						uPDATE = _.OtherField3,
 						UpDaTe = _.OtherField4,
 						upDATE = _.OtherField5
-					}), (t, s) => s.update == t.Id)
-					.Delete((t, s) => s.update == 4)
+					}))
+					.On((t, s) => s.update == t.Id)
+					.DeleteWhenMatchedAnd((t, s) => s.update == 4)
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();

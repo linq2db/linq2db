@@ -1322,11 +1322,11 @@ namespace LinqToDB.SqlProvider
 		#region Builders
 
 		#region BuildSearchCondition
-		internal virtual void BuildWhereSearchCondition(SelectQuery qry, StringBuilder sb)
+		internal virtual void BuildSearchCondition(SelectQuery qry, SelectQuery.SearchCondition condition, StringBuilder sb)
 		{
 			SelectQuery = qry;
 			StringBuilder = sb;
-			BuildWhereSearchCondition(qry.Where.SearchCondition);
+			BuildWhereSearchCondition(condition);
 		}
 
 		protected virtual void BuildWhereSearchCondition(SelectQuery.SearchCondition condition)
@@ -1672,10 +1672,10 @@ namespace LinqToDB.SqlProvider
 		void BuildInListValues(SelectQuery.Predicate.InList predicate, IEnumerable values)
 		{
 			var firstValue = true;
-			var len = StringBuilder.Length;
-			var hasNull = false;
-			var count = 0;
-			var longList = false;
+			var len        = StringBuilder.Length;
+			var hasNull    = false;
+			var count      = 0;
+			var longList   = false;
 
 			SqlDataType sqlDataType = null;
 

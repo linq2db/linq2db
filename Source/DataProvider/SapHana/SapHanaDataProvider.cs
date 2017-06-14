@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection, 
-			IMerge<TTarget, TSource> merge)
+			IMergeable<TTarget, TSource> merge)
 		{
 			return new SapHanaMergeBuilder<TTarget, TSource>(connection, merge);
 		}

@@ -234,7 +234,7 @@ namespace LinqToDB.DataProvider
 		{
 #if !NETSTANDARD
 			var st = ((DbDataReader)reader).GetSchemaTable();
-			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
+			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
 #else
 			return true;
 #endif
@@ -429,7 +429,6 @@ namespace LinqToDB.DataProvider
 
 #region Merge
 
-		[Obsolete("Use new Merge API. TODO: link to migration wiki-page")]
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
 			where T : class
@@ -437,7 +436,7 @@ namespace LinqToDB.DataProvider
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMerge<TTarget, TSource> merge)
+		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 			where TTarget : class
 			where TSource : class
 		{
@@ -461,7 +460,7 @@ namespace LinqToDB.DataProvider
 
 		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection,
-			IMerge<TTarget, TSource> merge)
+			IMergeable<TTarget, TSource> merge)
 			where TTarget : class
 			where TSource : class
 		{

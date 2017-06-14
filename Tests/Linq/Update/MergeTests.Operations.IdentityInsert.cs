@@ -28,7 +28,8 @@ namespace Tests.Merge
 				PrepareAssociationsData(db);
 
 				var rows = db.Person
-					.FromSame(
+					.Merge()
+					.Using(
 						db.Person.Select(p => new Model.Person()
 						{
 							ID = p.ID + 50,
@@ -36,9 +37,9 @@ namespace Tests.Merge
 							LastName = p.LastName,
 							Gender = p.Gender,
 							MiddleName = p.MiddleName
-						}),
-						(t, s) => t.ID + 50 == s.ID && t.FirstName != "first 3")
-					.Insert(s => s.FirstName == "first 3")
+						}))
+					.On((t, s) => t.ID + 50 == s.ID && t.FirstName != "first 3")
+					.InsertWhenNotMatchedAnd(s => s.FirstName == "first 3")
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -74,14 +75,18 @@ namespace Tests.Merge
 				var nextId = db.Person.Select(_ => _.ID).Max() + 1;
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.Insert(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
-					{
-						ID = nextId + 1,
-						FirstName = "Inserted 1",
-						LastName = "Inserted 2",
-						Gender = Gender.Male
-					})
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.InsertWhenNotMatchedAnd(
+						s => s.Patient.Diagnosis.Contains("sick")
+						, s => new Model.Person()
+						{
+							ID = nextId + 1,
+							FirstName = "Inserted 1",
+							LastName = "Inserted 2",
+							Gender = Gender.Male
+						})
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
@@ -117,13 +122,17 @@ namespace Tests.Merge
 				var nextId = db.Person.Select(_ => _.ID).Max() + 1;
 
 				var rows = db.Person
-					.FromSame(db.Person, (t, s) => t.ID == s.ID && t.FirstName != "first 3")
-					.Insert(s => s.Patient.Diagnosis.Contains("sick"), s => new Model.Person()
-					{
-						FirstName = "Inserted 1",
-						LastName = "Inserted 2",
-						Gender = Gender.Male
-					})
+					.Merge()
+					.Using(db.Person)
+					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
+					.InsertWhenNotMatchedAnd(
+						s => s.Patient.Diagnosis.Contains("sick"),
+						s => new Model.Person()
+						{
+							FirstName = "Inserted 1",
+							LastName = "Inserted 2",
+							Gender = Gender.Male
+						})
 					.Merge();
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();

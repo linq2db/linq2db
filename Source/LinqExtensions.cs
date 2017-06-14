@@ -1064,7 +1064,7 @@ namespace LinqToDB
 
 		#endregion
 
-		static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
 
 		internal static ContextParser.Context GetContext<TSource>(this IQueryable<TSource> source)
 		{

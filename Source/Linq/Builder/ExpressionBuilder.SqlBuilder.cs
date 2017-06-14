@@ -2440,6 +2440,32 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 
+				case ExpressionType.Equal :
+					{
+						if (expression.Type == typeof(bool))
+						{
+							var e = (BinaryExpression)expression;
+
+							Expression ce = null, ee = null;
+
+							if      (e.Left.NodeType  == ExpressionType.Constant) { ce = e.Left;  ee = e.Right; }
+							else if (e.Right.NodeType == ExpressionType.Constant) { ce = e.Right; ee = e.Left; }
+
+							if (ce != null)
+							{
+								var value = ((ConstantExpression)ce).Value;
+
+								if (value is bool && (bool)value == false)
+								{
+									BuildSearchCondition(context, Expression.Not(ee), conditions);
+									return;
+								}
+							}
+						}
+
+						goto default;
+					}
+
 				default                    :
 					var predicate = ConvertPredicate(context, expression);
 
@@ -2465,7 +2491,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		private static SelectQuery.Condition CheckIsNull(ISqlPredicate predicate, bool isNot)
+		static SelectQuery.Condition CheckIsNull(ISqlPredicate predicate, bool isNot)
 		{
 			if (Configuration.Linq.CheckNullForNotEquals == false)
 				return null;
@@ -2482,10 +2508,10 @@ namespace LinqToDB.Linq.Builder
 				if (inList != null)
 				{
 					isNot = QueryVisitor.Find(sc, _ =>
-					        {
-						        var condition = _ as SelectQuery.Condition;
-						        return condition != null && condition.IsNot;
-					        }) != null;
+					{
+						var condition = _ as SelectQuery.Condition;
+						return condition != null && condition.IsNot;
+					}) != null;
 				}
 			}
 
@@ -2493,12 +2519,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
 
-
-				if (   (exprExpr != null && 
-					   (    (exprExpr.Operator == SelectQuery.Predicate.Operator.NotEqual && isNot == false)
-					     || (exprExpr.Operator == SelectQuery.Predicate.Operator.Equal    && isNot == true)
-					   ))
-				    || (inList != null && inList.IsNot || isNot))
+				if (exprExpr != null && 
+					(
+						exprExpr.Operator == SelectQuery.Predicate.Operator.NotEqual && isNot == false ||
+						exprExpr.Operator == SelectQuery.Predicate.Operator.Equal    && isNot == true
+					) ||
+					inList != null && inList.IsNot || isNot)
 				{
 					var expr1 = exprExpr != null ? exprExpr.Expr1 : inList.Expr1;
 					var expr2 = exprExpr != null ? exprExpr.Expr2 : null;
@@ -2534,6 +2560,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 			}
+
 			return null;
 		}
 

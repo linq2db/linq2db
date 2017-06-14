@@ -200,7 +200,7 @@ namespace LinqToDB.DataProvider.Sybase
 		#region Merge
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection,
-			IMerge<TTarget, TSource> merge)
+			IMergeable<TTarget, TSource> merge)
 		{
 			return new SybaseMergeBuilder<TTarget, TSource>(connection, merge);
 		}
