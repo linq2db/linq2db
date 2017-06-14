@@ -106,6 +106,30 @@ namespace LinqToDB.Data
 			}
 		}
 
+		public Expression TargetKey
+		{
+			get
+			{
+				return _targetKey;
+			}
+		}
+
+		public Expression SourceKey
+		{
+			get
+			{
+				return _sourceKey;
+			}
+		}
+
+		public Type KeyType
+		{
+			get
+			{
+				return _keyType;
+			}
+		}
+
 		public MergeDefinition<TTarget, TNewSource> AddSource<TNewSource>(IQueryable<TNewSource> source)
 			where TNewSource : class
 		{
@@ -125,10 +149,10 @@ namespace LinqToDB.Data
 				_enumerableSource,
 				_queryableSource,
 				_matchPredicate,
-				_targetKey,
-				_sourceKey,
-				_keyType,
-				_operations.Concat(new[] { operation }).ToArray());
+				TargetKey,
+				SourceKey,
+				KeyType,
+				(_operations ?? new Operation[0]).Concat(new[] { operation }).ToArray());
 		}
 
 		public MergeDefinition<TTarget, TSource> AddOnPredicate(Expression<Func<TTarget, TSource, bool>> matchPredicate)

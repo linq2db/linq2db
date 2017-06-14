@@ -153,7 +153,7 @@ namespace Tests.Merge
 		}
 
 		private static readonly TestMapping1[] InitialTargetData = new[]
-				{
+		{
 			new TestMapping1() { Id = 1                                                                   },
 			new TestMapping1() { Id = 2, Field1 = 2,             Field3 = 101                             },
 			new TestMapping1() { Id = 3,             Field2 = 3,               Field4 = 203               },
@@ -164,7 +164,7 @@ namespace Tests.Merge
 		{
 			new TestMapping1() { Id = 3,              Field2 = 3,  Field3 = 113                             },
 			new TestMapping1() { Id = 4, Field1 = 5,  Field2 = 7,                Field4 = 214               },
-			new TestMapping1() { Id = 5, Field1 = 10, Field2 = 4,                             Field5 = 315 },
+			new TestMapping1() { Id = 5, Field1 = 10, Field2 = 4,                             Field5 = 315  },
 			new TestMapping1() { Id = 6,                           Field3 = 116, Field4 = 216, Field5 = 316 },
 		};
 

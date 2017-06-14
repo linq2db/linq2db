@@ -393,7 +393,7 @@ namespace LinqToDB.Data
 		}
 		#endregion
 
-		#region UpdateWithDelete
+		#region UpdateThenDelete
 		/// <summary>
 		/// IMPORTANT: This operation supported only by Oracle Database.
 		/// Adds new update with delete operation to merge and returns new merge command with added operation.

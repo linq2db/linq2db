@@ -74,6 +74,45 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region MERGE : Predicates
+		protected void BuildPredicateByKeys(Type keyType, Expression targetKey, Expression sourceKey)
+		{
+			var target = _connection.GetTable<TTarget>();
+			var source = _connection.GetTable<TSource>();
+
+			var join = Expression.Call(
+				MemberHelper.MethodOf<IQueryable<int>>(n => n.Join<int, int, int, int>(null, null, null, null))
+					.GetGenericMethodDefinition()
+					.MakeGenericMethod(typeof(TTarget), typeof(TSource), keyType, typeof(int)),
+				Expression.Constant(target),
+				Expression.Constant(source),
+				targetKey,
+				sourceKey,
+				Expression.Lambda<Func<TTarget, TSource, int>>(
+					Expression.Constant(0),
+					Expression.Parameter(typeof(TTarget), _targetAlias),
+					Expression.Parameter(typeof(TSource), SourceAlias)));
+
+			var ctx = target.Provider.Execute<ContextParser.Context>(
+				Expression.Call(
+					null,
+					LinqExtensions._setMethodInfo8.MakeGenericMethod(typeof(int)),
+					new[] { join }));
+
+			var sql = ctx.SelectQuery;
+
+			var selectContext = (SelectContext)ctx.Context;
+
+			var condition = sql.From.Tables[0].Joins[0].Condition;
+			SetSourceColumnAliases(condition, sql.From.Tables[0].Joins[0].Table.Source);
+			
+			ctx.SetParameters();
+			SaveParameters(sql.Parameters);
+
+			SqlBuilder.BuildSearchCondition(sql, condition, Command);
+
+			Command.Append(" ");
+		}
+
 		protected void BuildPredicateByTargetAndSource(Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			var query = _connection.GetTable<TTarget>()
@@ -92,7 +131,7 @@ namespace LinqToDB.DataProvider
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
 
-			SqlBuilder.BuildWhereSearchCondition(sql, Command);
+			SqlBuilder.BuildSearchCondition(sql, sql.Where.SearchCondition, Command);
 
 			Command.Append(" ");
 		}
@@ -115,7 +154,7 @@ namespace LinqToDB.DataProvider
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
 
-			SqlBuilder.BuildWhereSearchCondition(sql, Command);
+			SqlBuilder.BuildSearchCondition(sql, sql.Where.SearchCondition, Command);
 
 			Command.Append(" ");
 		}
@@ -484,10 +523,12 @@ namespace LinqToDB.DataProvider
 		{
 			Command.Append("ON (");
 
-			if (Merge.MatchPredicate == null)
-				BuildDefaultMatchPredicate();
-			else
+			if (Merge.MatchPredicate != null)
 				BuildPredicateByTargetAndSource(Merge.MatchPredicate);
+			else if (Merge.KeyType != null)
+				BuildPredicateByKeys(Merge.KeyType, Merge.TargetKey, Merge.SourceKey);
+			else
+				BuildDefaultMatchPredicate();
 
 			Command.AppendLine(")");
 		}
