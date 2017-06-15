@@ -225,8 +225,12 @@ namespace LinqToDB.Common
 				if (toFields == null)
 					return null;
 
+				var fromType = @from;
+				if (fromType.IsNullable())
+					fromType = fromType.ToNullableUnderlying();
+
 				var fromTypeFields = toFields
-					.Select(f => new { f.OrigValue, attrs = f.MapValues.Where(a => a.Value == null || a.Value.GetType() == @from).ToList() })
+					.Select(f => new { f.OrigValue, attrs = f.MapValues.Where(a => a.Value == null || a.Value.GetType() == fromType).ToList() })
 					.ToList();
 
 				if (fromTypeFields.All(f => f.attrs.Count != 0))
@@ -314,6 +318,11 @@ namespace LinqToDB.Common
 					.ToList();
 
 				{
+					var valueType = to;
+					if (valueType.IsNullable())
+						valueType = valueType.ToNullableUnderlying();
+
+
 					var toTypeFields = fromFields
 						.Select(f => new { f.Field, Attrs = f.Attrs
 							.OrderBy(a =>
@@ -325,7 +334,7 @@ namespace LinqToDB.Common
 							})
 							.ThenBy(a => !a.IsDefault)
 							.ThenBy(a => a.Value == null)
-							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == to) })
+							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType) })
 						.ToList();
 
 					if (toTypeFields.All(f => f.Attrs != null))
@@ -498,19 +507,21 @@ namespace LinqToDB.Common
 				var cp = Expression.Convert(expr, ufrom);
 
 				ex = GetConverter(mappingSchema, cp, ufrom, to);
-
-				if (ex == null && to != uto)
-				{
-					ex = GetConverter(mappingSchema, cp, ufrom, uto);
-
-					if (ex != null)
-						ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
-				}
 			}
 
 			if (ex == null && to != uto)
 			{
 				ex = GetConverter(mappingSchema, expr, @from, uto);
+
+				if (ex != null)
+					ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
+			}
+
+			if (ex == null && from != ufrom && to != uto)
+			{
+				var cp = Expression.Convert(expr, ufrom);
+
+				ex = GetConverter(mappingSchema, cp, ufrom, uto);
 
 				if (ex != null)
 					ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
@@ -627,7 +638,7 @@ namespace LinqToDB.Common
 					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
 					?? Enum.GetUnderlyingType(type);
 
-			if (enumType.IsNullable() && !defaultType.IsClassEx() && !defaultType.IsNullable())
+			if ((enumType.IsNullable() || fields.Any(attrs => attrs.Count != 0 && attrs[0].Value == null)) && !defaultType.IsClassEx() && !defaultType.IsNullable())
 				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);
 
 			return defaultType;
