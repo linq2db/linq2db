@@ -536,6 +536,8 @@ namespace LinqToDB.Linq
 
 		static class ObjectOperation<T1>
 		{
+			public static object Sync = new object();
+
 			public static readonly Dictionary<object,Query<int>>    Insert             = new Dictionary<object,Query<int>>();
 			public static readonly Dictionary<object,Query<object>> InsertWithIdentity = new Dictionary<object,Query<object>>();
 			public static readonly Dictionary<object,Query<int>>    InsertOrUpdate     = new Dictionary<object,Query<int>>();
@@ -596,7 +598,7 @@ namespace LinqToDB.Linq
 			var key = new { dataContextInfo.DataContext.MappingSchema.ConfigurationID, dataContextInfo.DataContext.ContextID, tableName, databaseName, schemaName };
 
 			if (!ObjectOperation<T>.Insert.TryGetValue(key, out ei))
-				lock (_sync)
+				lock (ObjectOperation<T>.Sync)
 					if (!ObjectOperation<T>.Insert.TryGetValue(key, out ei))
 					{
 						var sqlTable = new SqlTable<T>(dataContextInfo.DataContext.MappingSchema);
@@ -655,7 +657,7 @@ namespace LinqToDB.Linq
 			var key = new { dataContextInfo.DataContext.MappingSchema.ConfigurationID, dataContextInfo.DataContext.ContextID };
 
 			if (!ObjectOperation<T>.InsertWithIdentity.TryGetValue(key, out ei))
-				lock (_sync)
+				lock (ObjectOperation<T>.Sync)
 					if (!ObjectOperation<T>.InsertWithIdentity.TryGetValue(key, out ei))
 					{
 						var sqlTable = new SqlTable<T>(dataContextInfo.DataContext.MappingSchema);
@@ -711,9 +713,7 @@ namespace LinqToDB.Linq
 			var key = new { dataContextInfo.DataContext.MappingSchema.ConfigurationID, dataContextInfo.DataContext.ContextID };
 
 			if (!ObjectOperation<T>.InsertOrUpdate.TryGetValue(key, out ei))
-			{
-				lock (_sync)
-				{
+				lock (ObjectOperation<T>.Sync)
 					if (!ObjectOperation<T>.InsertOrUpdate.TryGetValue(key, out ei))
 					{
 						var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
@@ -807,8 +807,6 @@ namespace LinqToDB.Linq
 
 						ObjectOperation<T>.InsertOrUpdate.Add(key, ei);
 					}
-				}
-			}
 
 			return (int)ei.GetElement(null, dataContextInfo, Expression.Constant(obj), null);
 		}
@@ -869,7 +867,7 @@ namespace LinqToDB.Linq
 			var key = new { dataContextInfo.DataContext.MappingSchema.ConfigurationID, dataContextInfo.DataContext.ContextID };
 
 			if (!ObjectOperation<T>.Update.TryGetValue(key, out ei))
-				lock (_sync)
+				lock (ObjectOperation<T>.Sync)
 					if (!ObjectOperation<T>.Update.TryGetValue(key, out ei))
 					{
 						var sqlTable = new SqlTable<T>(dataContextInfo.DataContext.MappingSchema);
