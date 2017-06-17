@@ -292,6 +292,13 @@ namespace LinqToDB.Data
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
+		static Func<Exception, Exception> defaultExceptionIntercept = (original) => original;
+		private Func<Exception,Exception> _exceptionIntercept = defaultExceptionIntercept ;
+		public Func<Exception, Exception> ExceptionIntercept
+		{
+			get { return _exceptionIntercept; }
+			set { _exceptionIntercept = value ?? defaultExceptionIntercept; }
+		}
 		#endregion
 
 		#region Configuration
@@ -681,118 +688,154 @@ namespace LinqToDB.Data
 
 		internal int ExecuteNonQuery()
 		{
-			if (TraceSwitch.Level == TraceLevel.Off)
-				return Command.ExecuteNonQuery();
-
-			if (OnTraceConnection == null)
-				return Command.ExecuteNonQuery();
-
-			if (TraceSwitch.TraceInfo)
-			{
-				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
-				{
-					TraceLevel     = TraceLevel.Info,
-					DataConnection = this,
-					Command        = Command,
-				});
-			}
-
-			var now = DateTime.Now;
-
 			try
 			{
-				var ret = Command.ExecuteNonQuery();
+				if (TraceSwitch.Level == TraceLevel.Off)
+					return Command.ExecuteNonQuery();
+
+				if (OnTraceConnection == null)
+					return Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 					{
-						TraceLevel      = TraceLevel.Info,
-						DataConnection  = this,
-						Command         = Command,
-						ExecutionTime   = DateTime.Now - now,
-						RecordsAffected = ret,
-					});
-				}
-
-				return ret;
-			}
-			catch (Exception ex)
-			{
-				if (TraceSwitch.TraceError)
-				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
-					{
-						TraceLevel     = TraceLevel.Error,
+						TraceLevel = TraceLevel.Info,
 						DataConnection = this,
-						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
-						Exception      = ex,
+						Command = Command,
 					});
 				}
 
-				throw;
+				var now = DateTime.Now;
+
+				try
+				{
+					var ret = Command.ExecuteNonQuery();
+
+					if (TraceSwitch.TraceInfo)
+					{
+						OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+						{
+							TraceLevel = TraceLevel.Info,
+							DataConnection = this,
+							Command = Command,
+							ExecutionTime = DateTime.Now - now,
+							RecordsAffected = ret,
+						});
+					}
+
+					return ret;
+				}
+				catch (Exception ex)
+				{
+					if (TraceSwitch.TraceError)
+					{
+						OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+						{
+							TraceLevel = TraceLevel.Error,
+							DataConnection = this,
+							Command = Command,
+							ExecutionTime = DateTime.Now - now,
+							Exception = ex,
+						});
+					}
+
+					throw;
+				}
+			}
+			catch (Exception intercept)
+			{
+				var intercepted = ExceptionIntercept(intercept);
+
+				if ((intercepted ?? intercept) != intercept)
+					throw intercepted;
+				else
+					throw;
 			}
 		}
 
 		object ExecuteScalar()
 		{
-			if (TraceSwitch.Level == TraceLevel.Off)
-				return Command.ExecuteScalar();
-
-			if (OnTraceConnection == null)
-				return Command.ExecuteScalar();
-
-			if (TraceSwitch.TraceInfo)
-			{
-				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
-				{
-					TraceLevel     = TraceLevel.Info,
-					DataConnection = this,
-					Command        = Command,
-				});
-			}
-
-			var now = DateTime.Now;
-
 			try
 			{
-				var ret = Command.ExecuteScalar();
+				if (TraceSwitch.Level == TraceLevel.Off)
+					return Command.ExecuteScalar();
+
+				if (OnTraceConnection == null)
+					return Command.ExecuteScalar();
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 					{
-						TraceLevel     = TraceLevel.Info,
+						TraceLevel = TraceLevel.Info,
 						DataConnection = this,
-						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
+						Command = Command,
 					});
 				}
 
-				return ret;
-			}
-			catch (Exception ex)
-			{
-				if (TraceSwitch.TraceError)
+				var now = DateTime.Now;
+
+				try
 				{
-					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
-					{
-						TraceLevel     = TraceLevel.Error,
-						DataConnection = this,
-						Command        = Command,
-						ExecutionTime  = DateTime.Now - now,
-						Exception      = ex,
-					});
-				}
+					var ret = Command.ExecuteScalar();
 
-				throw;
+					if (TraceSwitch.TraceInfo)
+					{
+						OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+						{
+							TraceLevel = TraceLevel.Info,
+							DataConnection = this,
+							Command = Command,
+							ExecutionTime = DateTime.Now - now,
+						});
+					}
+
+					return ret;
+				}
+				catch (Exception ex)
+				{
+					if (TraceSwitch.TraceError)
+					{
+						OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+						{
+							TraceLevel = TraceLevel.Error,
+							DataConnection = this,
+							Command = Command,
+							ExecutionTime = DateTime.Now - now,
+							Exception = ex,
+						});
+					}
+
+					throw;
+				}
+			}
+			catch (Exception intercept)
+			{
+				var intercepted = ExceptionIntercept(intercept);
+
+				if ((intercepted ?? intercept) != intercept)
+					throw intercepted;
+				else
+					throw;
 			}
 		}
 
 		internal IDataReader ExecuteReader()
 		{
-			return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
+			try
+			{
+				return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
+			}
+			catch (Exception intercept)
+			{
+				var intercepted = ExceptionIntercept(intercept);
+
+				if ((intercepted ?? intercept) != intercept)
+					throw intercepted;
+				else
+					throw;
+			}
 		}
 
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
