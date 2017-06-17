@@ -70,7 +70,7 @@ namespace Tests.Samples
 		[Test]
 		public void InterceptedExceptionExecuteReader()
 		{
-			_connection.Intercept = (ex) => throw new DivideByZeroException("Intercepted exception", ex);
+            _connection.Intercept = (ex) => { throw new DivideByZeroException("Intercepted exception", ex); };
 
 			var table = _connection.GetTable<TestTable>();
 			Assert.Catch<DivideByZeroException>(() => table.ToList());
@@ -79,7 +79,7 @@ namespace Tests.Samples
 		[Test]
 		public void InterceptedResetExecuteReader()
 		{
-			_connection.Intercept = (ex) => throw new DivideByZeroException("Intercepted exception", ex);
+            _connection.Intercept = (ex) => { throw new DivideByZeroException("Intercepted exception", ex); };
 
 			var table = _connection.GetTable<TestTable>();
 			Assert.Catch<DivideByZeroException>(() => table.ToList());
@@ -95,7 +95,7 @@ namespace Tests.Samples
 			var table = _connection.CreateTable<TestTable>();
 			_connection.Close();
 
-			_connection.Intercept = (ex) => throw new DivideByZeroException("Intercepted exception", ex);
+            _connection.Intercept = (ex) => { throw new DivideByZeroException("Intercepted exception", ex); };
 
 			Assert.Catch<DivideByZeroException>(() => table.Drop());
 		}
