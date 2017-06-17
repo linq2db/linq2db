@@ -15,18 +15,41 @@ namespace Tests.Samples
 	public class ExceptionInterceptTests : TestBase
 	{
 #if !MONO
+
+		private class TestDataConnection : DataConnection
+		{
+			public TestDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
+			{
+			}
+
+			protected override Exception ExceptionIntercept(Exception original)
+			{
+				return Intercept(original) ;
+			}
+
+			static Func<Exception, Exception> defaultExceptionIntercept = (original) => original;
+			private Func<Exception, Exception> _exceptionIntercept = defaultExceptionIntercept;
+			public Func<Exception, Exception> Intercept
+			{
+				get { return _exceptionIntercept; }
+				set { _exceptionIntercept = value ?? defaultExceptionIntercept; }
+			}
+		}
+
 		public class TestTable
 		{
 			[Column(IsIdentity = true)]
 			public int ID { get; set; }
 		}
 
-		private DataConnection _connection;
+		private TestDataConnection _connection;
+
+
 
 		[OneTimeSetUp]
 		public void SetUp()
 		{
-			_connection = new DataConnection(ProviderName.SQLite, "Data Source=:memory:;");
+			_connection = new TestDataConnection(ProviderName.SQLite, "Data Source=:memory:;");
 
 
 		}
@@ -47,7 +70,7 @@ namespace Tests.Samples
 		[Test]
 		public void InterceptedExceptionExecuteReader()
 		{
-			_connection.ExceptionIntercept = (ex) => throw new DivideByZeroException("Intercepted exception", ex);
+			_connection.Intercept = (ex) => throw new DivideByZeroException("Intercepted exception", ex);
 
 			var table = _connection.GetTable<TestTable>();
 			Assert.Catch<DivideByZeroException>(() => table.ToList());
@@ -56,12 +79,12 @@ namespace Tests.Samples
 		[Test]
 		public void InterceptedResetExecuteReader()
 		{
-			_connection.ExceptionIntercept = (ex) => throw new DivideByZeroException("Intercepted exception", ex);
+			_connection.Intercept = (ex) => throw new DivideByZeroException("Intercepted exception", ex);
 
 			var table = _connection.GetTable<TestTable>();
 			Assert.Catch<DivideByZeroException>(() => table.ToList());
 
-			_connection.ExceptionIntercept = null;
+			_connection.Intercept = null;
 
 			Assert.Catch<SQLiteException>(() => table.ToList());
 		}
@@ -72,8 +95,8 @@ namespace Tests.Samples
 			var table = _connection.CreateTable<TestTable>();
 			_connection.Close();
 
-			_connection.ExceptionIntercept = (ex) => throw new DivideByZeroException("Intercepted exception", ex);
-			
+			_connection.Intercept = (ex) => throw new DivideByZeroException("Intercepted exception", ex);
+
 			Assert.Catch<DivideByZeroException>(() => table.Drop());
 		}
 

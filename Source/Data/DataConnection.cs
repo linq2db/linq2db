@@ -291,14 +291,6 @@ namespace LinqToDB.Data
 		}
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
-
-		static Func<Exception, Exception> defaultExceptionIntercept = (original) => original;
-		private Func<Exception,Exception> _exceptionIntercept = defaultExceptionIntercept ;
-		public Func<Exception, Exception> ExceptionIntercept
-		{
-			get { return _exceptionIntercept; }
-			set { _exceptionIntercept = value ?? defaultExceptionIntercept; }
-		}
 		#endregion
 
 		#region Configuration
@@ -1060,6 +1052,11 @@ namespace LinqToDB.Data
 		internal CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
 		{
 			return DataProvider.GetCommandBehavior(commandBehavior);
+		}
+
+		protected virtual Exception ExceptionIntercept(Exception original)
+		{
+			return original;
 		}
 	}
 }
