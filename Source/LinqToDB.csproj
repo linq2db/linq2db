@@ -190,6 +190,7 @@
     <Compile Include="Mapping\DataTypeAttribute.cs" />
     <Compile Include="Mapping\StoredProcedure.cs" />
     <Compile Include="Metadata\SystemDataSqlServerAttributeReader.cs" />
+    <Compile Include="IRetryPolicy.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />
     <Compile Include="SchemaProvider\ForeingKeyInfo.cs" />

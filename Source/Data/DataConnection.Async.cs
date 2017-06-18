@@ -25,10 +25,20 @@ namespace LinqToDB.Data
 			InitCommand(commandType, sql, parameters, null);
 		}
 
+		private Task<int> ExecuteNonQueryAsyncCore(CancellationToken cancellationToken)
+		{
+			return
+				RetryPolicy == null
+					? ((DbCommand) Command).ExecuteNonQueryAsync(cancellationToken)
+					: RetryPolicy.ExecuteAsync(
+						ct => ((DbCommand) Command).ExecuteNonQueryAsync(ct),
+						cancellationToken);
+		}
+
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
+				return await ExecuteNonQueryAsyncCore(cancellationToken);
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -43,7 +53,7 @@ namespace LinqToDB.Data
 			try
 			{
 				var now = DateTime.Now;
-				var ret = await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
+				var ret = await ExecuteNonQueryAsyncCore(cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -76,10 +86,24 @@ namespace LinqToDB.Data
 			}
 		}
 
-		internal async Task<DbDataReader> ExecuteReaderAsync(CommandBehavior commandBehavior, CancellationToken cancellationToken)
+		internal Task<DbDataReader> ExecuteReaderAsyncCore(
+			CommandBehavior commandBehavior,
+			CancellationToken cancellationToken)
+		{
+			return
+				RetryPolicy == null
+					? ((DbCommand) Command).ExecuteReaderAsync(commandBehavior, cancellationToken)
+					: RetryPolicy.ExecuteAsync(
+						ct => ((DbCommand) Command).ExecuteReaderAsync(commandBehavior, cancellationToken),
+						cancellationToken);
+		}
+
+		internal async Task<DbDataReader> ExecuteReaderAsync(
+			CommandBehavior commandBehavior,
+			CancellationToken cancellationToken)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return await ((DbCommand)Command).ExecuteReaderAsync(commandBehavior, cancellationToken);
+				return await ExecuteReaderAsyncCore(commandBehavior, cancellationToken);
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -95,7 +119,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = await ((DbCommand)Command).ExecuteReaderAsync(cancellationToken);
+				var ret = await ExecuteReaderAsyncCore(commandBehavior, cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
 				{

@@ -6,6 +6,7 @@ namespace LinqToDB.Common
 	{
 		public static bool IsStructIsScalarType = true;
 		public static bool AvoidSpecificDataProviderAPI;
+		public static IRetryPolicy RetryPolicy;
 
 		public static class Linq
 		{
