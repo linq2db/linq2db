@@ -13,7 +13,9 @@ namespace LinqToDB
 		public RetryLimitExceededException(Exception innerException) : base(_retryLimitExceededMessage, innerException)
 		{}
 
+#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
 		protected RetryLimitExceededException(SerializationInfo info, StreamingContext context) : base(info, context)
 		{}
+#endif
 	}
 }
