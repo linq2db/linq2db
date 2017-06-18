@@ -15,7 +15,6 @@ namespace Tests.Samples
 	public class ExceptionInterceptTests : TestBase
 	{
 #if !MONO
-
 		private class TestDataConnection : DataConnection
 		{
 			public TestDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
@@ -54,6 +53,12 @@ namespace Tests.Samples
 
 		}
 
+		[NUnit.Framework.TearDown]
+		public void ResetIntercept()
+		{
+			_connection.Intercept = null;
+		}
+
 		[OneTimeTearDown]
 		public void TearDown()
 		{
@@ -70,7 +75,7 @@ namespace Tests.Samples
 		[Test]
 		public void InterceptedExceptionExecuteReader()
 		{
-            _connection.Intercept = (ex) => { throw new DivideByZeroException("Intercepted exception", ex); };
+			_connection.Intercept = (ex) => { return new DivideByZeroException("Intercepted exception", ex); };
 
 			var table = _connection.GetTable<TestTable>();
 			Assert.Catch<DivideByZeroException>(() => table.ToList());
@@ -79,7 +84,7 @@ namespace Tests.Samples
 		[Test]
 		public void InterceptedResetExecuteReader()
 		{
-            _connection.Intercept = (ex) => { throw new DivideByZeroException("Intercepted exception", ex); };
+			_connection.Intercept = (ex) => { return new DivideByZeroException("Intercepted exception", ex); };
 
 			var table = _connection.GetTable<TestTable>();
 			Assert.Catch<DivideByZeroException>(() => table.ToList());
@@ -89,26 +94,67 @@ namespace Tests.Samples
 			Assert.Catch<SQLiteException>(() => table.ToList());
 		}
 
-		[Test]
+        [Test]
+        public void InterceptedRetryExecuteReader()
+        {
+            int count = 0;
+            _connection.Intercept = (ex) => 
+            {
+                if (count < 1)
+                {
+                    count++;
+                    return null;
+                }
+
+                return new DivideByZeroException("Intercepted exception", ex); 
+            };
+
+            var table = _connection.GetTable<TestTable>();
+            Assert.Catch<DivideByZeroException>(() => table.ToList());
+            Assert.AreEqual(1, count);
+        }
+
+
+        [Test]
 		public void InterceptedExceptionExecuteNonQuery()
 		{
 			var table = _connection.CreateTable<TestTable>();
 			_connection.Close();
 
-            _connection.Intercept = (ex) => { throw new DivideByZeroException("Intercepted exception", ex); };
+			_connection.Intercept = (ex) => { return new DivideByZeroException("Intercepted exception", ex); };
 
 			Assert.Catch<DivideByZeroException>(() => table.Drop());
 		}
 
-		[Test]
+        [Test]
+        public void InterceptedRetryExecuteNonQuery()
+        {
+            int count = 0;
+            _connection.Intercept = (ex) =>
+            {
+                if (count < 1)
+                {
+                    count++;
+                    return null;
+                }
+
+                return new DivideByZeroException("Intercepted exception", ex);
+            };
+
+            var table = _connection.CreateTable<TestTable>();
+            _connection.Close();
+
+            Assert.Catch<DivideByZeroException>(() => table.Drop());
+            Assert.AreEqual(1, count);
+        }
+
+        [Test]
 		public void InterceptedExceptionExecuteScalar()
 		{
 
 			// TODO: find a query that will excercise ExecuteScalar on its own so we can test the call.
 
 		}
-
-
 #endif
 	}
 }
