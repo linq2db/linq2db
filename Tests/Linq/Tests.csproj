@@ -266,6 +266,7 @@
     <Compile Include="Linq\InterfaceTests.cs" />
     <Compile Include="Linq\JoinOptimizeTests.cs" />
     <Compile Include="Linq\SqlExtensionTests.cs" />
+    <Compile Include="Samples\ExceptionInterceptTests.cs" />
     <Compile Include="Samples\DataContextDecoratorTests.cs" />
     <Compile Include="OrmBattle\Helper\ExpressionUtils.cs" />
     <Compile Include="OrmBattle\Helper\GenericEqualityComparer.cs" />
@@ -476,6 +477,7 @@
     </Content>
     <Content Include="AppveyorDataProviders.Core.txt" />
     <Content Include="AppveyorDataProviders.txt" />
+    <Content Include="UserDataProviders.txt" />
     <Content Include="DefaultDataProviders.txt" />
     <Content Include="MonoAppveyorDataProviders.txt" />
     <Content Include="..\..\Data\Northwind.sqlite">
