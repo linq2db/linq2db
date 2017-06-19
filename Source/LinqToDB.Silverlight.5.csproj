@@ -29,7 +29,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>Bin\Debug.Silverlight.5\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SILVERLIGHT</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SILVERLIGHT;NOASYNC</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
@@ -39,7 +39,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>Bin\Release.Silverlight.5\</OutputPath>
-    <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>
+    <DefineConstants>TRACE;SILVERLIGHT;NOASYNC</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
@@ -64,6 +64,7 @@
     <Reference Include="System.Xml.Linq, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IRetryPolicy.cs" />
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />

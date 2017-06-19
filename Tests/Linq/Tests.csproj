@@ -259,6 +259,7 @@
     <Compile Include="DataProvider\PostgreSQLTests.cs" />
     <Compile Include="DataProvider\SqlServerTypesTests.cs" />
     <Compile Include="Data\MiniProfilerTests.cs" />
+    <Compile Include="Data\RetryPolicyTest.cs" />
     <Compile Include="Data\TransactionTests.cs" />
     <Compile Include="Data\ProcedureTests.cs" />
     <Compile Include="Linq\AnalyticTests.cs" />
