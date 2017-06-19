@@ -705,8 +705,11 @@ namespace Tests.xUpdate
 				{
 					db.Parent.Delete(c => c.ParentID >= 1000);
 
-					for (var i = 0; i < 10; i++)
-						db.Insert(new Parent { ParentID = 1000 + i });
+					using (new DisableLogging())
+					{
+						for (var i = 0; i < 10; i++)
+							db.Insert(new Parent { ParentID = 1000 + i });
+					}
 
 					var rowsAffected = db.Parent
 						.Where(p => p.ParentID >= 1000)
@@ -723,20 +726,141 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// TODO: [Test, DataContextSource]
-		public void TestUpdateTake(string context)
+		[Test, DataContextSource(
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
+			ProviderName.SapHana,
+			ProviderName.MySql,
+			TestProvName.MySql57
+		 )]
+		public void TestUpdateTakeOrdered(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var entities =
-					from x in db.Parent
-					where x.ParentID > 1000
-					orderby x.ParentID descending
-					select x;
+				try
+				{
+					using (new DisableLogging())
+					{
+						db.Parent.Delete(c => c.ParentID >= 1000);
+						for (var i = 0; i < 10; i++)
+							db.Insert(new Parent { ParentID = 1000 + i });
+					}
 
-				entities
-					.Take(10)
-					.Update(x => new Parent { Value1 = 1 });
+					var entities =
+						from x in db.Parent
+						where x.ParentID > 1000
+						orderby x.ParentID descending
+						select x;
+
+					var rowsAffected = entities
+						.Take(5)
+						.Update(x => new Parent { Value1 = 1 });
+
+					Assert.That(rowsAffected, Is.EqualTo(5));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
+
+		[Test, DataContextSource(
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
+			ProviderName.SapHana,
+			ProviderName.MySql,
+			TestProvName.MySql57
+		 )]
+		public void TestUpdateSkipTake(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					using (new DisableLogging())
+					{
+						db.Parent.Delete(c => c.ParentID >= 1000);
+						for (var i = 0; i < 10; i++)
+							db.Insert(new Parent {ParentID = 1000 + i});
+					}
+
+					var entities =
+						from x in db.Parent
+						where x.ParentID > 1000
+						orderby x.ParentID descending
+						select x;
+
+					var rowsAffected = entities
+						.Skip(1)
+						.Take(5)
+						.Update(x => new Parent { Value1 = 1 });
+
+					Assert.That(rowsAffected, Is.EqualTo(5));
+
+					Assert.False(db.Parent.Where(p => p.ParentID == 1000 + 9).Single().Value1 == 1);
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
+
+		[Test, DataContextSource(
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000,
+			ProviderName.SapHana
+		 )]
+		public void TestUpdateTakeNotOrdered(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					using (new DisableLogging())
+					{
+						db.Parent.Delete(c => c.ParentID >= 1000);
+						for (var i = 0; i < 10; i++)
+							db.Insert(new Parent {ParentID = 1000 + i});
+					}
+
+					var entities =
+						from x in db.Parent
+						where x.ParentID > 1000
+						select x;
+
+					var rowsAffected = entities
+						.Take(5)
+						.Update(x => new Parent { Value1 = 1 });
+
+					Assert.That(rowsAffected, Is.EqualTo(5));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
 			}
 		}
 
