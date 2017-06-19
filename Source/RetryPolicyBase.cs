@@ -6,7 +6,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -144,6 +143,8 @@ namespace LinqToDB
 			}
 		}
 
+#if !NOASYNC
+
 		/// <summary>
 		///     Executes the specified asynchronous operation and returns the result.
 		/// </summary>
@@ -163,8 +164,8 @@ namespace LinqToDB
 		/// <exception cref="RetryLimitExceededException">
 		///     Thrown if the operation has not succeeded after the configured number of retries.
 		/// </exception>
-		public virtual Task<TResult> ExecuteAsync<TResult>(
-			Func<CancellationToken, Task<TResult>> operation,
+		public virtual System.Threading.Tasks.Task<TResult> ExecuteAsync<TResult>(
+			Func<CancellationToken, System.Threading.Tasks.Task<TResult>> operation,
 			CancellationToken cancellationToken = default(CancellationToken))
 		{
 			if (Suspended)
@@ -174,8 +175,8 @@ namespace LinqToDB
 			return ExecuteImplementationAsync(operation, cancellationToken);
 		}
 
-		private async Task<TResult> ExecuteImplementationAsync<TResult>(
-			Func<CancellationToken, Task<TResult>> operation,
+		private async System.Threading.Tasks.Task<TResult> ExecuteImplementationAsync<TResult>(
+			Func<CancellationToken, System.Threading.Tasks.Task<TResult>> operation,
 			CancellationToken cancellationToken)
 		{
 			while (true)
@@ -206,9 +207,11 @@ namespace LinqToDB
 					OnRetry();
 				}
 
-				await Task.Delay(delay.Value, cancellationToken);
+				await System.Threading.Tasks.Task.Delay(delay.Value, cancellationToken);
 			}
 		}
+
+#endif
 
 		/// <summary>
 		///     Method called before the first operation execution

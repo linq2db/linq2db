@@ -109,6 +109,7 @@
     <EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IRetryPolicy.cs" />
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
