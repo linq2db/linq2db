@@ -1127,17 +1127,7 @@ namespace LinqToDB.SqlProvider
 			if (to.Type == typeof(object))
 				return func.Parameters[2];
 
-			if (to.Precision > 0)
-			{
-				var maxPrecision = GetMaxPrecision(from);
-				var maxScale     = GetMaxScale    (from);
-				var newPrecision = maxPrecision >= 0 ? Math.Min(to.Precision ?? 0, maxPrecision) : to.Precision;
-				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale     ?? 0, maxScale)     : to.Scale;
-
-				if (to.Precision != newPrecision || to.Scale != newScale)
-					to = new SqlDataType(to.DataType, to.Type, null, newPrecision, newScale);
-			}
-			else if (to.Length > 0)
+			if (to.Length > 0)
 			{
 				var maxLength = to.Type == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
 				var newLength = maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength) : to.Length;

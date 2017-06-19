@@ -259,6 +259,7 @@
     <Compile Include="DataProvider\PostgreSQLTests.cs" />
     <Compile Include="DataProvider\SqlServerTypesTests.cs" />
     <Compile Include="Data\MiniProfilerTests.cs" />
+    <Compile Include="Data\RetryPolicyTest.cs" />
     <Compile Include="Data\TransactionTests.cs" />
     <Compile Include="Data\ProcedureTests.cs" />
     <Compile Include="Linq\AnalyticTests.cs" />
@@ -380,6 +381,7 @@
     <Compile Include="UserTests\Issue358Tests.cs" />
     <Compile Include="UserTests\Issue356Tests.cs" />
     <Compile Include="UserTests\Issue082Tests.cs" />
+    <Compile Include="UserTests\Issue737Tests.cs" />
     <Compile Include="UserTests\Issue395Tests.cs" />
     <Compile Include="UserTests\Issue273Tests.cs" />
     <Compile Include="UserTests\Issue447Tests.cs" />

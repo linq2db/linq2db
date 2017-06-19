@@ -79,6 +79,8 @@
     <Compile Include="Configuration\NamedValue.cs" />
     <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerRetryPolicy.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerTransientErrorDetector.cs" />
     <Compile Include="Data\TraceInfoStep.cs" />
     <Compile Include="KeepConnectionAliveScope.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
@@ -190,6 +192,9 @@
     <Compile Include="Mapping\DataTypeAttribute.cs" />
     <Compile Include="Mapping\StoredProcedure.cs" />
     <Compile Include="Metadata\SystemDataSqlServerAttributeReader.cs" />
+    <Compile Include="IRetryPolicy.cs" />
+    <Compile Include="RetryLimitExceededException.cs" />
+    <Compile Include="RetryPolicyBase.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />
     <Compile Include="SchemaProvider\ForeingKeyInfo.cs" />

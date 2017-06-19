@@ -3,10 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
@@ -32,12 +31,28 @@ namespace LinqToDB.Data
 			AddMappingSchema(mappingSchema);
 		}
 
-		public DataConnection(string configurationString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this(configurationString)
+		public DataConnection(string configurationString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+			: this(configurationString, (IRetryPolicy)null)
 		{
 			AddMappingSchema(mappingSchema);
 		}
 
+		public DataConnection(
+			string configurationString,
+			[JetBrains.Annotations.NotNull]   MappingSchema mappingSchema,
+			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
+			: this(configurationString, mappingSchema)
+		{
+			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+		}
+
 		public DataConnection(string configurationString)
+			: this(configurationString, (IRetryPolicy)null)
+		{
+			
+		}
+
+		public DataConnection(string configurationString, [JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
 		{
 			InitConfig();
 
@@ -51,15 +66,21 @@ namespace LinqToDB.Data
 			DataProvider     = ci.DataProvider;
 			ConnectionString = ci.ConnectionString;
 			_mappingSchema   = DataProvider.MappingSchema;
+			RetryPolicy      = retryPolicy ?? Configuration.RetryPolicy;
 		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public DataConnection(
+				[JetBrains.Annotations.NotNull] string        providerName,
+				[JetBrains.Annotations.NotNull] string        connectionString,
+				[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(providerName, connectionString)
 		{
 			AddMappingSchema(mappingSchema);
 		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string connectionString)
 		{
 			if (providerName     == null) throw new ArgumentNullException("providerName");
 			if (connectionString == null) throw new ArgumentNullException("connectionString");
@@ -76,14 +97,28 @@ namespace LinqToDB.Data
 			_mappingSchema   = DataProvider.MappingSchema;
 		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] string        connectionString,
+			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(dataProvider, connectionString)
 		{
 			AddMappingSchema(mappingSchema);
 		}
 
+		public DataConnection(
+			[JetBrains.Annotations.NotNull]   IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull]   string        connectionString,
+			[JetBrains.Annotations.NotNull]   MappingSchema mappingSchema,
+			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
+			: this(dataProvider, connectionString, mappingSchema)
+		{
+			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] string connectionString)
 		{
 			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
 			if (connectionString == null) throw new ArgumentNullException("connectionString");
@@ -95,13 +130,18 @@ namespace LinqToDB.Data
 			ConnectionString = connectionString;
 		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbConnection connection, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbConnection connection,
+			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(dataProvider, connection)
 		{
 			AddMappingSchema(mappingSchema);
 		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbConnection connection)
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbConnection connection)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (connection   == null) throw new ArgumentNullException("connection");
@@ -117,13 +157,28 @@ namespace LinqToDB.Data
 			_connection    = connection;
 		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbTransaction transaction, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbTransaction transaction,
+			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(dataProvider, transaction)
 		{
 			AddMappingSchema(mappingSchema);
 		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbTransaction transaction)
+		public DataConnection(
+			[JetBrains.Annotations.NotNull]   IDataProvider  dataProvider,
+			[JetBrains.Annotations.NotNull]   IDbTransaction transaction,
+			[JetBrains.Annotations.NotNull]   MappingSchema  mappingSchema,
+			[JetBrains.Annotations.CanBeNull] IRetryPolicy   retryPolicy)
+			: this(dataProvider, transaction, mappingSchema)
+		{
+			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+		}
+
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbTransaction transaction)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (transaction  == null) throw new ArgumentNullException("transaction");
@@ -148,6 +203,7 @@ namespace LinqToDB.Data
 		public string        ConfigurationString { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ConnectionString    { get; private set; }
+		public IRetryPolicy  RetryPolicy         { get; private set; }
 
 		static readonly ConcurrentDictionary<string,int> _configurationIDs;
 		static int _maxID;
@@ -296,7 +352,7 @@ namespace LinqToDB.Data
 
 		#region Configuration
 
-		private static ILinqToDBSettings _defaultSettings = null;
+		private static ILinqToDBSettings _defaultSettings;
 
 		public static ILinqToDBSettings DefaultSettings
 		{
@@ -312,7 +368,11 @@ namespace LinqToDB.Data
 			set { _defaultSettings = value; }
 		}
 
-		static IDataProvider FindProvider(string configuration, IEnumerable<KeyValuePair<string,IDataProvider>> ps, IDataProvider defp)
+		[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+		private static IDataProvider FindProvider(
+			string configuration,
+			IEnumerable<KeyValuePair<string,IDataProvider>> ps,
+			IDataProvider defp)
 		{
 			foreach (var p in ps.OrderByDescending(kv => kv.Key.Length))
 				if (configuration == p.Key || configuration.StartsWith(p.Key + '.'))
@@ -386,7 +446,7 @@ namespace LinqToDB.Data
 		}
 
 		static readonly object _initSyncRoot = new object();
-		static          bool   _initialized  = false;
+		static          bool   _initialized;
 
 		static void InitConfig()
 		{
@@ -430,7 +490,7 @@ namespace LinqToDB.Data
 
 		class ConfigurationInfo
 		{
-			private readonly bool _dataProviderSetted = false;
+			private readonly bool _dataProviderSetted;
 			public ConfigurationInfo(string connectionString, IDataProvider dataProvider)
 			{
 				ConnectionString    = connectionString;
@@ -560,7 +620,7 @@ namespace LinqToDB.Data
 			_configurations[configuration].ConnectionString = connectionString;
 		}
 
-		[Pure]
+		[JetBrains.Annotations.Pure]
 		public static string GetConnectionString(string configurationString)
 		{
 			InitConfig();
@@ -679,13 +739,18 @@ namespace LinqToDB.Data
 			}
 		}
 
+		private int ExecuteNonQueryInternal()
+		{
+			return
+				RetryPolicy == null
+					?                           Command.ExecuteNonQuery()
+					: RetryPolicy.Execute(() => Command.ExecuteNonQuery());
+		}
+
 		internal int ExecuteNonQuery()
 		{
-			if (TraceSwitch.Level == TraceLevel.Off)
-				return Command.ExecuteNonQuery();
-
-			if (OnTraceConnection == null)
-				return Command.ExecuteNonQuery();
+			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+				return ExecuteNonQueryInternal();
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -701,7 +766,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteNonQuery();
+				var ret = ExecuteNonQueryInternal();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -735,13 +800,18 @@ namespace LinqToDB.Data
 			}
 		}
 
+		private object ExecuteScalarInternal()
+		{
+			return
+				RetryPolicy == null
+					?                           Command.ExecuteScalar()
+					: RetryPolicy.Execute(() => Command.ExecuteScalar());
+		}
+
 		object ExecuteScalar()
 		{
-			if (TraceSwitch.Level == TraceLevel.Off)
-				return Command.ExecuteScalar();
-
-			if (OnTraceConnection == null)
-				return Command.ExecuteScalar();
+			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+				return ExecuteScalarInternal();
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -757,7 +827,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteScalar();
+				var ret = ExecuteScalarInternal();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -790,18 +860,23 @@ namespace LinqToDB.Data
 			}
 		}
 
-		internal IDataReader ExecuteReader()
+		private IDataReader ExecuteReader()
 		{
 			return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 		}
 
+		private IDataReader ExecuteReaderInternal(CommandBehavior commandBehavior)
+		{
+			return
+				RetryPolicy == null
+					?                           Command.ExecuteReader(commandBehavior)
+					: RetryPolicy.Execute(() => Command.ExecuteReader(commandBehavior));
+		}
+
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
-			if (TraceSwitch.Level == TraceLevel.Off)
-				return Command.ExecuteReader(commandBehavior);
-
-			if (OnTraceConnection == null)
-				return Command.ExecuteReader(commandBehavior);
+			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+				return ExecuteReaderInternal(commandBehavior);
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -817,7 +892,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteReader(commandBehavior);
+				var ret = ExecuteReaderInternal(commandBehavior);
 
 				if (TraceSwitch.TraceInfo)
 				{
