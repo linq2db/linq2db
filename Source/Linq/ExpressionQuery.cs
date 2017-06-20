@@ -10,23 +10,18 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
-	using Data;
 	using Extensions;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>
 	{
 		#region Init
 
-		protected void Init(IDataContextInfo dataContextInfo, Expression expression)
+		protected void Init([NotNull] IDataContextInfo dataContextInfo, Expression expression)
 		{
-#if SILVERLIGHT || NETFX_CORE && !NETSTANDARD
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
 
 			DataContextInfo = dataContextInfo;
-#else
-			DataContextInfo = dataContextInfo ?? new DataContextInfo(new DataConnection(), true);
-#endif
-			Expression      = expression      ?? Expression.Constant(this);
+			Expression      = expression ?? Expression.Constant(this);
 		}
 
 		[NotNull] public Expression       Expression      { get; set; }

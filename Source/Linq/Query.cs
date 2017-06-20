@@ -269,6 +269,9 @@ namespace LinqToDB.Linq
 				if (query != null)
 					dataContext.ReleaseQuery(query);
 
+				if (dataContextInfo.DataContext.CloseAfterUse)
+					dataContextInfo.DataContext.Close();
+
 				if (dataContextInfo.DisposeContext)
 					dataContext.Dispose();
 			}
@@ -309,6 +312,9 @@ namespace LinqToDB.Linq
 				if (query != null)
 					dataContext.ReleaseQuery(query);
 
+				if (dataContextInfo.DataContext.CloseAfterUse)
+					dataContextInfo.DataContext.Close();
+
 				if (dataContextInfo.DisposeContext)
 					dataContext.Dispose();
 			}
@@ -345,6 +351,9 @@ namespace LinqToDB.Linq
 			{
 				if (query != null)
 					dataContext.ReleaseQuery(query);
+
+				if (dataContextInfo.DataContext.CloseAfterUse)
+					dataContextInfo.DataContext.Close();
 
 				if (dataContextInfo.DisposeContext)
 					dataContext.Dispose();
@@ -386,6 +395,9 @@ namespace LinqToDB.Linq
 			{
 				if (query != null)
 					dataContext.ReleaseQuery(query);
+
+				if (dataContextInfo.DataContext.CloseAfterUse)
+					dataContextInfo.DataContext.Close();
 
 				if (dataContextInfo.DisposeContext)
 					dataContext.Dispose();
@@ -1087,6 +1099,9 @@ namespace LinqToDB.Linq
 				if (query != null)
 					dataContext.ReleaseQuery(query);
 
+				if (dataContextInfo.DataContext.CloseAfterUse)
+					dataContextInfo.DataContext.Close();
+
 				if (dataContextInfo.DisposeContext)
 					dataContext.Dispose();
 			}
@@ -1167,13 +1182,8 @@ namespace LinqToDB.Linq
 			object[]                 ps,
 			MapInfo                  mapInfo)
 		{
-			var closeQueryContext = false;
-
 			if (queryContext == null)
-			{
-				closeQueryContext = true;
-				queryContext = new QueryContext(dataContextInfo, expr, ps);
-			}
+				queryContext = new QueryContext(dataContextInfo.DataContext, expr, ps);
 
 			var isFaulted = false;
 
@@ -1230,8 +1240,6 @@ namespace LinqToDB.Linq
 			{
 				if (dataContextInfo.DataContext.CloseAfterUse)
 					dataContextInfo.DataContext.Close();
-				else if (closeQueryContext)
-					queryContext.Close();
 			}
 		}
 

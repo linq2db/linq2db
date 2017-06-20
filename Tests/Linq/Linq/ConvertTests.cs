@@ -613,17 +613,17 @@ namespace Tests.Linq
 			}
 		}
 
-		private static void AssertConvert<TTo, TFrom>(Model.ITestDataContext db, TTo exprected, TFrom value)
+		static void AssertConvert<TTo, TFrom>(Model.ITestDataContext db, TTo expected, TFrom value)
 		{
 			var r = db.Types.Select(_ => ServerConvert<TTo, TFrom>(value)).First();
 
-			Console.WriteLine($"Expected {exprected} result {r}");
+			Console.WriteLine($"Expected {expected} result {r}");
 
 			Assert.GreaterOrEqual(0.01m,
-				Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(exprected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)));
+				Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)));
 		}
 
-		[CLSCompliant(false)]
+		//[CLSCompliant(false)]
 		[Sql.Function("$Convert$", 1, 2, 0, ServerSideOnly = true)]
 		public static TTo ServerConvert<TTo, TFrom>(TFrom obj)
 		{

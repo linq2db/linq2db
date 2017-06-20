@@ -1509,17 +1509,9 @@ namespace LinqToDB.Linq.Builder
 					object                                   parentObject,
 					Func<IDataContext,object,IEnumerable<T>> queryReader)
 				{
-					var db = queryContext.GetDataContext();
-
-					try
-					{
-						foreach (var item in queryReader(db.DataContextInfo.DataContext, parentObject))
+					using (var db = queryContext.DataContext.Clone(true))
+						foreach (var item in queryReader(db, parentObject))
 							yield return item;
-					}
-					finally
-					{
-						queryContext.ReleaseDataContext(db);
-					}
 				}
 			}
 
