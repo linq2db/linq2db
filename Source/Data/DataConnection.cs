@@ -139,6 +139,16 @@ namespace LinqToDB.Data
 
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbConnection connection,
+			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
+			[JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
+			: this(dataProvider, connection, mappingSchema)
+		{
+			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+		}
+
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
@@ -153,6 +163,15 @@ namespace LinqToDB.Data
 			DataProvider   = dataProvider;
 			_mappingSchema = DataProvider.MappingSchema;
 			_connection    = connection;
+		}
+
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbConnection connection,
+			[JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
+			: this(dataProvider, connection)
+		{
+			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
 		}
 
 		public DataConnection(
