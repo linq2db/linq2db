@@ -288,6 +288,11 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.CommandCount(selectQuery);
 		}
 
+		private static string GetFullTableName(SqlTable table)
+		{
+			return (table.Owner ?? "") + table.PhysicalName;
+		}
+
 		protected override void BuildDropTableStatement()
 		{
 			if (_identityField == null)
@@ -298,7 +303,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				StringBuilder
 					.Append("DROP TRIGGER TIDENTITY_")
-					.Append(SelectQuery.CreateTable.Table.PhysicalName)
+					.Append(GetFullTableName(SelectQuery.CreateTable.Table))
 					.AppendLine();
 			}
 		}
@@ -311,7 +316,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					StringBuilder
 						.Append("DROP SEQUENCE SIDENTITY_")
-						.Append(SelectQuery.CreateTable.Table.PhysicalName)
+						.Append(GetFullTableName(SelectQuery.CreateTable.Table))
 						.AppendLine();
 				}
 				else
@@ -323,13 +328,13 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					StringBuilder
 						.Append("CREATE SEQUENCE SIDENTITY_")
-						.Append(SelectQuery.CreateTable.Table.PhysicalName)
+						.Append(GetFullTableName(SelectQuery.CreateTable.Table))
 						.AppendLine();
 				}
 				else
 				{
 					StringBuilder
-						.AppendFormat("CREATE OR REPLACE TRIGGER  TIDENTITY_{0}", SelectQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("CREATE OR REPLACE TRIGGER  TIDENTITY_{0}", GetFullTableName(SelectQuery.CreateTable.Table))
 						.AppendLine()
 						.AppendFormat("BEFORE INSERT ON ");
 
@@ -339,7 +344,7 @@ namespace LinqToDB.DataProvider.Oracle
 						.AppendLine(" FOR EACH ROW")
 						.AppendLine  ()
 						.AppendLine  ("BEGIN")
-						.AppendFormat("\tSELECT SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("\tSELECT SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, GetFullTableName(SelectQuery.CreateTable.Table))
 						.AppendLine  ()
 						.AppendLine  ("END;");
 				}

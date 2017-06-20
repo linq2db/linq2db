@@ -1848,7 +1848,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, OracleDataContext]
-		public void Issue723(string context)
+		public void Issue723Test(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -1857,6 +1857,11 @@ namespace Tests.DataProvider
 					db.Execute("GRANT CREATE ANY TRIGGER TO TestUser");
 					db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
 					db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
+					for (var i = 1; i < 3; i++)
+					{
+						var id = Convert.ToInt32(db.InsertWithIdentity(new Issue723Table() {StringValue = i.ToString()}));
+						Assert.AreEqual(i, id);
+					}
 					Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
 				}
 				finally
