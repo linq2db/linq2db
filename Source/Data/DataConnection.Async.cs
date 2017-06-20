@@ -29,8 +29,8 @@ namespace LinqToDB.Data
 		{
 			return
 				RetryPolicy == null
-					?                                ((DbCommand) Command).ExecuteNonQueryAsync(cancellationToken)
-					: RetryPolicy.ExecuteAsync(ct => ((DbCommand) Command).ExecuteNonQueryAsync(ct), cancellationToken);
+					?                                ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken)
+					: RetryPolicy.ExecuteAsync(ct => ((DbCommand)Command).ExecuteNonQueryAsync(ct), cancellationToken);
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)

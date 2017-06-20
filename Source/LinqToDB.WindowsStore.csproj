@@ -110,6 +110,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IRetryPolicy.cs" />
+    <Compile Include="RetryLimitExceededException.cs" />
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
@@ -231,11 +232,9 @@
     <Compile Include="Linq\Builder\WhereBuilder.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\CompiledTableT.cs" />
-    <Compile Include="Linq\DataContextInfo.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />
     <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Linq\Expressions.cs" />
-    <Compile Include="Linq\IDataContextInfo.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
     <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IExpressionQueryT.cs" />

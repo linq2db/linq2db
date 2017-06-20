@@ -171,20 +171,14 @@ namespace LinqToDB.Linq.Builder
 
 				List<TElement> GetItems()
 				{
-					var db = _queryContext.GetDataContext();
-
-					try
+					using (var db = _queryContext.DataContext.Clone(true))
 					{
 						var ps = new object[_parameters.Count];
 
 						for (var i = 0; i < ps.Length; i++)
 							ps[i] = _parameters[i].Accessor(_queryContext.Expression, _queryContext.CompiledParameters);
 
-						return _itemReader(db.DataContextInfo.DataContext, Key, ps).ToList();
-					}
-					finally
-					{
-						_queryContext.ReleaseDataContext(db);
+						return _itemReader(db, Key, ps).ToList();
 					}
 				}
 

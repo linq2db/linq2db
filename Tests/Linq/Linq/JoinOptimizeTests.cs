@@ -16,7 +16,7 @@ namespace Tests.Linq
 		SelectQuery GetSelectQuery<T>(IQueryable<T> query)
 		{
 			var eq = (IExpressionQuery)query;
-			var info = Query<T>.GetQuery(eq.DataContextInfo.DataContext, eq.Expression);
+			var info = Query<T>.GetQuery(eq.DataContext, eq.Expression);
 			return info.Queries.Single().SelectQuery;
 		}
 

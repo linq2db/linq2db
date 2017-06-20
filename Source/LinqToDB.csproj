@@ -380,13 +380,11 @@
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="Linq\CompiledTableT.cs" />
     <Compile Include="DataContext.cs" />
-    <Compile Include="Linq\DataContextInfo.cs" />
     <Compile Include="DataContextTransaction.cs" />
     <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\Expressions.cs" />
     <Compile Include="DataExtensions.cs" />
     <Compile Include="IDataContext.cs" />
-    <Compile Include="Linq\IDataContextInfo.cs" />
     <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
     <Compile Include="Linq\ISelectInsertable.cs" />
