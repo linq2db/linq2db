@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IRetryPolicy.cs" />
+    <Compile Include="RetryLimitExceededException.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
     <Compile Include="Common\ConvertBuilder.cs" />

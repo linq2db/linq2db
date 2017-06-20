@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.ServiceModel.Channels;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
+
 using LinqToDB;
 using LinqToDB.Data;
+
 using NUnit.Framework;
 
 namespace Tests.Data
@@ -19,7 +17,7 @@ namespace Tests.Data
 		{
 			public int Count { get; private set; }
 
-			public TResult Execute<TResult>([NotNull] Func<TResult> operation)
+			public TResult Execute<TResult>(Func<TResult> operation)
 			{
 				Count++;
 				try
@@ -28,11 +26,11 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryException();
+					throw new RetryLimitExceededException();
 				}
 			}
 
-			public Task<TResult> ExecuteAsync<TResult>([NotNull] Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default(CancellationToken))
+			public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default(CancellationToken))
 			{
 				Count++;
 				try
@@ -43,7 +41,7 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryException();
+					throw new RetryLimitExceededException();
 				}
 			}
 		}
@@ -58,7 +56,7 @@ namespace Tests.Data
 		{
 			var ret = new Retry();
 			
-			Assert.Throws<RetryException>(() =>
+			Assert.Throws<RetryLimitExceededException>(() =>
 			{
 				using (var db = new DataConnection(context, ret))
 				{
@@ -84,7 +82,7 @@ namespace Tests.Data
 			}
 			catch (AggregateException ex)
 			{
-				Assert.IsNotNull(ex.InnerExceptions.OfType<RetryException>().Single());
+				Assert.IsNotNull(ex.InnerExceptions.OfType<RetryLimitExceededException>().Single());
 			}
 
 			Assert.AreEqual(1, ret.Count);
