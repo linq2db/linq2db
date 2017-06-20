@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		///     Creates a new instance of <see cref="SqlServerRetryPolicy" />.
 		/// </summary>
 		/// <param name="maxRetryCount"> The maximum number of retry attempts. </param>
-		public SqlServerRetryPolicy(int maxRetryCount) : this(maxRetryCount, DefaultMaxDelay, errorNumbersToAdd: null)
+		public SqlServerRetryPolicy(int maxRetryCount) : this(maxRetryCount, DefaultMaxDelay, null)
 		{}
 
 		/// <summary>
@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (baseDelay == null)
 				return null;
 
-			if (CallOnWrappedException(lastException, IsMemoryOptimizedError))
+			if (IsMemoryOptimizedError(lastException))
 				return TimeSpan.FromMilliseconds(baseDelay.Value.TotalSeconds);
 
 			return baseDelay;

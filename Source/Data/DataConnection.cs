@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -23,8 +24,7 @@ namespace LinqToDB.Data
 		#region .ctor
 
 		public DataConnection() : this((string)null)
-		{
-		}
+		{}
 
 		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this((string)null)
 		{
@@ -48,9 +48,7 @@ namespace LinqToDB.Data
 
 		public DataConnection(string configurationString)
 			: this(configurationString, (IRetryPolicy)null)
-		{
-			
-		}
+		{}
 
 		public DataConnection(string configurationString, [JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
 		{
@@ -646,10 +644,14 @@ namespace LinqToDB.Data
 			get
 			{
 				if (_connection == null)
+				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
+					if (RetryPolicy != null)
+						_connection = new RetryingDbConnection((DbConnection)_connection, RetryPolicy);
+				}
 
 				if (_connection.State == ConnectionState.Closed)
-				{
+				{ 
 					_connection.Open();
 					_closeConnection = true;
 				}
@@ -739,18 +741,10 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private int ExecuteNonQueryInternal()
-		{
-			return
-				RetryPolicy == null
-					?                           Command.ExecuteNonQuery()
-					: RetryPolicy.Execute(() => Command.ExecuteNonQuery());
-		}
-
 		internal int ExecuteNonQuery()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteNonQueryInternal();
+				return Command.ExecuteNonQuery();
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -766,7 +760,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteNonQueryInternal();
+				var ret = Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -800,18 +794,10 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private object ExecuteScalarInternal()
-		{
-			return
-				RetryPolicy == null
-					?                           Command.ExecuteScalar()
-					: RetryPolicy.Execute(() => Command.ExecuteScalar());
-		}
-
 		object ExecuteScalar()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteScalarInternal();
+				return Command.ExecuteScalar();
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -819,7 +805,7 @@ namespace LinqToDB.Data
 				{
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
-					Command        = Command,
+					Command        = Command
 				});
 			}
 
@@ -827,7 +813,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteScalarInternal();
+				var ret = Command.ExecuteScalar();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -865,18 +851,10 @@ namespace LinqToDB.Data
 			return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 		}
 
-		private IDataReader ExecuteReaderInternal(CommandBehavior commandBehavior)
-		{
-			return
-				RetryPolicy == null
-					?                           Command.ExecuteReader(commandBehavior)
-					: RetryPolicy.Execute(() => Command.ExecuteReader(commandBehavior));
-		}
-
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteReaderInternal(commandBehavior);
+				return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -892,7 +870,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteReaderInternal(commandBehavior);
+				var ret = ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 
 				if (TraceSwitch.TraceInfo)
 				{
