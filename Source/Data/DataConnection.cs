@@ -43,7 +43,12 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
 			: this(configurationString, mappingSchema)
 		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy = GetRetryPolicy(retryPolicy);
+		}
+
+		private static IRetryPolicy GetRetryPolicy(IRetryPolicy retryPolicy)
+		{
+			return retryPolicy ?? (Configuration.RetryPolicyFactory != null ? Configuration.RetryPolicyFactory() : null);
 		}
 
 		public DataConnection(string configurationString)
@@ -64,7 +69,7 @@ namespace LinqToDB.Data
 			DataProvider     = ci.DataProvider;
 			ConnectionString = ci.ConnectionString;
 			_mappingSchema   = DataProvider.MappingSchema;
-			RetryPolicy      = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy      = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
@@ -111,7 +116,7 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
 			: this(dataProvider, connectionString, mappingSchema)
 		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
@@ -144,7 +149,7 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
 			: this(dataProvider, connection, mappingSchema)
 		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
@@ -171,7 +176,7 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
 			: this(dataProvider, connection)
 		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
@@ -190,7 +195,7 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.CanBeNull] IRetryPolicy   retryPolicy)
 			: this(dataProvider, transaction, mappingSchema)
 		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
