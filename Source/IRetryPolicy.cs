@@ -40,6 +40,6 @@ namespace LinqToDB
 		Task<TResult> ExecuteAsync<TResult>(
 			[NotNull] Func<CancellationToken, Task<TResult>> operation,
 			CancellationToken cancellationToken = default(CancellationToken));
-	}
 #endif
+	}
 }
