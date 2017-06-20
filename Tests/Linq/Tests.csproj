@@ -271,6 +271,7 @@
     <Compile Include="OrmBattle\Helper\ExpressionUtils.cs" />
     <Compile Include="OrmBattle\Helper\GenericEqualityComparer.cs" />
     <Compile Include="OrmBattle\OrmBattleTests.cs" />
+    <Compile Include="Samples\ExceptionInterceptTests.cs" />
     <Compile Include="SqlServerTypes\Loader.cs" />
     <Compile Include="TestProvName.cs" />
     <Compile Include="Update\CreateTableTests.cs" />
