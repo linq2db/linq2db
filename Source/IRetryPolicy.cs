@@ -1,6 +1,8 @@
 ﻿using System;
+#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
+#endif
 
 using JetBrains.Annotations;
 

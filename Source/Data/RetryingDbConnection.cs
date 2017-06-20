@@ -1,7 +1,9 @@
 ﻿using System.Data;
 using System.Data.Common;
+#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.Data
 {

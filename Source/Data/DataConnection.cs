@@ -6,7 +6,9 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+#if !NOASYNC
 using System.Threading;
+#endif
 
 namespace LinqToDB.Data
 {
