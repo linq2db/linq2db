@@ -5,8 +5,8 @@
 
 using System;
 using System.Collections.Generic;
-#if !NOASYNC
 using System.Threading;
+#if !NOASYNC
 using System.Threading.Tasks;
 #endif
 
@@ -140,9 +140,7 @@ namespace LinqToDB
 				}
 
 				using (var waitEvent = new ManualResetEventSlim(false))
-				{
 					waitEvent.WaitHandle.WaitOne(delay.Value);
-				}
 			}
 		}
 
