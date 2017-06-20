@@ -144,6 +144,7 @@ namespace LinqToDB
 			}
 		}
 
+#if !NOASYNC
 		/// <summary>
 		///     Executes the specified asynchronous operation and returns the result.
 		/// </summary>
@@ -209,6 +210,7 @@ namespace LinqToDB
 				await Task.Delay(delay.Value, cancellationToken);
 			}
 		}
+#endif
 
 		/// <summary>
 		///     Method called before the first operation execution
