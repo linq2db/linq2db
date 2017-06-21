@@ -2,12 +2,12 @@
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
 #if !NOASYNC
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	public partial class DataConnection
 	{
@@ -18,25 +18,28 @@ namespace LinqToDB.Data
 
 			if (_connection.State == ConnectionState.Closed)
 			{
-				await ((DbConnection)_connection).OpenAsync(cancellationToken);
+				if (RetryPolicy == null)
+					await ((DbConnection)_connection).OpenAsync(cancellationToken);
+				else
+				{
+					await RetryPolicy.ExecuteAsync(
+						ct =>
+						{
+							((DbConnection) _connection).OpenAsync(ct);
+							return Task.FromResult(0);
+						},
+						cancellationToken);
+				}
 				_closeConnection = true;
 			}
 
 			InitCommand(commandType, sql, parameters, null);
 		}
 
-		private Task<int> ExecuteNonQueryAsyncInternal(CancellationToken cancellationToken)
-		{
-			return
-				RetryPolicy == null
-					?                                ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken)
-					: RetryPolicy.ExecuteAsync(ct => ((DbCommand)Command).ExecuteNonQueryAsync(ct), cancellationToken);
-		}
-
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return await ExecuteNonQueryAsyncInternal(cancellationToken);
+				return await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -51,7 +54,7 @@ namespace LinqToDB.Data
 			try
 			{
 				var now = DateTime.Now;
-				var ret = await ExecuteNonQueryAsyncInternal(cancellationToken);
+				var ret = await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -84,22 +87,12 @@ namespace LinqToDB.Data
 			}
 		}
 
-		internal Task<DbDataReader> ExecuteReaderAsyncInternal(
-			CommandBehavior commandBehavior,
-			CancellationToken cancellationToken)
-		{
-			return
-				RetryPolicy == null
-					?                                ((DbCommand) Command).ExecuteReaderAsync(commandBehavior, cancellationToken)
-					: RetryPolicy.ExecuteAsync(ct => ((DbCommand) Command).ExecuteReaderAsync(commandBehavior, ct), cancellationToken);
-		}
-
 		internal async Task<DbDataReader> ExecuteReaderAsync(
 			CommandBehavior commandBehavior,
 			CancellationToken cancellationToken)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return await ExecuteReaderAsyncInternal(commandBehavior, cancellationToken);
+				return await ((DbCommand)Command).ExecuteReaderAsync(commandBehavior, cancellationToken);
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -115,7 +108,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = await ExecuteReaderAsyncInternal(commandBehavior, cancellationToken);
+				var ret = await ((DbCommand)Command).ExecuteReaderAsync(commandBehavior, cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
 				{

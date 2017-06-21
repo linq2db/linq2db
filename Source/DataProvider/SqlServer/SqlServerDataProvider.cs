@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Init
 
 		public SqlServerDataProvider(string name, SqlServerVersion version)
-			: base(name, null)
+			: base(name, (MappingSchema)null)
 		{
 			Version = version;
 

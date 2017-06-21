@@ -39,5 +39,6 @@ namespace LinqToDB.DataProvider
 		                                          string tableName, string databaseName, string schemaName)
 			where T : class;
 
+		//TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay);
 	}
 }

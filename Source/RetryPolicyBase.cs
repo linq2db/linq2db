@@ -6,6 +6,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
 
 using JetBrains.Annotations;
 
@@ -14,7 +17,7 @@ namespace LinqToDB
 	public abstract class RetryPolicyBase : IRetryPolicy
 	{
 		/// <summary>
-		///     The default number of retry attempts.
+		///   The default number of retry attempts.
 		/// </summary>
 		protected static readonly int DefaultMaxRetryCount = 5;
 
@@ -124,7 +127,7 @@ namespace LinqToDB
 				catch (Exception ex)
 				{
 					Suspended = false;
-					if (!CallOnWrappedException(ex, ShouldRetryOn))
+					if (!ShouldRetryOn(ex))
 						throw;
 
 					ExceptionsEncountered.Add(ex);
@@ -137,14 +140,11 @@ namespace LinqToDB
 				}
 
 				using (var waitEvent = new ManualResetEventSlim(false))
-				{
 					waitEvent.WaitHandle.WaitOne(delay.Value);
-				}
 			}
 		}
 
 #if !NOASYNC
-
 		/// <summary>
 		///     Executes the specified asynchronous operation and returns the result.
 		/// </summary>
@@ -155,7 +155,7 @@ namespace LinqToDB
 		///     A cancellation token used to cancel the retry operation, but not operations that are already in flight
 		///     or that already completed successfully.
 		/// </param>
-		/// <typeparam name="TResult"> The result type of the <see cref="Task{T}" /> returned by <paramref name="operation" />. </typeparam>
+		/// <typeparam name="TResult"> The result type of the <see cref="Task{TResult}" /> returned by <paramref name="operation" />. </typeparam>
 		/// <returns>
 		///     A task that will run to completion if the original task completes successfully (either the
 		///     first time or after retrying transient failures). If the task fails with a non-transient error or
@@ -164,8 +164,7 @@ namespace LinqToDB
 		/// <exception cref="RetryLimitExceededException">
 		///     Thrown if the operation has not succeeded after the configured number of retries.
 		/// </exception>
-		public virtual System.Threading.Tasks.Task<TResult> ExecuteAsync<TResult>(
-			Func<CancellationToken, System.Threading.Tasks.Task<TResult>> operation,
+		public virtual Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation,
 			CancellationToken cancellationToken = default(CancellationToken))
 		{
 			if (Suspended)
@@ -175,8 +174,9 @@ namespace LinqToDB
 			return ExecuteImplementationAsync(operation, cancellationToken);
 		}
 
-		private async System.Threading.Tasks.Task<TResult> ExecuteImplementationAsync<TResult>(
-			Func<CancellationToken, System.Threading.Tasks.Task<TResult>> operation,
+		private async Task<TResult> ExecuteImplementationAsync<TResult>(
+			Func<CancellationToken,
+			Task<TResult>> operation,
 			CancellationToken cancellationToken)
 		{
 			while (true)
@@ -195,7 +195,7 @@ namespace LinqToDB
 				{
 					Suspended = false;
 
-					if (!CallOnWrappedException(ex, ShouldRetryOn))
+					if (!ShouldRetryOn(ex))
 						throw;
 
 					ExceptionsEncountered.Add(ex);
@@ -207,10 +207,9 @@ namespace LinqToDB
 					OnRetry();
 				}
 
-				await System.Threading.Tasks.Task.Delay(delay.Value, cancellationToken);
+				await Task.Delay(delay.Value, cancellationToken);
 			}
 		}
-
 #endif
 
 		/// <summary>
@@ -261,22 +260,5 @@ namespace LinqToDB
 		///     <c>true</c> if the specified exception is considered as transient, otherwise <c>false</c>.
 		/// </returns>
 		protected abstract bool ShouldRetryOn([NotNull] Exception exception);
-
-		/// <summary>
-		///     Recursively gets InnerException from <paramref name="exception" /> as long as it is an
-		///     exception created by Entity Framework and calls <paramref name="exceptionHandler" /> on the innermost one.
-		/// </summary>
-		/// <param name="exception"> The exception to be unwrapped. </param>
-		/// <param name="exceptionHandler"> A delegate that will be called with the unwrapped exception. </param>
-		/// <typeparam name="TResult"> The return type of <paramref name="exceptionHandler" />. </typeparam>
-		/// <returns>
-		///     The result from <paramref name="exceptionHandler" />.
-		/// </returns>
-		public static TResult CallOnWrappedException<TResult>(
-			[NotNull] Exception exception,
-			[NotNull] Func<Exception, TResult> exceptionHandler)
-		{
-			return exceptionHandler(exception);
-		}
 	}
 }

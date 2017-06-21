@@ -64,7 +64,7 @@ namespace Tests.Data
 				}
 			});
 
-			Assert.AreEqual(1, ret.Count);
+			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
 		}
 
 		[Test, DataContextSource(false)]
@@ -85,7 +85,7 @@ namespace Tests.Data
 				Assert.IsNotNull(ex.InnerExceptions.OfType<RetryLimitExceededException>().Single());
 			}
 
-			Assert.AreEqual(1, ret.Count);
+			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
 		}
 
 	}

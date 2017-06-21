@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -23,8 +24,7 @@ namespace LinqToDB.Data
 		#region .ctor
 
 		public DataConnection() : this((string)null)
-		{
-		}
+		{}
 
 		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this((string)null)
 		{
@@ -43,14 +43,17 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
 			: this(configurationString, mappingSchema)
 		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy = GetRetryPolicy(retryPolicy);
+		}
+
+		private static IRetryPolicy GetRetryPolicy(IRetryPolicy retryPolicy)
+		{
+			return retryPolicy ?? (Configuration.RetryPolicyFactory != null ? Configuration.RetryPolicyFactory() : null);
 		}
 
 		public DataConnection(string configurationString)
 			: this(configurationString, (IRetryPolicy)null)
-		{
-			
-		}
+		{}
 
 		public DataConnection(string configurationString, [JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
 		{
@@ -66,7 +69,7 @@ namespace LinqToDB.Data
 			DataProvider     = ci.DataProvider;
 			ConnectionString = ci.ConnectionString;
 			_mappingSchema   = DataProvider.MappingSchema;
-			RetryPolicy      = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy      = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
@@ -113,7 +116,7 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
 			: this(dataProvider, connectionString, mappingSchema)
 		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
@@ -141,6 +144,16 @@ namespace LinqToDB.Data
 
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbConnection connection,
+			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
+			[JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
+			: this(dataProvider, connection, mappingSchema)
+		{
+			RetryPolicy = GetRetryPolicy(retryPolicy);
+		}
+
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
@@ -159,6 +172,15 @@ namespace LinqToDB.Data
 
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbConnection connection,
+			[JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
+			: this(dataProvider, connection)
+		{
+			RetryPolicy = GetRetryPolicy(retryPolicy);
+		}
+
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbTransaction transaction,
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(dataProvider, transaction)
@@ -173,7 +195,7 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.CanBeNull] IRetryPolicy   retryPolicy)
 			: this(dataProvider, transaction, mappingSchema)
 		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
+			RetryPolicy = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
@@ -646,10 +668,14 @@ namespace LinqToDB.Data
 			get
 			{
 				if (_connection == null)
+				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
+					if (RetryPolicy != null)
+						_connection = new RetryingDbConnection((DbConnection)_connection, RetryPolicy);
+				}
 
 				if (_connection.State == ConnectionState.Closed)
-				{
+				{ 
 					_connection.Open();
 					_closeConnection = true;
 				}
@@ -739,18 +765,10 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private int ExecuteNonQueryInternal()
-		{
-			return
-				RetryPolicy == null
-					?                           Command.ExecuteNonQuery()
-					: RetryPolicy.Execute(() => Command.ExecuteNonQuery());
-		}
-
 		internal int ExecuteNonQuery()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteNonQueryInternal();
+				return Command.ExecuteNonQuery();
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -766,7 +784,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteNonQueryInternal();
+				var ret = Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -800,18 +818,10 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private object ExecuteScalarInternal()
-		{
-			return
-				RetryPolicy == null
-					?                           Command.ExecuteScalar()
-					: RetryPolicy.Execute(() => Command.ExecuteScalar());
-		}
-
 		object ExecuteScalar()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteScalarInternal();
+				return Command.ExecuteScalar();
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -819,7 +829,7 @@ namespace LinqToDB.Data
 				{
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
-					Command        = Command,
+					Command        = Command
 				});
 			}
 
@@ -827,7 +837,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteScalarInternal();
+				var ret = Command.ExecuteScalar();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -865,18 +875,10 @@ namespace LinqToDB.Data
 			return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 		}
 
-		private IDataReader ExecuteReaderInternal(CommandBehavior commandBehavior)
-		{
-			return
-				RetryPolicy == null
-					?                           Command.ExecuteReader(commandBehavior)
-					: RetryPolicy.Execute(() => Command.ExecuteReader(commandBehavior));
-		}
-
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteReaderInternal(commandBehavior);
+				return Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -892,7 +894,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteReaderInternal(commandBehavior);
+				var ret = Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 
 				if (TraceSwitch.TraceInfo)
 				{
