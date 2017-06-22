@@ -209,6 +209,7 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 #endif
 
+
 		/// <summary>
 		///     Method called before the first operation execution
 		/// </summary>

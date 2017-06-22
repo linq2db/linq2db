@@ -16,7 +16,9 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using Expressions;
 	using Mapping;
+#if !SILVERLIGHT && !WINSTORE
 	using RetryPolicy;
+#endif
 
 	public partial class DataConnection : ICloneable
 	{
@@ -165,7 +167,9 @@ namespace LinqToDB.Data
 		public string        ConfigurationString { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ConnectionString    { get; private set; }
+#if !SILVERLIGHT && !WINSTORE
 		public IRetryPolicy  RetryPolicy         { get; set; }
+#endif
 
 		static readonly ConcurrentDictionary<string,int> _configurationIDs;
 		static int _maxID;
@@ -310,9 +314,9 @@ namespace LinqToDB.Data
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
-		#endregion
+#endregion
 
-		#region Configuration
+#region Configuration
 
 		private static ILinqToDBSettings _defaultSettings;
 
@@ -597,7 +601,7 @@ namespace LinqToDB.Data
 
 #endregion
 
-		#region Connection
+#region Connection
 
 		bool          _closeConnection;
 		bool          _closeTransaction;
@@ -611,10 +615,12 @@ namespace LinqToDB.Data
 				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
 
+#if !SILVERLIGHT && !WINSTORE
 					var retryPolicy = RetryPolicy ?? (Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null);
 
 					if (retryPolicy != null)
 						_connection = new RetryingDbConnection((DbConnection)_connection, RetryPolicy);
+#endif
 				}
 
 				if (_connection.State == ConnectionState.Closed)
@@ -653,9 +659,9 @@ namespace LinqToDB.Data
 				OnClosed(this, EventArgs.Empty);
 		}
 
-		#endregion
+#endregion
 
-		#region Command
+#region Command
 
 		public string LastQuery;
 
@@ -875,9 +881,9 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-		#endregion
+#endregion
 
-		#region Transaction
+#region Transaction
 
 		public IDbTransaction Transaction { get; private set; }
 		
@@ -957,9 +963,9 @@ namespace LinqToDB.Data
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region MappingSchema
+#region MappingSchema
 
 		private MappingSchema _mappingSchema;
 
@@ -990,9 +996,9 @@ namespace LinqToDB.Data
 			return this;
 		}
 
-		#endregion
+#endregion
 
-		#region ICloneable Members
+#region ICloneable Members
 
 		DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection, MappingSchema mappingSchema)
 		{
@@ -1014,9 +1020,9 @@ namespace LinqToDB.Data
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
 		
-		#endregion
+#endregion
 
-		#region System.IDisposable Members
+#region System.IDisposable Members
 
 		protected bool Disposed { get; private set; }
 
@@ -1032,7 +1038,7 @@ namespace LinqToDB.Data
 			Close();
 		}
 
-		#endregion
+#endregion
 
 		internal CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
 		{
