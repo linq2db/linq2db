@@ -544,12 +544,12 @@ namespace LinqToDB.SqlProvider
 
 			if (SelectQuery.Update.Items.Count > 0)
 			{
-			AppendIndent().AppendLine("WHEN MATCHED THEN");
+				AppendIndent().AppendLine("WHEN MATCHED THEN");
 
-			Indent++;
-			AppendIndent().AppendLine("UPDATE ");
-			BuildUpdateSet();
-			Indent--;
+				Indent++;
+				AppendIndent().AppendLine("UPDATE ");
+				BuildUpdateSet();
+				Indent--;
 			}
 
 			AppendIndent().AppendLine("WHEN NOT MATCHED THEN");

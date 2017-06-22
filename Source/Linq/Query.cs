@@ -854,7 +854,7 @@ namespace LinqToDB.Linq
 			Queries.Add(new QueryInfo
 			{
 				SelectQuery = insertQuery,
-				Parameters = Queries[0].Parameters
+				Parameters  = Queries[0].Parameters
 					.Select(p => new ParameterAccessor
 						(
 							p.Expression,
@@ -889,7 +889,7 @@ namespace LinqToDB.Linq
 			Queries.Add(new QueryInfo
 			{
 				SelectQuery = insertQuery,
-				Parameters = Queries[0].Parameters.ToList(),
+				Parameters  = Queries[0].Parameters.ToList(),
 			});
 		}
 

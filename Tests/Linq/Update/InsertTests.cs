@@ -865,8 +865,8 @@ namespace Tests.xUpdate
 					id = Convert.ToInt32(db.Person.InsertWithIdentity(() => new Person
 					{
 						FirstName = "test",
-						LastName = "subject",
-						Gender = Gender.Unknown
+						LastName  = "subject",
+						Gender    = Gender.Unknown
 					}));
 
 				try
@@ -874,7 +874,7 @@ namespace Tests.xUpdate
 					var records = db.Patient.InsertOrUpdate(
 						() => new Patient()
 						{
-							PersonID = id,
+							PersonID  = id,
 							Diagnosis = "negative"
 						},
 						p => new Patient()
@@ -896,7 +896,7 @@ namespace Tests.xUpdate
 						records = db.Patient.InsertOrUpdate(
 							() => new Patient()
 							{
-								PersonID = id,
+								PersonID  = id,
 								Diagnosis = "positive"
 							},
 							p => new Patient()
