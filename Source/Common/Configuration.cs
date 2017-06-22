@@ -5,7 +5,9 @@ using JetBrains.Annotations;
 namespace LinqToDB.Common
 {
 	using Data;
+#if !SILVERLIGHT
 	using Data.RetryPolicy;
+#endif
 
 	[PublicAPI]
 	public static class Configuration
@@ -72,6 +74,7 @@ namespace LinqToDB.Common
 			public static bool ThrowUnresolvedTypeException;
 		}
 
+#if !SILVERLIGHT
 		public static class RetryPolicy
 		{
 			public static Func<DataConnection,IRetryPolicy> Factory;
@@ -107,5 +110,6 @@ namespace LinqToDB.Common
 			/// </summary>
 			public static TimeSpan DefaultCoefficient = TimeSpan.FromSeconds(1);
 		}
+#endif
 	}
 }

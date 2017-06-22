@@ -16,7 +16,9 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using Expressions;
 	using Mapping;
+#if !SILVERLIGHT
 	using RetryPolicy;
+#endif
 
 	public partial class DataConnection : ICloneable
 	{
@@ -165,7 +167,9 @@ namespace LinqToDB.Data
 		public string        ConfigurationString { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ConnectionString    { get; private set; }
+#if !SILVERLIGHT
 		public IRetryPolicy  RetryPolicy         { get; set; }
+#endif
 
 		static readonly ConcurrentDictionary<string,int> _configurationIDs;
 		static int _maxID;
@@ -310,9 +314,9 @@ namespace LinqToDB.Data
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
-		#endregion
+#endregion
 
-		#region Configuration
+#region Configuration
 
 		private static ILinqToDBSettings _defaultSettings;
 
@@ -597,7 +601,7 @@ namespace LinqToDB.Data
 
 #endregion
 
-		#region Connection
+#region Connection
 
 		bool          _closeConnection;
 		bool          _closeTransaction;
@@ -611,10 +615,12 @@ namespace LinqToDB.Data
 				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
 
+#if !SILVERLIGHT
 					var retryPolicy = RetryPolicy ?? (Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null);
 
 					if (retryPolicy != null)
 						_connection = new RetryingDbConnection((DbConnection)_connection, RetryPolicy);
+#endif
 				}
 
 				if (_connection.State == ConnectionState.Closed)
