@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace Tests.xUpdate
 {
 	using Model;
+	using System.Collections.Generic;
 
 	[TestFixture]
 	public class InsertTests : TestBase
@@ -850,6 +851,76 @@ namespace Tests.xUpdate
 				{
 					db.Patient.Delete(p => p.PersonID == id);
 					db.Person. Delete(p => p.ID       == id);
+				}
+			}
+		}
+
+		[DataContextSource]
+		public void InsertOrUpdate2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				int id;
+				using (new DisableLogging())
+					id = Convert.ToInt32(db.Person.InsertWithIdentity(() => new Person
+					{
+						FirstName = "test",
+						LastName = "subject",
+						Gender = Gender.Unknown
+					}));
+
+				try
+				{
+					var records = db.Patient.InsertOrUpdate(
+						() => new Patient()
+						{
+							PersonID = id,
+							Diagnosis = "negative"
+						},
+						p => new Patient()
+						{
+						});
+
+					try
+					{
+						List<Patient> patients;
+
+						using (new DisableLogging())
+							patients = db.Patient.Where(p => p.PersonID == id).ToList();
+
+						Assert.AreEqual(1, records);
+						Assert.AreEqual(1, patients.Count);
+						Assert.AreEqual(id, patients[0].PersonID);
+						Assert.AreEqual("negative", patients[0].Diagnosis);
+
+						records = db.Patient.InsertOrUpdate(
+							() => new Patient()
+							{
+								PersonID = id,
+								Diagnosis = "positive"
+							},
+							p => new Patient()
+							{
+							});
+
+						using (new DisableLogging())
+							patients = db.Patient.Where(p => p.PersonID == id).ToList();
+
+						Assert.LessOrEqual(records, 0);
+						Assert.AreEqual(1, patients.Count);
+						Assert.AreEqual(id, patients[0].PersonID);
+						Assert.AreEqual("negative", patients[0].Diagnosis);
+					}
+					finally
+					{
+						using (new DisableLogging())
+							db.Patient.Delete(p => p.PersonID == id);
+					}
+				}
+				finally
+				{
+					using (new DisableLogging())
+						db.Person.Delete(p => p.ID == id);
 				}
 			}
 		}

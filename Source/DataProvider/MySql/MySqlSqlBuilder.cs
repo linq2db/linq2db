@@ -228,28 +228,44 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildInsertOrUpdateQuery()
 		{
+			var position = StringBuilder.Length;
+
 			BuildInsertQuery();
-			AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
-			Indent++;
-
-			var first = true;
-
-			foreach (var expr in SelectQuery.Update.Items)
+			if (SelectQuery.Update.Items.Count > 0)
 			{
-				if (!first)
-					StringBuilder.Append(',').AppendLine();
-				first = false;
+				AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
-				AppendIndent();
-				BuildExpression(expr.Column, false, true);
-				StringBuilder.Append(" = ");
-				BuildExpression(expr.Expression, false, true);
+				Indent++;
+
+				var first = true;
+
+				foreach (var expr in SelectQuery.Update.Items)
+				{
+					if (!first)
+						StringBuilder.Append(',').AppendLine();
+					first = false;
+
+					AppendIndent();
+					BuildExpression(expr.Column, false, true);
+					StringBuilder.Append(" = ");
+					BuildExpression(expr.Expression, false, true);
+				}
+
+				Indent--;
+
+				StringBuilder.AppendLine();
 			}
+			else
+			{
+				var sql = StringBuilder.ToString();
+				var insertIndex = sql.IndexOf("INSERT", position);
 
-			Indent--;
-
-			StringBuilder.AppendLine();
+				StringBuilder.Clear()
+					.Append(sql.Substring(0, insertIndex))
+					.Append("INSERT IGNORE")
+					.Append(sql.Substring(insertIndex + "INSERT".Length));
+			}
 		}
 
 		protected override void BuildEmptyInsert()
