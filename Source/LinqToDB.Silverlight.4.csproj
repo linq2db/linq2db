@@ -64,8 +64,6 @@
     <Reference Include="System.Xml.Linq, Version=2.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IRetryPolicy.cs" />
-    <Compile Include="RetryLimitExceededException.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
     <Compile Include="Common\ConvertBuilder.cs" />

@@ -5,17 +5,17 @@ using System.Threading;
 using System.Threading.Tasks;
 #endif
 
-namespace LinqToDB.Data
+namespace LinqToDB.Data.RetryPolicy
 {
-	internal class RetryingDbConnection : DbConnection
+	class RetryingDbConnection : DbConnection
 	{
-		private readonly DbConnection _connection;
-		private readonly IRetryPolicy _policy;
+		readonly DbConnection _connection;
+		readonly IRetryPolicy _policy;
 
 		public RetryingDbConnection(DbConnection connection, IRetryPolicy policy)
 		{
 			_connection = connection;
-			_policy = policy;
+			_policy     = policy;
 		}
 
 		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
@@ -35,12 +35,12 @@ namespace LinqToDB.Data
 
 		public override void Open()
 		{
-			_policy.Execute(() => { _connection.Open(); return 0;});
+			_policy.Execute(_connection.Open);
 		}
 
 		public override string ConnectionString
 		{
-			get { return _connection.ConnectionString; }
+			get { return _connection.ConnectionString;  }
 			set { _connection.ConnectionString = value; }
 		}
 
@@ -72,13 +72,7 @@ namespace LinqToDB.Data
 #if !NOASYNC
 		public override Task OpenAsync(CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(
-				ct =>
-				{
-					_connection.OpenAsync(ct);
-					return Task.FromResult(0);
-				},
-				cancellationToken);
+			return _policy.ExecuteAsync(ct => _connection.OpenAsync(ct), cancellationToken);
 		}
 #endif
 	}

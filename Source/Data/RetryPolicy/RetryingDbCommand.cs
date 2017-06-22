@@ -5,17 +5,17 @@ using System.Threading;
 using System.Threading.Tasks;
 #endif
 
-namespace LinqToDB.Data
+namespace LinqToDB.Data.RetryPolicy
 {
-	internal class RetryingDbCommand : DbCommand
+	class RetryingDbCommand : DbCommand
 	{
-		private readonly DbCommand _command;
-		private readonly IRetryPolicy _policy;
+		readonly DbCommand    _command;
+		readonly IRetryPolicy _policy;
 
 		public RetryingDbCommand(DbCommand command, IRetryPolicy policy)
 		{
 			_command = command;
-			_policy = policy;
+			_policy  = policy;
 		}
 
 		public override void Prepare()
@@ -25,31 +25,31 @@ namespace LinqToDB.Data
 
 		public override string CommandText
 		{
-			get { return _command.CommandText; }
+			get { return _command.CommandText;  }
 			set { _command.CommandText = value; }
 		}
 
 		public override int CommandTimeout
 		{
-			get { return _command.CommandTimeout; }
+			get { return _command.CommandTimeout;  }
 			set { _command.CommandTimeout = value; }
 		}
 
 		public override CommandType CommandType
 		{
-			get { return _command.CommandType; }
+			get { return _command.CommandType;  }
 			set { _command.CommandType = value; }
 		}
 
 		public override UpdateRowSource UpdatedRowSource
 		{
-			get { return _command.UpdatedRowSource; }
+			get { return _command.UpdatedRowSource;  }
 			set { _command.UpdatedRowSource = value; }
 		}
 
 		protected override DbConnection DbConnection
 		{
-			get { return _command.Connection; }
+			get { return _command.Connection;  }
 			set { _command.Connection = value; }
 		}
 
@@ -60,24 +60,19 @@ namespace LinqToDB.Data
 
 		protected override DbTransaction DbTransaction
 		{
-			get { return _command.Transaction; }
+			get { return _command.Transaction;  }
 			set { _command.Transaction = value; }
 		}
 
 		public override bool DesignTimeVisible
 		{
-			get { return _command.DesignTimeVisible; }
+			get { return _command.DesignTimeVisible;  }
 			set { _command.DesignTimeVisible = value; }
 		}
 
 		public override void Cancel()
 		{
-			_policy.Execute(
-				() =>
-				{
-					_command.Cancel();
-					return 0;
-				});
+			_policy.Execute(_command.Cancel);
 		}
 
 		protected override DbParameter CreateDbParameter()

@@ -81,12 +81,16 @@
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerRetryPolicy.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerTransientErrorDetector.cs" />
-    <Compile Include="Data\RetryingDbCommand.cs">
+    <Compile Include="Data\RetryPolicy\DefaultRetryPolicyFactory.cs" />
+    <Compile Include="Data\RetryPolicy\IRetryPolicy.cs" />
+    <Compile Include="Data\RetryPolicy\RetryingDbCommand.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Data\RetryingDbConnection.cs">
+    <Compile Include="Data\RetryPolicy\RetryingDbConnection.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Data\RetryPolicy\RetryLimitExceededException.cs" />
+    <Compile Include="Data\RetryPolicy\RetryPolicyBase.cs" />
     <Compile Include="Data\TraceInfoStep.cs" />
     <Compile Include="KeepConnectionAliveScope.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
@@ -198,9 +202,6 @@
     <Compile Include="Mapping\DataTypeAttribute.cs" />
     <Compile Include="Mapping\StoredProcedure.cs" />
     <Compile Include="Metadata\SystemDataSqlServerAttributeReader.cs" />
-    <Compile Include="IRetryPolicy.cs" />
-    <Compile Include="RetryLimitExceededException.cs" />
-    <Compile Include="RetryPolicyBase.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />
     <Compile Include="SchemaProvider\ForeingKeyInfo.cs" />

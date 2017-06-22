@@ -1,12 +1,11 @@
 ﻿using System;
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+#if !NOASYNC
 #endif
 
-using JetBrains.Annotations;
-
-namespace LinqToDB
+namespace LinqToDB.Data.RetryPolicy
 {
 	public interface IRetryPolicy
 	{
@@ -19,6 +18,8 @@ namespace LinqToDB
 		/// <typeparam name="TResult"> The return type of <paramref name="operation" />. </typeparam>
 		/// <returns> The result from the operation. </returns>
 		TResult Execute<TResult>([NotNull] Func<TResult> operation);
+
+		void Execute([NotNull] Action operation);
 
 #if !NOASYNC
 		/// <summary>
@@ -41,6 +42,10 @@ namespace LinqToDB
 		/// </returns>
 		Task<TResult> ExecuteAsync<TResult>(
 			[NotNull] Func<CancellationToken, Task<TResult>> operation,
+			CancellationToken cancellationToken = default(CancellationToken));
+
+		Task ExecuteAsync(
+			[NotNull] Func<CancellationToken,Task> operation,
 			CancellationToken cancellationToken = default(CancellationToken));
 #endif
 	}

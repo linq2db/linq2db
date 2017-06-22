@@ -6,18 +6,17 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace LinqToDB.Data
 {
-	using System.Text;
-
 	using Common;
 	using Configuration;
 	using DataProvider;
 	using Expressions;
-
 	using Mapping;
+	using RetryPolicy;
 
 	public partial class DataConnection : ICloneable
 	{
@@ -32,30 +31,11 @@ namespace LinqToDB.Data
 		}
 
 		public DataConnection(string configurationString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(configurationString, (IRetryPolicy)null)
+			: this(configurationString)
 		{
 			AddMappingSchema(mappingSchema);
 		}
-
-		public DataConnection(
-			string configurationString,
-			[JetBrains.Annotations.NotNull]   MappingSchema mappingSchema,
-			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
-			: this(configurationString, mappingSchema)
-		{
-			RetryPolicy = GetRetryPolicy(retryPolicy);
-		}
-
-		private static IRetryPolicy GetRetryPolicy(IRetryPolicy retryPolicy)
-		{
-			return retryPolicy ?? (Configuration.RetryPolicyFactory != null ? Configuration.RetryPolicyFactory() : null);
-		}
-
 		public DataConnection(string configurationString)
-			: this(configurationString, (IRetryPolicy)null)
-		{}
-
-		public DataConnection(string configurationString, [JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
 		{
 			InitConfig();
 
@@ -69,7 +49,6 @@ namespace LinqToDB.Data
 			DataProvider     = ci.DataProvider;
 			ConnectionString = ci.ConnectionString;
 			_mappingSchema   = DataProvider.MappingSchema;
-			RetryPolicy      = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
@@ -110,16 +89,6 @@ namespace LinqToDB.Data
 		}
 
 		public DataConnection(
-			[JetBrains.Annotations.NotNull]   IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull]   string        connectionString,
-			[JetBrains.Annotations.NotNull]   MappingSchema mappingSchema,
-			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
-			: this(dataProvider, connectionString, mappingSchema)
-		{
-			RetryPolicy = GetRetryPolicy(retryPolicy);
-		}
-
-		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] string connectionString)
 		{
@@ -144,16 +113,6 @@ namespace LinqToDB.Data
 
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] IDbConnection connection,
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
-			[JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
-			: this(dataProvider, connection, mappingSchema)
-		{
-			RetryPolicy = GetRetryPolicy(retryPolicy);
-		}
-
-		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
@@ -172,30 +131,11 @@ namespace LinqToDB.Data
 
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull] IDbConnection connection,
-			[JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
-			: this(dataProvider, connection)
-		{
-			RetryPolicy = GetRetryPolicy(retryPolicy);
-		}
-
-		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbTransaction transaction,
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
 			: this(dataProvider, transaction)
 		{
 			AddMappingSchema(mappingSchema);
-		}
-
-		public DataConnection(
-			[JetBrains.Annotations.NotNull]   IDataProvider  dataProvider,
-			[JetBrains.Annotations.NotNull]   IDbTransaction transaction,
-			[JetBrains.Annotations.NotNull]   MappingSchema  mappingSchema,
-			[JetBrains.Annotations.CanBeNull] IRetryPolicy   retryPolicy)
-			: this(dataProvider, transaction, mappingSchema)
-		{
-			RetryPolicy = GetRetryPolicy(retryPolicy);
 		}
 
 		public DataConnection(
@@ -225,7 +165,7 @@ namespace LinqToDB.Data
 		public string        ConfigurationString { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ConnectionString    { get; private set; }
-		public IRetryPolicy  RetryPolicy         { get; private set; }
+		public IRetryPolicy  RetryPolicy         { get; set; }
 
 		static readonly ConcurrentDictionary<string,int> _configurationIDs;
 		static int _maxID;
@@ -670,7 +610,10 @@ namespace LinqToDB.Data
 				if (_connection == null)
 				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
-					if (RetryPolicy != null)
+
+					var retryPolicy = RetryPolicy ?? (Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null);
+
+					if (retryPolicy != null)
 						_connection = new RetryingDbConnection((DbConnection)_connection, RetryPolicy);
 				}
 

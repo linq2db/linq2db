@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
 
 using NUnit.Framework;
 
@@ -20,6 +21,7 @@ namespace Tests.Data
 			public TResult Execute<TResult>(Func<TResult> operation)
 			{
 				Count++;
+
 				try
 				{
 					return operation();
@@ -30,7 +32,36 @@ namespace Tests.Data
 				}
 			}
 
+			public void Execute(Action operation)
+			{
+				Count++;
+
+				try
+				{
+					operation();
+				}
+				catch
+				{
+					throw new RetryLimitExceededException();
+				}
+			}
+
 			public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default(CancellationToken))
+			{
+				Count++;
+				try
+				{
+					var res = operation(cancellationToken);
+					res.Wait(cancellationToken);
+					return res;
+				}
+				catch
+				{
+					throw new RetryLimitExceededException();
+				}
+			}
+
+			public Task ExecuteAsync(Func<CancellationToken,Task> operation, CancellationToken cancellationToken = new CancellationToken())
 			{
 				Count++;
 				try
@@ -58,7 +89,7 @@ namespace Tests.Data
 			
 			Assert.Throws<RetryLimitExceededException>(() =>
 			{
-				using (var db = new DataConnection(context, ret))
+				using (var db = new DataConnection(context) { RetryPolicy = ret })
 				{
 					db.GetTable<FakeClass>().ToList();
 				}
@@ -74,7 +105,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = new DataConnection(context, ret))
+				using (var db = new DataConnection(context) { RetryPolicy = ret })
 				{
 					var r = db.GetTable<FakeClass>().ToListAsync();
 					r.Wait();
@@ -87,6 +118,5 @@ namespace Tests.Data
 
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
 		}
-
 	}
 }
