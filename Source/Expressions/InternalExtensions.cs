@@ -693,6 +693,16 @@ namespace LinqToDB.Expressions
 					}
 
 				case ExpressionType.Parameter: path = ConvertTo(path, typeof(ParameterExpression)); break;
+
+				case ExpressionType.Extension:
+					{
+						if (expr.CanReduce)
+						{
+							expr = expr.Reduce();
+							Path(expr, visited, path, func);
+						}
+						break;
+					}
 			}
 
 			func(expr, path);
