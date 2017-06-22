@@ -2,29 +2,30 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace LinqToDB.Data
 {
-	using System.Text;
-
 	using Common;
 	using Configuration;
 	using DataProvider;
 	using Expressions;
-
 	using Mapping;
+#if !SILVERLIGHT && !WINSTORE
+	using RetryPolicy;
+#endif
 
 	public partial class DataConnection : ICloneable
 	{
 		#region .ctor
 
 		public DataConnection() : this((string)null)
-		{
-		}
+		{}
 
 		public DataConnection([JetBrains.Annotations.NotNull] MappingSchema mappingSchema) : this((string)null)
 		{
@@ -32,27 +33,11 @@ namespace LinqToDB.Data
 		}
 
 		public DataConnection(string configurationString, [JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
-			: this(configurationString, (IRetryPolicy)null)
+			: this(configurationString)
 		{
 			AddMappingSchema(mappingSchema);
 		}
-
-		public DataConnection(
-			string configurationString,
-			[JetBrains.Annotations.NotNull]   MappingSchema mappingSchema,
-			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
-			: this(configurationString, mappingSchema)
-		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
-		}
-
 		public DataConnection(string configurationString)
-			: this(configurationString, (IRetryPolicy)null)
-		{
-			
-		}
-
-		public DataConnection(string configurationString, [JetBrains.Annotations.CanBeNull] IRetryPolicy retryPolicy)
 		{
 			InitConfig();
 
@@ -66,7 +51,6 @@ namespace LinqToDB.Data
 			DataProvider     = ci.DataProvider;
 			ConnectionString = ci.ConnectionString;
 			_mappingSchema   = DataProvider.MappingSchema;
-			RetryPolicy      = retryPolicy ?? Configuration.RetryPolicy;
 		}
 
 		public DataConnection(
@@ -104,16 +88,6 @@ namespace LinqToDB.Data
 			: this(dataProvider, connectionString)
 		{
 			AddMappingSchema(mappingSchema);
-		}
-
-		public DataConnection(
-			[JetBrains.Annotations.NotNull]   IDataProvider dataProvider,
-			[JetBrains.Annotations.NotNull]   string        connectionString,
-			[JetBrains.Annotations.NotNull]   MappingSchema mappingSchema,
-			[JetBrains.Annotations.CanBeNull] IRetryPolicy  retryPolicy)
-			: this(dataProvider, connectionString, mappingSchema)
-		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
 		}
 
 		public DataConnection(
@@ -167,16 +141,6 @@ namespace LinqToDB.Data
 		}
 
 		public DataConnection(
-			[JetBrains.Annotations.NotNull]   IDataProvider  dataProvider,
-			[JetBrains.Annotations.NotNull]   IDbTransaction transaction,
-			[JetBrains.Annotations.NotNull]   MappingSchema  mappingSchema,
-			[JetBrains.Annotations.CanBeNull] IRetryPolicy   retryPolicy)
-			: this(dataProvider, transaction, mappingSchema)
-		{
-			RetryPolicy = retryPolicy ?? Configuration.RetryPolicy;
-		}
-
-		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbTransaction transaction)
 		{
@@ -203,7 +167,9 @@ namespace LinqToDB.Data
 		public string        ConfigurationString { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ConnectionString    { get; private set; }
-		public IRetryPolicy  RetryPolicy         { get; private set; }
+#if !SILVERLIGHT && !WINSTORE
+		public IRetryPolicy  RetryPolicy         { get; set; }
+#endif
 
 		static readonly ConcurrentDictionary<string,int> _configurationIDs;
 		static int _maxID;
@@ -348,9 +314,9 @@ namespace LinqToDB.Data
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
-		#endregion
+#endregion
 
-		#region Configuration
+#region Configuration
 
 		private static ILinqToDBSettings _defaultSettings;
 
@@ -635,7 +601,7 @@ namespace LinqToDB.Data
 
 #endregion
 
-		#region Connection
+#region Connection
 
 		bool          _closeConnection;
 		bool          _closeTransaction;
@@ -646,10 +612,19 @@ namespace LinqToDB.Data
 			get
 			{
 				if (_connection == null)
+				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
 
+#if !SILVERLIGHT && !WINSTORE
+					var retryPolicy = RetryPolicy ?? (Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null);
+
+					if (retryPolicy != null)
+						_connection = new RetryingDbConnection((DbConnection)_connection, RetryPolicy);
+#endif
+				}
+
 				if (_connection.State == ConnectionState.Closed)
-				{
+				{ 
 					_connection.Open();
 					_closeConnection = true;
 				}
@@ -684,9 +659,9 @@ namespace LinqToDB.Data
 				OnClosed(this, EventArgs.Empty);
 		}
 
-		#endregion
+#endregion
 
-		#region Command
+#region Command
 
 		public string LastQuery;
 
@@ -739,18 +714,10 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private int ExecuteNonQueryInternal()
-		{
-			return
-				RetryPolicy == null
-					?                           Command.ExecuteNonQuery()
-					: RetryPolicy.Execute(() => Command.ExecuteNonQuery());
-		}
-
 		internal int ExecuteNonQuery()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteNonQueryInternal();
+				return Command.ExecuteNonQuery();
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -766,7 +733,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteNonQueryInternal();
+				var ret = Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -800,18 +767,10 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private object ExecuteScalarInternal()
-		{
-			return
-				RetryPolicy == null
-					?                           Command.ExecuteScalar()
-					: RetryPolicy.Execute(() => Command.ExecuteScalar());
-		}
-
 		object ExecuteScalar()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteScalarInternal();
+				return Command.ExecuteScalar();
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -819,7 +778,7 @@ namespace LinqToDB.Data
 				{
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
-					Command        = Command,
+					Command        = Command
 				});
 			}
 
@@ -827,7 +786,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteScalarInternal();
+				var ret = Command.ExecuteScalar();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -865,18 +824,10 @@ namespace LinqToDB.Data
 			return ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 		}
 
-		private IDataReader ExecuteReaderInternal(CommandBehavior commandBehavior)
-		{
-			return
-				RetryPolicy == null
-					?                           Command.ExecuteReader(commandBehavior)
-					: RetryPolicy.Execute(() => Command.ExecuteReader(commandBehavior));
-		}
-
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return ExecuteReaderInternal(commandBehavior);
+				return Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -892,7 +843,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = ExecuteReaderInternal(commandBehavior);
+				var ret = Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -930,9 +881,9 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-		#endregion
+#endregion
 
-		#region Transaction
+#region Transaction
 
 		public IDbTransaction Transaction { get; private set; }
 		
@@ -1012,9 +963,9 @@ namespace LinqToDB.Data
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region MappingSchema
+#region MappingSchema
 
 		private MappingSchema _mappingSchema;
 
@@ -1045,9 +996,9 @@ namespace LinqToDB.Data
 			return this;
 		}
 
-		#endregion
+#endregion
 
-		#region ICloneable Members
+#region ICloneable Members
 
 		DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection, MappingSchema mappingSchema)
 		{
@@ -1069,9 +1020,9 @@ namespace LinqToDB.Data
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
 		
-		#endregion
+#endregion
 
-		#region System.IDisposable Members
+#region System.IDisposable Members
 
 		protected bool Disposed { get; private set; }
 
@@ -1087,7 +1038,7 @@ namespace LinqToDB.Data
 			Close();
 		}
 
-		#endregion
+#endregion
 
 		internal CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
 		{

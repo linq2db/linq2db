@@ -3,10 +3,10 @@ using System.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 
-using LinqToDB.DataProvider;
-
 namespace LinqToDB.Configuration
 {
+	using DataProvider;
+
 	public sealed class DataProviderElement : ElementBase, IDataProviderSettings
 	{
 		static readonly ConfigurationProperty _propTypeName = new ConfigurationProperty("type",    typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);

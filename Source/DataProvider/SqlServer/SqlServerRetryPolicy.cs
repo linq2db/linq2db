@@ -11,9 +11,12 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Common;
+	using Data.RetryPolicy;
+
 	public class SqlServerRetryPolicy : RetryPolicyBase
 	{
-		private readonly ICollection<int> _additionalErrorNumbers;
+		readonly ICollection<int> _additionalErrorNumbers;
 
 		/// <summary>
 		///   Creates a new instance of <see cref="SqlServerRetryPolicy" />.
@@ -21,22 +24,24 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <remarks>
 		///     The default retry limit is 5, which means that the total amount of time spent before failing is 26 seconds plus the random factor.
 		/// </remarks>
-		public SqlServerRetryPolicy() : this(DefaultMaxRetryCount)
+		public SqlServerRetryPolicy()
+			: this(Configuration.RetryPolicy.DefaultMaxRetryCount)
 		{}
 
 		/// <summary>
 		///     Creates a new instance of <see cref="SqlServerRetryPolicy" />.
 		/// </summary>
 		/// <param name="maxRetryCount"> The maximum number of retry attempts. </param>
-		public SqlServerRetryPolicy(int maxRetryCount) : this(maxRetryCount, DefaultMaxDelay, errorNumbersToAdd: null)
+		public SqlServerRetryPolicy(int maxRetryCount)
+			: this(maxRetryCount, Configuration.RetryPolicy.DefaultMaxDelay, null)
 		{}
 
 		/// <summary>
 		///     Creates a new instance of <see cref="SqlServerRetryPolicy" />.
 		/// </summary>
-		/// <param name="maxRetryCount"> The maximum number of retry attempts. </param>
-		/// <param name="maxRetryDelay"> The maximum delay in milliseconds between retries. </param>
-		/// <param name="errorNumbersToAdd"> Additional SQL error numbers that should be considered transient. </param>
+		/// <param name="maxRetryCount">The maximum number of retry attempts.</param>
+		/// <param name="maxRetryDelay">The maximum delay in milliseconds between retries.</param>
+		/// <param name="errorNumbersToAdd">Additional SQL error numbers that should be considered transient.</param>
 		public SqlServerRetryPolicy(
 			int maxRetryCount,
 			TimeSpan maxRetryDelay,
@@ -51,6 +56,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (_additionalErrorNumbers != null)
 			{
 				var sqlException = exception as SqlException;
+
 				if (sqlException != null)
 					foreach (SqlError err in sqlException.Errors)
 						if (_additionalErrorNumbers.Contains(err.Number))
@@ -63,18 +69,20 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override TimeSpan? GetNextDelay(Exception lastException)
 		{
 			var baseDelay = base.GetNextDelay(lastException);
+
 			if (baseDelay == null)
 				return null;
 
-			if (CallOnWrappedException(lastException, IsMemoryOptimizedError))
+			if (IsMemoryOptimizedError(lastException))
 				return TimeSpan.FromMilliseconds(baseDelay.Value.TotalSeconds);
 
 			return baseDelay;
 		}
 
-		private static bool IsMemoryOptimizedError(Exception exception)
+		static bool IsMemoryOptimizedError(Exception exception)
 		{
 			var sqlException = exception as SqlException;
+
 			if (sqlException != null)
 				foreach (SqlError err in sqlException.Errors)
 					switch (err.Number)

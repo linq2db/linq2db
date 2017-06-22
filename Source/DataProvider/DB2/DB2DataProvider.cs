@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
 			SqlProviderFlags.IsDistinctOrderBySupported   = version != DB2Version.zOS;
 
-			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
 		}

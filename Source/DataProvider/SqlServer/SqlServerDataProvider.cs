@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Init
 
 		public SqlServerDataProvider(string name, SqlServerVersion version)
-			: base(name, null)
+			: base(name, (MappingSchema)null)
 		{
 			Version = version;
 
@@ -37,8 +37,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlProviderFlags.TakeHintsSupported      = TakeHints.Percent | TakeHints.WithTies;
 			}
 
-			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
-			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{

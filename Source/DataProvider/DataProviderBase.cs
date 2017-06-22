@@ -58,11 +58,22 @@ namespace LinqToDB.DataProvider
 			SetField<IDataReader,DateTime>((r,i) => r.GetDateTime(i));
 			SetField<IDataReader,Guid>    ((r,i) => r.GetGuid    (i));
 			SetField<IDataReader,byte[]>  ((r,i) => (byte[])r.GetValue(i));
+
+			MaxRetryCount = DefaultMaxRetryCount;
 		}
 
 		#endregion
 
 		#region Public Members
+		/// <summary>
+		///   The default number of retry attempts.
+		/// </summary>
+		protected static readonly int DefaultMaxRetryCount = 5;
+
+		/// <summary>
+		///     The maximum number of retry attempts.
+		/// </summary>
+		protected virtual int MaxRetryCount { get; private set; }
 
 		public          string           Name                { get; private set; }
 		public abstract string           ConnectionNamespace { get; }
@@ -122,6 +133,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
 		}
 
+		protected void SetCharFieldToType<T>(string dataTypeName, Expression<Func<IDataReader, int, string>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
+		}
+
 		protected void SetField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(T) }] = expr;
@@ -147,6 +163,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(TF) }] = expr;
 		}
 
+		protected virtual string NormalizeTypeName(string typeName)
+		{
+			return typeName;
+		}
+
 		#endregion
 
 		#region GetReaderExpression
@@ -164,6 +185,8 @@ namespace LinqToDB.DataProvider
 					providerType,
 					((DbDataReader)reader).GetName(idx)));
 			}
+
+			typeName = NormalizeTypeName(typeName);
 
 #if DEBUG1
 			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
@@ -373,7 +396,7 @@ namespace LinqToDB.DataProvider
 
 #endregion
 
-#region Create/Drop Database
+		#region Create/Drop Database
 
 		internal static void CreateFileDatabase(
 			string databaseName,
@@ -418,24 +441,28 @@ namespace LinqToDB.DataProvider
 
 #endregion
 
-#region BulkCopy
-
+		#region BulkCopy
 		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
 		}
+		#endregion
 
-#endregion
-
-#region Merge
-
+		#region Merge
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
 			where T : class
 		{
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
+		#endregion
 
-#endregion
+		//public virtual TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay)
+		//{
+		//	return
+		//		retryCount <= MaxRetryCount && exception is TimeoutException
+		//			? baseDelay
+		//			: (TimeSpan?)null;
+		//}
 	}
 }

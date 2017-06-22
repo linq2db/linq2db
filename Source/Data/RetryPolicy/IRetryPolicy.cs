@@ -1,8 +1,9 @@
 ﻿using System;
-
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
-namespace LinqToDB
+namespace LinqToDB.Data.RetryPolicy
 {
 	public interface IRetryPolicy
 	{
@@ -16,8 +17,9 @@ namespace LinqToDB
 		/// <returns> The result from the operation. </returns>
 		TResult Execute<TResult>([NotNull] Func<TResult> operation);
 
-#if !NOASYNC
+		void Execute([NotNull] Action operation);
 
+#if !NOASYNC
 		/// <summary>
 		///     Executes the specified asynchronous operation and returns the result.
 		/// </summary>
@@ -36,10 +38,13 @@ namespace LinqToDB
 		///     first time or after retrying transient failures). If the task fails with a non-transient error or
 		///     the retry limit is reached, the returned task will become faulted and the exception must be observed.
 		/// </returns>
-		System.Threading.Tasks.Task<TResult> ExecuteAsync<TResult>(
-			[NotNull] Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>> operation,
-			System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+		Task<TResult> ExecuteAsync<TResult>(
+			[NotNull] Func<CancellationToken, Task<TResult>> operation,
+			CancellationToken cancellationToken = default(CancellationToken));
 
+		Task ExecuteAsync(
+			[NotNull] Func<CancellationToken,Task> operation,
+			CancellationToken cancellationToken = default(CancellationToken));
 #endif
 	}
 }

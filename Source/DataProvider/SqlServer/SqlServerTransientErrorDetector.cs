@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static bool ShouldRetryOn([NotNull] Exception ex)
 		{
 			var sqlException = ex as SqlException;
+
 			if (sqlException != null)
 			{
 				foreach (SqlError err in sqlException.Errors)
@@ -121,10 +122,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				return false;
 			}
 
-			if (ex is TimeoutException)
-				return true;
-
-			return false;
+			return ex is TimeoutException;
 		}
 	}
 }

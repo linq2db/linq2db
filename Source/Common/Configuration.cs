@@ -1,12 +1,19 @@
 using System;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Common
 {
+	using Data;
+#if !SILVERLIGHT && !WINSTORE
+	using Data.RetryPolicy;
+#endif
+
+	[PublicAPI]
 	public static class Configuration
 	{
-		public static bool         IsStructIsScalarType = true;
-		public static bool         AvoidSpecificDataProviderAPI;
-		public static IRetryPolicy RetryPolicy;
+		public static bool IsStructIsScalarType = true;
+		public static bool AvoidSpecificDataProviderAPI;
 
 		public static class Linq
 		{
@@ -60,10 +67,49 @@ namespace LinqToDB.Common
 			public static bool UseBinaryAggregateExpression = false;
 		}
 
+		[PublicAPI]
 		public static class LinqService
 		{
 			public static bool SerializeAssemblyQualifiedName;
 			public static bool ThrowUnresolvedTypeException;
 		}
+
+#if !SILVERLIGHT && !WINSTORE
+		public static class RetryPolicy
+		{
+			public static Func<DataConnection,IRetryPolicy> Factory;
+
+			public static bool UseDefaultPolicy
+			{
+				get { return Factory != null; }
+				set { Factory = value ? DefaultRetryPolicyFactory.GetRetryPolicy : (Func<DataConnection,IRetryPolicy>)null; }
+			}
+
+			/// <summary>
+			/// The default number of retry attempts.
+			/// </summary>
+			public static int DefaultMaxRetryCount = 5;
+
+			/// <summary>
+			/// The default maximum time delay between retries, must be nonnegative.
+			/// </summary>
+			public static TimeSpan DefaultMaxDelay = TimeSpan.FromSeconds(30);
+
+			/// <summary>
+			/// The default maximum random factor, must not be lesser than 1.
+			/// </summary>
+			public static double DefaultRandomFactor = 1.1;
+
+			/// <summary>
+			/// The default base for the exponential function used to compute the delay between retries, must be positive.
+			/// </summary>
+			public static double DefaultExponentialBase = 2;
+
+			/// <summary>
+			/// The default coefficient for the exponential function used to compute the delay between retries, must be nonnegative.
+			/// </summary>
+			public static TimeSpan DefaultCoefficient = TimeSpan.FromSeconds(1);
+		}
+#endif
 	}
 }
