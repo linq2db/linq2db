@@ -16,7 +16,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using Expressions;
 	using Mapping;
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !WINSTORE
 	using RetryPolicy;
 #endif
 
@@ -167,7 +167,7 @@ namespace LinqToDB.Data
 		public string        ConfigurationString { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ConnectionString    { get; private set; }
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !WINSTORE
 		public IRetryPolicy  RetryPolicy         { get; set; }
 #endif
 
@@ -615,7 +615,7 @@ namespace LinqToDB.Data
 				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !WINSTORE
 					var retryPolicy = RetryPolicy ?? (Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null);
 
 					if (retryPolicy != null)

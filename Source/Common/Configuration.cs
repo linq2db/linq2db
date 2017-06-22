@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Common
 {
 	using Data;
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !WINSTORE
 	using Data.RetryPolicy;
 #endif
 
@@ -74,7 +74,7 @@ namespace LinqToDB.Common
 			public static bool ThrowUnresolvedTypeException;
 		}
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !WINSTORE
 		public static class RetryPolicy
 		{
 			public static Func<DataConnection,IRetryPolicy> Factory;
