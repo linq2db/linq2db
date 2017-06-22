@@ -611,12 +611,10 @@ namespace LinqToDB.Data
 				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
 
-#if !NETFX_CORE && !NETSTANDARD && !SILVERLIGHT
 					var retryPolicy = RetryPolicy ?? (Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null);
 
 					if (retryPolicy != null)
 						_connection = new RetryingDbConnection((DbConnection)_connection, RetryPolicy);
-#endif
 				}
 
 				if (_connection.State == ConnectionState.Closed)

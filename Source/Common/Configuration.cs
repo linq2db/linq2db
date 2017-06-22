@@ -1,12 +1,13 @@
 using System;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Common
 {
-#if !NETFX_CORE && !NETSTANDARD && !SILVERLIGHT
 	using Data;
 	using Data.RetryPolicy;
-#endif
 
+	[PublicAPI]
 	public static class Configuration
 	{
 		public static bool IsStructIsScalarType = true;
@@ -64,13 +65,13 @@ namespace LinqToDB.Common
 			public static bool UseBinaryAggregateExpression = false;
 		}
 
+		[PublicAPI]
 		public static class LinqService
 		{
 			public static bool SerializeAssemblyQualifiedName;
 			public static bool ThrowUnresolvedTypeException;
 		}
 
-#if !NETFX_CORE && !NETSTANDARD && !SILVERLIGHT
 		public static class RetryPolicy
 		{
 			public static Func<DataConnection,IRetryPolicy> Factory;
@@ -106,6 +107,5 @@ namespace LinqToDB.Common
 			/// </summary>
 			public static TimeSpan DefaultCoefficient = TimeSpan.FromSeconds(1);
 		}
-#endif
 	}
 }
