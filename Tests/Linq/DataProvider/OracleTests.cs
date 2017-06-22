@@ -1850,23 +1850,47 @@ namespace Tests.DataProvider
 		[Test, OracleDataContext]
 		public void Issue723Test(string context)
 		{
+			var ms = new MappingSchema();
 			using (var db = new TestDataConnection(context))
 			{
+				db.AddMappingSchema(ms);
+				
+				var currentUser = db.Execute<string>("SELECT user FROM dual");
+				db.Execute("GRANT CREATE ANY TRIGGER TO " + currentUser);
+				db.Execute("GRANT CREATE ANY SEQUENCE TO " + currentUser);
+				db.Execute("GRANT DROP ANY TRIGGER TO " + currentUser);
+				db.Execute("GRANT DROP ANY SEQUENCE TO " + currentUser);
+				db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
+
 				try
 				{
-					db.Execute("GRANT CREATE ANY TRIGGER TO TestUser");
-					db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
+
+					var tableSpace = db.Execute<string>("SELECT default_tablespace FROM sys.dba_users WHERE username = 'ISSUE723SCHEMA'");
+					db.Execute("ALTER USER Issue723Schema quota unlimited on {0}".Args(tableSpace));
+
 					db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
-					for (var i = 1; i < 3; i++)
-					{
-						var id = Convert.ToInt32(db.InsertWithIdentity(new Issue723Table() {StringValue = i.ToString()}));
-						Assert.AreEqual(i, id);
-					}
 					Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
+
+					try
+					{
+						db.MappingSchema.GetFluentMappingBuilder()
+							.Entity<Issue723Table>()
+							.HasSchemaName("Issue723Schema");
+
+						for (var i = 1; i < 3; i++)
+						{
+							var id = Convert.ToInt32(db.InsertWithIdentity(new Issue723Table() { StringValue = i.ToString() }));
+							Assert.AreEqual(i, id);
+						}
+						Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
+					}
+					finally
+					{
+						db.DropTable<Issue723Table>(schemaName: "Issue723Schema");
+					}
 				}
 				finally
 				{
-					db.DropTable<Issue723Table>(schemaName: "Issue723Schema");
 					db.Execute("DROP USER Issue723Schema CASCADE");
 				}
 			}

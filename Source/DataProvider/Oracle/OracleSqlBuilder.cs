@@ -302,8 +302,10 @@ namespace LinqToDB.DataProvider.Oracle
 			else
 			{
 				StringBuilder
-					.Append("DROP TRIGGER TIDENTITY_")
-					.Append(GetFullTableName(SelectQuery.CreateTable.Table))
+					.Append("DROP TRIGGER ")
+					.Append(SelectQuery.CreateTable.Table.Owner)
+					.Append(".TIDENTITY_")
+					.Append(SelectQuery.CreateTable.Table.PhysicalName)
 					.AppendLine();
 			}
 		}
@@ -315,8 +317,10 @@ namespace LinqToDB.DataProvider.Oracle
 				if (commandNumber == 1)
 				{
 					StringBuilder
-						.Append("DROP SEQUENCE SIDENTITY_")
-						.Append(GetFullTableName(SelectQuery.CreateTable.Table))
+						.Append("DROP SEQUENCE ")
+						.Append(SelectQuery.CreateTable.Table.Owner)
+						.Append(".SIDENTITY_")
+						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
@@ -327,14 +331,16 @@ namespace LinqToDB.DataProvider.Oracle
 				if (commandNumber == 1)
 				{
 					StringBuilder
-						.Append("CREATE SEQUENCE SIDENTITY_")
-						.Append(GetFullTableName(SelectQuery.CreateTable.Table))
+						.Append("CREATE SEQUENCE ")
+						.Append(SelectQuery.CreateTable.Table.Owner)
+						.Append(".SIDENTITY_")
+						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
 				{
 					StringBuilder
-						.AppendFormat("CREATE OR REPLACE TRIGGER  TIDENTITY_{0}", GetFullTableName(SelectQuery.CreateTable.Table))
+						.AppendFormat("CREATE OR REPLACE TRIGGER {0}.TIDENTITY_{1}", SelectQuery.CreateTable.Table.Owner, SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine()
 						.AppendFormat("BEFORE INSERT ON ");
 
@@ -344,7 +350,7 @@ namespace LinqToDB.DataProvider.Oracle
 						.AppendLine(" FOR EACH ROW")
 						.AppendLine  ()
 						.AppendLine  ("BEGIN")
-						.AppendFormat("\tSELECT SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, GetFullTableName(SelectQuery.CreateTable.Table))
+						.AppendFormat("\tSELECT {2}.SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName, SelectQuery.CreateTable.Table.Owner)
 						.AppendLine  ()
 						.AppendLine  ("END;");
 				}
