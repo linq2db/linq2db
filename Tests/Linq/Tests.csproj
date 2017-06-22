@@ -43,7 +43,7 @@
     <DefineConstants>TRACE;DEBUG;FW4;MOBILE1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <NoWarn>649 429</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
@@ -267,6 +267,7 @@
     <Compile Include="Linq\InterfaceTests.cs" />
     <Compile Include="Linq\JoinOptimizeTests.cs" />
     <Compile Include="Linq\SqlExtensionTests.cs" />
+    <Compile Include="Linq\CharTypesTests.cs" />
     <Compile Include="Samples\DataContextDecoratorTests.cs" />
     <Compile Include="OrmBattle\Helper\ExpressionUtils.cs" />
     <Compile Include="OrmBattle\Helper\GenericEqualityComparer.cs" />

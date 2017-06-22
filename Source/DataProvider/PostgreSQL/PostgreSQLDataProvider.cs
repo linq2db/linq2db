@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
 
-			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 		}

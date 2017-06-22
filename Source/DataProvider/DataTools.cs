@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Text;
 
 namespace LinqToDB.DataProvider
@@ -113,5 +114,15 @@ namespace LinqToDB.DataProvider
 					break;
 			}
 		}
+
+		public static Func<IDataReader, int, string> GetChar = (dr, i) =>
+		{
+			var str = dr.GetString(i);
+
+			if (str.Length > 0)
+				return str[0].ToString();
+
+			return string.Empty;
+		};
 	}
 }

@@ -72,7 +72,8 @@ namespace Tests._Create
 					{
 						Console.WriteLine(ex.Message);
 
-						if (command.TrimStart().StartsWith("DROP"))
+						if (command.TrimStart().StartsWith("DROP")
+							|| command.TrimStart().StartsWith("CALL DROP"))
 							Console.WriteLine("\nnot too OK\n");
 						else
 						{

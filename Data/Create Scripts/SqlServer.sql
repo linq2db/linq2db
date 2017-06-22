@@ -381,6 +381,7 @@ CREATE TABLE AllTypes
 	smalldatetimeDataType    smalldatetime     NULL,
 
 	charDataType             char(1)           NULL,
+	char20DataType           char(20)          NULL,
 	varcharDataType          varchar(20)       NULL,
 	-- explicit collation set for legacy text types as they doesn't support *_SC collations and this script will
 	-- fail if database has such collation
