@@ -40,7 +40,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FW4;MOBILE1</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FW4;MOBILE1;NOFSHARP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
@@ -225,10 +225,6 @@
   <Choose>
     <When Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
       <ItemGroup Condition=" '$(Configuration)' != 'ReleaseMono' AND '$(Configuration)' != 'DebugMono' ">
-        <ProjectReference Include="..\FSharp\Tests.FSharp.fsproj">
-          <Project>{56109866-4005-4852-9f9a-19a7a8d3b369}</Project>
-          <Name>Tests.FSharp</Name>
-        </ProjectReference>
         <ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj">
           <Project>{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}</Project>
           <Name>Tests.VisualBasic</Name>

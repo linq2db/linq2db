@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETFX_CORE && !NETSTANDARD && !SILVERLIGHT
+using System;
 
 namespace LinqToDB.Data.RetryPolicy
 {
@@ -15,3 +16,4 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 	}
 }
+#endif

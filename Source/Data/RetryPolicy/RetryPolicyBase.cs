@@ -1,4 +1,5 @@
-﻿// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
+﻿#if !NETFX_CORE && !NETSTANDARD && !SILVERLIGHT
+// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
 
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
@@ -131,8 +132,9 @@ namespace LinqToDB.Data.RetryPolicy
 					waitEvent.WaitHandle.WaitOne(delay.Value);
 			}
 		}
+#endif
 
-#if !NOASYNC
+#if !NETFX_CORE && !NETSTANDARD && !SILVERLIGHT && !NOASYNC
 		/// <summary>
 		///     Executes the specified asynchronous operation and returns the result.
 		/// </summary>
@@ -209,6 +211,7 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 #endif
 
+#if !NETFX_CORE && !NETSTANDARD && !SILVERLIGHT
 		/// <summary>
 		///     Method called before the first operation execution
 		/// </summary>
@@ -261,3 +264,4 @@ namespace LinqToDB.Data.RetryPolicy
 		protected abstract bool ShouldRetryOn([NotNull] Exception exception);
 	}
 }
+#endif

@@ -611,10 +611,12 @@ namespace LinqToDB.Data
 				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
 
+#if !NETFX_CORE && !NETSTANDARD && !SILVERLIGHT
 					var retryPolicy = RetryPolicy ?? (Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null);
 
 					if (retryPolicy != null)
 						_connection = new RetryingDbConnection((DbConnection)_connection, RetryPolicy);
+#endif
 				}
 
 				if (_connection.State == ConnectionState.Closed)
@@ -653,9 +655,9 @@ namespace LinqToDB.Data
 				OnClosed(this, EventArgs.Empty);
 		}
 
-		#endregion
+#endregion
 
-		#region Command
+#region Command
 
 		public string LastQuery;
 
@@ -875,9 +877,9 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-		#endregion
+#endregion
 
-		#region Transaction
+#region Transaction
 
 		public IDbTransaction Transaction { get; private set; }
 		
@@ -957,9 +959,9 @@ namespace LinqToDB.Data
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region MappingSchema
+#region MappingSchema
 
 		private MappingSchema _mappingSchema;
 
@@ -990,9 +992,9 @@ namespace LinqToDB.Data
 			return this;
 		}
 
-		#endregion
+#endregion
 
-		#region ICloneable Members
+#region ICloneable Members
 
 		DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection, MappingSchema mappingSchema)
 		{
@@ -1014,9 +1016,9 @@ namespace LinqToDB.Data
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
 		
-		#endregion
+#endregion
 
-		#region System.IDisposable Members
+#region System.IDisposable Members
 
 		protected bool Disposed { get; private set; }
 
@@ -1032,7 +1034,7 @@ namespace LinqToDB.Data
 			Close();
 		}
 
-		#endregion
+#endregion
 
 		internal CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
 		{
