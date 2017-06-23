@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Configuration;
 	using Common;
 	using Data;
 	using SchemaProvider;
@@ -138,7 +139,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			var data = ((OleDbConnection)dataConnection.Connection)
+			var data = ((OleDbConnection)Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection))
 				.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, new object[] { null, null });
 
 			var q = from fk in data.AsEnumerable()

@@ -1,5 +1,8 @@
-﻿using System.Data;
+﻿using System;
+using System.ComponentModel;
+using System.Data;
 using System.Data.Common;
+using LinqToDB.Configuration;
 #if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,13 +10,15 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data.RetryPolicy
 {
-	class RetryingDbConnection : DbConnection
+	class RetryingDbConnection : DbConnection, IProxy<DbConnection>, IDisposable, ICloneable
 	{
-		readonly DbConnection _connection;
-		readonly IRetryPolicy _policy;
+		readonly DataConnection _dataConnection;
+		readonly DbConnection   _connection;
+		readonly IRetryPolicy   _policy;
 
-		public RetryingDbConnection(DbConnection connection, IRetryPolicy policy)
+		public RetryingDbConnection(DataConnection dataConnection, DbConnection connection, IRetryPolicy policy)
 		{
+			_dataConnection = dataConnection;
 			_connection = connection;
 			_policy     = policy;
 		}
@@ -35,6 +40,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public override void Open()
 		{
+			_connection.ConnectionString = ConnectionString;
 			_policy.Execute(_connection.Open);
 		}
 
@@ -75,5 +81,54 @@ namespace LinqToDB.Data.RetryPolicy
 			return _policy.ExecuteAsync(ct => _connection.OpenAsync(ct), cancellationToken);
 		}
 #endif
+
+		void IDisposable.Dispose()
+		{
+			((IDisposable)_connection).Dispose();
+		}
+
+		public DbConnection UnderlyingObject
+		{
+			get { return _connection; }
+		}
+
+		public override DataTable GetSchema()
+		{
+			return _connection.GetSchema();
+		}
+
+		public override DataTable GetSchema(string collectionName)
+		{
+			return _connection.GetSchema(collectionName);
+		}
+
+		public override DataTable GetSchema(string collectionName, string[] restrictionValues)
+		{
+			return _connection.GetSchema(collectionName, restrictionValues);
+		}
+
+		public override int ConnectionTimeout
+		{
+			get { return _connection.ConnectionTimeout; }
+		}
+
+		public override event StateChangeEventHandler StateChange
+		{
+			add    { _connection.StateChange += value; }
+			remove { _connection.StateChange -= value; }
+		}
+
+		public override ISite Site
+		{
+			get { return _connection.Site;  }
+			set { _connection.Site = value; }
+		}
+
+		public object Clone()
+		{
+			if (_connection is ICloneable)
+				return ((ICloneable)_connection).Clone();
+			return _dataConnection.DataProvider.CreateConnection(_dataConnection.ConnectionString);
+		}
 	}
 }

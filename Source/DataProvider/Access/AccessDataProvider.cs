@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.OleDb;
 using System.IO;
 using System.Runtime.InteropServices;
-using LinqToDB.Data;
 
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Configuration;
+	using Data;
 	using Extensions;
 	using Mapping;
 	using SchemaProvider;
@@ -77,7 +79,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override bool IsCompatibleConnection(IDbConnection connection)
 		{
-			return typeof(OleDbConnection).IsSameOrParentOf(connection.GetType());
+			return typeof(OleDbConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

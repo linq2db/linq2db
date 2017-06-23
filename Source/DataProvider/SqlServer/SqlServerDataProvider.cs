@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
@@ -9,6 +10,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Configuration;
 	using Common;
 	using Data;
 	using Extensions;
@@ -149,7 +151,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override bool IsCompatibleConnection(IDbConnection connection)
 		{
-			return typeof(SqlConnection).IsSameOrParentOf(connection.GetType());
+			return typeof(SqlConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
 #if !NETSTANDARD

@@ -373,27 +373,33 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
+			var sql = @"
+				SELECT
+					PROCSCHEMA,
+					PROCNAME
+				FROM
+					SYSCAT.PROCEDURES
+				WHERE
+					" + GetSchemaFilter("PROCSCHEMA");
+
+			if (IncludedSchemas.Count == 0)
+				sql += " AND PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'ADMINISTRATOR', 'SYSIBM')";
+
 			return dataConnection
 				.Query(rd =>
-				{
-					var schema = rd.ToString(0);
-					var name   = rd.ToString(1);
-
-					return new ProcedureInfo
 					{
-						ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + name,
-						CatalogName   = dataConnection.Connection.Database,
-						SchemaName    = schema,
-						ProcedureName = name,
-					};
-				},@"
-					SELECT
-						PROCSCHEMA,
-						PROCNAME
-					FROM
-						SYSCAT.PROCEDURES
-					WHERE
-						" + GetSchemaFilter("PROCSCHEMA"))
+						var schema = rd.ToString(0);
+						var name   = rd.ToString(1);
+
+						return new ProcedureInfo
+						{
+							ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + name,
+							CatalogName   = dataConnection.Connection.Database,
+							SchemaName    = schema,
+							ProcedureName = name,
+						};
+					},
+					sql)
 				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrenSchema)
 				.ToList();
 		}

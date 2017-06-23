@@ -241,10 +241,10 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider()
-						.GetSchema(conn, new GetSchemaOptions() {ExcludedSchemas = new string[] {null}})
-						.Tables.Select(_ => _.SchemaName)
-						.Distinct()
-						.ToList();
+					.GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = new string[] { null }})
+					.Tables.Select(_ => _.SchemaName)
+					.Distinct()
+					.ToList();
 				exclude.Add(null);
 				exclude.Add("");
 

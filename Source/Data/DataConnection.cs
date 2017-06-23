@@ -37,6 +37,7 @@ namespace LinqToDB.Data
 		{
 			AddMappingSchema(mappingSchema);
 		}
+
 		public DataConnection(string configurationString)
 		{
 			InitConfig();
@@ -51,6 +52,11 @@ namespace LinqToDB.Data
 			DataProvider     = ci.DataProvider;
 			ConnectionString = ci.ConnectionString;
 			_mappingSchema   = DataProvider.MappingSchema;
+
+
+#if !SILVERLIGHT && !WINSTORE
+			RetryPolicy = Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null;
+#endif
 		}
 
 		public DataConnection(
@@ -616,10 +622,8 @@ namespace LinqToDB.Data
 					_connection = DataProvider.CreateConnection(ConnectionString);
 
 #if !SILVERLIGHT && !WINSTORE
-					var retryPolicy = RetryPolicy ?? (Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null);
-
-					if (retryPolicy != null)
-						_connection = new RetryingDbConnection((DbConnection)_connection, RetryPolicy);
+					if (RetryPolicy != null)
+						_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
 #endif
 				}
 

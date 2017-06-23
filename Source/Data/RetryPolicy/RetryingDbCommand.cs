@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
+using LinqToDB.Configuration;
 #if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data.RetryPolicy
 {
-	class RetryingDbCommand : DbCommand
+	class RetryingDbCommand : DbCommand, IProxy<DbCommand>
 	{
 		readonly DbCommand    _command;
 		readonly IRetryPolicy _policy;
@@ -111,5 +112,10 @@ namespace LinqToDB.Data.RetryPolicy
 			return _policy.ExecuteAsync(ct => _command.ExecuteScalarAsync(ct), cancellationToken);
 		}
 #endif
+
+		public DbCommand UnderlyingObject
+		{
+			get { return _command; }
+		}
 	}
 }

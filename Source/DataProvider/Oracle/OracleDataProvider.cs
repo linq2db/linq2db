@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Configuration;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -272,7 +273,9 @@ namespace LinqToDB.DataProvider.Oracle
 						Expression.Assign(
 							Expression.PropertyOrField(
 								Expression.Convert(
-									Expression.PropertyOrField(p, "Command"),
+									Expression.Call(
+										MemberHelper.MethodOf(() => Proxy.GetUnderlyingObject((DbCommand)null)),
+										Expression.Convert(Expression.PropertyOrField(p, "Command"), typeof(DbCommand))),
 									connectionType.AssemblyEx().GetType(AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
 							Expression.Constant(true)),
@@ -448,7 +451,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (value.Length != 0)
 						{
-							dynamic command = dataConnection.Command;
+							dynamic command = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
 						
 							command.ArrayBindCount = value.Length;
 
