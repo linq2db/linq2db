@@ -92,6 +92,7 @@ namespace LinqToDB.Data.RetryPolicy
 			get { return _connection; }
 		}
 
+#if !NETSTANDARD
 		public override DataTable GetSchema()
 		{
 			return _connection.GetSchema();
@@ -107,6 +108,13 @@ namespace LinqToDB.Data.RetryPolicy
 			return _connection.GetSchema(collectionName, restrictionValues);
 		}
 
+		public override ISite Site
+		{
+			get { return _connection.Site;  }
+			set { _connection.Site = value; }
+		}
+#endif
+
 		public override int ConnectionTimeout
 		{
 			get { return _connection.ConnectionTimeout; }
@@ -116,12 +124,6 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			add    { _connection.StateChange += value; }
 			remove { _connection.StateChange -= value; }
-		}
-
-		public override ISite Site
-		{
-			get { return _connection.Site;  }
-			set { _connection.Site = value; }
 		}
 
 		public object Clone()
