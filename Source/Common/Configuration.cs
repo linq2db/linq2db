@@ -26,7 +26,7 @@ namespace LinqToDB.Common
 			public static bool OptimizeJoins = true;
 
 			/// <summary>
-			/// If set to true unllable fields would be checked for IS NULL when comparasion type is NotEqual 
+			/// If set to true nullable fields would be checked for IS NULL when comparasion type is NotEqual 
 			/// <example>
 			/// public class MyEntity
 			/// {
