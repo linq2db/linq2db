@@ -541,12 +541,16 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 
 			AppendIndent().AppendLine(")");
-			AppendIndent().AppendLine("WHEN MATCHED THEN");
 
-			Indent++;
-			AppendIndent().AppendLine("UPDATE ");
-			BuildUpdateSet();
-			Indent--;
+			if (SelectQuery.Update.Items.Count > 0)
+			{
+				AppendIndent().AppendLine("WHEN MATCHED THEN");
+
+				Indent++;
+				AppendIndent().AppendLine("UPDATE ");
+				BuildUpdateSet();
+				Indent--;
+			}
 
 			AppendIndent().AppendLine("WHEN NOT MATCHED THEN");
 
@@ -564,7 +568,18 @@ namespace LinqToDB.SqlProvider
 		{
 			AppendIndent().AppendLine("BEGIN TRAN").AppendLine();
 
-			BuildUpdateQuery();
+			var buildUpdate = SelectQuery.Update.Items.Count > 0;
+			if (buildUpdate)
+			{
+				BuildUpdateQuery();
+			}
+			else
+			{
+				AppendIndent().AppendLine("IF NOT EXISTS(");
+				Indent++;
+				AppendIndent().AppendLine("SELECT 1 ");
+				BuildFromClause();
+			}
 
 			AppendIndent().AppendLine("WHERE");
 
@@ -593,8 +608,17 @@ namespace LinqToDB.SqlProvider
 
 			Indent--;
 
-			StringBuilder.AppendLine();
-			AppendIndent().AppendLine("IF @@ROWCOUNT = 0");
+			if (buildUpdate)
+			{
+				StringBuilder.AppendLine();
+				AppendIndent().AppendLine("IF @@ROWCOUNT = 0");
+			}
+			else
+			{
+				Indent--;
+				AppendIndent().AppendLine(")");
+			}
+
 			AppendIndent().AppendLine("BEGIN");
 
 			Indent++;

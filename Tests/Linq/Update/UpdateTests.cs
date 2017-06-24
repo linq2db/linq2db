@@ -738,7 +738,10 @@ namespace Tests.xUpdate
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana,
 			ProviderName.MySql,
-			TestProvName.MySql57
+			TestProvName.MySql57,
+			TestProvName.MariaDB,
+			ProviderName.Sybase,
+			ProviderName.OracleManaged
 		 )]
 		public void TestUpdateTakeOrdered(string context)
 		{
@@ -784,7 +787,10 @@ namespace Tests.xUpdate
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana,
 			ProviderName.MySql,
-			TestProvName.MySql57
+			TestProvName.MySql57,
+			TestProvName.MariaDB,
+			ProviderName.Sybase,
+			ProviderName.OracleManaged
 		 )]
 		public void TestUpdateSkipTake(string context)
 		{
