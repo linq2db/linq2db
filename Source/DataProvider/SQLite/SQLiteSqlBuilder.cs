@@ -91,12 +91,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return value;
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32 : StringBuilder.Append("INTEGER"); break;
-				default             : base.BuildDataType(type);        break;
+				case DataType.Int32 : StringBuilder.Append("INTEGER");               break;
+				default             : base.BuildDataType(type, createDbType);        break;
 			}
 		}
 

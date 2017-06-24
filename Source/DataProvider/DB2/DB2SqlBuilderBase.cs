@@ -131,13 +131,13 @@ namespace LinqToDB.DataProvider.DB2
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime  : StringBuilder.Append("timestamp"); break;
-				case DataType.DateTime2 : StringBuilder.Append("timestamp"); break;
-				default                 : base.BuildDataType(type);          break;
+				case DataType.DateTime  : StringBuilder.Append("timestamp");      break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");      break;
+				default                 : base.BuildDataType(type, createDbType); break;
 			}
 		}
 

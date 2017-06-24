@@ -882,7 +882,7 @@ namespace LinqToDB.SqlProvider
 				field.Length,
 				field.Precision,
 				field.Scale),
-				createDbType: true);
+				true);
 		}
 
 		protected virtual void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
@@ -1963,7 +1963,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlDataType:
-					BuildDataType((SqlDataType)expr);
+					BuildDataType((SqlDataType)expr, false);
 					break;
 
 				case QueryElementType.SearchCondition:
@@ -2122,7 +2122,7 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildDataType
 
-		protected virtual void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected virtual void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
