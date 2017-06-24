@@ -1197,8 +1197,16 @@ namespace Tests
 
 		public LocalTable(IDataContext db)
 		{
-			_db = db;
-			_db.CreateTable<T>();
+			try
+			{
+				_db = db;
+				_db.CreateTable<T>();
+			}
+			catch
+			{
+				_db.DropTable<T>();
+				throw;
+			}
 		}
 
 		public void Dispose()

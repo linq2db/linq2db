@@ -301,10 +301,14 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else
 			{
+			var schemaPrefix = string.IsNullOrWhiteSpace(SelectQuery.CreateTable.Table.Owner)
+				? string.Empty
+				: SelectQuery.CreateTable.Table.Owner + ".";
+
 				StringBuilder
 					.Append("DROP TRIGGER ")
-					.Append(SelectQuery.CreateTable.Table.Owner)
-					.Append(".TIDENTITY_")
+					.Append(schemaPrefix)
+					.Append("TIDENTITY_")
 					.Append(SelectQuery.CreateTable.Table.PhysicalName)
 					.AppendLine();
 			}
@@ -312,14 +316,18 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildCommand(int commandNumber)
 		{
+			var schemaPrefix = string.IsNullOrWhiteSpace(SelectQuery.CreateTable.Table.Owner)
+				? string.Empty
+				: SelectQuery.CreateTable.Table.Owner + ".";
+
 			if (SelectQuery.CreateTable.IsDrop)
 			{
 				if (commandNumber == 1)
 				{
 					StringBuilder
 						.Append("DROP SEQUENCE ")
-						.Append(SelectQuery.CreateTable.Table.Owner)
-						.Append(".SIDENTITY_")
+						.Append(schemaPrefix)
+						.Append("SIDENTITY_")
 						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
@@ -332,15 +340,15 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					StringBuilder
 						.Append("CREATE SEQUENCE ")
-						.Append(SelectQuery.CreateTable.Table.Owner)
-						.Append(".SIDENTITY_")
+						.Append(schemaPrefix)
+						.Append("SIDENTITY_")
 						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
 				{
 					StringBuilder
-						.AppendFormat("CREATE OR REPLACE TRIGGER {0}.TIDENTITY_{1}", SelectQuery.CreateTable.Table.Owner, SelectQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("CREATE OR REPLACE TRIGGER {0}TIDENTITY_{1}", schemaPrefix, SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine()
 						.AppendFormat("BEFORE INSERT ON ");
 
@@ -350,7 +358,7 @@ namespace LinqToDB.DataProvider.Oracle
 						.AppendLine(" FOR EACH ROW")
 						.AppendLine  ()
 						.AppendLine  ("BEGIN")
-						.AppendFormat("\tSELECT {2}.SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName, SelectQuery.CreateTable.Table.Owner)
+						.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName, schemaPrefix)
 						.AppendLine  ()
 						.AppendLine  ("END;");
 				}
