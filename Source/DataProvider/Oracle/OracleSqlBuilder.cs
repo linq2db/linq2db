@@ -288,11 +288,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.CommandCount(selectQuery);
 		}
 
-		private static string GetFullTableName(SqlTable table)
-		{
-			return (table.Owner ?? "") + table.PhysicalName;
-		}
-
 		protected override void BuildDropTableStatement()
 		{
 			if (_identityField == null)
