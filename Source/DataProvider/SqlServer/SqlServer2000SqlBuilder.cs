@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.AppendLine("SELECT SCOPE_IDENTITY()");
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{

@@ -191,7 +191,7 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
@@ -212,7 +212,15 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;
 				case DataType.Text           : StringBuilder.Append("Clob");                      break;
-				default                      : base.BuildDataType(type);                          break;
+				case DataType.Guid           : StringBuilder.Append("Raw(16)");                   break;
+				case DataType.Binary         :
+				case DataType.VarBinary      :
+					if (type.Length == null || type.Length == 0)
+						StringBuilder.Append("BLOB");
+					else 
+						StringBuilder.Append("Raw(").Append(type.Length).Append(")");
+					break;
+				default: base.BuildDataType(type, createDbType);                                  break;
 			}
 		}
 

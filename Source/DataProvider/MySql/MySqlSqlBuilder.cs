@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
@@ -75,20 +75,20 @@ namespace LinqToDB.DataProvider.MySql
 					if (createDbType) goto default;
 					StringBuilder.Append("Unsigned");
 					break;
-				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");   break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
+				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");                 break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                 break;
 				case DataType.DateTime2     :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");        break;
-				case DataType.Boolean       : StringBuilder.Append("Boolean");         break;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                      break;
+				case DataType.Boolean       : StringBuilder.Append("Boolean");                       break;
 				case DataType.Double        :
-				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal); break;
+				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal, createDbType); break;
 				case DataType.VarChar       :
 				case DataType.NVarChar      :
 					StringBuilder.Append("Char");
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length).Append(')');
 					break;
-				default: base.BuildDataType(type); break;
+				default: base.BuildDataType(type, createDbType);                                     break;
 			}
 		}
 

@@ -1838,5 +1838,44 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		public class Issue731Table
+		{
+			public int    Id;
+			public Guid   Guid;
+			[Column(DataType = DataType.Binary)]
+			public Guid   BinaryGuid;
+			public byte[] BlobValue;
+			[Column(Length = 5)]
+			public byte[] RawValue;
+
+		}
+
+		[Test, OracleDataContext]
+		public void Issue731Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new LocalTable<Issue731Table>(db))
+			{
+				var origin = new Issue731Table()
+				{
+					Id         = 1,
+					Guid       = Guid.NewGuid(),
+					BinaryGuid = Guid.NewGuid(),
+					BlobValue  = new byte[] { 1, 2, 3 },
+					RawValue   = new byte[] { 4, 5, 6 }
+				};
+
+				db.Insert(origin);
+
+				var result = db.GetTable<Issue731Table>().First(_ => _.Id == 1);
+
+				Assert.AreEqual(origin.Id,         result.Id);
+				Assert.AreEqual(origin.Guid,       result.Guid);
+				Assert.AreEqual(origin.BinaryGuid, result.BinaryGuid);
+				Assert.AreEqual(origin.BlobValue,  result.BlobValue);
+				Assert.AreEqual(origin.RawValue,   result.RawValue);
+			}
+		}
 	}
 }
