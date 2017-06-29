@@ -49,5 +49,20 @@ namespace LinqToDB.Mapping
 		{
 			return keys == null ? Array<string>.Empty : keys.Replace(" ", "").Split(',');
 		}
+
+		const string constantKeyPrefix = "const:";
+		internal static bool TryParseConstantKey(string key, out string value)
+		{
+			if (key.StartsWith(constantKeyPrefix))
+			{
+				value = key.Substring(constantKeyPrefix.Length);
+				return true;
+			}
+			else
+			{
+				value = null;
+				return false;
+			}
+		}
 	}
 }

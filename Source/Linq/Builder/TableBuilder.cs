@@ -883,8 +883,12 @@ namespace LinqToDB.Linq.Builder
 							p = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
 						}
 
-						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
-						var e2 = Expression.MakeMemberAccess(param,  ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
+						var e1 = p.Expr1 is SqlField
+									? Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo)
+									: (Expression)Expression.Constant(((SqlValue)p.Expr1).Value, p.Expr1.SystemType);
+						var e2 = p.Expr2 is SqlField
+									? Expression.MakeMemberAccess(param,  ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo)
+									: (Expression)Expression.Constant(((SqlValue)p.Expr1).Value, p.Expr1.SystemType);
 
 //						while (e1.Type != e2.Type)
 //						{
@@ -1324,19 +1328,44 @@ namespace LinqToDB.Linq.Builder
 
 				for (var i = 0; i < association.ThisKey.Length; i++)
 				{
+					var keyName1 = association.ThisKey[i];
+					var keyName2 = association.OtherKey[i];
+
 					SqlField field1;
 					SqlField field2;
 
-					if (!parent.SqlTable.Fields.TryGetValue(association.ThisKey[i], out field1))
-						throw new LinqException("Association key '{0}' not found for type '{1}.", association.ThisKey[i], parent.ObjectType);
+					parent.SqlTable.Fields.TryGetValue(keyName1, out field1);
+					SqlTable.Fields.TryGetValue(keyName2, out field2);
 
-					if (!SqlTable.Fields.TryGetValue(association.OtherKey[i], out field2))
+					Type t;
+					if (field1 != null)
+						t = field1.SystemType;
+					else if (field2 != null)
+						t = field2.SystemType;
+					else
+						t = typeof(string);
+
+					ISqlExpression exp1;
+					ISqlExpression exp2;
+					string constValue1;
+					string constValue2;
+
+					if (field1 != null)
+						exp1 = field1;
+					else if (AssociationDescriptor.TryParseConstantKey(keyName1, out constValue1))
+						exp1 = new SqlValue(Converter.ChangeType(constValue1, t));
+					else
+						throw new LinqException("Association key '{0}' not found for type '{1}.", keyName1, parent.ObjectType);
+
+					if (field2 != null)
+						exp2 = field2;
+					else if (AssociationDescriptor.TryParseConstantKey(keyName2, out constValue2)) 
+						exp2 = new SqlValue(Converter.ChangeType(constValue2, t));
+					else
 						throw new LinqException("Association key '{0}' not found for type '{1}.", association.OtherKey[i], ObjectType);
 
-//					join.Field(field1).Equal.Field(field2);
-
 					ISqlPredicate predicate = new SelectQuery.Predicate.ExprExpr(
-						field1, SelectQuery.Predicate.Operator.Equal, field2);
+						exp1, SelectQuery.Predicate.Operator.Equal, exp2);
 
 					predicate = builder.Convert(parent, predicate);
 
