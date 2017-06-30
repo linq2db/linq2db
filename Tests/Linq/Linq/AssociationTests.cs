@@ -571,5 +571,39 @@ namespace Tests.Linq
 				Assert.That(value.Parent, Is.Not.Null);
 			}
 		}
+
+		[Test, DataContextSource]
+		public void Constant(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in db.Parent
+					where p.ParentID ==3
+					from c in p.ChildrenByConstParent3
+					select c
+					,
+					from c in db.Child
+					where c.ParentID == 3
+					select c
+					);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Constant2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from c in db.Child.Take(1)
+					select c.ParentByConst3
+					,
+					from p in db.Parent
+					where p.ParentID == 3
+					select p
+					);
+			}
+		}
 	}
 }
