@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Configuration;
 	using Data;
+	using Extensions;
 
 	public abstract class TypeCreatorBase
 	{
@@ -103,7 +105,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		public dynamic CreateInstance(DataConnection value)
 		{
-			return (_creator ?? (_creator = GetCreator<IDbConnection>(DB2Types.ConnectionType)))(value.Connection);
+			return (_creator ?? (_creator = GetCreator<IDbConnection>(DB2Types.ConnectionType)))(Proxy.GetUnderlyingObject((DbConnection)value.Connection));
 		}
 	}
 

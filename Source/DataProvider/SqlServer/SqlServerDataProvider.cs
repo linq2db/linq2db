@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
@@ -9,6 +10,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Configuration;
 	using Common;
 	using Data;
 	using Extensions;
@@ -37,8 +39,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlProviderFlags.TakeHintsSupported      = TakeHints.Percent | TakeHints.WithTies;
 			}
 
-			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
-			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{
@@ -147,7 +151,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override bool IsCompatibleConnection(IDbConnection connection)
 		{
-			return typeof(SqlConnection).IsSameOrParentOf(connection.GetType());
+			return typeof(SqlConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
 #if !NETSTANDARD

@@ -979,6 +979,13 @@ namespace LinqToDB.Linq.Builder
 
 				case ChangeTypeExpression.ChangeTypeType :
 					return ConvertToSql(context, ((ChangeTypeExpression)expression).Expression);
+
+				case ExpressionType.Extension :
+					{
+						if (expression.CanReduce)
+							return ConvertToSql(context, expression.Reduce());
+						break;
+					}
 			}
 
 			if (expression.Type == typeof(bool) && _convertedPredicates.Add(expression))
@@ -2370,30 +2377,27 @@ namespace LinqToDB.Linq.Builder
 						var e = expression as BinaryAggregateExpression;
 						if (e != null)
 						{
-
-							var aggregateCondition = new SelectQuery.SearchCondition();
-							var isOr = e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse;
-
-							foreach (var expr in e.Expressions)
+							if (e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse)
 							{
-								var currentItems = new SelectQuery.SearchCondition();
-								BuildSearchCondition(context, expr, currentItems.Conditions);
+								var orCondition = new SelectQuery.SearchCondition();
 
-								if (aggregateCondition.Precedence != currentItems.Precedence)
+								for (var i = 0; i < e.Expressions.Length; i++)
 								{
-									aggregateCondition.Conditions.Add(new SelectQuery.Condition(false, currentItems, isOr));
+									var expr = e.Expressions[i];
+									BuildSearchCondition(context, expr, orCondition.Conditions);
+									if (i < e.Expressions.Length - 1)
+										orCondition.Conditions[orCondition.Conditions.Count - 1].IsOr = true;
 								}
-								else
-								{
-									if (isOr)
-										foreach (var c in currentItems.Conditions)
-											c.IsOr = true;
 
-									aggregateCondition.Conditions.AddRange(currentItems.Conditions);
+								conditions.Add(new SelectQuery.Condition(false, orCondition));
+							}
+							else
+							{
+								foreach (var expr in e.Expressions)
+								{
+									BuildSearchCondition(context, expr, conditions);
 								}
 							}
-
-							conditions.Add(new SelectQuery.Condition(false, aggregateCondition));
 						}
 
 						break;

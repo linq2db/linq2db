@@ -133,6 +133,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
 		}
 
+		protected void SetCharFieldToType<T>(string dataTypeName, Expression<Func<IDataReader, int, string>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
+		}
+
 		protected void SetField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(T) }] = expr;
@@ -158,6 +163,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(TF) }] = expr;
 		}
 
+		protected virtual string NormalizeTypeName(string typeName)
+		{
+			return typeName;
+		}
+
 		#endregion
 
 		#region GetReaderExpression
@@ -175,6 +185,8 @@ namespace LinqToDB.DataProvider
 					providerType,
 					((DbDataReader)reader).GetName(idx)));
 			}
+
+			typeName = NormalizeTypeName(typeName);
 
 #if DEBUG1
 			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");

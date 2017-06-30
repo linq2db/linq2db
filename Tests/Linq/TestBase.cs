@@ -5,7 +5,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-
+using System.Threading;
+using System.Threading.Tasks;
 #if !NETSTANDARD
 
 using System.ServiceModel;
@@ -16,6 +17,7 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
@@ -36,6 +38,29 @@ namespace Tests
 {
 	using Model;
 	using System.Text.RegularExpressions;
+
+	class Retry : IRetryPolicy
+	{
+		public TResult Execute<TResult>(Func<TResult> operation)
+		{
+			return operation();
+		}
+
+		public void Execute(Action operation)
+		{
+			operation();
+		}
+
+		public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			return operation(cancellationToken);
+		}
+
+		public Task ExecuteAsync(Func<CancellationToken,Task> operation, CancellationToken cancellationToken = new CancellationToken())
+		{
+			return operation(cancellationToken);
+		}
+	}
 
 	public class TestBase
 	{
@@ -67,6 +92,8 @@ namespace Tests
 					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
 #endif
 			};
+
+			//Configuration.RetryPolicy.Factory = db => new Retry();
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
