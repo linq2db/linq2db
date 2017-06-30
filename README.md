@@ -88,6 +88,20 @@ GetSchemaOptions.ExcludedCatalogs = new[] { "TestUser", "SYSSTAT" }; // Defines 
 GetSchemaOptions.IncludedCatalogs = new[] { "TestUser", "SYS" };     // Defines only included catalogs.
 ```
 
+## Provider specific configurations
+### SQL Server
+```cs
+bool GenerateSqlServerFreeText = true; // Defines wheather to generate extensions for Free Text search, or not
+```
+### PostgreSQL
+```cs
+bool GenerateCaseSensitiveNames = false; // defines whether to generate case sensitive or insensitive names 
+```
+### PostgreSQL
+```cs
+bool GenerateSybaseSystemTables = false; //defines whether to generate Sybase sysobjects tables or not
+```
+
 ## Customizing generation process
 
 Use the following code to modify your model **before** you call the `GenerateModel()` method.
