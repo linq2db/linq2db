@@ -107,8 +107,13 @@ bool GenerateSybaseSystemTables = false; // Defines whether to generate Sybase s
 Use the following code to modify your model **before** you call the `GenerateModel()` method.
 
 ```c#
-GetTable("Person").TypeName = "MyName";                                             // Replaces table name.
-GetColumn("Person", "PersonID").MemberName = "ID";                                  // Replaces column PersonID of Person table with ID.
+GetTable("Person").TypeName  = "MyName";                                            // Replaces table name.
+GetTable("Person").BaseClass = "PersonBase, IId";                                   // Set base class & interface for type, null to reset 
+
+GetColumn("Person", "PersonID")    .MemberName   = "ID";                            // Replaces column PersonID of Person table with ID.
+GetColumn("Person", "PasswordHash").SkipOnUpdate = true;                            // Set [Column(SkipOnUpdate=true)], same for other column options
+GetColumn("Person", "Gender")      .Type         = "global::Model.Gender";          // Change column type
+
 GetFK("Orders", "FK_Orders_Customers").MemberName      = "Customers";               // Replaces association name.
 GetFK("Orders", "FK_Orders_Customers").AssociationType = AssociationType.OneToMany; // Changes association type.
 
