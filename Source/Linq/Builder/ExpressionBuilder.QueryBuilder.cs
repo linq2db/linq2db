@@ -559,13 +559,36 @@ namespace LinqToDB.Linq.Builder
 
 										for (var i = 0; i < table.Association.ThisKey.Length; i++)
 										{
-											var field1 = table.ParentAssociation.SqlTable.Fields[table.Association.ThisKey [i]];
-											var field2 = table.                  SqlTable.Fields[table.Association.OtherKey[i]];
+											var keyName1 = table.Association.ThisKey[i];
+											var keyName2 = table.Association.OtherKey[i];
+											string constValue1;
+											string constValue2;
+											var field1 = AssociationDescriptor.TryParseConstantKey(keyName1, out constValue1)
+															? null
+															: table.ParentAssociation.SqlTable.Fields[keyName1];
+											var field2 = AssociationDescriptor.TryParseConstantKey(keyName2, out constValue2)
+															? null
+															: table.SqlTable.Fields[keyName2];
 
-											var ma1 = Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo);
-											var ma2 = Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo);
+											Expression exp1, exp2;
 
-											var ee = Equal(mappringSchema, ma1, ma2);
+											Type t;
+											if (field1 != null)
+												t = field1.SystemType;
+											else if (field2 != null)
+												t = field2.SystemType;
+											else
+												t = typeof(string);
+
+											exp1 = field1 != null
+													? Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo)
+													: (Expression)Expression.Constant(Converter.ChangeType(constValue1, t));
+											exp2 = field2 != null
+													? Expression.MakeMemberAccess(op, field2.ColumnDescriptor.MemberInfo)
+													: (Expression)Expression.Constant(Converter.ChangeType(keyName2, t));
+
+											
+											var ee = Equal(mappringSchema, exp2, exp1);
 
 											ex = ex == null ? ee : Expression.AndAlso(ex, ee);
 										}

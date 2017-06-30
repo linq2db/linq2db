@@ -40,6 +40,9 @@ namespace Tests.Model
 			get { return Children; }
 		}
 
+		[Association(ThisKey = "const:3", OtherKey = "ParentID")]
+		public IEnumerable<Child> ChildrenByConstParent3;
+
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 #if !NOIMMUTABLE
 		public ImmutableList<Child> Children3;
@@ -96,6 +99,9 @@ namespace Tests.Model
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
 		public GrandChild[] GrandChildren2;
+
+		[Association(ThisKey = "const:3", OtherKey ="ParentID")]
+		public Parent ParentByConst3;
 
 		public override bool Equals(object obj)
 		{
