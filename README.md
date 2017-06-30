@@ -95,11 +95,11 @@ bool GenerateSqlServerFreeText = true; // Defines wheather to generate extension
 ```
 ### PostgreSQL
 ```cs
-bool GenerateCaseSensitiveNames = false; // defines whether to generate case sensitive or insensitive names 
+bool GenerateCaseSensitiveNames = false; // Defines whether to generate case sensitive or insensitive names 
 ```
-### PostgreSQL
+### Sybase
 ```cs
-bool GenerateSybaseSystemTables = false; //defines whether to generate Sybase sysobjects tables or not
+bool GenerateSybaseSystemTables = false; // Defines whether to generate Sybase sysobjects tables or not
 ```
 
 ## Customizing generation process
