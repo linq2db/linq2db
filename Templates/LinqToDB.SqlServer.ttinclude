@@ -71,7 +71,7 @@ void DoGenerateSqlServerFreeText()
 					IsStatic       = true,
 					InitValue      =                                                                                                                                                      Environment.NewLine +
 					"	typeof(" + DataContextObject.Name + ").GetMethods()"                                                                                                            + Environment.NewLine +
-					"		.Where(m => m.Name == \"FreeTextTable\" &&  m.IsGenericMethod && m.GetParameters().Length == 2 )"                                                           + Environment.NewLine +
+					"		.Where(m => m.Name == \"FreeTextTable\" &&  m.IsGenericMethod && m.GetParameters().Length == 2)"                                                            + Environment.NewLine +
 					"		.Where(m => m.GetParameters()[0].ParameterType.IsGenericTypeEx() && m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(Expression<>))" + Environment.NewLine +
 					"		.Where(m => m.GetParameters()[1].ParameterType == typeof(string))"                                                                                          + Environment.NewLine +
 					"		.Single()"
