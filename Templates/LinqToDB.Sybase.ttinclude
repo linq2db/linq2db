@@ -12,7 +12,7 @@
 		};
 	}
 #><#+
-bool GenerateSybaseSystemTables = false;
+bool GenerateSybaseSystemTables = false; // Defines whether to generate Sybase sysobjects tables or not
 
 void GenerateSybaseTypes()
 {

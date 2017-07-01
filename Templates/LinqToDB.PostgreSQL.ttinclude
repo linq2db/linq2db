@@ -13,7 +13,7 @@
 	}
 #><#+
 
-bool GenerateCaseSensitiveNames = false;
+bool GenerateCaseSensitiveNames = false; // Defines whether to generate case sensitive or insensitive names 
 
 void SetCaseSensitiveNames()
 {
