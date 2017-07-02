@@ -434,9 +434,17 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(ProviderName.SQLite), Parallelizable(ParallelScope.None)]
 		public void CreateDatabase(string context)
 		{
+			try
+			{
+				SQLiteTools.DropDatabase   ("TestDatabase");
+			}
+			catch
+			{
+			}
+
 			SQLiteTools.CreateDatabase("TestDatabase");
 			Assert.IsTrue(File.Exists ("TestDatabase.sqlite"));
 

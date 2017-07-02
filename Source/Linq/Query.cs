@@ -310,6 +310,44 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		public void SetQueryQuery2()
+		{
+			FinalizeQuery();
+
+			if (Queries.Count != 2)
+				throw new InvalidOperationException();
+
+			ClearParameters();
+
+			GetElement = (ctx, db, expr, ps) => QueryQuery2(db, expr, ps);
+		}
+
+		int QueryQuery2(IDataContext dataContext, Expression expr, object[] parameters)
+		{
+			object query = null;
+
+			try
+			{
+				query = SetCommand(dataContext, expr, parameters, 0, true);
+
+				var n = dataContext.ExecuteScalar(query);
+
+				if (n != null)
+					return 0;
+
+				query = SetCommand(dataContext, expr, parameters, 1, true);
+				return dataContext.ExecuteNonQuery(query);
+			}
+			finally
+			{
+				if (query != null)
+					dataContext.ReleaseQuery(query);
+
+				if (dataContext.CloseAfterUse)
+					dataContext.Close();
+			}
+		}
+
 		#endregion
 
 		#region ScalarQuery
@@ -805,7 +843,7 @@ namespace LinqToDB.Linq
 
 		internal void MakeAlternativeInsertOrUpdate(SelectQuery selectQuery)
 		{
-			var dic = new Dictionary<ICloneableElement,ICloneableElement>();
+			var dic = new Dictionary<ICloneableElement, ICloneableElement>();
 
 			var insertQuery = (SelectQuery)selectQuery.Clone(dic, _ => true);
 
@@ -833,10 +871,20 @@ namespace LinqToDB.Linq
 			foreach (var key in keys)
 				selectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression);
 
-			selectQuery.QueryType = QueryType.Update;
 			selectQuery.ClearInsert();
 
-			SetNonQueryQuery2();
+			if (selectQuery.Update.Items.Count > 0)
+			{
+				selectQuery.QueryType = QueryType.Update;
+				SetNonQueryQuery2();
+			}
+			else
+			{
+				selectQuery.QueryType = QueryType.Select;
+				selectQuery.Select.Columns.Clear();
+				selectQuery.Select.Columns.Add(new SelectQuery.Column(selectQuery, new SqlExpression("1")));
+				SetQueryQuery2();
+			}
 
 			Queries.Add(new QueryInfo
 			{
