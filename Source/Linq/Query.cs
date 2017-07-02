@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
@@ -118,6 +120,15 @@ namespace LinqToDB.Linq
 
 		public Func<QueryContext,IDataContext,Expression,object[],object>         GetElement;
 		public Func<QueryContext,IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
+		public Func<ExpressionQuery<T>,QueryContext,IDataContext,Expression,object[],Action<T>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync =
+			(query, context, dataContext, expression, parameters, action, token, options) =>
+		{
+			return AsyncExtensions.GetActionTask(() =>
+			{
+				foreach (var item in query)
+					action(item);
+			}, token, options);
+		};
 
 		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContext dc, Expression expr, object[] ps)
 		{

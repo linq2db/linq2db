@@ -5,7 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
@@ -27,8 +28,8 @@ namespace LinqToDB.Linq
 		[NotNull] public Expression   Expression  { get; set; }
 		[NotNull] public IDataContext DataContext { get; set; }
 
-		internal  Query<T> Info;
-		internal  object[] Parameters;
+		internal Query<T> Info;
+		internal object[] Parameters;
 
 		#endregion
 
@@ -38,6 +39,8 @@ namespace LinqToDB.Linq
 		private string _sqlTextHolder;
 
 // ReSharper disable InconsistentNaming
+		// This property is helpful in Debug Mode.
+		//
 		[UsedImplicitly]
 		private string _sqlText { get { return SqlText; }}
 // ReSharper restore InconsistentNaming
@@ -78,6 +81,11 @@ namespace LinqToDB.Linq
 				Info = info;
 
 			return info;
+		}
+
+		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken, TaskCreationOptions options)
+		{
+			return GetQuery(Expression, true).GetForEachAsync(this, null, DataContext, Expression, Parameters, action, cancellationToken, options);
 		}
 
 		#endregion

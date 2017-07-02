@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Linq;
 
 namespace LinqToDB
 {
@@ -39,7 +40,7 @@ namespace LinqToDB
 			return task;
 		}
 
-		static Task GetTask(Action action, CancellationToken token, TaskCreationOptions options)
+		internal static Task GetActionTask(Action action, CancellationToken token, TaskCreationOptions options)
 		{
 			var task = new Task(action, token, options);
 
@@ -90,43 +91,28 @@ namespace LinqToDB
 
 		public static Task ForEachAsync<TSource>(this IQueryable<TSource> source, Action<TSource> action)
 		{
-			return GetActionTask(() =>
-			{
-				foreach (var item in source)
-					action(item);
-			});
+			return ForEachAsync(source, action, CancellationToken.None, TaskCreationOptions.None);
 		}
 
 		public static Task ForEachAsync<TSource>(
 			this IQueryable<TSource> source, Action<TSource> action, CancellationToken token)
 		{
-			return GetActionTask(() =>
-			{
-				foreach (var item in source)
-				{
-					if (token.IsCancellationRequested)
-						break;
-					action(item);
-				}
-			},
-			token);
+			return ForEachAsync(source, action, token, TaskCreationOptions.None);
 		}
 
 		public static Task ForEachAsync<TSource>(
 			this IQueryable<TSource> source, Action<TSource> action, TaskCreationOptions options)
 		{
-			return GetActionTask(() =>
-			{
-				foreach (var item in source)
-					action(item);
-			},
-			options);
+			return ForEachAsync(source, action, CancellationToken.None, options);
 		}
 
 		public static Task ForEachAsync<TSource>(
 			this IQueryable<TSource> source, Action<TSource> action, CancellationToken token, TaskCreationOptions options)
 		{
-			return GetTask(() =>
+			if (source is ExpressionQuery<TSource>)
+				return ((ExpressionQuery<TSource>)source).GetForEachAsync(action, token, options);
+
+			return GetActionTask(() =>
 			{
 				foreach (var item in source)
 				{
@@ -145,25 +131,30 @@ namespace LinqToDB
 
 		public static Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source)
 		{
-			return GetTask(source.ToList);
+			return ToListAsync(source, CancellationToken.None, TaskCreationOptions.None);
 		}
 
 		public static Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
 		{
-			return GetTask(
-				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(),
-				token);
+			return ToListAsync(source, token, TaskCreationOptions.None);
 		}
 
 		public static Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source, TaskCreationOptions options)
 		{
-			return GetTask(source.ToList, options);
+			return ToListAsync(source, CancellationToken.None, options);
 		}
 
-		public static Task<List<TSource>> ToListAsync<TSource>(
+		public static async Task<List<TSource>> ToListAsync<TSource>(
 			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var list = new List<TSource>();
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(list.Add, token, options);
+				return list;
+			}
+
+			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(),
 				token,
 				options);
@@ -175,25 +166,30 @@ namespace LinqToDB
 
 		public static Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source)
 		{
-			return GetTask(source.ToArray);
+			return ToArrayAsync(source, CancellationToken.None, TaskCreationOptions.None);
 		}
 
 		public static Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
 		{
-			return GetTask(
-				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
-				token);
+			return ToArrayAsync(source, token, TaskCreationOptions.None);
 		}
 
 		public static Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source, TaskCreationOptions options)
 		{
-			return GetTask(source.ToArray, options);
+			return ToArrayAsync(source, CancellationToken.None, options);
 		}
 
-		public static Task<TSource[]> ToArrayAsync<TSource>(
+		public static async Task<TSource[]> ToArrayAsync<TSource>(
 			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var list = new List<TSource>();
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(list.Add, token, options);
+				return list.ToArray();
+			}
+
+			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
 				token,
 				options);
@@ -207,7 +203,7 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector)
 		{
-			return GetTask(() => source.ToDictionary(keySelector));
+			return ToDictionaryAsync(source, keySelector, CancellationToken.None, TaskCreationOptions.None);
 		}
 
 		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
@@ -215,9 +211,7 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			CancellationToken        token)
 		{
-			return GetTask(
-				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
-				token);
+			return ToDictionaryAsync(source, keySelector, token, TaskCreationOptions.None);
 		}
 
 		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
@@ -225,16 +219,23 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			TaskCreationOptions      options)
 		{
-			return GetTask(() => source.ToDictionary(keySelector), options);
+			return ToDictionaryAsync(source, keySelector, CancellationToken.None, options);
 		}
 
-		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
+		public static async Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			CancellationToken        token,
 			TaskCreationOptions      options)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var dic = new Dictionary<TKey,TSource>();
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token, options);
+				return dic;
+			}
+
+			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
 				token,
 				options);
@@ -245,7 +246,7 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			IEqualityComparer<TKey>  comparer)
 		{
-			return GetTask(() => source.ToDictionary(keySelector, comparer));
+			return ToDictionaryAsync(source, keySelector, comparer, CancellationToken.None, TaskCreationOptions.None);
 		}
 
 		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
@@ -254,9 +255,7 @@ namespace LinqToDB
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token)
 		{
-			return GetTask(
-				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer),
-				token);
+			return ToDictionaryAsync(source, keySelector, comparer, token, TaskCreationOptions.None);
 		}
 
 		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
@@ -265,17 +264,24 @@ namespace LinqToDB
 			IEqualityComparer<TKey>  comparer,
 			TaskCreationOptions      options)
 		{
-			return GetTask(() => source.ToDictionary(keySelector, comparer), options);
+			return ToDictionaryAsync(source, keySelector, comparer, CancellationToken.None, options);
 		}
 
-		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
+		public static async Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token,
 			TaskCreationOptions      options)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var dic = new Dictionary<TKey,TSource>(comparer);
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token, options);
+				return dic;
+			}
+
+			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer),
 				token,
 				options);
@@ -286,8 +292,7 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector)
 		{
-			return GetTask(
-				() => source.ToDictionary(keySelector, elementSelector));
+			return ToDictionaryAsync(source, keySelector, elementSelector, CancellationToken.None, TaskCreationOptions.None);
 		}
 
 		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
@@ -296,9 +301,7 @@ namespace LinqToDB
 			Func<TSource,TElement>   elementSelector,
 			CancellationToken        token)
 		{
-			return GetTask(
-				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector),
-				token);
+			return ToDictionaryAsync(source, keySelector, elementSelector, token, TaskCreationOptions.None);
 		}
 
 		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
@@ -307,19 +310,24 @@ namespace LinqToDB
 			Func<TSource,TElement>   elementSelector,
 			TaskCreationOptions      options)
 		{
-			return GetTask(
-				() => source.ToDictionary(keySelector, elementSelector),
-				options);
+			return ToDictionaryAsync(source, keySelector, elementSelector, CancellationToken.None, options);
 		}
 
-		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
+		public static async Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
 			CancellationToken        token,
 			TaskCreationOptions      options)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var dic = new Dictionary<TKey,TElement>();
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token, options);
+				return dic;
+			}
+
+			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector),
 				token,
 				options);
@@ -331,8 +339,7 @@ namespace LinqToDB
 			Func<TSource,TElement>   elementSelector,
 			IEqualityComparer<TKey>  comparer)
 		{
-			return GetTask(
-				() => source.ToDictionary(keySelector, elementSelector, comparer));
+			return ToDictionaryAsync(source, keySelector, elementSelector, comparer, CancellationToken.None, TaskCreationOptions.None);
 		}
 
 		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
@@ -342,9 +349,7 @@ namespace LinqToDB
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token)
 		{
-			return GetTask(
-				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer),
-				token);
+			return ToDictionaryAsync(source, keySelector, elementSelector, comparer, token, TaskCreationOptions.None);
 		}
 
 		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
@@ -354,12 +359,10 @@ namespace LinqToDB
 			IEqualityComparer<TKey>  comparer,
 			TaskCreationOptions      options)
 		{
-			return GetTask(
-				() => source.ToDictionary(keySelector, elementSelector, comparer),
-				options);
+			return ToDictionaryAsync(source, keySelector, elementSelector, comparer, CancellationToken.None, options);
 		}
 
-		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
+		public static async Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
@@ -367,7 +370,14 @@ namespace LinqToDB
 			CancellationToken        token,
 			TaskCreationOptions      options)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var dic = new Dictionary<TKey,TElement>();
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token, options);
+				return dic;
+			}
+
+			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer),
 				token,
 				options);
