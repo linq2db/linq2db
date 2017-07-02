@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 #if !SL4
 using System.Threading.Tasks;
+// ReSharper disable StaticMemberInGenericType
 #endif
 
 namespace LinqToDB.Linq
@@ -21,7 +23,7 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract class Query
+	internal abstract class Query
 	{
 		#region Init
 
@@ -85,7 +87,7 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class Query<T> : Query
+	internal class Query<T> : Query
 	{
 		#region Init
 
@@ -123,7 +125,7 @@ namespace LinqToDB.Linq
 		public Func<QueryContext,IDataContext,Expression,object[],object>         GetElement;
 		public Func<QueryContext,IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
-		public Func<ExpressionQuery<T>,QueryContext,IDataContext,Expression,object[],Action<T>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync =
+		public readonly Func<ExpressionQuery<T>,QueryContext,IDataContext,Expression,object[],Action<T>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync =
 			(query, context, dataContext, expression, parameters, action, token, options) =>
 		{
 			return AsyncExtensions.GetActionTask(() =>
@@ -466,9 +468,10 @@ namespace LinqToDB.Linq
 			{
 				var value = p.Accessor(expr, parameters);
 
-				if (value is IEnumerable)
+				var vs = value as IEnumerable;
+				if (vs != null)
 				{
-					var type  = value.GetType();
+					var type  = vs.GetType();
 					var etype = type.GetItemType();
 
 					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
@@ -476,7 +479,7 @@ namespace LinqToDB.Linq
 					{
 						var values = new List<object>();
 
-						foreach (var v in (IEnumerable)value)
+						foreach (var v in vs)
 						{
 							value = v;
 
@@ -581,7 +584,7 @@ namespace LinqToDB.Linq
 
 		static class ObjectOperation<T1>
 		{
-			public static object Sync = new object();
+			public static readonly object Sync = new object();
 
 			public static readonly Dictionary<object,Query<int>>    Insert             = new Dictionary<object,Query<int>>();
 			public static readonly Dictionary<object,Query<object>> InsertWithIdentity = new Dictionary<object,Query<object>>();
@@ -1160,7 +1163,8 @@ namespace LinqToDB.Linq
 			{
 				var q = query;
 
-				if (select.SkipValue is SqlValue)
+				var value = select.SkipValue as SqlValue;
+				if (value != null)
 				{
 					var n = (int)((IValueContainer)select.SkipValue).Value;
 
@@ -1178,7 +1182,8 @@ namespace LinqToDB.Linq
 			{
 				var q = query;
 
-				if (select.TakeValue is SqlValue)
+				var value = select.TakeValue as SqlValue;
+				if (value != null)
 				{
 					var n = (int)((IValueContainer)select.TakeValue).Value;
 
@@ -1198,16 +1203,25 @@ namespace LinqToDB.Linq
 		internal void SetQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
 		{
 			var query   = GetQuery();
-			var mapInfo = new MapInfo { Expression = expression };
+			var mapInfo = new MapInfo(expression);
 
 			ClearParameters();
 
 			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
 		}
 
-		class MapInfo
+		private class MapInfo
 		{
-			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> Expression;
+			public MapInfo([JetBrains.Annotations.NotNull] Expression<Func<QueryContext, IDataContext, IDataReader, Expression, object[], T>> expression)
+			{
+				if (expression == null)
+					throw new ArgumentNullException("expression");
+				Expression = expression;
+			}
+
+			[JetBrains.Annotations.NotNull]
+			public readonly Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> Expression;
+
 			public            Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>  Mapper;
 			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> MapperExpression;
 		}
@@ -1239,6 +1253,7 @@ namespace LinqToDB.Linq
 
 					// IT : # MapperExpression.Compile()
 					//
+					Debug.Assert(mapInfo.MapperExpression != null, "mapInfo.MapperExpression != null");
 					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
 				}
 
@@ -1315,6 +1330,7 @@ namespace LinqToDB.Linq
 						return ex != null ? ex.Reduce(dr) : e;
 					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>>;
 
+					Debug.Assert(mapperExpression != null, "mapperExpression != null");
 					mapInfo.Mapper = mapper = mapperExpression.Compile();
 				}
 
