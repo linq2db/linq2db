@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using JetBrains.Annotations;
+
 using LinqToDB.Linq;
 
 namespace LinqToDB
 {
 	using System.Linq.Expressions;
 
+	[PublicAPI]
 	public static class AsyncExtensions
 	{
 		#region Helpers
@@ -109,8 +113,9 @@ namespace LinqToDB
 		public static Task ForEachAsync<TSource>(
 			this IQueryable<TSource> source, Action<TSource> action, CancellationToken token, TaskCreationOptions options)
 		{
-			if (source is ExpressionQuery<TSource>)
-				return ((ExpressionQuery<TSource>)source).GetForEachAsync(action, token, options);
+			var query = source as ExpressionQuery<TSource>;
+			if (query != null)
+				return query.GetForEachAsync(action, token, options);
 
 			return GetActionTask(() =>
 			{
@@ -127,8 +132,8 @@ namespace LinqToDB
 
 		#endregion
 
+#if !NOASYNC
 		#region ToListAsync
-
 		public static Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source)
 		{
 			return ToListAsync(source, CancellationToken.None, TaskCreationOptions.None);
@@ -147,10 +152,11 @@ namespace LinqToDB
 		public static async Task<List<TSource>> ToListAsync<TSource>(
 			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
 		{
-			if (source is ExpressionQuery<TSource>)
+			var query = source as ExpressionQuery<TSource>;
+			if (query != null)
 			{
 				var list = new List<TSource>();
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(list.Add, token, options);
+				await query.GetForEachAsync(list.Add, token, options);
 				return list;
 			}
 
@@ -159,7 +165,6 @@ namespace LinqToDB
 				token,
 				options);
 		}
-
 		#endregion
 
 		#region ToArrayAsync
@@ -182,10 +187,11 @@ namespace LinqToDB
 		public static async Task<TSource[]> ToArrayAsync<TSource>(
 			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
 		{
-			if (source is ExpressionQuery<TSource>)
+			var query = source as ExpressionQuery<TSource>;
+			if (query != null)
 			{
 				var list = new List<TSource>();
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(list.Add, token, options);
+				await query.GetForEachAsync(list.Add, token, options);
 				return list.ToArray();
 			}
 
@@ -228,10 +234,11 @@ namespace LinqToDB
 			CancellationToken        token,
 			TaskCreationOptions      options)
 		{
-			if (source is ExpressionQuery<TSource>)
+			var query = source as ExpressionQuery<TSource>;
+			if (query != null)
 			{
 				var dic = new Dictionary<TKey,TSource>();
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token, options);
+				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token, options);
 				return dic;
 			}
 
@@ -274,10 +281,11 @@ namespace LinqToDB
 			CancellationToken        token,
 			TaskCreationOptions      options)
 		{
-			if (source is ExpressionQuery<TSource>)
+			var query = source as ExpressionQuery<TSource>;
+			if (query != null)
 			{
 				var dic = new Dictionary<TKey,TSource>(comparer);
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token, options);
+				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token, options);
 				return dic;
 			}
 
@@ -320,10 +328,11 @@ namespace LinqToDB
 			CancellationToken        token,
 			TaskCreationOptions      options)
 		{
-			if (source is ExpressionQuery<TSource>)
+			var query = source as ExpressionQuery<TSource>;
+			if (query != null)
 			{
 				var dic = new Dictionary<TKey,TElement>();
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token, options);
+				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token, options);
 				return dic;
 			}
 
@@ -370,10 +379,11 @@ namespace LinqToDB
 			CancellationToken        token,
 			TaskCreationOptions      options)
 		{
-			if (source is ExpressionQuery<TSource>)
+			var query = source as ExpressionQuery<TSource>;
+			if (query != null)
 			{
 				var dic = new Dictionary<TKey,TElement>();
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token, options);
+				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token, options);
 				return dic;
 			}
 
@@ -384,6 +394,7 @@ namespace LinqToDB
 		}
 
 		#endregion
+#endif
 
 		#region FirstAsync
 
