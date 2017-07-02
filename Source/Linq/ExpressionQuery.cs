@@ -6,7 +6,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+#if !SL4
 using System.Threading.Tasks;
+#endif
 using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
@@ -83,10 +85,12 @@ namespace LinqToDB.Linq
 			return info;
 		}
 
+#if !SL4
 		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken, TaskCreationOptions options)
 		{
 			return GetQuery(Expression, true).GetForEachAsync(this, null, DataContext, Expression, Parameters, action, cancellationToken, options);
 		}
+#endif
 
 		#endregion
 

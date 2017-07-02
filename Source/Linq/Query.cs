@@ -6,7 +6,9 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+#if !SL4
 using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.Linq
 {
@@ -120,6 +122,7 @@ namespace LinqToDB.Linq
 
 		public Func<QueryContext,IDataContext,Expression,object[],object>         GetElement;
 		public Func<QueryContext,IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
+#if !SL4
 		public Func<ExpressionQuery<T>,QueryContext,IDataContext,Expression,object[],Action<T>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync =
 			(query, context, dataContext, expression, parameters, action, token, options) =>
 		{
@@ -129,6 +132,7 @@ namespace LinqToDB.Linq
 					action(item);
 			}, token, options);
 		};
+#endif
 
 		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContext dc, Expression expr, object[] ps)
 		{
