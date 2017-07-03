@@ -1343,6 +1343,12 @@ namespace LinqToDB.Linq.Builder
 					join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 				}
 
+				var expressionPredicate = Association.GetPredicate();
+				if (expressionPredicate != null)
+				{
+					//TODO: Need help in converting to ISqlPredicate
+				}
+
 				Init();
 			}
 
