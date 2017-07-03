@@ -1,6 +1,23 @@
+LINQ to DB 1.8.3  Release Notes
+---------------------------------
+[!] Fixed problems with Configuration.Linq.UseBinaryAggregateExpression (#708, #716)
+[!] Expreimental support for query retry (#736, https://github.com/linq2db/linq2db/blob/master/Tests/Linq/Data/RetryPolicyTest.cs)
+
+Better support for NpgSql 3.2.3 (#714, #715)
+Fixed issue with wrong convert optimization (#722)
+Fixed join optimization (#728)
+Fixies with nullable enum mapping (#726)
+Fixed issue with cached query (#737, #738)
+Update with OrderBy support (#205, #729)
+Changed string trimming (trim only spaces) (#727)
+Better support for creating tables with Oracle (#731, #750, #723, #724)
+Fixed InsertOrUpdate for Oracle (#100, #732, #746)
+
+
 LINQ to DB 1.8.2  Release Notes
 ---------------------------------
-Configuration.Linq.UseBinaryAggregateExpression is set to false by default as supposed to be unstable
+[!] Configuration.Linq.UseBinaryAggregateExpression is set to false by default as supposed to be unstable
+
 
 LINQ to DB 1.8.1  Release Notes
 ---------------------------------
