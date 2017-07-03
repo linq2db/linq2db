@@ -1867,11 +1867,12 @@ namespace Tests.DataProvider
 
 					var tableSpace = db.Execute<string>("SELECT default_tablespace FROM sys.dba_users WHERE username = 'ISSUE723SCHEMA'");
 					db.Execute("ALTER USER Issue723Schema quota unlimited on {0}".Args(tableSpace));
+
+					db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
+					Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
+
 					try
 					{
-
-						db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
-						Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
 
 						db.MappingSchema.GetFluentMappingBuilder()
 							.Entity<Issue723Table>()
