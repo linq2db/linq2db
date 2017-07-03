@@ -1,0 +1,130 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ output extension=".generated.cs" #>
+using System;
+using System.Linq.Expressions;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB
+{
+	using Linq;
+
+	public static partial class AsyncExtensions
+	{
+<#
+	foreach (var info in new[]
+	{
+		new { Method = "First",           RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "source.First",                            GParams = "<TSource>",         Params = "",                                              CallParams = "", },
+		new { Method = "First",           RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "() => source.First(predicate)",           GParams = "<TSource>",         Params = ", Expression<Func<TSource,bool>> predicate",    CallParams = ", predicate", },
+
+		new { Method = "FirstOrDefault",  RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "source.FirstOrDefault",                   GParams = "<TSource>",         Params = "",                                              CallParams = "", },
+		new { Method = "FirstOrDefault",  RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "() => source.FirstOrDefault(predicate)",  GParams = "<TSource>",         Params = ", Expression<Func<TSource,bool>> predicate",    CallParams = ", predicate", },
+
+		new { Method = "Single",          RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "source.Single",                           GParams = "<TSource>",         Params = "",                                              CallParams = "", },
+		new { Method = "Single",          RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Single(predicate)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,bool>> predicate",    CallParams = ", predicate", },
+
+		new { Method = "SingleOrDefault", RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "source.SingleOrDefault",                  GParams = "<TSource>",         Params = "",                                              CallParams = "", },
+		new { Method = "SingleOrDefault", RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "() => source.SingleOrDefault(predicate)", GParams = "<TSource>",         Params = ", Expression<Func<TSource,bool>> predicate",    CallParams = ", predicate", },
+
+		new { Method = "Contains",        RetType = "bool",     Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Contains(item)",             GParams = "<TSource>",         Params = ", TSource item",                                CallParams = ", item", },
+
+		new { Method = "Any",             RetType = "bool",     Type = "TSource",  SParam = "TSource",  Lambda = "source.Any",                              GParams = "<TSource>",         Params = "",                                              CallParams = "", },
+		new { Method = "Any",             RetType = "bool",     Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Any(predicate)",             GParams = "<TSource>",         Params = ", Expression<Func<TSource,bool>> predicate",    CallParams = ", predicate", },
+
+		new { Method = "All",             RetType = "bool",     Type = "TSource",  SParam = "TSource",  Lambda = "() => source.All(predicate)",             GParams = "<TSource>",         Params = ", Expression<Func<TSource,bool>> predicate",    CallParams = ", predicate", },
+
+		new { Method = "Count",           RetType = "int",      Type = "TSource",  SParam = "TSource",  Lambda = "source.Count",                            GParams = "<TSource>",         Params = "",                                              CallParams = "", },
+		new { Method = "Count",           RetType = "int",      Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Count(predicate)",           GParams = "<TSource>",         Params = ", Expression<Func<TSource,bool>> predicate",    CallParams = ", predicate", },
+
+		new { Method = "LongCount",       RetType = "long",     Type = "TSource",  SParam = "TSource",  Lambda = "source.LongCount",                        GParams = "<TSource>",         Params = "",                                              CallParams = "", },
+		new { Method = "LongCount",       RetType = "long",     Type = "TSource",  SParam = "TSource",  Lambda = "() => source.LongCount(predicate)",       GParams = "<TSource>",         Params = ", Expression<Func<TSource,bool>> predicate",    CallParams = ", predicate", },
+
+		new { Method = "Min",             RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "source.Min",                              GParams = "<TSource>",         Params = "",                                              CallParams = "", },
+		new { Method = "Min",             RetType = "TResult",  Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Min(selector)",              GParams = "<TSource,TResult>", Params = ", Expression<Func<TSource,TResult>> selector",  CallParams = ", selector", },
+
+		new { Method = "Max",             RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "source.Max",                              GParams = "<TSource>",         Params = "",                                              CallParams = "", },
+		new { Method = "Max",             RetType = "TResult",  Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Max(selector)",              GParams = "<TSource,TResult>", Params = ", Expression<Func<TSource,TResult>> selector",  CallParams = ", selector", },
+
+		new { Method = "Sum",             RetType = "int",      Type = "int",      SParam = "int",      Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "int?",     Type = "int?",     SParam = "int?",     Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "long",     Type = "long",     SParam = "long",     Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "long?",    Type = "long?",    SParam = "long?",    Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "float",    Type = "float",    SParam = "float",    Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "float?",   Type = "float?",   SParam = "float?",   Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "double",   Type = "double",   SParam = "double",   Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "double?",  Type = "double?",  SParam = "double?",  Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "decimal",  Type = "decimal",  SParam = "decimal",  Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "decimal?", Type = "decimal?", SParam = "decimal?", Lambda = "source.Sum",                              GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Sum",             RetType = "int",      Type = "int",      SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,int>> selector",      CallParams = ", selector", },
+		new { Method = "Sum",             RetType = "int?",     Type = "int?",     SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,int?>> selector",     CallParams = ", selector", },
+		new { Method = "Sum",             RetType = "long",     Type = "long",     SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,long>> selector",     CallParams = ", selector", },
+		new { Method = "Sum",             RetType = "long?",    Type = "long?",    SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,long?>> selector",    CallParams = ", selector", },
+		new { Method = "Sum",             RetType = "float",    Type = "float",    SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,float>> selector",    CallParams = ", selector", },
+		new { Method = "Sum",             RetType = "float?",   Type = "float?",   SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,float?>> selector",   CallParams = ", selector", },
+		new { Method = "Sum",             RetType = "double",   Type = "double",   SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,double>> selector",   CallParams = ", selector", },
+		new { Method = "Sum",             RetType = "double?",  Type = "double?",  SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,double?>> selector",  CallParams = ", selector", },
+		new { Method = "Sum",             RetType = "decimal",  Type = "decimal",  SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,decimal>> selector",  CallParams = ", selector", },
+		new { Method = "Sum",             RetType = "decimal?", Type = "decimal?", SParam = "TSource",  Lambda = "() => source.Sum(selector)",              GParams = "<TSource>",         Params = ", Expression<Func<TSource,decimal?>> selector", CallParams = ", selector", },
+
+		new { Method = "Average",         RetType = "double",   Type = "int",      SParam = "int",      Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "double?",  Type = "int?",     SParam = "int?",     Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "double",   Type = "long",     SParam = "long",     Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "double?",  Type = "long?",    SParam = "long?",    Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "float",    Type = "float",    SParam = "float",    Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "float?",   Type = "float?",   SParam = "float?",   Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "double",   Type = "double",   SParam = "double",   Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "double?",  Type = "double?",  SParam = "double?",  Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "decimal",  Type = "decimal",  SParam = "decimal",  Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "decimal?", Type = "decimal?", SParam = "decimal?", Lambda = "source.Average",                          GParams = "",                  Params = "",                                              CallParams = "", },
+		new { Method = "Average",         RetType = "double",   Type = "int",      SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,int>> selector",      CallParams = ", selector", },
+		new { Method = "Average",         RetType = "double?",  Type = "int?",     SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,int?>> selector",     CallParams = ", selector", },
+		new { Method = "Average",         RetType = "double",   Type = "long",     SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,long>> selector",     CallParams = ", selector", },
+		new { Method = "Average",         RetType = "double?",  Type = "long?",    SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,long?>> selector",    CallParams = ", selector", },
+		new { Method = "Average",         RetType = "float",    Type = "float",    SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,float>> selector",    CallParams = ", selector", },
+		new { Method = "Average",         RetType = "float?",   Type = "float?",   SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,float?>> selector",   CallParams = ", selector", },
+		new { Method = "Average",         RetType = "double",   Type = "double",   SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,double>> selector",   CallParams = ", selector", },
+		new { Method = "Average",         RetType = "double?",  Type = "double?",  SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,double?>> selector",  CallParams = ", selector", },
+		new { Method = "Average",         RetType = "decimal",  Type = "decimal",  SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,decimal>> selector",  CallParams = ", selector", },
+		new { Method = "Average",         RetType = "decimal?", Type = "decimal?", SParam = "TSource",  Lambda = "() => source.Average(selector)",          GParams = "<TSource>",         Params = ", Expression<Func<TSource,decimal?>> selector", CallParams = ", selector", },
+	})
+	{
+#>
+		#region <#= info.Method #>Async<<#= info.Type #><#= info.CallParams #>>
+
+		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(this IQueryable<<#= info.SParam #>> source<#= info.Params #>)
+		{
+			return <#= info.Method #>Async(source<#= info.CallParams #>, CancellationToken.None, TaskCreationOptions.None);
+		}
+
+		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(this IQueryable<<#= info.SParam #>> source<#= info.Params #>, CancellationToken token)
+		{
+			return <#= info.Method #>Async(source<#= info.CallParams #>, token, TaskCreationOptions.None);
+		}
+
+		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(this IQueryable<<#= info.SParam #>> source<#= info.Params #>, TaskCreationOptions options)
+		{
+			return <#= info.Method #>Async(source<#= info.CallParams #>, CancellationToken.None, options);
+		}
+
+		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(
+			this IQueryable<<#= info.SParam #>> source<#= info.Params #>,
+			CancellationToken   token,
+			TaskCreationOptions options)
+		{
+			var query = source as ExpressionQuery<<#= info.RetType #>>;
+
+			if (query != null)
+				return query.GetElementAsync(<#= info.Lambda #>, token, options);
+
+			return GetTask(<#= info.Lambda #>, token, options);
+		}
+
+		#endregion
+
+<#
+	}
+#>
+	}
+}

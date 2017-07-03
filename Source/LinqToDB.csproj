@@ -72,6 +72,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="AsyncExtensions.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AsyncExtensions.tt</DependentUpon>
+    </Compile>
     <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Configuration\IConnectionStringSettings.cs" />
     <Compile Include="Configuration\IDataProviderSettings.cs" />
@@ -507,6 +512,15 @@
     <None Include="Compile.bat" />
     <None Include="linq2db.snk" />
     <None Include="LinqToDB.project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AsyncExtensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

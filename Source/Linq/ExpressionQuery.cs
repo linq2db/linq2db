@@ -86,10 +86,17 @@ namespace LinqToDB.Linq
 		}
 
 #if !SL4
+
+		public Task<T> GetElementAsync(Func<T> func, CancellationToken cancellationToken, TaskCreationOptions options)
+		{
+			return GetQuery(Expression, true).GetElementAsync(null, DataContext, Expression, Parameters, func, cancellationToken, options);
+		}
+
 		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken, TaskCreationOptions options)
 		{
 			return GetQuery(Expression, true).GetForEachAsync(this, null, DataContext, Expression, Parameters, action, cancellationToken, options);
 		}
+
 #endif
 
 		#endregion
