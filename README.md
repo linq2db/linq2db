@@ -14,7 +14,7 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 
 # How to help the project
 
-No, this is not the donate link. We do need sonmething really more valluable - your **time**. If you really want to help us please read this [post](https://github.com/linq2db/linq2db/wiki/How-can-i-help).
+No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://github.com/linq2db/linq2db/wiki/How-can-i-help).
 
 # Project Build Status
 --------------------

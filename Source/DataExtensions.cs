@@ -240,20 +240,20 @@ namespace LinqToDB
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
 			string         tableName       = null,
 			string         databaseName    = null,
-			string         ownerName       = null,
+			string         schemaName      = null,
 			string         statementHeader = null,
 			string         statementFooter = null,
 			DefaulNullable defaulNullable  = DefaulNullable.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return Query<T>.CreateTable(dataContext,
-				tableName, databaseName, ownerName, statementHeader, statementFooter, defaulNullable);
+				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable);
 		}
 
 		public static void DropTable<T>([NotNull] this IDataContext dataContext,
 			string tableName    = null,
 			string databaseName = null,
-			string schemaName    = null)
+			string schemaName   = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			Query<T>.DropTable(dataContext, tableName, databaseName, schemaName);

@@ -420,6 +420,7 @@ namespace Tests.Linq
 					db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
 			}
 		}
+
 		/*
 		[Test, DataContextSource]
 		public void LeftJoinTest3(string context)
@@ -434,6 +435,28 @@ namespace Tests.Linq
 			}
 		}
 		*/
+
+		[Test, DataContextSource]
+		public void AssociationTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Parent.SelectMany(p => p.Children.SelectMany(c => c.GrandChildren)),
+					db.Parent.SelectMany(p => p.GrandChildren2));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void AssociationTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Parent.SelectMany(p => p.Children.Where(c => c.ChildID == 22).SelectMany(c => c.GrandChildren)),
+					db.Parent.SelectMany(p => p.GrandChildrenByID(22)));
+			}
+		}
 	}
 
 	static class ExpressionTestExtensions
