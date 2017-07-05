@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using JetBrains.Annotations;
 
 #pragma warning disable 472 // The result of the expression is always the same since a value of this type is never equal to 'null'
 
@@ -315,6 +318,13 @@ namespace Tests.Linq
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
 			public Middle Middle { get; set; }
+
+			[Association(ExpressionPredicate = "MiddleGenericPredicate" , CanBeNull = true)]
+			public Middle MiddleGeneric { get; set; }
+
+			[UsedImplicitly]
+			static Expression<Func<Top, Middle, bool>> MiddleGenericPredicate =>
+				(t, m) => t.ParentID == m.ParentID && m.ChildID > 1;
 		}
 
 		[Table(Name="Child")]
@@ -569,6 +579,62 @@ namespace Tests.Linq
 				var value = db.GetTable<StorageTestClass>().LoadWith(x => x.Parent).First();
 
 				Assert.That(value.Parent, Is.Not.Null);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
+		public void TestGenericAssociation1(string context)
+		{
+			var ids = new[] { 1, 5 };
+
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from t in db.GetTable<Top>()
+					where ids.Contains(t.ParentID)
+					orderby t.ParentID
+					select t.MiddleGeneric == null ? null : t.MiddleGeneric.Bottom;
+
+				var list = q.ToList();
+
+				Assert.NotNull(list[0]);
+				Assert.Null   (list[1]);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void TestGenericAssociation2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Parent
+					from g in t.GrandChildren.Where(m => m.ChildID > 22)
+					orderby g.ParentID
+					select t
+					,
+					from t in db.Parent
+					from g in t.GrandChildrenX
+					orderby g.ParentID
+					select t);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.SqlCe)]
+		public void TestGenericAssociation3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Parent
+					where t.GrandChildren.Count(m => m.ChildID > 22) > 1
+					orderby t.ParentID
+					select t
+					,
+					from t in db.Parent
+					where t.GrandChildrenX.Count > 1
+					orderby t.ParentID
+					select t);
 			}
 		}
 	}
