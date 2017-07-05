@@ -2372,7 +2372,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Search Condition Builder
 
-		void BuildSearchCondition(IBuildContext context, Expression expression, List<SelectQuery.Condition> conditions)
+		internal void BuildSearchCondition(IBuildContext context, Expression expression, List<SelectQuery.Condition> conditions)
 		{
 			switch (expression.NodeType)
 			{

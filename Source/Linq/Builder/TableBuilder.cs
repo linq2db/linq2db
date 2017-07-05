@@ -867,7 +867,7 @@ namespace LinqToDB.Linq.Builder
 					Expression expr  = null;
 					var        param = Expression.Parameter(typeof(T), "c");
 
-					foreach (var cond in (association).ParentAssociationJoin.Condition.Conditions)
+					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
 					{
 						SelectQuery.Predicate.ExprExpr p;
 
@@ -905,6 +905,14 @@ namespace LinqToDB.Linq.Builder
 
 						var ex = ExpressionBuilder.Equal(association.Builder.MappingSchema, e1, e2);
 							
+						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
+					}
+
+					if (association.ExpressionPredicate != null)
+					{
+						var l  = association.ExpressionPredicate;
+						var ex = l.Body.Transform(e => e == l.Parameters[0] ? parent : e == l.Parameters[1] ? param : e);
+
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
 
@@ -1156,7 +1164,7 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
+								if (InheritanceMapping != null && InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
 									foreach (var mapping in InheritanceMapping)
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
@@ -1288,6 +1296,8 @@ namespace LinqToDB.Linq.Builder
 			public readonly SelectQuery.JoinedTable  ParentAssociationJoin;
 			public readonly AssociationDescriptor    Association;
 			public readonly bool                     IsList;
+			public          int                      RegularConditionCount;
+			public          LambdaExpression         ExpressionPredicate;
 
 			public override IBuildContext Parent
 			{
@@ -1341,6 +1351,17 @@ namespace LinqToDB.Linq.Builder
 					predicate = builder.Convert(parent, predicate);
 
 					join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
+				}
+
+				RegularConditionCount = join.JoinedTable.Condition.Conditions.Count;
+				ExpressionPredicate   = Association.GetPredicate();
+
+				if (ExpressionPredicate != null)
+				{
+					Builder.BuildSearchCondition(
+						new ExpressionContext(null, new IBuildContext[] { parent, this }, ExpressionPredicate), 
+						ExpressionPredicate.Body,
+						join.JoinedTable.Condition.Conditions);
 				}
 
 				Init();
