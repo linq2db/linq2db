@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 #if !NOIMMUTABLE
@@ -79,6 +80,32 @@ namespace Tests.Model
 
 		static Expression<Func<Parent,GrandChild, bool>> GrandChildrenPredicate =>
 			(t, m) => m.ChildID > 22;
+
+		[ExpressionMethod("GrandChildren2Impl")]
+		public IEnumerable<GrandChild> GrandChildren2 { get; set; }
+
+		static Expression<Func<Parent,ITestDataContext,IEnumerable<GrandChild>>> GrandChildren2Impl()
+		{
+			return (p,db) =>
+//				from gc in db.GrandChild
+//				where p.ParentID == gc.ParentID
+//				select gc;
+				p.Children.SelectMany(c => c.GrandChildren);
+		}
+
+		[ExpressionMethod("GrandChildrenByIDImpl")]
+		public IEnumerable<GrandChild> GrandChildrenByID(int id)
+		{
+			throw new NotImplementedException();
+		}
+
+		static Expression<Func<Parent,int,ITestDataContext,IEnumerable<GrandChild>>> GrandChildrenByIDImpl()
+		{
+			return (p,id,db) =>
+				from gc in db.GrandChild
+				where p.ParentID == gc.ParentID && gc.ChildID == id
+				select gc;
+		}
 	}
 
 	public class Child
@@ -279,9 +306,9 @@ namespace Tests.Model
 		}
 	}
 
-#endregion
+	#endregion
 
-#region Parent1/GrandChild1
+	#region Parent1/GrandChild1
 
 	[Table("Parent")]
 	public class Parent1 : IEquatable<Parent1>, IComparable
@@ -360,9 +387,9 @@ namespace Tests.Model
 		}
 	}
 
-#endregion
+	#endregion
 
-#region Inheritance
+	#region Inheritance
 
 	[Table(Name="Parent", IsColumnAttributeRequired=false)]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceNull))]
@@ -447,9 +474,9 @@ namespace Tests.Model
 		}
 	}
 
-#endregion
+	#endregion
 
-#region Inheritance2
+	#region Inheritance2
 
 	[Table(Name="Parent")]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase2))]
@@ -469,9 +496,9 @@ namespace Tests.Model
 		public int Value1;
 	}
 
-#endregion
+	#endregion
 
-#region Inheritance3
+	#region Inheritance3
 
 	[Table(Name="Parent")]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase3))]
@@ -492,9 +519,9 @@ namespace Tests.Model
 		public int Value;
 	}
 
-#endregion
+	#endregion
 
-#region Inheritance4
+	#region Inheritance4
 
 	public enum Parent4Type
 	{
@@ -525,7 +552,7 @@ namespace Tests.Model
 		public override Parent4Type Value1 { get { return Parent4Type.Value2; } }
 	}
 
-#endregion
+	#endregion
 
 	public class Functions
 	{

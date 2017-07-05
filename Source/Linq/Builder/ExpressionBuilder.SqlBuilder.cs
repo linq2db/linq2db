@@ -500,19 +500,34 @@ namespace LinqToDB.Linq.Builder
 		static Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
 		{
 			var ef    = lambda.Body.Unwrap();
-			var parms = new Dictionary<string,int>(lambda.Parameters.Count);
+			var parms = new Dictionary<ParameterExpression,int>(lambda.Parameters.Count);
 			var pn    = pi.Method.IsStatic ? 0 : -1;
 
 			foreach (var p in lambda.Parameters)
-				parms.Add(p.Name, pn++);
+				parms.Add(p, pn++);
 
 			var pie = ef.Transform(wpi =>
 			{
 				if (wpi.NodeType == ExpressionType.Parameter)
 				{
 					int n;
-					if (parms.TryGetValue(((ParameterExpression)wpi).Name, out n))
+
+					if (parms.TryGetValue((ParameterExpression)wpi, out n))
+					{
+						if (n >= pi.Arguments.Count)
+						{
+							if (DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							{
+								if (DataContextParam.Type != wpi.Type)
+									return Expression.Convert(DataContextParam, wpi.Type);
+								return DataContextParam;
+							}
+
+							throw new LinqToDBException("Can't convert {0} to expression.".Args(wpi));
+						}
+
 						return n < 0 ? pi.Object : pi.Arguments[n];
+					}
 				}
 
 				return wpi;
