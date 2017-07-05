@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
 using JetBrains.Annotations;
 
 #pragma warning disable 472 // The result of the expression is always the same since a value of this type is never equal to 'null'
@@ -321,7 +323,7 @@ namespace Tests.Linq
 			public Middle MiddleGeneric { get; set; }
 
 			[UsedImplicitly]
-			static Expression<Func<Top, Middle, bool>> MiddleGenericPredicate => 
+			static Expression<Func<Top, Middle, bool>> MiddleGenericPredicate =>
 				(t, m) => t.ParentID == m.ParentID && m.ChildID > 1;
 		}
 
@@ -581,7 +583,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
-		public void TestGenericAssociation(string context)
+		public void TestGenericAssociation1(string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -600,5 +602,40 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource]
+		public void TestGenericAssociation2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Parent
+					from g in t.GrandChildren.Where(m => m.ChildID > 22)
+					orderby g.ParentID
+					select t
+					,
+					from t in db.Parent
+					from g in t.GrandChildrenX
+					orderby g.ParentID
+					select t);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.SqlCe)]
+		public void TestGenericAssociation3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Parent
+					where t.GrandChildren.Count(m => m.ChildID > 22) > 1
+					orderby t.ParentID
+					select t
+					,
+					from t in db.Parent
+					where t.GrandChildrenX.Count > 1
+					orderby t.ParentID
+					select t);
+			}
+		}
 	}
 }

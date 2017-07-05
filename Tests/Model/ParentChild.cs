@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 #if !NOIMMUTABLE
 using System.Collections.Immutable;
@@ -72,6 +73,12 @@ namespace Tests.Model
 
 		[Association(ThisKey = "ParentID", OtherKey = "ID")]
 		public LinqDataTypes Types;
+
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID", ExpressionPredicate = "GrandChildrenPredicate" , CanBeNull = true)]
+		public List<GrandChild> GrandChildrenX { get; set; }
+
+		static Expression<Func<Parent,GrandChild, bool>> GrandChildrenPredicate =>
+			(t, m) => m.ChildID > 22;
 	}
 
 	public class Child

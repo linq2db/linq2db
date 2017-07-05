@@ -67,7 +67,7 @@ namespace LinqToDB.Mapping
 			if (members.Length == 0)
 				throw new LinqToDBException(string.Format("Static member '{0}' for type '{1}' not found", ExpressionPredicate, type.Name));
 			if (members.Length > 1)
-				throw new LinqToDBException(string.Format("Ambigous members '{0}' for type '{1}' has been found", ExpressionPredicate, type.Name));
+				throw new LinqToDBException(string.Format("Ambiguous members '{0}' for type '{1}' has been found", ExpressionPredicate, type.Name));
 
 			Expression predicate = null;
 			var propInfo = members[0] as PropertyInfo;
