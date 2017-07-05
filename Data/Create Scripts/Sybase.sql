@@ -1,24 +1,12 @@
-﻿USE master
-GO
-
-DROP DATABASE TestData
-GO
-
-CREATE DATABASE TestData
-GO
-
-USE TestData
-GO
-
-IF OBJECT_ID('dbo.Doctor') IS NOT NULL
+﻿IF OBJECT_ID('dbo.Doctor') IS NOT NULL
 BEGIN DROP TABLE Doctor END
 GO
 
-IF OBJECT_ID('dbo.InheritanceParent') IS NOT NULL
+IF OBJECT_ID('dbo.Patient') IS NOT NULL
 BEGIN DROP TABLE Patient END
 GO
 
-IF OBJECT_ID('dbo.Patient') IS NOT NULL
+IF OBJECT_ID('dbo.InheritanceParent') IS NOT NULL
 BEGIN DROP TABLE InheritanceParent END
 GO
 
@@ -178,6 +166,7 @@ CREATE TABLE AllTypes
 	timeDataType             time              NULL,
 
 	charDataType             char(1)           NULL,
+	char20DataType           char(20)          NULL,
 	varcharDataType          varchar(20)       NULL,
 	textDataType             text              NULL,
 	ncharDataType            nchar(20)         NULL,

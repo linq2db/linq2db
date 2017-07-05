@@ -5,7 +5,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-
+using System.Threading;
+using System.Threading.Tasks;
 #if !NETSTANDARD
 
 using System.ServiceModel;
@@ -16,6 +17,7 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
@@ -36,6 +38,29 @@ namespace Tests
 {
 	using Model;
 	using System.Text.RegularExpressions;
+
+	class Retry : IRetryPolicy
+	{
+		public TResult Execute<TResult>(Func<TResult> operation)
+		{
+			return operation();
+		}
+
+		public void Execute(Action operation)
+		{
+			operation();
+		}
+
+		public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			return operation(cancellationToken);
+		}
+
+		public Task ExecuteAsync(Func<CancellationToken,Task> operation, CancellationToken cancellationToken = new CancellationToken())
+		{
+			return operation(cancellationToken);
+		}
+	}
 
 	public class TestBase
 	{
@@ -67,6 +92,8 @@ namespace Tests
 					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
 #endif
 			};
+
+			//Configuration.RetryPolicy.Factory = db => new Retry();
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
@@ -276,6 +303,9 @@ namespace Tests
 				_providerNames      = providers;
 			}
 
+			public ParallelScope ParallelScope { get; set; } = ParallelScope.Children;
+			public int           Order         { get; set; }
+
 			readonly bool     _includeLinqService;
 			readonly string[] _providerNames;
 
@@ -286,6 +316,18 @@ namespace Tests
 					name += ".LinqService";
 
 				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
+			}
+
+			int GetOrder(IMethodInfo method)
+			{
+				if (Order == 0)
+				{
+					if (method.Name.StartsWith("Tests._Create")) return 100;
+					if (method.Name.StartsWith("Tests.xUpdate")) return 2000;
+					return 1000;
+				}
+
+				return Order;
 			}
 
 			protected virtual IEnumerable<object[]> GetParameters(string provider)
@@ -309,7 +351,6 @@ namespace Tests
 				{
 					var isIgnore = !UserProviders.ContainsKey(provider);
 
-
 					foreach (var parameters in GetParameters(provider))
 					{
 						var data = new TestCaseParameters(parameters);
@@ -319,7 +360,10 @@ namespace Tests
 						foreach (var attr in explic)
 							attr.ApplyToTest(test);
 
-						test.Properties.Set(PropertyNames.Category, provider);
+						test.Properties.Set(PropertyNames.Order,         GetOrder(method));
+						//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
+						test.Properties.Set(PropertyNames.Category,      provider);
+
 						SetName(test, method, provider, false);
 
 						if (isIgnore)
@@ -335,8 +379,8 @@ namespace Tests
 						yield return test;
 
 					}
-#if !NETSTANDARD && !MONO
 
+#if !NETSTANDARD && !MONO
 					if (!isIgnore && _includeLinqService)
 					{
 						foreach (var paremeters in GetParameters(provider + ".LinqService"))
@@ -348,7 +392,10 @@ namespace Tests
 							foreach (var attr in explic)
 								attr.ApplyToTest(test);
 
-							test.Properties.Set(PropertyNames.Category, provider);
+							test.Properties.Set(PropertyNames.Order,         GetOrder(method));
+							//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
+							test.Properties.Set(PropertyNames.Category,      provider);
+
 							SetName(test, method, provider, true);
 
 							yield return test;
@@ -1033,8 +1080,13 @@ namespace Tests
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
-			var resultList   = result.  ToList();
-			var expectedList = expected.ToList();
+			AreEqual(t => t, expected, result);
+		}
+
+		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result)
+		{
+			var resultList   = result.  Select(fixSelector).ToList();
+			var expectedList = expected.Select(fixSelector).ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Lenght: ");
@@ -1172,8 +1224,16 @@ namespace Tests
 
 		public LocalTable(IDataContext db)
 		{
-			_db = db;
-			_db.CreateTable<T>();
+			try
+			{
+				_db = db;
+				_db.CreateTable<T>();
+			}
+			catch
+			{
+				_db.DropTable<T>();
+				throw;
+			}
 		}
 
 		public void Dispose()

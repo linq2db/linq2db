@@ -22,12 +22,6 @@ namespace LinqToDB.Data
 			return new Table<T>(this);
 		}
 
-		public ITable<T> GetTable<T>(bool dispose)
-			where T : class
-		{
-			return new Table<T>(new DataContextInfo(this, dispose));
-		}
-
 		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object[] parameters)
 			where T : class
 		{
@@ -342,6 +336,8 @@ namespace LinqToDB.Data
 
 		SqlProviderFlags IDataContext.SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
 		Type             IDataContext.DataReaderType   { get { return DataProvider.DataReaderType;   } }
+
+		bool             IDataContext.CloseAfterUse    { get; set; }
 
 		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{

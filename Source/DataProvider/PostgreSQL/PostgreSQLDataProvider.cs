@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
 
-			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 		}
@@ -87,10 +87,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlCircleType      = npgSql.GetType("NpgsqlTypes.NpgsqlCircle",      true);
 			NpgsqlPolygonType     = npgSql.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
 
-			if (npgSql.GetName().Version >= new Version(3, 1, 9))
-			{
-				_commandBehavior = CommandBehavior.KeyInfo;
-			}
+			// https://github.com/linq2db/linq2db/pull/718
+			//if (npgSql.GetName().Version >= new Version(3, 1, 9))
+			//{
+			//	_commandBehavior = CommandBehavior.KeyInfo;
+			//}
 
 			if (BitStringType        != null) SetProviderField(BitStringType,        BitStringType,        "GetBitString");
 			if (NpgsqlIntervalType   != null) SetProviderField(NpgsqlIntervalType,   NpgsqlIntervalType,   "GetInterval");

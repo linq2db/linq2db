@@ -16,20 +16,16 @@ namespace LinqToDB.Linq
 	{
 		#region Init
 
-		protected void Init(IDataContextInfo dataContextInfo, Expression expression)
+		protected void Init([NotNull] IDataContext dataContext, Expression expression)
 		{
-#if SILVERLIGHT || NETFX_CORE && !NETSTANDARD
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
 
-			DataContextInfo = dataContextInfo;
-#else
-			DataContextInfo = dataContextInfo ?? new DefaultDataContextInfo();
-#endif
-			Expression      = expression      ?? Expression.Constant(this);
+			DataContext = dataContext;
+			Expression  = expression ?? Expression.Constant(this);
 		}
 
-		[NotNull] public Expression       Expression      { get; set; }
-		[NotNull] public IDataContextInfo DataContextInfo { get; set; }
+		[NotNull] public Expression   Expression  { get; set; }
+		[NotNull] public IDataContext DataContext { get; set; }
 
 		internal  Query<T> Info;
 		internal  object[] Parameters;
@@ -50,12 +46,12 @@ namespace LinqToDB.Linq
 		{
 			get
 			{
-				var hasQueryHints = DataContextInfo.DataContext.QueryHints.Count > 0 || DataContextInfo.DataContext.NextQueryHints.Count > 0;
+				var hasQueryHints = DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0;
 
 				if (_sqlTextHolder == null || hasQueryHints)
 				{
 					var info    = GetQuery(Expression, true);
-					var sqlText = info.GetSqlText(DataContextInfo.DataContext, Expression, Parameters, 0);
+					var sqlText = info.GetSqlText(DataContext, Expression, Parameters, 0);
 
 					if (hasQueryHints)
 						return sqlText;
@@ -71,17 +67,12 @@ namespace LinqToDB.Linq
 
 		#region Execute
 
-		IEnumerable<T> Execute(IDataContextInfo dataContextInfo, Expression expression)
-		{
-			return GetQuery(expression, true).GetIEnumerable(null, dataContextInfo, expression, Parameters);
-		}
-
 		Query<T> GetQuery(Expression expression, bool cache)
 		{
 			if (cache && Info != null)
 				return Info;
 
-			var info = Query<T>.GetQuery(DataContextInfo, expression);
+			var info = Query<T>.GetQuery(DataContext, expression);
 
 			if (cache)
 				Info = info;
@@ -117,7 +108,7 @@ namespace LinqToDB.Linq
 			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			return new ExpressionQueryImpl<TElement>(DataContextInfo, expression);
+			return new ExpressionQueryImpl<TElement>(DataContext, expression);
 		}
 
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
@@ -129,7 +120,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryImpl<>).MakeGenericType(elementType), new object[] { DataContextInfo, expression });
+				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryImpl<>).MakeGenericType(elementType), new object[] { DataContext, expression });
 			}
 			catch (TargetInvocationException ex)
 			{
@@ -139,12 +130,12 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			return (TResult)GetQuery(expression, false).GetElement(null, DataContextInfo, expression, Parameters);
+			return (TResult)GetQuery(expression, false).GetElement(null, DataContext, expression, Parameters);
 		}
 
 		object IQueryProvider.Execute(Expression expression)
 		{
-			return GetQuery(expression, false).GetElement(null, DataContextInfo, expression, Parameters);
+			return GetQuery(expression, false).GetElement(null, DataContext, expression, Parameters);
 		}
 
 		#endregion
@@ -153,12 +144,12 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			return Execute(DataContextInfo, Expression).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(null, DataContext, Expression, Parameters).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return Execute(DataContextInfo, Expression).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(null, DataContext, Expression, Parameters).GetEnumerator();
 		}
 
 		#endregion

@@ -5,8 +5,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB;
-	using LinqToDB.Common;
 	using LinqToDB.Linq;
 	using LinqToDB.SqlQuery;
 
@@ -15,11 +13,10 @@ namespace Tests.Linq
 	[TestFixture]
 	public class JoinOptimizeTests : TestBase
 	{
-
 		SelectQuery GetSelectQuery<T>(IQueryable<T> query)
 		{
 			var eq = (IExpressionQuery)query;
-			var info = Query<T>.GetQuery(eq.DataContextInfo, eq.Expression);
+			var info = Query<T>.GetQuery(eq.DataContext, eq.Expression);
 			return info.Queries.Single().SelectQuery;
 		}
 
@@ -472,5 +469,50 @@ namespace Tests.Linq
 			}
 		}
 
+
+		[Test, NorthwindDataContext]
+		public void SelftJoinFail(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q1 = from od in db.Order
+					join od2 in db.Order on od.EmployeeID equals od2.OrderID
+					select od;
+
+				Assert.AreEqual(1, GeTableSource(q1).Joins.Count);
+
+				var q2 = from od in db.Order
+					join od2 in db.Order on od.OrderID equals od2.EmployeeID
+					select od;
+
+				Assert.AreEqual(1, GeTableSource(q2).Joins.Count);
+
+				var q3 = from od in db.Order
+					join od2 in db.Order on new {ID1 = od.OrderID, ID2 = od.EmployeeID.Value} equals new {ID1 = od2.EmployeeID.Value, ID2 = od2.OrderID}
+					select od;
+
+				Assert.AreEqual(1, GeTableSource(q3).Joins.Count);
+
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void SelftJoinOptimized(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q1 = from od in db.Order
+					join od2 in db.Order on od.OrderID equals od2.OrderID
+					select od;
+
+				Assert.AreEqual(0, GeTableSource(q1).Joins.Count);
+
+				var q2 = from od in db.Order
+					join od2 in db.Order on new {od.OrderID, od.EmployeeID} equals new {od2.OrderID, od2.EmployeeID}
+					select od;
+
+				Assert.AreEqual(0, GeTableSource(q2).Joins.Count);
+			}
+		}
 	}
 }

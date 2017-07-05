@@ -319,7 +319,7 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeUnions()
 		{
-			var isAllUnion = new QueryVisitor().Find(_selectQuery,
+			var isAllUnion = QueryVisitor.Find(_selectQuery,
 				ne =>
 				{
 					var nu = ne as SelectQuery.Union;
@@ -328,7 +328,7 @@ namespace LinqToDB.SqlQuery
 
 					return false;
 				});
-			var isNotAllUnion = new QueryVisitor().Find(_selectQuery,
+			var isNotAllUnion = QueryVisitor.Find(_selectQuery,
 				ne =>
 				{
 					var nu = ne as SelectQuery.Union;
@@ -808,7 +808,7 @@ namespace LinqToDB.SqlQuery
 			var visitor = new QueryVisitor();
 
 			if (optimizeColumns &&
-				visitor.Find(expr, e => e is SelectQuery || IsAggregationFunction(e)) == null)
+				QueryVisitor.Find(expr, e => e is SelectQuery || IsAggregationFunction(e)) == null)
 			{
 				var n = 0;
 				var q = query.ParentSelect ?? query;
@@ -989,7 +989,7 @@ namespace LinqToDB.SqlQuery
 
 		static bool ContainsTable(ISqlTableSource table, IQueryElement sql)
 		{
-			return null != new QueryVisitor().Find(sql, e =>
+			return null != QueryVisitor.Find(sql, e =>
 				e == table ||
 				e.ElementType == QueryElementType.SqlField && table == ((SqlField)e).Table ||
 				e.ElementType == QueryElementType.Column   && table == ((SelectQuery.Column)  e).Parent);

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -52,26 +50,6 @@ namespace Tests.UserTests
 			{
 				var dc = new DataContext(context);
 				AreEqual(Person.Where(_ => _.ID == 1), dc.GetTable<Person>().Where(_ => _.ID == 1));
-			}
-		}
-
-		[Test, IssueContextSourceAttribute(false)]
-		public void ConnectionClosed4(string context)
-		{
-			for   (var i = 0; i < 1000; i++)
-			using (var db = (DataConnection)GetDataContext(context))
-			{
-				AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>(true).Where(_ => _.ID == 1));
-			}
-		}
-
-		[Test, IssueContextSourceAttribute(false)]
-		public void ConnectionClosed5(string context)
-		{
-			for (var i = 0; i < 1000; i++)
-			{
-				var db = (DataConnection)GetDataContext(context);
-				AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>(true).Where(_ => _.ID == 1));
 			}
 		}
 

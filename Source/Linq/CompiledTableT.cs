@@ -28,8 +28,6 @@ namespace LinqToDB.Linq
 
 		Query<T> GetInfo(IDataContext dataContext)
 		{
-			var dataContextInfo = DataContextInfo.Create(dataContext);
-
 			string        lastContextID;
 			MappingSchema lastMappingSchema;
 			Query<T>      query;
@@ -41,8 +39,8 @@ namespace LinqToDB.Linq
 				query             = _lastQuery;
 			}
 
-			var contextID     = dataContextInfo.ContextID;
-			var mappingSchema = dataContextInfo.MappingSchema;
+			var contextID     = dataContext.ContextID;
+			var mappingSchema = dataContext.MappingSchema;
 
 			if (lastContextID != contextID || lastMappingSchema != mappingSchema)
 				query = null;
@@ -62,9 +60,9 @@ namespace LinqToDB.Linq
 
 						if (query == null)
 						{
-							query = new Query<T>(dataContextInfo, _expression);
+							query = new Query<T>(dataContext, _expression);
 
-							query = new ExpressionBuilder(query, dataContextInfo, _expression, _lambda.Parameters.ToArray())
+							query = new ExpressionBuilder(query, dataContext, _expression, _lambda.Parameters.ToArray())
 								.Build<T>();
 
 							_infos.Add(key, query);
@@ -89,10 +87,9 @@ namespace LinqToDB.Linq
 		public T Execute(object[] parameters)
 		{
 			var db    = (IDataContext)parameters[0];
-			var ctx   = DataContextInfo.Create(db);
 			var query = GetInfo(db);
 
-			return (T)query.GetElement(null, ctx, _expression, parameters);
+			return (T)query.GetElement(null, db, _expression, parameters);
 		}
 	}
 }

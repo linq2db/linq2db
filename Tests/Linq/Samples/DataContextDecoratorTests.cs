@@ -48,21 +48,8 @@ namespace Tests.Samples
 				}
 			}
 
-			public Type DataReaderType
-			{
-				get
-				{
-					return _context.DataReaderType;
-				}
-			}
-
-			public Func<ISqlOptimizer> GetSqlOptimizer
-			{
-				get
-				{
-					return _context.GetSqlOptimizer;
-				}
-			}
+			public Type                DataReaderType  { get { return _context.DataReaderType; } }
+			public Func<ISqlOptimizer> GetSqlOptimizer { get { return _context.GetSqlOptimizer; } }
 
 			public bool InlineParameters
 			{
@@ -77,21 +64,9 @@ namespace Tests.Samples
 				}
 			}
 
-			public MappingSchema MappingSchema
-			{
-				get
-				{
-					return _mappingSchema;
-				}
-			}
-
-			public List<string> NextQueryHints
-			{
-				get
-				{
-					return _context.NextQueryHints;
-				}
-			}
+			public MappingSchema MappingSchema { get { return _mappingSchema; } }
+			public List<string> NextQueryHints { get { return _context.NextQueryHints; } }
+			public bool         CloseAfterUse  { get; set; }
 
 			public List<string> QueryHints
 			{

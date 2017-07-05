@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Informix
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
-				.Append("char(")
+				.Append("chr(")
 				.Append(value)
 				.Append(")")
 				;

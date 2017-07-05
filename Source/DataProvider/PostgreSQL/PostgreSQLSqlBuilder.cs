@@ -53,18 +53,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override string LimitFormat  { get { return "LIMIT {0}";   } }
 		protected override string OffsetFormat { get { return "OFFSET {0} "; } }
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
 				case DataType.SByte         :
-				case DataType.Byte          : StringBuilder.Append("SmallInt");      break;
-				case DataType.Money         : StringBuilder.Append("Decimal(19,4)"); break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)"); break;
+				case DataType.Byte          : StringBuilder.Append("SmallInt");       break;
+				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");  break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");  break;
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
-				case DataType.DateTime      : StringBuilder.Append("TimeStamp");     break;
-				case DataType.Boolean       : StringBuilder.Append("Boolean");       break;
+				case DataType.DateTime      : StringBuilder.Append("TimeStamp");      break;
+				case DataType.Boolean       : StringBuilder.Append("Boolean");        break;
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 					if (type.Length > 0)
@@ -74,9 +74,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (type.Type == typeof(string))
 						goto case DataType.NVarChar;
 					break;
-				case DataType.Json           : StringBuilder.Append("json");          break;
-				case DataType.BinaryJson     : StringBuilder.Append("jsonb");         break;
-				default                      : base.BuildDataType(type); break;
+				case DataType.Json           : StringBuilder.Append("json");           break;
+				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
+				default                      : base.BuildDataType(type, createDbType); break;
 			}
 		}
 

@@ -228,7 +228,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
@@ -245,7 +245,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
@@ -267,7 +267,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
@@ -322,7 +322,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
@@ -340,7 +340,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
@@ -358,7 +358,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
@@ -376,7 +376,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");

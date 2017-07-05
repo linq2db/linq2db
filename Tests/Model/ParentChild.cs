@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 #if !NOIMMUTABLE
 using System.Collections.Immutable;
@@ -72,6 +74,32 @@ namespace Tests.Model
 
 		[Association(ThisKey = "ParentID", OtherKey = "ID")]
 		public LinqDataTypes Types;
+
+		[ExpressionMethod("GrandChildren2Impl")]
+		public IEnumerable<GrandChild> GrandChildren2 { get; set; }
+
+		static Expression<Func<Parent,ITestDataContext,IEnumerable<GrandChild>>> GrandChildren2Impl()
+		{
+			return (p,db) =>
+//				from gc in db.GrandChild
+//				where p.ParentID == gc.ParentID
+//				select gc;
+				p.Children.SelectMany(c => c.GrandChildren);
+		}
+
+		[ExpressionMethod("GrandChildrenByIDImpl")]
+		public IEnumerable<GrandChild> GrandChildrenByID(int id)
+		{
+			throw new NotImplementedException();
+		}
+
+		static Expression<Func<Parent,int,ITestDataContext,IEnumerable<GrandChild>>> GrandChildrenByIDImpl()
+		{
+			return (p,id,db) =>
+				from gc in db.GrandChild
+				where p.ParentID == gc.ParentID && gc.ChildID == id
+				select gc;
+		}
 	}
 
 	public class Child
