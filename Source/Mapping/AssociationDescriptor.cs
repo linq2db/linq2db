@@ -16,7 +16,7 @@ namespace LinqToDB.Mapping
 			[JNotNull] MemberInfo memberInfo,
 			[JNotNull] string[]   thisKey,
 			[JNotNull] string[]   otherKey,
-					   string     expressionPredicate,
+			           string     expressionPredicate,
 			           string     storage,
 			           bool       canBeNull)
 		{
