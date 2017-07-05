@@ -7,6 +7,7 @@ using JNotNull = JetBrains.Annotations.NotNullAttribute;
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Extensions;
 
 	public class AssociationDescriptor
 	{
@@ -60,20 +61,25 @@ namespace LinqToDB.Mapping
 				return null;
 
 			var type = MemberInfo.DeclaringType;
+
 			if (type == null)
 				throw new ArgumentException(string.Format("Member '{0}' has no declaring type", MemberInfo.Name));
 
-			var members = type.GetMember(ExpressionPredicate, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+			var members = type.GetStaticMembersEx(ExpressionPredicate);
+
 			if (members.Length == 0)
 				throw new LinqToDBException(string.Format("Static member '{0}' for type '{1}' not found", ExpressionPredicate, type.Name));
+
 			if (members.Length > 1)
 				throw new LinqToDBException(string.Format("Ambiguous members '{0}' for type '{1}' has been found", ExpressionPredicate, type.Name));
 
 			Expression predicate = null;
+
 			var propInfo = members[0] as PropertyInfo;
+
 			if (propInfo != null)
 			{
-				var value = propInfo.GetValue(null);
+				var value = propInfo.GetValue(null, null);
 				if (value == null)
 					return null;
 
