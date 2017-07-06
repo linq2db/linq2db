@@ -13,7 +13,7 @@ namespace T4Model.LinqToDB
 				var int1 = (int?)1;
 				var str2 = "2";
 
-				dc.Scalar_OutputParameter(ref int1, ref str2);
+				dc.ScalarOutputParameter(ref int1, ref str2);
 			}
 		}
 	}

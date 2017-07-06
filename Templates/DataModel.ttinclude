@@ -347,18 +347,41 @@ void LoadMetadata(DataConnection dataConnection)
 			if (col.MemberName == t.TypeName)
 				col.MemberName += "_Column";
 		}
+
+	    var duplicates = t.Columns.Values.ToLookup(c => c.MemberName).Where(g => g.Count() > 1);
+	    foreach (var d in duplicates)
+	    {
+			var alreadyNamed = new HashSet<string>();
+	        foreach (var col in d)
+	        {
+	            col.MemberName = col.ColumnName;
+	            if (keyWords.Contains(col.MemberName))
+	                col.MemberName = "@" + col.MemberName;
+
+	            col.MemberName = ConvertToCompilable(col.MemberName, false);
+
+	            if (col.MemberName == t.TypeName)
+	                col.MemberName += "_Column";
+
+	            while (alreadyNamed.Contains(col.MemberName))
+	            {
+	                col.MemberName += "_";
+	            }
+	            alreadyNamed.Add(col.MemberName);
+	        }
+	    }
 	}
 
 	AfterLoadMetadata();
 }
 
-string ConvertToCompilable(string name)
+string ConvertToCompilable(string name, bool mayRemoveUnderscore = true)
 {
 	var query =
 		from c in name
 		select char.IsLetterOrDigit(c) || c == '@' ? c : '_';
 
-	return ToValidName(new string(query.ToArray()));
+	return ToValidName(new string(query.ToArray()), mayRemoveUnderscore);
 }
 
 Table GetTable(string name)
@@ -638,9 +661,9 @@ public class Parameter
 }
 
 int _counter = 0;
-string ToValidName(string name)
+string ToValidName(string name, bool mayRemoveUnderscore = true)
 {
-	if (NormalizeNames && name.Contains("_"))
+	if (NormalizeNames && mayRemoveUnderscore && name.Contains("_"))
 	{
 		name = SplitAndJoin(name, "", '_');
 	}	
