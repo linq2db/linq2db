@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.SqlCe</id>
-		<version>1.8.2</version>
+		<version>1.8.3</version>
 		<title>LINQ to SqlCe</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -18,7 +18,7 @@
 		</summary>
 		<tags>linq linq2db SqlCe SqlServerCe SqlServer Compact LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db.t4models" version="1.8.2"/>
+			<dependency id="linq2db.t4models" version="1.8.3"/>
 		</dependencies>
 	</metadata>
 	<files>
