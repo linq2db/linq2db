@@ -166,6 +166,9 @@ namespace LinqToDB.DataProvider.Firebird
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
+        /// <summary>
+        /// Specifies how identifiers like table and field names should be quoted.
+        /// </summary>
 		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None;
 
 		public override object Convert(object value, ConvertType convertType)
