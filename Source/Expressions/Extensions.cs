@@ -48,12 +48,11 @@ namespace LinqToDB.Expressions
 		#region GetCount
 
 		/// <summary>
-		/// Returns the total number of expression items which are matching the given
+		/// Returns the total number of expression items which are matching the given.
 		/// <paramref name="func"/>.
 		/// </summary>
-		/// <param name="expr">Expression-Tree which gets counted</param>
+		/// <param name="expr">Expression-Tree which gets counted.</param>
 		/// <param name="func">Predicate which is used to test if the given expression should be counted.</param>
-		/// <returns></returns>
 		public static int GetCount(this Expression expr, Func<Expression,bool> func)
 		{
 			var n = 0;
@@ -87,8 +86,6 @@ namespace LinqToDB.Expressions
 		/// <summary>
 		/// Calls the given <paramref name="func"/> for each child node of the <paramref name="expr"/>.
 		/// </summary>
-		/// <param name="expr"></param>
-		/// <param name="func"></param>
 		public static void Visit(this Expression expr, Action<Expression> func)
 		{
 			if (expr == null)
@@ -373,8 +370,6 @@ namespace LinqToDB.Expressions
 		/// Calls the given <paramref name="func"/> for each node of the <paramref name="expr"/>.
 		/// If the <paramref name="func"/> returns false, no childs of the tested expression will be enumerated.
 		/// </summary>
-		/// <param name="expr"></param>
-		/// <param name="func"></param>
 		public static void Visit(this Expression expr, Func<Expression,bool> func)
 		{
 			if (expr == null || !func(expr))
@@ -677,9 +672,6 @@ namespace LinqToDB.Expressions
 		/// Enumerates the expression tree and returns the <paramref name="exprToFind"/> if it's
 		/// contained within the <paramref name="expr"/>.
 		/// </summary>
-		/// <param name="expr"></param>
-		/// <param name="exprToFind"></param>
-		/// <returns></returns>
 		public static Expression Find(this Expression expr, Expression exprToFind)
 		{
 			return expr.Find(e => e == exprToFind);
@@ -689,9 +681,6 @@ namespace LinqToDB.Expressions
 		/// Enumerates the given <paramref name="expr"/> and returns the first sub-expression
 		/// which matches the given <paramref name="func"/>. If no expression was found, null is returned.
 		/// </summary>
-		/// <param name="expr"></param>
-		/// <param name="func"></param>
-		/// <returns></returns>
 		public static Expression Find(this Expression expr, Func<Expression,bool> func)
 		{
 			if (expr == null || func(expr))
@@ -951,9 +940,6 @@ namespace LinqToDB.Expressions
 		/// Returns the body of <paramref name="lambda"/> but replaces the first parameter of that
 		/// lambda expression with the <paramref name="exprToReplaceParameter"/> expression.
 		/// </summary>
-		/// <param name="lambda"></param>
-		/// <param name="exprToReplaceParameter"></param>
-		/// <returns></returns>
 		public static Expression GetBody(this LambdaExpression lambda, Expression exprToReplaceParameter)
 		{
 			return Transform(lambda.Body, e => e == lambda.Parameters[0] ? exprToReplaceParameter : e);
@@ -963,10 +949,6 @@ namespace LinqToDB.Expressions
 		/// Returns the body of <paramref name="lambda"/> but replaces the first two parameters of
 		/// that lambda expression with the given replace expressions.
 		/// </summary>
-		/// <param name="lambda"></param>
-		/// <param name="exprToReplaceParameter1"></param>
-		/// <param name="exprToReplaceParameter2"></param>
-		/// <returns></returns>
 		public static Expression GetBody(this LambdaExpression lambda, Expression exprToReplaceParameter1, Expression exprToReplaceParameter2)
 		{
 			return Transform(lambda.Body, e =>
@@ -1010,8 +992,6 @@ namespace LinqToDB.Expressions
 		/// Enumerates the expression tree of <paramref name="expr"/> and might
 		/// replace expression with the returned value of the given <paramref name="func"/>.
 		/// </summary>
-		/// <param name="expr"></param>
-		/// <param name="func"></param>
 		/// <returns>The modified expression.</returns>
 		public static Expression Transform(this Expression expr, Func<Expression,Expression> func)
 		{

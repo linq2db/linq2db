@@ -169,6 +169,9 @@ namespace LinqToDB.DataProvider.Firebird
 		/// <summary>
 		/// Specifies how identifiers like table and field names should be quoted.
 		/// </summary>
+		/// <remarks>
+		/// By default identifiers will not be quoted.
+		/// </remarks>
 		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None;
 
 		public override object Convert(object value, ConvertType convertType)
