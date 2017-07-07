@@ -2,22 +2,22 @@
 
 namespace LinqToDB.DataProvider.Firebird
 {
-    /// <summary>
-    /// Possible modes for Firebird identifier quotes
-    /// </summary>
+	/// <summary>
+	/// Possible modes for Firebird identifier quotes
+	/// </summary>
 	public enum FirebirdIdentifierQuoteMode
 	{
-        /// <summary>
-        /// Do not quote identifiers
-        /// </summary>
+		/// <summary>
+		/// Do not quote identifiers
+		/// </summary>
 		None,
-        /// <summary>
-        /// Always quote identifiers
-        /// </summary>
+		/// <summary>
+		/// Always quote identifiers
+		/// </summary>
 		Quote,
-        /// <summary>
-        /// quote identifiers if needed.
-        /// </summary>
+		/// <summary>
+		/// quote identifiers if needed.
+		/// </summary>
 		Auto
 	}
 }
