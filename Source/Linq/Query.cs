@@ -189,22 +189,22 @@ namespace LinqToDB.Linq
 
 		static Query<T> FindQuery(IDataContext dataContext, Expression expr)
 		{
-			Query<T> prev = null;
+            //Query<T> prev = null;
 			var      n    = 0;
 
 			for (var query = _first; query != null; query = query.Next)
 			{
 				if (query.Compare(dataContext.ContextID, dataContext.MappingSchema, expr))
 				{
-					if (prev != null)
-					{
-						lock (_sync)
-						{
-							prev.Next  = query.Next;
-							query.Next = _first;
-							_first     = query;
-						}
-					}
+                    //if (prev != null)
+                    //{
+                    //    lock (_sync)
+                    //    {
+                    //        prev.Next  = query.Next;
+                    //        query.Next = _first;
+                    //        _first     = query;
+                    //    }
+                    //}
 
 					return query;
 				}
@@ -215,7 +215,7 @@ namespace LinqToDB.Linq
 					return null;
 				}
 
-				prev = query;
+                //prev = query;
 			}
 
 			return null;
