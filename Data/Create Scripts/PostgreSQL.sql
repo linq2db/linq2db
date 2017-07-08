@@ -458,7 +458,7 @@ CREATE TABLE "TestMerge1"
 	"Field5"	INTEGER	NULL,
 
 	"FieldInt64"      BIGINT                   NULL,
-	"FieldBoolean"    BIT                      NULL,
+	"FieldBoolean"    BOOLEAN                  NULL,
 	"FieldString"     VARCHAR(20)              NULL,
 	"FieldNString"    VARCHAR(20)              NULL,
 	"FieldChar"       CHAR(1)                  NULL,
@@ -487,7 +487,7 @@ CREATE TABLE "TestMerge2"
 	"Field5"	INTEGER	NULL,
 
 	"FieldInt64"      BIGINT                   NULL,
-	"FieldBoolean"    BIT                      NULL,
+	"FieldBoolean"    BOOLEAN                  NULL,
 	"FieldString"     VARCHAR(20)              NULL,
 	"FieldNString"    VARCHAR(20)              NULL,
 	"FieldChar"       CHAR(1)                  NULL,

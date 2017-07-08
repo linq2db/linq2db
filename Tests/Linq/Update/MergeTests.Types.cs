@@ -26,6 +26,7 @@ namespace Tests.Merge
 			[Column("Field1")]
 			public int? FieldInt32;
 
+			[Column(IsColumn = false, Configuration = ProviderName.Access)]
 			[Column("FieldInt64")]
 			public long? FieldInt64;
 
@@ -55,12 +56,15 @@ namespace Tests.Merge
 			[Column("FieldDateTime")]
 			public DateTime? FieldDateTime;
 
+			[Column(IsColumn = false, Configuration = ProviderName.DB2)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)]
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = TestProvName.Firebird3)]
+			[Column(IsColumn = false, Configuration = ProviderName.Access)]
+			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
 			[Column("FieldDateTime2")]
 			public DateTimeOffset? FieldDateTime2;
 
@@ -76,11 +80,20 @@ namespace Tests.Merge
 
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
+			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
+			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
+			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
+			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column("FieldDate")]
 			public DateTime? FieldDate;
 
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
+			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
+			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
+			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
+			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
+			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column("FieldTime")]
 			public TimeSpan? FieldTime;
 
@@ -96,8 +109,13 @@ namespace Tests.Merge
 			[MapValue("FIRST")]
 			Value1,
 			[MapValue("\b", Configuration = ProviderName.Informix)]
+			[MapValue("\b", Configuration = ProviderName.PostgreSQL)]
+			[MapValue("\b", Configuration = ProviderName.SqlCe)]
 			[MapValue("\0")]
 			Value2,
+			[MapValue("_", Configuration = ProviderName.Oracle)]
+			[MapValue("_", Configuration = ProviderName.OracleManaged)]
+			[MapValue("_", Configuration = ProviderName.OracleNative)]
 			[MapValue("")]
 			Value3,
 			[MapValue(null)]
@@ -161,7 +179,7 @@ namespace Tests.Merge
 				FieldNString    = "всЁ нормально",
 				FieldChar       = '*',
 				FieldNChar      = 'ё',
-				FieldFloat      = float.MinValue,
+				FieldFloat      = -3.40282002E+38f, //float.MinValue,
 				FieldDouble     = double.MinValue,
 				FieldDateTime   = new DateTime(2000, 11, 12, 21, 14, 15, 167),
 				FieldDateTime2  = new DateTimeOffset(2000, 11, 22, 13, 14, 15, 1, TimeSpan.FromMinutes(15)).AddTicks(1234567),
@@ -179,11 +197,11 @@ namespace Tests.Merge
 				FieldInt32      = int.MaxValue,
 				FieldInt64      = long.MaxValue,
 				FieldBoolean    = false,
-				FieldString     = "test\r\n\v\b\t\0",
-				FieldNString    = "ЙЦУКЩывапр\0м\r\nq",
-				FieldChar       = '\0',
-				FieldNChar      = '\0',
-				FieldFloat      = float.MaxValue,
+				FieldString     = "test\r\n\v\b\t\f",
+				FieldNString    = "ЙЦУКЩывапрм\r\nq",
+				FieldChar       = '&',
+				FieldNChar      = '>',
+				FieldFloat      = 3.40282002E+38f, //float.MaxValue,
 				FieldDouble     = double.MaxValue,
 				FieldDateTime   = new DateTime(2001, 10, 12, 21, 14, 15, 167),
 				FieldDateTime2  = new DateTimeOffset(2001, 11, 22, 13, 14, 15, 0, TimeSpan.FromMinutes(-15)).AddTicks(1234567),
@@ -205,8 +223,8 @@ namespace Tests.Merge
 				FieldNString    = "<>?/.,;'щЩ\":",
 				FieldChar       = '\r',
 				FieldNChar      = '\n',
-				FieldFloat      = float.Epsilon,
-				FieldDouble     = -double.Epsilon,
+				FieldFloat      = 1.1755e-38f, //float.Epsilon,
+				FieldDouble     = -2.2250738585072014e-308d, //-double.Epsilon,
 				FieldDateTime   = new DateTime(2098, 10, 12, 21, 14, 15, 997),
 				FieldDateTime2  = new DateTimeOffset(2001, 11, 22, 13, 14, 15, 999, TimeSpan.FromMinutes(99)).AddTicks(1234567),
 				FieldBinary     = new byte[] { 255, 200, 100, 50, 20, 0 },
@@ -231,8 +249,8 @@ namespace Tests.Merge
 				FieldNString    = "`~!@#$%^&*()_+{}|[]\\",
 				FieldChar       = '\f',
 				FieldNChar      = '\v',
-				FieldFloat      = -float.Epsilon,
-				FieldDouble     = double.Epsilon,
+				FieldFloat      = -1.1755e-38f, //-float.Epsilon,
+				FieldDouble     = 2.2250738585072014e-308d, //double.Epsilon,
 				FieldDateTime   = new DateTime(2098, 10, 12, 21, 14, 15, 907),
 				FieldDateTime2  = new DateTimeOffset(2001, 11, 22, 13, 14, 15, 111, TimeSpan.FromMinutes(-99)).AddTicks(-9876543),
 				FieldBinary     = new byte[] { 255, 200, 100, 50, 20, 0 },
@@ -249,11 +267,11 @@ namespace Tests.Merge
 				FieldInt32      = int.MaxValue,
 				FieldInt64      = long.MaxValue,
 				FieldBoolean    = false,
-				FieldString     = "test\r\n\v\b\t\0",
-				FieldNString    = "ЙЦУКЩывапр\0м\r\nq",
-				FieldChar       = '\0',
-				FieldNChar      = '\0',
-				FieldFloat      = float.MaxValue,
+				FieldString     = "test\r\n\v\b\t",
+				FieldNString    = "ЙЦУКЩывапрм\r\nq",
+				FieldChar       = '1',
+				FieldNChar      = ' ',
+				FieldFloat      = 3.40282002E+38f, //float.MaxValue,
 				FieldDouble     = double.MaxValue,
 				FieldDateTime   = new DateTime(2001, 10, 12, 21, 14, 15, 167),
 				FieldDateTime2  = new DateTimeOffset(2001, 11, 22, 13, 14, 15, 321, TimeSpan.FromMinutes(-15)),
@@ -275,8 +293,8 @@ namespace Tests.Merge
 				FieldNString    = "`~!@#$%^&*()_+{}|[]\\",
 				FieldChar       = ' ',
 				FieldNChar      = ' ',
-				FieldFloat      = -float.Epsilon,
-				FieldDouble     = double.Epsilon,
+				FieldFloat      = -1.1755e-38f, //-float.Epsilon,
+				FieldDouble     = 2.2250738585072014e-308d, //double.Epsilon,
 				FieldDateTime   = new DateTime(2098, 10, 12, 21, 14, 15, 913),
 				FieldDateTime2  = new DateTimeOffset(2001, 11, 22, 13, 14, 15, 0, TimeSpan.FromMinutes(-99)),
 				FieldBinary     = new byte[] { 255, 200, 100, 50, 20, 0 },
@@ -293,11 +311,11 @@ namespace Tests.Merge
 				FieldInt32      = int.MaxValue,
 				FieldInt64      = long.MaxValue,
 				FieldBoolean    = false,
-				FieldString     = "test\r\n\v\b\t\0 \r ",
-				FieldNString    = "ЙЦУКЩывапр\0м\r\nq \r ",
-				FieldChar       = '\0',
-				FieldNChar      = '\0',
-				FieldFloat      = float.MaxValue,
+				FieldString     = "test\r\n\v\b\t \r ",
+				FieldNString    = "ЙЦУКЩывапрм\r\nq \r ",
+				FieldChar       = '-',
+				FieldNChar      = '~',
+				FieldFloat      = 3.40282002E+38f, //float.MaxValue,
 				FieldDouble     = double.MaxValue,
 				FieldDateTime   = new DateTime(2001, 10, 12, 21, 14, 15, 167),
 				FieldDateTime2  = new DateTimeOffset(2001, 11, 22, 13, 14, 15, 999, TimeSpan.FromMinutes(-15)),
@@ -314,7 +332,6 @@ namespace Tests.Merge
 		[DataContextSource(false)]
 		public void TestMergeTypes(string context)
 		{
-			System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 			using (var db = new TestDataConnection(context))
 			{
 				PrepareTypesData(db);
@@ -341,27 +358,30 @@ namespace Tests.Merge
 		{
 			Assert.AreEqual(expected.Id, actual.Id);
 			Assert.AreEqual(expected.FieldInt32, actual.FieldInt32);
-			Assert.AreEqual(expected.FieldInt64, actual.FieldInt64);
-			Assert.AreEqual(expected.FieldBoolean, actual.FieldBoolean);
+
+			if (context != ProviderName.Access)
+				Assert.AreEqual(expected.FieldInt64, actual.FieldInt64);
+
+			if (context != ProviderName.Access)
+				Assert.AreEqual(expected.FieldBoolean, actual.FieldBoolean);
+			else
+				Assert.AreEqual(expected.FieldBoolean ?? false, actual.FieldBoolean);
 
 			AssertString(expected.FieldString, actual.FieldString, context);
 
 			if (context != ProviderName.Informix)
 				Assert.AreEqual(expected.FieldNString, actual.FieldNString);
 
-			//Assert.AreEqual(expected.FieldChar, actual.FieldChar);
-			//Assert.AreEqual(expected.FieldNChar, actual.FieldNChar);
+			AssertChar(expected.FieldChar, actual.FieldChar, context);
+
+			AssertNChar(expected.FieldChar, actual.FieldChar, context);
+
 			Assert.AreEqual(expected.FieldFloat, actual.FieldFloat);
 			Assert.AreEqual(expected.FieldDouble, actual.FieldDouble);
-			Assert.AreEqual(expected.FieldDateTime, actual.FieldDateTime);
 
-			if (context != ProviderName.SqlServer2000
-				&& context != ProviderName.SqlServer2005
-				&& context != ProviderName.SqlCe
-				&& context != ProviderName.Informix
-				&& context != ProviderName.Firebird
-				&& context != TestProvName.Firebird3)
-				Assert.AreEqual(expected.FieldDateTime2, actual.FieldDateTime2);
+			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, context);
+
+			AssertDateTimeOffset(expected.FieldDateTime2, actual.FieldDateTime2, context);
 
 			Assert.AreEqual(expected.FieldBinary, actual.FieldBinary);
 
@@ -371,7 +391,11 @@ namespace Tests.Merge
 			Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
 			if (context != ProviderName.SqlServer2000
-				&& context != ProviderName.SqlServer2005)
+				&& context != ProviderName.SqlServer2005
+				&& context != ProviderName.SqlCe
+				&& context != ProviderName.Oracle
+				&& context != ProviderName.OracleManaged
+				&& context != ProviderName.OracleNative)
 				Assert.AreEqual(expected.FieldDate, actual.FieldDate);
 
 			AssertTime(expected.FieldTime, actual.FieldTime, context);
@@ -385,6 +409,94 @@ namespace Tests.Merge
 				Assert.IsNull(actual.FieldEnumNumber);
 			else
 				Assert.AreEqual(expected.FieldEnumNumber, actual.FieldEnumNumber);
+		}
+
+		private static void AssertDateTimeOffset(DateTimeOffset? expected, DateTimeOffset? actual, string context)
+		{
+			if (expected != null)
+			{
+				if (context == ProviderName.Oracle
+					|| context == ProviderName.OracleManaged
+					|| context == ProviderName.OracleNative)
+				{
+					var trimmable = expected.Value.Ticks % 10;
+					if (trimmable >= 5)
+						trimmable -= 10;
+
+					expected = expected.Value.AddTicks(-trimmable);
+				}
+
+				if (context == ProviderName.PostgreSQL)
+					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
+			}
+
+			if (   context != ProviderName.SqlServer2000
+				&& context != ProviderName.SqlServer2005
+				&& context != ProviderName.SqlCe
+				&& context != ProviderName.Informix
+				&& context != ProviderName.Firebird
+				&& context != TestProvName.Firebird3
+				&& context != ProviderName.MySql
+				&& context != TestProvName.MySql57
+				&& context != TestProvName.MariaDB
+				&& context != ProviderName.Access
+				&& context != ProviderName.DB2)
+				Assert.AreEqual(expected, actual);
+		}
+
+		private static void AssertChar(char? expected, char? actual, string context)
+		{
+			if (expected != null)
+			{
+				// why??
+				if (expected == ' '
+					&& (   context == ProviderName.MySql
+						|| context == TestProvName.MariaDB
+						|| context == TestProvName.MySql57
+						|| context == ProviderName.DB2
+						|| context == ProviderName.PostgreSQL
+						|| context == ProviderName.SqlCe))
+					expected = '\0';
+			}
+
+			Assert.AreEqual(expected, actual);
+		}
+
+		private static void AssertNChar(char? expected, char? actual, string context)
+		{
+			if (expected != null)
+			{
+				// why??
+				if (expected == ' '
+					&& (context == ProviderName.MySql
+						|| context == TestProvName.MariaDB
+						|| context == TestProvName.MySql57
+						|| context == ProviderName.DB2
+						|| context == ProviderName.PostgreSQL
+						|| context == ProviderName.SqlCe))
+					expected = '\0';
+			}
+
+			Assert.AreEqual(expected, actual);
+		}
+
+		private static void AssertDateTime(DateTime? expected, DateTime? actual, string context)
+		{
+			if (expected != null)
+			{
+				if (context == TestProvName.MySql57 && expected.Value.Millisecond > 500)
+					expected = expected.Value.AddSeconds(1);
+
+				if (   context == ProviderName.MySql
+					|| context == TestProvName.MariaDB
+					|| context == TestProvName.MySql57
+					|| context == ProviderName.Oracle
+					|| context == ProviderName.OracleManaged
+					|| context == ProviderName.OracleNative)
+					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
+			}
+
+			Assert.AreEqual(expected, actual);
 		}
 
 		private static void AssertString(string expected, string actual, string context)
@@ -405,7 +517,15 @@ namespace Tests.Merge
 		private static void AssertTime(TimeSpan? expected, TimeSpan? actual, string context)
 		{
 			if (   context == ProviderName.SqlServer2000
-				|| context == ProviderName.SqlServer2005)
+				|| context == ProviderName.SqlServer2005
+				|| context == ProviderName.Oracle
+				|| context == ProviderName.OracleManaged
+				|| context == ProviderName.OracleNative
+				|| context == ProviderName.SqlCe
+				|| context == ProviderName.MySql
+				// MySql57 and MariaDB work, but column is disabled...
+				|| context == TestProvName.MySql57
+				|| context == TestProvName.MariaDB)
 				return;
 
 			if (expected != null)
@@ -418,6 +538,13 @@ namespace Tests.Merge
 						break;
 					case ProviderName.Informix:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
+						break;
+					case ProviderName.PostgreSQL:
+						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
+						break;
+					case ProviderName.DB2:
+					case ProviderName.Access:
+						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
 						break;
 				}
 			}

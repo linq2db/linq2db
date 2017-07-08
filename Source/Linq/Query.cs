@@ -1231,7 +1231,7 @@ namespace LinqToDB.Linq
 
 					try
 					{
-					result = mapper(queryContext, dataContext, dr, expr, ps);
+						result = mapper(queryContext, dataContext, dr, expr, ps);
 					}
 					catch (FormatException)
 					{
@@ -1241,7 +1241,7 @@ namespace LinqToDB.Linq
 						isFaulted = true;
 
 						mapInfo.Mapper = mapInfo.Expression.Compile();
-					result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
+						result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
 					}
 					catch (InvalidCastException)
 					{
@@ -1251,7 +1251,7 @@ namespace LinqToDB.Linq
 						isFaulted = true;
 
 						mapInfo.Mapper = mapInfo.Expression.Compile();
-					result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
+						result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
 					}
 
 					yield return result;

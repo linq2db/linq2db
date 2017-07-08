@@ -485,9 +485,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is DateTimeOffset)
 					{
 						var dto  = (DateTimeOffset)value;
-						var zone = dto.Offset.ToString("hh\\:mm");
-						if (!zone.StartsWith("-") && !zone.StartsWith("+"))
-							zone = "+" + zone;
+						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm");
 						value = _createOracleTimeStampTZ(dto, zone);
 					}
 					break;
