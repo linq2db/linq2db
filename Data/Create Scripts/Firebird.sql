@@ -299,6 +299,7 @@ CREATE TABLE AllTypes
 	timestampDataType        timestamp,
 
 	charDataType             char(1),
+	char20DataType           char(20),
 	varcharDataType          varchar(20),
 	textDataType             blob sub_type TEXT,
 	ncharDataType            char(20) character set UNICODE_FSS,
@@ -337,6 +338,7 @@ VALUES
 	NULL,
 	NULL,
 	NULL,
+	NULL,
 
 	NULL
 )
@@ -356,6 +358,7 @@ VALUES
 
 	Cast('2012-12-12 12:12:12' as timestamp),
 
+	'1',
 	'1',
 	'234',
 	'567',

@@ -147,6 +147,7 @@ CREATE TABLE AllTypes
 	boolDataType     boolean                 NULL,
 
 	charDataType     char(1)                 NULL,
+	char20DataType   char(20)                NULL,
 	varcharDataType  varchar(10)             NULL,
 	ncharDataType    nchar(10)               NULL,
 	nvarcharDataType nvarchar(10)            NULL,

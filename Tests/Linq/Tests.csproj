@@ -259,6 +259,7 @@
     <Compile Include="DataProvider\PostgreSQLTests.cs" />
     <Compile Include="DataProvider\SqlServerTypesTests.cs" />
     <Compile Include="Data\MiniProfilerTests.cs" />
+    <Compile Include="Data\RetryPolicyTest.cs" />
     <Compile Include="Data\TransactionTests.cs" />
     <Compile Include="Data\ProcedureTests.cs" />
     <Compile Include="Linq\AnalyticTests.cs" />
@@ -266,6 +267,7 @@
     <Compile Include="Linq\InterfaceTests.cs" />
     <Compile Include="Linq\JoinOptimizeTests.cs" />
     <Compile Include="Linq\SqlExtensionTests.cs" />
+    <Compile Include="Linq\CharTypesTests.cs" />
     <Compile Include="Samples\DataContextDecoratorTests.cs" />
     <Compile Include="OrmBattle\Helper\ExpressionUtils.cs" />
     <Compile Include="OrmBattle\Helper\GenericEqualityComparer.cs" />
@@ -398,6 +400,7 @@
     <Compile Include="UserTests\Issue358Tests.cs" />
     <Compile Include="UserTests\Issue356Tests.cs" />
     <Compile Include="UserTests\Issue082Tests.cs" />
+    <Compile Include="UserTests\Issue737Tests.cs" />
     <Compile Include="UserTests\Issue395Tests.cs" />
     <Compile Include="UserTests\Issue273Tests.cs" />
     <Compile Include="UserTests\Issue447Tests.cs" />
@@ -418,6 +421,7 @@
     <Compile Include="UserTests\Issue548Tests.cs" />
     <Compile Include="UserTests\Issue569Tests.cs" />
     <Compile Include="UserTests\Issue667Tests.cs" />
+    <Compile Include="UserTests\Issue708Tests.cs" />
     <Compile Include="UserTests\LetTests.cs" />
     <Compile Include="UserTests\MultiPartIdentifierTests.cs" />
     <Compile Include="UserTests\SelectManyDeleteTests.cs" />

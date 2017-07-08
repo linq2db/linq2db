@@ -392,6 +392,9 @@ namespace LinqToDB.Expressions
 			if (expr1.Arguments.Count != expr2.Arguments.Count || expr1.Method != expr2.Method)
 				return false;
 
+			if (!expr1.Object.EqualsTo(expr2.Object, info))
+				return false;
+
 			if (info.QueryableAccessorDic.Count > 0)
 			{
 				QueryableAccessor qa;
@@ -399,9 +402,6 @@ namespace LinqToDB.Expressions
 				if (info.QueryableAccessorDic.TryGetValue(expr1, out qa))
 					return qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
 			}
-
-			if (!expr1.Object.EqualsTo(expr2.Object, info))
-				return false;
 
 			for (var i = 0; i < expr1.Arguments.Count; i++)
 				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
@@ -693,6 +693,16 @@ namespace LinqToDB.Expressions
 					}
 
 				case ExpressionType.Parameter: path = ConvertTo(path, typeof(ParameterExpression)); break;
+
+				case ExpressionType.Extension:
+					{
+						if (expr.CanReduce)
+						{
+							expr = expr.Reduce();
+							Path(expr, visited, path, func);
+						}
+						break;
+					}
 			}
 
 			func(expr, path);

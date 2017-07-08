@@ -545,7 +545,7 @@ namespace LinqToDB.Linq.Builder
 									if (table.IsList)
 									{
 										var ttype  = typeof(Table<>).MakeGenericType(table.ObjectType);
-										var tbl    = Activator.CreateInstance(ttype);
+										var tbl    = Activator.CreateInstance(ttype, context.Builder.DataContext);
 										var method = e == expression ?
 											MemberHelper.MethodOf<IEnumerable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition().MakeGenericMethod(table.ObjectType) :
 											_whereMethodInfo.MakeGenericMethod(e.Type, table.ObjectType, ttype);

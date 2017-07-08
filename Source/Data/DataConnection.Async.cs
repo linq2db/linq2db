@@ -2,12 +2,12 @@
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
 #if !NOASYNC
+	using System.Threading;
+	using System.Threading.Tasks;
 
 	public partial class DataConnection
 	{
@@ -18,7 +18,7 @@ namespace LinqToDB.Data
 
 			if (_connection.State == ConnectionState.Closed)
 			{
-				await ((DbConnection)_connection).OpenAsync(cancellationToken);
+				await ((DbConnection) _connection).OpenAsync(cancellationToken);
 				_closeConnection = true;
 			}
 
@@ -76,7 +76,9 @@ namespace LinqToDB.Data
 			}
 		}
 
-		internal async Task<DbDataReader> ExecuteReaderAsync(CommandBehavior commandBehavior, CancellationToken cancellationToken)
+		internal async Task<DbDataReader> ExecuteReaderAsync(
+			CommandBehavior commandBehavior,
+			CancellationToken cancellationToken)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return await ((DbCommand)Command).ExecuteReaderAsync(commandBehavior, cancellationToken);
@@ -95,7 +97,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = await ((DbCommand)Command).ExecuteReaderAsync(cancellationToken);
+				var ret = await ((DbCommand)Command).ExecuteReaderAsync(commandBehavior, cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
 				{

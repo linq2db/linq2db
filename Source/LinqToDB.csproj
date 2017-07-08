@@ -76,6 +76,7 @@
     <Compile Include="Configuration\IConnectionStringSettings.cs" />
     <Compile Include="Configuration\IDataProviderSettings.cs" />
     <Compile Include="Configuration\ILinqToDBSettings.cs" />
+    <Compile Include="Configuration\IProxy.cs" />
     <Compile Include="Configuration\NamedValue.cs" />
     <Compile Include="DataProvider\BasicMergeBuilder.cs" />
     <Compile Include="DataProvider\DB2\DB2MergeBuilder.cs" />
@@ -91,6 +92,18 @@
     <Compile Include="DataProvider\Sybase\SybaseMergeBuilder.cs" />
     <Compile Include="Data\Merge.cs" />
     <Compile Include="Data\MergeDefinition.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerRetryPolicy.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerTransientErrorDetector.cs" />
+    <Compile Include="Data\RetryPolicy\DefaultRetryPolicyFactory.cs" />
+    <Compile Include="Data\RetryPolicy\IRetryPolicy.cs" />
+    <Compile Include="Data\RetryPolicy\RetryingDbCommand.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Data\RetryPolicy\RetryingDbConnection.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Data\RetryPolicy\RetryLimitExceededException.cs" />
+    <Compile Include="Data\RetryPolicy\RetryPolicyBase.cs" />
     <Compile Include="Data\TraceInfoStep.cs" />
     <Compile Include="KeepConnectionAliveScope.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
@@ -387,13 +400,11 @@
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="Linq\CompiledTableT.cs" />
     <Compile Include="DataContext.cs" />
-    <Compile Include="Linq\DataContextInfo.cs" />
     <Compile Include="DataContextTransaction.cs" />
     <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\Expressions.cs" />
     <Compile Include="DataExtensions.cs" />
     <Compile Include="IDataContext.cs" />
-    <Compile Include="Linq\IDataContextInfo.cs" />
     <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
     <Compile Include="Linq\ISelectInsertable.cs" />

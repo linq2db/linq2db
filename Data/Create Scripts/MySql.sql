@@ -202,6 +202,7 @@ CREATE TABLE AllTypes
 	year4DataType       year(4)                      NULL,
 
 	charDataType        char(1)                      NULL,
+	char20DataType      char(20)                     NULL,
 	varcharDataType     varchar(20)                  NULL,
 	textDataType        text                         NULL,
 

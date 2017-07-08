@@ -228,7 +228,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
@@ -245,7 +245,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
@@ -267,7 +267,7 @@ namespace LinqToDB.Data
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
@@ -393,16 +393,16 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException("table");
 
-			var tbl = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate),
-				tableName ?? tbl.TableName,
+				tableName    ?? tbl.TableName,
 				databaseName ?? tbl.DatabaseName,
-				schemaName ?? tbl.SchemaName);
+				schemaName   ?? tbl.SchemaName);
 		}
 
 		/// <summary>
@@ -426,16 +426,16 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException("table");
 
-			var tbl = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source,
-				tableName ?? tbl.TableName,
+				tableName    ?? tbl.TableName,
 				databaseName ?? tbl.DatabaseName,
-				schemaName ?? tbl.SchemaName);
+				schemaName   ?? tbl.SchemaName);
 		}
 
 		/// <summary>
@@ -459,16 +459,16 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException("table");
 
-			var tbl = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source,
-				tableName ?? tbl.TableName,
+				tableName    ?? tbl.TableName,
 				databaseName ?? tbl.DatabaseName,
-				schemaName ?? tbl.SchemaName);
+				schemaName   ?? tbl.SchemaName);
 		}
 
 		/// <summary>
@@ -489,16 +489,16 @@ namespace LinqToDB.Data
 		{
 			if (table == null) throw new ArgumentNullException("table");
 
-			var tbl = (Table<T>)table;
-			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
 
 			if (dataConnection == null)
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.Merge(dataConnection, null, false, source,
-				tableName ?? tbl.TableName,
+				tableName    ?? tbl.TableName,
 				databaseName ?? tbl.DatabaseName,
-				schemaName ?? tbl.SchemaName);
+				schemaName   ?? tbl.SchemaName);
 		}
 
 		#endregion

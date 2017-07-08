@@ -5,7 +5,7 @@ namespace LinqToDB.Linq
 {
 	class ExpressionQueryImpl<T> : ExpressionQuery<T>
 	{
-		public ExpressionQueryImpl(IDataContextInfo dataContext, Expression expression)
+		public ExpressionQueryImpl(IDataContext dataContext, Expression expression)
 		{
 			Init(dataContext, expression);
 		}

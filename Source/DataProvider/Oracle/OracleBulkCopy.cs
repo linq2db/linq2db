@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Configuration;
 	using Data;
 	using SqlProvider;
 	using Extensions;
@@ -61,7 +63,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 					if (options.UseInternalTransaction == true) bcOptions |= 1; // UseInternalTransaction = 1,
 
-					using (var bc = _bulkCopyCreator(dataConnection.Connection, bcOptions))
+					using (var bc = _bulkCopyCreator(Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection), bcOptions))
 					{
 						dynamic dbc = bc;
 

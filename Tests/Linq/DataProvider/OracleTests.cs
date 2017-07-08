@@ -1806,7 +1806,7 @@ namespace Tests.DataProvider
 		}
 
 
-		[Test, OracleDataContext()]
+		[Test, OracleDataContext]
 		public void Issue539(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1836,6 +1836,113 @@ namespace Tests.DataProvider
 				{
 					db.GetTable<ALLTYPE2>().Delete(_ => _.ID == n);
 				}
+			}
+		}
+
+		public class Issue723Table
+		{
+			[PrimaryKey, Identity, NotNull]
+			public int Id;
+
+			public string StringValue;
+		}
+
+		[Test, OracleDataContext]
+		public void Issue723Test1(string context)
+		{
+			var ms = new MappingSchema();
+			using (var db = new TestDataConnection(context))
+			{
+				db.AddMappingSchema(ms);
+				
+				var currentUser = db.Execute<string>("SELECT user FROM dual");
+				db.Execute("GRANT CREATE ANY TRIGGER TO " + currentUser);
+				db.Execute("GRANT CREATE ANY SEQUENCE TO " + currentUser);
+				db.Execute("GRANT DROP ANY TRIGGER TO " + currentUser);
+				db.Execute("GRANT DROP ANY SEQUENCE TO " + currentUser);
+				db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
+
+				try
+				{
+
+					var tableSpace = db.Execute<string>("SELECT default_tablespace FROM sys.dba_users WHERE username = 'ISSUE723SCHEMA'");
+					db.Execute("ALTER USER Issue723Schema quota unlimited on {0}".Args(tableSpace));
+
+					db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
+					Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
+
+					try
+					{
+
+						db.MappingSchema.GetFluentMappingBuilder()
+							.Entity<Issue723Table>()
+							.HasSchemaName("Issue723Schema");
+
+						for (var i = 1; i < 3; i++)
+						{
+							var id = Convert.ToInt32(db.InsertWithIdentity(new Issue723Table() { StringValue = i.ToString() }));
+							Assert.AreEqual(i, id);
+						}
+						Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
+					}
+					finally
+					{
+						db.DropTable<Issue723Table>(schemaName: "Issue723Schema");
+					}
+				}
+				finally
+				{
+					db.Execute("DROP USER Issue723Schema CASCADE");
+				}
+			}
+		}
+
+		[Test, OracleDataContext]
+		public void Issue723Test2(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new LocalTable<Issue723Table>(db))
+			{
+				Assert.True(true);
+			}
+		}
+
+		public class Issue731Table
+		{
+			public int    Id;
+			public Guid   Guid;
+			[Column(DataType = DataType.Binary)]
+			public Guid   BinaryGuid;
+			public byte[] BlobValue;
+			[Column(Length = 5)]
+			public byte[] RawValue;
+
+		}
+
+		[Test, OracleDataContext]
+		public void Issue731Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new LocalTable<Issue731Table>(db))
+			{
+				var origin = new Issue731Table()
+				{
+					Id         = 1,
+					Guid       = Guid.NewGuid(),
+					BinaryGuid = Guid.NewGuid(),
+					BlobValue  = new byte[] { 1, 2, 3 },
+					RawValue   = new byte[] { 4, 5, 6 }
+				};
+
+				db.Insert(origin);
+
+				var result = db.GetTable<Issue731Table>().First(_ => _.Id == 1);
+
+				Assert.AreEqual(origin.Id,         result.Id);
+				Assert.AreEqual(origin.Guid,       result.Guid);
+				Assert.AreEqual(origin.BinaryGuid, result.BinaryGuid);
+				Assert.AreEqual(origin.BlobValue,  result.BlobValue);
+				Assert.AreEqual(origin.RawValue,   result.RawValue);
 			}
 		}
 	}

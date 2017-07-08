@@ -500,19 +500,34 @@ namespace LinqToDB.Linq.Builder
 		static Expression ConvertMethod(MethodCallExpression pi, LambdaExpression lambda)
 		{
 			var ef    = lambda.Body.Unwrap();
-			var parms = new Dictionary<string,int>(lambda.Parameters.Count);
+			var parms = new Dictionary<ParameterExpression,int>(lambda.Parameters.Count);
 			var pn    = pi.Method.IsStatic ? 0 : -1;
 
 			foreach (var p in lambda.Parameters)
-				parms.Add(p.Name, pn++);
+				parms.Add(p, pn++);
 
 			var pie = ef.Transform(wpi =>
 			{
 				if (wpi.NodeType == ExpressionType.Parameter)
 				{
 					int n;
-					if (parms.TryGetValue(((ParameterExpression)wpi).Name, out n))
+
+					if (parms.TryGetValue((ParameterExpression)wpi, out n))
+					{
+						if (n >= pi.Arguments.Count)
+						{
+							if (DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							{
+								if (DataContextParam.Type != wpi.Type)
+									return Expression.Convert(DataContextParam, wpi.Type);
+								return DataContextParam;
+							}
+
+							throw new LinqToDBException("Can't convert {0} to expression.".Args(wpi));
+						}
+
 						return n < 0 ? pi.Object : pi.Arguments[n];
+					}
 				}
 
 				return wpi;
@@ -979,6 +994,13 @@ namespace LinqToDB.Linq.Builder
 
 				case ChangeTypeExpression.ChangeTypeType :
 					return ConvertToSql(context, ((ChangeTypeExpression)expression).Expression);
+
+				case ExpressionType.Extension :
+					{
+						if (expression.CanReduce)
+							return ConvertToSql(context, expression.Reduce());
+						break;
+					}
 			}
 
 			if (expression.Type == typeof(bool) && _convertedPredicates.Add(expression))
@@ -2350,7 +2372,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Search Condition Builder
 
-		void BuildSearchCondition(IBuildContext context, Expression expression, List<SelectQuery.Condition> conditions)
+		internal void BuildSearchCondition(IBuildContext context, Expression expression, List<SelectQuery.Condition> conditions)
 		{
 			switch (expression.NodeType)
 			{
@@ -2370,30 +2392,27 @@ namespace LinqToDB.Linq.Builder
 						var e = expression as BinaryAggregateExpression;
 						if (e != null)
 						{
-
-							var aggregateCondition = new SelectQuery.SearchCondition();
-							var isOr = e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse;
-
-							foreach (var expr in e.Expressions)
+							if (e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse)
 							{
-								var currentItems = new SelectQuery.SearchCondition();
-								BuildSearchCondition(context, expr, currentItems.Conditions);
+								var orCondition = new SelectQuery.SearchCondition();
 
-								if (aggregateCondition.Precedence != currentItems.Precedence)
+								for (var i = 0; i < e.Expressions.Length; i++)
 								{
-									aggregateCondition.Conditions.Add(new SelectQuery.Condition(false, currentItems, isOr));
+									var expr = e.Expressions[i];
+									BuildSearchCondition(context, expr, orCondition.Conditions);
+									if (i < e.Expressions.Length - 1)
+										orCondition.Conditions[orCondition.Conditions.Count - 1].IsOr = true;
 								}
-								else
-								{
-									if (isOr)
-										foreach (var c in currentItems.Conditions)
-											c.IsOr = true;
 
-									aggregateCondition.Conditions.AddRange(currentItems.Conditions);
+								conditions.Add(new SelectQuery.Condition(false, orCondition));
+							}
+							else
+							{
+								foreach (var expr in e.Expressions)
+								{
+									BuildSearchCondition(context, expr, conditions);
 								}
 							}
-
-							conditions.Add(new SelectQuery.Condition(false, aggregateCondition));
 						}
 
 						break;

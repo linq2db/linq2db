@@ -73,12 +73,12 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSqlBuilder(_isSelect, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("DateTime"); break;
-				default                 : base.BuildDataType(type); break;
+				case DataType.DateTime2 : StringBuilder.Append("DateTime");       break;
+				default                 : base.BuildDataType(type, createDbType); break;
 			}
 		}
 

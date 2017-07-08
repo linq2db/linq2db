@@ -7,12 +7,12 @@ namespace LinqToDB.Linq
 	{
 		public Table(IDataContext dataContext)
 		{
-			Init(dataContext == null ? null : new DataContextInfo(dataContext, false), null);
+			Init(dataContext, null);
 		}
 
 		public Table(IDataContext dataContext, Expression expression)
 		{
-			Init(dataContext == null ? null : new DataContextInfo(dataContext, false), expression);
+			Init(dataContext, expression);
 		}
 
 #if !SILVERLIGHT

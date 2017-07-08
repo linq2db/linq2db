@@ -163,6 +163,7 @@ CREATE TABLE AllTypes
 	doubleDataType           double                NULL,
 
 	charDataType             char(1)               NULL,
+	char20DataType           char(20)              NULL,
 	varcharDataType          varchar(20)           NULL,
 	clobDataType             clob                  NULL,
 	dbclobDataType           dbclob(100)           NULL,

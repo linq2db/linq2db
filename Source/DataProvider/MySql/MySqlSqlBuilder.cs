@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
@@ -75,20 +75,20 @@ namespace LinqToDB.DataProvider.MySql
 					if (createDbType) goto default;
 					StringBuilder.Append("Unsigned");
 					break;
-				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");   break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
+				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");                 break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");                 break;
 				case DataType.DateTime2     :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");        break;
-				case DataType.Boolean       : StringBuilder.Append("Boolean");         break;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                      break;
+				case DataType.Boolean       : StringBuilder.Append("Boolean");                       break;
 				case DataType.Double        :
-				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal); break;
+				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal, createDbType); break;
 				case DataType.VarChar       :
 				case DataType.NVarChar      :
 					StringBuilder.Append("Char");
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length).Append(')');
 					break;
-				default: base.BuildDataType(type); break;
+				default: base.BuildDataType(type, createDbType);                                     break;
 			}
 		}
 
@@ -228,28 +228,44 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildInsertOrUpdateQuery()
 		{
+			var position = StringBuilder.Length;
+
 			BuildInsertQuery();
-			AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
-			Indent++;
-
-			var first = true;
-
-			foreach (var expr in SelectQuery.Update.Items)
+			if (SelectQuery.Update.Items.Count > 0)
 			{
-				if (!first)
-					StringBuilder.Append(',').AppendLine();
-				first = false;
+				AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
-				AppendIndent();
-				BuildExpression(expr.Column, false, true);
-				StringBuilder.Append(" = ");
-				BuildExpression(expr.Expression, false, true);
+				Indent++;
+
+				var first = true;
+
+				foreach (var expr in SelectQuery.Update.Items)
+				{
+					if (!first)
+						StringBuilder.Append(',').AppendLine();
+					first = false;
+
+					AppendIndent();
+					BuildExpression(expr.Column, false, true);
+					StringBuilder.Append(" = ");
+					BuildExpression(expr.Expression, false, true);
+				}
+
+				Indent--;
+
+				StringBuilder.AppendLine();
 			}
+			else
+			{
+				var sql = StringBuilder.ToString();
+				var insertIndex = sql.IndexOf("INSERT", position);
 
-			Indent--;
-
-			StringBuilder.AppendLine();
+				StringBuilder.Clear()
+					.Append(sql.Substring(0, insertIndex))
+					.Append("INSERT IGNORE")
+					.Append(sql.Substring(insertIndex + "INSERT".Length));
+			}
 		}
 
 		protected override void BuildEmptyInsert()

@@ -32,8 +32,10 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsSybaseBuggyGroupBy      = true;
 			SqlProviderFlags.IsCrossJoinSupported      = false;
 
-			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
-			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Configuration;
 	using Data;
-	using SqlProvider;
+	using Extensions;
 
 	class DB2BulkCopy : BasicBulkCopy
 	{
@@ -59,7 +60,7 @@ namespace LinqToDB.DataProvider.DB2
 					if (options.KeepIdentity == true) bcOptions |= 1; // KeepIdentity = 1, TableLock = 2, Truncate = 4,
 					if (options.TableLock    == true) bcOptions |= 2;
 
-					using (var bc = _bulkCopyCreator(dataConnection.Connection, bcOptions))
+					using (var bc = _bulkCopyCreator(Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection), bcOptions))
 					{
 						dynamic dbc = bc;
 
