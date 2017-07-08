@@ -123,7 +123,7 @@ namespace Tests.Merge
 
 		private class FakeTable<TEntity> : ITable<TEntity>
 		{
-			IDataContextInfo IExpressionQuery.DataContextInfo
+			IDataContext IExpressionQuery.DataContext
 			{
 				get
 				{

@@ -296,7 +296,7 @@ namespace LinqToDB.DataProvider
 					Command.Append(", ");
 
 				AddSourceValue(
-					ContextInfo.DataContext.MappingSchema.ValueToSqlConverter,
+					DataContext.MappingSchema.ValueToSqlConverter,
 					_sourceDescriptor.Columns[i],
 					columnTypes[i],
 					null);
@@ -346,7 +346,7 @@ namespace LinqToDB.DataProvider
 
 			var columnTypes = GetSourceColumnTypes();
 
-			var valueConverter = ContextInfo.DataContext.MappingSchema.ValueToSqlConverter;
+			var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
 
 			foreach (var item in source)
 			{
@@ -367,7 +367,7 @@ namespace LinqToDB.DataProvider
 						Command.Append(",");
 
 					var column = _sourceDescriptor.Columns[i];
-					var value = column.GetValue(ContextInfo.DataContext.MappingSchema, item);
+					var value = column.GetValue(DataContext.MappingSchema, item);
 
 					AddSourceValue(valueConverter, column, columnTypes[i], value);
 
@@ -437,7 +437,7 @@ namespace LinqToDB.DataProvider
 					SqlParameters = query.Parameters.ToArray()
 				};
 
-				var preparedQuery = (DataConnection.PreparedQuery)ContextInfo.DataContext.SetQuery(queryContext);
+				var preparedQuery = (DataConnection.PreparedQuery)DataContext.SetQuery(queryContext);
 
 				Command.Append(preparedQuery.Commands[0]);
 			}
@@ -455,7 +455,7 @@ namespace LinqToDB.DataProvider
 
 			var columnTypes = GetSourceColumnTypes();
 
-			var valueConverter = ContextInfo.DataContext.MappingSchema.ValueToSqlConverter;
+			var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
 
 			foreach (var item in source)
 			{
@@ -475,7 +475,7 @@ namespace LinqToDB.DataProvider
 						Command.Append(",");
 
 					var column = _sourceDescriptor.Columns[i];
-					var value = column.GetValue(ContextInfo.DataContext.MappingSchema, item);
+					var value = column.GetValue(DataContext.MappingSchema, item);
 
 					AddSourceValue(valueConverter, column, columnTypes[i], value);
 
@@ -663,7 +663,7 @@ namespace LinqToDB.DataProvider
 					Expression.Quote(create)
 				});
 
-			var qry = Query<int>.GetQuery(ContextInfo.DataContext, insertExpression);
+			var qry = Query<int>.GetQuery(DataContext, insertExpression);
 			var query = qry.Queries[0].SelectQuery;
 
 			query.Insert.Into.Alias = _targetAlias;
@@ -786,7 +786,7 @@ namespace LinqToDB.DataProvider
 				LinqExtensions._updateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
-			var qry = Query<int>.GetQuery(ContextInfo.DataContext, updateExpression);
+			var qry = Query<int>.GetQuery(DataContext, updateExpression);
 			var query = qry.Queries[0].SelectQuery;
 
 			if (ProviderUsesAlternativeUpdate)
@@ -1059,7 +1059,7 @@ namespace LinqToDB.DataProvider
 				LinqExtensions._updateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
-			var qry = Query<int>.GetQuery(ContextInfo.DataContext, updateExpression);
+			var qry = Query<int>.GetQuery(DataContext, updateExpression);
 			var query = qry.Queries[0].SelectQuery;
 
 			MoveJoinsToSubqueries(query, _targetAlias, null, QueryElement.UpdateSetter);
@@ -1128,11 +1128,11 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		protected IDataContextInfo ContextInfo
+		protected IDataContext DataContext
 		{
 			get
 			{
-				return Merge.Target.DataContextInfo;
+				return Merge.Target.DataContext;
 			}
 		}
 
@@ -1258,11 +1258,11 @@ namespace LinqToDB.DataProvider
 		public virtual string BuildCommand()
 		{
 			// prepare required objects
-			SqlBuilder = (BasicSqlBuilder)ContextInfo.DataContext.CreateSqlProvider();
+			SqlBuilder = (BasicSqlBuilder)DataContext.CreateSqlProvider();
 
-			_sourceDescriptor = TargetDescriptor = ContextInfo.DataContext.MappingSchema.GetEntityDescriptor(typeof(TTarget));
+			_sourceDescriptor = TargetDescriptor = DataContext.MappingSchema.GetEntityDescriptor(typeof(TTarget));
 			if (typeof(TTarget) != typeof(TSource))
-				_sourceDescriptor = ContextInfo.DataContext.MappingSchema.GetEntityDescriptor(typeof(TSource));
+				_sourceDescriptor = DataContext.MappingSchema.GetEntityDescriptor(typeof(TSource));
 
 			var target = (Table<TTarget>)Merge.Target;
 			var sb = new StringBuilder();

@@ -709,10 +709,10 @@ namespace LinqToDB.Data
 			var definition = (MergeDefinition<TTarget, TSource>)merge;
 
 			DataConnection dataConnection;
-			if (definition.Target.DataContextInfo.DataContext is DataConnection)
-				dataConnection = (DataConnection)definition.Target.DataContextInfo.DataContext;
-			else if (definition.Target.DataContextInfo.DataContext is DataContext)
-				dataConnection = ((DataContext)definition.Target.DataContextInfo.DataContext).GetDataConnection();
+			if (definition.Target.DataContext is DataConnection)
+				dataConnection = (DataConnection)definition.Target.DataContext;
+			else if (definition.Target.DataContext is DataContext)
+				dataConnection = ((DataContext)definition.Target.DataContext).GetDataConnection();
 			else
 				throw new ArgumentException("DataContext must be of DataConnection or DataContext type.");
 
