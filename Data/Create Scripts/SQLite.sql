@@ -181,12 +181,9 @@ CREATE TABLE TestMerge1
 	FieldFloat      FLOAT(24)         NULL,
 	FieldDouble     FLOAT(53)         NULL,
 	FieldDateTime   DATETIME          NULL,
-	FieldDateTime2  DATETIMEOFFSET(7) NULL,
 	FieldBinary     VARBINARY(20)     NULL,
 	FieldGuid       UNIQUEIDENTIFIER  NULL,
-	FieldDecimal    DECIMAL(24, 10)   NULL,
 	FieldDate       DATE              NULL,
-	FieldTime       TIME(7)           NULL,
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL
 );
@@ -208,12 +205,9 @@ CREATE TABLE TestMerge2
 	FieldFloat      FLOAT(24)         NULL,
 	FieldDouble     FLOAT(53)         NULL,
 	FieldDateTime   DATETIME          NULL,
-	FieldDateTime2  DATETIMEOFFSET(7) NULL,
 	FieldBinary     VARBINARY(20)     NULL,
 	FieldGuid       UNIQUEIDENTIFIER  NULL,
-	FieldDecimal    DECIMAL(24, 10)   NULL,
 	FieldDate       DATE              NULL,
-	FieldTime       TIME(7)           NULL,
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL
 );

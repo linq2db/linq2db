@@ -209,6 +209,11 @@ namespace Tests.Merge
 					throw new NotImplementedException();
 				}
 
+				IDisposable IDataProvider.ExecuteScope()
+				{
+					throw new NotImplementedException();
+				}
+
 				CommandBehavior IDataProvider.GetCommandBehavior(CommandBehavior commandBehavior)
 				{
 					throw new NotImplementedException();

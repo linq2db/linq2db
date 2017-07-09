@@ -91,11 +91,14 @@ INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoi
 GO
 
 
-DROP TABLE Parent
+IF OBJECT_ID('dbo.Parent') IS NOT NULL
+BEGIN DROP TABLE Parent END
 GO
-DROP TABLE Child
+IF OBJECT_ID('dbo.Child') IS NOT NULL
+BEGIN DROP TABLE Child END
 GO
-DROP TABLE GrandChild
+IF OBJECT_ID('dbo.GrandChild') IS NOT NULL
+BEGIN DROP TABLE GrandChild END
 GO
 
 CREATE TABLE Parent      (ParentID int, Value1 int NULL)
@@ -105,8 +108,9 @@ GO
 CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
 GO
 
+IF OBJECT_ID('dbo.LinqDataTypes') IS NOT NULL
+BEGIN DROP TABLE LinqDataTypes END
 
-DROP TABLE LinqDataTypes
 GO
 
 CREATE TABLE LinqDataTypes
@@ -126,7 +130,8 @@ CREATE TABLE LinqDataTypes
 GO
 
 
-DROP TABLE TestIdentity
+IF OBJECT_ID('dbo.TestIdentity') IS NOT NULL
+BEGIN DROP TABLE TestIdentity END
 GO
 
 CREATE TABLE TestIdentity

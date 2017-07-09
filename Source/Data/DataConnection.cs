@@ -734,7 +734,8 @@ namespace LinqToDB.Data
 		internal int ExecuteNonQuery()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return Command.ExecuteNonQuery();
+				using (DataProvider.ExecuteScope())
+					return Command.ExecuteNonQuery();
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -750,7 +751,9 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteNonQuery();
+				int ret;
+				using (DataProvider.ExecuteScope())
+					ret = Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -844,7 +847,8 @@ namespace LinqToDB.Data
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
+				using (DataProvider.ExecuteScope())
+					return Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -860,7 +864,10 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
+				IDataReader ret;
+
+				using (DataProvider.ExecuteScope())
+					ret = Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
 
 				if (TraceSwitch.TraceInfo)
 				{

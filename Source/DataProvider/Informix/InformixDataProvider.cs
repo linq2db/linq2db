@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.Linq.Expressions;
 using System.Security;
-using System.Threading;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -74,6 +72,11 @@ namespace LinqToDB.DataProvider.Informix
 		Type _ifxDecimal;
 		Type _ifxDateTime;
 		Type _ifxTimeSpan;
+
+		public override IDisposable ExecuteScope()
+		{
+			return new InformixCultureFixRegion();
+		}
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{

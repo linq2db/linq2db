@@ -122,6 +122,18 @@ namespace LinqToDB.DataProvider
 			return commandBehavior;
 		}
 
+		public virtual IDisposable ExecuteScope()
+		{
+			return Disposable.Instance;
+		}
+
+		private class Disposable : IDisposable
+		{
+			public static IDisposable Instance = new Disposable();
+
+			void IDisposable.Dispose() { }
+		}
+
 		#endregion
 
 		#region Helpers

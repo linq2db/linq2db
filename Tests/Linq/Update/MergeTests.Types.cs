@@ -30,6 +30,7 @@ namespace Tests.Merge
 			[Column("FieldInt64")]
 			public long? FieldInt64;
 
+			[Column(IsColumn = false, Configuration = ProviderName.Sybase)]
 			[Column("FieldBoolean")]
 			public bool? FieldBoolean;
 
@@ -56,6 +57,7 @@ namespace Tests.Merge
 			[Column("FieldDateTime")]
 			public DateTime? FieldDateTime;
 
+			[Column(IsColumn = false, Configuration = ProviderName.Sybase)]
 			[Column(IsColumn = false, Configuration = ProviderName.DB2)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
@@ -65,6 +67,8 @@ namespace Tests.Merge
 			[Column(IsColumn = false, Configuration = TestProvName.Firebird3)]
 			[Column(IsColumn = false, Configuration = ProviderName.Access)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
+			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
+			[Column(IsColumn = false, Configuration = ProviderName.SapHana)]
 			[Column("FieldDateTime2")]
 			public DateTimeOffset? FieldDateTime2;
 
@@ -75,6 +79,7 @@ namespace Tests.Merge
 			[Column("FieldGuid")]
 			public Guid? FieldGuid;
 
+			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column("FieldDecimal")]
 			public decimal? FieldDecimal;
 
@@ -94,6 +99,7 @@ namespace Tests.Merge
 			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
 			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
+			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column("FieldTime")]
 			public TimeSpan? FieldTime;
 
@@ -111,11 +117,14 @@ namespace Tests.Merge
 			[MapValue("\b", Configuration = ProviderName.Informix)]
 			[MapValue("\b", Configuration = ProviderName.PostgreSQL)]
 			[MapValue("\b", Configuration = ProviderName.SqlCe)]
+			[MapValue("\b", Configuration = ProviderName.Sybase)]
+			[MapValue("\b", Configuration = ProviderName.SapHana)]
 			[MapValue("\0")]
 			Value2,
 			[MapValue("_", Configuration = ProviderName.Oracle)]
 			[MapValue("_", Configuration = ProviderName.OracleManaged)]
 			[MapValue("_", Configuration = ProviderName.OracleNative)]
+			[MapValue("_", Configuration = ProviderName.Sybase)]
 			[MapValue("")]
 			Value3,
 			[MapValue(null)]
@@ -362,15 +371,14 @@ namespace Tests.Merge
 			if (context != ProviderName.Access)
 				Assert.AreEqual(expected.FieldInt64, actual.FieldInt64);
 
-			if (context != ProviderName.Access)
-				Assert.AreEqual(expected.FieldBoolean, actual.FieldBoolean);
-			else
-				Assert.AreEqual(expected.FieldBoolean ?? false, actual.FieldBoolean);
+			if (context != ProviderName.Sybase)
+				if (context != ProviderName.Access)
+					Assert.AreEqual(expected.FieldBoolean, actual.FieldBoolean);
+				else
+					Assert.AreEqual(expected.FieldBoolean ?? false, actual.FieldBoolean);
 
 			AssertString(expected.FieldString, actual.FieldString, context);
-
-			if (context != ProviderName.Informix)
-				Assert.AreEqual(expected.FieldNString, actual.FieldNString);
+			AssertNString(expected.FieldNString, actual.FieldNString, context);
 
 			AssertChar(expected.FieldChar, actual.FieldChar, context);
 
@@ -382,13 +390,13 @@ namespace Tests.Merge
 			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, context);
 
 			AssertDateTimeOffset(expected.FieldDateTime2, actual.FieldDateTime2, context);
-
-			Assert.AreEqual(expected.FieldBinary, actual.FieldBinary);
+			AssertBinary(expected.FieldBinary, actual.FieldBinary, context);
 
 			if (context != ProviderName.Informix)
 				Assert.AreEqual(expected.FieldGuid, actual.FieldGuid);
 
-			Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
+			if (context != ProviderName.SQLite)
+				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
 			if (context != ProviderName.SqlServer2000
 				&& context != ProviderName.SqlServer2005
@@ -409,6 +417,35 @@ namespace Tests.Merge
 				Assert.IsNull(actual.FieldEnumNumber);
 			else
 				Assert.AreEqual(expected.FieldEnumNumber, actual.FieldEnumNumber);
+		}
+
+		private static void AssertNString(string expected, string actual, string context)
+		{
+			if (expected != null)
+			{
+				if (context == ProviderName.Sybase)
+					expected = expected.TrimEnd(' ');
+			}
+
+			if (context != ProviderName.Informix)
+				Assert.AreEqual(expected, actual);
+		}
+
+		private static void AssertBinary(byte[] expected, byte[] actual, string context)
+		{
+			if (expected != null)
+			{
+				if (context == ProviderName.Sybase)
+				{
+					while (expected.Length > 1 && expected[expected.Length - 1] == 0)
+						expected = expected.Take(expected.Length - 1).ToArray();
+
+					 if (expected.Length == 0)
+						expected = new byte[] { 0 };
+				}
+			}
+
+			Assert.AreEqual(expected, actual);
 		}
 
 		private static void AssertDateTimeOffset(DateTimeOffset? expected, DateTimeOffset? actual, string context)
@@ -440,7 +477,10 @@ namespace Tests.Merge
 				&& context != TestProvName.MySql57
 				&& context != TestProvName.MariaDB
 				&& context != ProviderName.Access
-				&& context != ProviderName.DB2)
+				&& context != ProviderName.SQLite
+				&& context != ProviderName.Sybase
+				&& context != ProviderName.DB2
+				&& context != ProviderName.SapHana)
 				Assert.AreEqual(expected, actual);
 		}
 
@@ -487,6 +527,26 @@ namespace Tests.Merge
 				if (context == TestProvName.MySql57 && expected.Value.Millisecond > 500)
 					expected = expected.Value.AddSeconds(1);
 
+				if (context == ProviderName.Sybase)
+				{
+					switch (expected.Value.Millisecond % 10)
+					{
+						case 1:
+						case 4:
+						case 7:
+							expected = expected.Value.AddMilliseconds(-1);
+							break;
+						case 2:
+						case 5:
+						case 9:
+							expected = expected.Value.AddMilliseconds(1);
+							break;
+						case 8:
+							expected = expected.Value.AddMilliseconds(-2);
+							break;
+					}
+				}
+
 				if (   context == ProviderName.MySql
 					|| context == TestProvName.MariaDB
 					|| context == TestProvName.MySql57
@@ -505,8 +565,11 @@ namespace Tests.Merge
 			{
 				switch (context)
 				{
+					case ProviderName.Sybase:
+						expected = expected.TrimEnd(' ');
+						break;
 					case ProviderName.Informix:
-						expected = expected.Replace("\t", string.Empty).Replace("\0", string.Empty);
+						expected = expected.TrimEnd('\t', ' ');
 						break;
 				}
 			}
@@ -522,6 +585,7 @@ namespace Tests.Merge
 				|| context == ProviderName.OracleManaged
 				|| context == ProviderName.OracleNative
 				|| context == ProviderName.SqlCe
+				|| context == ProviderName.SQLite
 				|| context == ProviderName.MySql
 				// MySql57 and MariaDB work, but column is disabled...
 				|| context == TestProvName.MySql57
@@ -532,6 +596,29 @@ namespace Tests.Merge
 			{
 				switch (context)
 				{
+					case ProviderName.Sybase:
+						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000) * 10000);
+						switch (expected.Value.Milliseconds % 10)
+						{
+							case 1:
+							case 4:
+							case 7:
+								expected = expected.Value.Add(TimeSpan.FromMilliseconds(-1));
+								break;
+							case 2:
+							case 5:
+							case 9:
+								expected = expected.Value.Add(TimeSpan.FromMilliseconds(1));
+								break;
+							case 8:
+								expected = expected.Value.Add(TimeSpan.FromMilliseconds(2));
+								break;
+						}
+
+						if (expected == TimeSpan.FromDays(1))
+							expected = expected.Value.Add(TimeSpan.FromMilliseconds(-4));
+
+						break;
 					case ProviderName.Firebird:
 					case TestProvName.Firebird3:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
@@ -544,6 +631,7 @@ namespace Tests.Merge
 						break;
 					case ProviderName.DB2:
 					case ProviderName.Access:
+					case ProviderName.SapHana:
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
 						break;
 				}
