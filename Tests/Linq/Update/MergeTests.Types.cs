@@ -89,6 +89,7 @@ namespace Tests.Merge
 			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
 			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
+			[Column("FieldDate"     , Configuration = ProviderName.Informix, DataType = DataType.Date)]
 			[Column("FieldDate")]
 			public DateTime? FieldDate;
 
@@ -100,6 +101,7 @@ namespace Tests.Merge
 			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
+			[Column(IsColumn = false, Configuration = ProviderName.Informix)]
 			[Column("FieldTime")]
 			public TimeSpan? FieldTime;
 
@@ -155,7 +157,7 @@ namespace Tests.Merge
 
 		private void PrepareTypesData(IDataContext db)
 		{
-			//using (new DisableLogging())
+			using (new DisableLogging())
 			{
 				GetTypes1(db).Delete();
 				GetTypes2(db).Delete();
@@ -638,6 +640,38 @@ namespace Tests.Merge
 			}
 
 			Assert.AreEqual(expected, actual);
+		}
+
+		[MergeDataContextSource]
+		public void TestTypesInsertByMerge(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				using (new DisableLogging())
+				{
+					GetTypes1(db).Delete();
+					GetTypes2(db).Delete();
+				}
+
+				GetTypes1(db).Merge().Using(InitialTypes1Data).OnTargetKey().InsertWhenNotMatched().Merge();
+				GetTypes2(db).Merge().Using(InitialTypes2Data).OnTargetKey().InsertWhenNotMatched().Merge();
+
+				var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
+				var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(InitialTypes1Data.Length, result1.Count);
+				Assert.AreEqual(InitialTypes2Data.Length, result2.Count);
+
+				for (var i = 0; i < InitialTypes1Data.Length; i++)
+				{
+					AssertTypesRow(InitialTypes1Data[i], result1[i], context);
+				}
+
+				for (var i = 0; i < InitialTypes2Data.Length; i++)
+				{
+					AssertTypesRow(InitialTypes2Data[i], result2[i], context);
+				}
+			}
 		}
 	}
 }

@@ -98,12 +98,16 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime  : StringBuilder.Append("datetime year to second");   break;
-				case DataType.DateTime2 : StringBuilder.Append("datetime year to fraction"); break;
+				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      break;
+				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   break;
+				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   break;
+				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); break;
+				case DataType.Time       : StringBuilder.Append("INTERVAL HOUR TO FRACTION"); break;
+				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      break;
 				case DataType.SByte      :
-				case DataType.Byte       : StringBuilder.Append("SmallInt");                 break;
-				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");            break;
-				default                  : base.BuildDataType(type, createDbType);           break;
+				case DataType.Byte       : StringBuilder.Append("SmallInt");                  break;
+				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");             break;
+				default                  : base.BuildDataType(type, createDbType);            break;
 			}
 		}
 

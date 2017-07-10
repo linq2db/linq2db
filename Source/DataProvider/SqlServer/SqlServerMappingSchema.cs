@@ -180,11 +180,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 			{
 				var format = value.Days > 0
-					? value.Milliseconds > 0
-						? "d\\.hh\\:mm\\:ss\\.fff"
+					? value.Ticks % 10000000 != 0
+						? "d\\.hh\\:mm\\:ss\\.fffffff"
 						: "d\\.hh\\:mm\\:ss"
-					: value.Milliseconds > 0
-						? "hh\\:mm\\:ss\\.fff"
+					: value.Ticks % 10000000 != 0
+						? "hh\\:mm\\:ss\\.fffffff"
 						: "hh\\:mm\\:ss";
 
 				stringBuilder
