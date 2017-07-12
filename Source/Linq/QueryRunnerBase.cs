@@ -87,7 +87,7 @@ namespace LinqToDB.Linq
 
 		protected void SetCommand(bool clearQueryHints)
 		{
-			lock (this)
+			lock (Query)
 			{
 				SetParameters();
 

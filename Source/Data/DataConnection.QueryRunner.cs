@@ -50,9 +50,15 @@ namespace LinqToDB.Data
 				}
 			}
 
+			PreparedQuery _preparedQuery;
+
 			protected override void SetQuery()
 			{
-				throw new NotImplementedException();
+				var queryContext  = Query.Queries[QueryNumber];
+
+				_preparedQuery = _dataConnection.GetCommand(queryContext);
+
+				_dataConnection.GetParameters(queryContext, _preparedQuery);
 			}
 
 			public override void Dispose()
@@ -72,16 +78,12 @@ namespace LinqToDB.Data
 
 			void SetCommand()
 			{
-				var queryContext = Query.Queries[QueryNumber];
+				SetCommand(true);
 
-				var preparedQuery = _dataConnection.GetCommand(queryContext);
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints);
 
-				_dataConnection.GetParameters(queryContext, preparedQuery);
-
-				_dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints);
-
-				if (preparedQuery.Parameters != null)
-					foreach (var p in preparedQuery.Parameters)
+				if (_preparedQuery.Parameters != null)
+					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 			}
 
@@ -105,19 +107,15 @@ namespace LinqToDB.Data
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)
 			{
-				var queryContext = Query.Queries[QueryNumber];
+				base.SetCommand(true);
 
-				var preparedQuery = _dataConnection.GetCommand(queryContext);
+				await _dataConnection.InitCommandAsync(CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints, cancellationToken);
 
-				_dataConnection.GetParameters(queryContext, preparedQuery);
-
-				await _dataConnection.InitCommandAsync(CommandType.Text, preparedQuery.Commands[0], null, preparedQuery.QueryHints, cancellationToken);
-
-				if (preparedQuery.Parameters != null)
-					foreach (var p in preparedQuery.Parameters)
+				if (_preparedQuery.Parameters != null)
+					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 
-				var dataReader = await _dataConnection.SetCommand(preparedQuery.Commands[0], queryContext.GetParameters()).ExecuteReaderAsync(cancellationToken);
+				var dataReader = await _dataConnection.SetCommand(_preparedQuery.Commands[0]).ExecuteReaderAsync(cancellationToken);
 
 				dataReader.SkipAction = SkipAction;
 				dataReader.TakeAction = TakeAction;

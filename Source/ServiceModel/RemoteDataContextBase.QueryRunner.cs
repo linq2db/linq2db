@@ -29,9 +29,9 @@ namespace LinqToDB.ServiceModel
 			ILinqService _client;
 
 			public override Expression MapperExpression { get; set; }
+
 			protected override void SetQuery()
 			{
-				throw new NotImplementedException();
 			}
 
 			public override void Dispose()
@@ -43,6 +43,8 @@ namespace LinqToDB.ServiceModel
 
 			public override int ExecuteNonQuery()
 			{
+				SetCommand(true);
+
 				var queryContext = Query.Queries[QueryNumber];
 
 				var q    = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
@@ -64,6 +66,8 @@ namespace LinqToDB.ServiceModel
 
 			public override object ExecuteScalar()
 			{
+				SetCommand(true);
+
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
 
@@ -82,6 +86,8 @@ namespace LinqToDB.ServiceModel
 
 			public override IDataReader ExecuteReader()
 			{
+				SetCommand(true);
+
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
 
@@ -106,6 +112,8 @@ namespace LinqToDB.ServiceModel
 			{
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
+
+				SetCommand(true);
 
 				return await Task.Run(() =>
 				{

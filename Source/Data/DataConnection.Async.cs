@@ -3,19 +3,27 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
 #if !NOASYNC
-	using System.Threading;
-	using System.Threading.Tasks;
+	using RetryPolicy;
 
 	public partial class DataConnection
 	{
 		internal async Task InitCommandAsync(CommandType commandType, string sql, DataParameter[] parameters, CancellationToken cancellationToken)
 		{
 			if (_connection == null)
+			{
 				_connection = DataProvider.CreateConnection(ConnectionString);
+
+#if !SILVERLIGHT && !WINSTORE
+					if (RetryPolicy != null)
+						_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
+#endif
+			}
 
 			if (_connection.State == ConnectionState.Closed)
 			{
