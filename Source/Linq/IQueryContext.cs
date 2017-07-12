@@ -9,7 +9,7 @@ namespace LinqToDB.Linq
 	{
 		SelectQuery    SelectQuery { get; }
 		object         Context     { get; set; }
-		List<string>   QueryHints  { get; }
+		List<string>   QueryHints  { get; set; }
 		SqlParameter[] GetParameters();
 	}
 }

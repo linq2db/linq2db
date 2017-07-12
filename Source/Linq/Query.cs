@@ -23,9 +23,11 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using SqlProvider;
 
-	internal abstract class Query
+	abstract class Query
 	{
 		#region Init
+
+		public readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
 
 		public abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
@@ -85,9 +87,36 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
+		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
+
+		public object GetConvertedEnum(Type valueType, object value)
+		{
+			if (_enumConverters == null)
+				_enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
+
+			Func<object, object> converter;
+
+			if (!_enumConverters.TryGetValue(valueType, out converter))
+			{
+				var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
+				var convExpr  = MappingSchema.GetConvertExpression(valueType, toType);
+				var convParam = Expression.Parameter(typeof(object));
+
+				var lex = Expression.Lambda<Func<object, object>>(
+					Expression.Convert(convExpr.GetBody(Expression.Convert(convParam, valueType)), typeof(object)),
+					convParam);
+
+				converter = lex.Compile();
+
+				_enumConverters.GetOrAdd(valueType, converter);
+			}
+
+			return converter(value);
+		}
 	}
 
-	internal class Query<T> : Query
+	class Query<T> : Query
 	{
 		#region Init
 
@@ -120,14 +149,13 @@ namespace LinqToDB.Linq
 
 		public          bool            DoNotChache;
 		public          Query<T>        Next;
-		public readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
 
-		public Func<QueryContext,IDataContext,Expression,object[],object>         GetElement;
-		public Func<QueryContext,IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
+		public Func<QueryContext,IDataContextEx,Expression,object[],object>         GetElement;
+		public Func<QueryContext,IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
-		public Func<QueryContext,IDataContext,Expression,object[],Func<T>,CancellationToken,TaskCreationOptions,Task<T>> GetElementAsync =
+		public Func<QueryContext,IDataContextEx,Expression,object[],Func<T>,CancellationToken,TaskCreationOptions,Task<T>> GetElementAsync =
 			(context, dataContext, expression, parameters, func, token, options) => AsyncExtensions.GetTask(func, token, options);
-		public Func<ExpressionQuery<T>,QueryContext,IDataContext,Expression,object[],Action<T>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync =
+		public Func<ExpressionQuery<T>,QueryContext,IDataContextEx,Expression,object[],Action<T>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync =
 			(query, context, dataContext, expression, parameters, action, token, options) =>
 		{
 			return AsyncExtensions.GetActionTask(() =>
@@ -138,7 +166,7 @@ namespace LinqToDB.Linq
 		};
 #endif
 
-		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContext dc, Expression expr, object[] ps)
+		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContextEx dc, Expression expr, object[] ps)
 		{
 			yield return ConvertTo<T>.From(GetElement(qc, dc, expr, ps));
 		}
@@ -462,7 +490,26 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
+		QueryInfo SetCommandX(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints)
+		{
+			lock (this)
+			{
+				SetParameters(expr, parameters, idx);
+
+				var query = Queries[idx];
+
+				if (idx == 0 && (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0))
+				{
+					query.QueryHints = new List<string>(dataContext.QueryHints);
+					query.QueryHints.AddRange(dataContext.NextQueryHints);
+
+					if (clearQueryHints)
+						dataContext.NextQueryHints.Clear();
+				}
+
+				return query;
+			}
+		}
 
 		internal void SetParameters(Expression expr, object[] parameters, int idx)
 		{
@@ -471,6 +518,7 @@ namespace LinqToDB.Linq
 				var value = p.Accessor(expr, parameters);
 
 				var vs = value as IEnumerable;
+
 				if (vs != null)
 				{
 					var type  = vs.GetType();
@@ -503,34 +551,10 @@ namespace LinqToDB.Linq
 				p.SqlParameter.Value = value;
 
 				var dataType = p.DataTypeAccessor(expr, parameters);
+
 				if (dataType != DataType.Undefined)
 					p.SqlParameter.DataType = dataType;
 			}
-		}
-
-		private object GetConvertedEnum(Type valueType, object value)
-		{
-			if (_enumConverters == null)
-				_enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
-
-			Func<object, object> converter;
-
-			if (!_enumConverters.TryGetValue(valueType, out converter))
-			{
-				var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
-				var convExpr  = MappingSchema.GetConvertExpression(valueType, toType);
-				var convParam = Expression.Parameter(typeof(object));
-
-				var lex = Expression.Lambda<Func<object, object>>(
-					Expression.Convert(convExpr.GetBody(Expression.Convert(convParam, valueType)), typeof(object)),
-					convParam);
-
-				converter = lex.Compile();
-
-				_enumConverters.GetOrAdd(valueType, converter);
-			}
-
-			return converter(value);
 		}
 
 		#endregion
@@ -555,30 +579,6 @@ namespace LinqToDB.Linq
 			MappingSchema ms,
 			Expression    expr,
 			object[]      ps);
-
-		public class QueryInfo : IQueryContext
-		{
-			public QueryInfo()
-			{
-				SelectQuery = new SelectQuery();
-			}
-
-			public SelectQuery  SelectQuery { get; set; }
-			public object       Context     { get; set; }
-			public List<string> QueryHints  { get; set; }
-
-			public SqlParameter[] GetParameters()
-			{
-				var ps = new SqlParameter[Parameters.Count];
-
-				for (var i = 0; i < ps.Length; i++)
-					ps[i] = Parameters[i].SqlParameter;
-
-				return ps;
-			}
-
-			public List<ParameterAccessor> Parameters = new List<ParameterAccessor>();
-		}
 
 		#endregion
 
@@ -662,7 +662,7 @@ namespace LinqToDB.Linq
 
 						ei = new Query<int>(dataContext, null)
 						{
-							Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						foreach (var field in sqlTable.Fields)
@@ -690,7 +690,7 @@ namespace LinqToDB.Linq
 						ObjectOperation<T>.Insert.Add(key, ei);
 					}
 
-			return (int)ei.GetElement(null, dataContext, Expression.Constant(obj), null);
+			return (int)ei.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(obj), null);
 		}
 
 		#endregion
@@ -718,7 +718,7 @@ namespace LinqToDB.Linq
 
 						ei = new Query<object>(dataContext, null)
 						{
-							Queries = { new Query<object>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						foreach (var field in sqlTable.Fields)
@@ -746,7 +746,7 @@ namespace LinqToDB.Linq
 						ObjectOperation<T>.InsertWithIdentity.Add(key, ei);
 					}
 
-			return ei.GetElement(null, dataContext, Expression.Constant(obj), null);
+			return ei.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(obj), null);
 		}
 
 		#endregion
@@ -779,7 +779,7 @@ namespace LinqToDB.Linq
 
 						ei = new Query<int>(dataContext, null)
 						{
-							Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
@@ -858,7 +858,7 @@ namespace LinqToDB.Linq
 						ObjectOperation<T>.InsertOrUpdate.Add(key, ei);
 					}
 
-			return (int)ei.GetElement(null, dataContext, Expression.Constant(obj), null);
+			return (int)ei.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(obj), null);
 		}
 
 		internal void MakeAlternativeInsertOrUpdate(SelectQuery selectQuery)
@@ -937,7 +937,7 @@ namespace LinqToDB.Linq
 
 						ei = new Query<int>(dataContext, null)
 						{
-							Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
@@ -981,7 +981,7 @@ namespace LinqToDB.Linq
 						ObjectOperation<T>.Update.Add(key, ei);
 					}
 
-			return (int)ei.GetElement(null, dataContext, Expression.Constant(obj), null);
+			return (int)ei.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(obj), null);
 		}
 
 		#endregion
@@ -1008,7 +1008,7 @@ namespace LinqToDB.Linq
 
 						ei = new Query<int>(dataContext, null)
 						{
-							Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+							Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
 						var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
@@ -1033,7 +1033,7 @@ namespace LinqToDB.Linq
 						ObjectOperation<T>.Delete.Add(key, ei);
 					}
 
-			return (int)ei.GetElement(null, dataContext, Expression.Constant(obj), null);
+			return (int)ei.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(obj), null);
 		}
 
 		#endregion
@@ -1064,12 +1064,12 @@ namespace LinqToDB.Linq
 
 			var query = new Query<int>(dataContext, null)
 			{
-				Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+				Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
 			};
 
 			query.SetNonQueryQuery();
 
-			query.GetElement(null, dataContext, Expression.Constant(null), null);
+			query.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(null), null);
 
 			ITable<T> table = new Table<T>(dataContext);
 
@@ -1097,12 +1097,12 @@ namespace LinqToDB.Linq
 
 			var query = new Query<int>(dataContext, null)
 			{
-				Queries = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
+				Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
 			};
 
 			query.SetNonQueryQuery();
 
-			query.GetElement(null, dataContext, Expression.Constant(null), null);
+			query.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(null), null);
 		}
 
 		#endregion
@@ -1212,7 +1212,7 @@ namespace LinqToDB.Linq
 			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
 		}
 
-		private class MapInfo
+		class MapInfo
 		{
 			public MapInfo([JetBrains.Annotations.NotNull] Expression<Func<QueryContext, IDataContext, IDataReader, Expression, object[], T>> expression)
 			{
@@ -1251,7 +1251,7 @@ namespace LinqToDB.Linq
 					{
 						var ex = e as ConvertFromDataReaderExpression;
 						return ex != null ? ex.Reduce(dr) : e;
-					}) as Expression<Func<QueryContext, IDataContext, IDataReader, Expression, object[], T>>;
+					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
 
 					// IT : # MapperExpression.Compile()
 					//
@@ -1370,9 +1370,273 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
+		#region Mapper
+
+		class Mapper
+		{
+			public Mapper(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> mapperExpression)
+			{
+				_expression = mapperExpression;
+			}
+
+			readonly Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> _expression;
+			         Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> _mapperExpression;
+			                    Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>  _mapper;
+
+			bool _isFaulted;
+
+			public IQueryRunner QueryRunner;
+
+			public T Map(
+				QueryContext queryContext,
+				IDataContext dataContext,
+				IDataReader  dataReader,
+				Expression   expr,
+				object[]     ps)
+			{
+				if (_mapper == null)
+				{
+					_mapperExpression = (Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>)_expression.Transform(e =>
+					{
+						var ex = e as ConvertFromDataReaderExpression;
+						return ex != null ? ex.Reduce(dataReader) : e;
+					});
+
+					QueryRunner.MapperExpression = _mapperExpression;
+
+					_mapper = _mapperExpression.Compile();
+				}
+
+				try
+				{
+					return _mapper(queryContext, dataContext, dataReader, expr, ps);
+				}
+				catch (FormatException)
+				{
+					if (_isFaulted)
+						throw;
+
+					_isFaulted = true;
+
+					QueryRunner.MapperExpression = _expression;
+
+					return (_mapper = _expression.Compile())(queryContext, dataContext, dataReader, expr, ps);
+				}
+				catch (InvalidCastException)
+				{
+					if (_isFaulted)
+						throw;
+
+					_isFaulted = true;
+
+					QueryRunner.MapperExpression = _expression;
+
+					return (_mapper = _expression.Compile())(queryContext, dataContext, dataReader, expr, ps);
+				}
+			}
+		}
+
+		#endregion
+
+		#region Execute
+
+		IEnumerable<T> ExecuteQuery(
+			QueryContext   queryContext,
+			IDataContextEx dataContext,
+			Mapper         mapper,
+			Expression     expression,
+			object[]       ps,
+			int            queryNumber)
+		{
+			if (queryContext == null)
+				queryContext = new QueryContext(dataContext, expression, ps);
+
+			try
+			{
+				var query = SetCommandX(dataContext, expression, ps, queryNumber, true);
+
+				using (var runner = dataContext.GetQueryRunner(this, queryNumber, expression, ps))
+				{
+					mapper.QueryRunner = runner;
+
+					var count = 0;
+
+					using (var dr  = runner.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							yield return mapper.Map(queryContext, dataContext, dr, expression, ps);
+							count++;
+						}
+					}
+
+					runner.RowsCount = count;
+				}
+			}
+			finally
+			{
+				if (dataContext.CloseAfterUse)
+					dataContext.Close();
+			}
+		}
+
+		async Task ExecuteQueryAsync(
+			QueryContext                  queryContext,
+			IDataContextEx                dataContext,
+			Mapper                        mapper,
+			Expression                    expression,
+			object[]                      ps,
+			int                           queryNumber,
+			Action<T>                     action,
+			Func<Expression,object[],int> skipAction,
+			Func<Expression,object[],int> takeAction,
+			CancellationToken             cancellationToken,
+			TaskCreationOptions           options)
+		{
+			if (queryContext == null)
+				queryContext = new QueryContext(dataContext, expression, ps);
+
+			try
+			{
+				var query = SetCommandX(dataContext, expression, ps, queryNumber, true);
+
+				Func<IDataReader,T> m = dr => mapper.Map(queryContext, dataContext, dr, expression, ps);
+
+				using (var runner = dataContext.GetQueryRunner(this, queryNumber, expression, ps))
+				{
+					runner.SkipAction = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
+					runner.TakeAction = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;
+
+					mapper.QueryRunner = runner;
+
+					var count = 0;
+
+					using (var dr  = await runner.ExecuteReaderAsync(cancellationToken, options))
+						await dr.QueryForEachAsync(m, r => { action(r); count++; }, cancellationToken);
+
+					runner.RowsCount = count;
+				}
+			}
+			finally
+			{
+				if (dataContext.CloseAfterUse)
+					dataContext.Close();
+			}
+		}
+
+		Tuple<
+			Func<QueryContext,IDataContextEx,Mapper,Expression,object[],int,IEnumerable<T>>,
+			Func<Expression,object[],int>,
+			Func<Expression,object[],int>>
+			GetExecuteQuery()
+		{
+			FinalizeQuery();
+
+			if (Queries.Count != 1)
+				throw new InvalidOperationException();
+
+			Func<QueryContext,IDataContextEx,Mapper,Expression,object[],int,IEnumerable<T>> query = ExecuteQuery;
+
+			Func<Expression,object[],int> skip = null, take = null;
+
+			var select = Queries[0].SelectQuery.Select;
+
+			if (select.SkipValue != null && !SqlProviderFlags.GetIsSkipSupportedFlag(Queries[0].SelectQuery))
+			{
+				var q = query;
+
+				var value = select.SkipValue as SqlValue;
+				if (value != null)
+				{
+					var n = (int)((IValueContainer)select.SkipValue).Value;
+
+					if (n > 0)
+					{
+						query = (qc, db, mapper, expr, ps, qn) => q(qc, db, mapper, expr, ps, qn).Skip(n);
+						skip  = (expr, ps) => n;
+					}
+				}
+				else if (select.SkipValue is SqlParameter)
+				{
+					var i = GetParameterIndex(select.SkipValue);
+					query = (qc, db, mapper, expr, ps, qn) => q(qc, db, mapper, expr, ps, qn).Skip((int)Queries[0].Parameters[i].Accessor(expr, ps));
+					skip  = (expr,ps) => (int)Queries[0].Parameters[i].Accessor(expr, ps);
+				}
+			}
+
+			if (select.TakeValue != null && !SqlProviderFlags.IsTakeSupported)
+			{
+				var q = query;
+
+				var value = select.TakeValue as SqlValue;
+				if (value != null)
+				{
+					var n = (int)((IValueContainer)select.TakeValue).Value;
+
+					if (n > 0)
+					{
+						query = (qc, db, mapper, expr, ps, qn) => q(qc, db, mapper, expr, ps, qn).Take(n);
+						take  = (expr, ps) => n;
+					}
+				}
+				else if (select.TakeValue is SqlParameter)
+				{
+					var i = GetParameterIndex(select.TakeValue);
+					query = (qc, db, mapper, expr, ps, qn) => q(qc, db, mapper, expr, ps, qn).Take((int)Queries[0].Parameters[i].Accessor(expr, ps));
+					take  = (expr,ps) => (int)Queries[0].Parameters[i].Accessor(expr, ps);
+				}
+			}
+
+			return Tuple.Create(query, skip, take);
+		}
+
+		public void SetRunQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
+		{
+			var query  = GetExecuteQuery();
+			var mapper = new Mapper(expression);
+
+			ClearParameters();
+
+			var runQuery = query.Item1;
+
+			GetIEnumerable = (ctx,db,expr,ps) => runQuery(ctx, db, mapper, expr, ps, 0);
+
+			var skipAction = query.Item2;
+			var takeAction = query.Item3;
+
+			GetForEachAsync = (expressionQuery,ctx,db,expr,ps,action,token,options) =>
+				ExecuteQueryAsync(ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token, options);
+		}
+
+		#endregion
 	}
 
-	public class ParameterAccessor
+	class QueryInfo : IQueryContext
+	{
+		public QueryInfo()
+		{
+			SelectQuery = new SelectQuery();
+		}
+
+		public SelectQuery  SelectQuery { get; set; }
+		public object       Context     { get; set; }
+		public List<string> QueryHints  { get; set; }
+
+		public SqlParameter[] GetParameters()
+		{
+			var ps = new SqlParameter[Parameters.Count];
+
+			for (var i = 0; i < ps.Length; i++)
+				ps[i] = Parameters[i].SqlParameter;
+
+			return ps;
+		}
+
+		public List<ParameterAccessor> Parameters = new List<ParameterAccessor>();
+	}
+
+	class ParameterAccessor
 	{
 		public ParameterAccessor(
 			Expression                           expression,

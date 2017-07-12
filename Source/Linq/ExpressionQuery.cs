@@ -89,12 +89,12 @@ namespace LinqToDB.Linq
 
 		public Task<T> GetElementAsync(Func<T> func, CancellationToken cancellationToken, TaskCreationOptions options)
 		{
-			return GetQuery(Expression, true).GetElementAsync(null, DataContext, Expression, Parameters, func, cancellationToken, options);
+			return GetQuery(Expression, true).GetElementAsync(null, (IDataContextEx)DataContext, Expression, Parameters, func, cancellationToken, options);
 		}
 
 		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken, TaskCreationOptions options)
 		{
-			return GetQuery(Expression, true).GetForEachAsync(this, null, DataContext, Expression, Parameters, action, cancellationToken, options);
+			return GetQuery(Expression, true).GetForEachAsync(this, null, (IDataContextEx)DataContext, Expression, Parameters, action, cancellationToken, options);
 		}
 
 #endif
@@ -149,12 +149,12 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			return (TResult)GetQuery(expression, false).GetElement(null, DataContext, expression, Parameters);
+			return (TResult)GetQuery(expression, false).GetElement(null, (IDataContextEx)DataContext, expression, Parameters);
 		}
 
 		object IQueryProvider.Execute(Expression expression)
 		{
-			return GetQuery(expression, false).GetElement(null, DataContext, expression, Parameters);
+			return GetQuery(expression, false).GetElement(null, (IDataContextEx)DataContext, expression, Parameters);
 		}
 
 		#endregion
@@ -163,12 +163,12 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			return GetQuery(Expression, true).GetIEnumerable(null, DataContext, Expression, Parameters).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(null, (IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return GetQuery(Expression, true).GetIEnumerable(null, DataContext, Expression, Parameters).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(null, (IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
 		}
 
 		#endregion

@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
+	using Linq;
+
 #if !NOASYNC
 
-	public class DataReaderAsync : IDisposable
+	public class DataReaderAsync : IDataReaderAsync
 	{
 		public   CommandInfo       CommandInfo       { get; set; }
 		public   DbDataReader      Reader            { get; set; }
@@ -53,9 +55,19 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(objectReader, action, CancellationToken.None);
 		}
 
+		public Func<int> SkipAction;
+		public Func<int> TakeAction;
+
 		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
-			while (await Reader.ReadAsync(cancellationToken))
+			var skip = SkipAction == null ? 0 : SkipAction();
+
+			while (skip-- > 0 && await Reader.ReadAsync(cancellationToken))
+				{}
+
+			var take = TakeAction == null ? int.MaxValue : TakeAction();
+
+			while (take-- > 0 && await Reader.ReadAsync(cancellationToken))
 				action(objectReader(Reader));
 		}
 

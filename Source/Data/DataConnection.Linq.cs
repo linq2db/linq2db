@@ -14,7 +14,7 @@ namespace LinqToDB.Data
 	using SqlQuery;
 	using SqlProvider;
 
-	public partial class DataConnection : IDataContext
+	public partial class DataConnection : IDataContextEx
 	{
 		public ITable<T> GetTable<T>()
 			where T : class

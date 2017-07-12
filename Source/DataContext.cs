@@ -11,7 +11,7 @@ namespace LinqToDB
 	using Mapping;
 	using SqlProvider;
 
-	public class DataContext : IDataContext
+	public partial class DataContext : IDataContextEx
 	{
 		public DataContext() : this(DataConnection.DefaultConfiguration)
 		{

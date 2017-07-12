@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -23,6 +24,19 @@ namespace LinqToDB.Data
 			}
 
 			InitCommand(commandType, sql, parameters, null);
+		}
+
+		internal async Task InitCommandAsync(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints, CancellationToken cancellationToken)
+		{
+			if (queryHints != null && queryHints.Count > 0)
+			{
+				var sqlProvider = DataProvider.CreateSqlBuilder();
+				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
+				queryHints.Clear();
+			}
+
+			await InitCommandAsync(commandType, sql, parameters, cancellationToken);
+			LastQuery = Command.CommandText;
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
