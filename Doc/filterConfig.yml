@@ -1,0 +1,7 @@
+apiRules:
+- exclude:
+      uidRegex: ^System\.Object\..*
+      type: Member
+- exclude:
+      uidRegex: ^System\.Attribute\..*
+      type: Member
