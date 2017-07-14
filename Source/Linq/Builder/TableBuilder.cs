@@ -593,6 +593,8 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
+			// IT : TableBuilder : BuildQuery
+			//
 			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildQuery(typeof(T), this, null);

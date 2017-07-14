@@ -26,6 +26,8 @@ namespace LinqToDB.Linq
 		protected readonly int            QueryNumber;
 		protected readonly object[]       Parameters;
 
+		protected List<string> QueryHints { get; set; }
+
 		public abstract void                   Dispose();
 		public abstract int                    ExecuteNonQuery();
 		public abstract object                 ExecuteScalar();
@@ -93,10 +95,8 @@ namespace LinqToDB.Linq
 
 				if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
 				{
-					var queryContext = Query.Queries[QueryNumber];
-
-					queryContext.QueryHints = new List<string>(DataContext.QueryHints);
-					queryContext.QueryHints.AddRange(DataContext.NextQueryHints);
+					QueryHints = new List<string>(DataContext.QueryHints);
+					QueryHints.AddRange(DataContext.NextQueryHints);
 
 					if (clearQueryHints)
 						DataContext.NextQueryHints.Clear();

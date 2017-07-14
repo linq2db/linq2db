@@ -252,6 +252,7 @@ namespace LinqToDB.Data
 			return ExecuteScalar();
 		}
 
+		// IT : IDataContext.ExecuteReader
 		IDataReader IDataContext.ExecuteReader(object query)
 		{
 			ThrowOnDisposed();

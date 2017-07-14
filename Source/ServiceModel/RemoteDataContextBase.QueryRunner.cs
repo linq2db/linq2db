@@ -16,6 +16,8 @@ namespace LinqToDB.ServiceModel
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
 		}
 
+		// IT : QueryRunner - RemoteDataContextBase
+		//
 		class QueryRunner : QueryRunnerBase
 		{
 			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object[] parameters)
@@ -39,6 +41,9 @@ namespace LinqToDB.ServiceModel
 				var disposable = _client as IDisposable;
 				if (disposable != null)
 					disposable.Dispose();
+
+				if (DataContext.CloseAfterUse)
+					DataContext.Close();
 			}
 
 			public override int ExecuteNonQuery()

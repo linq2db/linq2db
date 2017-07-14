@@ -17,6 +17,8 @@ namespace LinqToDB.Data
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
 		}
 
+		// IT : QueryRunner - DataConnection
+		//
 		internal class QueryRunner : QueryRunnerBase
 		{
 			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object[] parameters)
@@ -74,13 +76,16 @@ namespace LinqToDB.Data
 						RecordsAffected  = RowsCount,
 					});
 				}
+
+				if (DataContext.CloseAfterUse)
+					DataContext.Close();
 			}
 
 			void SetCommand()
 			{
 				SetCommand(true);
 
-				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints);
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints);
 
 				if (_preparedQuery.Parameters != null)
 					foreach (var p in _preparedQuery.Parameters)
@@ -101,7 +106,14 @@ namespace LinqToDB.Data
 
 			public override IDataReader ExecuteReader()
 			{
-				SetCommand();
+				SetCommand(true);
+
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints);
+
+				if (_preparedQuery.Parameters != null)
+					foreach (var p in _preparedQuery.Parameters)
+						_dataConnection.Command.Parameters.Add(p);
+
 				return _dataConnection.ExecuteReader();
 			}
 
@@ -109,7 +121,7 @@ namespace LinqToDB.Data
 			{
 				base.SetCommand(true);
 
-				await _dataConnection.InitCommandAsync(CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints, cancellationToken);
+				await _dataConnection.InitCommandAsync(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, cancellationToken);
 
 				if (_preparedQuery.Parameters != null)
 					foreach (var p in _preparedQuery.Parameters)

@@ -1452,32 +1452,22 @@ namespace LinqToDB.Linq
 			if (queryContext == null)
 				queryContext = new QueryContext(dataContext, expression, ps);
 
-			try
+			using (var runner = dataContext.GetQueryRunner(this, queryNumber, expression, ps))
 			{
-				var query = SetCommandX(dataContext, expression, ps, queryNumber, true);
+				mapper.QueryRunner = runner;
 
-				using (var runner = dataContext.GetQueryRunner(this, queryNumber, expression, ps))
+				var count = 0;
+
+				using (var dr  = runner.ExecuteReader())
 				{
-					mapper.QueryRunner = runner;
-
-					var count = 0;
-
-					using (var dr  = runner.ExecuteReader())
+					while (dr.Read())
 					{
-						while (dr.Read())
-						{
-							yield return mapper.Map(queryContext, dataContext, dr, expression, ps);
-							count++;
-						}
+						yield return mapper.Map(queryContext, dataContext, dr, expression, ps);
+						count++;
 					}
-
-					runner.RowsCount = count;
 				}
-			}
-			finally
-			{
-				if (dataContext.CloseAfterUse)
-					dataContext.Close();
+
+				runner.RowsCount = count;
 			}
 		}
 

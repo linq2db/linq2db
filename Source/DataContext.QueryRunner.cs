@@ -16,6 +16,8 @@ namespace LinqToDB
 			return new QueryRunner(this, ((IDataContextEx)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters));
 		}
 
+		// IT : QueryRunner - DataContext
+		//
 		class QueryRunner : IQueryRunner
 		{
 			public QueryRunner(DataContext dataContext, IQueryRunner queryRunner)
