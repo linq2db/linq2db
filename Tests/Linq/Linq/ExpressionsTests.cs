@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Linq;
 
@@ -317,6 +317,24 @@ namespace Tests.Linq
 					,
 					from p in db.Parent
 					select GrandChildren(p).Count());
+		}
+
+		[Test, DataContextSource]
+		public async Task AssociationMethodExpressionAsync(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var list = await db.Parent.ToListAsync();
+
+				AreEqual(
+					from p in Parent
+					select p.Children.SelectMany(gc => gc.GrandChildren).Count()
+					,
+					await (
+						from p in db.Parent
+						select GrandChildren(p).Count()
+					).ToListAsync());
+			}
 		}
 
 		[Test]

@@ -113,6 +113,48 @@ namespace LinqToDB.ServiceModel
 				return new ServiceModelDataReader(_dataContext.MappingSchema, result);
 			}
 
+			class DataReaderAsync : IDataReaderAsync
+			{
+				public DataReaderAsync(RemoteDataContextBase dataContext, string result, Func<int> skipAction, Func<int> takeAction)
+				{
+					_dataContext = dataContext;
+					_result      = result;
+					_skipAction  = skipAction;
+					_takeAction  = takeAction;
+				}
+
+				readonly RemoteDataContextBase _dataContext;
+				readonly string                _result;
+				readonly Func<int>             _skipAction;
+				readonly Func<int>             _takeAction;
+
+				public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+				{
+					await Task.Run(() =>
+					{
+						var result = LinqServiceSerializer.DeserializeResult(_result);
+
+						using (var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result))
+						{
+							var skip = _skipAction == null ? 0 : _skipAction();
+
+							while (skip-- > 0 && reader.Read())
+								if (cancellationToken.IsCancellationRequested)
+									return;
+
+							var take = _takeAction == null ? int.MaxValue : _takeAction();
+				
+							while (take-- > 0 && reader.Read())
+								if (cancellationToken.IsCancellationRequested)
+									return;
+								else
+									action(objectReader(reader));
+						}
+					},
+					cancellationToken);
+				}
+			}
+
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)
 			{
 				if (_dataContext._batchCounter > 0)
@@ -134,11 +176,7 @@ namespace LinqToDB.ServiceModel
 							q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
 							queryContext.QueryHints));
 
-					var result = LinqServiceSerializer.DeserializeResult(ret);
-
-					var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result);
-
-					return new ServiceModelDataReaderAsync { Reader = reader, SkipAction = SkipAction, TakeAction = TakeAction };
+					return new DataReaderAsync(_dataContext, ret, SkipAction, TakeAction);
 				},
 				cancellationToken);
 			}

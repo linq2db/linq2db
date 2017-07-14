@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -207,6 +207,15 @@ namespace Tests.Linq
 				AreEqual(
 					   ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>(),
 					db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>());
+		}
+
+		[Test, DataContextSource]
+		public async Task Cast1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					      ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>(),
+					await db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>().ToListAsync());
 		}
 
 		class ParentEx : Parent
@@ -571,6 +580,22 @@ namespace Tests.Linq
 					select p1;
 
 				var list = q.Distinct().OfType<Test18Female>().ToList();
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task Test18Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ids = Enumerable.Range(0, 10).ToList();
+				var q   =
+					from p1 in db.GetTable<Test18Person>()
+					where ids.Contains(p1.PersonID)
+					join p2 in db.GetTable<Test18Person>() on p1.PersonID equals p2.PersonID
+					select p1;
+
+				var list = await q.Distinct().OfType<Test18Female>().ToListAsync();
 			}
 		}
 

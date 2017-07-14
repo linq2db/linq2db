@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Threading;
@@ -30,6 +31,8 @@ namespace LinqToDB.Data
 			readonly DataConnection _dataConnection;
 			readonly DateTime       _startedOn = DateTime.Now;
 
+			bool _isAsync;
+
 			Expression _mapperExpression;
 
 			public override Expression  MapperExpression
@@ -47,6 +50,7 @@ namespace LinqToDB.Data
 							TraceLevel       = TraceLevel.Info,
 							DataConnection   = _dataConnection,
 							MapperExpression = MapperExpression,
+							IsAsync          = _isAsync,
 						});
 					}
 				}
@@ -74,6 +78,7 @@ namespace LinqToDB.Data
 						MapperExpression = MapperExpression,
 						ExecutionTime    = DateTime.Now - _startedOn,
 						RecordsAffected  = RowsCount,
+						IsAsync          = _isAsync,
 					});
 				}
 
@@ -117,8 +122,40 @@ namespace LinqToDB.Data
 				return _dataConnection.ExecuteReader();
 			}
 
+			class DataReaderAsync : IDataReaderAsync
+			{
+				public DataReaderAsync(DataConnection dataConnection, Func<int> skipAction, Func<int> takeAction)
+				{
+					_dataConnection = dataConnection;
+					_skipAction     = skipAction;
+					_takeAction     = takeAction;
+				}
+
+				readonly DataConnection _dataConnection;
+				readonly Func<int>      _skipAction;
+				readonly Func<int>      _takeAction;
+
+				async Task IDataReaderAsync.QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+				{
+					using (var reader = await _dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken))
+					{
+						var skip = _skipAction == null ? 0 : _skipAction();
+
+						while (skip-- > 0 && await reader.ReadAsync(cancellationToken))
+							{}
+
+						var take = _takeAction == null ? int.MaxValue : _takeAction();
+
+						while (take-- > 0 && await reader.ReadAsync(cancellationToken))
+							action(objectReader(reader));
+					}
+				}
+			}
+
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)
 			{
+				_isAsync = true;
+
 				base.SetCommand(true);
 
 				await _dataConnection.InitCommandAsync(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, cancellationToken);
@@ -127,10 +164,7 @@ namespace LinqToDB.Data
 					foreach (var p in _preparedQuery.Parameters)
 						_dataConnection.Command.Parameters.Add(p);
 
-				var dataReader = await _dataConnection.SetCommand(_preparedQuery.Commands[0]).ExecuteReaderAsync(cancellationToken);
-
-				dataReader.SkipAction = SkipAction;
-				dataReader.TakeAction = TakeAction;
+				var dataReader = new DataReaderAsync(_dataConnection, SkipAction, TakeAction);
 
 				return dataReader;
 			}

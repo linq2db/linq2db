@@ -112,6 +112,7 @@ namespace LinqToDB.Data
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = this,
 					Command        = Command,
+					IsAsync        = true,
 				});
 			}
 
@@ -129,6 +130,7 @@ namespace LinqToDB.Data
 						DataConnection = this,
 						Command        = Command,
 						ExecutionTime  = DateTime.Now - now,
+						IsAsync        = true,
 					});
 				}
 
@@ -145,6 +147,7 @@ namespace LinqToDB.Data
 						Command        = Command,
 						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
+						IsAsync        = true,
 					});
 				}
 

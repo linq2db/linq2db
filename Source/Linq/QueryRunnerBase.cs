@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Data;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq
@@ -26,7 +27,8 @@ namespace LinqToDB.Linq
 		protected readonly int            QueryNumber;
 		protected readonly object[]       Parameters;
 
-		protected List<string> QueryHints { get; set; }
+		protected List<string>            QueryHints;
+		protected DataParameter[]         DataParameters;
 
 		public abstract void                   Dispose();
 		public abstract int                    ExecuteNonQuery();
@@ -43,19 +45,23 @@ namespace LinqToDB.Linq
 		{
 			var queryContext = Query.Queries[QueryNumber];
 
-			foreach (var p in queryContext.Parameters)
+			//DataParameters = new DataParameter[queryContext.Parameters.Count];
+
+			for (var i = 0; i < queryContext.Parameters.Count; i++)
 			{
+				var p     = queryContext.Parameters[i];
 				var value = p.Accessor(Expression, Parameters);
 
 				var vs = value as IEnumerable;
 
 				if (vs != null)
 				{
-					var type  = vs.GetType();
+					var type = vs.GetType();
 					var etype = type.GetItemType();
 
 					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
-						(type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArgumentsEx()[0].IsEnumEx()))
+						type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+						etype.GetGenericArgumentsEx()[0].IsEnumEx())
 					{
 						var values = new List<object>();
 
@@ -82,26 +88,27 @@ namespace LinqToDB.Linq
 
 				var dataType = p.DataTypeAccessor(Expression, Parameters);
 
-				if (dataType != DataType.Undefined)
-					p.SqlParameter.DataType = dataType;
+				if (dataType == DataType.Undefined)
+					p.SqlParameter.DataType = dataType = p.SqlParameter.DataType;
+
+				//DataParameters[i] = new DataParameter(p.SqlParameter.Name, value, dataType);
 			}
 		}
 
 		protected void SetCommand(bool clearQueryHints)
 		{
+			if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
+			{
+				QueryHints = new List<string>(DataContext.QueryHints);
+				QueryHints.AddRange(DataContext.NextQueryHints);
+
+				if (clearQueryHints)
+					DataContext.NextQueryHints.Clear();
+			}
+
 			lock (Query)
 			{
 				SetParameters();
-
-				if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
-				{
-					QueryHints = new List<string>(DataContext.QueryHints);
-					QueryHints.AddRange(DataContext.NextQueryHints);
-
-					if (clearQueryHints)
-						DataContext.NextQueryHints.Clear();
-				}
-
 				SetQuery();
 			}
 		}

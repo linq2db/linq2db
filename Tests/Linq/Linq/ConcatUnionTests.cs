@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 
 using NUnit.Framework;
@@ -22,6 +22,20 @@ namespace Tests.Linq
 					,
 					(from p in db.Parent where p.ParentID == 1 select p).Concat(
 					(from p in db.Parent where p.ParentID == 2 select p)));
+		}
+
+		[Test, DataContextSource]
+		public async Task Concat1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from p in Parent where p.ParentID == 1 select p).Concat(
+					(from p in Parent where p.ParentID == 2 select p))
+					,
+					await 
+					(from p in db.Parent where p.ParentID == 1 select p).Concat(
+					(from p in db.Parent where p.ParentID == 2 select p))
+					.ToListAsync());
 		}
 
 		[Test, DataContextSource]

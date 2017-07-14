@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	interface IDataReaderAsync : IDisposable
+	interface IDataReaderAsync
 	{
 		Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken);
 	}

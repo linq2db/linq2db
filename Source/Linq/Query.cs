@@ -196,9 +196,10 @@ namespace LinqToDB.Linq
 						{
 							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
 #if !SILVERLIGHT && !NETFX_CORE
-							DataConnection.WriteTraceLine(
-								"Expression test code generated: '" + testFile + "'.", 
-								DataConnection.TraceSwitch.DisplayName);
+							if (DataConnection.TraceSwitch.TraceInfo)
+								DataConnection.WriteTraceLine(
+									"Expression test code generated: '" + testFile + "'.", 
+									DataConnection.TraceSwitch.DisplayName);
 #endif
 						}
 
@@ -487,27 +488,6 @@ namespace LinqToDB.Linq
 				}
 
 				return dataContext.SetQuery(query);
-			}
-		}
-
-		QueryInfo SetCommandX(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints)
-		{
-			lock (this)
-			{
-				SetParameters(expr, parameters, idx);
-
-				var query = Queries[idx];
-
-				if (idx == 0 && (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0))
-				{
-					query.QueryHints = new List<string>(dataContext.QueryHints);
-					query.QueryHints.AddRange(dataContext.NextQueryHints);
-
-					if (clearQueryHints)
-						dataContext.NextQueryHints.Clear();
-				}
-
-				return query;
 			}
 		}
 
@@ -1202,94 +1182,6 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		internal void SetQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
-		{
-			var query   = GetQuery();
-			var mapInfo = new MapInfo(expression);
-
-			ClearParameters();
-
-			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
-		}
-
-		class MapInfo
-		{
-			public MapInfo([JetBrains.Annotations.NotNull] Expression<Func<QueryContext, IDataContext, IDataReader, Expression, object[], T>> expression)
-			{
-				if (expression == null)
-					throw new ArgumentNullException("expression");
-				Expression = expression;
-			}
-
-			[JetBrains.Annotations.NotNull]
-			public readonly Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> Expression;
-
-			public            Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>  Mapper;
-			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> MapperExpression;
-		}
-
-		static IEnumerable<T> Map(
-			IEnumerable<IDataReader> data,
-			QueryContext             queryContext,
-			IDataContext             dataContext,
-			Expression               expr,
-			object[]                 ps,
-			MapInfo                  mapInfo)
-		{
-			if (queryContext == null)
-				queryContext = new QueryContext(dataContext, expr, ps);
-
-			var isFaulted = false;
-
-			foreach (var dr in data)
-			{
-				var mapper = mapInfo.Mapper;
-
-				if (mapper == null)
-				{
-					mapInfo.MapperExpression = mapInfo.Expression.Transform(e =>
-					{
-						var ex = e as ConvertFromDataReaderExpression;
-						return ex != null ? ex.Reduce(dr) : e;
-					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
-
-					// IT : # MapperExpression.Compile()
-					//
-					Debug.Assert(mapInfo.MapperExpression != null, "mapInfo.MapperExpression != null");
-					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
-				}
-
-				T result;
-
-				try
-				{
-					result = mapper(queryContext, dataContext, dr, expr, ps);
-				}
-				catch (FormatException)
-				{
-					if (isFaulted)
-						throw;
-
-					isFaulted = true;
-
-					mapInfo.Mapper = mapInfo.Expression.Compile();
-					result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
-				}
-				catch (InvalidCastException)
-				{
-					if (isFaulted)
-						throw;
-
-					isFaulted = true;
-
-					mapInfo.Mapper = mapInfo.Expression.Compile();
-					result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
-				}
-
-				yield return result;
-			}
-		}
-
 		internal void SetQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>> expression)
 		{
 			var query   = GetQuery();
@@ -1412,10 +1304,17 @@ namespace LinqToDB.Linq
 				{
 					return _mapper(queryContext, dataContext, dataReader, expr, ps);
 				}
-				catch (FormatException)
+				catch (FormatException ex)
 				{
 					if (_isFaulted)
 						throw;
+
+#if !SILVERLIGHT && !NETFX_CORE
+					if (DataConnection.TraceSwitch.TraceInfo)
+						DataConnection.WriteTraceLine(
+							"Mapper has switched to slow mode. Mapping exception: " + ex.Message,
+							DataConnection.TraceSwitch.DisplayName);
+#endif
 
 					_isFaulted = true;
 
@@ -1423,10 +1322,17 @@ namespace LinqToDB.Linq
 
 					return (_mapper = _expression.Compile())(queryContext, dataContext, dataReader, expr, ps);
 				}
-				catch (InvalidCastException)
+				catch (InvalidCastException ex)
 				{
 					if (_isFaulted)
 						throw;
+
+#if !SILVERLIGHT && !NETFX_CORE
+					if (DataConnection.TraceSwitch.TraceInfo)
+						DataConnection.WriteTraceLine(
+							"Mapper has switched to slow mode. Mapping exception: " + ex.Message,
+							DataConnection.TraceSwitch.DisplayName);
+#endif
 
 					_isFaulted = true;
 
@@ -1489,8 +1395,6 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				var query = SetCommandX(dataContext, expression, ps, queryNumber, true);
-
 				Func<IDataReader,T> m = dr => mapper.Map(queryContext, dataContext, dr, expression, ps);
 
 				using (var runner = dataContext.GetQueryRunner(this, queryNumber, expression, ps))
@@ -1502,8 +1406,8 @@ namespace LinqToDB.Linq
 
 					var count = 0;
 
-					using (var dr  = await runner.ExecuteReaderAsync(cancellationToken, options))
-						await dr.QueryForEachAsync(m, r => { action(r); count++; }, cancellationToken);
+					var dr  = await runner.ExecuteReaderAsync(cancellationToken, options);
+					await dr.QueryForEachAsync(m, r => { action(r); count++; }, cancellationToken);
 
 					runner.RowsCount = count;
 				}
