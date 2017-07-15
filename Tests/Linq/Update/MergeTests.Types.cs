@@ -72,6 +72,9 @@ namespace Tests.Merge
 			[Column("FieldDateTime2")]
 			public DateTimeOffset? FieldDateTime2;
 
+			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
+			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
+			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)] // for some reason it breaks merge
 			[Column("FieldBinary")]
 			public byte[] FieldBinary;
@@ -392,6 +395,7 @@ namespace Tests.Merge
 			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, context);
 
 			AssertDateTimeOffset(expected.FieldDateTime2, actual.FieldDateTime2, context);
+
 			AssertBinary(expected.FieldBinary, actual.FieldBinary, context);
 
 			if (context != ProviderName.Informix)
@@ -435,7 +439,10 @@ namespace Tests.Merge
 
 		private static void AssertBinary(byte[] expected, byte[] actual, string context)
 		{
-			if (context == ProviderName.Informix)
+			if (context == ProviderName.Informix
+				|| context == ProviderName.Oracle
+				|| context == ProviderName.OracleManaged
+				|| context == ProviderName.OracleNative)
 				return;
 
 			if (expected != null)

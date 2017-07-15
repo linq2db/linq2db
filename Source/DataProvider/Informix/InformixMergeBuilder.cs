@@ -79,16 +79,10 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				if (!valueConverter.TryConvert(Command, columnType, value))
 				{
-					var name = GetNextParameterName();
-
-					var fullName = SqlBuilder.Convert(name, ConvertType.NameToQueryParameter).ToString();
-
-					Command.Append(fullName);
+					AddSourceValueAsParameter(column, value);
 
 					// even for parameters
 					WriteTypeHint(column, columnType);
-
-					AddParameter(new DataParameter(name, value, column.DataType));
 				}
 				else
 				{

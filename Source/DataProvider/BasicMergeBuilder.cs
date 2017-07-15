@@ -242,14 +242,19 @@ namespace LinqToDB.DataProvider
 			// avoid parameters in source due to low limits for parameters number in providers
 			if (!valueConverter.TryConvert(Command, columnType, value))
 			{
-				var name = GetNextParameterName();
-
-				var fullName = SqlBuilder.Convert(name, ConvertType.NameToQueryParameter).ToString();
-
-				Command.Append(fullName);
-
-				AddParameter(new DataParameter(name, value, column.DataType));
+				AddSourceValueAsParameter(column, value);
 			}
+		}
+
+		protected void AddSourceValueAsParameter(ColumnDescriptor column, object value)
+		{
+			var name = GetNextParameterName();
+
+			var fullName = SqlBuilder.Convert(name, ConvertType.NameToQueryParameter).ToString();
+
+			Command.Append(fullName);
+
+			AddParameter(new DataParameter(name, value, column.DataType));
 		}
 
 		private void BuildAsSourceClause(IEnumerable<string> columnNames)
