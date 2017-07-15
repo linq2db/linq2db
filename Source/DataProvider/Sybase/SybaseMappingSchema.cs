@@ -32,12 +32,12 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			var start = "'";
+			string startPrefix = null;
 
 			if (value.Any(ch => ch > 127))
-				start = "N'";
+				startPrefix = "N";
 
-			DataTools.ConvertStringToSql(stringBuilder, "+", start, AppendConversion, value);
+			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversion, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)

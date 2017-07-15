@@ -2,6 +2,8 @@
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
+using System;
+using System.Globalization;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -71,15 +73,60 @@ namespace LinqToDB.DataProvider.Informix
 			SqlDataType columnType,
 			object value)
 		{
+			// informix have really hard times to recognize it's own types, so in source we need to specify type
+			// hint for most of types
 			if (value != null)
 			{
-				base.AddSourceValue(valueConverter, column, columnType, value);
-				return;
-			}
+				if (!valueConverter.TryConvert(Command, columnType, value))
+				{
+					var name = GetNextParameterName();
 
-			// Informix NULL values are typed and usually it can type them from context
-			// source select is one of those places where it cannot infer type, so we should specify it explicitly
-			Command.Append("NULL::");
+					var fullName = SqlBuilder.Convert(name, ConvertType.NameToQueryParameter).ToString();
+
+					Command.Append(fullName);
+
+					// even for parameters
+					WriteTypeHint(column, columnType);
+
+					AddParameter(new DataParameter(name, value, column.DataType));
+				}
+				else
+				{
+					if (value is decimal && columnType.Precision == null
+						&& (columnType.DataType == DataType.Decimal || columnType.DataType == DataType.Undefined))
+					{
+						var decValue = (decimal)value;
+
+						var precision = 0;
+						var str = decValue.ToString(CultureInfo.InvariantCulture);
+						var dotIndex = str.IndexOf(".");
+						if (dotIndex >= 0)
+						{
+							precision = str.Substring(0, dotIndex).TrimStart('0').Length;
+						}
+
+						var scale = BitConverter.GetBytes(decimal.GetBits(decValue)[3])[2];
+						precision += scale;
+
+						columnType = new SqlDataType(DataType.Decimal, columnType.Type, null, precision, scale);
+					}
+
+					// this is the only place where hint is not required for some types but it doesn't make sense to
+					// write extra logic to detect when it could be skipped
+					WriteTypeHint(column, columnType);
+				}
+			}
+			else
+			{
+				Command.Append("NULL");
+				WriteTypeHint(column, columnType);
+			}
+		}
+
+		private void WriteTypeHint(ColumnDescriptor column, SqlDataType columnType)
+		{
+			Command.Append("::");
+
 			if (column.DbType != null)
 				Command.Append(column.DbType);
 			else

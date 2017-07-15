@@ -248,7 +248,7 @@ namespace LinqToDB.DataProvider
 
 				Command.Append(fullName);
 
-				_parameters.Add(new DataParameter(name, value, column.DataType));
+				AddParameter(new DataParameter(name, value, column.DataType));
 			}
 		}
 
@@ -1074,6 +1074,11 @@ namespace LinqToDB.DataProvider
 		#region Parameters
 		private readonly List<DataParameter> _parameters = new List<DataParameter>();
 
+		protected void AddParameter(DataParameter parameter)
+		{
+			_parameters.Add(parameter);
+		}
+
 		private int _parameterCnt;
 
 		/// <summary>
@@ -1093,7 +1098,7 @@ namespace LinqToDB.DataProvider
 		public bool NoopCommand { get; private set; }
 
 
-		private string GetNextParameterName()
+		protected string GetNextParameterName()
 		{
 			return string.Format("p{0}", _parameterCnt++);
 		}
@@ -1104,7 +1109,7 @@ namespace LinqToDB.DataProvider
 			{
 				param.Name = GetNextParameterName();
 
-				_parameters.Add(new DataParameter(param.Name, param.Value, param.DataType));
+				AddParameter(new DataParameter(param.Name, param.Value, param.DataType));
 			}
 		}
 		#endregion

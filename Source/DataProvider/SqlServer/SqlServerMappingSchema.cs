@@ -115,21 +115,21 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
 		{
-			string start;
+			string startPrefix;
 
 			switch (sqlDataType.DataType)
 			{
 				case DataType.Char    :
 				case DataType.VarChar :
 				case DataType.Text    :
-					start = "'";
+					startPrefix = null;
 					break;
 				default               :
-					start = "N'";
+					startPrefix = "N";
 					break;
 			}
 
-			DataTools.ConvertStringToSql(stringBuilder, "+", start, AppendConversion, value);
+			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversion, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
