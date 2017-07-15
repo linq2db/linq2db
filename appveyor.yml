@@ -4,7 +4,8 @@ environment:
   packageVersion: 1.8.4
   op_build_user: "ili"
   op_build_user_email: "docfx@linq2db.com"
-  access_token:    secure: bjKC2PPZY9DQHz5k4uCmqS7Gf8+nfhVvJ1vWFFx/93VTRFnc1poo+isF8jsQjtFb
+  access_token:
+    secure: bjKC2PPZY9DQHz5k4uCmqS7Gf8+nfhVvJ1vWFFx/93VTRFnc1poo+isF8jsQjtFb
   matrix:
     - buildConfiguration: dotNet
       solutionName: linq2db.4.5.sln
