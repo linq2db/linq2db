@@ -91,7 +91,7 @@ build_script:
 
 after_build:
 - ps: |
-    if (($env:buildConfiguration -ne "docfx")
+    if ($env:buildConfiguration -ne "docfx")
     {
        if ($env:buildConfiguration -eq "dotNetCore")
        {
@@ -118,7 +118,7 @@ artifacts:
 
 test_script:
 - ps: |
-    if (($env:buildConfiguration -ne "docfx")
+    if ($env:buildConfiguration -ne "docfx")
     {
       if ($env:buildConfiguration -eq "dotNetCore")
       {
@@ -141,7 +141,7 @@ test_script:
 
 before_test:
 - ps: |
-    if (($env:buildConfiguration -ne "docfx")
+    if ($env:buildConfiguration -ne "docfx")
     {
       Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
        cd $env:appveyor_build_folder
