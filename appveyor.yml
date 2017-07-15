@@ -57,36 +57,36 @@ before_build:
 
 build_script:
   - ps: |
-    if ($env:buildConfiguration -eq "docfx" -and ($env:APPVEYOR_REPO_BRANCH -eq "release" -or $env:APPVEYOR_REPO_BRANCH -eq "docfx"))
-    {
-      choco install docfx
-      cd ./doc
-      docfx docfx.json
-      
-      cd ..
-      
-      git config --global core.autocrlf true
-      git config --global credential.helper store
-      Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
-      git config --global user.email $env:op_build_user_email
-      git config --global user.name $env:op_build_user
-      
-      
-      git clone https://github.com/linq2db/linq2db.github.io.git -b master linq2db.github.io -q
-      
-      Copy-Item linq2db.github.io/.git ./doc/_site -recurse
-      
-      cs ./doc/_site
-      
-      git add -A 2>&1
-      git commit -m "CI docfx update" -q
-      
-      git push "https://ili:$($env:access_token)@github.com/linq2db/linq2db.github.io.git" master -q
-    }
-    else 
-    {
-      & msbuild $env:solutionName /property:Configuration=Release
-    }
+      if ($env:buildConfiguration -eq "docfx" -and ($env:APPVEYOR_REPO_BRANCH -eq "release" -or $env:APPVEYOR_REPO_BRANCH -eq "docfx"))
+      {
+        choco install docfx
+        cd ./doc
+        docfx docfx.json
+        
+        cd ..
+        
+        git config --global core.autocrlf true
+        git config --global credential.helper store
+        Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+        git config --global user.email $env:op_build_user_email
+        git config --global user.name $env:op_build_user
+        
+        
+        git clone https://github.com/linq2db/linq2db.github.io.git -b master linq2db.github.io -q
+        
+        Copy-Item linq2db.github.io/.git ./doc/_site -recurse
+        
+        cs ./doc/_site
+        
+        git add -A 2>&1
+        git commit -m "CI docfx update" -q
+        
+        git push "https://ili:$($env:access_token)@github.com/linq2db/linq2db.github.io.git" master -q
+      }
+      else 
+      {
+        & msbuild $env:solutionName /property:Configuration=Release
+      }
 
 
 after_build:
