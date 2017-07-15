@@ -76,7 +76,7 @@ build_script:
         
         Copy-Item linq2db.github.io/.git ./doc/_site -recurse
         
-        cs ./doc/_site
+        cd ./doc/_site
         
         git add -A 2>&1
         git commit -m "CI docfx update" -q
