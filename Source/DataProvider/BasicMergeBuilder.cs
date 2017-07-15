@@ -242,11 +242,11 @@ namespace LinqToDB.DataProvider
 			// avoid parameters in source due to low limits for parameters number in providers
 			if (!valueConverter.TryConvert(Command, columnType, value))
 			{
-				AddSourceValueAsParameter(column, value);
+				AddSourceValueAsParameter(column.DataType, value);
 			}
 		}
 
-		protected void AddSourceValueAsParameter(ColumnDescriptor column, object value)
+		protected void AddSourceValueAsParameter(DataType dataType, object value)
 		{
 			var name = GetNextParameterName();
 
@@ -254,7 +254,7 @@ namespace LinqToDB.DataProvider
 
 			Command.Append(fullName);
 
-			AddParameter(new DataParameter(name, value, column.DataType));
+			AddParameter(new DataParameter(name, value, dataType));
 		}
 
 		private void BuildAsSourceClause(IEnumerable<string> columnNames)

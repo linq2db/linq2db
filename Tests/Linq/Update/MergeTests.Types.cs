@@ -51,6 +51,7 @@ namespace Tests.Merge
 			[Column("FieldFloat")]
 			public float? FieldFloat;
 
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird)] // disabled due to test data
 			[Column("FieldDouble")]
 			public double? FieldDouble;
 
@@ -64,7 +65,6 @@ namespace Tests.Merge
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)]
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
-			[Column(IsColumn = false, Configuration = TestProvName.Firebird3)]
 			[Column(IsColumn = false, Configuration = ProviderName.Access)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
@@ -72,6 +72,7 @@ namespace Tests.Merge
 			[Column("FieldDateTime2")]
 			public DateTimeOffset? FieldDateTime2;
 
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.OracleManaged)]
 			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
@@ -97,6 +98,7 @@ namespace Tests.Merge
 			[Column("FieldDate")]
 			public DateTime? FieldDate;
 
+			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
@@ -390,7 +392,10 @@ namespace Tests.Merge
 			AssertNChar(expected.FieldChar, actual.FieldChar, context);
 
 			Assert.AreEqual(expected.FieldFloat, actual.FieldFloat);
-			Assert.AreEqual(expected.FieldDouble, actual.FieldDouble);
+
+			if (context != ProviderName.Firebird
+				&& context != TestProvName.Firebird3)
+				Assert.AreEqual(expected.FieldDouble, actual.FieldDouble);
 
 			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, context);
 
@@ -442,7 +447,9 @@ namespace Tests.Merge
 			if (context == ProviderName.Informix
 				|| context == ProviderName.Oracle
 				|| context == ProviderName.OracleManaged
-				|| context == ProviderName.OracleNative)
+				|| context == ProviderName.OracleNative
+				|| context == ProviderName.Firebird
+				|| context == TestProvName.Firebird3)
 				return;
 
 			if (expected != null)
@@ -601,7 +608,9 @@ namespace Tests.Merge
 				|| context == ProviderName.MySql
 				// MySql57 and MariaDB work, but column is disabled...
 				|| context == TestProvName.MySql57
-				|| context == TestProvName.MariaDB)
+				|| context == TestProvName.MariaDB
+				|| context == ProviderName.Firebird
+				|| context == TestProvName.Firebird3)
 				return;
 
 			if (expected != null)

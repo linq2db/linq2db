@@ -1,4 +1,10 @@
 ﻿using LinqToDB.Data;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+using System.Globalization;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -50,6 +56,29 @@ namespace LinqToDB.DataProvider.Firebird
 				//Data type unknown
 				return false;
 			}
+		}
+
+		protected override void AddSourceValue(
+			ValueToSqlConverter valueConverter,
+			ColumnDescriptor column,
+			SqlDataType columnType,
+			object value)
+		{
+			if (value is string)
+			{
+				// without it firebird will convert it to CHAR(LENGTH_OF_BIGGEST_VALUE) and pad all values with spaces
+				Command.Append("CAST(");
+				valueConverter.TryConvert(Command, columnType, value);
+
+				var stringValue = (string)value;
+				var length = Encoding.UTF8.GetByteCount(stringValue);
+				if (length == 0)
+					length = 1;
+
+				Command.AppendFormat(" AS VARCHAR({0}))", length.ToString(CultureInfo.InvariantCulture));
+			}
+			else
+				base.AddSourceValue(valueConverter, column, columnType, value);
 		}
 	}
 }
