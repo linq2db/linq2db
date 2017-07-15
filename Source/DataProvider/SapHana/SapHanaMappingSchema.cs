@@ -17,7 +17,8 @@ namespace LinqToDB.DataProvider.SapHana
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
 			SetValueToSqlConverter(typeof(string), (sb, dt, v) => ConvertStringToSql(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(char),   (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
@@ -29,6 +30,16 @@ namespace LinqToDB.DataProvider.SapHana
 				.Append(value)
 				.Append(")")
 				;
+		}
+
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("x'");
+
+			foreach (var b in value)
+				stringBuilder.Append(b.ToString("X2"));
+
+			stringBuilder.Append("'");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
