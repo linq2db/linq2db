@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
 	using Mapping;
 	using SqlQuery;

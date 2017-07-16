@@ -22,6 +22,8 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
 			SqlProviderFlags.IsDistinctOrderBySupported   = version != DB2Version.zOS;
 
+			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
+
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);

@@ -1,6 +1,10 @@
 ﻿using LinqToDB.Data;
 using System;
 using System.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -65,6 +69,43 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (Merge.Operations.All(_ => _.Type == MergeOperationType.Delete))
 				throw new LinqToDBException(string.Format("Merge only with Delete operations not supported by {0} provider.", ProviderName));
+		}
+
+		protected override void AddSourceValue(
+			ValueToSqlConverter valueConverter,
+			ColumnDescriptor column,
+			SqlDataType columnType,
+			object value)
+		{
+			// strange thing, that real type needs explicit typing only on some combinations of columns and values
+			// from other side, for Sybase it is not surprising
+			if (column.DataType == DataType.Single
+				|| (column.DataType == DataType.Undefined && column.MemberType.ToNullableUnderlying() == typeof(float)))
+			{
+				Command.Append("CAST(");
+				base.AddSourceValue(valueConverter, column, columnType, value);
+				Command.Append(" AS REAL)");
+			}
+			else if (column.DataType == DataType.DateTime)
+			{
+				Command.Append("CAST(");
+				base.AddSourceValue(valueConverter, column, columnType, value);
+				Command.Append(" AS DATETIME)");
+			}
+			else if (column.DataType == DataType.Date)
+			{
+				Command.Append("CAST(");
+				base.AddSourceValue(valueConverter, column, columnType, value);
+				Command.Append(" AS DATE)");
+			}
+			else if (column.DataType == DataType.Time)
+			{
+				Command.Append("CAST(");
+				base.AddSourceValue(valueConverter, column, columnType, value);
+				Command.Append(" AS TIME)");
+			}
+			else
+				base.AddSourceValue(valueConverter, column, columnType, value);
 		}
 	}
 }

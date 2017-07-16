@@ -55,6 +55,7 @@ namespace Tests.Merge
 			[Column("FieldDouble")]
 			public double? FieldDouble;
 
+			[Column("FieldDateTime", Configuration = ProviderName.Sybase, DataType = DataType.DateTime)]
 			[Column("FieldDateTime")]
 			public DateTime? FieldDateTime;
 
@@ -95,6 +96,7 @@ namespace Tests.Merge
 			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column("FieldDate"     , Configuration = ProviderName.Informix, DataType = DataType.Date)]
+			[Column("FieldDate"     , Configuration = ProviderName.Sybase  , DataType = DataType.Date)]
 			[Column("FieldDate")]
 			public DateTime? FieldDate;
 
@@ -107,6 +109,7 @@ namespace Tests.Merge
 			[Column(IsColumn = false, Configuration = ProviderName.OracleNative)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
+			[Column("FieldTime"     , Configuration = ProviderName.Sybase, DataType = DataType.Time)]
 			[Column("FieldTime")]
 			public TimeSpan? FieldTime;
 
@@ -507,14 +510,10 @@ namespace Tests.Merge
 		{
 			if (expected != null)
 			{
-				// why??
 				if (expected == ' '
 					&& (   context == ProviderName.MySql
 						|| context == TestProvName.MariaDB
-						|| context == TestProvName.MySql57
-						|| context == ProviderName.DB2
-						|| context == ProviderName.PostgreSQL
-						|| context == ProviderName.SqlCe))
+						|| context == TestProvName.MySql57))
 					expected = '\0';
 			}
 
@@ -525,14 +524,10 @@ namespace Tests.Merge
 		{
 			if (expected != null)
 			{
-				// why??
 				if (expected == ' '
 					&& (context == ProviderName.MySql
 						|| context == TestProvName.MariaDB
-						|| context == TestProvName.MySql57
-						|| context == ProviderName.DB2
-						|| context == ProviderName.PostgreSQL
-						|| context == ProviderName.SqlCe))
+						|| context == TestProvName.MySql57))
 					expected = '\0';
 			}
 

@@ -35,11 +35,11 @@ namespace Tests.Linq
 
 			[Column("ncharDataType")]
 			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
-			[Column("CHAR20DATATYPE",  Configuration = ProviderName.DB2)]
-			[Column("char20datatype",  Configuration = ProviderName.PostgreSQL)]
-			[Column("char20DataType",  Configuration = ProviderName.MySql)]
-			[Column("char20DataType",  Configuration = TestProvName.MySql57)]
-			[Column("char20DataType",  Configuration = TestProvName.MariaDB)]
+			[Column("CHAR20DATATYPE" ,  Configuration = ProviderName.DB2)]
+			[Column("char20datatype" ,  Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType" ,  Configuration = ProviderName.MySql)]
+			[Column("char20DataType" ,  Configuration = TestProvName.MySql57)]
+			[Column("char20DataType" ,  Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string NString;
 
@@ -65,13 +65,13 @@ namespace Tests.Linq
 			[Column(Configuration = TestProvName.MariaDB,    IsColumn = false)]
 			public char? Char;
 
-			[Column("ncharDataType")]
-			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
-			[Column("CHAR20DATATYPE",  Configuration = ProviderName.DB2)]
-			[Column("char20datatype",  Configuration = ProviderName.PostgreSQL)]
-			[Column("char20DataType",  Configuration = ProviderName.MySql)]
-			[Column("char20DataType",  Configuration = TestProvName.MySql57)]
-			[Column("char20DataType",  Configuration = TestProvName.MariaDB)]
+			[Column("ncharDataType"  , DataType = DataType.NChar)]
+			[Column("nchar20DataType", DataType = DataType.NChar, Configuration = ProviderName.SapHana)]
+			[Column("CHAR20DATATYPE" , DataType = DataType.NChar, Configuration = ProviderName.DB2)]
+			[Column("char20datatype" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql57)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
 
@@ -126,7 +126,9 @@ namespace Tests.Linq
 							query = query.Value(_ => _.String, record.String);
 
 						if (context == ProviderName.Firebird
-							|| context == ProviderName.Firebird + ".LinqService")
+							|| context == ProviderName.Firebird + ".LinqService"
+							|| context == TestProvName.Firebird3
+							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
 
 						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
@@ -144,8 +146,18 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
 
-						if (context != ProviderName.Firebird
-							&& context == ProviderName.Firebird + ".LinqService")
+						if (context == ProviderName.Sybase
+							|| context == ProviderName.Sybase + ".LinqService")
+							// this kind of replacement is allowed in unicode, but dunno why it is done for sybase
+							Assert.AreEqual(
+								testData[i].NString?.TrimEnd(' ')
+									.Replace('\u2000', '\u2002')
+									.Replace('\u2001', '\u2003'),
+								records[i].NString);
+						else if (context != ProviderName.Firebird
+							&& context != ProviderName.Firebird + ".LinqService"
+							&& context != TestProvName.Firebird3
+							&& context != TestProvName.Firebird3 + ".LinqService")
 							Assert.AreEqual(testData[i].NString?.TrimEnd(' '), records[i].NString);
 					}
 
@@ -172,7 +184,9 @@ namespace Tests.Linq
 
 			// I wonder why
 			if (context == ProviderName.Firebird
-				|| context == ProviderName.Firebird + ".LinqService")
+				|| context == ProviderName.Firebird + ".LinqService"
+				|| context == TestProvName.Firebird3
+				|| context == TestProvName.Firebird3 + ".LinqService")
 				return CharTestData.Where(_ => _.NChar != '\xA0').ToArray();
 
 			// also strange
@@ -202,7 +216,9 @@ namespace Tests.Linq
 
 			// I wonder why
 			if (context == ProviderName.Firebird
-				|| context == ProviderName.Firebird + ".LinqService")
+				|| context == ProviderName.Firebird + ".LinqService"
+				|| context == TestProvName.Firebird3
+				|| context == TestProvName.Firebird3 + ".LinqService")
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\xA0")).ToArray();
 
 			// also strange
@@ -257,7 +273,9 @@ namespace Tests.Linq
 							query = query.Value(_ => _.Char, record.Char);
 
 						if (context == ProviderName.Firebird
-							|| context == ProviderName.Firebird + ".LinqService")
+							|| context == ProviderName.Firebird + ".LinqService"
+							|| context == TestProvName.Firebird3
+							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
 
 						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
@@ -292,11 +310,27 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							Assert.AreEqual(testData[i].Char, records[i].Char);
 
-						if (context != ProviderName.Firebird
-							&& context == ProviderName.Firebird + ".LinqService")
+						if (context == ProviderName.Sybase
+							|| context == ProviderName.Sybase + ".LinqService")
+							// this kind of replacement is allowed in unicode, but dunno why it is done for sybase
+							Assert.AreEqual(
+								testData[i].NChar == '\u2000' || testData[i].NChar == '\u2001'
+									? (char)(testData[i].NChar + 2) : testData[i].NChar,
+								records[i].NChar);
+						else if (context == ProviderName.MySql
+							  || context == ProviderName.MySql + ".LinqService"
+							  || context == TestProvName.MySql57
+							  || context == TestProvName.MySql57 + ".LinqService"
+							  || context == TestProvName.MariaDB
+							  || context == TestProvName.MariaDB + ".LinqService")
+							// for some reason mysql doesn't insert space
+							Assert.AreEqual(testData[i].NChar == ' ' ? '\0' : testData[i].NChar, records[i].NChar);
+						else if (context != ProviderName.Firebird
+							  && context != ProviderName.Firebird + ".LinqService"
+							  && context != TestProvName.Firebird3
+							  && context != TestProvName.Firebird3 + ".LinqService")
 							Assert.AreEqual(testData[i].NChar, records[i].NChar);
 					}
-
 				}
 				finally
 				{
