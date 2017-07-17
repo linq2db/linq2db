@@ -31,12 +31,12 @@ namespace LinqToDB.DataProvider
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
 		/// <summary>
 		/// Returns conext object to wrap calls of Execute* methods.
-		/// Using this provider could e.g. change thread culture during Execute* calls.
-		/// Following calls wrapped:
+		/// Using this, provider could e.g. change thread culture during Execute* calls.
+		/// Following calls wrapped right now:
 		/// DataConnection.ExecuteNonQuery
 		/// DataConnection.ExecuteReader.
 		/// </summary>
-		/// <returns>Returs disposable scope object. Cannot be null.</returns>
+		/// <returns>Returns disposable scope object. Cannot be null.</returns>
 		IDisposable        ExecuteScope          ();
 
 #if !NETSTANDARD

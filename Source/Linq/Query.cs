@@ -876,7 +876,7 @@ namespace LinqToDB.Linq
 			if (selectQuery.Update.Items.Count > 0)
 			{
 				selectQuery.QueryType = QueryType.Update;
-			SetNonQueryQuery2();
+				SetNonQueryQuery2();
 			}
 			else
 			{

@@ -165,12 +165,12 @@ DROP TABLE IF EXISTS TestMerge1;
 DROP TABLE IF EXISTS TestMerge2;
 CREATE TABLE TestMerge1
 (
-	Id		integer      NOT NULL CONSTRAINT PK_TestMerge1,
-	Field1	integer          NULL,
-	Field2	integer          NULL,
-	Field3	integer          NULL,
-	Field4	integer          NULL,
-	Field5	integer          NULL,
+	Id              INTEGER       NOT NULL CONSTRAINT PK_TestMerge1,
+	Field1          INTEGER           NULL,
+	Field2          INTEGER           NULL,
+	Field3          INTEGER           NULL,
+	Field4          INTEGER           NULL,
+	Field5          INTEGER           NULL,
 
 	FieldInt64      BIGINT            NULL,
 	FieldBoolean    BIT               NULL,
@@ -189,12 +189,12 @@ CREATE TABLE TestMerge1
 );
 CREATE TABLE TestMerge2
 (
-	Id		integer      NOT NULL CONSTRAINT PK_TestMerge2,
-	Field1	integer          NULL,
-	Field2	integer          NULL,
-	Field3	integer          NULL,
-	Field4	integer          NULL,
-	Field5	integer          NULL,
+	Id              INTEGER       NOT NULL CONSTRAINT PK_TestMerge2,
+	Field1          INTEGER           NULL,
+	Field2          INTEGER           NULL,
+	Field3          INTEGER           NULL,
+	Field4          INTEGER           NULL,
+	Field5          INTEGER           NULL,
 
 	FieldInt64      BIGINT            NULL,
 	FieldBoolean    BIT               NULL,

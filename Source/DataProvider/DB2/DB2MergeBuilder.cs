@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			get
 			{
-				// DB2 doesn't support INSERT FROM (well, except latest DB2 LUW version, but linq2db don't support it yet)
+				// DB2 doesn't support INSERT FROM (well, except latest DB2 LUW version, but linq2db doesn't support it yet)
 				return true;
 			}
 		}

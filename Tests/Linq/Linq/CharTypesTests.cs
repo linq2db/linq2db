@@ -35,11 +35,11 @@ namespace Tests.Linq
 
 			[Column("ncharDataType")]
 			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
-			[Column("CHAR20DATATYPE" ,  Configuration = ProviderName.DB2)]
-			[Column("char20datatype" ,  Configuration = ProviderName.PostgreSQL)]
-			[Column("char20DataType" ,  Configuration = ProviderName.MySql)]
-			[Column("char20DataType" ,  Configuration = TestProvName.MySql57)]
-			[Column("char20DataType" ,  Configuration = TestProvName.MariaDB)]
+			[Column("CHAR20DATATYPE" , Configuration = ProviderName.DB2)]
+			[Column("char20datatype" , Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType" , Configuration = ProviderName.MySql)]
+			[Column("char20DataType" , Configuration = TestProvName.MySql57)]
+			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string NString;
 

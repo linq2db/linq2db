@@ -40,6 +40,8 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public override void Open()
 		{
+			// this line breaks SAP HANA provider connection string
+			//_connection.ConnectionString = ConnectionString;
 			_policy.Execute(_connection.Open);
 		}
 
