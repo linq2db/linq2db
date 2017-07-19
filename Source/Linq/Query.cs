@@ -9,6 +9,8 @@ using System.Linq.Expressions;
 using System.Threading;
 #if !SL4
 using System.Threading.Tasks;
+using LinqToDB.ServiceModel;
+
 // ReSharper disable StaticMemberInGenericType
 #endif
 
@@ -114,15 +116,21 @@ namespace LinqToDB.Linq
 
 			return converter(value);
 		}
+
+		internal abstract object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints);
 	}
 
 	class Query<T> : Query
 	{
+		// IT : #
+		readonly IDataContext _dataContext;
+
 		#region Init
 
 		public Query(IDataContext dataContext, Expression expression)
 			: base(dataContext, expression)
 		{
+			_dataContext = dataContext;
 			// IT : # check
 			GetIEnumerable = MakeEnumerable;
 		}
@@ -273,7 +281,8 @@ namespace LinqToDB.Linq
 
 		#region NonQueryQuery
 
-		void FinalizeQuery()
+		// IT : #
+		internal void FinalizeQuery()
 		{
 			foreach (var sql in Queries)
 			{
@@ -470,7 +479,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints)
+		internal override object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints)
 		{
 			lock (this)
 			{
@@ -1364,7 +1373,7 @@ namespace LinqToDB.Linq
 
 				var count = 0;
 
-				using (var dr  = runner.ExecuteReader())
+				using (var dr = runner.ExecuteReader())
 				{
 					while (dr.Read())
 					{
@@ -1487,6 +1496,15 @@ namespace LinqToDB.Linq
 
 		public void SetRunQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
 		{
+			if (_dataContext is RemoteDataContextBase)
+			{
+				((RemoteDataContextBase)_dataContext).SetRunQuery(this, expression);
+				return;
+			};
+
+//			SetQuery(expression);
+//			return;
+
 			var query  = GetExecuteQuery();
 			var mapper = new Mapper(expression);
 
@@ -1496,11 +1514,99 @@ namespace LinqToDB.Linq
 
 			GetIEnumerable = (ctx,db,expr,ps) => runQuery(ctx, db, mapper, expr, ps, 0);
 
-			var skipAction = query.Item2;
-			var takeAction = query.Item3;
+//			var skipAction = query.Item2;
+//			var takeAction = query.Item3;
+//
+//			GetForEachAsync = (expressionQuery,ctx,db,expr,ps,action,token,options) =>
+//				ExecuteQueryAsync(ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token, options);
+		}
+ 
+		internal void SetQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
+		{
+			var query   = GetQuery();
+			var mapInfo = new MapInfo(expression);
 
-			GetForEachAsync = (expressionQuery,ctx,db,expr,ps,action,token,options) =>
-				ExecuteQueryAsync(ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token, options);
+			ClearParameters();
+
+			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
+		}
+
+		class MapInfo
+		{
+			public MapInfo([JetBrains.Annotations.NotNull] Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
+			{
+				if (expression == null)
+					throw new ArgumentNullException("expression");
+				Expression = expression;
+			}
+
+			[JetBrains.Annotations.NotNull]
+			public readonly Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> Expression;
+
+			public            Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>  Mapper;
+			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> MapperExpression;
+		}
+
+		static IEnumerable<T> Map(
+			IEnumerable<IDataReader> data,
+			QueryContext             queryContext,
+			IDataContext             dataContext,
+			Expression               expr,
+			object[]                 ps,
+			MapInfo                  mapInfo)
+		{
+			if (queryContext == null)
+				queryContext = new QueryContext(dataContext, expr, ps);
+
+			var isFaulted = false;
+
+			foreach (var dr in data)
+			{
+				var mapper = mapInfo.Mapper;
+
+				if (mapper == null)
+				{
+					mapInfo.MapperExpression = mapInfo.Expression.Transform(e =>
+					{
+						var ex = e as ConvertFromDataReaderExpression;
+						return ex != null ? ex.Reduce(dr) : e;
+					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
+
+					// IT : # MapperExpression.Compile()
+					//
+					Debug.Assert(mapInfo.MapperExpression != null, "mapInfo.MapperExpression != null");
+					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
+				}
+
+				T result;
+
+				try
+				{
+					result = mapper(queryContext, dataContext, dr, expr, ps);
+				}
+				catch (FormatException)
+				{
+					if (isFaulted)
+						throw;
+
+					isFaulted = true;
+
+					mapInfo.Mapper = mapInfo.Expression.Compile();
+					result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
+				}
+				catch (InvalidCastException)
+				{
+					if (isFaulted)
+						throw;
+
+					isFaulted = true;
+
+					mapInfo.Mapper = mapInfo.Expression.Compile();
+					result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
+				}
+
+				yield return result;
+			}
 		}
 
 		#endregion

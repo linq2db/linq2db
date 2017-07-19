@@ -27,7 +27,7 @@ namespace LinqToDB.Linq
 		protected readonly int            QueryNumber;
 		protected readonly object[]       Parameters;
 
-		protected List<string>            QueryHints;
+		protected List<string>            QueryHints = new List<string>();
 		protected DataParameter[]         DataParameters;
 
 		public abstract void                   Dispose();
@@ -95,19 +95,24 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		protected void SetCommand(bool clearQueryHints)
+		protected virtual void SetCommand(bool clearQueryHints)
 		{
-			if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
-			{
-				QueryHints = new List<string>(DataContext.QueryHints);
-				QueryHints.AddRange(DataContext.NextQueryHints);
-
-				if (clearQueryHints)
-					DataContext.NextQueryHints.Clear();
-			}
-
 			lock (Query)
 			{
+				if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
+				{
+					var queryContext = Query.Queries[QueryNumber];
+
+					queryContext.QueryHints = new List<string>(DataContext.QueryHints);
+					queryContext.QueryHints.AddRange(DataContext.NextQueryHints);
+
+					QueryHints.AddRange(DataContext.QueryHints);
+					QueryHints.AddRange(DataContext.NextQueryHints);
+
+					if (clearQueryHints)
+						DataContext.NextQueryHints.Clear();
+				}
+
 				SetParameters();
 				SetQuery();
 			}
