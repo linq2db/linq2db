@@ -471,7 +471,7 @@ namespace LinqToDB.ServiceModel
 			Close();
 		}
 
-		private void Close()
+		void Close()
 		{
 			if (OnClosing != null)
 				OnClosing(this, EventArgs.Empty);

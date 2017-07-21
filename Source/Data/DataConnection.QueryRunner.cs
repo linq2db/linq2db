@@ -18,6 +18,11 @@ namespace LinqToDB.Data
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
 		}
 
+		IQueryRunner1 IDataContextEx.GetQueryRun(Query query, int queryNumber, Expression expression, object[] parameters)
+		{
+			throw new NotImplementedException();
+		}
+
 		// IT : QueryRunner - DataConnection
 		//
 		internal class QueryRunner : QueryRunnerBase

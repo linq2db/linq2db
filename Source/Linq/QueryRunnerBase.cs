@@ -5,11 +5,117 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Data;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq
 {
+	using Data;
+	using Extensions;
+
+	abstract class QueryRunBase : IQueryRunner1
+	{
+		protected QueryRunBase(
+			Query        query,
+			IDataContext dataContext,
+			Expression   expression,
+			object[]     parameters,
+			int          queryNumber)
+		{
+			_query       = query;
+			_dataContext = dataContext;
+			_expression  = expression;
+			_parameters  = parameters;
+			_queryNumber = queryNumber;
+		}
+
+		protected readonly Query        _query;
+		protected readonly IDataContext _dataContext;
+
+		readonly Expression   _expression;
+		readonly object[]     _parameters;
+		protected readonly int          _queryNumber;
+
+		public abstract Expression MapperExpression { get; set; }
+
+		public int RowsCount { get; set; }
+
+		public virtual void Dispose()
+		{
+			if (_dataContext.CloseAfterUse)
+				_dataContext.Close();
+		}
+
+		protected abstract void        SetQuery     (QueryInfo queryInfo);
+		public    abstract IDataReader ExecuteReader();
+
+		void SetParameters()
+		{
+			foreach (var p in _query.Queries[_queryNumber].Parameters)
+			{
+				var value = p.Accessor(_expression, _parameters);
+
+				var vs = value as IEnumerable;
+
+				if (vs != null)
+				{
+					var type  = vs.GetType();
+					var etype = type.GetItemType();
+
+					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
+						(type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArgumentsEx()[0].IsEnumEx()))
+					{
+						var values = new List<object>();
+
+						foreach (var v in vs)
+						{
+							value = v;
+
+							if (v != null)
+							{
+								var valueType = v.GetType();
+
+								if (valueType.ToNullableUnderlying().IsEnumEx())
+									value = _query.GetConvertedEnum(valueType, value);
+							}
+
+							values.Add(value);
+						}
+
+						value = values;
+					}
+				}
+
+				p.SqlParameter.Value = value;
+
+				var dataType = p.DataTypeAccessor(_expression, _parameters);
+
+				if (dataType != DataType.Undefined)
+					p.SqlParameter.DataType = dataType;
+			}
+		}
+
+		protected void SetCommand(bool clearQueryHints)
+		{
+			lock (_query)
+			{
+				SetParameters();
+
+				var query = _query.Queries[_queryNumber];
+
+				if (_queryNumber == 0 && (_dataContext.QueryHints.Count > 0 || _dataContext.NextQueryHints.Count > 0))
+				{
+					query.QueryHints = new List<string>(_dataContext.QueryHints);
+					query.QueryHints.AddRange(_dataContext.NextQueryHints);
+
+					if (clearQueryHints)
+						_dataContext.NextQueryHints.Clear();
+				}
+
+				SetQuery(query);
+			}
+		}
+	}
+
+
 	abstract class QueryRunnerBase : IQueryRunner
 	{
 		protected QueryRunnerBase(Query query, int queryNumber, IDataContextEx dataContext, Expression expression, object[] parameters)

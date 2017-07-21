@@ -1274,7 +1274,8 @@ namespace LinqToDB.Linq
 
 		#region Mapper
 
-		class Mapper
+		// IT : #
+		internal class Mapper
 		{
 			public Mapper(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> mapperExpression)
 			{
@@ -1304,7 +1305,8 @@ namespace LinqToDB.Linq
 						return ex != null ? ex.Reduce(dataReader) : e;
 					});
 
-					QueryRunner.MapperExpression = _mapperExpression;
+					// IT : #
+					if (QueryRunner != null) QueryRunner.MapperExpression = _mapperExpression;
 
 					_mapper = _mapperExpression.Compile();
 				}
@@ -1327,7 +1329,8 @@ namespace LinqToDB.Linq
 
 					_isFaulted = true;
 
-					QueryRunner.MapperExpression = _expression;
+					// IT : #
+					if (QueryRunner != null) QueryRunner.MapperExpression = _expression;
 
 					return (_mapper = _expression.Compile())(queryContext, dataContext, dataReader, expr, ps);
 				}
@@ -1345,7 +1348,8 @@ namespace LinqToDB.Linq
 
 					_isFaulted = true;
 
-					QueryRunner.MapperExpression = _expression;
+					// IT : #
+					if (QueryRunner != null) QueryRunner.MapperExpression = _expression;
 
 					return (_mapper = _expression.Compile())(queryContext, dataContext, dataReader, expr, ps);
 				}
@@ -1432,14 +1436,12 @@ namespace LinqToDB.Linq
 			Func<QueryContext,IDataContextEx,Mapper,Expression,object[],int,IEnumerable<T>>,
 			Func<Expression,object[],int>,
 			Func<Expression,object[],int>>
-			GetExecuteQuery()
+			GetExecuteQuery(Func<QueryContext,IDataContextEx,Mapper,Expression,object[],int,IEnumerable<T>> query)
 		{
 			FinalizeQuery();
 
 			if (Queries.Count != 1)
 				throw new InvalidOperationException();
-
-			Func<QueryContext,IDataContextEx,Mapper,Expression,object[],int,IEnumerable<T>> query = ExecuteQuery;
 
 			Func<Expression,object[],int> skip = null, take = null;
 
@@ -1498,18 +1500,18 @@ namespace LinqToDB.Linq
 		{
 			if (_dataContext is RemoteDataContextBase)
 			{
-				((RemoteDataContextBase)_dataContext).SetRunQuery(this, expression);
+				QueryRunner.SetRunQuery(this, expression);
 				return;
 			};
 
 //			SetQuery(expression);
 //			return;
 
-			var query  = GetExecuteQuery();
-			var mapper = new Mapper(expression);
+			var query = GetExecuteQuery(ExecuteQuery);
 
 			ClearParameters();
 
+			var mapper   = new Mapper(expression);
 			var runQuery = query.Item1;
 
 			GetIEnumerable = (ctx,db,expr,ps) => runQuery(ctx, db, mapper, expr, ps, 0);
