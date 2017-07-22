@@ -6,7 +6,6 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using SqlQuery;
 
-
 	public class InformixMappingSchema : MappingSchema
 	{
 		public InformixMappingSchema() : this(ProviderName.Informix)
@@ -28,7 +27,7 @@ namespace LinqToDB.DataProvider.Informix
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
-				.Append("char(")
+				.Append("chr(")
 				.Append(value)
 				.Append(")")
 				;

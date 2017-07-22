@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Data.Odbc;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Configuration;
 	using Common;
 	using Data;
 	using Extensions;
@@ -47,7 +49,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override bool IsCompatibleConnection(IDbConnection connection)
 		{
-			return typeof(OdbcConnection).IsSameOrParentOf(connection.GetType());
+			return typeof(OdbcConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
 		protected override IDbConnection CreateConnectionInternal(string connectionString)

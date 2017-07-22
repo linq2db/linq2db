@@ -319,7 +319,7 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeUnions()
 		{
-			var isAllUnion = new QueryVisitor().Find(_selectQuery,
+			var isAllUnion = QueryVisitor.Find(_selectQuery,
 				ne =>
 				{
 					var nu = ne as SelectQuery.Union;
@@ -328,7 +328,7 @@ namespace LinqToDB.SqlQuery
 
 					return false;
 				});
-			var isNotAllUnion = new QueryVisitor().Find(_selectQuery,
+			var isNotAllUnion = QueryVisitor.Find(_selectQuery,
 				ne =>
 				{
 					var nu = ne as SelectQuery.Union;
@@ -564,6 +564,16 @@ namespace LinqToDB.SqlQuery
 				{
 					var sc = (SelectQuery.SearchCondition)cond.Predicate;
 					OptimizeSearchCondition(sc);
+					if (sc.Conditions.Count == 0)
+					{
+						if (cond.IsOr)
+						{
+							searchCondition.Conditions.Clear();
+							break;
+						}
+						searchCondition.Conditions.RemoveAt(i);
+						--i;
+					}
 				}
 			}
 		}
@@ -798,7 +808,7 @@ namespace LinqToDB.SqlQuery
 			var visitor = new QueryVisitor();
 
 			if (optimizeColumns &&
-				visitor.Find(expr, e => e is SelectQuery || IsAggregationFunction(e)) == null)
+				QueryVisitor.Find(expr, e => e is SelectQuery || IsAggregationFunction(e)) == null)
 			{
 				var n = 0;
 				var q = query.ParentSelect ?? query;
@@ -889,15 +899,25 @@ namespace LinqToDB.SqlQuery
 
 		static bool IsAggregationFunction(IQueryElement expr)
 		{
-			if (expr is SqlFunction)
-				switch (((SqlFunction)expr).Name)
+			var func = expr as SqlFunction;
+			if (func != null)
+			{ 
+				switch (func.Name)
 				{
 					case "Count"   :
 					case "Average" :
 					case "Min"     :
 					case "Max"     :
 					case "Sum"     : return true;
+					default        : return false;
 				}
+			}
+
+			var sqlExpr = expr as SqlExpression;
+			if (sqlExpr != null)
+			{
+				return sqlExpr.SqlFlags.HasFlag(SqlFlags.Aggregate);
+			}
 
 			return false;
 		}
@@ -918,7 +938,7 @@ namespace LinqToDB.SqlQuery
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(c => IsAggregationFunction(c.Expression));
 
-				if (isApplySupported && (isAgg || sql.Select.TakeValue != null || sql.Select.SkipValue != null))
+				if (isApplySupported && (isAgg || sql.Select.HasModifier))
 					return;
 
 				var searchCondition = new List<SelectQuery.Condition>(sql.Where.SearchCondition.Conditions);
@@ -927,6 +947,10 @@ namespace LinqToDB.SqlQuery
 
 				if (!ContainsTable(tableSource.Source, sql))
 				{
+					if (!(joinTable.JoinType == SelectQuery.JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
+						&& sql.Select.HasModifier)
+						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
+
 					joinTable.JoinType = joinTable.JoinType == SelectQuery.JoinType.CrossApply ? SelectQuery.JoinType.Inner : SelectQuery.JoinType.Left;
 					joinTable.Condition.Conditions.AddRange(searchCondition);
 				}
@@ -965,7 +989,7 @@ namespace LinqToDB.SqlQuery
 
 		static bool ContainsTable(ISqlTableSource table, IQueryElement sql)
 		{
-			return null != new QueryVisitor().Find(sql, e =>
+			return null != QueryVisitor.Find(sql, e =>
 				e == table ||
 				e.ElementType == QueryElementType.SqlField && table == ((SqlField)e).Table ||
 				e.ElementType == QueryElementType.Column   && table == ((SelectQuery.Column)  e).Parent);

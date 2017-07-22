@@ -64,8 +64,14 @@ namespace LinqToDB.Linq.Builder
 
 							var ma = (MemberExpression)expr;
 
-							if (Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member) != null)
+							var l  = Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member);
+							if (l != null)
+							{
+								// In Grouping KeyContext whe have to perform calculation on server side
+								if (Contexts.Any(c => c is GroupByBuilder.KeyContext))
+									return new TransformInfo(BuildSql(context, expr));
 								break;
+							}
 
 							if (ma.Member.IsNullableValueMember())
 								break;
@@ -326,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Type type, int idx)
 		{
-			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal, DataContextInfo.DataContext);
+			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal, DataContext);
 		}
 
 		#endregion
@@ -482,27 +488,22 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Call(
 					null,
 					MemberHelper.MethodOf(() => ExecuteSubQuery(null, null, null)),
-						ContextParam,
+						DataContextParam,
 						Expression.NewArrayInit(typeof(object), parameters),
 						Expression.Constant(queryReader)
 					);
 			}
 
 			static TRet ExecuteSubQuery(
-				QueryContext                     queryContext,
+				IDataContext                     dataContext,
 				object[]                         parameters,
 				Func<IDataContext,object[],TRet> queryReader)
 			{
-				var db = queryContext.GetDataContext();
+				var db = dataContext.Clone(true);
 
-				try
-				{
-					return queryReader(db.DataContextInfo.DataContext, parameters);
-				}
-				finally
-				{
-					queryContext.ReleaseDataContext(db);
-				}
+				db.CloseAfterUse = true;
+
+				return queryReader(db, parameters);
 			}
 		}
 
@@ -544,7 +545,7 @@ namespace LinqToDB.Linq.Builder
 									if (table.IsList)
 									{
 										var ttype  = typeof(Table<>).MakeGenericType(table.ObjectType);
-										var tbl    = Activator.CreateInstance(ttype);
+										var tbl    = Activator.CreateInstance(ttype, context.Builder.DataContext);
 										var method = e == expression ?
 											MemberHelper.MethodOf<IEnumerable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition().MakeGenericMethod(table.ObjectType) :
 											_whereMethodInfo.MakeGenericMethod(e.Type, table.ObjectType, ttype);

@@ -94,16 +94,16 @@ namespace LinqToDB.DataProvider.Informix
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
 				case DataType.DateTime  : StringBuilder.Append("datetime year to second");   break;
 				case DataType.DateTime2 : StringBuilder.Append("datetime year to fraction"); break;
 				case DataType.SByte      :
-				case DataType.Byte       : StringBuilder.Append("SmallInt");      break;
-				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)"); break;
-				default                  : base.BuildDataType(type);              break;
+				case DataType.Byte       : StringBuilder.Append("SmallInt");                 break;
+				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");            break;
+				default                  : base.BuildDataType(type, createDbType);           break;
 			}
 		}
 

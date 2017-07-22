@@ -60,8 +60,9 @@ CREATE TABLE Doctor
 (
 	PersonID int          NOT NULL,
 	Taxonomy nvarchar(50) NOT NULL,
-	FOREIGN KEY (PersonID)
-	REFERENCES Person (PersonID)
+
+	PRIMARY KEY (PersonID),
+	FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 )
 GO
 
@@ -73,7 +74,10 @@ GO
 CREATE TABLE Patient
 (
 	PersonID  int           NOT NULL,
-	Diagnosis nvarchar(100) NOT NULL
+	Diagnosis nvarchar(100) NOT NULL,
+
+	PRIMARY KEY (PersonID),
+	FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 )
 GO
 
@@ -110,7 +114,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    byte,
 	SmallIntValue  smallint,
 	IntValue       int,
-	BigIntValue    bigint
+	BigIntValue    bigint,
+	StringValue    NVARCHAR(50)
 )
 GO
 
@@ -142,6 +147,7 @@ CREATE TABLE AllTypes
 	boolDataType     boolean                 NULL,
 
 	charDataType     char(1)                 NULL,
+	char20DataType   char(20)                NULL,
 	varcharDataType  varchar(10)             NULL,
 	ncharDataType    nchar(10)               NULL,
 	nvarcharDataType nvarchar(10)            NULL,

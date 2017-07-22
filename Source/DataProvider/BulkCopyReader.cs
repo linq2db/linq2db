@@ -12,12 +12,13 @@ namespace LinqToDB.DataProvider
 
 	public class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
 	{
-		public BulkCopyReader(IDataProvider dataProvider, List<ColumnDescriptor> columns, IEnumerable collection)
+		public BulkCopyReader(IDataProvider dataProvider, MappingSchema mappingSchema, List<ColumnDescriptor> columns, IEnumerable collection)
 		{
-			_dataProvider = dataProvider;
-			_columns      = columns;
-			_enumerator   = collection.GetEnumerator();
-			_columnTypes  = _columns
+			_dataProvider  = dataProvider;
+			_columns       = columns;
+			_enumerator    = collection.GetEnumerator();
+			_mappingSchema = mappingSchema;
+			_columnTypes   = _columns
 				.Select(c => c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType).DataType : c.DataType)
 				.ToArray();
 		}
@@ -29,6 +30,7 @@ namespace LinqToDB.DataProvider
 		readonly List<ColumnDescriptor> _columns;
 		readonly IEnumerator            _enumerator;
 		readonly Parameter              _valueConverter = new Parameter();
+		readonly MappingSchema          _mappingSchema;
 
 		public class Parameter : IDbDataParameter
 		{
@@ -58,7 +60,7 @@ namespace LinqToDB.DataProvider
 
 		public override object GetValue(int i)
 		{
-			var value = _columns[i].GetValue(_enumerator.Current);
+			var value = _columns[i].GetValue(_mappingSchema, _enumerator.Current);
 
 			_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[i], value);
 
@@ -72,7 +74,7 @@ namespace LinqToDB.DataProvider
 
 			for (var it = 0; it < count; ++it)
 			{
-				var value = _columns[it].GetValue(obj);
+				var value = _columns[it].GetValue(_mappingSchema, obj);
 				_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[it], value);
 				values[it] = _valueConverter.Value;
 			}

@@ -91,12 +91,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return value;
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32 : StringBuilder.Append("INTEGER"); break;
-				default             : base.BuildDataType(type);        break;
+				case DataType.Int32 : StringBuilder.Append("INTEGER");               break;
+				default             : base.BuildDataType(type, createDbType);        break;
 			}
 		}
 
@@ -131,19 +131,19 @@ namespace LinqToDB.DataProvider.SQLite
 				var leftType  = exprExpr.Expr1.SystemType;
 				var rightType = exprExpr.Expr2.SystemType;
 
-				if ((IsDateTime(leftType) || IsDateTime(rightType)) && 
-					!((exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null) 
-					|| (exprExpr.Expr2 is IValueContainer && ((IValueContainer)exprExpr.Expr2).Value == null)))
+				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
+					!(exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null ||
+					  exprExpr.Expr2 is IValueContainer && ((IValueContainer)exprExpr.Expr2).Value == null))
 				{
 					
-					if (leftType != null)
+					if (leftType != null && !(exprExpr.Expr1 is SqlFunction && ((SqlFunction)exprExpr.Expr1).Name == "$Convert$"))
 					{
 						var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
 							SqlDataType.GetDataType(leftType), exprExpr.Expr1);
 						exprExpr.Expr1 = l;
 					}
-
-					if (rightType != null)
+				
+					if (rightType != null && !(exprExpr.Expr2 is SqlFunction && ((SqlFunction)exprExpr.Expr2).Name == "$Convert$"))
 					{
 						var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
 							SqlDataType.GetDataType(rightType), exprExpr.Expr2);

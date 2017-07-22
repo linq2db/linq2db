@@ -233,7 +233,6 @@ namespace Tests.SchemaProvider
 				Assert.IsEmpty(schema1.Tables);
 				Assert.IsEmpty(schema2.Tables);
 			}
-
 		}
 
 		[Test, DataContextSource(false)]
@@ -242,10 +241,10 @@ namespace Tests.SchemaProvider
 			using (var conn = new DataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider()
-						.GetSchema(conn, new GetSchemaOptions() {ExcludedSchemas = new string[] {null}})
-						.Tables.Select(_ => _.SchemaName)
-						.Distinct()
-						.ToList();
+					.GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = new string[] { null }})
+					.Tables.Select(_ => _.SchemaName)
+					.Distinct()
+					.ToList();
 				exclude.Add(null);
 				exclude.Add("");
 
@@ -255,9 +254,7 @@ namespace Tests.SchemaProvider
 				Assert.IsEmpty(schema1.Tables);
 				Assert.IsEmpty(schema2.Tables);
 			}
-
 		}
-
 
 		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
 		public void SchemaProviderNormalizeName(string context)
@@ -295,6 +292,28 @@ namespace Tests.SchemaProvider
 
 				Assert.IsNotNull(sc);
 				Assert.IsEmpty(sc.Tables.SelectMany(_ => _.ForeignKeys).Where(_ => _.MemberName.Any(char.IsDigit)));
+			}
+		}
+
+		[Test, DataContextSource(false)]
+		public void PrimaryForeignKeyTest(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var p = db.DataProvider.GetSchemaProvider();
+				var s = p.GetSchema(db);
+
+				var fkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
+				var pkCountDoctor = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Doctor), StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
+
+				Assert.AreEqual(1, fkCountDoctor);
+				Assert.AreEqual(1, pkCountDoctor);
+
+				var fkCountPerson = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).ForeignKeys.Count;
+				var pkCountPerson = s.Tables.Single(_ => _.TableName.Equals(nameof(Model.Person), StringComparison.OrdinalIgnoreCase) && !(_.SchemaName ?? "").Equals("MySchema", StringComparison.OrdinalIgnoreCase)).Columns.Count(_ => _.IsPrimaryKey);
+
+				Assert.AreEqual(2, fkCountPerson);
+				Assert.AreEqual(1, pkCountPerson);
 			}
 		}
 	}

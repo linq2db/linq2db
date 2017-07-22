@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Configuration;
 	using Data;
 	using SqlProvider;
 	using Extensions;
@@ -54,14 +56,14 @@ namespace LinqToDB.DataProvider.Oracle
 				if (_bulkCopyCreator != null)
 				{
 					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToList();
-					var rd      = new BulkCopyReader(_dataProvider, columns, source);
+					var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
 					var rc      = new BulkCopyRowsCopied();
 
 					var bcOptions = 0; // Default
 
 					if (options.UseInternalTransaction == true) bcOptions |= 1; // UseInternalTransaction = 1,
 
-					using (var bc = _bulkCopyCreator(dataConnection.Connection, bcOptions))
+					using (var bc = _bulkCopyCreator(Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection), bcOptions))
 					{
 						dynamic dbc = bc;
 
@@ -227,7 +229,7 @@ namespace LinqToDB.DataProvider.Oracle
 					: column.DataType;
 				//var type     = dataConnection.DataProvider.ConvertParameterType(column.MemberType, dataType);
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType)
+				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(dataConnection.MappingSchema, o)).ToArray(), dataType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,

@@ -234,6 +234,33 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		public static MemberInfo[] GetStaticMembersEx(this Type type, string name)
+		{
+#if NETFX_CORE
+			return type.GetTypeInfo().GetAllMembers().Where(m =>
+			{
+				var fieldInfo = m as FieldInfo;
+
+				if (fieldInfo != null)
+					return fieldInfo.IsStatic && fieldInfo.Name == name;
+
+				var propertyInfo = m as PropertyInfo;
+
+				if (propertyInfo != null)
+					return propertyInfo.CanRead && propertyInfo.GetMethod.IsStatic && propertyInfo.Name == name;
+
+				var methodInfo = m as MethodInfo;
+
+				if (methodInfo != null)
+					return methodInfo.IsStatic && methodInfo.Name == name;
+
+				return false;
+			}).ToArray();
+#else
+			return type.GetMember(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+#endif
+		}
+
 		/// <summary>
 		/// Returns <see cref="MemberInfo"/> of <paramref name="type"/> described by <paramref name="memberInfo"/>
 		/// It us useful when member's declared and reflected types are not the same
@@ -634,7 +661,7 @@ namespace LinqToDB.Extensions
 			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ConcurrentDictionary<Type,T[]>();
 		}
 
-#region Attributes cache
+		#region Attributes cache
 
 		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ConcurrentDictionary<Type, object[]>();
 
@@ -700,7 +727,7 @@ namespace LinqToDB.Extensions
 				GetAttributesTreeInternal(list, type.BaseTypeEx());
 		}
 
-#endregion
+		#endregion
 
 		/// <summary>
 		/// Returns an array of custom attributes applied to a type.
@@ -1153,7 +1180,7 @@ namespace LinqToDB.Extensions
 		
 #endregion
 
-#region MethodInfo extensions
+		#region MethodInfo extensions
 
 		public static PropertyInfo GetPropertyInfo(this MethodInfo method)
 		{
@@ -1174,9 +1201,9 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-#endregion
+		#endregion
 
-#region MemberInfo extensions
+		#region MemberInfo extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
@@ -1326,7 +1353,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-#endregion
+		#endregion
 
 	}
 }

@@ -4,7 +4,7 @@ namespace LinqToDB
 {
 	public static class LinqToDBConstants
 	{
-		public const string FullVersionString  = "1.7.7.0";
+		public const string FullVersionString  = "1.8.4.0";
 
 		public const string ProductName        = "Linq to DB";
 		public const string ProductDescription = "Linq to DB";

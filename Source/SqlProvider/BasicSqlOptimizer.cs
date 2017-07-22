@@ -133,7 +133,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-						if (new QueryVisitor().Find(cond, checkTable) == null)
+						if (QueryVisitor.Find(cond, checkTable) == null)
 							continue;
 
 						var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -248,7 +248,7 @@ namespace LinqToDB.SqlProvider
 								levelTables.Add((ISqlTableSource)e);
 						});
 
-						if (SqlProviderFlags.IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, checkTable) == null)
+						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, checkTable) == null)
 							continue;
 
 						var join = SelectQuery.LeftJoin(subQuery);
@@ -299,7 +299,7 @@ namespace LinqToDB.SqlProvider
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-							if (new QueryVisitor().Find(cond, checkTable) == null)
+							if (QueryVisitor.Find(cond, checkTable) == null)
 								continue;
 
 							var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -1127,17 +1127,7 @@ namespace LinqToDB.SqlProvider
 			if (to.Type == typeof(object))
 				return func.Parameters[2];
 
-			if (to.Precision > 0)
-			{
-				var maxPrecision = GetMaxPrecision(from);
-				var maxScale     = GetMaxScale    (from);
-				var newPrecision = maxPrecision >= 0 ? Math.Min(to.Precision ?? 0, maxPrecision) : to.Precision;
-				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale     ?? 0, maxScale)     : to.Scale;
-
-				if (to.Precision != newPrecision || to.Scale != newScale)
-					to = new SqlDataType(to.DataType, to.Type, null, newPrecision, newScale);
-			}
-			else if (to.Length > 0)
+			if (to.Length > 0)
 			{
 				var maxLength = to.Type == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
 				var newLength = maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength) : to.Length;
@@ -1266,8 +1256,8 @@ namespace LinqToDB.SqlProvider
 					var table = selectQuery.Update.Table ?? (SqlTable)selectQuery.From.Tables[0].Source;
 
 					if (selectQuery.Update.Table != null)
-						if (new QueryVisitor().Find(selectQuery.From, t => t == table) == null)
-							table = (SqlTable)new QueryVisitor().Find(selectQuery.From,
+						if (QueryVisitor.Find(selectQuery.From, t => t == table) == null)
+							table = (SqlTable)QueryVisitor.Find(selectQuery.From,
 								ex => ex is SqlTable && ((SqlTable)ex).ObjectType == table.ObjectType) ?? table;
 
 					var copy = new SqlTable(table);

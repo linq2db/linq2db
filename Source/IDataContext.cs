@@ -20,6 +20,7 @@ namespace LinqToDB
 		bool                InlineParameters  { get; set; }
 		List<string>        QueryHints        { get; }
 		List<string>        NextQueryHints    { get; }
+		bool                CloseAfterUse     { get; set; }
 
 		Expression          GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?               IsDBNullAllowed    (IDataReader reader, int idx);
@@ -32,6 +33,8 @@ namespace LinqToDB
 
 		string              GetSqlText         (object query);
 		IDataContext        Clone              (bool forNestedQuery);
+
+		void                Close              ();
 
 		event EventHandler  OnClosing;
 	}

@@ -4,6 +4,8 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using LinqToDB.Configuration;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -31,15 +33,17 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SqlProviderFlags.MaxInListValuesCount = 1000;
 
-			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
-			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharFieldToType<char>("Char",  (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
 
-//			ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal), ToType = typeof(TimeSpan) }] =
-//				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));
+			//			ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal), ToType = typeof(TimeSpan) }] =
+			//				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));
 
 			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
-
-			SetField<IDataReader,decimal>((r,i) => OracleTools.DataReaderGetDecimal(r, i));
+		
+//			SetField<IDataReader,decimal>((r,i) => OracleTools.DataReaderGetDecimal(r, i));
 		}
 
 		Type _oracleBFile;
@@ -143,6 +147,89 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			{
+				// static decimal GetOracleDecimal(OracleDataReader rd, int idx)
+				// {
+				//     var tstz = rd.GetOracleDecimal(idx);
+				//     decimal decimalVar;
+				//     var precision = 29;
+				//     while (true)
+				//     {
+				//        try
+				//        {  
+				//           tstz = OracleDecimal.SetPrecision(tstz, precision);
+				//           decimalVar = (decimal)tstz;
+				//           break;
+				//        }
+				//        catch(OverflowException exceptionVar)
+				//        {
+				//           if (--precision <= 26)
+				//              throw exceptionVar;
+				//        }
+				//     }
+				//
+				//     return decimalVar;
+				// }
+
+				var tstz               = Expression.Parameter(_oracleDecimal, "tstz");
+				var decimalVar         = Expression.Variable(typeof(decimal), "decimalVar");
+				var precision          = Expression.Variable(typeof(int),     "precision");
+				var label              = Expression.Label(typeof(decimal));
+				var setPrecisionMethod = _oracleDecimal.GetMethod("SetPrecision", BindingFlags.Static | BindingFlags.Public);
+
+				var getDecimalAdv = Expression.Lambda(
+					Expression.Block(
+						new[] {tstz, decimalVar, precision},
+						Expression.Assign(tstz, Expression.Call(dataReaderParameter, "GetOracleDecimal", null, indexParameter)),
+						Expression.Assign(precision, Expression.Constant(29)),
+						Expression.Loop(
+							Expression.TryCatch(
+								Expression.Block(
+									Expression.Assign(tstz, Expression.Call(setPrecisionMethod, tstz, precision)),
+									Expression.Assign(decimalVar, Expression.Convert(tstz, typeof(decimal))),
+									Expression.Break(label, decimalVar),
+									Expression.Constant(0)
+								),
+								Expression.Catch(typeof(OverflowException),
+									Expression.Block(
+										Expression.IfThen(
+											Expression.LessThanOrEqual(Expression.SubtractAssign(precision, Expression.Constant(1)),
+												Expression.Constant(26)),
+											Expression.Rethrow()
+										),
+										Expression.Constant(0)
+									)
+
+								)
+							),
+							label),
+						decimalVar
+					),
+					dataReaderParameter,
+					indexParameter);
+
+
+				// static T GetDecimalValue<T>(OracleDataReader rd, int idx)
+				// {
+				//    return (T) OracleDecimal.SetPrecision(rd.GetOracleDecimal(idx), 27);
+				// }
+
+				Func<Type, LambdaExpression> getDecimal = t =>
+					Expression.Lambda(
+						Expression.ConvertChecked(
+							Expression.Call(setPrecisionMethod,
+								Expression.Call(dataReaderParameter, "GetOracleDecimal", null, indexParameter), Expression.Constant(27)),
+							t),
+						dataReaderParameter,
+						indexParameter);
+
+				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = _oracleDecimal }] = getDecimalAdv;
+				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), FieldType = typeof(decimal)}        ] = getDecimalAdv;
+				ReaderExpressions[new ReaderInfo { ToType = typeof(int),     FieldType = typeof(decimal)}        ] = getDecimal(typeof(int));
+				ReaderExpressions[new ReaderInfo { ToType = typeof(long),    FieldType = typeof(decimal)}        ] = getDecimal(typeof(long));
+				ReaderExpressions[new ReaderInfo {                           FieldType = typeof(decimal)}        ] = getDecimal(typeof(decimal));
+			}
+
+			{
 				// static DateTimeOffset GetOracleTimeStampLTZ(OracleDataReader rd, int idx)
 				// {
 				//     var tstz = rd.GetOracleTimeStampLTZ(idx).ToOracleTimeStampTZ();
@@ -186,7 +273,9 @@ namespace LinqToDB.DataProvider.Oracle
 						Expression.Assign(
 							Expression.PropertyOrField(
 								Expression.Convert(
-									Expression.PropertyOrField(p, "Command"),
+									Expression.Call(
+										MemberHelper.MethodOf(() => Proxy.GetUnderlyingObject((DbCommand)null)),
+										Expression.Convert(Expression.PropertyOrField(p, "Command"), typeof(DbCommand))),
 									connectionType.AssemblyEx().GetType(AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
 							Expression.Constant(true)),
@@ -362,7 +451,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (value.Length != 0)
 						{
-							dynamic command = dataConnection.Command;
+							dynamic command = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
 						
 							command.ArrayBindCount = value.Length;
 

@@ -13,17 +13,13 @@ namespace LinqToDB.Mapping
 	{
 		public EntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
-			_mappingSchema = mappingSchema;
-
 			TypeAccessor = TypeAccessor.GetAccessor(type);
 			Associations = new List<AssociationDescriptor>();
 			Columns      = new List<ColumnDescriptor>();
 
-			Init();
-			InitInheritanceMapping();
+			Init(mappingSchema);
+			InitInheritanceMapping(mappingSchema);
 		}
-
-		readonly MappingSchema _mappingSchema;
 
 		public TypeAccessor                TypeAccessor              { get; private set; }
 		public string                      TableName                 { get; private set; }
@@ -45,9 +41,9 @@ namespace LinqToDB.Mapping
 
 		public Type ObjectType { get { return TypeAccessor.Type; } }
 
-		void Init()
+		void Init(MappingSchema mappingSchema)
 		{
-			var ta = _mappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
+			var ta = mappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
 
 			if (ta != null)
 			{
@@ -69,16 +65,16 @@ namespace LinqToDB.Mapping
 
 			foreach (var member in TypeAccessor.Members)
 			{
-				var aa = _mappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var aa = mappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 				if (aa != null)
 				{
 					Associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.Storage, aa.CanBeNull));
+						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.ExpressionPredicate, aa.Storage, aa.CanBeNull));
 					continue;
 				}
 
-				var ca = _mappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var ca = mappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 				if (ca != null)
 				{
@@ -90,24 +86,24 @@ namespace LinqToDB.Mapping
 						}
 						else
 						{
-							var cd = new ColumnDescriptor(_mappingSchema, ca, member);
+							var cd = new ColumnDescriptor(mappingSchema, ca, member);
 							Columns.Add(cd);
 							_columnNames.Add(member.Name, cd);
 						}
 					}
 				}
 				else if (
-					!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type) ||
-					_mappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
-					_mappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
+					!IsColumnAttributeRequired && mappingSchema.IsScalarType(member.Type) ||
+					mappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
+					mappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
 				{
-					var cd = new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member);
+					var cd = new ColumnDescriptor(mappingSchema, new ColumnAttribute(), member);
 					Columns.Add(cd);
 					_columnNames.Add(member.Name, cd);
 				}
 				else
 				{
-					var caa = _mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+					var caa = mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 					if (caa != null)
 					{
@@ -119,14 +115,14 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			var typeColumnAttrs = _mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
+			var typeColumnAttrs = mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
 
 			foreach (var attr in typeColumnAttrs.Concat(attrs))
 				if (attr.IsColumn)
-					SetColumn(attr);
+					SetColumn(attr, mappingSchema);
 		}
 
-		void SetColumn(ColumnAttribute attr)
+		void SetColumn(ColumnAttribute attr, MappingSchema mappingSchema)
 		{
 			if (attr.MemberName == null)
 				throw new LinqToDBException("The Column attribute of the '{0}' type must have MemberName.".Args(TypeAccessor.Type));
@@ -134,14 +130,14 @@ namespace LinqToDB.Mapping
 			if (attr.MemberName.IndexOf('.') < 0)
 			{
 				var ex = TypeAccessor[attr.MemberName];
-				var cd = new ColumnDescriptor(_mappingSchema, attr, ex);
+				var cd = new ColumnDescriptor(mappingSchema, attr, ex);
 
 				Columns.Add(cd);
 				_columnNames.Add(attr.MemberName, cd);
 			}
 			else
 			{
-				var cd = new ColumnDescriptor(_mappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName));
+				var cd = new ColumnDescriptor(mappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName));
 
 				if (!string.IsNullOrWhiteSpace(attr.MemberName))
 				{
@@ -171,9 +167,9 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		internal void InitInheritanceMapping()
+		internal void InitInheritanceMapping(MappingSchema mappingSchema)
 		{
-			var mappingAttrs = _mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
+			var mappingAttrs = mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
 			var result       = new List<InheritanceMapping>(mappingAttrs.Length);
 
 			if (mappingAttrs.Length > 0)
@@ -189,7 +185,7 @@ namespace LinqToDB.Mapping
 
 					var ed = mapping.Type.Equals(ObjectType)
 						? this
-						: _mappingSchema.GetEntityDescriptor(mapping.Type);
+						: mappingSchema.GetEntityDescriptor(mapping.Type);
 
 					//foreach (var column in this.Columns)
 					//{

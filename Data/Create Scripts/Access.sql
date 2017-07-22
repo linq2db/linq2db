@@ -232,7 +232,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    OleObject NULL,
 	SmallIntValue  smallint,
 	IntValue       int       NULL,
-	BigIntValue    long      NULL
+	BigIntValue    long      NULL,
+	StringValue    Text(50)  NULL
 )
 GO
 
@@ -267,6 +268,7 @@ CREATE TABLE AllTypes
 	datetimeDataType         datetime         NULL,
 
 	charDataType             char(1)          NULL,
+	char20DataType           char(20)         NULL,
 	varcharDataType          varchar(20)      NULL,
 	textDataType             text             NULL,
 	ncharDataType            nchar(20)        NULL,

@@ -5,7 +5,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-
+using System.Threading;
+using System.Threading.Tasks;
 #if !NETSTANDARD
 
 using System.ServiceModel;
@@ -16,6 +17,7 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
@@ -37,6 +39,29 @@ namespace Tests
 	using Model;
 	using System.Text.RegularExpressions;
 
+	class Retry : IRetryPolicy
+	{
+		public TResult Execute<TResult>(Func<TResult> operation)
+		{
+			return operation();
+		}
+
+		public void Execute(Action operation)
+		{
+			operation();
+		}
+
+		public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			return operation(cancellationToken);
+		}
+
+		public Task ExecuteAsync(Func<CancellationToken,Task> operation, CancellationToken cancellationToken = new CancellationToken())
+		{
+			return operation(cancellationToken);
+		}
+	}
+
 	public class TestBase
 	{
 		static TestBase()
@@ -54,7 +79,7 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
-				if (traceCount < 1000)
+				 if (traceCount < 10000)
 				{
 					Console.WriteLine("{0}: {1}", s2, s1);
 					Debug.WriteLine(s1, s2);
@@ -63,10 +88,12 @@ namespace Tests
 				else
 					Console.Write("z");
 #else
-				if (traceCount++ > 1000)
+				if (traceCount++ > 10000)
 					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
 #endif
 			};
+
+			//Configuration.RetryPolicy.Factory = db => new Retry();
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
@@ -276,6 +303,9 @@ namespace Tests
 				_providerNames      = providers;
 			}
 
+			public ParallelScope ParallelScope { get; set; } = ParallelScope.Children;
+			public int           Order         { get; set; }
+
 			readonly bool     _includeLinqService;
 			readonly string[] _providerNames;
 
@@ -293,6 +323,18 @@ namespace Tests
 				}
 
 				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
+			}
+
+			int GetOrder(IMethodInfo method)
+			{
+				if (Order == 0)
+				{
+					if (method.Name.StartsWith("Tests._Create")) return 100;
+					if (method.Name.StartsWith("Tests.xUpdate")) return 2000;
+					return 1000;
+				}
+
+				return Order;
 			}
 
 			protected virtual IEnumerable<object[]> GetParameters(string provider)
@@ -326,7 +368,10 @@ namespace Tests
 						foreach (var attr in explic)
 							attr.ApplyToTest(test);
 
+						test.Properties.Set(PropertyNames.Order,         GetOrder(method));
+						//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
 						test.Properties.Set(PropertyNames.Category, provider);
+
 						SetName(test, method, provider, false, caseNumber++);
 
 						if (isIgnore)
@@ -342,8 +387,8 @@ namespace Tests
 						yield return test;
 
 					}
-#if !NETSTANDARD && !MONO
 
+#if !NETSTANDARD && !MONO
 					if (!isIgnore && _includeLinqService)
 					{
 						var linqCaseNumber = 0;
@@ -356,7 +401,10 @@ namespace Tests
 							foreach (var attr in explic)
 								attr.ApplyToTest(test);
 
+							test.Properties.Set(PropertyNames.Order,         GetOrder(method));
+							//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
 							test.Properties.Set(PropertyNames.Category, provider);
+
 							SetName(test, method, provider, true, linqCaseNumber++);
 
 							yield return test;
@@ -485,6 +533,7 @@ namespace Tests
 			get
 			{
 				if (_types == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_types = db.Types.ToList();
 
@@ -498,6 +547,7 @@ namespace Tests
 			get
 			{
 				if (_types2 == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_types2 = db.Types2.ToList();
 
@@ -505,7 +555,7 @@ namespace Tests
 			}
 		}
 
-		protected const int MaxPersonID = 4;
+		protected internal const int MaxPersonID = 4;
 
 		private          List<Person> _person;
 		protected IEnumerable<Person>  Person
@@ -514,6 +564,7 @@ namespace Tests
 			{
 				if (_person == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_person = db.Person.ToList();
 
@@ -532,6 +583,7 @@ namespace Tests
 			{
 				if (_patient == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_patient = db.Patient.ToList();
 
@@ -550,6 +602,7 @@ namespace Tests
 			{
 				if (_doctor == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_doctor = db.Doctor.ToList();
 				}
@@ -566,6 +619,7 @@ namespace Tests
 			get
 			{
 				if (_parent == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						db.Parent.Delete(c => c.ParentID >= 1000);
@@ -679,6 +733,7 @@ namespace Tests
 			get
 			{
 				if (_child == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						db.Child.Delete(c => c.ParentID >= 1000);
@@ -705,6 +760,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						_grandChild = db.GrandChild.ToList();
@@ -724,6 +780,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild1 == null)
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 					{
 						_grandChild1 = db.GrandChild1.ToList();
@@ -750,6 +807,7 @@ namespace Tests
 			{
 				if (_inheritanceParent == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_inheritanceParent = db.InheritanceParent.ToList();
 				}
@@ -765,6 +823,7 @@ namespace Tests
 			{
 				if (_inheritanceChild == null)
 				{
+					using (new DisableLogging())
 					using (var db = new TestDataConnection())
 						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
 				}
@@ -797,6 +856,7 @@ namespace Tests
 				get
 				{
 					if (_category == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_category = db.Category.ToList();
 					return _category;
@@ -810,6 +870,7 @@ namespace Tests
 				{
 					if (_customer == null)
 					{
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_customer = db.Customer.ToList();
 
@@ -828,6 +889,7 @@ namespace Tests
 				{
 					if (_employee == null)
 					{
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 						{
 							_employee = db.Employee.ToList();
@@ -850,6 +912,7 @@ namespace Tests
 				get
 				{
 					if (_employeeTerritory == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_employeeTerritory = db.EmployeeTerritory.ToList();
 					return _employeeTerritory;
@@ -862,6 +925,7 @@ namespace Tests
 				get
 				{
 					if (_orderDetail == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_orderDetail = db.OrderDetail.ToList();
 					return _orderDetail;
@@ -875,6 +939,7 @@ namespace Tests
 				{
 					if (_order == null)
 					{
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_order = db.Order.ToList();
 
@@ -895,6 +960,7 @@ namespace Tests
 				get
 				{
 					if (_product == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_product = db.Product.ToList();
 
@@ -920,6 +986,7 @@ namespace Tests
 				get
 				{
 					if (_region == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_region = db.Region.ToList();
 					return _region;
@@ -932,6 +999,7 @@ namespace Tests
 				get
 				{
 					if (_shipper == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_shipper = db.Shipper.ToList();
 					return _shipper;
@@ -944,6 +1012,7 @@ namespace Tests
 				get
 				{
 					if (_supplier == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_supplier = db.Supplier.ToList();
 					return _supplier;
@@ -956,6 +1025,7 @@ namespace Tests
 				get
 				{
 					if (_territory == null)
+						using (new DisableLogging())
 						using (var db = new NorthwindDB(_context))
 							_territory = db.Territory.ToList();
 					return _territory;
@@ -998,6 +1068,7 @@ namespace Tests
 								SmallIntValue  = record.SmallIntValue,
 								IntValue       = record.IntValue,
 								BigIntValue    = record.BigIntValue,
+								StringValue    = record.StringValue
 							};
 
 							if (copy.DateTimeValue != null)
@@ -1018,8 +1089,13 @@ namespace Tests
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
-			var resultList   = result.  ToList();
-			var expectedList = expected.ToList();
+			AreEqual(t => t, expected, result);
+		}
+
+		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result)
+		{
+			var resultList   = result.  Select(fixSelector).ToList();
+			var expectedList = expected.Select(fixSelector).ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Lenght: ");
@@ -1125,6 +1201,19 @@ namespace Tests
 		}
 	}
 
+	public class DisableLogging : IDisposable
+	{
+		public DisableLogging()
+		{
+			DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+		}
+
+		public void Dispose()
+		{
+			DataConnection.TurnTraceSwitchOn();
+		}
+	}
+
 	public class WithoutJoinOptimization : IDisposable
 	{
 		public WithoutJoinOptimization()
@@ -1144,13 +1233,41 @@ namespace Tests
 
 		public LocalTable(IDataContext db)
 		{
+			try
+			{
 			_db = db;
 			_db.CreateTable<T>();
+		}
+			catch
+			{
+				_db.DropTable<T>();
+				throw;
+			}
 		}
 
 		public void Dispose()
 		{
 			_db.DropTable<T>();
 		}
+	}
+
+	public class DeletePerson : IDisposable
+	{
+		private IDataContext _db;
+
+		public DeletePerson(IDataContext db)
+		{
+			_db = db;
+			Delete(_db);
+		}
+
+		public void Dispose()
+		{
+			Delete(_db);
+		}
+
+		private readonly Func<IDataContext, int> Delete =
+			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
+
 	}
 }

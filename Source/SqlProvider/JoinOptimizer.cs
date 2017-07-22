@@ -925,6 +925,12 @@ namespace LinqToDB.SqlProvider
 			if (found == null)
 				return false;
 
+			// for removing join with same table fields should be equal
+			found = found.Where(f => f.OneField.Name == f.ManyField.Name).ToList();
+
+			if (found.Count == 0)
+				return false;
+
 			if (hasLeftJoin)
 			{
 				if (join.Condition.Conditions.Count != found.Count)

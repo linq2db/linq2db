@@ -308,10 +308,12 @@ CREATE COLUMN TABLE "AllTypes"
 	"timestampDataType" TIMESTAMP NULL,	
 
 	"charDataType" CHAR(1) NULL,
+	"char20DataType" CHAR(20) NULL,
 	"varcharDataType" VARCHAR(20) NULL,
 	"textDataType" TEXT NULL,
 	"shorttextDataType" SHORTTEXT(20) NULL,
 	"ncharDataType" NCHAR(1) NULL,
+	"nchar20DataType" NCHAR(20) NULL,
 	"nvarcharDataType" NVARCHAR(20) NULL,
 	"alphanumDataType" ALPHANUM(20) NULL,
 
@@ -454,7 +456,8 @@ CREATE COLUMN TABLE "LinqDataTypes"
 	"BinaryValue" VARBINARY(5000) NULL,
 	"SmallIntValue" SMALLINT,
 	"IntValue" INTEGER NULL,
-	"BigIntValue" BIGINT NULL
+	"BigIntValue" BIGINT NULL,
+	"StringValue" NVARCHAR(50) NULL
 );;
 
 CALL DROPEXISTINGTABLE('BulkInsertLowerCaseColumns', CURRENT_SCHEMA);;

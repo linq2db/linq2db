@@ -215,7 +215,7 @@ namespace Tests.Linq
 					.Select(p4 => new Person { ID = p4.p11.ID, FirstName = p4.p3.p1.FirstName }));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana, ParallelScope = ParallelScope.None)]
 		public void MultipleSelect11(string context)
 		{
 			var dt = DateTime.Now;
@@ -667,5 +667,50 @@ namespace Tests.Linq
 				Assert.IsNotEmpty(r.Name.LastName);
 			}
 		}
+
+		[Test, DataContextSource]
+		public void SelectNullableTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var e = new LinqDataTypes2() { ID = 1000, BoolValue = false };
+					db.Insert(e);
+
+					var e2 = db.Types2.First(_ => _.ID == 1000);
+
+					Assert.AreEqual(e, e2);
+				}
+				finally
+				{
+					db.Types2.Where(_ => _.ID == 1000).Delete();
+				}
+			}
+		}
+
+		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
+		public void SelectNullableTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var en = new LinqDataTypes2() { ID = 1000, BoolValue = false };
+					db.Insert(en);
+
+					var e  = new LinqDataTypes()  { ID = 1000, BoolValue = false };
+
+					var e2 = db.Types.First(_ => _.ID == 1000);
+
+					Assert.AreEqual(e, e2);
+				}
+				finally
+				{
+					db.Types2.Where(_ => _.ID == 1000).Delete();
+				}
+			}
+		}
+
 	}
 }

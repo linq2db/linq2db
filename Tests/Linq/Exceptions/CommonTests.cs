@@ -25,7 +25,7 @@ namespace Tests.Exceptions
 				if (selectQuery.IsInsert && selectQuery.Insert.Into.Name == "Parent")
 				{
 					var expr =
-						new QueryVisitor().Find(selectQuery.Insert, e =>
+						QueryVisitor.Find(selectQuery.Insert, e =>
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
@@ -73,7 +73,7 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void ReplaceTableTest(string context)
 		{
 			using (var db = new MyDataConnection(context))

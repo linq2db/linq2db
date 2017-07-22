@@ -91,15 +91,19 @@ namespace LinqToDB.Linq.Builder
 
 		public ExpressionBuilder(
 			Query                 query,
-			IDataContextInfo      dataContext,
+			IDataContext          dataContext,
 			Expression            expression,
 			ParameterExpression[] compiledParameters)
 		{
 			_query               = query;
+
+			if (Configuration.Linq.UseBinaryAggregateExpression)
+				expression = AggregateExpression(expression);
+
 			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
 			CompiledParameters   = compiledParameters;
-			DataContextInfo      = dataContext;
+			DataContext          = dataContext;
 			OriginalExpression   = expression;
 
 			_visitedExpressions  = new HashSet<Expression>();
@@ -112,16 +116,15 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataContext.DataReaderType), "ldr");
+				DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataReaderType), "ldr");
 			}
 		}
-
 
 		#endregion
 
 		#region Public Members
 
-		public readonly IDataContextInfo      DataContextInfo;
+		public readonly IDataContext          DataContext;
 		public readonly Expression            OriginalExpression;
 		public readonly Expression            Expression;
 		public readonly ParameterExpression[] CompiledParameters;
@@ -136,7 +139,7 @@ namespace LinqToDB.Linq.Builder
 
 		public MappingSchema MappingSchema
 		{
-			get { return DataContextInfo.MappingSchema; }
+			get { return DataContext.MappingSchema; }
 		}
 
 		#endregion
@@ -232,8 +235,9 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertExpressionTree(Expression expression)
 		{
-			var expr = ConvertParameters(expression);
+			var expr = expression;
 
+			expr = ConvertParameters (expr);
 			expr = ExposeExpression  (expr);
 			expr = OptimizeExpression(expr);
 
@@ -292,6 +296,48 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertParameters
 
+		Expression AggregateExpression(Expression expression)
+		{
+			return expression.Transform(expr =>
+			{
+				switch (expr.NodeType)
+				{
+					case ExpressionType.Or      :
+					case ExpressionType.And     :
+					case ExpressionType.OrElse  :
+					case ExpressionType.AndAlso :
+						{
+							var stack  = new Stack<Expression>();
+							var items  = new List<Expression>();
+							var binary = (BinaryExpression) expr;
+
+							stack.Push(binary.Right);
+							stack.Push(binary.Left);
+							while (stack.Count > 0)
+							{
+								var item = stack.Pop();
+								if (item.NodeType == expr.NodeType)
+								{
+									binary  = (BinaryExpression) item;
+									stack.Push(binary.Right);
+									stack.Push(binary.Left);
+								}
+								else
+									items.Add(item);
+							}
+
+							if (items.Count > 2)
+							{
+								return new BinaryAggregateExpression(expr.NodeType, expr.Type, items.ToArray());
+							}
+							break;
+						}
+				}
+
+				return expr;
+			});
+		}
+
 		Expression ConvertParameters(Expression expression)
 		{
 			return expression.Transform(expr =>
@@ -336,8 +382,29 @@ namespace LinqToDB.Linq.Builder
 
 							if (l != null)
 							{
-								var body = l.Body.Unwrap();
-								var ex   = body.Transform(wpi => wpi.NodeType == ExpressionType.Parameter ? me.Expression : wpi);
+								var body  = l.Body.Unwrap();
+								var parms = l.Parameters.ToDictionary(p => p);
+								var ex    = body.Transform(wpi =>
+								{
+									if (wpi.NodeType == ExpressionType.Parameter && parms.ContainsKey((ParameterExpression)wpi))
+									{
+										if (wpi.Type.IsSameOrParentOf(me.Expression.Type))
+										{
+											return me.Expression;
+										}
+
+										if (DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+										{
+											if (DataContextParam.Type != wpi.Type)
+												return Expression.Convert(DataContextParam, wpi.Type);
+											return DataContextParam;
+										}
+
+										throw new LinqToDBException("Can't convert {0} to expression.".Args(wpi));
+									}
+
+									return wpi;
+								});
 
 								if (ex.Type != expr.Type)
 									ex = new ChangeTypeExpression(ex, expr.Type);

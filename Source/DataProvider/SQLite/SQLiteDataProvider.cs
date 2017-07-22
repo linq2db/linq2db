@@ -28,8 +28,10 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
 
-			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
-			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
@@ -37,6 +39,20 @@ namespace LinqToDB.DataProvider.SQLite
 		public    override string ConnectionNamespace { get { return SQLiteTools.AssemblyName; } }
 		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(SQLiteTools.AssemblyName, SQLiteTools.ConnectionName); } }
 		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(SQLiteTools.AssemblyName, SQLiteTools.DataReaderName); } }
+
+		protected override string NormalizeTypeName(string typeName)
+		{
+			if (typeName == null)
+				return null;
+
+			if (typeName.StartsWith("char("))
+				return "char";
+
+			if (typeName.StartsWith("nchar("))
+				return "nchar";
+
+			return typeName;
+		}
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{

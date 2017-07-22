@@ -157,9 +157,8 @@ namespace LinqToDB.DataProvider
 		{
 			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 			{
-				dataConnection.OnTraceConnection(new TraceInfo
+				dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
-					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = dataConnection,
 					CommandText    = commandText,
@@ -174,7 +173,7 @@ namespace LinqToDB.DataProvider
 
 				if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = dataConnection,
@@ -188,7 +187,7 @@ namespace LinqToDB.DataProvider
 			{
 				if (DataConnection.TraceSwitch.TraceError && dataConnection.OnTraceConnection != null)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = dataConnection,

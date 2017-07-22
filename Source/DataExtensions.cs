@@ -184,124 +184,79 @@ namespace LinqToDB
 
 		#region Insert
 
-		public static int Insert<T>([NotNull] this IDataContextInfo dataContextInfo, T obj,
+		public static int Insert<T>([NotNull] this IDataContext dataContext, T obj,
 			string tableName = null, string databaseName = null, string schemaName = null)
 		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.Insert(dataContextInfo, obj, tableName, databaseName, schemaName);
-		}
-
-		public static int Insert<T>(this IDataContext dataContext, T obj,
-			string tableName = null, string databaseName = null, string schemaName = null)
-		{
-			return Query<T>.Insert(DataContextInfo.Create(dataContext), obj, tableName, databaseName, schemaName);
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return Query<T>.Insert(dataContext, obj, tableName, databaseName, schemaName);
 		}
 
 		#endregion
 
 		#region InsertOrReplace
 
-		public static int InsertOrReplace<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
+		public static int InsertOrReplace<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.InsertOrReplace(dataContextInfo, obj);
-		}
-
-		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj)
-		{
-			return Query<T>.InsertOrReplace(DataContextInfo.Create(dataContext), obj);
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return Query<T>.InsertOrReplace(dataContext, obj);
 		}
 
 		#endregion
 
 		#region InsertWithIdentity
 
-		public static object InsertWithIdentity<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
+		public static object InsertWithIdentity<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.InsertWithIdentity(dataContextInfo, obj);
-		}
-
-		public static object InsertWithIdentity<T>(this IDataContext dataContext, T obj)
-		{
-			return Query<T>.InsertWithIdentity(DataContextInfo.Create(dataContext), obj);
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return Query<T>.InsertWithIdentity(dataContext, obj);
 		}
 
 		#endregion
 
 		#region Update
 
-		public static int Update<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
+		public static int Update<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.Update(dataContextInfo, obj);
-		}
-
-		public static int Update<T>(this IDataContext dataContext, T obj)
-		{
-			return Query<T>.Update(DataContextInfo.Create(dataContext), obj);
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return Query<T>.Update(dataContext, obj);
 		}
 
 		#endregion
 
 		#region Delete
 
-		public static int Delete<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
-		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.Delete(dataContextInfo, obj);
-		}
-
 		public static int Delete<T>([NotNull] this IDataContext dataContext, T obj)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.Delete(DataContextInfo.Create(dataContext), obj);
+			return Query<T>.Delete(dataContext, obj);
 		}
+
 		#endregion
 
 		#endregion
 
 		#region DDL Operations
 
-		public static ITable<T> CreateTable<T>([NotNull] this IDataContextInfo dataContextInfo,
-			string         tableName       = null,
-			string         databaseName    = null,
-			string         ownerName       = null,
-			string         statementHeader = null,
-			string         statementFooter = null,
-			DefaulNullable defaulNullable  = DefaulNullable.None)
-		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.CreateTable(dataContextInfo,
-				tableName, databaseName, ownerName, statementHeader, statementFooter, defaulNullable);
-		}
-
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
 			string         tableName       = null,
 			string         databaseName    = null,
-			string         ownerName       = null,
+			string         schemaName      = null,
 			string         statementHeader = null,
 			string         statementFooter = null,
 			DefaulNullable defaulNullable  = DefaulNullable.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.CreateTable(DataContextInfo.Create(dataContext),
-				tableName, databaseName, ownerName, statementHeader, statementFooter, defaulNullable);
+			return Query<T>.CreateTable(dataContext,
+				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable);
 		}
 
-		public static void DropTable<T>([NotNull] this IDataContextInfo dataContextInfo,
+		public static void DropTable<T>([NotNull] this IDataContext dataContext,
 			string tableName    = null,
 			string databaseName = null,
-			string schemaName    = null)
-		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			Query<T>.DropTable(dataContextInfo, tableName, databaseName, schemaName);
-		}
-
-		public static void DropTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
+			string schemaName   = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, schemaName);
+			Query<T>.DropTable(dataContext, tableName, databaseName, schemaName);
 		}
 
 		public static void DropTable<T>([NotNull] this ITable<T> table, string tableName = null, string databaseName = null, string schemaName = null)
@@ -310,7 +265,7 @@ namespace LinqToDB
 
 			var tbl = (Table<T>)table;
 
-			Query<T>.DropTable(tbl.DataContextInfo, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName);
+			Query<T>.DropTable(tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName);
 		}
 
 		#endregion

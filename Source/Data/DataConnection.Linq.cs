@@ -22,12 +22,6 @@ namespace LinqToDB.Data
 			return new Table<T>(this);
 		}
 
-		public ITable<T> GetTable<T>(bool dispose)
-			where T : class
-		{
-			return new Table<T>(new DataContextInfo(this, dispose));
-		}
-
 		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object[] parameters)
 			where T : class
 		{
@@ -59,7 +53,7 @@ namespace LinqToDB.Data
 				 };
 			}
 
-			var sql    = query.SelectQuery.ProcessParameters();
+			var sql    = query.SelectQuery.ProcessParameters(MappingSchema);
 			var newSql = ProcessQuery(sql);
 
 			if (!object.ReferenceEquals(sql, newSql))
@@ -162,6 +156,8 @@ namespace LinqToDB.Data
 
 		int IDataContext.ExecuteNonQuery(object query)
 		{
+			ThrowOnDisposed();
+
 			var pq = (PreparedQuery)query;
 
 			if (pq.Commands.Length == 1)
@@ -206,6 +202,8 @@ namespace LinqToDB.Data
 
 		object IDataContext.ExecuteScalar(object query)
 		{
+			ThrowOnDisposed();
+
 			var pq = (PreparedQuery)query;
 
 			InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
@@ -256,6 +254,8 @@ namespace LinqToDB.Data
 
 		IDataReader IDataContext.ExecuteReader(object query)
 		{
+			ThrowOnDisposed();
+
 			var pq = (PreparedQuery)query;
 
 			InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
@@ -269,6 +269,7 @@ namespace LinqToDB.Data
 
 		void IDataContext.ReleaseQuery(object query)
 		{
+			ThrowOnDisposed();
 		}
 
 		#endregion
@@ -277,6 +278,8 @@ namespace LinqToDB.Data
 
 		string IDataContext.GetSqlText(object query)
 		{
+			ThrowOnDisposed();
+
 			var pq = (PreparedQuery)query;
 
 			var sqlProvider = pq.SqlProvider ?? DataProvider.CreateSqlBuilder();
@@ -334,6 +337,8 @@ namespace LinqToDB.Data
 		SqlProviderFlags IDataContext.SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
 		Type             IDataContext.DataReaderType   { get { return DataProvider.DataReaderType;   } }
 
+		bool             IDataContext.CloseAfterUse    { get; set; }
+
 		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			return DataProvider.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
@@ -346,6 +351,8 @@ namespace LinqToDB.Data
 
 		object IDataContext.SetQuery(IQueryContext queryContext)
 		{
+			ThrowOnDisposed();
+
 			var query = GetCommand(queryContext);
 
 			GetParameters(queryContext, query);
@@ -358,6 +365,8 @@ namespace LinqToDB.Data
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
+			ThrowOnDisposed();
+
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
 				return new DataConnection(DataProvider, _connection) { _mappingSchema = _mappingSchema, Transaction = Transaction };
 

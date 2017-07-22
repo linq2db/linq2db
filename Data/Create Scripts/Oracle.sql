@@ -623,7 +623,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    blob         NULL,
 	SmallIntValue  smallint,
 	IntValue       int          NULL,
-	BigIntValue    number(20,0) NULL
+	BigIntValue    number(20,0) NULL,
+	StringValue    VARCHAR2(50) NULL
 )
 /
 
@@ -730,6 +731,7 @@ CREATE TABLE AllTypes
 	localZoneDataType        timestamp with local time zone NULL,
 
 	charDataType             char(1)                        NULL,
+	char20DataType           char(20)                       NULL,
 	varcharDataType          varchar2(20)                   NULL,
 	textDataType             clob                           NULL,
 	ncharDataType            nchar(20)                      NULL,

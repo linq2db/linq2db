@@ -48,14 +48,19 @@ namespace LinqToDB.Expressions
 
 		internal static bool EqualsTo(this Expression expr1, Expression expr2, Dictionary<Expression,QueryableAccessor> queryableAccessorDic)
 		{
-			return EqualsTo(expr1, expr2, new HashSet<Expression>(), queryableAccessorDic);
+			return EqualsTo(expr1, expr2, new EqualsToInfo { QueryableAccessorDic = queryableAccessorDic });
+		}
+
+		class EqualsToInfo
+		{
+			public HashSet<Expression>                      Visited = new HashSet<Expression>();
+			public Dictionary<Expression,QueryableAccessor> QueryableAccessorDic;
 		}
 
 		static bool EqualsTo(
-			this Expression     expr1,
-			Expression          expr2,
-			HashSet<Expression> visited,
-			Dictionary<Expression,QueryableAccessor> queryableAccessorDic)
+			this Expression expr1,
+			Expression      expr2,
+			EqualsToInfo    info)
 		{
 			if (expr1 == expr2)
 				return true;
@@ -93,13 +98,13 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
 					{
-						var e1 = (BinaryExpression)expr1;
-						var e2 = (BinaryExpression)expr2;
+//						var e1 = (BinaryExpression)expr1;
+//						var e2 = (BinaryExpression)expr2;
 						return
-							e1.Method == e2.Method &&
-							e1.Conversion.EqualsTo(e2.Conversion, visited, queryableAccessorDic) &&
-							e1.Left.      EqualsTo(e2.Left,       visited, queryableAccessorDic) &&
-							e1.Right.     EqualsTo(e2.Right,      visited, queryableAccessorDic);
+							((BinaryExpression)expr1).Method == ((BinaryExpression)expr2).Method &&
+							((BinaryExpression)expr1).Conversion.EqualsTo(((BinaryExpression)expr2).Conversion, info) &&
+							((BinaryExpression)expr1).Left.      EqualsTo(((BinaryExpression)expr2).Left,       info) &&
+							((BinaryExpression)expr1).Right.     EqualsTo(((BinaryExpression)expr2).Right,      info);
 					}
 
 				case ExpressionType.ArrayLength:
@@ -112,317 +117,297 @@ namespace LinqToDB.Expressions
 				case ExpressionType.TypeAs:
 				case ExpressionType.UnaryPlus:
 					{
-						var e1 = (UnaryExpression)expr1;
-						var e2 = (UnaryExpression)expr2;
-						return e1.Method == e2.Method && e1.Operand.EqualsTo(e2.Operand, visited, queryableAccessorDic);
-					}
-
-				case ExpressionType.Call:
-					{
-						var e1 = (MethodCallExpression)expr1;
-						var e2 = (MethodCallExpression)expr2;
-
-						if (e1.Arguments.Count != e2.Arguments.Count || e1.Method != e2.Method)
-							return false;
-
-						if (queryableAccessorDic.Count > 0)
-						{
-							QueryableAccessor qa;
-
-							if (queryableAccessorDic.TryGetValue(expr1, out qa))
-								return qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, visited, queryableAccessorDic);
-						}
-
-						if (!e1.Object.EqualsTo(e2.Object, visited, queryableAccessorDic))
-							return false;
-
-						for (var i = 0; i < e1.Arguments.Count; i++)
-							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], visited, queryableAccessorDic))
-								return false;
-
-						return true;
+//						var e1 = (UnaryExpression)expr1;
+//						var e2 = (UnaryExpression)expr2;
+						return
+							((UnaryExpression)expr1).Method == ((UnaryExpression)expr2).Method &&
+							((UnaryExpression)expr1).Operand.EqualsTo(((UnaryExpression)expr2).Operand, info);
 					}
 
 				case ExpressionType.Conditional:
 					{
-						var e1 = (ConditionalExpression)expr1;
-						var e2 = (ConditionalExpression)expr2;
+//						var e1 = (ConditionalExpression)expr1;
+//						var e2 = (ConditionalExpression)expr2;
 						return
-							e1.Test.   EqualsTo(e2.Test,    visited, queryableAccessorDic) &&
-							e1.IfTrue. EqualsTo(e2.IfTrue,  visited, queryableAccessorDic) &&
-							e1.IfFalse.EqualsTo(e2.IfFalse, visited, queryableAccessorDic);
+							((ConditionalExpression)expr1).Test.   EqualsTo(((ConditionalExpression)expr2).Test,    info) &&
+							((ConditionalExpression)expr1).IfTrue. EqualsTo(((ConditionalExpression)expr2).IfTrue,  info) &&
+							((ConditionalExpression)expr1).IfFalse.EqualsTo(((ConditionalExpression)expr2).IfFalse, info);
 					}
 
-				case ExpressionType.Constant:
-					{
-						var e1 = (ConstantExpression)expr1;
-						var e2 = (ConstantExpression)expr2;
-
-						if (e1.Value == null && e2.Value == null)
-							return true;
-
-						if (IsConstantable(e1.Type))
-							return Equals(e1.Value, e2.Value);
-
-						if (e1.Value == null || e2.Value == null)
-							return false;
-
-						if (e1.Value is IQueryable)
-						{
-							var eq1 = ((IQueryable)e1.Value).Expression;
-							var eq2 = ((IQueryable)e2.Value).Expression;
-
-							if (!visited.Contains(eq1))
-							{
-								visited.Add(eq1);
-								return eq1.EqualsTo(eq2, visited, queryableAccessorDic);
-							}
-						}
-
-						return true;
-					}
-
-				case ExpressionType.Invoke:
-					{
-						var e1 = (InvocationExpression)expr1;
-						var e2 = (InvocationExpression)expr2;
-
-						if (e1.Arguments.Count != e2.Arguments.Count || !e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic))
-							return false;
-
-						for (var i = 0; i < e1.Arguments.Count; i++)
-							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], visited, queryableAccessorDic))
-								return false;
-
-						return true;
-					}
-
-				case ExpressionType.Lambda:
-					{
-						var e1 = (LambdaExpression)expr1;
-						var e2 = (LambdaExpression)expr2;
-
-						if (e1.Parameters.Count != e2.Parameters.Count || !e1.Body.EqualsTo(e2.Body, visited, queryableAccessorDic))
-							return false;
-
-						for (var i = 0; i < e1.Parameters.Count; i++)
-							if (!e1.Parameters[i].EqualsTo(e2.Parameters[i], visited, queryableAccessorDic))
-								return false;
-
-						return true;
-					}
-
-				case ExpressionType.ListInit:
-					{
-						var e1 = (ListInitExpression)expr1;
-						var e2 = (ListInitExpression)expr2;
-
-						if (e1.Initializers.Count != e2.Initializers.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, visited, queryableAccessorDic))
-							return false;
-
-						for (var i = 0; i < e1.Initializers.Count; i++)
-						{
-							var i1 = e1.Initializers[i];
-							var i2 = e2.Initializers[i];
-
-							if (i1.Arguments.Count != i2.Arguments.Count || i1.AddMethod != i2.AddMethod)
-								return false;
-
-							for (var j = 0; j < i1.Arguments.Count; j++)
-								if (!i1.Arguments[j].EqualsTo(i2.Arguments[j], visited, queryableAccessorDic))
-									return false;
-						}
-
-						return true;
-					}
-
-				case ExpressionType.MemberAccess:
-					{
-						var e1 = (MemberExpression)expr1;
-						var e2 = (MemberExpression)expr2;
-
-						if (e1.Member == e2.Member)
-						{
-							if (e1.Expression == e2.Expression || e1.Expression.Type == e2.Expression.Type)
-							{
-								if (queryableAccessorDic.Count > 0)
-								{
-									QueryableAccessor qa;
-
-									if (queryableAccessorDic.TryGetValue(expr1, out qa))
-										return
-											e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic) &&
-											qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, visited, queryableAccessorDic);
-								}
-							}
-
-							return e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic);
-						}
-
-						return false;
-					}
-
-				case ExpressionType.MemberInit:
-					{
-						var e1 = (MemberInitExpression)expr1;
-						var e2 = (MemberInitExpression)expr2;
-
-						if (e1.Bindings.Count != e2.Bindings.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, visited, queryableAccessorDic))
-							return false;
-
-						Func<MemberBinding,MemberBinding,bool> compareBindings = null; compareBindings = (b1,b2) =>
-						{
-							if (b1 == b2)
-								return true;
-
-							if (b1 == null || b2 == null || b1.BindingType != b2.BindingType || b1.Member != b2.Member)
-								return false;
-
-							switch (b1.BindingType)
-							{
-								case MemberBindingType.Assignment:
-									return ((MemberAssignment)b1).Expression.EqualsTo(((MemberAssignment)b2).Expression, visited, queryableAccessorDic);
-
-								case MemberBindingType.ListBinding:
-									var ml1 = (MemberListBinding)b1;
-									var ml2 = (MemberListBinding)b2;
-
-									if (ml1.Initializers.Count != ml2.Initializers.Count)
-										return false;
-
-									for (var i = 0; i < ml1.Initializers.Count; i++)
-									{
-										var ei1 = ml1.Initializers[i];
-										var ei2 = ml2.Initializers[i];
-
-										if (ei1.AddMethod != ei2.AddMethod || ei1.Arguments.Count != ei2.Arguments.Count)
-											return false;
-
-										for (var j = 0; j < ei1.Arguments.Count; j++)
-											if (!ei1.Arguments[j].EqualsTo(ei2.Arguments[j], visited, queryableAccessorDic))
-												return false;
-									}
-
-									break;
-
-								case MemberBindingType.MemberBinding:
-									var mm1 = (MemberMemberBinding)b1;
-									var mm2 = (MemberMemberBinding)b2;
-
-									if (mm1.Bindings.Count != mm2.Bindings.Count)
-										return false;
-
-									for (var i = 0; i < mm1.Bindings.Count; i++)
-										if (!compareBindings(mm1.Bindings[i], mm2.Bindings[i]))
-											return false;
-
-									break;
-							}
-
-							return true;
-						};
-
-						for (var i = 0; i < e1.Bindings.Count; i++)
-						{
-							var b1 = e1.Bindings[i];
-							var b2 = e2.Bindings[i];
-
-							if (!compareBindings(b1, b2))
-								return false;
-						}
-
-						return true;
-					}
-
-				case ExpressionType.New:
-					{
-						var e1 = (NewExpression)expr1;
-						var e2 = (NewExpression)expr2;
-
-						if (e1.Arguments.Count != e2.Arguments.Count)
-							return false;
-
-						if (e1.Members == null && e2.Members != null)
-							return false;
-
-						if (e1.Members != null && e2.Members == null)
-							return false;
-
-						if (e1.Constructor != e2.Constructor)
-							return false;
-
-						if (e1.Members != null)
-						{
-							if (e1.Members.Count != e2.Members.Count)
-								return false;
-
-							for (var i = 0; i < e1.Members.Count; i++)
-								if (e1.Members[i] != e2.Members[i])
-									return false;
-						}
-
-						for (var i = 0; i < e1.Arguments.Count; i++)
-							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], visited, queryableAccessorDic))
-								return false;
-
-						return true;
-					}
-
+				case ExpressionType.Call          : return EqualsToX((MethodCallExpression)expr1, (MethodCallExpression)expr2, info);
+				case ExpressionType.Constant      : return EqualsToX((ConstantExpression)  expr1, (ConstantExpression)  expr2, info);
+				case ExpressionType.Invoke        : return EqualsToX((InvocationExpression)expr1, (InvocationExpression)expr2, info);
+				case ExpressionType.Lambda        : return EqualsToX((LambdaExpression)    expr1, (LambdaExpression)    expr2, info);
+				case ExpressionType.ListInit      : return EqualsToX((ListInitExpression)  expr1, (ListInitExpression)  expr2, info);
+				case ExpressionType.MemberAccess  : return EqualsToX((MemberExpression)    expr1, (MemberExpression)    expr2, info);
+				case ExpressionType.MemberInit    : return EqualsToX((MemberInitExpression)expr1, (MemberInitExpression)expr2, info);
+				case ExpressionType.New           : return EqualsToX((NewExpression)       expr1, (NewExpression)       expr2, info);
 				case ExpressionType.NewArrayBounds:
-				case ExpressionType.NewArrayInit:
-					{
-						var e1 = (NewArrayExpression)expr1;
-						var e2 = (NewArrayExpression)expr2;
-
-						if (e1.Expressions.Count != e2.Expressions.Count)
-							return false;
-
-						for (var i = 0; i < e1.Expressions.Count; i++)
-							if (!e1.Expressions[i].EqualsTo(e2.Expressions[i], visited, queryableAccessorDic))
-								return false;
-
-						return true;
-					}
-
-				case ExpressionType.Default  :
-					return true;
-
-				case ExpressionType.Parameter:
-					{
-						var e1 = (ParameterExpression)expr1;
-						var e2 = (ParameterExpression)expr2;
-						return e1.Name == e2.Name;
-					}
+				case ExpressionType.NewArrayInit  : return EqualsToX((NewArrayExpression)  expr1, (NewArrayExpression)  expr2, info);
+				case ExpressionType.Default       : return true;
+				case ExpressionType.Parameter     : return ((ParameterExpression) expr1).Name == ((ParameterExpression) expr2).Name;
 
 				case ExpressionType.TypeIs:
 					{
-						var e1 = (TypeBinaryExpression)expr1;
-						var e2 = (TypeBinaryExpression)expr2;
-						return e1.TypeOperand == e2.TypeOperand && e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic);
+//						var e1 = (TypeBinaryExpression)expr1;
+//						var e2 = (TypeBinaryExpression)expr2;
+						return
+							((TypeBinaryExpression)expr1).TypeOperand == ((TypeBinaryExpression)expr2).TypeOperand &&
+							((TypeBinaryExpression)expr1).Expression.EqualsTo(((TypeBinaryExpression)expr2).Expression, info);
 					}
 
 #if FW4 || SILVERLIGHT
 
 				case ExpressionType.Block:
-					{
-						var e1 = (BlockExpression)expr1;
-						var e2 = (BlockExpression)expr2;
-
-						for (var i = 0; i < e1.Expressions.Count; i++)
-							if (!e1.Expressions[i].EqualsTo(e2.Expressions[i], visited, queryableAccessorDic))
-								return false;
-
-						for (var i = 0; i < e1.Variables.Count; i++)
-							if (!e1.Variables[i].EqualsTo(e2.Variables[i], visited, queryableAccessorDic))
-								return false;
-
-						return true;
-					}
+					return EqualsToX((BlockExpression)expr1, (BlockExpression)expr2, info);
 
 #endif
 			}
 
 			throw new InvalidOperationException();
+		}
+
+		static bool EqualsToX(BlockExpression expr1, BlockExpression expr2, EqualsToInfo info)
+		{
+			for (var i = 0; i < expr1.Expressions.Count; i++)
+				if (!expr1.Expressions[i].EqualsTo(expr2.Expressions[i], info))
+					return false;
+
+			for (var i = 0; i < expr1.Variables.Count; i++)
+				if (!expr1.Variables[i].EqualsTo(expr2.Variables[i], info))
+					return false;
+
+			return true;
+		}
+
+		static bool EqualsToX(NewArrayExpression expr1, NewArrayExpression expr2, EqualsToInfo info)
+		{
+			if (expr1.Expressions.Count != expr2.Expressions.Count)
+				return false;
+
+			for (var i = 0; i < expr1.Expressions.Count; i++)
+				if (!expr1.Expressions[i].EqualsTo(expr2.Expressions[i], info))
+					return false;
+
+			return true;
+		}
+
+		static bool EqualsToX(NewExpression expr1, NewExpression expr2, EqualsToInfo info)
+		{
+			if (expr1.Arguments.Count != expr2.Arguments.Count)
+				return false;
+
+			if (expr1.Members == null && expr2.Members != null)
+				return false;
+
+			if (expr1.Members != null && expr2.Members == null)
+				return false;
+
+			if (expr1.Constructor != expr2.Constructor)
+				return false;
+
+			if (expr1.Members != null)
+			{
+				if (expr1.Members.Count != expr2.Members.Count)
+					return false;
+
+				for (var i = 0; i < expr1.Members.Count; i++)
+					if (expr1.Members[i] != expr2.Members[i])
+						return false;
+			}
+
+			for (var i = 0; i < expr1.Arguments.Count; i++)
+				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					return false;
+
+			return true;
+		}
+
+		static bool EqualsToX(MemberInitExpression expr1, MemberInitExpression expr2, EqualsToInfo info)
+		{
+			if (expr1.Bindings.Count != expr2.Bindings.Count || !expr1.NewExpression.EqualsTo(expr2.NewExpression, info))
+				return false;
+
+			Func<MemberBinding,MemberBinding,bool> compareBindings = null;
+			compareBindings = (b1, b2) =>
+			{
+				if (b1 == b2)
+					return true;
+
+				if (b1 == null || b2 == null || b1.BindingType != b2.BindingType || b1.Member != b2.Member)
+					return false;
+
+				switch (b1.BindingType)
+				{
+					case MemberBindingType.Assignment:
+						return ((MemberAssignment)b1).Expression.EqualsTo(((MemberAssignment)b2).Expression, info);
+
+					case MemberBindingType.ListBinding:
+						var ml1 = (MemberListBinding)b1;
+						var ml2 = (MemberListBinding)b2;
+
+						if (ml1.Initializers.Count != ml2.Initializers.Count)
+							return false;
+
+						for (var i = 0; i < ml1.Initializers.Count; i++)
+						{
+							var ei1 = ml1.Initializers[i];
+							var ei2 = ml2.Initializers[i];
+
+							if (ei1.AddMethod != ei2.AddMethod || ei1.Arguments.Count != ei2.Arguments.Count)
+								return false;
+
+							for (var j = 0; j < ei1.Arguments.Count; j++)
+								if (!ei1.Arguments[j].EqualsTo(ei2.Arguments[j], info))
+									return false;
+						}
+
+						break;
+
+					case MemberBindingType.MemberBinding:
+						var mm1 = (MemberMemberBinding)b1;
+						var mm2 = (MemberMemberBinding)b2;
+
+						if (mm1.Bindings.Count != mm2.Bindings.Count)
+							return false;
+
+						for (var i = 0; i < mm1.Bindings.Count; i++)
+							if (!compareBindings(mm1.Bindings[i], mm2.Bindings[i]))
+								return false;
+
+						break;
+				}
+
+				return true;
+			};
+
+			for (var i = 0; i < expr1.Bindings.Count; i++)
+			{
+				var b1 = expr1.Bindings[i];
+				var b2 = expr2.Bindings[i];
+
+				if (!compareBindings(b1, b2))
+					return false;
+			}
+
+			return true;
+		}
+
+		static bool EqualsToX(MemberExpression expr1, MemberExpression expr2, EqualsToInfo info)
+		{
+			if (expr1.Member == expr2.Member)
+			{
+				if (expr1.Expression == expr2.Expression || expr1.Expression.Type == expr2.Expression.Type)
+				{
+					if (info.QueryableAccessorDic.Count > 0)
+					{
+						QueryableAccessor qa;
+
+						if (info.QueryableAccessorDic.TryGetValue(expr1, out qa))
+							return
+								expr1.Expression.EqualsTo(expr2.Expression, info) &&
+								qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
+					}
+				}
+
+				return expr1.Expression.EqualsTo(expr2.Expression, info);
+			}
+
+			return false;
+		}
+
+		static bool EqualsToX(ListInitExpression expr1, ListInitExpression expr2, EqualsToInfo info)
+		{
+			if (expr1.Initializers.Count != expr2.Initializers.Count || !expr1.NewExpression.EqualsTo(expr2.NewExpression, info))
+				return false;
+
+			for (var i = 0; i < expr1.Initializers.Count; i++)
+			{
+				var i1 = expr1.Initializers[i];
+				var i2 = expr2.Initializers[i];
+
+				if (i1.Arguments.Count != i2.Arguments.Count || i1.AddMethod != i2.AddMethod)
+					return false;
+
+				for (var j = 0; j < i1.Arguments.Count; j++)
+					if (!i1.Arguments[j].EqualsTo(i2.Arguments[j], info))
+						return false;
+			}
+
+			return true;
+		}
+
+		static bool EqualsToX(LambdaExpression expr1, LambdaExpression expr2, EqualsToInfo info)
+		{
+			if (expr1.Parameters.Count != expr2.Parameters.Count || !expr1.Body.EqualsTo(expr2.Body, info))
+				return false;
+
+			for (var i = 0; i < expr1.Parameters.Count; i++)
+				if (!expr1.Parameters[i].EqualsTo(expr2.Parameters[i], info))
+					return false;
+
+			return true;
+		}
+
+		static bool EqualsToX(InvocationExpression expr1, InvocationExpression expr2, EqualsToInfo info)
+		{
+			if (expr1.Arguments.Count != expr2.Arguments.Count || !expr1.Expression.EqualsTo(expr2.Expression, info))
+				return false;
+
+			for (var i = 0; i < expr1.Arguments.Count; i++)
+				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					return false;
+
+			return true;
+		}
+
+		static bool EqualsToX(ConstantExpression expr1, ConstantExpression expr2, EqualsToInfo info)
+		{
+			if (expr1.Value == null && expr2.Value == null)
+				return true;
+
+			if (IsConstantable(expr1.Type))
+				return Equals(expr1.Value, expr2.Value);
+
+			if (expr1.Value == null || expr2.Value == null)
+				return false;
+
+			if (expr1.Value is IQueryable)
+			{
+				var eq1 = ((IQueryable)expr1.Value).Expression;
+				var eq2 = ((IQueryable)expr2.Value).Expression;
+
+				if (!info.Visited.Contains(eq1))
+				{
+					info.Visited.Add(eq1);
+					return eq1.EqualsTo(eq2, info);
+				}
+			}
+
+			return true;
+		}
+
+		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
+		{
+			if (expr1.Arguments.Count != expr2.Arguments.Count || expr1.Method != expr2.Method)
+				return false;
+
+			if (!expr1.Object.EqualsTo(expr2.Object, info))
+				return false;
+
+			if (info.QueryableAccessorDic.Count > 0)
+			{
+				QueryableAccessor qa;
+
+				if (info.QueryableAccessorDic.TryGetValue(expr1, out qa))
+					return qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
+			}
+
+			for (var i = 0; i < expr1.Arguments.Count; i++)
+				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					return false;
+
+			return true;
 		}
 
 		#endregion
@@ -708,6 +693,16 @@ namespace LinqToDB.Expressions
 					}
 
 				case ExpressionType.Parameter: path = ConvertTo(path, typeof(ParameterExpression)); break;
+
+				case ExpressionType.Extension:
+					{
+						if (expr.CanReduce)
+						{
+							expr = expr.Reduce();
+							Path(expr, visited, path, func);
+						}
+						break;
+					}
 			}
 
 			func(expr, path);

@@ -5,6 +5,32 @@ using System.IO;
 using System.Linq;
 using System.Data;
 
+/*
+
+	https://blog.sqlauthority.com/2011/10/02/sql-server-ce-list-of-information_schema-system-tables/
+
+-- Get all the columns of the database
+SELECT * 
+FROM INFORMATION_SCHEMA.COLUMNS
+-- Get all the indexes of the database
+SELECT * 
+FROM INFORMATION_SCHEMA.INDEXES
+-- Get all the indexes and columns of the database
+SELECT * 
+FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+-- Get all the datatypes of the database
+SELECT * 
+FROM INFORMATION_SCHEMA.PROVIDER_TYPES
+-- Get all the tables of the database
+SELECT * 
+FROM INFORMATION_SCHEMA.TABLES
+-- Get all the constraint of the database
+SELECT * 
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+-- Get all the foreign keys of the database
+SELECT * 
+FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
+*/
 namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
@@ -38,23 +64,16 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
-			var idxs         = dbConnection.GetSchema("Indexes");
-			var cs           = dbConnection.GetSchema("IndexColumns");
+			var data = dataConnection.Query<PrimaryKeyInfo>(
+				@"SELECT
+					COALESCE(TABLE_CATALOG, '') + '.' + COALESCE(TABLE_SCHEMA, '') + '.' + TABLE_NAME AS TableID,
+					INDEX_NAME                                            AS PrimaryKeyName,
+					COLUMN_NAME                                           AS ColumnName,
+					ORDINAL_POSITION                                      AS Ordinal
+				FROM INFORMATION_SCHEMA.INDEXES
+				WHERE PRIMARY_KEY = 1");
 
-			return
-			(
-				from idx in idxs.AsEnumerable()
-				join c   in cs.  AsEnumerable()
-					on idx.Field<string>("TABLE_NAME") equals c.Field<string>("TABLE_NAME")
-				select new PrimaryKeyInfo
-				{
-					TableID        = idx.Field<string>("TABLE_CATALOG") + "." + idx.Field<string>("TABLE_SCHEMA") + "." + idx.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = idx.Field<string>("INDEX_NAME"),
-					ColumnName     = c.  Field<string>("COLUMN_NAME"),
-					Ordinal        = ConvertTo<int>.From(c["ORDINAL_POSITION"]),
-				}
-			).ToList();
+			return data.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)

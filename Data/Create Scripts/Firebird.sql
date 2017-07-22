@@ -114,7 +114,7 @@ COMMIT;
 
 CREATE TABLE Doctor
 (
-	PersonID INTEGER     NOT NULL,
+	PersonID INTEGER     NOT NULL PRIMARY KEY,
 	Taxonomy VARCHAR(50) NOT NULL,
 		CONSTRAINT FK_Doctor_Person FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 			ON DELETE CASCADE
@@ -128,7 +128,7 @@ COMMIT;
 
 CREATE TABLE Patient
 (
-	PersonID  int           NOT NULL,
+	PersonID  int           NOT NULL PRIMARY KEY,
 	Diagnosis VARCHAR(256)  NOT NULL,
 	FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 			ON DELETE CASCADE
@@ -230,7 +230,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    blob,
 	SmallIntValue  smallint,
 	IntValue       int,
-	BigIntValue    bigint
+	BigIntValue    bigint,
+	StringValue    VARCHAR(50)
 )
 COMMIT;
 
@@ -298,6 +299,7 @@ CREATE TABLE AllTypes
 	timestampDataType        timestamp,
 
 	charDataType             char(1),
+	char20DataType           char(20),
 	varcharDataType          varchar(20),
 	textDataType             blob sub_type TEXT,
 	ncharDataType            char(20) character set UNICODE_FSS,
@@ -305,6 +307,16 @@ CREATE TABLE AllTypes
 
 	blobDataType             blob
 )
+COMMIT;
+
+CREATE GENERATOR AllTypesID;
+COMMIT;
+
+CREATE TRIGGER AllTypes_ID FOR AllTypes
+BEFORE INSERT POSITION 0
+AS BEGIN
+	NEW.ID = GEN_ID(AllTypesID, 1);
+END
 COMMIT;
 
 INSERT INTO AllTypes
@@ -321,6 +333,7 @@ VALUES
 
 	NULL,
 
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -346,6 +359,7 @@ VALUES
 	Cast('2012-12-12 12:12:12' as timestamp),
 
 	'1',
+	'1',
 	'234',
 	'567',
 	'23233',
@@ -356,15 +370,6 @@ VALUES
 COMMIT;
 
 
-CREATE GENERATOR AllTypesID;
-COMMIT;
-
-CREATE TRIGGER AllTypes_ID FOR AllTypes
-BEFORE INSERT POSITION 0
-AS BEGIN
-	NEW.ID = GEN_ID(AllTypesID, 1);
-END
-COMMIT;
 
 
 CREATE VIEW PersonView

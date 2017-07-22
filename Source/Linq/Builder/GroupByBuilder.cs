@@ -171,20 +171,14 @@ namespace LinqToDB.Linq.Builder
 
 				List<TElement> GetItems()
 				{
-					var db = _queryContext.GetDataContext();
-
-					try
+					using (var db = _queryContext.DataContext.Clone(true))
 					{
 						var ps = new object[_parameters.Count];
 
 						for (var i = 0; i < ps.Length; i++)
 							ps[i] = _parameters[i].Accessor(_queryContext.Expression, _queryContext.CompiledParameters);
 
-						return _itemReader(db.DataContextInfo.DataContext, Key, ps).ToList();
-					}
-					finally
-					{
-						_queryContext.ReleaseDataContext(db);
+						return _itemReader(db, Key, ps).ToList();
 					}
 				}
 
@@ -281,7 +275,7 @@ namespace LinqToDB.Linq.Builder
 							new[] { context.Builder.DataReaderLocal },
 							new[]
 							{
-								Expression.Assign(dataReaderLocal, Expression.Convert(ExpressionBuilder.DataReaderParam, context.Builder.DataContextInfo.DataContext.DataReaderType)),
+								Expression.Assign(dataReaderLocal, Expression.Convert(ExpressionBuilder.DataReaderParam, context.Builder.DataContext.DataReaderType)),
 								keyExpr
 							});
 					}
@@ -414,7 +408,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ctx = Builder.GetSubQuery(this, call);
 
-					if (Builder.DataContextInfo.SqlProviderFlags.IsSubQueryColumnSupported)
+					if (Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported)
 						return ctx.SelectQuery;
 
 					var join = ctx.SelectQuery.CrossApply();
