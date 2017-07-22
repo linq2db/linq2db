@@ -1235,9 +1235,9 @@ namespace Tests
 		{
 			try
 			{
-			_db = db;
-			_db.CreateTable<T>();
-		}
+				_db = db;
+				_db.CreateTable<T>();
+			}
 			catch
 			{
 				_db.DropTable<T>();

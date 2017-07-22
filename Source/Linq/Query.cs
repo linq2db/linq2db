@@ -106,8 +106,6 @@ namespace LinqToDB.Linq
 			foreach (var query in Queries)
 				foreach (var sqlParameter in query.Parameters)
 					sqlParameter.Expression = null;
-
-			Expression = null;
 		}
 
 		#endregion

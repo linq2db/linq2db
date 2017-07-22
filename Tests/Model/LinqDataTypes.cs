@@ -26,13 +26,13 @@ namespace Tests.Model
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 			return
-				other.ID                   == ID            &&
-				other.MoneyValue           == MoneyValue    &&
-				other.BoolValue            == BoolValue     &&
-				other.GuidValue            == GuidValue     &&
-				other.SmallIntValue        == SmallIntValue &&
-				other.DateTimeValue.Date   == DateTimeValue.Date &&
-				other.DateTimeValue.Hour   == DateTimeValue.Hour &&
+				other.ID                   == ID                   &&
+				other.MoneyValue           == MoneyValue           &&
+				other.BoolValue            == BoolValue            &&
+				other.GuidValue            == GuidValue            &&
+				other.SmallIntValue        == SmallIntValue        &&
+				other.DateTimeValue.Date   == DateTimeValue.Date   &&
+				other.DateTimeValue.Hour   == DateTimeValue.Hour   &&
 				other.DateTimeValue.Minute == DateTimeValue.Minute &&
 				other.DateTimeValue.Second == DateTimeValue.Second &&
 				(
@@ -93,9 +93,9 @@ namespace Tests.Model
 			if (ReferenceEquals(this, other)) return true;
 			return
 				other.ID                     == ID                     &&
- 				other.MoneyValue             == MoneyValue             &&
- 				other.BoolValue              == BoolValue              &&
- 				other.GuidValue              == GuidValue              &&				
+				other.MoneyValue             == MoneyValue             &&
+				other.BoolValue              == BoolValue              &&
+				other.GuidValue              == GuidValue              &&
 				other.StringValue            == StringValue            &&
 				other.DateTimeValue.HasValue == DateTimeValue.HasValue &&
 				(other.DateTimeValue == null ||

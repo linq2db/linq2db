@@ -71,13 +71,13 @@ namespace Tests.UserTests
 		}
 
 #if !MONO
-		[Issue256TestSource]
+		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
 		public void SimpleTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
 			Test(context, action, 1);
 		}
 
-		[Issue256TestSource]
+		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
 		public void RetryTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
 			Test(context, action, 3);
