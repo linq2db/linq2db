@@ -129,8 +129,15 @@ namespace LinqToDB.Linq
 		#region GetInfo
 
 		static          Query<T> _first;
+
+		/// <summary>
+		/// Query cache synchronization object.
+		/// </summary>
 		static readonly object   _sync = new object();
 
+		/// <summary>
+		/// Query cache size (per result type).
+		/// </summary>
 		const int CacheSize = 100;
 
 		public static Query<T> GetQuery(IDataContext dataContext, Expression expr)

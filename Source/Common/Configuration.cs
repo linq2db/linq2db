@@ -65,6 +65,17 @@ namespace LinqToDB.Common
 			/// https://github.com/linq2db/linq2db/pull/563
 			/// </remarks>
 			public static bool UseBinaryAggregateExpression = false;
+
+			/// <summary>
+			/// Used to disable LINQ expressions caching for queries.
+			/// This cache reduces time, required for query parsing but have several side-effects:
+			/// - cached LINQ expressions could contain references to external objects as parameters, which could lead to memory leaks if those objects are not used anymore by other code
+			/// - cache access synchronization could lead to bigger latencies than it saves.
+			/// Default value: false.
+			/// </summary>
+			/// <remarks>
+			/// See <see cref="https://github.com/linq2db/linq2db/issues/256"/> for more details.</remarks>
+			public static bool DisableQueryCache;
 		}
 
 		[PublicAPI]

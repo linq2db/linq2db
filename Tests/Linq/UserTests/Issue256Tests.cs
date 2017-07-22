@@ -45,25 +45,25 @@ namespace Tests.UserTests
 		[AttributeUsage(AttributeTargets.Method)]
 		class Issue256TestSourceAttribute : DataContextSourceAttribute
 		{
-			protected override IEnumerable<object[]> GetParameters(string provider)
+			protected override IEnumerable<Tuple<object[], string>> GetParameters(string provider)
 			{
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)Unused };
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)Unused }, (string)null);
 
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)SelectWhere };
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)SelectSelect };
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)SelectOrderBy };
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)SelectWhere }, (string)null);
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)SelectSelect }, (string)null);
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)SelectOrderBy }, (string)null);
 
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)UpdateWhere };
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)UpdateSet };
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)UpdateUpdate };
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)UpdateWhere }, (string)null);
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)UpdateSet }, (string)null);
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)UpdateUpdate }, (string)null);
 
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)InsertInsert };
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)InsertInsert }, (string)null);
 
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)DeleteWhere };
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)DeleteWhere }, (string)null);
 
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)NonLinqInsert };
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)NonLinqUpdate };
-				yield return new object[] { provider, (Action<ITestDataContext, byte[], int>)NonLinqDelete };
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)NonLinqInsert }, (string)null);
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)NonLinqUpdate }, (string)null);
+				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)NonLinqDelete }, (string)null);
 
 				// More test candidates:
 				// BatchInsert, Merge, Sql.ExpressionAttribute

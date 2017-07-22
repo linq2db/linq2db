@@ -309,16 +309,19 @@ namespace Tests
 			readonly bool     _includeLinqService;
 			readonly string[] _providerNames;
 
-			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService, int caseNumber)
+			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService, int caseNumber, string baseName)
 			{
-				var name = method.Name + "." + provider;
+				var name = (baseName ?? method.Name) + "." + provider;
+
 				if (isLinqService)
 					name += ".LinqService";
 
 				// numerate cases starting from second case to preserve naming for most of tests
 				if (caseNumber > 0)
 				{
-					name += "." + caseNumber;
+					if (baseName == null)
+						name += "." + caseNumber;
+
 					test.FullName += "." + caseNumber;
 				}
 
@@ -337,9 +340,9 @@ namespace Tests
 				return Order;
 			}
 
-			protected virtual IEnumerable<object[]> GetParameters(string provider)
+			protected virtual IEnumerable<Tuple<object[], string>> GetParameters(string provider)
 			{
-				yield return new object[] {provider};
+				yield return Tuple.Create(new object[] {provider}, (string)null);
 			}
 
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
@@ -361,7 +364,7 @@ namespace Tests
 					var caseNumber = 0;
 					foreach (var parameters in GetParameters(provider))
 					{
-						var data = new TestCaseParameters(parameters);
+						var data = new TestCaseParameters(parameters.Item1);
 
 						test = builder.BuildTestMethod(method, suite, data);
 
@@ -372,7 +375,7 @@ namespace Tests
 						//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
 						test.Properties.Set(PropertyNames.Category, provider);
 
-						SetName(test, method, provider, false, caseNumber++);
+						SetName(test, method, provider, false, caseNumber++, parameters.Item2);
 
 						if (isIgnore)
 						{
@@ -395,7 +398,7 @@ namespace Tests
 						foreach (var parameters in GetParameters(provider + ".LinqService"))
 						{
 
-							var data = new TestCaseParameters(parameters);
+							var data = new TestCaseParameters(parameters.Item1);
 							test = builder.BuildTestMethod(method, suite, data);
 
 							foreach (var attr in explic)
@@ -405,7 +408,7 @@ namespace Tests
 							//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
 							test.Properties.Set(PropertyNames.Category, provider);
 
-							SetName(test, method, provider, true, linqCaseNumber++);
+							SetName(test, method, provider, true, linqCaseNumber++, parameters.Item2);
 
 							yield return test;
 						}

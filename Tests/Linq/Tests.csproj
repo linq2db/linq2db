@@ -273,7 +273,9 @@
     <Compile Include="OrmBattle\Helper\GenericEqualityComparer.cs" />
     <Compile Include="OrmBattle\OrmBattleTests.cs" />
     <Compile Include="SqlServerTypes\Loader.cs" />
+    <Compile Include="TestNoopProvider.cs" />
     <Compile Include="TestProvName.cs" />
+    <Compile Include="TestsInitialization.cs" />
     <Compile Include="Update\CreateTableTests.cs" />
     <Compile Include="Linq\QueryHintsTests.cs" />
     <Compile Include="Linq\AsyncTests.cs" />
@@ -377,6 +379,7 @@
     <Compile Include="UserTests\Issue192Tests.cs" />
     <Compile Include="UserTests\Issue175Tests.cs" />
     <Compile Include="UserTests\Issue228Tests.cs" />
+    <Compile Include="UserTests\Issue278Tests.cs" />
     <Compile Include="UserTests\Issue256Tests.cs" />
     <Compile Include="UserTests\Issue269Tests.cs" />
     <Compile Include="UserTests\Issue271Tests.cs" />
