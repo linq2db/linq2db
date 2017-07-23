@@ -18,7 +18,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue278Tests : TestBase
 	{	
-		private const int TOTAL_QUERIES_PER_RUN = 100000;
+		private const int TOTAL_QUERIES_PER_RUN = 1000;
 
 		private static readonly int[] ThreadsCount = new[] { 1, 2, 5, 10, 20 };
 
