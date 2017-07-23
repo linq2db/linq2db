@@ -138,20 +138,20 @@ namespace Tests.UserTests
 
 			var start = DateTimeOffset.Now;
 
-			Parallel.ForEach(Enumerable.Range(1, threadCount), _ =>
-			{
-				var rnd = new Random();
+			using (new DisableLogging())
+				Parallel.ForEach(Enumerable.Range(1, threadCount), _ =>
+				{
+					var rnd = new Random();
 
-				using (new DisableLogging())
-				using (var db = GetDataContext(context))
-					for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
-					{
-						if (clear)
-							Query<LinqDataTypes2>.ClearCache();
+					using (var db = GetDataContext(context))
+						for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
+						{
+							if (clear)
+								Query<LinqDataTypes2>.ClearCache();
 
-						actions[rnd.Next() % actions.Length](db);
-					}
-			});
+							actions[rnd.Next() % actions.Length](db);
+						}
+				});
 
 			// precision of this approach is more than enough for this test
 			var runTime = DateTimeOffset.Now - start;
