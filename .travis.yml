@@ -13,9 +13,9 @@ addons:
     - libunwind8
     - zlib1g
 
-dotnet: 1.0.0-preview2-003156
+#dotnet: 1.0.0-preview2-003156
 
-#dotnet: 1.0.0-preview2-1-003177
+dotnet: 1.0.0-preview2-1-003177
 
 mono:  
   - latest
