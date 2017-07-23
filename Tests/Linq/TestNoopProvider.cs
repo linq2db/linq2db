@@ -828,7 +828,7 @@ namespace Tests
 		{
 			get
 			{
-				throw new NotImplementedException();
+				return "Tests";
 			}
 		}
 

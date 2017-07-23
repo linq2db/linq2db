@@ -128,6 +128,10 @@ namespace LinqToDB.Linq
 
 		#region GetInfo
 
+		// linq query cache version
+		// incremented each time when new query added to cache
+		// not affected by cache reordering
+		static          int      _cacheVersion;
 		static          Query<T> _first;
 
 		/// <summary>
@@ -159,16 +163,20 @@ namespace LinqToDB.Linq
 
 			if (query == null)
 			{
+				var version = _cacheVersion;
 				query = CreateQuery(dataContext, expr);
 
 				// move lock as far as possible, because this method called a lot
 				if (!query.DoNotCache)
 					lock (_sync)
-						if (FindQuery(dataContext, expr) == null)
+					{
+						if (version == _cacheVersion || FindQuery(dataContext, expr) == null)
 						{
 							query.Next = _first;
 							_first = query;
+							_cacheVersion++;
 						}
+					}
 			}
 
 			return query;
