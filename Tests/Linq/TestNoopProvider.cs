@@ -145,7 +145,6 @@ namespace Tests
 			}
 		}
 
-#if !NETSTANDARD
 		void IDataReader.Close()
 		{
 			throw new NotImplementedException();
@@ -155,7 +154,6 @@ namespace Tests
 		{
 			throw new NotImplementedException();
 		}
-#endif
 
 		bool IDataReader.NextResult()
 		{
@@ -547,9 +545,11 @@ namespace Tests
 			}
 		}
 
+#if !NETSTANDARD
 		public override void Close()
 		{
 		}
+#endif
 
 		public override bool GetBoolean(int ordinal)
 		{
@@ -641,10 +641,12 @@ namespace Tests
 			throw new NotImplementedException();
 		}
 
+#if !NETSTANDARD
 		public override DataTable GetSchemaTable()
 		{
 			throw new NotImplementedException();
 		}
+#endif
 
 		public override string GetString(int ordinal)
 		{
