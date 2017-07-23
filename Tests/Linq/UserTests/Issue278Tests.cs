@@ -74,12 +74,14 @@ namespace Tests.UserTests
 
 		private void TestIt(string context, int threadCount, Action<ITestDataContext>[] actions)
 		{
+#if !NETSTANDARD
 			int workerThreads;
 			int iocpThreads;
 			ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
 
 			if (workerThreads < threadCount)
 				ThreadPool.SetMaxThreads(threadCount, iocpThreads);
+#endif
 
 			Parallel.ForEach(Enumerable.Range(1, threadCount), _ =>
 			{
