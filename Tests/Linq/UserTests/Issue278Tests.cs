@@ -18,7 +18,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue278Tests : TestBase
 	{	
-		private const int TOTAL_QUERIES_PER_RUN = 10000;
+		private const int TOTAL_QUERIES_PER_RUN = 100000;
 
 		private static readonly int[] ThreadsCount = new[] { 1, 2, 5, 10, 20 };
 
@@ -162,15 +162,16 @@ namespace Tests.UserTests
 		[OneTimeTearDown]
 		public void WriteResults()
 		{
-			var sb = new StringBuilder();
-			foreach (var key in _results.Keys.OrderBy(_ => _))
-			{
-				sb.AppendFormat("{0}: {1}", key, _results[key]).AppendLine();
-			}
+			// debug output
+			//var sb = new StringBuilder();
+			//foreach (var key in _results.Keys.OrderBy(_ => _))
+			//{
+			//	sb.AppendFormat("{0}: {1}", key, _results[key]).AppendLine();
+			//}
 
-			File.WriteAllText(@"c:\1\testrun.txt", sb.ToString());
+			//File.WriteAllText(@"c:\1\testrun.txt", sb.ToString());
 
-			_results.Clear();
+			//_results.Clear();
 		}
 
 		private static void Select(ITestDataContext db)

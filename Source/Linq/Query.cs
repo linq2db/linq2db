@@ -112,7 +112,7 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public          bool            DoNotChache;
+		public          bool            DoNotCache;
 		public          Query<T>        Next;
 		public readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
 
@@ -131,17 +131,17 @@ namespace LinqToDB.Linq
 		static          Query<T> _first;
 
 		/// <summary>
-		/// Query cache synchronization object.
+		/// LINQ query cache synchronization object.
 		/// </summary>
 		static readonly object   _sync = new object();
 
 		/// <summary>
-		/// Query cache size (per result type).
+		/// LINQ query cache size (per entity type).
 		/// </summary>
 		const int CacheSize = 100;
 
 		/// <summary>
-		/// Empties query cache for <typeparamref name="T"/> entity type.
+		/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
 		/// </summary>
 		public static void ClearCache()
 		{
@@ -159,21 +159,16 @@ namespace LinqToDB.Linq
 
 			if (query == null)
 			{
-				lock (_sync)
-				{
-					query = FindQuery(dataContext, expr);
+				query = CreateQuery(dataContext, expr);
 
-					if (query == null)
-					{
-						query = CreateQuery(dataContext, expr);
-
-						if (!query.DoNotChache)
+				// move lock as far as possible, because this method called a lot
+				if (!query.DoNotCache)
+					lock (_sync)
+						if (FindQuery(dataContext, expr) == null)
 						{
 							query.Next = _first;
 							_first = query;
 						}
-					}
-				}
 			}
 
 			return query;
@@ -226,6 +221,7 @@ namespace LinqToDB.Linq
 				{
 					if (prev != null)
 					{
+						// move found query up in cache
 						lock (_sync)
 						{
 							prev.Next  = query.Next;
