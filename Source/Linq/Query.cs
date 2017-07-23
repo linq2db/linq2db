@@ -1373,20 +1373,27 @@ namespace LinqToDB.Linq
 
 			using (var runner = dataContext.GetQueryRunner(this, queryNumber, expression, ps))
 			{
-				mapper.QueryRunner = runner;
-
-				var count = 0;
-
-				using (var dr = runner.ExecuteReader())
+				try
 				{
-					while (dr.Read())
-					{
-						yield return mapper.Map(queryContext, dataContext, dr, expression, ps);
-						count++;
-					}
-				}
+					mapper.QueryRunner = runner;
 
-				runner.RowsCount = count;
+					var count = 0;
+
+					using (var dr = runner.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							yield return mapper.Map(queryContext, dataContext, dr, expression, ps);
+							count++;
+						}
+					}
+
+					runner.RowsCount = count;
+				}
+				finally
+				{
+					mapper.QueryRunner = null;
+				}
 			}
 		}
 
@@ -1415,14 +1422,21 @@ namespace LinqToDB.Linq
 					runner.SkipAction = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
 					runner.TakeAction = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;
 
-					mapper.QueryRunner = runner;
+					try
+					{
+						mapper.QueryRunner = runner;
 
-					var count = 0;
+						var count = 0;
 
-					var dr  = await runner.ExecuteReaderAsync(cancellationToken, options);
-					await dr.QueryForEachAsync(m, r => { action(r); count++; }, cancellationToken);
+						var dr  = await runner.ExecuteReaderAsync(cancellationToken, options);
+						await dr.QueryForEachAsync(m, r => { action(r); count++; }, cancellationToken);
 
-					runner.RowsCount = count;
+						runner.RowsCount = count;
+					}
+					finally
+					{
+						mapper.QueryRunner = null;
+					}
 				}
 			}
 			finally
@@ -1498,15 +1512,6 @@ namespace LinqToDB.Linq
 
 		public void SetRunQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
 		{
-			if (_dataContext is RemoteDataContextBase)
-			{
-				QueryRunner.SetRunQuery(this, expression);
-				return;
-			};
-
-//			SetQuery(expression);
-//			return;
-
 			var query = GetExecuteQuery(ExecuteQuery);
 
 			ClearParameters();
@@ -1516,11 +1521,11 @@ namespace LinqToDB.Linq
 
 			GetIEnumerable = (ctx,db,expr,ps) => runQuery(ctx, db, mapper, expr, ps, 0);
 
-//			var skipAction = query.Item2;
-//			var takeAction = query.Item3;
-//
-//			GetForEachAsync = (expressionQuery,ctx,db,expr,ps,action,token,options) =>
-//				ExecuteQueryAsync(ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token, options);
+			var skipAction = query.Item2;
+			var takeAction = query.Item3;
+
+			GetForEachAsync = (expressionQuery,ctx,db,expr,ps,action,token,options) =>
+				ExecuteQueryAsync(ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token, options);
 		}
  
 		internal void SetQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)

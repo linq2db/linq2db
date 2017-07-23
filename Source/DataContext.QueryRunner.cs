@@ -11,11 +11,6 @@ namespace LinqToDB
 
 	public partial class DataContext
 	{
-		IQueryRunner1 IDataContextEx.GetQueryRun(Query query, int queryNumber, Expression expression, object[] parameters)
-		{
-			throw new NotImplementedException();
-		}
-
 		IQueryRunner IDataContextEx.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
 		{
 			return new QueryRunner(this, ((IDataContextEx)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters));
