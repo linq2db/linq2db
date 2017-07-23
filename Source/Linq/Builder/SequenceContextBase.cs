@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 			var expr   = BuildExpression(null, 0);
 			var mapper = Builder.BuildMapper<T>(expr);
 
-			query.SetRunQuery(mapper);
+			QueryRunner.SetRunQuery(query, mapper);
 		}
 
 		public abstract Expression         BuildExpression(Expression expression, int level);

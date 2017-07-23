@@ -42,8 +42,7 @@ namespace LinqToDB.ServiceModel
 				if (disposable != null)
 					disposable.Dispose();
 
-				if (DataContext.CloseAfterUse)
-					DataContext.Close();
+				base.Dispose();
 			}
 
 			public override int ExecuteNonQuery()

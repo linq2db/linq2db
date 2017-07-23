@@ -82,8 +82,7 @@ namespace LinqToDB.Data
 					});
 				}
 
-				if (DataContext.CloseAfterUse)
-					DataContext.Close();
+				base.Dispose();
 			}
 
 			void SetCommand()

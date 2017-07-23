@@ -31,7 +31,6 @@ namespace LinqToDB.Linq
 		protected List<string>            QueryHints = new List<string>();
 		protected DataParameter[]         DataParameters;
 
-		public abstract void                   Dispose();
 		public abstract int                    ExecuteNonQuery();
 		public abstract object                 ExecuteScalar();
 		public abstract IDataReader            ExecuteReader();
@@ -41,6 +40,12 @@ namespace LinqToDB.Linq
 		public Func<int> SkipAction { get; set; }
 		public Func<int> TakeAction { get; set; }
 		public int       RowsCount  { get; set; }
+
+		public virtual void Dispose()
+		{
+			if (DataContext.CloseAfterUse)
+				DataContext.Close();
+		}
 
 		internal void SetParameters()
 		{
