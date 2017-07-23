@@ -121,15 +121,11 @@ namespace LinqToDB.Linq
 
 	class Query<T> : Query
 	{
-		// IT : #
-		readonly IDataContext _dataContext;
-
 		#region Init
 
 		public Query(IDataContext dataContext, Expression expression)
 			: base(dataContext, expression)
 		{
-			_dataContext = dataContext;
 			// IT : # check
 			GetIEnumerable = MakeEnumerable;
 		}
@@ -280,8 +276,7 @@ namespace LinqToDB.Linq
 
 		#region NonQueryQuery
 
-		// IT : #
-		internal void FinalizeQuery()
+		void FinalizeQuery()
 		{
 			foreach (var sql in Queries)
 			{
@@ -1264,98 +1259,6 @@ namespace LinqToDB.Linq
 				}
 
 				counter++;
-
-				yield return result;
-			}
-		}
-
-		#endregion
-
-		#region Execute
-
-		internal void SetQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
-		{
-			var query   = GetQuery();
-			var mapInfo = new MapInfo(expression);
-
-			ClearParameters();
-
-			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
-		}
-
-		class MapInfo
-		{
-			public MapInfo([JetBrains.Annotations.NotNull] Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
-			{
-				if (expression == null)
-					throw new ArgumentNullException("expression");
-				Expression = expression;
-			}
-
-			[JetBrains.Annotations.NotNull]
-			public readonly Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> Expression;
-
-			public            Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>  Mapper;
-			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> MapperExpression;
-		}
-
-		static IEnumerable<T> Map(
-			IEnumerable<IDataReader> data,
-			QueryContext             queryContext,
-			IDataContext             dataContext,
-			Expression               expr,
-			object[]                 ps,
-			MapInfo                  mapInfo)
-		{
-			if (queryContext == null)
-				queryContext = new QueryContext(dataContext, expr, ps);
-
-			var isFaulted = false;
-
-			foreach (var dr in data)
-			{
-				var mapper = mapInfo.Mapper;
-
-				if (mapper == null)
-				{
-					mapInfo.MapperExpression = mapInfo.Expression.Transform(e =>
-					{
-						var ex = e as ConvertFromDataReaderExpression;
-						return ex != null ? ex.Reduce(dr) : e;
-					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
-
-					// IT : # MapperExpression.Compile()
-					//
-					Debug.Assert(mapInfo.MapperExpression != null, "mapInfo.MapperExpression != null");
-					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
-				}
-
-				T result;
-
-				try
-				{
-					result = mapper(queryContext, dataContext, dr, expr, ps);
-				}
-				catch (FormatException)
-				{
-					if (isFaulted)
-						throw;
-
-					isFaulted = true;
-
-					mapInfo.Mapper = mapInfo.Expression.Compile();
-					result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
-				}
-				catch (InvalidCastException)
-				{
-					if (isFaulted)
-						throw;
-
-					isFaulted = true;
-
-					mapInfo.Mapper = mapInfo.Expression.Compile();
-					result = mapInfo.Mapper(queryContext, dataContext, dr, expr, ps);
-				}
 
 				yield return result;
 			}
