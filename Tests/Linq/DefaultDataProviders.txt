@@ -24,3 +24,5 @@ NorthwindSqlite
 --PostgreSQL
 --Sybase
 --Northwind
+
+TestNoopProvider  * ConnectionString;                         * TestNoopProvider

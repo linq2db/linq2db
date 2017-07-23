@@ -145,6 +145,7 @@ namespace Tests
 			}
 		}
 
+#if !NETSTANDARD
 		void IDataReader.Close()
 		{
 			throw new NotImplementedException();
@@ -154,6 +155,7 @@ namespace Tests
 		{
 			throw new NotImplementedException();
 		}
+#endif
 
 		bool IDataReader.NextResult()
 		{
@@ -464,6 +466,7 @@ namespace Tests
 			}
 		}
 
+#if !NETSTANDARD
 		public override DataRowVersion SourceVersion
 		{
 			get
@@ -476,6 +479,7 @@ namespace Tests
 				throw new NotImplementedException();
 			}
 		}
+#endif
 
 		public override object Value { get; set; }
 
@@ -676,7 +680,6 @@ namespace Tests
 	internal class TestNoopDbParameterCollection : DbParameterCollection
 	{
 		private List<TestNoopDbParameter> _parameters = new List<TestNoopDbParameter>();
-		private int _count;
 
 		public override int Count
 		{
@@ -686,6 +689,7 @@ namespace Tests
 			}
 		}
 
+#if !NETSTANDARD
 		public override bool IsFixedSize
 		{
 			get
@@ -709,6 +713,7 @@ namespace Tests
 				throw new NotImplementedException();
 			}
 		}
+#endif
 
 		public override object SyncRoot
 		{
@@ -851,10 +856,12 @@ namespace Tests
 			return TestNoopSqlBuilder.Instance;
 		}
 
+#if !NETSTANDARD
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			throw new NotImplementedException();
 		}
+#endif
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
