@@ -140,8 +140,21 @@ namespace LinqToDB.Linq
 		/// </summary>
 		const int CacheSize = 100;
 
+		/// <summary>
+		/// Empties query cache for <typeparamref name="T"/> entity type.
+		/// </summary>
+		public static void ClearCache()
+		{
+			if (_first != null)
+				lock (_sync)
+					_first = null;
+		}
+
 		public static Query<T> GetQuery(IDataContext dataContext, Expression expr)
 		{
+			if (Configuration.Linq.DisableQueryCache)
+				return CreateQuery(dataContext, expr);
+
 			var query = FindQuery(dataContext, expr);
 
 			if (query == null)
@@ -152,35 +165,7 @@ namespace LinqToDB.Linq
 
 					if (query == null)
 					{
-						if (Configuration.Linq.GenerateExpressionTest)
-						{
-							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
-#if !SILVERLIGHT && !NETFX_CORE
-							DataConnection.WriteTraceLine(
-								"Expression test code generated: '" + testFile + "'.", 
-								DataConnection.TraceSwitch.DisplayName);
-#endif
-						}
-
-						query = new Query<T>(dataContext, expr);
-
-						try
-						{
-							query = new ExpressionBuilder(query, dataContext, expr, null).Build<T>();
-						}
-						catch (Exception)
-						{
-							if (!Configuration.Linq.GenerateExpressionTest)
-							{
-#if !SILVERLIGHT && !NETFX_CORE
-								DataConnection.WriteTraceLine(
-									"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
-									DataConnection.TraceSwitch.DisplayName);
-#endif
-							}
-
-							throw;
-						}
+						query = CreateQuery(dataContext, expr);
 
 						if (!query.DoNotChache)
 						{
@@ -189,6 +174,42 @@ namespace LinqToDB.Linq
 						}
 					}
 				}
+			}
+
+			return query;
+		}
+
+		private static Query<T> CreateQuery(IDataContext dataContext, Expression expr)
+		{
+			Query<T> query;
+			if (Configuration.Linq.GenerateExpressionTest)
+			{
+				var testFile = new ExpressionTestGenerator().GenerateSource(expr);
+#if !SILVERLIGHT && !NETFX_CORE
+				DataConnection.WriteTraceLine(
+					"Expression test code generated: '" + testFile + "'.",
+					DataConnection.TraceSwitch.DisplayName);
+#endif
+			}
+
+			query = new Query<T>(dataContext, expr);
+
+			try
+			{
+				query = new ExpressionBuilder(query, dataContext, expr, null).Build<T>();
+			}
+			catch (Exception)
+			{
+				if (!Configuration.Linq.GenerateExpressionTest)
+				{
+#if !SILVERLIGHT && !NETFX_CORE
+					DataConnection.WriteTraceLine(
+						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
+						DataConnection.TraceSwitch.DisplayName);
+#endif
+				}
+
+				throw;
 			}
 
 			return query;
@@ -573,7 +594,11 @@ namespace LinqToDB.Linq
 
 		static class ObjectOperation<T1>
 		{
-			public static object Sync = new object();
+			public static object InsertSync             = new object();
+			public static object InsertWithIdentitySync = new object();
+			public static object InsertOrUpdateSync     = new object();
+			public static object UpdateSync             = new object();
+			public static object DeleteSync             = new object();
 
 			public static readonly Dictionary<object,Query<int>>    Insert             = new Dictionary<object,Query<int>>();
 			public static readonly Dictionary<object,Query<object>> InsertWithIdentity = new Dictionary<object,Query<object>>();
@@ -635,7 +660,7 @@ namespace LinqToDB.Linq
 			var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
 
 			if (!ObjectOperation<T>.Insert.TryGetValue(key, out ei))
-				lock (ObjectOperation<T>.Sync)
+				lock (ObjectOperation<T>.InsertSync)
 					if (!ObjectOperation<T>.Insert.TryGetValue(key, out ei))
 					{
 						var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -694,7 +719,7 @@ namespace LinqToDB.Linq
 			var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
 
 			if (!ObjectOperation<T>.InsertWithIdentity.TryGetValue(key, out ei))
-				lock (ObjectOperation<T>.Sync)
+				lock (ObjectOperation<T>.InsertWithIdentitySync)
 					if (!ObjectOperation<T>.InsertWithIdentity.TryGetValue(key, out ei))
 					{
 						var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -750,7 +775,7 @@ namespace LinqToDB.Linq
 			var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
 
 			if (!ObjectOperation<T>.InsertOrUpdate.TryGetValue(key, out ei))
-				lock (ObjectOperation<T>.Sync)
+				lock (ObjectOperation<T>.InsertOrUpdateSync)
 					if (!ObjectOperation<T>.InsertOrUpdate.TryGetValue(key, out ei))
 					{
 						var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
@@ -914,7 +939,7 @@ namespace LinqToDB.Linq
 			var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
 
 			if (!ObjectOperation<T>.Update.TryGetValue(key, out ei))
-				lock (ObjectOperation<T>.Sync)
+				lock (ObjectOperation<T>.UpdateSync)
 					if (!ObjectOperation<T>.Update.TryGetValue(key, out ei))
 					{
 						var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -985,7 +1010,7 @@ namespace LinqToDB.Linq
 			var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
 
 			if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
-				lock (_sync)
+				lock (ObjectOperation<T>.DeleteSync)
 					if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
 					{
 						var sqlTable = new SqlTable<T>(dataContext.MappingSchema);

@@ -69,12 +69,18 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Used to disable LINQ expressions caching for queries.
 			/// This cache reduces time, required for query parsing but have several side-effects:
+			/// <para />
 			/// - cached LINQ expressions could contain references to external objects as parameters, which could lead to memory leaks if those objects are not used anymore by other code
+			/// <para />
 			/// - cache access synchronization could lead to bigger latencies than it saves.
-			/// Default value: false.
+			/// <para />
+			/// Default value: <c>false</c>.
+			/// <para />
+			/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
+			/// to call <see cref="LinqToDB.Linq.Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
+			/// <para />
+			/// See <see cref="https://github.com/linq2db/linq2db/issues/256"/> for more details.
 			/// </summary>
-			/// <remarks>
-			/// See <see cref="https://github.com/linq2db/linq2db/issues/256"/> for more details.</remarks>
 			public static bool DisableQueryCache;
 		}
 

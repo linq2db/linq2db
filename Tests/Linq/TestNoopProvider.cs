@@ -855,7 +855,7 @@ namespace Tests
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return TestNoopSqlBuilder.Instance;
+			return new TestNoopSqlBuilder();
 		}
 
 #if !NETSTANDARD
@@ -877,9 +877,7 @@ namespace Tests
 
 	internal class TestNoopSqlBuilder : BasicSqlBuilder
 	{
-		public static ISqlBuilder Instance = new TestNoopSqlBuilder();
-
-		private TestNoopSqlBuilder()
+		public TestNoopSqlBuilder()
 			: base(TestNoopSqlOptimizer.Instance, new SqlProviderFlags(), new ValueToSqlConverter())
 		{
 		}
