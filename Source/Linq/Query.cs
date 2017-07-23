@@ -113,7 +113,6 @@ namespace LinqToDB.Linq
 		#region Properties & Fields
 
 		public          bool            DoNotCache;
-		public          Query<T>        Next;
 		public readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
 
 		public Func<QueryContext,IDataContext,Expression,object[],object>         GetElement;
@@ -128,11 +127,7 @@ namespace LinqToDB.Linq
 
 		#region GetInfo
 
-		// linq query cache version
-		// incremented each time when new query added to cache
-		// not affected by cache reordering
-		static          int      _cacheVersion;
-		static          Query<T> _first;
+		static          List<Query<T>> _orderedCache = new List<Query<T>>(CacheSize);
 
 		/// <summary>
 		/// LINQ query cache synchronization object.
@@ -149,9 +144,9 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static void ClearCache()
 		{
-			if (_first != null)
+			if (_orderedCache.Count != 0)
 				lock (_sync)
-					_first = null;
+					_orderedCache.Clear();
 		}
 
 		public static Query<T> GetQuery(IDataContext dataContext, Expression expr)
@@ -163,18 +158,19 @@ namespace LinqToDB.Linq
 
 			if (query == null)
 			{
-				var version = _cacheVersion;
+				var cacheSize = _orderedCache.Count;
 				query = CreateQuery(dataContext, expr);
 
 				// move lock as far as possible, because this method called a lot
 				if (!query.DoNotCache)
 					lock (_sync)
 					{
-						if (version == _cacheVersion || FindQuery(dataContext, expr) == null)
+						if (cacheSize == _orderedCache.Count || FindQuery(dataContext, expr) == null)
 						{
-							query.Next = _first;
-							_first = query;
-							_cacheVersion++;
+							if (_orderedCache.Count == CacheSize)
+								_orderedCache.RemoveAt(CacheSize - 1);
+
+							_orderedCache.Insert(0, query);
 						}
 					}
 			}
@@ -220,36 +216,33 @@ namespace LinqToDB.Linq
 
 		static Query<T> FindQuery(IDataContext dataContext, Expression expr)
 		{
-			Query<T> prev = null;
-			var      n    = 0;
+			Query<T>[] queries;
 
-			for (var query = _first; query != null; query = query.Next)
+			// create thread-safe copy
+			lock (_sync)
+				queries = _orderedCache.ToArray();
+
+			foreach (var query in queries)
 			{
 				if (query.Compare(dataContext.ContextID, dataContext.MappingSchema, expr))
 				{
-					if (prev != null)
+					// move found query up in cache
+					lock (_sync)
 					{
-						// move found query up in cache
-						lock (_sync)
+						var oldIndex = _orderedCache.IndexOf(query);
+						if (oldIndex > 0)
 						{
-							prev.Next  = query.Next;
-							query.Next = _first;
-							_first     = query;
+							var first = _orderedCache[0];
+							_orderedCache[0] = query;
+							_orderedCache[oldIndex] = first;
 						}
 					}
 
 					return query;
 				}
-
-				if (n++ >= CacheSize)
-				{
-					query.Next = null;
-					return null;
-				}
-
-				prev = query;
 			}
 
+			Console.WriteLine("not found");
 			return null;
 		}
 
