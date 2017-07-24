@@ -25,7 +25,7 @@ namespace Tests.UserTests
 
 		private static readonly int[] ThreadsCount = new[] { 1, 2, 5, 10, 20 };
 
-		private static IDictionary<string, TimeSpan> _results = new Dictionary<string, TimeSpan>();
+		//private static IDictionary<string, TimeSpan> _results = new Dictionary<string, TimeSpan>();
 
 		private static readonly Tuple<string, Action<ITestDataContext>[]>[] ActionSets = new[]
 		{
@@ -237,7 +237,7 @@ namespace Tests.UserTests
 			// precision of this approach is more than enough for this test
 			var runTime = DateTimeOffset.Now - start;
 
-			_results.Add(caseName, runTime);
+			//_results.Add(caseName, runTime);
 		}
 
 		[OneTimeTearDown]
