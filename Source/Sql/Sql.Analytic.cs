@@ -1,4 +1,11 @@
-﻿using LinqToDB.SqlQuery;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using JetBrains.Annotations;
+using LinqToDB.Linq;
+using LinqToDB.SqlQuery;
+
+using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
@@ -229,13 +236,13 @@ namespace LinqToDB
 		public interface IAnalyticFunction<out TR>
 		{
 			[Sql.Extension("{function} OVER({query_partition_clause?}{_}{order_by_clause?}{_}{windowing_clause?})",
-				TokenName = "over", ChainPrecedence = 10, SqlFlags = SqlFlags.Aggregate)]
+				TokenName = "over", ChainPrecedence = 10, IsAggregate = true)]
 			IReadyForFullAnalyticClause<TR> Over();
 		}
 
 		public interface IAnalyticFunctionWithoutWindow<out TR>
 		{
-			[Sql.Extension("{function} OVER({query_partition_clause?}{_}{order_by_clause?})", TokenName = "over", ChainPrecedence = 10, SqlFlags = SqlFlags.Aggregate)]
+			[Sql.Extension("{function} OVER({query_partition_clause?}{_}{order_by_clause?})", TokenName = "over", ChainPrecedence = 10, IsAggregate = true)]
 			IOverMayHavePartitionAndOrder<TR> Over();
 		}
 
@@ -400,38 +407,116 @@ namespace LinqToDB
 
 		#region Analytic functions
 
-		[Sql.Extension("AVG({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#region Average
+
+		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static double Average<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static double Average<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<double>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.Average, source, expr, modifier),
+					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
+				));
+		}
+
+		[Sql.Extension("AVG({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
+		
+		#endregion Average
 
-		[Sql.Extension("CORR({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#region Corr
+
+		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true)]
+		public static Decimal Corr<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object>> expr1, [ExprParameter] Expression<Func<T, object>> expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true)]
+		public static Decimal Corr<TEntity>(
+			[NotNull]            this IQueryable<TEntity>           source, 
+			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1, 
+			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr2)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr1  == null) throw new ArgumentNullException("expr1");
+			if (expr2  == null) throw new ArgumentNullException("expr2");
+
+			return source.Provider.Execute<Decimal>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.Corr, source, expr1, expr2),
+					new Expression[] { source.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
+				));
+		}
+		
+		[Sql.Extension("CORR({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Corr<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
+		
+		#endregion Corr
 
 		#region Count
 
-		[Sql.Extension("COUNT(*)", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("COUNT({expr})", IsAggregate = true)]
+		public static long CountExt<TEntity>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, object> expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static long CountExt<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static long CountExt<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<long>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.CountExt, source, expr, modifier),
+					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
+				));
+		}
+
+		[Sql.Extension("COUNT(*)", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext)
 		{
 			throw new NotImplementedException();
 		}
-		[Sql.Extension("COUNT({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("COUNT({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Count<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
@@ -439,175 +524,303 @@ namespace LinqToDB
 
 		#endregion
 
-		[Sql.Extension("COVAR_POP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#region CovarPop
+
+		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true)]
+		public static Decimal CovarPop<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object>> expr1, [ExprParameter] Expression<Func<T, object>> expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true)]
+		public static Decimal CovarPop<TEntity>(
+			[NotNull]            this IQueryable<TEntity>               source, 
+			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1, 
+			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr2)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr1  == null) throw new ArgumentNullException("expr1");
+			if (expr2  == null) throw new ArgumentNullException("expr2");
+
+			return source.Provider.Execute<Decimal>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarPop, source, expr1, expr2),
+					new Expression[] { source.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
+				));
+		}
+		
+		[Sql.Extension("COVAR_POP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> CovarPop<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion CovarPop
+
+		#region CovarSamp
+
+		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true)]
+		public static Decimal CovarSamp<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object>> expr1, [ExprParameter] Expression<Func<T, object>> expr2)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true)]
+		public static Decimal CovarSamp<TEntity>(
+			[NotNull]            this IQueryable<TEntity>               source, 
+			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1, 
+			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr2)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr1  == null) throw new ArgumentNullException("expr1");
+			if (expr2  == null) throw new ArgumentNullException("expr2");
+
+			return source.Provider.Execute<Decimal>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarSamp, source, expr1, expr2),
+					new Expression[] { source.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
+				));
+		}
+		
+		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> CovarSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
 		{
 			throw new NotImplementedException();
 		}
 		
-		[Sql.Extension("CUME_DIST({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion CovarSamp	
+
+		[Sql.Extension("CUME_DIST({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static INeedsWithinGroupWithOrderOnly<TR> CumeDist<TR>(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("CUME_DIST()", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("CUME_DIST()", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<TR> CumeDist<TR>(this Sql.ISqlExtension ext)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("DENSE_RANK({expr1}, {expr2}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("DENSE_RANK({expr1}, {expr2}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static INeedsWithinGroupWithOrderOnly<long> DenseRank(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("DENSE_RANK()", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("DENSE_RANK()", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<long> DenseRank(this Sql.ISqlExtension ext)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LAG({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("LAG({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LEAD({expr}{_}{modifier?})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("LEAD({expr}{_}{modifier?})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("LISTAGG({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("LISTAGG({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static INeedsWithinGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new NotImplementedException();
 		}
-		[Sql.Extension("LISTAGG({expr}, {delimiter}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("LISTAGG({expr}, {delimiter}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static INeedsWithinGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] string delimiter)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("MAX({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#region Max
+
+		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static TV Max<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static TV Max<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<TV>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.Max, source, expr, modifier),
+					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
+				));
+		}
+
+		[Sql.Extension("MAX({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("MEDIAN({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion Max
+
+		#region Median
+
+		[Sql.Extension("MEDIAN({expr})", IsAggregate = true)]
+		public static long Median<TEntity, T>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, T> expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("MEDIAN({expr})", IsAggregate = true)]
+		public static long Median<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<long>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.Median, source, expr),
+					new Expression[] { source.Expression, Expression.Quote(expr) }
+				));
+		}
+
+		[Sql.Extension("MEDIAN({expr}) {over}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IReadyToFunctionOrOverWithPartition<T> Median<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("MIN({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion Median
+		
+		#region Min
+
+		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static TV Min<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static TV Min<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<TV>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.Min, source, expr, modifier),
+					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
+				));
+		}
+
+		[Sql.Extension("MIN({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("NTH_VALUE({expr}, {n})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion Min
+
+		[Sql.Extension("NTH_VALUE({expr}, {n})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> NthValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] long n)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("NTH_VALUE({expr}, {n}){_}{from?}{_}{nulls?}", TokenName = FunctionToken, BuilderType = typeof(ApplyFromAndNullsModifier), ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("NTH_VALUE({expr}, {n}){_}{from?}{_}{nulls?}", TokenName = FunctionToken, BuilderType = typeof(ApplyFromAndNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> NthValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] long n, Sql.From from, Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("NTILE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("NTILE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<T> NTile<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("PERCENT_RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("PERCENT_RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static INeedsWithinGroupWithOrderOnly<T> PercentRank<T>(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("PERCENT_RANK()", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("PERCENT_RANK()", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<T> PercentRank<T>(this Sql.ISqlExtension ext)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("PERCENTILE_CONT({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("PERCENTILE_CONT({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static INeedsWithinGroupWithSingleOrderAndMaybePartition<T> PercentileCont<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
 		//TODO: check nulls support when ordering
-		[Sql.Extension("PERCENTILE_DISC({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("PERCENTILE_DISC({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static INeedsWithinGroupWithSingleOrderAndMaybePartition<T> PercentileDisc<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static INeedsWithinGroupWithOrderOnly<long> Rank(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("RANK()", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("RANK()", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<long> Rank(this Sql.ISqlExtension ext)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("RATIO_TO_REPORT({expr}) {over}", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("RATIO_TO_REPORT({expr}) {over}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IOverWithPartitionNeeded<TR> RatioToReport<TR>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
@@ -615,58 +828,58 @@ namespace LinqToDB
 
 		#region REGR_ function
 
-		[Sql.Extension("REGR_SLOPE({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("REGR_SLOPE({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> RegrSlope<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("REGR_INTERCEPT({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("REGR_INTERCEPT({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> RegrIntercept<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("REGR_COUNT({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("REGR_COUNT({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<long> RegrCount(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("REGR_R2({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("REGR_R2({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> RegrR2<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("REGR_AVGX({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("REGR_AVGX({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> RegrAvgX<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("REGR_AVGY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("REGR_AVGY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> RegrAvgY<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
 		// ReSharper disable once InconsistentNaming
-		[Sql.Extension("REGR_SXX({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("REGR_SXX({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> RegrSXX<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
 		// ReSharper disable once InconsistentNaming
-		[Sql.Extension("REGR_SYY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("REGR_SYY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> RegrSYY<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
 		}
 
 		// ReSharper disable once InconsistentNaming
-		[Sql.Extension("REGR_SXY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("REGR_SXY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> RegrSXY<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
 			throw new NotImplementedException();
@@ -674,86 +887,240 @@ namespace LinqToDB
 
 		#endregion
 
-		[Sql.Extension("ROW_NUMBER()", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("ROW_NUMBER()", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAnalyticFunctionWithoutWindow<long> RowNumber(this Sql.ISqlExtension ext)
 		{
 			throw new NotImplementedException();
 		}
 
-		//TODO: support of aggreagate functions
-//		[Sql.Extension("STDDEV({expr})", Names = AggregateFunctionName + "," + AnalyticFunctionName, ChainPrecedence = 1, AllowedScope = SqlScope.Select | SqlScope.OrderBy)]
-//		public static IAggregateFunctionSelfContained<double> StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
-//		{
-//			throw new NotImplementedException();
-//		}
+		#region StdDev
 
-		[Sql.Extension("STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension(PN.Oracle,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		public static double StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
+		public static double StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
+		public static double StdDev<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<double>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDev, source, expr, modifier),
+					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
+				));
+		}
+
+		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension(PN.Oracle,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("STDDEV_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion StdDev
+
+		#region StdDevPop
+
+		[Sql.Extension("STDDEV_POP({expr})", IsAggregate = true)]
+		public static decimal StdDevPop<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("STDDEV_POP({expr})", IsAggregate = true)]
+		public static decimal StdDevPop<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<decimal>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDevPop, source, expr),
+					new Expression[] { source.Expression, Expression.Quote(expr) }
+				));
+		}
+
+		[Sql.Extension("STDDEV_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> StdDevPop<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("STDDEV_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion StdDevPop
+
+		#region StdDevSamp
+
+		[Sql.Extension("STDDEV_SAMP({expr})", IsAggregate = true)]
+		public static decimal StdDevSamp<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("STDDEV_SAMP({expr})", IsAggregate = true)]
+		public static decimal StdDevSamp<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<decimal>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDevSamp, source, expr),
+					new Expression[] { source.Expression, Expression.Quote(expr) }
+				));
+		}
+
+		[Sql.Extension("STDDEV_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> StdDevSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("SUM({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion StdDevSamp
+
+		[Sql.Extension("SUM({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Sum<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("SUM({modifier?}{_}{expr})" , BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("SUM({modifier?}{_}{expr})" , BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Sum<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("VAR_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#region VarPop
+
+		[Sql.Extension("VAR_POP({expr})", IsAggregate = true)]
+		public static decimal VarPop<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("VAR_POP({expr})", IsAggregate = true)]
+		public static decimal VarPop<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<decimal>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.VarPop, source, expr),
+					new Expression[] { source.Expression, Expression.Quote(expr) }
+				));
+		}
+
+		[Sql.Extension("VAR_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> VarPop<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("VAR_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion VarPop
+
+		#region VarSamp
+
+		[Sql.Extension("VAR_SAMP({expr})", IsAggregate = true)]
+		public static decimal VarSamp<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("VAR_SAMP({expr})", IsAggregate = true)]
+		public static decimal VarSamp<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<decimal>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.VarSamp, source, expr),
+					new Expression[] { source.Expression, Expression.Quote(expr) }
+				));
+		}
+
+		[Sql.Extension("VAR_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> VarSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("VARIANCE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		#endregion VarSamp
+
+		#region Variance
+
+		[Sql.Extension("VARIANCE({expr})", IsAggregate = true)]
+		public static TV Variance<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static TV Variance<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
+		public static TV Variance<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			return source.Provider.Execute<TV>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AnalyticFunctions.Variance, source, expr, modifier),
+					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
+				));
+		}
+
+		[Sql.Extension("VARIANCE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("{function} KEEP (DENSE_RANK FIRST {order_by_clause}){_}{over?}", ChainPrecedence = 10, SqlFlags = SqlFlags.Aggregate)]
+		#endregion
+
+		[Sql.Extension("{function} KEEP (DENSE_RANK FIRST {order_by_clause}){_}{over?}", ChainPrecedence = 10, IsAggregate = true)]
 		public static INeedOrderByAndMaybeOverWithPartition<TR> KeepFirst<TR>(this IAggregateFunction<TR> ext)
 		{
 			throw new NotImplementedException();
 		}
 		
-		[Sql.Extension("{function} KEEP (DENSE_RANK LAST {order_by_clause}){_}{over?}", ChainPrecedence = 10, SqlFlags = SqlFlags.Aggregate)]
+		[Sql.Extension("{function} KEEP (DENSE_RANK LAST {order_by_clause}){_}{over?}", ChainPrecedence = 10, IsAggregate = true)]
 		public static INeedOrderByAndMaybeOverWithPartition<TR> KeepLast<TR>(this IAggregateFunction<TR> ext)
 		{
 			throw new NotImplementedException();

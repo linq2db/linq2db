@@ -189,6 +189,7 @@
     <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Linq\Expressions.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Linq\MethodHelper.cs" />
     <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
@@ -284,7 +285,6 @@
     <Compile Include="SqlQuery\QueryVisitor.cs" />
     <Compile Include="SqlQuery\SelectQuery.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
-    <Compile Include="SqlQuery\SqlFlags.cs" />
     <Compile Include="SqlQuery\SqlBinaryExpression.cs" />
     <Compile Include="SqlQuery\SqlDataType.cs" />
     <Compile Include="SqlQuery\SqlException.cs" />

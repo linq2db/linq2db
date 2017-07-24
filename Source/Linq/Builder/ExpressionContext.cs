@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Key   :
 					case ConvertFlags.All   :
 						{
-							var root = expression.GetRootObject();
+							var root = expression.GetRootObject(Builder.MappingSchema);
 
 							if (root.NodeType == ExpressionType.Parameter)
 							{
@@ -96,13 +96,13 @@ namespace LinqToDB.Linq.Builder
 				case RequestFor.Field       :
 				case RequestFor.Expression  :
 					{
-						var levelExpression = expression.GetLevelExpression(level);
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 						if (Lambda.Parameters.Count > 1)
 						{
 							for (var i = 0; i < Lambda.Parameters.Count; i++)
 							{
-								var root = expression.GetRootObject();
+								var root = expression.GetRootObject(Builder.MappingSchema);
 
 								if (ReferenceEquals(root, Lambda.Parameters[i]))
 								{
