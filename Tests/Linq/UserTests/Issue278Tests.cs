@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿// mono 5.0.1.1-0xamarin5+debian7b1 crashes on those tests
+// TODO: try to uncomment, when newer version used on Travis
+#if !MONO
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
@@ -328,3 +331,4 @@ namespace Tests.UserTests
 		}
 	}
 }
+#endif
