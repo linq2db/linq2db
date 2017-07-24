@@ -1,5 +1,6 @@
 ﻿using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -8,6 +9,8 @@ using System.Collections.Generic;
 using System.Data.Linq;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -125,6 +128,84 @@ namespace Tests.UserTests
 			}
 		}
 
+		[IncludeDataContextSource(false, TestProvName.NoopProvider)]
+		public void TestQueryCacheFull(string context)
+		{
+			var oldValue = Configuration.Linq.DisableQueryCache;
+
+			var actions = new Action<ITestDataContext>[100];
+
+			var dbParam = Expression.Parameter(typeof(ITestDataContext), "db");
+			var tableMethod = MemberHelper.MethodOf(() => DataExtensions.GetTable<LinqDataTypes2>(null));
+			var table = Expression.Call(tableMethod, dbParam);
+
+			var recordParam = Expression.Parameter(typeof(LinqDataTypes2), "record");
+			var where = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>)null));
+
+			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null));
+
+			for (var i = 0; i < actions.Length; i++)
+			{
+				var predicateBody = Expression.Equal(Expression.PropertyOrField(recordParam, "ID"), Expression.Constant(i));
+				var predicate = Expression.Lambda<Func<LinqDataTypes2, bool>>(predicateBody, recordParam);
+				var body = Expression.Call(where, table, predicate);
+
+				body = Expression.Call(toListMethod, body);
+
+				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).Compile();
+			}
+
+			try
+			{
+				Configuration.Linq.DisableQueryCache = false;
+
+				TestIt(context, "TestQueryCacheOverflow", 10, actions, false);
+			}
+			finally
+			{
+				Configuration.Linq.DisableQueryCache = oldValue;
+			}
+		}
+
+		[IncludeDataContextSource(false, TestProvName.NoopProvider)]
+		public void TestQueryCacheOverflow(string context)
+		{
+			var oldValue = Configuration.Linq.DisableQueryCache;
+
+			var actions = new Action<ITestDataContext>[100 + 50];
+
+			var dbParam = Expression.Parameter(typeof(ITestDataContext), "db");
+			var tableMethod = MemberHelper.MethodOf(() => DataExtensions.GetTable<LinqDataTypes2>(null));
+			var table = Expression.Call(tableMethod, dbParam);
+
+			var recordParam = Expression.Parameter(typeof(LinqDataTypes2), "record");
+			var where = MemberHelper.MethodOf(() => Queryable.Where<LinqDataTypes2>(null, (Expression<Func<LinqDataTypes2, bool>>)null));
+
+			var toListMethod = MemberHelper.MethodOf(() => Enumerable.ToList<LinqDataTypes2>(null));
+
+			for (var i = 0; i < actions.Length; i++)
+			{
+				var predicateBody = Expression.Equal(Expression.PropertyOrField(recordParam, "ID"), Expression.Constant(i));
+				var predicate = Expression.Lambda<Func<LinqDataTypes2, bool>>(predicateBody, recordParam);
+				var body = Expression.Call(where, table, predicate);
+
+				body = Expression.Call(toListMethod, body);
+
+				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).Compile();
+			}
+
+			try
+			{
+				Configuration.Linq.DisableQueryCache = false;
+
+				TestIt(context, "TestQueryCacheOverflow", 10, actions, false);
+			}
+			finally
+			{
+				Configuration.Linq.DisableQueryCache = oldValue;
+			}
+		}
+
 		private void TestIt(string context, string caseName, int threadCount, Action<ITestDataContext>[] actions, bool clear)
 		{
 #if !NETSTANDARD
@@ -214,7 +295,7 @@ namespace Tests.UserTests
 
 		private static void Update(ITestDataContext db)
 		{
-			db.Update(new LinqDataTypes2()
+			db.Types2.Update(_ => new LinqDataTypes2()
 			{
 				ID = 100500,
 				DateTimeValue = DateTime.Now

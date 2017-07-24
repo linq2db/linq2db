@@ -130,6 +130,11 @@ namespace LinqToDB.Linq
 		static          List<Query<T>> _orderedCache = new List<Query<T>>(CacheSize);
 
 		/// <summary>
+		/// LINQ query cache version. Changed when query added or removed from cache.
+		/// Not changed when cache reordered.
+		/// </summary>
+		static          int            _cacheVersion;
+		/// <summary>
 		/// LINQ query cache synchronization object.
 		/// </summary>
 		static readonly object   _sync = new object();
@@ -146,7 +151,12 @@ namespace LinqToDB.Linq
 		{
 			if (_orderedCache.Count != 0)
 				lock (_sync)
+				{
+					if (_orderedCache.Count > 0)
+						_cacheVersion++;
+
 					_orderedCache.Clear();
+				}
 		}
 
 		public static Query<T> GetQuery(IDataContext dataContext, Expression expr)
@@ -158,19 +168,20 @@ namespace LinqToDB.Linq
 
 			if (query == null)
 			{
-				var cacheSize = _orderedCache.Count;
+				var oldVersion = _cacheVersion;
 				query = CreateQuery(dataContext, expr);
 
 				// move lock as far as possible, because this method called a lot
 				if (!query.DoNotCache)
 					lock (_sync)
 					{
-						if (cacheSize == _orderedCache.Count || FindQuery(dataContext, expr) == null)
+						if (oldVersion == _cacheVersion || FindQuery(dataContext, expr) == null)
 						{
 							if (_orderedCache.Count == CacheSize)
 								_orderedCache.RemoveAt(CacheSize - 1);
 
 							_orderedCache.Insert(0, query);
+							_cacheVersion++;
 						}
 					}
 			}
@@ -235,6 +246,15 @@ namespace LinqToDB.Linq
 							var first = _orderedCache[0];
 							_orderedCache[0] = query;
 							_orderedCache[oldIndex] = first;
+						}
+						else if (oldIndex == -1)
+						{
+							// query were evicted from cache - readd it
+							if (_orderedCache.Count == CacheSize)
+								_orderedCache.RemoveAt(CacheSize - 1);
+
+							_orderedCache.Insert(0, query);
+							_cacheVersion++;
 						}
 					}
 
