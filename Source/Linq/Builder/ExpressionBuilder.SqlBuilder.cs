@@ -297,7 +297,8 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
-			var isAggregate = AggregationBuilder.IsAggregate(call, MappingSchema);
+			var isAggregate = call.IsAggregate(MappingSchema);
+
 			if (isAggregate || call.IsQueryable())
 			{
 				var info = new BuildInfo(context, call, new SelectQuery { ParentSelect = context.SelectQuery });
@@ -871,7 +872,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Call        :
 					{
 						var e = (MethodCallExpression)expression;
-						var isAggregation = AggregationBuilder.IsAggregate(e, MappingSchema);
+						var isAggregation = e.IsAggregate(MappingSchema);
 						if ((isAggregation || e.IsQueryable()) && !ContainsBuilder.IsConstant(e))
 						{
 							if (IsSubQuery(context, e))
@@ -1057,11 +1058,13 @@ namespace LinqToDB.Linq.Builder
 
 						if (e.Method.DeclaringType == typeof(Enumerable))
 						{
-							if (CountBuilder.MethodNames.Contains(e.Method.Name) || AggregationBuilder.IsAggregate(e, MappingSchema))
+							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
 								result = IsQueryMember(e.Arguments[0]);
 						}
-						else if (AggregationBuilder.IsAggregate(e, MappingSchema))
+						else if (e.IsAggregate(MappingSchema))
+						{
 							result = true;
+						}
 						else if (e.Method.DeclaringType == typeof(Queryable))
 						{
 							switch (e.Method.Name)

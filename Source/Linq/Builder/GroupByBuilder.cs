@@ -376,7 +376,7 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression ConvertEnumerable(MethodCallExpression call)
 			{
-				if (AggregationBuilder.IsAggregate(call, Builder.MappingSchema))
+				if (call.IsAggregate(Builder.MappingSchema))
 				{
 					if (call.Arguments[0].NodeType == ExpressionType.Call)
 					{
@@ -504,7 +504,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var e = (MethodCallExpression)expression;
 
-								if (e.IsQueryable() || AggregationBuilder.IsAggregate(e, Builder.MappingSchema))
+								if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
 								{
 									return new[] { new SqlInfo { Sql = ConvertEnumerable(e) } };
 								}
@@ -542,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new NotImplementedException();
+				throw new LinqException("Expression '{0}' cannot be converted to SQL.", expression);
 			}
 
 			readonly Dictionary<Tuple<Expression,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new Dictionary<Tuple<Expression,int,ConvertFlags>,SqlInfo[]>();

@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
-using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
 
 using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using System;
+	using Linq;
 
 	public static partial class Sql
 	{
@@ -40,7 +40,6 @@ namespace LinqToDB
 			First,
 			Last
 		}
-	
 	}
 
 	public static class AnalyticFunctions

@@ -2,45 +2,30 @@
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using LinqToDB.Expressions;
 	using Extensions;
+	using Mapping;
 	using SqlQuery;
 
 	class AggregationBuilder : MethodCallBuilder
 	{
-		static string[] MethodNames = { "Average", "Min", "Max", "Sum" };
+		public static string[] MethodNames = { "Average", "Min", "Max", "Sum" };
 
 		public static Sql.ExpressionAttribute GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedTypeEx(),
 				methodCall.Method,
 				f => f.Configuration);
-			return functions.Length > 0 && functions[0].IsAggregate ? functions[0] : null;
-		}
-
-		public static bool IsAggregate(MethodCallExpression methodCall, MappingSchema mapping)
-		{
-			if (methodCall.IsQueryable(MethodNames))
-				return true;
-
-			if (methodCall.Arguments.Count > 0)
-			{
-				var function = GetAggregateDefinition(methodCall, mapping);
-				return function != null;
-			}
-
-			return false;
+			return functions.FirstOrDefault(f => f.IsAggregate);
 		}
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return IsAggregate(methodCall, builder.MappingSchema);
+			return methodCall.IsAggregate(builder.MappingSchema);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -64,9 +49,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
+			var attr    = GetAggregateDefinition(methodCall, builder.MappingSchema);
 
 			ISqlExpression sqlExpression = null;
-			var attr = GetAggregateDefinition(methodCall, builder.MappingSchema);
+
 			if (attr != null)
 			{
 				sqlExpression = attr.GetExpression(builder.MappingSchema, methodCall, e =>

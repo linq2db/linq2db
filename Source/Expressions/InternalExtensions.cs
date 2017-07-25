@@ -796,7 +796,7 @@ namespace LinqToDB.Expressions
 						if (e.Object != null)
 							return GetRootObject(e.Object, mapping);
 
-						if (e.Arguments != null && e.Arguments.Count > 0 && (e.IsQueryable() || AggregationBuilder.IsAggregate(e, mapping)))
+						if (e.Arguments != null && e.Arguments.Count > 0 && (e.IsQueryable() || e.IsAggregate(mapping)))
 							return GetRootObject(e.Arguments[0], mapping);
 
 						break;
@@ -865,6 +865,20 @@ namespace LinqToDB.Expressions
 			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions);
 		}
 
+		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
+		{
+			if (methodCall.IsQueryable(AggregationBuilder.MethodNames))
+				return true;
+
+			if (methodCall.Arguments.Count > 0)
+			{
+				var function = AggregationBuilder.GetAggregateDefinition(methodCall, mapping);
+				return function != null;
+			}
+
+			return false;
+		}
+
 		public static bool IsQueryable(this MethodCallExpression method, string name)
 		{
 			return method.Method.Name == name && method.IsQueryable();
@@ -889,7 +903,7 @@ namespace LinqToDB.Expressions
 						var call = (MethodCallExpression)expression;
 						var expr = call.Object;
 
-						if (expr == null && (call.IsQueryable() || AggregationBuilder.IsAggregate(call, mapping)) && call.Arguments.Count > 0)
+						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping)) && call.Arguments.Count > 0)
 							expr = call.Arguments[0];
 
 						if (expr != null)
