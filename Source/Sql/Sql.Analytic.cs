@@ -415,6 +415,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static double Average<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
 		{
@@ -428,6 +429,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
+#endif
 
 		[Sql.Extension("AVG({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
@@ -451,6 +453,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true)]
 		public static Decimal Corr<TEntity>(
 			[NotNull]            this IQueryable<TEntity>           source, 
@@ -468,7 +471,8 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
 				));
 		}
-		
+#endif
+
 		[Sql.Extension("CORR({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Corr<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr1, [ExprParameter] object expr2)
 		{
@@ -491,6 +495,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static long CountExt<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
@@ -504,6 +509,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
+#endif
 
 		[Sql.Extension("COUNT(*)", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext)
@@ -532,6 +538,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true)]
 		public static Decimal CovarPop<TEntity>(
 			[NotNull]            this IQueryable<TEntity>               source, 
@@ -549,6 +556,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
 				));
 		}
+#endif
 		
 		[Sql.Extension("COVAR_POP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> CovarPop<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
@@ -566,6 +574,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true)]
 		public static Decimal CovarSamp<TEntity>(
 			[NotNull]            this IQueryable<TEntity>               source, 
@@ -583,6 +592,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
 				));
 		}
+#endif
 		
 		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> CovarSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
@@ -671,6 +681,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static TV Max<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
 		{
@@ -684,6 +695,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
+#endif
 
 		[Sql.Extension("MAX({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
@@ -707,6 +719,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("MEDIAN({expr})", IsAggregate = true)]
 		public static long Median<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -720,6 +733,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
+#endif
 
 		[Sql.Extension("MEDIAN({expr}) {over}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IReadyToFunctionOrOverWithPartition<T> Median<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
@@ -737,6 +751,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static TV Min<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
 		{
@@ -750,6 +765,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
+#endif
 
 		[Sql.Extension("MIN({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr)
@@ -909,6 +925,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
 		public static double StdDev<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
@@ -923,6 +940,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
+#endif
 
 		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
@@ -948,6 +966,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("STDDEV_POP({expr})", IsAggregate = true)]
 		public static decimal StdDevPop<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -961,6 +980,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
+#endif
 
 		[Sql.Extension("STDDEV_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> StdDevPop<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
@@ -978,6 +998,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("STDDEV_SAMP({expr})", IsAggregate = true)]
 		public static decimal StdDevSamp<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -991,6 +1012,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
+#endif
 
 		[Sql.Extension("STDDEV_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> StdDevSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
@@ -1020,6 +1042,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("VAR_POP({expr})", IsAggregate = true)]
 		public static decimal VarPop<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -1033,6 +1056,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
+#endif
 
 		[Sql.Extension("VAR_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> VarPop<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
@@ -1050,6 +1074,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("VAR_SAMP({expr})", IsAggregate = true)]
 		public static decimal VarSamp<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -1063,6 +1088,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
+#endif
 
 		[Sql.Extension("VAR_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> VarSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
@@ -1086,6 +1112,7 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+#if !WINSTORE
 		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static TV Variance<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
@@ -1099,6 +1126,7 @@ namespace LinqToDB
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
+#endif
 
 		[Sql.Extension("VARIANCE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr)
