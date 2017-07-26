@@ -3,8 +3,18 @@ using System.Reflection;
 
 namespace LinqToDB.Linq
 {
-	class MethodHelper
+	public static class MethodHelper
 	{
+
+#if SILVERLIGHT
+		public static MethodInfo GetMethodInfo(this Delegate del)
+		{
+			if ((object) del == null)
+				throw new ArgumentNullException("del");
+			return del.Method;
+		}
+#endif
+
 		#region Helper methods to obtain MethodInfo in a safe way
 
 		public static MethodInfo GetMethodInfo<T1,T2>(Func<T1,T2> f, T1 unused1)
