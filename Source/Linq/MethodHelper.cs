@@ -7,6 +7,8 @@ namespace LinqToDB.Linq
 	{
 		#region Helper methods to obtain MethodInfo in a safe way
 
+#if !(SILVERLIGHT || WINSTORE || NETSTANDARD)
+
 		public static MethodInfo GetMethodInfo<T1,T2>(Func<T1,T2> f, T1 unused1)
 		{
 			return f.Method;
@@ -37,6 +39,7 @@ namespace LinqToDB.Linq
 			return f.Method;
 		}
 
+#endif
 		#endregion
 	}
 }

@@ -133,11 +133,9 @@
 				var res = qg.ToArray();
 				Assert.IsNotEmpty(res);
 
-#if !WINSTORE
 				db.Child.Average(c => c.ParentID);
 				db.Child.Average(c => c.ParentID, Sql.AggregateModifier.All);
 				db.Child.Average(c => c.ParentID, Sql.AggregateModifier.Distinct);
-#endif
 			}
 		}
 
@@ -258,9 +256,7 @@
 				var resg = qg.ToArray();
 				Assert.IsNotEmpty(resg);
 
-#if !WINSTORE
 				db.Child.Corr(c => c.ParentID, c => c.ChildID);
-#endif
 			}
 		}
 
@@ -315,12 +311,10 @@
 				var res = qg.ToArray();
 				Assert.IsNotEmpty(res);
 
-#if !WINSTORE
 				db.Child.Count();
 				db.Child.CountExt(c => c.ParentID);
 				db.Child.CountExt(c => c.ParentID, Sql.AggregateModifier.All);
 				db.Child.CountExt(c => c.ParentID, Sql.AggregateModifier.Distinct);
-#endif
 			}
 		}
 
@@ -356,9 +350,7 @@
 				var resg = qg.ToArray();
 				Assert.IsNotEmpty(resg);
 
-#if !WINSTORE
 				db.Child.CovarPop(c => c.ParentID, c => c.ChildID);
-#endif
 			}
 		}
 
@@ -394,9 +386,7 @@
 				var resg = qg.ToArray();
 				Assert.IsNotEmpty(resg);
 
-#if !WINSTORE
 				db.Child.CovarSamp(c => c.ParentID, c => c.ChildID);
-#endif
 			}
 		}
 
