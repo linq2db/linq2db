@@ -1,18 +1,12 @@
-﻿#if SILVERLIGHT || WINSTORE || NETSTANDARD
-	#define EMULATE_HELPER
-#endif
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
 	using Linq;
-	using Expressions;
 
 	using PN = LinqToDB.ProviderName;
 
@@ -419,10 +413,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _averagePopMethodInfo = MemberHelper.MethodOf(() => Average<int, int>(null, null, Sql.AggregateModifier.None)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static double Average<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
 		{
@@ -432,11 +422,7 @@ namespace LinqToDB
 			return source.Provider.Execute<double>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_averagePopMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Average, source, expr, modifier),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
@@ -463,10 +449,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _corrPopMethodInfo = MemberHelper.MethodOf(() => Corr<int>(null, null, null)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true)]
 		public static Decimal Corr<TEntity>(
 			[NotNull]            this IQueryable<TEntity>           source, 
@@ -480,11 +462,7 @@ namespace LinqToDB
 			return source.Provider.Execute<Decimal>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_corrPopMethodInfo.MakeGenericMethod(typeof(TEntity)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Corr, source, expr1, expr2),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
 				));
 		}
@@ -511,10 +489,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _countExtMethodInfo = MemberHelper.MethodOf(() => CountExt<int, int>(null, null, Sql.AggregateModifier.None)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static long CountExt<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
@@ -524,11 +498,7 @@ namespace LinqToDB
 			return source.Provider.Execute<long>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_countExtMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.CountExt, source, expr, modifier),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
@@ -560,9 +530,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _covarPopMethodInfo = MemberHelper.MethodOf(() => CovarPop<int>(null, null, null)).GetGenericMethodDefinition();
-#endif
 		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true)]
 		public static Decimal CovarPop<TEntity>(
 			[NotNull]            this IQueryable<TEntity>               source, 
@@ -576,11 +543,7 @@ namespace LinqToDB
 			return source.Provider.Execute<Decimal>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_covarPopMethodInfo.MakeGenericMethod(new[] { typeof(TEntity) }),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarPop, source, expr1, expr2),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
 				));
 		}
@@ -601,10 +564,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _covarSampMethodInfo = MemberHelper.MethodOf(() => CovarSamp<int>(null, null, null)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true)]
 		public static Decimal CovarSamp<TEntity>(
 			[NotNull]            this IQueryable<TEntity>               source, 
@@ -618,11 +577,7 @@ namespace LinqToDB
 			return source.Provider.Execute<Decimal>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_covarSampMethodInfo.MakeGenericMethod(typeof(TEntity)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.CovarSamp, source, expr1, expr2),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
 				));
 		}
@@ -714,10 +669,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _maxMethodInfo = MemberHelper.MethodOf(() => Max<int, int>(null, null, Sql.AggregateModifier.None)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static TV Max<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
 		{
@@ -727,11 +678,7 @@ namespace LinqToDB
 			return source.Provider.Execute<TV>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_maxMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Max, source, expr, modifier),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
@@ -758,10 +705,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _medianMethodInfo = MemberHelper.MethodOf(() => Median<int, int>(null, null)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("MEDIAN({expr})", IsAggregate = true)]
 		public static long Median<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -771,11 +714,7 @@ namespace LinqToDB
 			return source.Provider.Execute<long>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_medianMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Median, source, expr),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
@@ -796,10 +735,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _minMethodInfo = MemberHelper.MethodOf(() => Min<int, int>(null, null, Sql.AggregateModifier.None)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static TV Min<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
 		{
@@ -809,11 +744,7 @@ namespace LinqToDB
 			return source.Provider.Execute<TV>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_minMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Min, source, expr, modifier),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
@@ -976,10 +907,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _stdDevMethodInfo = MemberHelper.MethodOf(() => StdDev<int, int>(null, null, Sql.AggregateModifier.None)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
 		public static double StdDev<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
@@ -990,11 +917,7 @@ namespace LinqToDB
 			return source.Provider.Execute<double>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_stdDevMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDev, source, expr, modifier),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
@@ -1023,10 +946,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _stdDevPopMethodInfo = MemberHelper.MethodOf(() => StdDevPop<int, int>(null, null)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("STDDEV_POP({expr})", IsAggregate = true)]
 		public static decimal StdDevPop<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -1036,11 +955,7 @@ namespace LinqToDB
 			return source.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_stdDevPopMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDevPop, source, expr),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
@@ -1061,10 +976,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _stdDevSampMethodInfo = MemberHelper.MethodOf(() => StdDevSamp<int, int>(null, null)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("STDDEV_SAMP({expr})", IsAggregate = true)]
 		public static decimal StdDevSamp<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -1074,11 +985,7 @@ namespace LinqToDB
 			return source.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_stdDevSampMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.StdDevSamp, source, expr),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
@@ -1111,10 +1018,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _varPopMethodInfo = MemberHelper.MethodOf(() => VarPop<int, int>(null, null)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("VAR_POP({expr})", IsAggregate = true)]
 		public static decimal VarPop<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -1124,11 +1027,7 @@ namespace LinqToDB
 			return source.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_varPopMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.VarPop, source, expr),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
@@ -1149,10 +1048,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _varSampMethodInfo = MemberHelper.MethodOf(() => VarSamp<int, int>(null, null)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("VAR_SAMP({expr})", IsAggregate = true)]
 		public static decimal VarSamp<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
@@ -1162,11 +1057,7 @@ namespace LinqToDB
 			return source.Provider.Execute<decimal>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_varSampMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.VarSamp, source, expr),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr) }
 				));
 		}
@@ -1193,10 +1084,6 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-#if EMULATE_HELPER
-		static readonly MethodInfo _varianceMethodInfo = MemberHelper.MethodOf(() => Variance<int, int>(null, null, Sql.AggregateModifier.None)).GetGenericMethodDefinition();
-#endif
-
 		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
 		public static TV Variance<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
@@ -1206,11 +1093,7 @@ namespace LinqToDB
 			return source.Provider.Execute<TV>(
 				Expression.Call(
 					null,
-#if EMULATE_HELPER
-					_varianceMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TV)),
-#else
 					MethodHelper.GetMethodInfo(AnalyticFunctions.Variance, source, expr, modifier),
-#endif
 					new Expression[] { source.Expression, Expression.Quote(expr), Expression.Constant(modifier) }
 				));
 		}
