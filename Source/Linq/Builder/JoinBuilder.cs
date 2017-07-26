@@ -430,7 +430,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var levelExpression = expression.GetLevelExpression(level);
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 						if (levelExpression.NodeType == ExpressionType.MemberAccess)
 						{

@@ -625,6 +625,7 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.SystemType);
 							Append(elem.Name);
+							Append(elem.IsAggregate);
 							Append(elem.Precedence);
 							Append(elem.Parameters);
 
@@ -1189,12 +1190,13 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlFunction :
 						{
-							var systemType = Read<Type>();
-							var name       = ReadString();
-							var precedence = ReadInt();
-							var parameters = ReadArray<ISqlExpression>();
+							var systemType  = Read<Type>();
+							var name        = ReadString();
+							var isAggregate = ReadBool();
+							var precedence  = ReadInt();
+							var parameters  = ReadArray<ISqlExpression>();
 
-							obj = new SqlFunction(systemType, name, precedence, parameters);
+							obj = new SqlFunction(systemType, name, isAggregate, precedence, parameters);
 
 							break;
 						}

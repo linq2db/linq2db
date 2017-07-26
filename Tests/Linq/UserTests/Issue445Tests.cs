@@ -29,7 +29,6 @@ namespace Tests.UserTests
 			{
 				AreEqual(Person.Where(_ => _.ID == 1), db.Person.Where(_ => _.ID == 1));
 			}
-
 		}
 
 		[Test, IssueContextSourceAttribute(false)]
