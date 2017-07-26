@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,14 +19,14 @@ namespace LinqToDB.Linq
 
 		class Mapper<T>
 		{
-			public Mapper(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> mapperExpression)
+			public Mapper(Expression<Func<IQueryRunner,IDataReader,T>> mapperExpression)
 			{
 				_expression = mapperExpression;
 			}
 
-			readonly Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> _expression;
-			         Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> _mapperExpression;
-			                    Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>  _mapper;
+			readonly Expression<Func<IQueryRunner,IDataReader,T>> _expression;
+			         Expression<Func<IQueryRunner,IDataReader,T>> _mapperExpression;
+			                    Func<IQueryRunner,IDataReader,T>  _mapper;
 
 			bool _isFaulted;
 
@@ -33,14 +34,12 @@ namespace LinqToDB.Linq
 
 			public T Map(
 				QueryContext queryContext,
-				IDataContext dataContext,
-				IDataReader  dataReader,
-				Expression   expr,
-				object[]     ps)
+				IQueryRunner queryRunner,
+				IDataReader  dataReader)
 			{
 				if (_mapper == null)
 				{
-					_mapperExpression = (Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>)_expression.Transform(e =>
+					_mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(e =>
 					{
 						var ex = e as ConvertFromDataReaderExpression;
 						return ex != null ? ex.Reduce(dataReader) : e;
@@ -55,7 +54,7 @@ namespace LinqToDB.Linq
 
 				try
 				{
-					return _mapper(queryContext, dataContext, dataReader, expr, ps);
+					return _mapper(queryRunner, dataReader);
 				}
 				catch (FormatException ex)
 				{
@@ -75,7 +74,7 @@ namespace LinqToDB.Linq
 					if (qr != null)
 						qr.MapperExpression = _mapperExpression;
 
-					return (_mapper = _expression.Compile())(queryContext, dataContext, dataReader, expr, ps);
+					return (_mapper = _expression.Compile())(queryRunner, dataReader);
 				}
 				catch (InvalidCastException ex)
 				{
@@ -95,7 +94,7 @@ namespace LinqToDB.Linq
 					if (qr != null)
 						qr.MapperExpression = _mapperExpression;
 
-					return (_mapper = _expression.Compile())(queryContext, dataContext, dataReader, expr, ps);
+					return (_mapper = _expression.Compile())(queryRunner, dataReader);
 				}
 			}
 		}
@@ -217,22 +216,21 @@ namespace LinqToDB.Linq
 
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps))
 			{
+				runner.QueryContext = queryContext;
+				runner.DataContext  = dataContext;
+
 				try
 				{
 					mapper.QueryRunner = runner;
-
-					var count = 0;
 
 					using (var dr = runner.ExecuteReader())
 					{
 						while (dr.Read())
 						{
-							yield return mapper.Map(queryContext, dataContext, dr, expression, ps);
-							count++;
+							yield return mapper.Map(queryContext, runner, dr);
+							runner.RowsCount++;
 						}
 					}
-
-					runner.RowsCount = count;
 				}
 				finally
 				{
@@ -260,23 +258,21 @@ namespace LinqToDB.Linq
 			if (queryContext == null)
 				queryContext = new QueryContext(dataContext, expression, ps);
 
-			Func<IDataReader,T> m = dr => mapper.Map(queryContext, dataContext, dr, expression, ps);
-
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps))
 			{
-				runner.SkipAction = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
-				runner.TakeAction = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;
+				Func<IDataReader,T> m = dr => mapper.Map(queryContext, runner, dr);
+
+				runner.SkipAction   = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
+				runner.TakeAction   = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;
+				runner.QueryContext = queryContext;
+				runner.DataContext  = dataContext;
 
 				try
 				{
 					mapper.QueryRunner = runner;
 
-					var count = 0;
-
-					var dr  = await runner.ExecuteReaderAsync(cancellationToken, options);
-					await dr.QueryForEachAsync(m, r => { action(r); count++; }, cancellationToken);
-
-					runner.RowsCount = count;
+					var dr = await runner.ExecuteReaderAsync(cancellationToken, options);
+					await dr.QueryForEachAsync(m, r => { action(r); runner.RowsCount++; }, cancellationToken);
 				}
 				finally
 				{
@@ -287,9 +283,9 @@ namespace LinqToDB.Linq
 
 #endif
 
-		public static void SetRunQuery<T>(
+		static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
+			Expression<Func<IQueryRunner,IDataReader,T>> expression)
 		{
 			var executeQuery = GetExecuteQuery<T>(query, ExecuteQuery);
 
@@ -309,6 +305,61 @@ namespace LinqToDB.Linq
 				ExecuteQueryAsync(query, ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token, options);
 
 #endif
+		}
+
+		static readonly PropertyInfo _queryContextInfo = MemberHelper.PropertyOf<IQueryRunner>( p => p.QueryContext);
+		static readonly PropertyInfo _dataContextInfo  = MemberHelper.PropertyOf<IQueryRunner>( p => p.DataContext);
+		static readonly PropertyInfo _expressionInfo   = MemberHelper.PropertyOf<IQueryRunner>( p => p.Expression);
+		static readonly PropertyInfo _parametersnfo    = MemberHelper.PropertyOf<IQueryRunner>( p => p.Parameters);
+		static readonly PropertyInfo _rowsCountnfo     = MemberHelper.PropertyOf<IQueryRunner>( p => p.RowsCount);
+
+		public static void SetRunQuery<T>(
+			Query<T> query,
+			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
+		{
+			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
+			var dataReaderParam  = Expression.Parameter(typeof(IDataReader),  "dr");
+
+			var l =
+				Expression.Lambda<Func<IQueryRunner,IDataReader,T>>(
+					Expression.Invoke(
+						expression, new[]
+						{
+							Expression.Property(queryRunnerParam, _queryContextInfo) as Expression,
+							Expression.Property(queryRunnerParam, _dataContextInfo),
+							dataReaderParam,
+							Expression.Property(queryRunnerParam, _expressionInfo),
+							Expression.Property(queryRunnerParam, _parametersnfo),
+						}),
+					queryRunnerParam,
+					dataReaderParam);
+
+			SetRunQuery(query, l);
+		}
+
+		public static void SetRunQuery<T>(
+			Query<T> query,
+			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>> expression)
+		{
+			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
+			var dataReaderParam  = Expression.Parameter(typeof(IDataReader),  "dr");
+
+			var l =
+				Expression.Lambda<Func<IQueryRunner,IDataReader,T>>(
+					Expression.Invoke(
+						expression, new[]
+						{
+							Expression.Property(queryRunnerParam, _queryContextInfo) as Expression,
+							Expression.Property(queryRunnerParam, _dataContextInfo),
+							dataReaderParam,
+							Expression.Property(queryRunnerParam, _expressionInfo),
+							Expression.Property(queryRunnerParam, _parametersnfo),
+							Expression.Property(queryRunnerParam, _rowsCountnfo),
+						}),
+					queryRunnerParam,
+					dataReaderParam);
+
+			SetRunQuery(query, l);
 		}
 	}
 }

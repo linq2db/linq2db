@@ -59,6 +59,11 @@ namespace LinqToDB
 
 #endif
 
+			public    QueryContext   QueryContext { get { return _queryRunner.QueryContext; } set { _queryRunner.QueryContext = value; } }
+			public    IDataContextEx DataContext  { get { return _queryRunner.DataContext;  } set { _queryRunner.DataContext  = value; } }
+			public    Expression     Expression   { get { return _queryRunner.Expression;   } set { _queryRunner.Expression   = value; } }
+			public    object[]       Parameters   { get { return _queryRunner.Parameters;   } set { _queryRunner.Parameters   = value; } }
+
 			public Func<int> SkipAction { get { return _queryRunner.SkipAction; } set { _queryRunner.SkipAction = value; } }
 			public Func<int> TakeAction { get { return _queryRunner.TakeAction; } set { _queryRunner.TakeAction = value; } }
 

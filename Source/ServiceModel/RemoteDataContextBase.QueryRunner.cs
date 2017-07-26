@@ -2,7 +2,10 @@
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
+
+#if !NOASYNC
 using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.ServiceModel
 {

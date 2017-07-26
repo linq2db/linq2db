@@ -22,19 +22,21 @@ namespace LinqToDB.Linq
 			Parameters   = parameters;
 		}
 
-		protected readonly Query          Query;
-		protected readonly IDataContextEx DataContext;
-		protected readonly Expression     Expression;
-		protected readonly int            QueryNumber;
-		protected readonly object[]       Parameters;
+		protected readonly Query    Query;
+		protected readonly int      QueryNumber;
 
-		protected List<string>            QueryHints = new List<string>();
-		protected DataParameter[]         DataParameters;
+		protected List<string>      QueryHints = new List<string>();
+		protected DataParameter[]   DataParameters;
 
-		public abstract int                    ExecuteNonQuery();
-		public abstract object                 ExecuteScalar();
-		public abstract IDataReader            ExecuteReader();
-		public abstract Expression             MapperExpression { get; set; }
+		public QueryContext         QueryContext { get; set; }
+		public IDataContextEx       DataContext  { get; set; }
+		public Expression           Expression   { get; set; }
+		public object[]             Parameters   { get; set; }
+
+		public abstract int         ExecuteNonQuery();
+		public abstract object      ExecuteScalar();
+		public abstract IDataReader ExecuteReader();
+		public abstract Expression  MapperExpression { get; set; }
 #if !NOASYNC
 		public abstract Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options);
 #endif

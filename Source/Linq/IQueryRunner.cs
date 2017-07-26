@@ -16,9 +16,13 @@ namespace LinqToDB.Linq
 		Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken,TaskCreationOptions options);
 #endif
 
-		Func<int>  SkipAction       { get; set; }
-		Func<int>  TakeAction       { get; set; }
-		Expression MapperExpression { get; set; }
-		int        RowsCount        { get; set; }
+		Func<int>      SkipAction       { get; set; }
+		Func<int>      TakeAction       { get; set; }
+		QueryContext   QueryContext     { get; set; }
+		Expression     Expression       { get; set; }
+		IDataContextEx DataContext      { get; set; }
+		object[]       Parameters       { get; set; }
+		Expression     MapperExpression { get; set; }
+		int            RowsCount        { get; set; }
 	}
 }
