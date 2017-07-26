@@ -319,6 +319,8 @@ namespace Tests.Linq
 					select GrandChildren(p).Count());
 		}
 
+#if !NOASYNC
+
 		[Test, DataContextSource]
 		public async Task AssociationMethodExpressionAsync(string context)
 		{
@@ -336,6 +338,8 @@ namespace Tests.Linq
 					).ToListAsync());
 			}
 		}
+
+#endif
 
 		[Test]
 		public void ParameterlessExpression()

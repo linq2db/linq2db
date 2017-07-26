@@ -24,6 +24,8 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID == 2 select p)));
 		}
 
+#if !NOASYNC
+
 		[Test, DataContextSource]
 		public async Task Concat1Async(string context)
 		{
@@ -37,6 +39,8 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID == 2 select p))
 					.ToListAsync());
 		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void Concat11(string context)

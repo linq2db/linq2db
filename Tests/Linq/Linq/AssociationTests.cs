@@ -187,6 +187,8 @@ namespace Tests.Linq
 					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
 		}
 
+#if !NOASYNC
+
 		[Test, DataContextSource]
 		public async Task GroupBy2Async(string context)
 		{
@@ -195,6 +197,8 @@ namespace Tests.Linq
 					       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
 					(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
 		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void GroupBy3(string context)

@@ -209,6 +209,8 @@ namespace Tests.Linq
 					db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>());
 		}
 
+#if !NOASYNC
+
 		[Test, DataContextSource]
 		public async Task Cast1Async(string context)
 		{
@@ -217,6 +219,8 @@ namespace Tests.Linq
 					      ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>(),
 					await db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>().ToListAsync());
 		}
+
+#endif
 
 		class ParentEx : Parent
 		{
@@ -583,6 +587,8 @@ namespace Tests.Linq
 			}
 		}
 
+#if !NOASYNC
+
 		[Test, DataContextSource]
 		public async Task Test18Async(string context)
 		{
@@ -598,6 +604,8 @@ namespace Tests.Linq
 				var list = await q.Distinct().OfType<Test18Female>().ToListAsync();
 			}
 		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void Test19(string context)
