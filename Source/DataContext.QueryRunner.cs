@@ -50,10 +50,14 @@ namespace LinqToDB
 				return _queryRunner.ExecuteReader();
 			}
 
+#if !NOASYNC
+
 			public Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)
 			{
 				return _queryRunner.ExecuteReaderAsync(cancellationToken, options);
 			}
+
+#endif
 
 			public Func<int> SkipAction { get { return _queryRunner.SkipAction; } set { _queryRunner.SkipAction = value; } }
 			public Func<int> TakeAction { get { return _queryRunner.TakeAction; } set { _queryRunner.TakeAction = value; } }

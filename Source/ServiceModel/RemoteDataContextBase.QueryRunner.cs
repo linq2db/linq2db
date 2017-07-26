@@ -114,6 +114,8 @@ namespace LinqToDB.ServiceModel
 				return new ServiceModelDataReader(_dataContext.MappingSchema, result);
 			}
 
+#if !NOASYNC
+
 			class DataReaderAsync : IDataReaderAsync
 			{
 				public DataReaderAsync(RemoteDataContextBase dataContext, string result, Func<int> skipAction, Func<int> takeAction)
@@ -183,6 +185,8 @@ namespace LinqToDB.ServiceModel
 				},
 				cancellationToken);
 			}
+
+#endif
 		}
 	}
 }

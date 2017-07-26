@@ -12,7 +12,7 @@ namespace LinqToDB.Linq
 		object                ExecuteScalar  ();
 		IDataReader           ExecuteReader  ();
 
-#if !SL4
+#if !NOASYNC
 		Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken,TaskCreationOptions options);
 #endif
 

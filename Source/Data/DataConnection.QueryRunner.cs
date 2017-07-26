@@ -121,6 +121,8 @@ namespace LinqToDB.Data
 				return _dataConnection.ExecuteReader();
 			}
 
+#if !NOASYNC
+
 			class DataReaderAsync : IDataReaderAsync
 			{
 				public DataReaderAsync(DataConnection dataConnection, Func<int> skipAction, Func<int> takeAction)
@@ -167,6 +169,8 @@ namespace LinqToDB.Data
 
 				return dataReader;
 			}
+
+#endif
 		}
 	}
 }

@@ -174,9 +174,15 @@
     <Compile Include="Extensions\MappingExtensions.cs" />
     <Compile Include="Extensions\ReflectionExtensions.cs" />
     <Compile Include="IDataContext.cs" />
+    <Compile Include="IDataContextEx.cs" />
+    <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
+    <Compile Include="Linq\QueryRunner.cs" />
+    <Compile Include="Linq\QueryRunnerBase.cs" />
+    <Compile Include="Linq\IDataReaderAsync.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="LinqToDBException.cs" />
+    <Compile Include="Linq\IQueryRunner.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />
     <Compile Include="Linq\Builder\AllAnyBuilder.cs" />
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />

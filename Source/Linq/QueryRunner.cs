@@ -241,6 +241,8 @@ namespace LinqToDB.Linq
 			}
 		}
 
+#if !NOASYNC
+
 		static async Task ExecuteQueryAsync<T>(
 			Query                         query,
 			QueryContext                  queryContext,
@@ -283,6 +285,8 @@ namespace LinqToDB.Linq
 			}
 		}
 
+#endif
+
 		public static void SetRunQuery<T>(
 			Query<T> query,
 			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
@@ -296,11 +300,15 @@ namespace LinqToDB.Linq
 
 			query.GetIEnumerable = (ctx,db,expr,ps) => runQuery(query, ctx, db, mapper, expr, ps, 0);
 
+#if !NOASYNC
+
 			var skipAction = executeQuery.Item2;
 			var takeAction = executeQuery.Item3;
 
 			query.GetForEachAsync = (expressionQuery,ctx,db,expr,ps,action,token,options) =>
 				ExecuteQueryAsync(query, ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token, options);
+
+#endif
 		}
 	}
 }

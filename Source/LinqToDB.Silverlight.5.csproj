@@ -129,6 +129,7 @@
     <Compile Include="Extensions\MappingExtensions.cs" />
     <Compile Include="Extensions\ReflectionExtensions.cs" />
     <Compile Include="IDataContext.cs" />
+    <Compile Include="IDataContextEx.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="LinqToDBException.cs" />
@@ -188,10 +189,12 @@
     <Compile Include="Linq\ExpressionQuery.cs" />
     <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Linq\Expressions.cs" />
+    <Compile Include="Linq\IDataReaderAsync.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
     <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
+    <Compile Include="Linq\IQueryRunner.cs" />
     <Compile Include="Linq\ISelectInsertable.cs" />
     <Compile Include="Linq\ITable.cs" />
     <Compile Include="Linq\IUpdatable.cs" />
@@ -201,6 +204,8 @@
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="Linq\QueryContext.cs" />
+    <Compile Include="Linq\QueryRunner.cs" />
+    <Compile Include="Linq\QueryRunnerBase.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
     <Compile Include="Linq\TableT.cs" />
     <Compile Include="Mapping\AssociationAttribute.cs" />
@@ -257,6 +262,7 @@
     <Compile Include="ServiceModel\LinqServiceSerializer.cs" />
     <Compile Include="ServiceModel\LinqSoapServiceClient.Silverlight.cs" />
     <Compile Include="ServiceModel\RemoteDataContextBase.cs" />
+    <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
     <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />

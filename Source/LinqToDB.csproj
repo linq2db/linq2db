@@ -343,7 +343,6 @@
     <Compile Include="Mapping\PrimaryKeyAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\ServiceModelDataReaderAsync.cs" />
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
     <Compile Include="SqlProvider\BasicSqlOptimizer.cs" />

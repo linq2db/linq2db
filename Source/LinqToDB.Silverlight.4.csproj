@@ -64,6 +64,12 @@
     <Reference Include="System.Xml.Linq, Version=2.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
+    <Compile Include="Linq\IQueryRunner.cs" />
+    <Compile Include="Linq\QueryRunner.cs" />
+    <Compile Include="Linq\QueryRunnerBase.cs" />
+    <Compile Include="Linq\IDataReaderAsync.cs" />
+    <Compile Include="IDataContextEx.cs" />  
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
     <Compile Include="Common\ConvertBuilder.cs" />
