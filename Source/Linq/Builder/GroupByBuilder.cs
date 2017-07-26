@@ -477,7 +477,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							return Builder.ConvertToSql(_element, ex, true);
+							args[i - 1] = Builder.ConvertToSql(_element, ex, true);
 						}
 					}
 				}
@@ -485,6 +485,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					args = _element.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
 				}
+
+				if (attribute != null)
+					return attribute.GetExpression(call.Method, args);
 
 				return new SqlFunction(call.Type, call.Method.Name, args);
 			}
