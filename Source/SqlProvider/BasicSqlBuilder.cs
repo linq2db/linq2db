@@ -2472,6 +2472,7 @@ namespace LinqToDB.SqlProvider
 				return new SqlFunction(
 					func.SystemType,
 					func.Name,
+					false,
 					func.Precedence,
 					func.Parameters.Select((p, i) =>
 						IsBooleanParameter(p, func.Parameters.Length, i) ?

@@ -437,41 +437,6 @@ namespace LinqToDB.Linq
 
 		#region RunQuery
 
-		int GetParameterIndex(ISqlExpression parameter)
-		{
-			for (var i = 0; i < Queries[0].Parameters.Count; i++)
-			{
-				var p = Queries[0].Parameters[i].SqlParameter;
-
-				if (p == parameter)
-					return i;
-			}
-
-			throw new InvalidOperationException();
-		}
-
-		IEnumerable<IDataReader> RunQuery(IDataContext dataContext, Expression expr, object[] parameters, int queryNumber)
-		{
-			object query = null;
-
-			try
-			{
-				query = SetCommand(dataContext, expr, parameters, queryNumber, true);
-
-				using (var dr = dataContext.ExecuteReader(query))
-					while (dr.Read())
-						yield return dr;
-			}
-			finally
-			{
-				if (query != null)
-					dataContext.ReleaseQuery(query);
-
-				if (dataContext.CloseAfterUse)
-					dataContext.Close();
-			}
-		}
-
 		internal override object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints)
 		{
 			lock (this)

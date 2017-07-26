@@ -902,21 +902,13 @@ namespace LinqToDB.SqlQuery
 			var func = expr as SqlFunction;
 			if (func != null)
 			{ 
-				switch (func.Name)
-				{
-					case "Count"   :
-					case "Average" :
-					case "Min"     :
-					case "Max"     :
-					case "Sum"     : return true;
-					default        : return false;
-				}
+				return func.IsAggregate;
 			}
 
-			var sqlExpr = expr as SqlExpression;
-			if (sqlExpr != null)
-			{
-				return sqlExpr.SqlFlags.HasFlag(SqlFlags.Aggregate);
+			var expression = expr as SqlExpression;
+			if (expression != null)
+			{ 
+				return expression.IsAggregate;
 			}
 
 			return false;
