@@ -567,12 +567,14 @@ namespace LinqToDB.Linq.Builder
 
 					Expression testExpr;
 
+					var isNullExpr = Expression.Call(
+						ExpressionBuilder.DataReaderParam,
+						ReflectionHelper.DataReader.IsDBNull,
+						Expression.Constant(dindex));
+
 					if (mapping.m.Code == null)
 					{
-						testExpr = Expression.Call(
-							ExpressionBuilder.DataReaderParam,
-							ReflectionHelper.DataReader.IsDBNull,
-							Expression.Constant(dindex));
+						testExpr = isNullExpr;
 					}
 					else
 					{
@@ -582,6 +584,14 @@ namespace LinqToDB.Linq.Builder
 							Builder.MappingSchema,
 							Builder.BuildSql(codeType, dindex),
 							Expression.Constant(mapping.m.Code));
+
+						if (mapping.m.Discriminator.CanBeNull)
+						{
+							testExpr =
+								Expression.AndAlso(
+									Expression.Not(isNullExpr),
+									testExpr);
+						}
 					}
 
 					expr = Expression.Condition(

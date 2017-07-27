@@ -1,9 +1,6 @@
-﻿using LinqToDB.Mapping;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+
+using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
@@ -18,8 +15,8 @@ namespace Tests.Model
 	[InheritanceMapping(Code = 2,    Type = typeof(InheritanceParent2))]
 	public class InheritanceParentBase : TInheritance
 	{
-		[PrimaryKey]                     public int  InheritanceParentId  { get; set; }
-		[Column(IsDiscriminator = true)] public int? TypeDiscriminator    { get; set; }
+		[PrimaryKey]                     public int  InheritanceParentId { get; set; }
+		[Column(IsDiscriminator = true)] public int? TypeDiscriminator   { get; set; }
 
 		public override bool Equals(object obj)
 		{
@@ -30,9 +27,10 @@ namespace Tests.Model
 			if (ReferenceEquals(this, other))
 				return true;
 
-			return InheritanceParentId == other.InheritanceParentId
-				&& TypeDiscriminator   == other.TypeDiscriminator
-				&& GetType()           == other.GetType();
+			return
+				InheritanceParentId == other.InheritanceParentId &&
+				TypeDiscriminator   == other.TypeDiscriminator   &&
+				GetType()           == other.GetType();
 		}
 
 		public override int GetHashCode()
@@ -91,5 +89,4 @@ namespace Tests.Model
 	{
 		[Column] public string Name { get; set; }
 	}
-
 }

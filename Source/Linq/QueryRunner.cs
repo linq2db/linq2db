@@ -35,10 +35,7 @@ namespace LinqToDB.Linq
 
 			public IQueryRunner QueryRunner;
 
-			public T Map(
-				QueryContext queryContext,
-				IQueryRunner queryRunner,
-				IDataReader  dataReader)
+			public T Map(IQueryRunner queryRunner, IDataReader dataReader)
 			{
 				if (_mapper == null)
 				{
@@ -230,7 +227,7 @@ namespace LinqToDB.Linq
 					{
 						while (dr.Read())
 						{
-							yield return mapper.Map(queryContext, runner, dr);
+							yield return mapper.Map(runner, dr);
 							runner.RowsCount++;
 						}
 					}
@@ -263,7 +260,7 @@ namespace LinqToDB.Linq
 
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps))
 			{
-				Func<IDataReader,T> m = dr => mapper.Map(queryContext, runner, dr);
+				Func<IDataReader,T> m = dr => mapper.Map(runner, dr);
 
 				runner.SkipAction   = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
 				runner.TakeAction   = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;

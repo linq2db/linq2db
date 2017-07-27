@@ -44,7 +44,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		private void TestInternal(string context, Semaphore semaphore)
+		void TestInternal(string context, Semaphore semaphore)
 		{
 			try
 			{
