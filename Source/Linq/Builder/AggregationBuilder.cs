@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (attr != null)
 			{
-				sqlExpression = attr.GetExpression(builder.MappingSchema, methodCall, e =>
+				sqlExpression = attr.GetExpression(builder.MappingSchema, sequence.SelectQuery, methodCall, e =>
 				{
 					var ex = e.Unwrap();
 
