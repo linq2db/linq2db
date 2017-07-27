@@ -6,11 +6,12 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+
 #if !SL4
 using System.Threading.Tasks;
+#endif
 
 // ReSharper disable StaticMemberInGenericType
-#endif
 
 namespace LinqToDB.Linq
 {
@@ -149,8 +150,8 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public          bool            DoNotChache;
-		public          Query<T>        Next;
+		public bool     DoNotChache;
+		public Query<T> Next;
 
 		public Func<QueryContext,IDataContextEx,Expression,object[],object>         GetElement;
 		public Func<QueryContext,IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;

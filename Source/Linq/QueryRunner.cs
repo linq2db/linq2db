@@ -5,7 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+
+#if !SL4
 using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.Linq
 {
