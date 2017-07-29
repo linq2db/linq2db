@@ -152,7 +152,7 @@ namespace LinqToDB.Linq
 			if (_orderedCache.Count != 0)
 				lock (_sync)
 				{
-					if (_orderedCache.Count > 0)
+					if (_orderedCache.Count != 0)
 						_cacheVersion++;
 
 					_orderedCache.Clear();
@@ -243,9 +243,9 @@ namespace LinqToDB.Linq
 						var oldIndex = _orderedCache.IndexOf(query);
 						if (oldIndex > 0)
 						{
-							var first = _orderedCache[0];
-							_orderedCache[0] = query;
-							_orderedCache[oldIndex] = first;
+							var prev = _orderedCache[oldIndex - 1];
+							_orderedCache[oldIndex - 1] = query;
+							_orderedCache[oldIndex] = prev;
 						}
 						else if (oldIndex == -1)
 						{
