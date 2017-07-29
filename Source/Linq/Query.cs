@@ -156,6 +156,7 @@ namespace LinqToDB.Linq
 		public Func<QueryContext,IDataContextEx,Expression,object[],object>         GetElement;
 		public Func<QueryContext,IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
+		public Func<QueryContext,IDataContextEx,Expression,object[],CancellationToken,TaskCreationOptions,Task<object>> GetElementAsync1;
 		public Func<QueryContext,IDataContextEx,Expression,object[],Func<T>,CancellationToken,TaskCreationOptions,Task<T>> GetElementAsync =
 			(context, dataContext, expression, parameters, func, token, options) => AsyncExtensions.GetTask(func, token, options);
 		public Func<ExpressionQuery<T>,QueryContext,IDataContextEx,Expression,object[],Action<T>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync =
@@ -1051,51 +1052,6 @@ namespace LinqToDB.Linq
 			query.SetNonQueryQuery();
 
 			query.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(null), null);
-		}
-
-		#endregion
-
-		#region New Builder Support
-
-		public void SetElementQuery(Func<QueryContext,IDataContext,IDataReader,Expression,object[],object> mapper)
-		{
-			FinalizeQuery();
-
-			if (Queries.Count != 1)
-				throw new InvalidOperationException();
-
-			ClearParameters();
-
-			GetElement = (ctx,db,expr,ps) => RunQuery(ctx, db, expr, ps, mapper);
-		}
-
-		TE RunQuery<TE>(
-			QueryContext ctx,
-			IDataContext dataContext,
-			Expression   expr,
-			object[]     parameters,
-			Func<QueryContext,IDataContext,IDataReader,Expression,object[],TE> mapper)
-		{
-			object query = null;
-
-			try
-			{
-				query = SetCommand(dataContext, expr, parameters, 0, true);
-
-				using (var dr = dataContext.ExecuteReader(query))
-					while (dr.Read())
-						return mapper(ctx, dataContext, dr, expr, parameters);
-
-				return Array<TE>.Empty.First();
-			}
-			finally
-			{
-				if (query != null)
-					dataContext.ReleaseQuery(query);
-
-				if (dataContext.CloseAfterUse)
-					dataContext.Close();
-			}
 		}
 
 		#endregion

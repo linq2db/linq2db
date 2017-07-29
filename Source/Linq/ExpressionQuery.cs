@@ -152,6 +152,14 @@ namespace LinqToDB.Linq
 			return (TResult)GetQuery(expression, false).GetElement(null, (IDataContextEx)DataContext, expression, Parameters);
 		}
 
+		async Task<TResult> IQueryProviderEx.ExecuteAsync<TResult>(Expression expression, CancellationToken token, TaskCreationOptions options)
+		{
+			var value = await GetQuery(expression, false).GetElementAsync1(
+				null, (IDataContextEx)DataContext, expression, Parameters, token, options);
+
+			return DataContext.MappingSchema.ChangeTypeTo<TResult>(value);
+		}
+
 		object IQueryProvider.Execute(Expression expression)
 		{
 			return GetQuery(expression, false).GetElement(null, (IDataContextEx)DataContext, expression, Parameters);

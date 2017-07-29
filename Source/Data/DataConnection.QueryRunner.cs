@@ -136,7 +136,7 @@ namespace LinqToDB.Data
 				readonly Func<int>      _skipAction;
 				readonly Func<int>      _takeAction;
 
-				async Task IDataReaderAsync.QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+				async Task IDataReaderAsync.QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Func<T,bool> action, CancellationToken cancellationToken)
 				{
 					using (var reader = await _dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken))
 					{
@@ -148,9 +148,19 @@ namespace LinqToDB.Data
 						var take = _takeAction == null ? int.MaxValue : _takeAction();
 
 						while (take-- > 0 && await reader.ReadAsync(cancellationToken))
-							action(objectReader(reader));
+							if (!action(objectReader(reader)))
+								return;
 					}
 				}
+
+				/*
+				async Task IDataReaderAsync.QueryElementAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+				{
+					using (var reader = await _dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken))
+						if (await reader.ReadAsync(cancellationToken))
+							action(objectReader(reader));
+				}
+				*/
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)

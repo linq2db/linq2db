@@ -11,7 +11,7 @@ namespace LinqToDB.Linq
 	interface IDataReaderAsync
 	{
 #if !SL4
-		Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken);
+		Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Func<T,bool> action, CancellationToken cancellationToken);
 #endif
 	}
 }

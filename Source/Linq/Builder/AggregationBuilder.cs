@@ -141,7 +141,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = BuildExpression(FieldIndex);
 				var mapper = Builder.BuildMapper<object>(expr);
 
-				query.SetElementQuery(mapper.Compile());
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
 			public override Expression BuildExpression(Expression expression, int level)

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -520,6 +520,15 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					   Parent.Max(p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
 					db.Parent.Max(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
+		}
+
+		[Test, DataContextSource]
+		public async Task SubQueryMax1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					         Parent.Max     (p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
+					await db.Parent.MaxAsync(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
 		}
 
 		[Test, DataContextSource]

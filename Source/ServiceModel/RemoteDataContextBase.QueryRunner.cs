@@ -134,7 +134,7 @@ namespace LinqToDB.ServiceModel
 				readonly Func<int>             _skipAction;
 				readonly Func<int>             _takeAction;
 
-				public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
+				public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Func<T,bool> action, CancellationToken cancellationToken)
 				{
 					_dataContext.ThrowOnDisposed();
 
@@ -156,11 +156,29 @@ namespace LinqToDB.ServiceModel
 								if (cancellationToken.IsCancellationRequested)
 									return;
 								else
-									action(objectReader(reader));
+									if (!action(objectReader(reader)))
+										return;
 						}
 					},
 					cancellationToken);
 				}
+
+				/*
+				async Task IDataReaderAsync.QueryElementAsync<T>(Func<IDataReader,T> objectReader, Func<T,bool> action, CancellationToken cancellationToken)
+				{
+					_dataContext.ThrowOnDisposed();
+
+					await Task.Run(() =>
+					{
+						var result = LinqServiceSerializer.DeserializeResult(_result);
+
+						using (var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result))
+							if (reader.Read())
+								action(objectReader(reader));
+					},
+					cancellationToken);
+				}
+				*/
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)

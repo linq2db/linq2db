@@ -384,10 +384,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<bool>;
+			var provider = source.Provider as IQueryProviderEx;
 
-			if (query != null)
-				return query.GetElementAsync(() => source.All(predicate), token, options);
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<bool>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,Expression<Func<TSource,bool>>,bool>(Queryable.All), source, predicate),
+						arguments: new Expression[2]
+						{
+							source.Expression,
+							Expression.Quote(predicate)
+						}) as Expression,
+					token,
+					options);
+			}
 
 			return GetTask(() => source.All(predicate), token, options);
 		}
