@@ -53,18 +53,24 @@ namespace Tests.UserTests
 			Tuple.Create("MixedAll", new Action<ITestDataContext>[] { Select, Insert, InsertWithIdentity, InsertOrUpdate, Update, Delete, InsertObject, InsertWithIdentityObject, InsertOrUpdateObject, UpdateObject, DeleteObject }),
 		};
 
+		enum CacheMode
+		{
+			CacheEnabled,
+			CacheDisabled,
+			ClearCache,
+			NoCacheScope
+		}
+
 		[AttributeUsage(AttributeTargets.Method)]
 		class Issue278TestSourceAttribute : IncludeDataContextSourceAttribute
 		{
-			private readonly bool _withCache;
-			private readonly bool _withClear;
+			private readonly CacheMode _mode;
 
-			public Issue278TestSourceAttribute(bool withCache, bool withClear)
+			public Issue278TestSourceAttribute(CacheMode mode)
 				: base(TestProvName.NoopProvider)
 			{
 				// test using noop test provider to be not affected by provider side-effects
-				_withCache = withCache;
-				_withClear = withClear;
+				_mode = mode;
 			}
 
 			protected override IEnumerable<Tuple<object[], string>> GetParameters(string provider)
@@ -73,14 +79,14 @@ namespace Tests.UserTests
 				{
 					foreach (var set in ActionSets)
 					{
-						var baseName = string.Format("TestPerformance.set={0}.threads={1:00}.cache={2}.clear={3}", set.Item1, cnt, _withCache ? 1 : 0, _withClear ? 1 : 0);
+						var baseName = string.Format("TestPerformance.set={0}.threads={1:00}.cache={2}", set.Item1, cnt, _mode);
 						yield return Tuple.Create(new object[] { provider, cnt, set.Item2, baseName }, baseName);
 					}
 				}
 			}
 		}
 
-		[Issue278TestSource(true, false)]
+		[Issue278TestSource(CacheMode.CacheEnabled)]
 		public void TestPerformanceWithCache(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
@@ -89,7 +95,7 @@ namespace Tests.UserTests
 			{
 				Configuration.Linq.DisableQueryCache = false;
 
-				TestIt(context, caseName, threadCount, actions, false);
+				TestIt(context, caseName, threadCount, actions, CacheMode.CacheEnabled);
 			}
 			finally
 			{
@@ -97,7 +103,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Issue278TestSource(false, false)]
+		[Issue278TestSource(CacheMode.CacheDisabled)]
 		public void TestPerformanceWithoutCache(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
@@ -106,7 +112,7 @@ namespace Tests.UserTests
 			{
 				Configuration.Linq.DisableQueryCache = true;
 
-				TestIt(context, caseName, threadCount, actions, false);
+				TestIt(context, caseName, threadCount, actions, CacheMode.CacheDisabled);
 			}
 			finally
 			{
@@ -114,7 +120,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Issue278TestSource(true, true)]
+		[Issue278TestSource(CacheMode.ClearCache)]
 		public void TestPerformanceWithCacheClear(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
 			var oldValue = Configuration.Linq.DisableQueryCache;
@@ -123,7 +129,24 @@ namespace Tests.UserTests
 			{
 				Configuration.Linq.DisableQueryCache = false;
 
-				TestIt(context, caseName, threadCount, actions, true);
+				TestIt(context, caseName, threadCount, actions, CacheMode.ClearCache);
+			}
+			finally
+			{
+				Configuration.Linq.DisableQueryCache = oldValue;
+			}
+		}
+
+		[Issue278TestSource(CacheMode.NoCacheScope)]
+		public void TestPerformanceWithNoCacheScope(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
+		{
+			var oldValue = Configuration.Linq.DisableQueryCache;
+
+			try
+			{
+				Configuration.Linq.DisableQueryCache = false;
+
+				TestIt(context, caseName, threadCount, actions, CacheMode.NoCacheScope);
 			}
 			finally
 			{
@@ -162,7 +185,7 @@ namespace Tests.UserTests
 			{
 				Configuration.Linq.DisableQueryCache = false;
 
-				TestIt(context, "TestQueryCacheOverflow", 10, actions, false);
+				TestIt(context, "TestQueryCacheOverflow", 10, actions, CacheMode.CacheEnabled);
 			}
 			finally
 			{
@@ -201,7 +224,7 @@ namespace Tests.UserTests
 			{
 				Configuration.Linq.DisableQueryCache = false;
 
-				TestIt(context, "TestQueryCacheOverflow", 10, actions, false);
+				TestIt(context, "TestQueryCacheOverflow", 10, actions, CacheMode.CacheEnabled);
 			}
 			finally
 			{
@@ -209,7 +232,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		private void TestIt(string context, string caseName, int threadCount, Action<ITestDataContext>[] actions, bool clear)
+		private void TestIt(string context, string caseName, int threadCount, Action<ITestDataContext>[] actions, CacheMode mode)
 		{
 #if !NETSTANDARD
 			int workerThreads;
@@ -230,10 +253,14 @@ namespace Tests.UserTests
 					using (var db = GetDataContext(context))
 						for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
 						{
-							if (clear)
+							if (mode == CacheMode.ClearCache)
 								Query<LinqDataTypes2>.ClearCache();
 
-							actions[rnd.Next() % actions.Length](db);
+							if (mode == CacheMode.NoCacheScope && (rnd.Next() % 2 == 0))
+								using (NoLinqCache.Scope())
+									actions[rnd.Next() % actions.Length](db);
+							else
+								actions[rnd.Next() % actions.Length](db);
 						}
 				});
 

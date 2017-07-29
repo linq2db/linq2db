@@ -90,6 +90,9 @@ namespace LinqToDB.Linq
 		{
 			// IT : # check
 			GetIEnumerable = MakeEnumerable;
+#if !SILVERLIGHT
+			DoNotCache     = NoLinqCache.IsNoCache;
+#endif
 		}
 
 		public override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)

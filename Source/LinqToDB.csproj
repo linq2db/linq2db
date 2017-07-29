@@ -72,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="AsyncLocal.cs" />
     <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Configuration\IConnectionStringSettings.cs" />
     <Compile Include="Configuration\IDataProviderSettings.cs" />
@@ -198,6 +199,7 @@
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
     <Compile Include="Linq\MethodHelper.cs" />
+    <Compile Include="Linq\NoLinqCache.cs" />
     <Compile Include="Mapping\Relationship.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Expressions\IGenericInfoProvider.cs" />
