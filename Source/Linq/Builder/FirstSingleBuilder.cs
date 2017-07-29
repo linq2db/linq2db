@@ -7,6 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlQuery;
+	using Common;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -99,11 +100,103 @@ namespace LinqToDB.Linq.Builder
 
 				switch (_methodCall.Method.Name)
 				{
-					case "First"           : query.GetElement = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).First();           break;
-					case "FirstOrDefault"  : query.GetElement = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).FirstOrDefault();  break;
-					case "Single"          : query.GetElement = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).Single();          break;
-					case "SingleOrDefault" : query.GetElement = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).SingleOrDefault(); break;
+					case "First"           : GetFirstElement          (query); break;
+					case "FirstOrDefault"  : GetFirstOrDefaultElement (query); break;
+					case "Single"          : GetSingleElement         (query); break;
+					case "SingleOrDefault" : GetSingleOrDefaultElement(query); break;
 				}
+			}
+
+			static void GetFirstElement<T>(Query<T> query)
+			{
+				query.GetElement      = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).First();
+
+#if !NOASYNC
+
+				query.GetElementAsync = async (ctx, db, expr, ps, token, options) =>
+				{
+					var count = 0;
+					var obj   = default(T);
+
+					await query.GetForEachAsync(ctx, db, expr, ps,
+						r => { obj = r; count++; return false; }, token, options);
+
+					return count > 0 ? obj : Array<T>.Empty.First();
+				};
+
+#endif
+			}
+
+			static void GetFirstOrDefaultElement<T>(Query<T> query)
+			{
+				query.GetElement      = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).FirstOrDefault();
+
+#if !NOASYNC
+
+				query.GetElementAsync = async (ctx, db, expr, ps, token, options) =>
+				{
+					var count = 0;
+					var obj   = default(T);
+
+					await query.GetForEachAsync(ctx, db, expr, ps,
+						r => { obj = r; count++; return false; }, token, options);
+
+					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
+				};
+
+#endif
+			}
+
+			static void GetSingleElement<T>(Query<T> query)
+			{
+				query.GetElement      = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).Single();
+
+#if !NOASYNC
+
+				query.GetElementAsync = async (ctx, db, expr, ps, token, options) =>
+				{
+					var count = 0;
+					var obj   = default(T);
+
+					await query.GetForEachAsync(ctx, db, expr, ps,
+						r =>
+						{
+							if (count == 0)
+								obj = r;
+							count++;
+							return count == 1;
+						}, token, options);
+
+					return count == 1 ? obj : new T[count].Single();
+				};
+
+#endif
+			}
+
+			static void GetSingleOrDefaultElement<T>(Query<T> query)
+			{
+				query.GetElement      = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).SingleOrDefault();
+
+#if !NOASYNC
+
+				query.GetElementAsync = async (ctx, db, expr, ps, token, options) =>
+				{
+					var count = 0;
+					var obj   = default(T);
+
+					await query.GetForEachAsync(ctx, db, expr, ps,
+						r =>
+						{
+							if (count == 0)
+								obj = r;
+							count++;
+							return count == 1;
+						}, token, options);
+
+					return count == 1 ? obj : new T[count].SingleOrDefault();
+				};
+
+#endif
 			}
 
 			static object SequenceException()

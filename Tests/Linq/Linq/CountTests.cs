@@ -23,12 +23,30 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public async Task Count1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					         Parent.Count(),
+					await db.Parent.CountAsync());
+		}
+
+		[Test, DataContextSource]
 		public void Count2(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
 					   Parent.Count(p => p.ParentID > 2),
 					db.Parent.Count(p => p.ParentID > 2));
+		}
+
+		[Test, DataContextSource]
+		public async Task Count2Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					         Parent.Count     (p => p.ParentID > 2),
+					await db.Parent.CountAsync(p => p.ParentID > 2));
 		}
 
 		[Test, DataContextSource]

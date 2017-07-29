@@ -139,6 +139,7 @@
     <Compile Include="ITableT.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="LinqToDBException.cs" />
+    <Compile Include="Linq\IQueryProviderAsync.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />
     <Compile Include="Linq\Builder\AllAnyBuilder.cs" />
     <Compile Include="Linq\Builder\ContextParser.cs" />

@@ -156,18 +156,8 @@ namespace LinqToDB.Linq
 		public Func<QueryContext,IDataContextEx,Expression,object[],object>         GetElement;
 		public Func<QueryContext,IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
-		public Func<QueryContext,IDataContextEx,Expression,object[],CancellationToken,TaskCreationOptions,Task<object>> GetElementAsync1;
-		public Func<QueryContext,IDataContextEx,Expression,object[],Func<T>,CancellationToken,TaskCreationOptions,Task<T>> GetElementAsync =
-			(context, dataContext, expression, parameters, func, token, options) => AsyncExtensions.GetTask(func, token, options);
-		public Func<ExpressionQuery<T>,QueryContext,IDataContextEx,Expression,object[],Action<T>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync =
-			(query, context, dataContext, expression, parameters, action, token, options) =>
-		{
-			return AsyncExtensions.GetActionTask(() =>
-			{
-				foreach (var item in query)
-					action(item);
-			}, token, options);
-		};
+		public Func<QueryContext,IDataContextEx,Expression,object[],CancellationToken,TaskCreationOptions,Task<object>> GetElementAsync;
+		public Func<QueryContext,IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync;
 #endif
 
 		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContextEx dc, Expression expr, object[] ps)

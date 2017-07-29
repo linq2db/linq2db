@@ -179,6 +179,7 @@
     <Compile Include="Linq\QueryRunner.cs" />
     <Compile Include="Linq\QueryRunnerBase.cs" />
     <Compile Include="Linq\IDataReaderAsync.cs" />
+    <Compile Include="Linq\IQueryProviderAsync.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="LinqToDBException.cs" />

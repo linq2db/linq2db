@@ -32,10 +32,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.First, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.First), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.First, token, options);
 		}
@@ -64,10 +76,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.First(predicate), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, TSource>(Queryable.First), source, predicate),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.First(predicate), token, options);
 		}
@@ -96,10 +120,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.FirstOrDefault, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.FirstOrDefault), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.FirstOrDefault, token, options);
 		}
@@ -128,10 +164,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.FirstOrDefault(predicate), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, TSource>(Queryable.FirstOrDefault), source, predicate),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.FirstOrDefault(predicate), token, options);
 		}
@@ -160,10 +208,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Single, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.Single), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Single, token, options);
 		}
@@ -192,10 +252,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Single(predicate), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, TSource>(Queryable.Single), source, predicate),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Single(predicate), token, options);
 		}
@@ -224,10 +296,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.SingleOrDefault, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.SingleOrDefault), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.SingleOrDefault, token, options);
 		}
@@ -256,10 +340,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.SingleOrDefault(predicate), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, TSource>(Queryable.SingleOrDefault), source, predicate),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.SingleOrDefault(predicate), token, options);
 		}
@@ -288,10 +384,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<bool>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Contains(item), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<bool>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource, bool>(Queryable.Contains), source, item),
+						arguments: new Expression[2] { source.Expression, (Expression)Expression.Constant((object)item, typeof (TSource)) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Contains(item), token, options);
 		}
@@ -320,10 +428,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<bool>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Any, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<bool>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, bool>(Queryable.Any), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Any, token, options);
 		}
@@ -352,10 +472,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<bool>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Any(predicate), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<bool>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, bool>(Queryable.Any), source, predicate),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Any(predicate), token, options);
 		}
@@ -384,22 +516,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var provider = source.Provider as IQueryProviderEx;
+#if !NOASYNC
+
+			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
 			{
 				return provider.ExecuteAsync<bool>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,Expression<Func<TSource,bool>>,bool>(Queryable.All), source, predicate),
-						arguments: new Expression[2]
-						{
-							source.Expression,
-							Expression.Quote(predicate)
-						}) as Expression,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, bool>(Queryable.All), source, predicate),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
 					token,
 					options);
 			}
+
+#endif
 
 			return GetTask(() => source.All(predicate), token, options);
 		}
@@ -428,10 +560,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<int>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Count, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<int>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, int>(Queryable.Count), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Count, token, options);
 		}
@@ -460,10 +604,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<int>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Count(predicate), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<int>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, int>(Queryable.Count), source, predicate),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Count(predicate), token, options);
 		}
@@ -492,10 +648,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<long>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.LongCount, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<long>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, long>(Queryable.LongCount), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.LongCount, token, options);
 		}
@@ -524,10 +692,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<long>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.LongCount(predicate), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<long>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, long>(Queryable.LongCount), source, predicate),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.LongCount(predicate), token, options);
 		}
@@ -556,10 +736,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Min, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.Min), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Min, token, options);
 		}
@@ -588,10 +780,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TResult>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Min(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TResult>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>, TResult>(Queryable.Min), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Min(selector), token, options);
 		}
@@ -620,10 +824,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TSource>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Max, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.Max), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Max, token, options);
 		}
@@ -652,10 +868,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<TResult>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Max(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<TResult>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>, TResult>(Queryable.Max), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Max(selector), token, options);
 		}
@@ -684,10 +912,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<int>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<int>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<int>, int>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -716,10 +956,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<int?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<int?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<int?>, int?>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -748,10 +1000,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<long>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<long>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<long>, long>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -780,10 +1044,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<long?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<long?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<long?>, long?>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -812,10 +1088,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<float>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<float>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<float>, float>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -844,10 +1132,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<float?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<float?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<float?>, float?>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -876,10 +1176,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<double>, double>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -908,10 +1220,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<double?>, double?>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -940,10 +1264,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<decimal>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<decimal>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal>, decimal>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -972,10 +1308,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<decimal?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Sum, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<decimal?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal?>, decimal?>(Queryable.Sum), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Sum, token, options);
 		}
@@ -1004,10 +1352,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<int>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<int>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int>>, int>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1036,10 +1396,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<int?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<int?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int?>>, int?>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1068,10 +1440,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<long>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<long>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long>>, long>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1100,10 +1484,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<long?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<long?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long?>>, long?>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1132,10 +1528,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<float>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<float>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float>>, float>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1164,10 +1572,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<float?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<float?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float?>>, float?>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1196,10 +1616,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double>>, double>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1228,10 +1660,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double?>>, double?>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1260,10 +1704,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<decimal>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<decimal>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal>>, decimal>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1292,10 +1748,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<decimal?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Sum(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<decimal?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal?>>, decimal?>(Queryable.Sum), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Sum(selector), token, options);
 		}
@@ -1324,10 +1792,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<int>, double>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1356,10 +1836,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<int?>, double?>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1388,10 +1880,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<long>, double>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1420,10 +1924,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<long?>, double?>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1452,10 +1968,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<float>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<float>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<float>, float>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1484,10 +2012,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<float?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<float?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<float?>, float?>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1516,10 +2056,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<double>, double>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1548,10 +2100,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<double?>, double?>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1580,10 +2144,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<decimal>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<decimal>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal>, decimal>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1612,10 +2188,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<decimal?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(source.Average, token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<decimal?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal?>, decimal?>(Queryable.Average), source),
+						arguments: new Expression[1] { source.Expression }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(source.Average, token, options);
 		}
@@ -1644,10 +2232,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int>>, double>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}
@@ -1676,10 +2276,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int?>>, double?>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}
@@ -1708,10 +2320,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long>>, double>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}
@@ -1740,10 +2364,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long?>>, double?>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}
@@ -1772,10 +2408,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<float>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<float>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float>>, float>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}
@@ -1804,10 +2452,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<float?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<float?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float?>>, float?>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}
@@ -1836,10 +2496,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double>>, double>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}
@@ -1868,10 +2540,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<double?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<double?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double?>>, double?>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}
@@ -1900,10 +2584,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<decimal>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<decimal>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal>>, decimal>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}
@@ -1932,10 +2628,22 @@ namespace LinqToDB
 			CancellationToken   token,
 			TaskCreationOptions options)
 		{
-			var query = source as ExpressionQuery<decimal?>;
+#if !NOASYNC
 
-			if (query != null)
-				return query.GetElementAsync(() => source.Average(selector), token, options);
+			var provider = source.Provider as IQueryProviderAsync;
+
+			if (provider != null)
+			{
+				return provider.ExecuteAsync<decimal?>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal?>>, decimal?>(Queryable.Average), source, selector),
+						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
+					token,
+					options);
+			}
+
+#endif
 
 			return GetTask(() => source.Average(selector), token, options);
 		}

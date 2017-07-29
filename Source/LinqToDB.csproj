@@ -206,7 +206,7 @@
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\IDataReaderAsync.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
-    <Compile Include="Linq\IQueryProviderEx.cs" />
+    <Compile Include="Linq\IQueryProviderAsync.cs" />
     <Compile Include="Linq\IQueryRunner.cs" />
     <Compile Include="Linq\QueryRunner.cs" />
     <Compile Include="Linq\QueryRunnerBase.cs" />

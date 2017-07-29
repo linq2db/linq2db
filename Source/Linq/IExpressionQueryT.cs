@@ -8,7 +8,7 @@ namespace LinqToDB.Linq
 #if !SL4
 		out
 #endif
-		T> : IOrderedQueryable<T>, IQueryProviderEx, IExpressionQuery
+		T> : IOrderedQueryable<T>, IQueryProviderAsync, IExpressionQuery
 	{
 		new Expression Expression { get; set; }
 	}

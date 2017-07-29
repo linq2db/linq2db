@@ -6,9 +6,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+
 #if !SL4
 using System.Threading.Tasks;
 #endif
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
@@ -85,16 +87,21 @@ namespace LinqToDB.Linq
 			return info;
 		}
 
-#if !SL4
+#if !SL4 && !NOASYNC
 
-		public Task<T> GetElementAsync(Func<T> func, CancellationToken cancellationToken, TaskCreationOptions options)
+		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token, TaskCreationOptions options)
 		{
-			return GetQuery(Expression, true).GetElementAsync(null, (IDataContextEx)DataContext, Expression, Parameters, func, cancellationToken, options);
+			var value = await GetQuery(expression, false).GetElementAsync(
+				null, (IDataContextEx)DataContext, expression, Parameters, token, options);
+
+			return (TResult)value;
+			//return DataContext.MappingSchema.ChangeTypeTo<TResult>(value);
 		}
 
 		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken, TaskCreationOptions options)
 		{
-			return GetQuery(Expression, true).GetForEachAsync(this, null, (IDataContextEx)DataContext, Expression, Parameters, action, cancellationToken, options);
+			return GetQuery(Expression, true)
+				.GetForEachAsync(null, (IDataContextEx)DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken, options);
 		}
 
 #endif
@@ -150,14 +157,6 @@ namespace LinqToDB.Linq
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
 			return (TResult)GetQuery(expression, false).GetElement(null, (IDataContextEx)DataContext, expression, Parameters);
-		}
-
-		async Task<TResult> IQueryProviderEx.ExecuteAsync<TResult>(Expression expression, CancellationToken token, TaskCreationOptions options)
-		{
-			var value = await GetQuery(expression, false).GetElementAsync1(
-				null, (IDataContextEx)DataContext, expression, Parameters, token, options);
-
-			return DataContext.MappingSchema.ChangeTypeTo<TResult>(value);
 		}
 
 		object IQueryProvider.Execute(Expression expression)

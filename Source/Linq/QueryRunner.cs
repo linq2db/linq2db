@@ -250,7 +250,7 @@ namespace LinqToDB.Linq
 			Expression                    expression,
 			object[]                      ps,
 			int                           queryNumber,
-			Action<T>                     action,
+			Func<T,bool>                  func,
 			Func<Expression,object[],int> skipAction,
 			Func<Expression,object[],int> takeAction,
 			CancellationToken             cancellationToken,
@@ -273,7 +273,12 @@ namespace LinqToDB.Linq
 					mapper.QueryRunner = runner;
 
 					var dr = await runner.ExecuteReaderAsync(cancellationToken, options);
-					await dr.QueryForEachAsync(m, r => { action(r); runner.RowsCount++; return true; }, cancellationToken);
+					await dr.QueryForEachAsync(m, r =>
+					{
+						var b = func(r);
+						runner.RowsCount++;
+						return b;
+					}, cancellationToken);
 				}
 				finally
 				{
@@ -302,7 +307,7 @@ namespace LinqToDB.Linq
 			var skipAction = executeQuery.Item2;
 			var takeAction = executeQuery.Item3;
 
-			query.GetForEachAsync = (expressionQuery, ctx, db, expr, ps, action, token, options) =>
+			query.GetForEachAsync = (ctx, db, expr, ps, action, token, options) =>
 				ExecuteQueryAsync(query, ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token, options);
 
 #endif
@@ -385,9 +390,7 @@ namespace LinqToDB.Linq
 			query.GetElement = (ctx, db, expr, ps) => ExecuteElement(query, ctx, db, mapper, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, func, token, options) =>
-				ExecuteElementAsync<T>(query, ctx, db, mapper, expr, ps, token, options);
-			query.GetElementAsync1 = (ctx, db, expr, ps, token, options) =>
+			query.GetElementAsync = (ctx, db, expr, ps, token, options) =>
 				ExecuteElementAsync<object>(query, ctx, db, mapper, expr, ps, token, options);
 #endif
 		}
@@ -459,7 +462,7 @@ namespace LinqToDB.Linq
 
 					var dr = await runner.ExecuteReaderAsync(cancellationToken, options);
 
-					T item = default(T);
+					var item = default(T);
 					var read = false;
 
 					await dr.QueryForEachAsync(

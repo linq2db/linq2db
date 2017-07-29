@@ -85,9 +85,13 @@ namespace LinqToDB
 		public static Task ForEachAsync<TSource>(
 			this IQueryable<TSource> source, Action<TSource> action, CancellationToken token, TaskCreationOptions options)
 		{
+#if !NOASYNC
+
 			var query = source as ExpressionQuery<TSource>;
 			if (query != null)
 				return query.GetForEachAsync(action, token, options);
+
+#endif
 
 			return GetActionTask(() =>
 			{
@@ -102,7 +106,7 @@ namespace LinqToDB
 			options);
 		}
 
-		#endregion
+#endregion
 
 #if !NOASYNC
 
@@ -126,6 +130,8 @@ namespace LinqToDB
 		public static async Task<List<TSource>> ToListAsync<TSource>(
 			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
 		{
+#if !NOASYNC
+
 			var query = source as ExpressionQuery<TSource>;
 
 			if (query != null)
@@ -134,6 +140,8 @@ namespace LinqToDB
 				await query.GetForEachAsync(list.Add, token, options);
 				return list;
 			}
+
+#endif
 
 			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(),
@@ -163,13 +171,18 @@ namespace LinqToDB
 		public static async Task<TSource[]> ToArrayAsync<TSource>(
 			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
 		{
+#if !NOASYNC
+
 			var query = source as ExpressionQuery<TSource>;
+
 			if (query != null)
 			{
 				var list = new List<TSource>();
 				await query.GetForEachAsync(list.Add, token, options);
 				return list.ToArray();
 			}
+
+#endif
 
 			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
@@ -210,6 +223,8 @@ namespace LinqToDB
 			CancellationToken        token,
 			TaskCreationOptions      options)
 		{
+#if !NOASYNC
+
 			var query = source as ExpressionQuery<TSource>;
 
 			if (query != null)
@@ -218,6 +233,8 @@ namespace LinqToDB
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token, options);
 				return dic;
 			}
+
+#endif
 
 			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
