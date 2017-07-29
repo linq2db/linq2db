@@ -90,7 +90,7 @@ namespace LinqToDB.Linq
 		{
 			// IT : # check
 			GetIEnumerable = MakeEnumerable;
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !WINSTORE
 			DoNotCache     = NoLinqCache.IsNoCache;
 #endif
 		}

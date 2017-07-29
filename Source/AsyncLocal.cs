@@ -22,9 +22,8 @@
 
 namespace System.Threading
 {
-#if FW4
+#if !NETSTANDARD
 	using System.Security;
-	using System.Threading;
 	using System.Runtime.Remoting.Messaging;
 
 	internal sealed class AsyncLocal<T>
