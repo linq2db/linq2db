@@ -297,7 +297,9 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
-			if (call.IsQueryable())
+			var isAggregate = call.IsAggregate(MappingSchema);
+
+			if (isAggregate || call.IsQueryable())
 			{
 				var info = new BuildInfo(context, call, new SelectQuery { ParentSelect = context.SelectQuery });
 
@@ -306,7 +308,7 @@ namespace LinqToDB.Linq.Builder
 
 				var arg = call.Arguments[0];
 
-				if (AggregationBuilder.MethodNames.Contains(call.Method.Name))
+				if (isAggregate)
 					while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression)arg).Method.Name == "Select")
 						arg = ((MethodCallExpression)arg).Arguments[0];
 
@@ -870,13 +872,13 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Call        :
 					{
 						var e = (MethodCallExpression)expression;
-
-						if (e.IsQueryable() && !ContainsBuilder.IsConstant(e))
+						var isAggregation = e.IsAggregate(MappingSchema);
+						if ((isAggregation || e.IsQueryable()) && !ContainsBuilder.IsConstant(e))
 						{
 							if (IsSubQuery(context, e))
 								return SubQueryToSql(context, e);
 
-							if (CountBuilder.MethodNames.Concat(AggregationBuilder.MethodNames).Contains(e.Method.Name))
+							if (isAggregation || CountBuilder.MethodNames.Contains(e.Method.Name))
 							{
 								var ctx = GetContext(context, expression);
 
@@ -1056,8 +1058,12 @@ namespace LinqToDB.Linq.Builder
 
 						if (e.Method.DeclaringType == typeof(Enumerable))
 						{
-							if (CountBuilder.MethodNames.Concat(AggregationBuilder.MethodNames).Contains(e.Method.Name))
+							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
 								result = IsQueryMember(e.Arguments[0]);
+						}
+						else if (e.IsAggregate(MappingSchema))
+						{
+							result = true;
 						}
 						else if (e.Method.DeclaringType == typeof(Queryable))
 						{
@@ -2702,7 +2708,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext GetContext([JetBrains.Annotations.NotNull] IBuildContext current, Expression expression)
 		{
-			var root = expression.GetRootObject();
+			var root = expression.GetRootObject(MappingSchema);
 
 			for (; current != null; current = current.Parent)
 				if (current.IsExpression(root, 0, RequestFor.Root).Result)

@@ -166,7 +166,7 @@ namespace LinqToDB
 			readonly Dictionary<string, List<SqlExtensionParam>> _namedParameters;
 			public int ChainPrecedence { get; set; }
 
-			public SqlExtension(Type systemType, string expr, int precedence, int chainPrecedence, params SqlExtensionParam[] parameters)
+			public SqlExtension(Type systemType, string expr, int precedence, int chainPrecedence, bool isAggregate, params SqlExtensionParam[] parameters)
 			{
 				if (parameters == null) throw new ArgumentNullException("parameters");
 
@@ -177,18 +177,19 @@ namespace LinqToDB
 				Expr             = expr;
 				Precedence       = precedence;
 				ChainPrecedence  = chainPrecedence;
+				IsAggregate      = isAggregate;
 				_namedParameters = parameters.ToLookup(p => p.Name).ToDictionary(p => p.Key, p => p.ToList());
 			}
 
 			public SqlExtension(string expr, params SqlExtensionParam[] parameters)
-				: this(null, expr, SqlQuery.Precedence.Unknown, 0, parameters)
+				: this(null, expr, SqlQuery.Precedence.Unknown, 0, false, parameters)
 			{
 			}
 			 
-			public Type     SystemType { get; set; }
-			public string   Expr       { get; set; }
-			public int      Precedence { get; set; }
-			public SqlFlags SqlFlags   { get; set; }
+			public Type   SystemType  { get; set; }
+			public string Expr        { get; set; }
+			public int    Precedence  { get; set; }
+			public bool   IsAggregate { get; set; }
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
 			{
@@ -349,7 +350,7 @@ namespace LinqToDB
 
 				public ISqlExpression ConvertToSqlExpression(int precedence)
 				{
-					return BuildSqlExpression(Extension, Extension.SystemType, precedence, Extension.SqlFlags);
+					return BuildSqlExpression(Extension, Extension.SystemType, precedence, Extension.IsAggregate);
 				}
 
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
@@ -363,7 +364,6 @@ namespace LinqToDB
 
 			public Type      BuilderType     { get; set; }
 			public int       ChainPrecedence { get; set; }
-			public SqlFlags  SqlFlags    { get; set; }
 
 			public ExtensionAttribute(string expression): this(string.Empty, expression)
 			{
@@ -371,7 +371,6 @@ namespace LinqToDB
 
 			public ExtensionAttribute(string configuration, string expression) : base(configuration, expression)
 			{
-				SqlFlags         = SqlFlags.None;
 				ExpectExpression = true;
 				ServerSideOnly   = true;
 				PreferServerSide = true;
@@ -423,6 +422,12 @@ namespace LinqToDB
 									current = call.Object;
 
 								break;
+							}
+						case ExpressionType.Constant:
+						case ExpressionType.Parameter:
+							{
+								current = null;
+								continue;
 							}
 						default:
 							throw new InvalidOperationException(string.Format("Invalid method chain for Extension ({0}) -> {1}", expr, current));
@@ -509,10 +514,7 @@ namespace LinqToDB
 				else if (member is PropertyInfo)
 					type = ((PropertyInfo)member).PropertyType;
 
-				var extension = new SqlExtension(type, Expression, Precedence, ChainPrecedence)
-				{
-					SqlFlags = SqlFlags
-				};
+				var extension = new SqlExtension(type, Expression, Precedence, ChainPrecedence, IsAggregate);
 
 				SqlExtensionParam result = null;
 
@@ -543,16 +545,6 @@ namespace LinqToDB
 									extension.AddParameter(name, sqlExpr);
 								}
 							}
-						}
-						else
-						{
-							//TODO: support of aggreagate functions
-//							if (typeof(IEnumerable<>).IsSameOrParentOf(param.ParameterType))
-//							{
-//								var zz = convertHelper.Convert(arg);
-//								convertHelper.AddTypeMapping(param.ParameterType.GetGenericArguments().First(), arg);
-//								var generic = param.ParameterType.GetGenericArguments().First();
-//							}
 						}
 					}
 				}
@@ -589,7 +581,6 @@ namespace LinqToDB
 			protected class ConvertHelper
 			{
 				readonly Func<Expression, ISqlExpression> _converter;
-				readonly Dictionary<Type, Expression>     _typeMapping = new Dictionary<Type, Expression>();
 
 				public ConvertHelper([NotNull] Func<Expression, ISqlExpression> converter)
 				{
@@ -599,48 +590,11 @@ namespace LinqToDB
 
 				public ISqlExpression Convert(Expression exp)
 				{
-					var current = exp.Unwrap();
-					if (current.NodeType == ExpressionType.Lambda)
-					{
-						var toReplace = new Dictionary<Expression, Expression>();
-						current.Visit(e =>
-							{
-								var param = e as ParameterExpression;
-								if (param != null)
-								{
-									Expression value;
-									if (_typeMapping.TryGetValue(param.Type, out value))
-									{
-										toReplace[param] = value;
-									}
-								}
-							}
-						);
-
-						if (toReplace.Count > 0)
-						{
-							current = ((LambdaExpression) current).Body.Transform(e =>
-							{
-								Expression value;
-								if (toReplace.TryGetValue(e, out value))
-									return value;
-								return e;
-							});
-						}
-
-						//TODO: Aggregate functions support
-//						current = ((LambdaExpression) current).Body;
-					}
-					return _converter(current);
-				}
-
-				public void AddTypeMapping(Type type, Expression expr)
-				{
-					_typeMapping[type] = expr;	
+					return _converter(exp);
 				}
 			}
 
-			public static SqlExpression BuildSqlExpression(SqlExtension root, Type systemType, int precedence, SqlFlags sqlFlags)
+			public static SqlExpression BuildSqlExpression(SqlExtension root, Type systemType, int precedence, bool isAggregate)
 			{
 				var sb             = new StringBuilder();
 				var resolvedParams = new Dictionary<SqlExtensionParam, string>();
@@ -704,7 +658,7 @@ namespace LinqToDB
 				};
 
 				var expr          = ResolveExpressionValues(root.Expr, valueProvider);
-				var sqlExpression = new SqlExpression(systemType, expr, precedence, sqlFlags, newParams.ToArray());
+				var sqlExpression = new SqlExpression(systemType, expr, precedence, isAggregate, newParams.ToArray());
 
 				return sqlExpression;
 			}
@@ -746,8 +700,8 @@ namespace LinqToDB
 
 				mainExtension.SystemType = type ?? expression.Type;
 
-				// aggregating flags 
-				var sqlFlags = ordered.Select(c => c.Extension.SqlFlags).Aggregate((a, b) => a | b);
+				// calculating that extension is aggregate
+				var isAggregate = ordered.Any(c => c.Extension.IsAggregate);
 
 				// add parameters in reverse order
 				for (int i = chain.Count - 1; i >= 0; i--)
@@ -759,7 +713,7 @@ namespace LinqToDB
 				}
 
 				//TODO: Precedence calculation
-				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType, mainExtension.Precedence, sqlFlags);
+				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType, mainExtension.Precedence, isAggregate);
 
 				return res;
 			}
