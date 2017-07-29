@@ -1,11 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Running;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Benchmarks
+namespace Tests.Benchmarks
 {
 	// TODO: move to benchmarks project after benchmarks project PR merged
 	/// <summary>
