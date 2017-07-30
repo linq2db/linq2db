@@ -243,6 +243,7 @@
     <Compile Include="Linq\IValueInsertable.cs" />
     <Compile Include="Linq\LinqException.cs" />
     <Compile Include="Linq\MemberInfoComparer.cs" />
+    <Compile Include="Linq\MethodHelper.cs" />
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="Linq\QueryContext.cs" />
@@ -329,7 +330,6 @@
     <Compile Include="SqlQuery\QueryVisitor.cs" />
     <Compile Include="SqlQuery\SelectQuery.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
-    <Compile Include="SqlQuery\SqlFlags.cs" />
     <Compile Include="SqlQuery\SqlBinaryExpression.cs" />
     <Compile Include="SqlQuery\SqlDataType.cs" />
     <Compile Include="SqlQuery\SqlException.cs" />

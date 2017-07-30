@@ -777,7 +777,7 @@ namespace LinqToDB.Linq.Builder
 							var isTable =
 								table       != null &&
 								table.Field == null &&
-								(expression == null || expression.GetLevelExpression(table.Level) == expression);
+								(expression == null || expression.GetLevelExpression(Builder.MappingSchema, table.Level) == expression);
 
 							return new IsExpressionResult(isTable, isTable ? table.Table : null);
 						}
@@ -787,7 +787,7 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null)
 								return IsExpressionResult.False;
 
-							var levelExpression = expression.GetLevelExpression(level);
+							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 							switch (levelExpression.NodeType)
 							{
@@ -811,7 +811,7 @@ namespace LinqToDB.Linq.Builder
 									table       != null &&
 									table.Table is AssociatedTableContext &&
 									table.Field == null &&
-									(expression == null || expression.GetLevelExpression(table.Level) == expression);
+									(expression == null || expression.GetLevelExpression(Builder.MappingSchema, table.Level) == expression);
 
 								return new IsExpressionResult(isat, isat ? table.Table : null);
 							}
@@ -941,7 +941,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (EntityDescriptor.Associations.Count > 0)
 				{
-					var levelExpression = expression.GetLevelExpression(level);
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 					if (buildInfo != null && buildInfo.IsSubQuery)
 					{
@@ -1090,7 +1090,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var levelExpression = expression.GetLevelExpression(level);
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -1203,7 +1203,7 @@ namespace LinqToDB.Linq.Builder
 				if (expression == null)
 					return new TableLevel { Table = this };
 
-				var levelExpression = expression.GetLevelExpression(level);
+				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 				TableLevel result = null;
 
@@ -1231,7 +1231,7 @@ namespace LinqToDB.Linq.Builder
 			TableLevel GetAssociation(Expression expression, int level)
 			{
 				var objectMapper    = EntityDescriptor;
-				var levelExpression = expression.GetLevelExpression(level);
+				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 				var inheritance     =
 					(
 						from m in InheritanceMapping

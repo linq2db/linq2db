@@ -149,6 +149,7 @@
     <Compile Include="Linq\Builder\DistinctBuilder.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Linq\MethodHelper.cs" />
     <Compile Include="Linq\Builder\ExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ExpressionBuilder.QueryBuilder.cs" />
     <Compile Include="Linq\Builder\ExpressionBuilder.SqlBuilder.cs" />
@@ -286,7 +287,6 @@
     <Compile Include="SqlQuery\QueryVisitor.cs" />
     <Compile Include="SqlQuery\SelectQuery.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
-    <Compile Include="SqlQuery\SqlFlags.cs" />
     <Compile Include="SqlQuery\SqlBinaryExpression.cs" />
     <Compile Include="SqlQuery\SqlDataType.cs" />
     <Compile Include="SqlQuery\SqlException.cs" />

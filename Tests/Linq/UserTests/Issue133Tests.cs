@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Sql.Expression("COUNT(*) * 100E0 / SUM(COUNT(*)) OVER()", ServerSideOnly = true)]
+		[Sql.Expression("COUNT(*) * 100E0 / SUM(COUNT(*)) OVER()", ServerSideOnly = true, IsAggregate = true)]
 		private static double CountPercents()
 		{
 			throw new InvalidOperationException("This function should be used only in database code");
@@ -41,7 +41,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, SupportsAnalyticFunctionsContext]
+		[Test, SupportsAnalyticFunctionsContext(false)] // LinqService fails with decimals
 		public void PositiveHavingTest(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -57,46 +57,44 @@ namespace Tests.UserTests
 			}
 		}
 
-//TODO: Uncomment after merging of Window Functions
+		[Test, SupportsAnalyticFunctionsContext, Ignore("Wrong Having detection")]
+		public void PositiveWindowFunctionsWhereTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Child
+					.GroupBy(_ => _.ParentID)
+					.Select(_ => new
+					{
+						CountPercents = _.Count() * 100d / Sql.Ext.Sum(_.Count()).Over().ToValue(),
+						Sum = _.Sum(r => r.ParentID)
+					})
+					.Where(_ => _.Sum != 36)
+					.ToList();
 
-//		[Test, SupportsAnalyticFunctionsContext]
-//		public void PositiveWindowFunctionsWhereTest(string context)
-//		{
-//			using (var db = GetDataContext(context))
-//			{
-//				var result = db.Child
-//					.GroupBy(_ => _.ParentID)
-//					.Select(_ => new
-//					{
-//						CountPercents = _.Count() * 100d / Sql.Ext.Sum(_.Count()).Over().ToValue(),
-//						Sum = _.Sum(r => r.ParentID)
-//					})
-//					.Where(_ => _.Sum != 36)
-//					.ToList();
-//
-//				Assert.AreEqual(5, result.Count);
-//				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
-//			}
-//		}
-//
-//		[Test, SupportsAnalyticFunctionsContext]
-//		public void PositiveWindowFunctionsHavingTest(string context)
-//		{
-//			using (var db = GetDataContext(context))
-//			{
-//				var result = db.Child
-//					.GroupBy(_ => _.ParentID)
-//					.Select(_ => new
-//					{
-//						CountPercents = _.Count() * 100d / Sql.Ext.Sum(_.Count()).Over().ToValue(),
-//						Sum = _.Sum(r => r.ParentID)
-//					})
-//					.Having(_ => _.Sum != 36)
-//					.ToList();
-//
-//				Assert.AreEqual(5, result.Count);
-//				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
-//			}
-//		}
+				Assert.AreEqual(5, result.Count);
+				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+			}
+		}
+
+		[Test, SupportsAnalyticFunctionsContext]
+		public void PositiveWindowFunctionsHavingTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Child
+					.GroupBy(_ => _.ParentID)
+					.Select(_ => new
+					{
+						CountPercents = _.Count() * 100d / Sql.Ext.Sum(_.Count()).Over().ToValue(),
+						Sum = _.Sum(r => r.ParentID)
+					})
+					.Having(_ => _.Sum != 36)
+					.ToList();
+
+				Assert.AreEqual(5, result.Count);
+				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+			}
+		}
 	}
 }

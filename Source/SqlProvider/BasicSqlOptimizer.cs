@@ -268,12 +268,10 @@ namespace LinqToDB.SqlProvider
 							{
 								switch (((SqlFunction)subCol.Expression).Name)
 								{
-									case "Min"     :
-									case "Max"     :
-									case "Sum"     :
-									case "Average" : isAggregated = true;                 break;
-									case "Count"   : isAggregated = true; isCount = true; break;
+									case "Count"   : isCount = true; break;
 								}
+
+								isAggregated = ((SqlFunction) subCol.Expression).IsAggregate;
 							}
 						}
 
@@ -737,7 +735,7 @@ namespace LinqToDB.SqlProvider
 										return parms[0];
 
 									if (parms.Length != len)
-										return new SqlFunction(func.SystemType, func.Name, func.Precedence, parms);
+										return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
 								}
 
 								break;

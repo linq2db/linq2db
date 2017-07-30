@@ -42,6 +42,7 @@ namespace LinqToDB.DataProvider.Sybase
 								return new SqlFunction(
 									func.SystemType,
 									func.Name,
+									false,
 									func.Precedence,
 									func.Parameters[0],
 									func.Parameters[1],
