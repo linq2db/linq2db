@@ -125,6 +125,7 @@ namespace Tests.UserTests
 			switch (context)
 			{
 				case ProviderName.SQLite:
+				case TestProvName.SQLiteMs:
 					return "main";
 				case ProviderName.Access:
 					return "Database\\TestData";
