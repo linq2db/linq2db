@@ -198,6 +198,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join);
 		}
 
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			// "db..table" syntax not supported and postgresql doesn't support database name, if it is not current database
+			// so we can clear database name to avoid error from server
+			if (database != null && owner == null)
+				database = null;
+
+			return base.BuildTableName(sb, database, owner, table);
+		}
+
 #if !SILVERLIGHT
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
