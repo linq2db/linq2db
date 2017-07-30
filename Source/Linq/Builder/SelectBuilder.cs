@@ -94,7 +94,6 @@ namespace LinqToDB.Linq.Builder
 					});
 
 				QueryRunner.SetRunQuery(query, mapper);
-				//query.SetQuery(mapper);
 			}
 
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)

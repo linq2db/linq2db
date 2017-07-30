@@ -128,7 +128,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				if (_insertWithIdentity) query.SetScalarQuery<object>();
+				if (_insertWithIdentity) QueryRunner.SetScalarQuery(query);
 				else                     query.SetNonQueryQuery();
 			}
 

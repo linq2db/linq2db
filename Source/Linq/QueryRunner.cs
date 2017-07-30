@@ -102,6 +102,8 @@ namespace LinqToDB.Linq
 
 		#endregion
 
+		#region Helpers
+
 		static void FinalizeQuery(Query query)
 		{
 			foreach (var sql in query.Queries)
@@ -136,6 +138,10 @@ namespace LinqToDB.Linq
 
 			throw new InvalidOperationException();
 		}
+
+		#endregion
+
+		#region SetRunQuery
 
 		static Tuple<
 			Func<Query,QueryContext,IDataContextEx,Mapper<T>,Expression,object[],int,IEnumerable<T>>,
@@ -339,6 +345,10 @@ namespace LinqToDB.Linq
 					dataReaderParam);
 		}
 
+		#endregion
+
+		#region SetRunQuery / Cast, Concat, Union, OfType, ScalarSelect, Select, SequenceContext, Table
+
 		public static void SetRunQuery<T>(
 			Query<T> query,
 			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
@@ -347,6 +357,10 @@ namespace LinqToDB.Linq
 
 			SetRunQuery(query, l);
 		}
+
+		#endregion
+
+		#region SetRunQuery / Select 2
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -372,6 +386,10 @@ namespace LinqToDB.Linq
 
 			SetRunQuery(query, l);
 		}
+
+		#endregion
+
+		#region SetRunQuery / Aggregation, All, Any, Contains, Count
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -490,5 +508,33 @@ namespace LinqToDB.Linq
 
 #endif
 
+		#endregion
+
+		#region ScalarQuery
+
+		public static void SetScalarQuery<T>(Query<T> query)
+		{
+			FinalizeQuery(query);
+
+			if (query.Queries.Count != 1)
+				throw new InvalidOperationException();
+
+			ClearParameters(query);
+
+			query.GetElement = (ctx, db, expr, ps) => ScalarQuery(query, db, expr, ps);
+		}
+
+		static T ScalarQuery<T>(Query<T> query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		{
+			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
+			{
+				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
+				runner.DataContext  = dataContext;
+
+				return (T)runner.ExecuteScalar();
+			}
+		}
+
+		#endregion
 	}
 }

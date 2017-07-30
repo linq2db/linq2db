@@ -392,41 +392,6 @@ namespace LinqToDB.Linq
 
 		#endregion
 
-		#region ScalarQuery
-
-		public void SetScalarQuery<TS>()
-		{
-			FinalizeQuery();
-
-			if (Queries.Count != 1)
-				throw new InvalidOperationException();
-
-			ClearParameters();
-
-			GetElement = (ctx,db,expr,ps) => ScalarQuery<TS>(db, expr, ps);
-		}
-
-		TS ScalarQuery<TS>(IDataContext dataContext, Expression expr, object[] parameters)
-		{
-			object query = null;
-
-			try
-			{
-				query = SetCommand(dataContext, expr, parameters, 0, true);
-				return (TS)dataContext.ExecuteScalar(query);
-			}
-			finally
-			{
-				if (query != null)
-					dataContext.ReleaseQuery(query);
-
-				if (dataContext.CloseAfterUse)
-					dataContext.Close();
-			}
-		}
-
-		#endregion
-
 		#region RunQuery
 
 		internal override object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints)
@@ -680,7 +645,7 @@ namespace LinqToDB.Linq
 							}
 						}
 
-						ei.SetScalarQuery<object>();
+						QueryRunner.SetScalarQuery(ei);
 
 						ObjectOperation<T>.InsertWithIdentity.Add(key, ei);
 					}

@@ -98,13 +98,90 @@ namespace LinqToDB.Data
 
 			public override int ExecuteNonQuery()
 			{
-				SetCommand();
-				return _dataConnection.ExecuteNonQuery();
+//				SetCommand();
+//				return _dataConnection.ExecuteNonQuery();
+
+				SetCommand(true);
+
+				if (_preparedQuery.Commands.Length == 1)
+				{
+					_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints);
+
+					if (_preparedQuery.Parameters != null)
+						foreach (var p in _preparedQuery.Parameters)
+							_dataConnection.Command.Parameters.Add(p);
+
+					return _dataConnection.ExecuteNonQuery();
+				}
+
+				for (var i = 0; i < _preparedQuery.Commands.Length; i++)
+				{
+					_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[i], null, i == 0 ? _preparedQuery.QueryHints : null);
+
+					if (i == 0 && _preparedQuery.Parameters != null)
+						foreach (var p in _preparedQuery.Parameters)
+							_dataConnection.Command.Parameters.Add(p);
+
+					if (i < _preparedQuery.Commands.Length - 1 && _preparedQuery.Commands[i].StartsWith("DROP"))
+					{
+						try
+						{
+							ExecuteNonQuery();
+						}
+						catch (Exception)
+						{
+						}
+					}
+					else
+					{
+						ExecuteNonQuery();
+					}
+				}
+
+				return -1;
 			}
 
 			public override object ExecuteScalar()
 			{
 				SetCommand();
+
+				IDbDataParameter idparam = null;
+
+				if (_dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
+				{
+					var sql = _preparedQuery.SelectQuery;
+
+					if (sql.IsInsert && sql.Insert.WithIdentity)
+					{
+						idparam = _dataConnection.Command.CreateParameter();
+
+						idparam.ParameterName = "IDENTITY_PARAMETER";
+						idparam.Direction     = ParameterDirection.Output;
+						idparam.Direction     = ParameterDirection.Output;
+						idparam.DbType        = DbType.Decimal;
+
+						_dataConnection.Command.Parameters.Add(idparam);
+					}
+				}
+
+				if (_preparedQuery.Commands.Length == 1)
+				{
+					if (idparam != null)
+					{
+						// так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
+						// остальные провайдеры должны поддерживать такой режим
+						_dataConnection.ExecuteNonQuery();
+
+						return idparam.Value;
+					}
+
+					return _dataConnection.ExecuteScalar();
+				}
+
+				_dataConnection.ExecuteNonQuery();
+
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[1], null, null);
+
 				return _dataConnection.ExecuteScalar();
 			}
 
@@ -152,15 +229,6 @@ namespace LinqToDB.Data
 								return;
 					}
 				}
-
-				/*
-				async Task IDataReaderAsync.QueryElementAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
-				{
-					using (var reader = await _dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken))
-						if (await reader.ReadAsync(cancellationToken))
-							action(objectReader(reader));
-				}
-				*/
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)

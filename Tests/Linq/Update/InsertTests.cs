@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
@@ -682,7 +682,6 @@ namespace Tests.xUpdate
 			{
 				for (var i = 0; i < 2; i++)
 				{
-
 					var id = db.InsertWithIdentity(
 						new Person
 						{
@@ -700,6 +699,33 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+		// IT : #
+//		[Test, DataContextSource]
+//		public async Task InsertWithIdentity4Async(string context)
+//		{
+//			using (var db = GetDataContext(context))
+//			using (new DeletePerson(db))
+//			{
+//				for (var i = 0; i < 2; i++)
+//				{
+//					var id = db.InsertWithIdentityAsync(
+//						new Person
+//						{
+//							FirstName = "John" + i,
+//							LastName  = "Shepard",
+//							Gender    = Gender.Male
+//						});
+//
+//					Assert.NotNull(id);
+//
+//					var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
+//
+//					Assert.NotNull (john);
+//					Assert.AreEqual(id, john.ID);
+//				}
+//			}
+//		}
 
 		[Test, DataContextSource]
 		public void InsertWithIdentity5(string context)
