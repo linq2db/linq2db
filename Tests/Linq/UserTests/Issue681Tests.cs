@@ -4,8 +4,10 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
 using System.Linq;
-using System.ServiceModel;
 using Tests.Model;
+#if !NETFX_CORE
+using System.ServiceModel;
+#endif
 
 namespace Tests.UserTests
 {
