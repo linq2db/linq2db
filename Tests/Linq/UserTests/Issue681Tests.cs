@@ -56,9 +56,11 @@ namespace Tests.UserTests
 				if (   context == ProviderName.SapHana
 					|| context == ProviderName.DB2)
 					Assert.Throws<LinqToDBException>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
+#if !NETFX_CORE
 				else if (context == ProviderName.SapHana + ".LinqService"
 					||   context == ProviderName.DB2     + ".LinqService")
 					Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
+#endif
 				else
 					db.GetTable<TestTable>().DatabaseName(dbName).ToList();
 			}
