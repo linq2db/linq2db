@@ -5,9 +5,6 @@ using NUnit.Framework;
 using System;
 using System.Linq;
 using Tests.Model;
-#if !MONO
-using System.ServiceModel;
-#endif
 
 namespace Tests.UserTests
 {
@@ -58,11 +55,9 @@ namespace Tests.UserTests
 				if (   context == ProviderName.SapHana
 					|| context == ProviderName.DB2)
 					Assert.Throws<LinqToDBException>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
-#if !MONO
 				else if (context == ProviderName.SapHana + ".LinqService"
 					||   context == ProviderName.DB2     + ".LinqService")
-					Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
-#endif
+					Assert.Throws<Exception>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
 				else
 					db.GetTable<TestTable>().DatabaseName(dbName).ToList();
 			}
