@@ -61,7 +61,7 @@ namespace LinqToDB.Data
 		/// Creates database connection object that uses provided connection configuration.
 		/// </summary>
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
-		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
+		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		public DataConnection(string configurationString)
 		{
 			InitConfig();
@@ -262,7 +262,7 @@ namespace LinqToDB.Data
 
 		private int? _id;
 		/// <summary>
-		/// Unique identifier of mapping schema and connection combination. Shared by connections with the same mapping schema and connection configuration or connection string.
+		/// For internal use only.
 		/// </summary>
 		public  int   ID
 		{
@@ -517,7 +517,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Registers database provider factory method.
-		/// Factory accepts connection string settings and connection string. Could return null, of cannot create provider
+		/// Factory accepts connection string settings and connection string. Could return <c>null</c>, if cannot create provider
 		/// instance using provided options.
 		/// </summary>
 		/// <param name="providerDetector">Factory method delegate.</param>
@@ -876,9 +876,8 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Creates new command object, associated with current connection/transaction.
+		/// For internal use only.
 		/// </summary>
-		/// <returns>Command object.</returns>
 		public IDbCommand CreateCommand()
 		{
 			var command = Connection.CreateCommand();
@@ -893,7 +892,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Disposes current command object, associated with connection.
+		/// For internal use only.
 		/// </summary>
 		public void DisposeCommand()
 		{
