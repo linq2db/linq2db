@@ -9,8 +9,10 @@ namespace Tests.Linq
 {
 	using PN = ProviderName;
 
-	public static class TestedExtensions
+	public static class Sql2
 	{
+		#region DatePart
+
 		class DatePartBuilder: Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
@@ -57,7 +59,7 @@ namespace Tests.Linq
 					case Sql.DateParts.WeekDay     :
 						builder.Expression = "WeekDay(Date_Add({date}, interval 1 day))";
 						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
-						break;
+						return;
 					case Sql.DateParts.Hour        : partStr = "hour";        break;
 					case Sql.DateParts.Minute      : partStr = "minute";      break;
 					case Sql.DateParts.Second      : partStr = "second";      break;
@@ -88,7 +90,7 @@ namespace Tests.Linq
 					case Sql.DateParts.WeekDay     :
 						builder.Expression = "Extract(dow from {date})";
 						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
-						break;
+						return;
 					case Sql.DateParts.Hour        : partStr = "hour";    break;
 					case Sql.DateParts.Minute      : partStr = "minute";  break;
 					case Sql.DateParts.Second      : partStr = "second";  break;
@@ -116,7 +118,7 @@ namespace Tests.Linq
 					case Sql.DateParts.Quarter     :
 						builder.Expression = "Cast(strFTime('%m', {date}) as int)";
 						builder.ResultExpression = builder.Inc(builder.Div(builder.Dec(builder.ConvertToSqlExpression(Precedence.Primary)), 3));
-						break;
+						return;
 					case Sql.DateParts.Month       : partStr = "m"; break;
 					case Sql.DateParts.DayOfYear   : partStr = "j"; break;
 					case Sql.DateParts.Day         : partStr = "d"; break;
@@ -124,7 +126,7 @@ namespace Tests.Linq
 					case Sql.DateParts.WeekDay     :
 						builder.Expression = "Cast(strFTime('%w', {date}) as int)";
 						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
-						break;
+						return;
 					case Sql.DateParts.Hour        : partStr = "H"; break;
 					case Sql.DateParts.Minute      : partStr = "M"; break;
 					case Sql.DateParts.Second      : partStr = "S"; break;
@@ -172,25 +174,31 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr;
+				string exprStr;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
-					case Sql.DateParts.Year        : partStr = "Year({date})";                     break;
-					case Sql.DateParts.Quarter     : partStr = "Floor((Month({date})-1) / 3) + 1"; break;
-					case Sql.DateParts.Month       : partStr = "Month({date})";                    break;
-					case Sql.DateParts.DayOfYear   : partStr = "DayOfYear({date})";                break;
-					case Sql.DateParts.Day         : partStr = "DayOfMonth({date})";               break;
-					case Sql.DateParts.Week        : partStr = "Week({date})";                     break;
-					case Sql.DateParts.WeekDay     : partStr = "MOD(Weekday({date}) + 1, 7) + 1";  break;
-					case Sql.DateParts.Hour        : partStr = "Hour({date})";                     break;
-					case Sql.DateParts.Minute      : partStr = "Minute({date})";                   break;
-					case Sql.DateParts.Second      : partStr = "Second({date})";                   break;
+					case Sql.DateParts.Year        : exprStr = "Year({date})";                     break;
+					case Sql.DateParts.Quarter     : 
+						builder.Expression = "Floor((Month({date})-1) / 3)";
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression());
+						return;
+					case Sql.DateParts.Month       : exprStr = "Month({date})";                    break;
+					case Sql.DateParts.DayOfYear   : exprStr = "DayOfYear({date})";                break;
+					case Sql.DateParts.Day         : exprStr = "DayOfMonth({date})";               break;
+					case Sql.DateParts.Week        : exprStr = "Week({date})";                     break;
+					case Sql.DateParts.WeekDay     : 
+						builder.Expression = "MOD(Weekday({date}) + 1, 7)";
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression());
+						return;
+					case Sql.DateParts.Hour        : exprStr = "Hour({date})";                     break;
+					case Sql.DateParts.Minute      : exprStr = "Minute({date})";                   break;
+					case Sql.DateParts.Second      : exprStr = "Second({date})";                   break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 
-				builder.Expression = partStr;
+				builder.Expression = exprStr;
 			}
 		}
 
@@ -198,26 +206,52 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				string partStr;
+				string exprStr;
 				var part = builder.GetValue<Sql.DateParts>("part");
 				switch (part)
 				{
-					case Sql.DateParts.Year        : partStr = "Year({date})";          break;
-					case Sql.DateParts.Quarter     : partStr = "((Month({date}) - 1) / 3 + 1)"; break;
-					case Sql.DateParts.Month       : partStr = "Month({date})";         break;
-					case Sql.DateParts.DayOfYear   : partStr = "(Mdy(Month({date}), Day({date}), Year({date})) - Mdy(1, 1, Year({date})) + 1)"; break;
-					case Sql.DateParts.Day         : partStr = "Day({date})";           break;
-					case Sql.DateParts.Week        : partStr = "((Extend({date}, year to day) - (Mdy(12, 31 - WeekDay(Mdy(1, 1, year({date}))), Year({date}) - 1) + Interval(1) day to day)) / 7 + Interval(1) day to day)::char(10)::int"; break;
-					case Sql.DateParts.WeekDay     : partStr = "(weekDay({date}) + 1)"; break;
-					case Sql.DateParts.Hour        : partStr = "({date}::datetime Hour to Hour)::char(3)::int";     break;
-					case Sql.DateParts.Minute      : partStr = "({date}::datetime Minute to Minute)::char(3)::int"; break;
-					case Sql.DateParts.Second      : partStr = "({date}::datetime Second to Second)::char(3)::int"; break;
-					case Sql.DateParts.Millisecond : partStr = "Millisecond({date})";   break;
+					case Sql.DateParts.Year        : exprStr = "Year({date})";          break;
+					case Sql.DateParts.Quarter:
+						{
+							builder.Expression       = "Month({date})";
+							builder.ResultExpression =
+								builder.Inc(builder.Div(builder.Dec(builder.ConvertToSqlExpression(Precedence.Primary)), 3));
+							return;
+						}
+					case Sql.DateParts.Month       : exprStr = "Month({date})";         break;
+					case Sql.DateParts.DayOfYear   :
+						{
+							var param = builder.GetExpression("date");
+							builder.ResultExpression = builder.Inc(
+								builder.Sub<int>(
+									new SqlFunction(null, "Mdy",
+										new SqlFunction(null, "Month", param),
+										new SqlFunction(null, "Day", param),
+										new SqlFunction(null, "Year", param)),
+									new SqlFunction(null, "Mdy",
+										new SqlValue(1),
+										new SqlValue(1),
+										new SqlFunction(null, "Year", param)))
+							);
+							return;
+						}
+					case Sql.DateParts.Day         : exprStr = "Day({date})";           break;
+					case Sql.DateParts.Week        : exprStr = "((Extend({date}, year to day) - (Mdy(12, 31 - WeekDay(Mdy(1, 1, year({date}))), Year({date}) - 1) + Interval(1) day to day)) / 7 + Interval(1) day to day)::char(10)::int"; break;
+					case Sql.DateParts.WeekDay     : 
+						{
+							builder.Expression = "weekDay({date})";
+							builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
+							return;
+						}
+					case Sql.DateParts.Hour        : exprStr = "({date}::datetime Hour to Hour)::char(3)::int";     break;
+					case Sql.DateParts.Minute      : exprStr = "({date}::datetime Minute to Minute)::char(3)::int"; break;
+					case Sql.DateParts.Second      : exprStr = "({date}::datetime Second to Second)::char(3)::int"; break;
+					case Sql.DateParts.Millisecond : exprStr = "Millisecond({date})";                               break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 
-				builder.Expression = partStr;
+				builder.Expression = exprStr;
 			}
 		}
 
@@ -235,7 +269,12 @@ namespace Tests.Linq
 					case Sql.DateParts.DayOfYear   : partStr = "To_Number(To_Char({date}, 'DDD'))";                   break;
 					case Sql.DateParts.Day         : partStr = "To_Number(To_Char({date}, 'DD'))";                    break;
 					case Sql.DateParts.Week        : partStr = "To_Number(To_Char({date}, 'WW'))";                    break;
-					case Sql.DateParts.WeekDay     : partStr = "Mod(1 + Trunc({date}) - Trunc({date}, 'IW'), 7) + 1"; break;
+					case Sql.DateParts.WeekDay:
+						{
+							builder.Expression = "Mod(1 + Trunc({date}) - Trunc({date}, 'IW'), 7)";
+							builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
+							return;
+						}
 					case Sql.DateParts.Hour        : partStr = "To_Number(To_Char({date}, 'HH24'))";                  break;
 					case Sql.DateParts.Minute      : partStr = "To_Number(To_Char({date}, 'MI'))";                    break;
 					case Sql.DateParts.Second      : partStr = "To_Number(To_Char({date}, 'SS'))";                    break;
@@ -266,7 +305,12 @@ namespace Tests.Linq
 					case Sql.DateParts.Hour        : partStr = "To_Number(To_Char({date}, 'HH24'))";                  break;
 					case Sql.DateParts.Minute      : partStr = "To_Number(To_Char({date}, 'MI'))";                    break;
 					case Sql.DateParts.Second      : partStr = "To_Number(To_Char({date}, 'SS'))";                    break;
-					case Sql.DateParts.Millisecond : partStr = "To_Number(To_Char({date}, 'FF')) / 1000";             break;
+					case Sql.DateParts.Millisecond:
+						{
+							builder.Expression = "To_Number(To_Char({date}, 'FF'))";
+							builder.ResultExpression = builder.Div(builder.ConvertToSqlExpression(Precedence.Primary), 1000);
+							return;
+						}
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -314,17 +358,17 @@ namespace Tests.Linq
 		}
 
 
-		[Sql.Extension(               "DatePart({part}, {date})",                 ServerSideOnly = false, BuilderType = typeof(DatePartBuilder))]
-		[Sql.Extension(PN.DB2,        "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
-		[Sql.Extension(PN.Informix,   "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderInformix))] // TODO: Not checked
-		[Sql.Extension(PN.MySql,      "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderMySql))]
-		[Sql.Extension(PN.PostgreSQL, "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderPostgre))]
-		[Sql.Extension(PN.Firebird,   "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderFirebird))]
-		[Sql.Extension(PN.SQLite,     "Cast(StrFTime('%{part}', {date}) as int)", ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSqLite))]
-		[Sql.Extension(PN.Access,     "DatePart('{part}', {date})",               ServerSideOnly = false, BuilderType = typeof(DatePartBuilderAccess))]
-		[Sql.Extension(PN.SapHana,    "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSapHana))]
-		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracle))]
-		public static int? DatePart(this Sql.ISqlExtension ext, Sql.DateParts part, [ExprParameter] DateTime? date)
+		[Sql.Extension(               "DatePart({part}, {date})",                 ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilder))]
+		[Sql.Extension(PN.DB2,        "",                                         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
+		[Sql.Extension(PN.Informix,   "",                                         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderInformix))] 
+		[Sql.Extension(PN.MySql,      "Extract({part} from {date})",              ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderMySql))]
+		[Sql.Extension(PN.PostgreSQL, "Extract({part} from {date})",              ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderPostgre))]
+		[Sql.Extension(PN.Firebird,   "Extract({part} from {date})",              ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderFirebird))]
+		[Sql.Extension(PN.SQLite,     "Cast(StrFTime('%{part}', {date}) as int)", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderSqLite))]
+		[Sql.Extension(PN.Access,     "DatePart('{part}', {date})",               ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderAccess))]
+		[Sql.Extension(PN.SapHana,    "",                                         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderSapHana))]
+		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderOracle))]
+		public static int? DatePart(Sql.DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)
 				return null;
@@ -346,6 +390,338 @@ namespace Tests.Linq
 
 			throw new InvalidOperationException();
 		}
+
+		#endregion DatePart
+
+		#region DateAdd
+
+		class DateAddBuilderOracle : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+				switch (part)
+				{
+					case Sql.DateParts.Year  : 
+						builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Add_Months", date, builder.Mul(number, 12));
+						break;
+					case Sql.DateParts.Quarter : 
+						builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Add_Months", date, builder.Mul(number, 3));
+						break;
+					case Sql.DateParts.Month : 
+						builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Add_Months", builder.GetExpression("date"), builder.GetExpression("number"));
+						break;
+					case Sql.DateParts.DayOfYear   :
+					case Sql.DateParts.WeekDay     :
+					case Sql.DateParts.Day         : builder.ResultExpression = builder.Add<DateTime>(date, number);                                   break;
+					case Sql.DateParts.Week        : builder.ResultExpression = builder.Add<DateTime>(date, builder.Mul(number,                   7)); break;
+					case Sql.DateParts.Hour        : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,                  24)); break;
+					case Sql.DateParts.Minute      : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,             60 * 24)); break;
+					case Sql.DateParts.Second      : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number,        60 * 60 * 24)); break;
+					case Sql.DateParts.Millisecond : builder.ResultExpression = builder.Add<DateTime>(date, builder.Div(number, 1000 * 60 * 60 * 24)); break;	
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+		}
+
+		class DateAddBuilderDB2 : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				string expStr;
+				switch (part)
+				{
+					case Sql.DateParts.Year        : expStr = "{0} + {1} Year";                 break;
+					case Sql.DateParts.Quarter     : expStr = "{0} + ({1} * 3) Month";          break;
+					case Sql.DateParts.Month       : expStr = "{0} + {1} Month";                break;
+					case Sql.DateParts.DayOfYear   : 
+					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.Day         : expStr = "{0} + {1} Day";                  break;
+					case Sql.DateParts.Week        : expStr = "({0} * 7) Day";                  break;
+					case Sql.DateParts.Hour        : expStr = "{0} + {1} Hour";                 break;
+					case Sql.DateParts.Minute      : expStr = "{0} + {1} Minute";               break;
+					case Sql.DateParts.Second      : expStr = "{0} + {1} Second";               break;
+					case Sql.DateParts.Millisecond : expStr = "{0} + ({0} * 1000) Microsecond"; break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Additive, date, number);
+			}
+		}
+
+		class DateAddBuilderInformix : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				string expStr;
+				switch (part)
+				{
+					case Sql.DateParts.Year        : expStr = "{0} + Interval({1}) Year to Year";       break;
+					case Sql.DateParts.Quarter     : expStr = "{0} + Interval({1}) Month to Month * 3"; break;
+					case Sql.DateParts.Month       : expStr = "{0} + Interval({1}) Month to Month";     break;
+					case Sql.DateParts.DayOfYear   : 
+					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.Day         : expStr = "{0} + Interval({1}) Day to Day";         break;
+					case Sql.DateParts.Week        : expStr = "{0} + Interval({1}) Day to Day * 7";     break;
+					case Sql.DateParts.Hour        : expStr = "{0} + Interval({1}) Hour to Hour";       break;
+					case Sql.DateParts.Minute      : expStr = "{0} + Interval({1}) Minute to Minute";   break;
+					case Sql.DateParts.Second      : expStr = "{0} + Interval({1}) Second to Second";   break;
+					case Sql.DateParts.Millisecond : expStr = "{0} + Interval({1}) Second to Fraction * 1000";  break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Additive, date, number);
+			}
+		}
+
+		class DateAddBuilderPostgreSQL : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				string expStr;
+				switch (part)
+				{
+					case Sql.DateParts.Year        : expStr = "{0} + {1} * Interval '1 Year'";         break;
+					case Sql.DateParts.Quarter     : expStr = "{0} + {1} * Interval '1 Month' * 3";    break;
+					case Sql.DateParts.Month       : expStr = "{0} + {1} * Interval '1 Month'";        break;
+					case Sql.DateParts.DayOfYear   : 
+					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.Day         : expStr = "{0} + {1} * Interval '1 Day'";          break;
+					case Sql.DateParts.Week        : expStr = "{0} + {1} * Interval '1 Day' * 7";      break;
+					case Sql.DateParts.Hour        : expStr = "{0} + {1} * Interval '1 Hour'";         break;
+					case Sql.DateParts.Minute      : expStr = "{0} + {1} * Interval '1 Minute'";       break;
+					case Sql.DateParts.Second      : expStr = "{0} + {1} * Interval '1 Second'";       break;
+					case Sql.DateParts.Millisecond : expStr = "{0} + {1} * Interval '1 Millisecond'";  break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Additive, date, number);
+			}
+		}
+
+		class DateAddBuilderMySql : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				string expStr;
+				switch (part)
+				{
+					case Sql.DateParts.Year        : expStr = "Interval {0} Year"; break;
+					case Sql.DateParts.Quarter     : expStr = "Interval {0} Quarter"; break;
+					case Sql.DateParts.Month       : expStr = "Interval {0} Month"; break;
+					case Sql.DateParts.DayOfYear   : 
+					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.Day         : expStr = "Interval {0} Day";          break;
+					case Sql.DateParts.Week        : expStr = "Interval {0} Week"; break;
+					case Sql.DateParts.Hour        : expStr = "Interval {0} Hour"; break;
+					case Sql.DateParts.Minute      : expStr = "Interval {0} Minute"; break;
+					case Sql.DateParts.Second      : expStr = "Interval {0} Second"; break;
+					case Sql.DateParts.Millisecond : expStr = "Interval {0} Millisecond"; break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "Date_Add", date,
+					new SqlExpression(expStr, Precedence.Primary, number));
+			}
+		}
+
+		class DateAddBuilderSQLite : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				string expStr;
+				switch (part)
+				{
+					case Sql.DateParts.Year        : expStr = "'{0} Year'"; break;
+					case Sql.DateParts.Quarter     : 
+						expStr = "'{0} Month'"; 
+						number = builder.Mul(number, 3);
+						break;
+					case Sql.DateParts.Month       : expStr = "'{0} Month'"; break;
+					case Sql.DateParts.DayOfYear   : 
+					case Sql.DateParts.WeekDay     : 
+					case Sql.DateParts.Day         : expStr = "'{0} Day'";          break;
+					case Sql.DateParts.Week        : 
+						expStr = "'{0} Day'"; 
+						number = builder.Mul(number, 7);
+						break;
+					case Sql.DateParts.Hour        : expStr = "'{0} Hour'"; break;
+					case Sql.DateParts.Minute      : expStr = "'{0} Minute'"; break;
+					case Sql.DateParts.Second      : expStr = "'{0} Second'"; break;
+					case Sql.DateParts.Millisecond : expStr = "'{0} Millisecond'"; break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateTime", date,
+					new SqlExpression(expStr, Precedence.Additive, number));
+			}
+		}
+
+		class DateAddBuilderAccess : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				string partStr;
+				switch (part)
+				{
+					case Sql.DateParts.Year        : partStr = "yyyy"; break;
+					case Sql.DateParts.Quarter     : partStr = "q";    break;
+					case Sql.DateParts.Month       : partStr = "m";    break;
+					case Sql.DateParts.DayOfYear   : partStr = "y";    break; 
+					case Sql.DateParts.Day         : partStr = "d";    break;
+					case Sql.DateParts.Week        : partStr = "ww";   break;
+					case Sql.DateParts.WeekDay     : partStr = "w";    break;
+					case Sql.DateParts.Hour        : partStr = "h";    break;
+					case Sql.DateParts.Minute      : partStr = "n";    break;
+					case Sql.DateParts.Second      : partStr = "s";    break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", 
+					new SqlValue(partStr), number, date);
+			}
+		}
+
+		class DateAddBuilderSapHana : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				string function;
+				switch (part)
+				{
+					case Sql.DateParts.Year        : function = "Add_Years";   break;
+					case Sql.DateParts.Quarter     : 
+						function = "Add_Months";
+						number   = builder.Mul(number, 3);  
+						break;
+					case Sql.DateParts.Month       : function = "Add_Months";  break;
+					case Sql.DateParts.DayOfYear   : 
+					case Sql.DateParts.Day         : 
+					case Sql.DateParts.WeekDay     : function = "Add_Days";    break;
+					case Sql.DateParts.Week        : 
+						function = "Add_Days";   
+						number   = builder.Mul(number, 7);  
+						break;
+					case Sql.DateParts.Hour        : 
+						function = "Add_Seconds";
+						number   = builder.Mul(number, 3600);
+						break;
+					case Sql.DateParts.Minute      : 
+						function = "Add_Seconds";
+						number   = builder.Mul(number, 60);
+						break;
+					case Sql.DateParts.Second      : function = "Add_Seconds"; break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), function, date, number);
+			}
+		}
+
+		class DateAddBuilderFirebird : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var part    = builder.GetValue<Sql.DateParts>("part");
+				var date    = builder.GetExpression("date");
+				var number  = builder.GetExpression("number");
+
+				ISqlExpression partSql = null;
+				switch (part)
+				{
+					case Sql.DateParts.Quarter   :
+						partSql = new SqlValue(Sql.DateParts.Month);
+						number  = builder.Mul(number, 3);
+						break;
+					case Sql.DateParts.DayOfYear :
+					case Sql.DateParts.WeekDay   :
+						partSql = new SqlValue(Sql.DateParts.Day);
+						break;
+					case Sql.DateParts.Week      :
+						partSql = new SqlValue(Sql.DateParts.Day);
+						number = builder.Mul(number, 7);
+						break;
+				}
+
+				partSql = partSql ?? new SqlValue(part);
+
+				builder.ResultExpression = new SqlFunction(typeof(DateTime?), "DateAdd", partSql, number, date);
+			}
+		}
+
+
+		[Sql.Function] 
+		[Sql.Extension(PN.Oracle,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderOracle))]
+		[Sql.Extension(PN.DB2,        "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderDB2))]
+		[Sql.Extension(PN.Informix,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderInformix))]
+		[Sql.Extension(PN.PostgreSQL, "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderPostgreSQL))]
+		[Sql.Extension(PN.MySql,      "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderMySql))]
+		[Sql.Extension(PN.SQLite,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderSQLite))]
+		[Sql.Extension(PN.Access,     "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderAccess))]
+		[Sql.Extension(PN.SapHana,    "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderSapHana))]
+		[Sql.Extension(PN.Firebird,   "", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DateAddBuilderFirebird))]
+		public static DateTime? DateAdd(Sql.DateParts part, double? number, DateTime? date)
+		{
+			if (number == null || date == null)
+				return null;
+
+			switch (part)
+			{
+				case Sql.DateParts.Year        : return date.Value.AddYears       ((int)number);
+				case Sql.DateParts.Quarter     : return date.Value.AddMonths      ((int)number * 3);
+				case Sql.DateParts.Month       : return date.Value.AddMonths      ((int)number);
+				case Sql.DateParts.DayOfYear   : return date.Value.AddDays        (number.Value);
+				case Sql.DateParts.Day         : return date.Value.AddDays        (number.Value);
+				case Sql.DateParts.Week        : return date.Value.AddDays        (number.Value * 7);
+				case Sql.DateParts.WeekDay     : return date.Value.AddDays        (number.Value);
+				case Sql.DateParts.Hour        : return date.Value.AddHours       (number.Value);
+				case Sql.DateParts.Minute      : return date.Value.AddMinutes     (number.Value);
+				case Sql.DateParts.Second      : return date.Value.AddSeconds     (number.Value);
+				case Sql.DateParts.Millisecond : return date.Value.AddMilliseconds(number.Value);
+			}
+
+			throw new InvalidOperationException();
+		}
+
+		#endregion
 	}
 
 	public class SqlExtensionTests : TestBase
@@ -357,8 +733,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.Year, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.Year, t.DateTimeValue)));
 		}
 
 		[Test, DataContextSource]
@@ -366,8 +742,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.Quarter, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.Quarter, t.DateTimeValue)));
 		}
 
 		[Test, DataContextSource]
@@ -375,8 +751,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.Month, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.Month, t.DateTimeValue)));
 		}
 
 		[Test, DataContextSource]
@@ -384,8 +760,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue)));
 		}
 
 		[Test, DataContextSource]
@@ -393,15 +769,15 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.Day, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.Day, t.DateTimeValue)));
 		}
 
 		[Test, DataContextSource]
 		public void DatePartWeek(string context)
 		{
 			using (var db = GetDataContext(context))
-				(from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Week, t.DateTimeValue))).ToList();
+				(from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.Week, t.DateTimeValue))).ToList();
 		}
 
 		[Test, DataContextSource]
@@ -409,8 +785,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue)));
 		}
 
 		[Test, DataContextSource]
@@ -418,8 +794,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.Hour, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.Hour, t.DateTimeValue)));
 		}
 
 		[Test, DataContextSource]
@@ -427,8 +803,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.Minute, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.Minute, t.DateTimeValue)));
 		}
 
 		[Test, DataContextSource]
@@ -436,8 +812,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.Second, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
 		}
 
 		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
@@ -445,10 +821,173 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue)));
+					from t in    Types select           Sql2.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue),
+					from t in db.Types select Sql.AsSql(Sql2.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue)));
 		}
 
 		#endregion
+
+		#region DateAdd
+
+		[Test, DataContextSource]
+		public void DateAddYear(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.Year, 11, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.Year, 11, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test, DataContextSource]
+		public void DateAddQuarter(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.Quarter, -1, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.Quarter, -1, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test, DataContextSource]
+		public void DateAddMonth(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.Month, 2, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.Month, 2, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test, DataContextSource]
+		public void DateAddDayOfYear(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.DayOfYear, 3, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.DayOfYear, 3, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test, DataContextSource]
+		public void DateAddDay(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.Day, 5, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.Day, 5, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test, DataContextSource]
+		public void DateAddWeek(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.Week, -1, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.Week, -1, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test, DataContextSource]
+		public void DateAddWeekDay(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.WeekDay, 1, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.WeekDay, 1, t.DateTimeValue)).Value.Date);
+		}
+
+		[Test, DataContextSource]
+		public void DateAddHour(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue). Value.Hour,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)).Value.Hour);
+		}
+
+		[Test, DataContextSource]
+		public void DateAddMinute(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.Minute, 5, t.DateTimeValue). Value.Minute,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.Minute, 5, t.DateTimeValue)).Value.Minute);
+		}
+
+		[Test, DataContextSource]
+		public void DateAddSecond(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           Sql2.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue). Value.Second,
+					from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue)).Value.Second);
+		}
+
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+		public void DateAddMillisecond(string context)
+		{
+			using (var db = GetDataContext(context))
+				(from t in db.Types select Sql.AsSql(Sql2.DateAdd(Sql.DateParts.Millisecond, 41, t.DateTimeValue))).ToList();
+		}
+
+		[Test, DataContextSource]
+		public void AddYears(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           t.DateTimeValue.AddYears(1). Date,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddYears(1)).Date);
+		}
+
+		[Test, DataContextSource]
+		public void AddMonths(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           t.DateTimeValue.AddMonths(-2). Date,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMonths(-2)).Date);
+		}
+
+		[Test, DataContextSource]
+		public void AddDays(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           t.DateTimeValue.AddDays(5). Date,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddDays(5)).Date);
+		}
+
+		[Test, DataContextSource]
+		public void AddHours(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           t.DateTimeValue.AddHours(22). Hour,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(22)).Hour);
+		}
+
+		[Test, DataContextSource]
+		public void AddMinutes(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           t.DateTimeValue.AddMinutes(-8). Minute,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMinutes(-8)).Minute);
+		}
+
+		[Test, DataContextSource]
+		public void AddSeconds(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select           t.DateTimeValue.AddSeconds(-35). Second,
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(-35)).Second);
+		}
+
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+		public void AddMilliseconds(string context)
+		{
+			using (var db = GetDataContext(context))
+				(from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(221))).ToList();
+		}
+
+		#endregion
+
 	}
 }
