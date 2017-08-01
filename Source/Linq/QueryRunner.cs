@@ -524,14 +524,14 @@ namespace LinqToDB.Linq
 			query.GetElement = (ctx, db, expr, ps) => ScalarQuery(query, db, expr, ps);
 		}
 
-		static T ScalarQuery<T>(Query<T> query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		static object ScalarQuery<T>(Query<T> query, IDataContextEx dataContext, Expression expr, object[] parameters)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
 				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
 				runner.DataContext  = dataContext;
 
-				return (T)runner.ExecuteScalar();
+				return runner.ExecuteScalar();
 			}
 		}
 
