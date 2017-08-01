@@ -43,7 +43,7 @@
     <DefineConstants>TRACE;DEBUG;FW4;MOBILE1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <NoWarn>649 429</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
@@ -382,6 +382,8 @@
     <Compile Include="UserTests\Issue358Tests.cs" />
     <Compile Include="UserTests\Issue356Tests.cs" />
     <Compile Include="UserTests\Issue082Tests.cs" />
+    <Compile Include="UserTests\Issue264Tests.cs" />
+    <Compile Include="UserTests\Issue781Tests.cs" />
     <Compile Include="UserTests\Issue737Tests.cs" />
     <Compile Include="UserTests\Issue395Tests.cs" />
     <Compile Include="UserTests\Issue273Tests.cs" />
