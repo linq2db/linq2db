@@ -14,7 +14,9 @@ namespace LinqToDB.Data
 	using Common;
 	using Expressions;
 	using Extensions;
+	using JetBrains.Annotations;
 
+	[PublicAPI]
 	public class CommandInfo
 	{
 		public DataConnection  DataConnection;
