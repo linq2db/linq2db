@@ -125,7 +125,7 @@ namespace LinqToDB.Data
 					{
 						try
 						{
-							ExecuteNonQuery();
+							_dataConnection.ExecuteNonQuery();
 						}
 						catch (Exception)
 						{
@@ -133,7 +133,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						ExecuteNonQuery();
+						_dataConnection.ExecuteNonQuery();
 					}
 				}
 

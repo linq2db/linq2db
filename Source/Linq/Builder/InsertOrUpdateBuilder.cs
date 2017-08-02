@@ -101,7 +101,8 @@ namespace LinqToDB.Linq.Builder
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				if (Builder.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
-					query.SetNonQueryQuery();
+					QueryRunner.SetNonQueryQuery(query);
+					//query.SetNonQueryQuery();
 				else
 					query.MakeAlternativeInsertOrUpdate(SelectQuery);
 			}

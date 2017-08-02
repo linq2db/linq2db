@@ -536,5 +536,32 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
+		#region NonQueryQuery
+
+		public static void SetNonQueryQuery<T>(Query<T> query)
+		{
+			FinalizeQuery(query);
+
+			if (query.Queries.Count != 1)
+				throw new InvalidOperationException();
+
+			ClearParameters(query);
+
+			query.GetElement = (ctx,db,expr,ps) => NonQueryQuery(query, db, expr, ps);
+		}
+
+		static int NonQueryQuery<T>(Query<T> query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		{
+			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
+			{
+				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
+				runner.DataContext  = dataContext;
+
+				return runner.ExecuteNonQuery();
+			}
+		}
+
+		#endregion
 	}
 }

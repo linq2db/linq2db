@@ -128,8 +128,9 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				if (_insertWithIdentity) QueryRunner.SetScalarQuery(query);
-				else                     query.SetNonQueryQuery();
+				if (_insertWithIdentity) QueryRunner.SetScalarQuery  (query);
+				else                     QueryRunner.SetNonQueryQuery(query);
+//					query.SetNonQueryQuery();
 			}
 
 			public override Expression BuildExpression(Expression expression, int level)

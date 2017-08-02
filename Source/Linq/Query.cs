@@ -590,7 +590,8 @@ namespace LinqToDB.Linq
 							}
 						}
 
-						ei.SetNonQueryQuery();
+						//ei.SetNonQueryQuery();
+						QueryRunner.SetNonQueryQuery(ei);
 
 						ObjectOperation<T>.Insert.Add(key, ei);
 					}
@@ -646,7 +647,6 @@ namespace LinqToDB.Linq
 							}
 						}
 
-						//ei.SetScalarQuery<object>();
 						QueryRunner.SetScalarQuery(ei);
 
 						ObjectOperation<T>.InsertWithIdentity.Add(key, ei);
@@ -757,7 +757,8 @@ namespace LinqToDB.Linq
 						// Set the query.
 						//
 						if (ei.SqlProviderFlags.IsInsertOrUpdateSupported)
-							ei.SetNonQueryQuery();
+							//ei.SetNonQueryQuery();
+							QueryRunner.SetNonQueryQuery(ei);
 						else
 							ei.MakeAlternativeInsertOrUpdate(sqlQuery);
 
@@ -882,7 +883,8 @@ namespace LinqToDB.Linq
 								sqlQuery.IsParameterDependent = true;
 						}
 
-						ei.SetNonQueryQuery();
+						QueryRunner.SetNonQueryQuery(ei);
+						//ei.SetNonQueryQuery();
 
 						ObjectOperation<T>.Update.Add(key, ei);
 					}
@@ -934,7 +936,8 @@ namespace LinqToDB.Linq
 								sqlQuery.IsParameterDependent = true;
 						}
 
-						ei.SetNonQueryQuery();
+						QueryRunner.SetNonQueryQuery(ei);
+						//ei.SetNonQueryQuery();
 
 						ObjectOperation<T>.Delete.Add(key, ei);
 					}
@@ -973,7 +976,8 @@ namespace LinqToDB.Linq
 				Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
 			};
 
-			query.SetNonQueryQuery();
+			QueryRunner.SetNonQueryQuery(query);
+//			query.SetNonQueryQuery();
 
 			query.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(null), null);
 
@@ -1006,7 +1010,8 @@ namespace LinqToDB.Linq
 				Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
 			};
 
-			query.SetNonQueryQuery();
+			QueryRunner.SetNonQueryQuery(query);
+//			query.SetNonQueryQuery();
 
 			query.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(null), null);
 		}
