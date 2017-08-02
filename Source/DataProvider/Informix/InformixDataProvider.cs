@@ -190,9 +190,10 @@ namespace LinqToDB.DataProvider.Informix
 				if (dataType != DataType.Int64)
 					value = _newIfxTimeSpan((TimeSpan)value);
 			}
-			else if (value is Guid)
+			else if (value is Guid || value == null && dataType == DataType.Guid)
 			{
-				value    = value.ToString();
+				if (value != null)
+					value = value.ToString();
 				dataType = DataType.Char;
 			}
 			else if (value is bool)
@@ -222,7 +223,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameterType(parameter, dataType);
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -234,9 +235,9 @@ namespace LinqToDB.DataProvider.Informix
 				source);
 		}
 
-#endregion
+		#endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -247,6 +248,6 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#endregion
+		#endregion
 	}
 }
