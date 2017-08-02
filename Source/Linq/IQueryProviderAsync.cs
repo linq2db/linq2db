@@ -8,7 +8,7 @@ namespace LinqToDB.Linq
 {
 	public interface IQueryProviderAsync : IQueryProvider
 	{
-#if !NOASYNC
+#if !NOASYNC && !SL4
 		Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken token, TaskCreationOptions options);
 #endif
 	}

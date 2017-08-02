@@ -95,7 +95,6 @@ namespace LinqToDB.Linq
 				null, (IDataContextEx)DataContext, expression, Parameters, token, options);
 
 			return (TResult)value;
-			//return DataContext.MappingSchema.ChangeTypeTo<TResult>(value);
 		}
 
 		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken, TaskCreationOptions options)
