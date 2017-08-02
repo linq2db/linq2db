@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
+#if !SL4
 using System.Threading;
 using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.Linq
 {
