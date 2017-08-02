@@ -117,6 +117,53 @@ namespace LinqToDB.Linq
 		}
 
 		internal abstract object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints);
+
+		internal void SetParameters(Expression expr, object[] parameters, int idx)
+		{
+			foreach (var p in Queries[idx].Parameters)
+			{
+				var value = p.Accessor(expr, parameters);
+
+				var vs = value as IEnumerable;
+
+				if (vs != null)
+				{
+					var type  = vs.GetType();
+					var etype = type.GetItemType();
+
+					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
+						type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArgumentsEx()[0].IsEnumEx() &&
+						etype.GetGenericArgumentsEx()[0].IsEnumEx())
+					{
+						var values = new List<object>();
+
+						foreach (var v in vs)
+						{
+							value = v;
+
+							if (v != null)
+							{
+								var valueType = v.GetType();
+
+								if (valueType.ToNullableUnderlying().IsEnumEx())
+									value = GetConvertedEnum(valueType, value);
+							}
+
+							values.Add(value);
+						}
+
+						value = values;
+					}
+				}
+
+				p.SqlParameter.Value = value;
+
+				var dataType = p.DataTypeAccessor(expr, parameters);
+
+				if (dataType != DataType.Undefined)
+					p.SqlParameter.DataType = dataType;
+			}
+		}
 	}
 
 	class Query<T> : Query
@@ -415,52 +462,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		internal void SetParameters(Expression expr, object[] parameters, int idx)
-		{
-			foreach (var p in Queries[idx].Parameters)
-			{
-				var value = p.Accessor(expr, parameters);
-
-				var vs = value as IEnumerable;
-
-				if (vs != null)
-				{
-					var type  = vs.GetType();
-					var etype = type.GetItemType();
-
-					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
-						(type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArgumentsEx()[0].IsEnumEx()))
-					{
-						var values = new List<object>();
-
-						foreach (var v in vs)
-						{
-							value = v;
-
-							if (v != null)
-							{
-								var valueType = v.GetType();
-
-								if (valueType.ToNullableUnderlying().IsEnumEx())
-									value = GetConvertedEnum(valueType, value);
-							}
-
-							values.Add(value);
-						}
-
-						value = values;
-					}
-				}
-
-				p.SqlParameter.Value = value;
-
-				var dataType = p.DataTypeAccessor(expr, parameters);
-
-				if (dataType != DataType.Undefined)
-					p.SqlParameter.DataType = dataType;
-			}
-		}
-
 		#endregion
 
 		#region GetSqlText
@@ -645,6 +646,7 @@ namespace LinqToDB.Linq
 							}
 						}
 
+						//ei.SetScalarQuery<object>();
 						QueryRunner.SetScalarQuery(ei);
 
 						ObjectOperation<T>.InsertWithIdentity.Add(key, ei);

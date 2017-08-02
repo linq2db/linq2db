@@ -58,11 +58,8 @@ namespace LinqToDB.Linq
 		{
 			var queryContext = Query.Queries[QueryNumber];
 
-			//DataParameters = new DataParameter[queryContext.Parameters.Count];
-
-			for (var i = 0; i < queryContext.Parameters.Count; i++)
+			foreach (var p in queryContext.Parameters)
 			{
-				var p     = queryContext.Parameters[i];
 				var value = p.Accessor(Expression, Parameters);
 
 				var vs = value as IEnumerable;
@@ -101,10 +98,8 @@ namespace LinqToDB.Linq
 
 				var dataType = p.DataTypeAccessor(Expression, Parameters);
 
-				if (dataType == DataType.Undefined)
-					p.SqlParameter.DataType = dataType = p.SqlParameter.DataType;
-
-				//DataParameters[i] = new DataParameter(p.SqlParameter.Name, value, dataType);
+				if (dataType != DataType.Undefined)
+					p.SqlParameter.DataType = dataType;
 			}
 		}
 
