@@ -20,8 +20,8 @@ namespace LinqToDB.Linq.Builder
 			var returnType = methodCall.Method.ReturnType;
 			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
 
-			if (sequence.SelectQuery != buildInfo.SelectQuery)
-			{
+//			if (sequence.SelectQuery != buildInfo.SelectQuery)
+//			{
 //				if (sequence is JoinBuilder.GroupJoinSubQueryContext)
 //				{
 //					var ctx = new CountContext(buildInfo.Parent, sequence, returnType)
@@ -36,16 +36,16 @@ namespace LinqToDB.Linq.Builder
 //
 //					return ctx;
 //				}
-
-				if (sequence is GroupByBuilder.GroupByContext)
-				{
-					return new CountContext(buildInfo.Parent, sequence, returnType)
-					{
-						Sql        = SqlFunction.CreateCount(returnType, sequence.SelectQuery),
-						FieldIndex = -1
-					};
-				}
-			}
+//
+//				if (sequence is GroupByBuilder.GroupByContext)
+//				{
+//					return new CountContext(buildInfo.Parent, sequence, returnType)
+//					{
+//						Sql        = SqlFunction.CreateCount(returnType, sequence.SelectQuery),
+//						FieldIndex = -1
+//					};
+//				}
+//			}
 
 			if (sequence.SelectQuery.Select.IsDistinct        ||
 			    sequence.SelectQuery.Select.TakeValue != null ||
