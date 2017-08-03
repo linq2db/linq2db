@@ -27,7 +27,7 @@ namespace LinqToDB.Data
 
 			if (_connection.State == ConnectionState.Closed)
 			{
-				await ((DbConnection) _connection).OpenAsync(cancellationToken);
+				await ((DbConnection)_connection).OpenAsync(cancellationToken);
 				_closeConnection = true;
 			}
 
@@ -77,7 +77,60 @@ namespace LinqToDB.Data
 						Command         = Command,
 						ExecutionTime   = DateTime.Now - now,
 						RecordsAffected = ret,
+						IsAsync         = true,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitch.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+					{
+						TraceLevel     = TraceLevel.Error,
+						DataConnection = this,
+						Command        = Command,
+						Exception      = ex,
 						IsAsync        = true,
+					});
+				}
+
+				throw;
+			}
+		}
+
+		internal async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
+		{
+			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+				return await ((DbCommand)Command).ExecuteScalarAsync(cancellationToken);
+
+			if (TraceSwitch.TraceInfo)
+			{
+				OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
+				{
+					TraceLevel     = TraceLevel.Info,
+					DataConnection = this,
+					Command        = Command,
+					IsAsync        = true,
+				});
+			}
+
+			try
+			{
+				var now = DateTime.Now;
+				var ret = await ((DbCommand)Command).ExecuteScalarAsync(cancellationToken);
+
+				if (TraceSwitch.TraceInfo)
+				{
+					OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
+					{
+						TraceLevel      = TraceLevel.Info,
+						DataConnection  = this,
+						Command         = Command,
+						ExecutionTime   = DateTime.Now - now,
+						IsAsync         = true,
 					});
 				}
 

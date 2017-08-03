@@ -268,8 +268,6 @@ namespace LinqToDB.Linq
 
 			public static readonly Dictionary<object,Query<object>> InsertWithIdentity = new Dictionary<object,Query<object>>();
 			public static readonly Dictionary<object,Query<int>>    InsertOrUpdate     = new Dictionary<object,Query<int>>();
-			public static readonly Dictionary<object,Query<int>>    Update             = new Dictionary<object,Query<int>>();
-			public static readonly Dictionary<object,Query<int>>    Delete             = new Dictionary<object,Query<int>>();
 		}
 
 		static ParameterAccessor GetParameter(IDataContext dataContext, SqlField field)
@@ -527,58 +525,6 @@ namespace LinqToDB.Linq
 				SelectQuery = insertQuery,
 				Parameters  = Queries[0].Parameters.ToList(),
 			});
-		}
-
-		#endregion
-
-		#region Delete
-
-		public static int Delete(IDataContext dataContext, T obj)
-		{
-			if (Equals(default(T), obj))
-				return 0;
-
-			Query<int> ei;
-
-			var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-
-			if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
-				lock (_sync)
-					if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
-					{
-						var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-						var sqlQuery = new SelectQuery { QueryType = QueryType.Delete };
-
-						sqlQuery.From.Table(sqlTable);
-
-						ei = new Query<int>(dataContext, null)
-						{
-							Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
-						};
-
-						var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
-
-						if (keys.Count == 0)
-							throw new LinqException("Table '{0}' does not have primary key.".Args(sqlTable.Name));
-
-						foreach (var field in keys)
-						{
-							var param = GetParameter(dataContext, field);
-
-							ei.Queries[0].Parameters.Add(param);
-
-							sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
-
-							if (field.CanBeNull)
-								sqlQuery.IsParameterDependent = true;
-						}
-
-						QueryRunner.SetNonQueryQuery(ei);
-
-						ObjectOperation<T>.Delete.Add(key, ei);
-					}
-
-			return (int)ei.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(obj), null);
 		}
 
 		#endregion

@@ -218,6 +218,30 @@ namespace LinqToDB.ServiceModel
 				cancellationToken);
 			}
 
+			public override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			{
+				SetCommand(true);
+
+				return Task.Run(() =>
+				{
+					if (_dataContext._batchCounter > 0)
+						throw new LinqException("Incompatible batch operation.");
+
+					var queryContext = Query.Queries[QueryNumber];
+
+					_client = _dataContext.GetClient();
+
+					var q = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+
+					return _client.ExecuteScalar(
+						_dataContext.Configuration,
+						LinqServiceSerializer.Serialize(
+							q,
+							q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints));
+				},
+				cancellationToken);
+			}
+
 			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken, TaskCreationOptions options)
 			{
 				SetCommand(true);

@@ -52,6 +52,11 @@ namespace LinqToDB
 
 #if !NOASYNC
 
+			public Task<object> ExecuteScalarAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			{
+				return _queryRunner.ExecuteScalarAsync(cancellationToken, options);
+			}
+
 			public Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)
 			{
 				return _queryRunner.ExecuteReaderAsync(cancellationToken, options);

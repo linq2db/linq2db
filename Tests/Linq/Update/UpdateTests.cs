@@ -2,9 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 #region ReSharper disable
@@ -372,7 +377,7 @@ namespace Tests.xUpdate
 				{
 
 					var id = Convert.ToInt32(db.InsertWithIdentity(
-						new ComplexPerson2()
+						new ComplexPerson2
 						{
 							Name = new FullName
 							{
@@ -396,6 +401,47 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+#if !NOASYNC
+
+		// IT : # test
+
+		[Test, DataContextSource]
+		public async Task UpdateComplex1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => _.FirstName.StartsWith("UpdateComplex")).Delete();
+				try
+				{
+
+					var id = Convert.ToInt32(await db.InsertWithIdentityAsync(
+						new ComplexPerson2
+						{
+							Name = new FullName
+							{
+								FirstName = "UpdateComplex",
+								LastName  = "Empty"
+							}
+						}));
+
+					var obj = await db.GetTable<ComplexPerson2>().FirstAsync(_ => _.ID == id);
+					obj.Name.LastName = obj.Name.FirstName;
+
+					await db.UpdateAsync(obj);
+
+					obj = await db.GetTable<ComplexPerson2>().FirstAsync(_ => _.ID == id);
+
+					Assert.AreEqual(obj.Name.FirstName, obj.Name.LastName);
+				}
+				finally
+				{
+					db.Person.Where(_ => _.FirstName.StartsWith("UpdateComplex")).Delete();
+				}
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void UpdateComplex2(string context)

@@ -296,6 +296,50 @@ namespace LinqToDB.Data
 				return -1;
 			}
 
+			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			{
+				SetCommand();
+
+				IDbDataParameter idparam = null;
+
+				if (_dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
+				{
+					var sql = _preparedQuery.SelectQuery;
+
+					if (sql.IsInsert && sql.Insert.WithIdentity)
+					{
+						idparam = _dataConnection.Command.CreateParameter();
+
+						idparam.ParameterName = "IDENTITY_PARAMETER";
+						idparam.Direction     = ParameterDirection.Output;
+						idparam.Direction     = ParameterDirection.Output;
+						idparam.DbType        = DbType.Decimal;
+
+						_dataConnection.Command.Parameters.Add(idparam);
+					}
+				}
+
+				if (_preparedQuery.Commands.Length == 1)
+				{
+					if (idparam != null)
+					{
+						// так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
+						// остальные провайдеры должны поддерживать такой режим
+						await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+
+						return idparam.Value;
+					}
+
+					return await _dataConnection.ExecuteScalarAsync(cancellationToken);
+				}
+
+				await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+
+				await _dataConnection.InitCommandAsync(CommandType.Text, _preparedQuery.Commands[1], null, null, cancellationToken);
+
+				return await _dataConnection.ExecuteScalarAsync(cancellationToken);
+			}
+
 #endif
 		}
 	}

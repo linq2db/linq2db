@@ -16,8 +16,9 @@ namespace LinqToDB.Linq
 		IDataReader           ExecuteReader  ();
 
 #if !NOASYNC
-		Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken,TaskCreationOptions options);
 		Task<int>              ExecuteNonQueryAsync(CancellationToken cancellationToken,TaskCreationOptions options);
+		Task<object>           ExecuteScalarAsync  (CancellationToken cancellationToken,TaskCreationOptions options);
+		Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken,TaskCreationOptions options);
 #endif
 
 		string                GetSqlText     ();

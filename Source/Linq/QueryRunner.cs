@@ -612,6 +612,11 @@ namespace LinqToDB.Linq
 			ClearParameters(query);
 
 			query.GetElement = (ctx, db, expr, ps) => ScalarQuery(query, db, expr, ps);
+
+#if !NOASYNC
+			query.GetElementAsync = (ctx, db, expr, ps, token, options) =>
+				ScalarQueryAsync(query, db, expr, ps, token, options);
+#endif
 		}
 
 		static object ScalarQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
@@ -624,6 +629,27 @@ namespace LinqToDB.Linq
 				return runner.ExecuteScalar();
 			}
 		}
+
+#if !NOASYNC
+
+		static async Task<object> ScalarQueryAsync(
+			Query               query,
+			IDataContextEx      dataContext,
+			Expression          expression,
+			object[]            ps,
+			CancellationToken   cancellationToken,
+			TaskCreationOptions options)
+		{
+			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
+			{
+				runner.QueryContext = new QueryContext(dataContext, expression, ps);
+				runner.DataContext  = dataContext;
+
+				return await runner.ExecuteScalarAsync(cancellationToken, options);
+			}
+		}
+
+#endif
 
 		#endregion
 
