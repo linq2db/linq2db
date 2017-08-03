@@ -43,8 +43,8 @@ namespace LinqToDB.Linq.Builder
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				query.DoNotChache = true;
+
 				QueryRunner.SetNonQueryQuery(query);
-				//query.SetNonQueryQuery();
 
 				SqlOptimizer  = query.SqlOptimizer;
 				SetParameters = () => query.SetParameters(Builder.Expression, null, 0);

@@ -898,12 +898,12 @@ namespace Tests.xUpdate
 				try
 				{
 					var records = db.Patient.InsertOrUpdate(
-						() => new Patient()
+						() => new Patient
 						{
 							PersonID  = id,
 							Diagnosis = "negative"
 						},
-						p => new Patient()
+						p => new Patient
 						{
 						});
 
@@ -920,12 +920,12 @@ namespace Tests.xUpdate
 						Assert.AreEqual("negative", patients[0].Diagnosis);
 
 						records = db.Patient.InsertOrUpdate(
-							() => new Patient()
+							() => new Patient
 							{
 								PersonID  = id,
 								Diagnosis = "positive"
 							},
-							p => new Patient()
+							p => new Patient
 							{
 							});
 

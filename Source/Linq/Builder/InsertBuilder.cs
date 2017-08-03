@@ -130,7 +130,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_insertWithIdentity) QueryRunner.SetScalarQuery  (query);
 				else                     QueryRunner.SetNonQueryQuery(query);
-//					query.SetNonQueryQuery();
 			}
 
 			public override Expression BuildExpression(Expression expression, int level)

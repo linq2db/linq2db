@@ -102,7 +102,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (Builder.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
 					QueryRunner.SetNonQueryQuery(query);
-					//query.SetNonQueryQuery();
 				else
 					query.MakeAlternativeInsertOrUpdate(SelectQuery);
 			}

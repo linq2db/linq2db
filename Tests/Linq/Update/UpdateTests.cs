@@ -394,7 +394,6 @@ namespace Tests.xUpdate
 				{
 					db.Person.Where(_ => _.FirstName.StartsWith("UpdateComplex")).Delete();
 				}
-
 			}
 		}
 
@@ -597,16 +596,16 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(false,
-			ProviderName.Access, 
-			ProviderName.DB2, 
-			ProviderName.Firebird, 
-			ProviderName.Informix, 
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
 			ProviderName.OracleNative,
-			ProviderName.OracleManaged, 
-			ProviderName.PostgreSQL, 
-			ProviderName.SqlCe, 
-			ProviderName.SQLite, 
-			TestProvName.SQLiteMs, 
+			ProviderName.OracleManaged,
+			ProviderName.PostgreSQL,
+			ProviderName.SqlCe,
+			ProviderName.SQLite,
+			TestProvName.SQLiteMs,
 			ProviderName.SapHana)]
 		public void UpdateAssociation5(string context)
 		{
@@ -695,8 +694,7 @@ namespace Tests.xUpdate
 			TestProvName.SQLiteMs,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
-			ProviderName.SapHana
-			)]
+			ProviderName.SapHana)]
 		public void UpdateTop(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -741,8 +739,7 @@ namespace Tests.xUpdate
 			TestProvName.MySql57,
 			TestProvName.MariaDB,
 			ProviderName.Sybase,
-			ProviderName.OracleManaged
-		 )]
+			ProviderName.OracleManaged)]
 		public void TestUpdateTakeOrdered(string context)
 		{
 			using (var db = GetDataContext(context))

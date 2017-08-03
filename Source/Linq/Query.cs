@@ -327,40 +327,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public void SetNonQueryQuery()
-		{
-			FinalizeQuery();
-
-			if (Queries.Count != 1)
-				throw new InvalidOperationException();
-
-			ClearParameters();
-
-			GetElement = (ctx,db,expr,ps) => NonQueryQuery(db, expr, ps);
-		}
-
-		int NonQueryQuery(IDataContext dataContext, Expression expr, object[] parameters)
-		{
-			object query = null;
-
-			try
-			{
-				query = SetCommand(dataContext, expr, parameters, 0, true);
-
-				var res = dataContext.ExecuteNonQuery(query);
-
-				return res;
-			}
-			finally
-			{
-				if (query != null)
-					dataContext.ReleaseQuery(query);
-
-				if (dataContext.CloseAfterUse)
-					dataContext.Close();
-			}
-		}
-
 		public void SetNonQueryQuery2()
 		{
 			FinalizeQuery();
@@ -590,7 +556,6 @@ namespace LinqToDB.Linq
 							}
 						}
 
-						//ei.SetNonQueryQuery();
 						QueryRunner.SetNonQueryQuery(ei);
 
 						ObjectOperation<T>.Insert.Add(key, ei);
@@ -757,7 +722,6 @@ namespace LinqToDB.Linq
 						// Set the query.
 						//
 						if (ei.SqlProviderFlags.IsInsertOrUpdateSupported)
-							//ei.SetNonQueryQuery();
 							QueryRunner.SetNonQueryQuery(ei);
 						else
 							ei.MakeAlternativeInsertOrUpdate(sqlQuery);
@@ -884,7 +848,6 @@ namespace LinqToDB.Linq
 						}
 
 						QueryRunner.SetNonQueryQuery(ei);
-						//ei.SetNonQueryQuery();
 
 						ObjectOperation<T>.Update.Add(key, ei);
 					}
@@ -937,7 +900,6 @@ namespace LinqToDB.Linq
 						}
 
 						QueryRunner.SetNonQueryQuery(ei);
-						//ei.SetNonQueryQuery();
 
 						ObjectOperation<T>.Delete.Add(key, ei);
 					}
@@ -977,7 +939,6 @@ namespace LinqToDB.Linq
 			};
 
 			QueryRunner.SetNonQueryQuery(query);
-//			query.SetNonQueryQuery();
 
 			query.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(null), null);
 
@@ -1011,7 +972,6 @@ namespace LinqToDB.Linq
 			};
 
 			QueryRunner.SetNonQueryQuery(query);
-//			query.SetNonQueryQuery();
 
 			query.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(null), null);
 		}
