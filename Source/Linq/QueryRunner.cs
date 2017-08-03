@@ -686,13 +686,12 @@ namespace LinqToDB.Linq
 
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object[] parameters, int idx)
 		{
-			using (var runner = ((IDataContextEx)dataContext).GetQueryRunner(query, 0, expr, parameters))
-			{
-				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
-				runner.DataContext  = (IDataContextEx)dataContext;
+			var runner = ((IDataContextEx)dataContext).GetQueryRunner(query, 0, expr, parameters);
 
-				return runner.GetSqlText();
-			}
+			runner.QueryContext = new QueryContext(dataContext, expr, parameters);
+			runner.DataContext = (IDataContextEx) dataContext;
+
+			return runner.GetSqlText();
 		}
 
 		#endregion
