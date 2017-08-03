@@ -150,7 +150,7 @@ namespace Tests.Samples
 			public string Name;
 		}
 
-		[Test]
+//		[Test]
 		public void Sample()
 		{
 			using (var db = new TestDataConnection())

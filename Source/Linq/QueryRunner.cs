@@ -524,7 +524,7 @@ namespace LinqToDB.Linq
 			query.GetElement = (ctx, db, expr, ps) => ScalarQuery(query, db, expr, ps);
 		}
 
-		static object ScalarQuery<T>(Query<T> query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		static object ScalarQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
@@ -551,7 +551,7 @@ namespace LinqToDB.Linq
 			query.GetElement = (ctx,db,expr,ps) => NonQueryQuery(query, db, expr, ps);
 		}
 
-		static int NonQueryQuery<T>(Query<T> query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		static int NonQueryQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
@@ -563,5 +563,89 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
+		#region NonQueryQuery2
+
+		public static void SetNonQueryQuery2<T>(Query<T> query)
+		{
+			FinalizeQuery(query);
+
+			if (query.Queries.Count != 2)
+				throw new InvalidOperationException();
+
+			ClearParameters(query);
+
+			query.GetElement = (ctx,db,expr,ps) => NonQueryQuery2(query, db, expr, ps);
+		}
+
+		static int NonQueryQuery2(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		{
+			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
+			{
+				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
+				runner.DataContext  = dataContext;
+
+				var n = runner.ExecuteNonQuery();
+
+				if (n != 0)
+					return n;
+
+				runner.QueryNumber = 1;
+
+				return runner.ExecuteNonQuery();
+			}
+		}
+
+		#endregion
+
+		#region QueryQuery2
+
+		public static void SetQueryQuery2<T>(Query<T> query)
+		{
+			FinalizeQuery(query);
+
+			if (query.Queries.Count != 2)
+				throw new InvalidOperationException();
+
+			ClearParameters(query);
+
+			query.GetElement = (ctx, db, expr, ps) => QueryQuery2(query, db, expr, ps);
+		}
+
+		static int QueryQuery2(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		{
+			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
+			{
+				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
+				runner.DataContext  = dataContext;
+
+				var n = runner.ExecuteScalar();
+
+				if (n != null)
+					return 0;
+
+				runner.QueryNumber = 1;
+
+				return runner.ExecuteNonQuery();
+			}
+		}
+
+		#endregion
+
+		#region GetSqlText
+
+		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object[] parameters, int idx)
+		{
+			using (var runner = ((IDataContextEx)dataContext).GetQueryRunner(query, 0, expr, parameters))
+			{
+				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
+				runner.DataContext  = (IDataContextEx)dataContext;
+
+				return runner.GetSqlText();
+			}
+		}
+
+		#endregion
+
 	}
 }

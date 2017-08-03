@@ -39,6 +39,17 @@ namespace LinqToDB.ServiceModel
 			{
 			}
 
+			public override string GetSqlText()
+			{
+				SetCommand(false);
+
+				return DataContext.GetSqlText(new QueryContext
+				{
+					Query  = Query.Queries[QueryNumber],
+					Client = _client
+				});
+			}
+
 			public override void Dispose()
 			{
 				var disposable = _client as IDisposable;

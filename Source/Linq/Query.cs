@@ -116,8 +116,6 @@ namespace LinqToDB.Linq
 			return converter(value);
 		}
 
-		internal abstract object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints);
-
 		internal void SetParameters(Expression expr, object[] parameters, int idx)
 		{
 			foreach (var p in Queries[idx].Parameters)
@@ -184,13 +182,6 @@ namespace LinqToDB.Linq
 				SelectQuery = parseContext.SelectQuery,
 				Parameters  = sqlParameters,
 			});
-		}
-
-		void ClearParameters()
-		{
-			foreach (var query in Queries)
-				foreach (var sqlParameter in query.Parameters)
-					sqlParameter.Expression = null;
 		}
 
 		#endregion
@@ -308,134 +299,6 @@ namespace LinqToDB.Linq
 			}
 
 			return null;
-		}
-
-		#endregion
-
-		#region NonQueryQuery
-
-		void FinalizeQuery()
-		{
-			foreach (var sql in Queries)
-			{
-				sql.SelectQuery = SqlOptimizer.Finalize(sql.SelectQuery);
-				sql.Parameters  = sql.Parameters
-					.Select (p => new { p, idx = sql.SelectQuery.Parameters.IndexOf(p.SqlParameter) })
-					.OrderBy(p => p.idx)
-					.Select (p => p.p)
-					.ToList();
-			}
-		}
-
-		public void SetNonQueryQuery2()
-		{
-			FinalizeQuery();
-
-			if (Queries.Count != 2)
-				throw new InvalidOperationException();
-
-			ClearParameters();
-
-			GetElement = (ctx,db,expr,ps) => NonQueryQuery2(db, expr, ps);
-		}
-
-		int NonQueryQuery2(IDataContext dataContext, Expression expr, object[] parameters)
-		{
-			object query = null;
-
-			try
-			{
-				query = SetCommand(dataContext, expr, parameters, 0, true);
-
-				var n = dataContext.ExecuteNonQuery(query);
-
-				if (n != 0)
-					return n;
-
-				query = SetCommand(dataContext, expr, parameters, 1, true);
-				return dataContext.ExecuteNonQuery(query);
-			}
-			finally
-			{
-				if (query != null)
-					dataContext.ReleaseQuery(query);
-
-				if (dataContext.CloseAfterUse)
-					dataContext.Close();
-			}
-		}
-
-		public void SetQueryQuery2()
-		{
-			FinalizeQuery();
-
-			if (Queries.Count != 2)
-				throw new InvalidOperationException();
-
-			ClearParameters();
-
-			GetElement = (ctx, db, expr, ps) => QueryQuery2(db, expr, ps);
-		}
-
-		int QueryQuery2(IDataContext dataContext, Expression expr, object[] parameters)
-		{
-			object query = null;
-
-			try
-			{
-				query = SetCommand(dataContext, expr, parameters, 0, true);
-
-				var n = dataContext.ExecuteScalar(query);
-
-				if (n != null)
-					return 0;
-
-				query = SetCommand(dataContext, expr, parameters, 1, true);
-				return dataContext.ExecuteNonQuery(query);
-			}
-			finally
-			{
-				if (query != null)
-					dataContext.ReleaseQuery(query);
-
-				if (dataContext.CloseAfterUse)
-					dataContext.Close();
-			}
-		}
-
-		#endregion
-
-		#region RunQuery
-
-		internal override object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints)
-		{
-			lock (this)
-			{
-				SetParameters(expr, parameters, idx);
-
-				var query = Queries[idx];
-
-				if (idx == 0 && (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0))
-				{
-					query.QueryHints = new List<string>(dataContext.QueryHints);
-					query.QueryHints.AddRange(dataContext.NextQueryHints);
-
-					if (clearQueryHints)
-						dataContext.NextQueryHints.Clear();
-				}
-
-				return dataContext.SetQuery(query);
-			}
-		}
-
-		#endregion
-
-		#region GetSqlText
-
-		public string GetSqlText(IDataContext dataContext, Expression expr, object[] parameters, int idx)
-		{
-			var query = SetCommand(dataContext, expr, parameters, 0, false);
-			return dataContext.GetSqlText(query);
 		}
 
 		#endregion
@@ -767,14 +630,14 @@ namespace LinqToDB.Linq
 			if (selectQuery.Update.Items.Count > 0)
 			{
 				selectQuery.QueryType = QueryType.Update;
-				SetNonQueryQuery2();
+				QueryRunner.SetNonQueryQuery2(this);
 			}
 			else
 			{
 				selectQuery.QueryType = QueryType.Select;
 				selectQuery.Select.Columns.Clear();
 				selectQuery.Select.Columns.Add(new SelectQuery.Column(selectQuery, new SqlExpression("1")));
-				SetQueryQuery2();
+				QueryRunner.SetQueryQuery2(this);
 			}
 
 			Queries.Add(new QueryInfo

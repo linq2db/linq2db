@@ -57,6 +57,11 @@ namespace LinqToDB
 				return _queryRunner.ExecuteReaderAsync(cancellationToken, options);
 			}
 
+			public string GetSqlText()
+			{
+				return _queryRunner.GetSqlText();
+			}
+
 #endif
 
 			public    QueryContext   QueryContext { get { return _queryRunner.QueryContext; } set { _queryRunner.QueryContext = value; } }
@@ -77,6 +82,12 @@ namespace LinqToDB
 			{
 				get { return _queryRunner.RowsCount;  }
 				set { _queryRunner.RowsCount = value; }
+			}
+
+			public int QueryNumber
+			{
+				get { return _queryRunner.QueryNumber;  }
+				set { _queryRunner.QueryNumber = value; }
 			}
 		}
 	}

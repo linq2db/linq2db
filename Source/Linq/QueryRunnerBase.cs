@@ -26,7 +26,6 @@ namespace LinqToDB.Linq
 		}
 
 		protected readonly Query    Query;
-		protected readonly int      QueryNumber;
 
 		protected List<string>      QueryHints = new List<string>();
 		protected DataParameter[]   DataParameters;
@@ -44,9 +43,10 @@ namespace LinqToDB.Linq
 		public abstract Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options);
 #endif
 
-		public Func<int> SkipAction { get; set; }
-		public Func<int> TakeAction { get; set; }
-		public int       RowsCount  { get; set; }
+		public Func<int> SkipAction  { get; set; }
+		public Func<int> TakeAction  { get; set; }
+		public int       RowsCount   { get; set; }
+		public int       QueryNumber { get; set; }
 
 		public virtual void Dispose()
 		{
@@ -127,5 +127,7 @@ namespace LinqToDB.Linq
 		}
 
 		protected abstract void SetQuery();
+
+		public abstract string GetSqlText();
 	}
 }

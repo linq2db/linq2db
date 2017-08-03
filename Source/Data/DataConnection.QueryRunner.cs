@@ -66,6 +66,12 @@ namespace LinqToDB.Data
 				_dataConnection.GetParameters(queryContext, _preparedQuery);
 			}
 
+			public override string GetSqlText()
+			{
+				SetCommand(false);
+				return DataContext.GetSqlText(_preparedQuery);
+			}
+
 			public override void Dispose()
 			{
 				if (TraceSwitch.TraceInfo && _dataConnection.OnTraceConnection != null)
@@ -97,9 +103,6 @@ namespace LinqToDB.Data
 
 			public override int ExecuteNonQuery()
 			{
-//				SetCommand();
-//				return _dataConnection.ExecuteNonQuery();
-
 				SetCommand(true);
 
 				if (_preparedQuery.Commands.Length == 1)

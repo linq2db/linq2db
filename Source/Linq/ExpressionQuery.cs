@@ -58,7 +58,7 @@ namespace LinqToDB.Linq
 				if (_sqlTextHolder == null || hasQueryHints)
 				{
 					var info    = GetQuery(Expression, true);
-					var sqlText = info.GetSqlText(DataContext, Expression, Parameters, 0);
+					var sqlText = QueryRunner.GetSqlText(info, DataContext, Expression, Parameters, 0);
 
 					if (hasQueryHints)
 						return sqlText;
