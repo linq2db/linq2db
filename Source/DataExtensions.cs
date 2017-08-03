@@ -246,10 +246,34 @@ namespace LinqToDB
 		public static int InsertOrReplace<T>([NotNull] this IDataContext dataContext, T obj)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.InsertOrReplace(dataContext, obj);
+			return QueryRunner.InsertOrReplace<T>.Query(dataContext, obj);
 		}
 
-		#endregion
+#if !NOASYNC
+
+		public static Task<int> InsertOrReplaceAsync<T>([NotNull] this IDataContext dataContext, T obj,
+			CancellationToken token, TaskCreationOptions options)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, token, options);
+		}
+
+		public static Task<int> InsertOrReplaceAsync<T>([NotNull] this IDataContext dataContext, T obj,
+			CancellationToken token)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, token, TaskCreationOptions.None);
+		}
+
+		public static Task<int> InsertOrReplaceAsync<T>([NotNull] this IDataContext dataContext, T obj)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, CancellationToken.None, TaskCreationOptions.None);
+		}
+
+#endif
+
+#endregion
 
 		#region InsertWithIdentity
 

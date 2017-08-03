@@ -210,6 +210,7 @@
     <Compile Include="Linq\IQueryRunner.cs" />
     <Compile Include="Linq\QueryRunner.Delete.cs" />
     <Compile Include="Linq\QueryRunner.InsertWithIdentity.cs" />
+    <Compile Include="Linq\QueryRunner.InsertOrReplace.cs" />
     <Compile Include="Linq\QueryRunner.Update.cs" />
     <Compile Include="Linq\QueryRunner.Insert.cs" />
     <Compile Include="Linq\QueryRunner.cs" />

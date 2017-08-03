@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 				if (Builder.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
 					QueryRunner.SetNonQueryQuery(query);
 				else
-					query.MakeAlternativeInsertOrUpdate(SelectQuery);
+					QueryRunner.MakeAlternativeInsertOrUpdate(query, SelectQuery);
 			}
 
 			public override Expression BuildExpression(Expression expression, int level)

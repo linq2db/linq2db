@@ -708,7 +708,7 @@ namespace LinqToDB.Linq
 
 		#region NonQueryQuery2
 
-		public static void SetNonQueryQuery2<T>(Query<T> query)
+		public static void SetNonQueryQuery2(Query query)
 		{
 			FinalizeQuery(query);
 
@@ -718,6 +718,11 @@ namespace LinqToDB.Linq
 			ClearParameters(query);
 
 			query.GetElement = (ctx,db,expr,ps) => NonQueryQuery2(query, db, expr, ps);
+
+#if !NOASYNC
+			query.GetElementAsync = (ctx, db, expr, ps, token, options) =>
+				NonQueryQuery2Async(query, db, expr, ps, token, options);
+#endif
 		}
 
 		static int NonQueryQuery2(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
@@ -738,11 +743,39 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		#endregion
+#if !NOASYNC
+
+		static async Task<object> NonQueryQuery2Async(
+			Query               query,
+			IDataContextEx      dataContext,
+			Expression          expr,
+			object[]            parameters,
+			CancellationToken   cancellationToken,
+			TaskCreationOptions options)
+		{
+			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
+			{
+				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
+				runner.DataContext  = dataContext;
+
+				var n = await runner.ExecuteNonQueryAsync(cancellationToken, options);
+
+				if (n != 0)
+					return n;
+
+				runner.QueryNumber = 1;
+
+				return await runner.ExecuteNonQueryAsync(cancellationToken, options);
+			}
+		}
+
+#endif
+
+#endregion
 
 		#region QueryQuery2
 
-		public static void SetQueryQuery2<T>(Query<T> query)
+		public static void SetQueryQuery2(Query query)
 		{
 			FinalizeQuery(query);
 

@@ -986,6 +986,46 @@ namespace Tests.xUpdate
 			}
 		}
 
+#if !NOASYNC
+
+		// IT : # test
+		[Test, DataContextSource]
+		public async Task InsertOrReplace1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 0;
+
+				try
+				{
+					id = Convert.ToInt32(db.Person.InsertWithIdentity(() => new Person
+					{
+						FirstName = "John",
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					}));
+
+					for (var i = 0; i < 3; i++)
+					{
+						await db.InsertOrReplaceAsync(new Patient
+						{
+							PersonID  = id,
+							Diagnosis = ("abc" + i).ToString(),
+						});
+					}
+
+					Assert.AreEqual("abc2", db.Patient.Single(p => p.PersonID == id).Diagnosis);
+				}
+				finally
+				{
+					db.Patient.Delete(p => p.PersonID == id);
+					db.Person. Delete(p => p.ID       == id);
+				}
+			}
+		}
+
+#endif
+
 		[Test]
 		public void InsertOrReplaceWithIdentity()
 		{
