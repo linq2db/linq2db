@@ -95,6 +95,9 @@
     <Compile Include="DataProvider\DB2\DB2SqlBuilderBase.cs" />
     <Compile Include="DataProvider\DB2\DB2Version.cs" />
     <Compile Include="Linq\IQueryProviderAsync.cs" />
+    <Compile Include="Linq\QueryRunner.Update.cs" />
+    <Compile Include="Linq\QueryRunner.Insert.cs" />
+    <Compile Include="Linq\QueryRunner.Delete.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdConfiguration.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdIdentifierQuoteMode.cs" />

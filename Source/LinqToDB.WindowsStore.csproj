@@ -180,6 +180,9 @@
     <Compile Include="Linq\QueryRunnerBase.cs" />
     <Compile Include="Linq\IDataReaderAsync.cs" />
     <Compile Include="Linq\IQueryProviderAsync.cs" />
+    <Compile Include="Linq\QueryRunner.Update.cs" />
+    <Compile Include="Linq\QueryRunner.Insert.cs" />
+    <Compile Include="Linq\QueryRunner.Delete.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="LinqToDBException.cs" />

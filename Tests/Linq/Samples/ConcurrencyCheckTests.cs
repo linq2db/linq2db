@@ -18,7 +18,7 @@ namespace Tests.Samples
 	public class ConcurrencyCheckTests : TestBase
 	{
 #if !MONO
-		private class InterceptDataConnection : DataConnection
+		class InterceptDataConnection : DataConnection
 		{
 			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
 			{
@@ -28,7 +28,7 @@ namespace Tests.Samples
 			/// We need to use same paremeters as for original query
 			/// </summary>
 			/// <param name="original"></param>
-			private SelectQuery Clone(SelectQuery original)
+			SelectQuery Clone(SelectQuery original)
 			{
 				var clone = original.Clone();
 
@@ -122,6 +122,7 @@ namespace Tests.Samples
 					}
 				}
 				#endregion Insert
+
 				return selectQuery;
 			}
 		}
@@ -206,7 +207,7 @@ namespace Tests.Samples
 			Assert.AreEqual(0, result);
 		}
 
-		[Test]
+		[Test, Parallelizable(ParallelScope.None)]
 		public void InsertAndDeleteTest()
 		{
 			var db = _connection;
@@ -232,27 +233,27 @@ namespace Tests.Samples
 #if !NOASYNC
 
 		// IT : # test
-		[Test]
+		[Test, Parallelizable(ParallelScope.None)]
 		public async Task InsertAndDeleteTestAsync()
 		{
 			var db = _connection;
 			var table = db.GetTable<TestTable>();
 
-			await db.InsertAsync(new TestTable { ID = 1000, Description = "Delete Candidate 1000" });
-			await db.InsertAsync(new TestTable { ID = 1001, Description = "Delete Candidate 1001" });
+			await db.InsertAsync(new TestTable { ID = 2000, Description = "Delete Candidate 1000" });
+			await db.InsertAsync(new TestTable { ID = 2001, Description = "Delete Candidate 1001" });
 
-			var obj1000 = await table.FirstAsync(_ => _.ID == 1000);
-			var obj1001 = await table.FirstAsync(_ => _.ID == 1001);
+			var obj2000 = await table.FirstAsync(_ => _.ID == 2000);
+			var obj2001 = await table.FirstAsync(_ => _.ID == 2001);
 
-			Assert.IsNotNull(obj1000);
-			Assert.IsNotNull(obj1001);
-			Assert.AreEqual(1, obj1000.RowVer);
-			Assert.AreEqual(1, obj1001.RowVer);
+			Assert.IsNotNull(obj2000);
+			Assert.IsNotNull(obj2001);
+			Assert.AreEqual(1, obj2000.RowVer);
+			Assert.AreEqual(1, obj2001.RowVer);
 
-			db.Update(obj1000);
+			await db.UpdateAsync(obj2000);
 
-			Assert.AreEqual(0, db.Delete(obj1000));
-			Assert.AreEqual(1, db.Delete(obj1001));
+			Assert.AreEqual(0, await db.DeleteAsync(obj2000));
+			Assert.AreEqual(1, await db.DeleteAsync(obj2001));
 		}
 
 #endif
