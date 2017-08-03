@@ -40,7 +40,8 @@ namespace LinqToDB.Linq
 		public abstract IDataReader ExecuteReader();
 		public abstract Expression  MapperExpression { get; set; }
 #if !NOASYNC
-		public abstract Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options);
+		public abstract Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken, TaskCreationOptions options);
+		public abstract Task<int>              ExecuteNonQueryAsync(CancellationToken cancellationToken, TaskCreationOptions options);
 #endif
 
 		public Func<int> SkipAction  { get; set; }

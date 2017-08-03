@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
 
 using JetBrains.Annotations;
 
@@ -188,8 +192,38 @@ namespace LinqToDB
 			string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.Insert(dataContext, obj, tableName, databaseName, schemaName);
+			return QueryRunner.Insert<T>.Query(dataContext, obj, tableName, databaseName, schemaName);
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> InsertAsync<T>([NotNull] this IDataContext dataContext, T obj,
+			string tableName = null, string databaseName = null, string schemaName = null)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return await QueryRunner.Insert<T>.QueryAsync(
+				dataContext, obj, tableName, databaseName, schemaName, CancellationToken.None, TaskCreationOptions.None);
+		}
+
+		public static async Task<int> InsertAsync<T>([NotNull] this IDataContext dataContext, T obj,
+			CancellationToken token, TaskCreationOptions options)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return await QueryRunner.Insert<T>.QueryAsync(
+				dataContext, obj, null, null, null, token, options);
+		}
+
+		public static async Task<int> InsertAsync<T>(
+			[NotNull] this IDataContext dataContext, T obj,
+			string tableName, string databaseName, string schemaName,
+			CancellationToken token, TaskCreationOptions options)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return await QueryRunner.Insert<T>.QueryAsync(
+				dataContext, obj, tableName, databaseName, schemaName, token, options);
+		}
+
+#endif
 
 		#endregion
 

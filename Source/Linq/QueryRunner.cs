@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder;
 #if !SL4
 using System.Threading.Tasks;
 #endif
@@ -18,7 +19,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	static class QueryRunner
+	static partial class QueryRunner
 	{
 		#region Mapper
 
@@ -187,6 +188,45 @@ namespace LinqToDB.Linq
 				if (dataType != DataType.Undefined)
 					p.SqlParameter.DataType = dataType;
 			}
+		}
+
+		static ParameterAccessor GetParameter(Type type, IDataContext dataContext, SqlField field)
+		{
+			var exprParam = Expression.Parameter(typeof(Expression), "expr");
+
+			Expression getter = Expression.Convert(
+				Expression.Property(
+					Expression.Convert(exprParam, typeof(ConstantExpression)),
+					ReflectionHelper.Constant.Value),
+				type);
+
+			var members  = field.Name.Split('.');
+			var defValue = Expression.Constant(dataContext.MappingSchema.GetDefaultValue(field.SystemType), field.SystemType);
+
+			for (var i = 0; i < members.Length; i++)
+			{
+				var        member = members[i];
+				Expression pof    = Expression.PropertyOrField(getter, member);
+
+				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
+			}
+
+			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
+
+			var expr = dataContext.MappingSchema.GetConvertExpression(field.SystemType, typeof(DataParameter), createDefault: false);
+
+			if (expr != null)
+			{
+				var body = expr.GetBody(getter);
+
+				getter             = Expression.PropertyOrField(body, "Value");
+				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
+			}
+
+			var param = ExpressionBuilder.CreateParameterAccessor(
+				dataContext, getter, dataTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+
+			return param;
 		}
 
 		#endregion
@@ -562,7 +602,7 @@ namespace LinqToDB.Linq
 
 		#region ScalarQuery
 
-		public static void SetScalarQuery<T>(Query<T> query)
+		public static void SetScalarQuery(Query query)
 		{
 			FinalizeQuery(query);
 
@@ -589,7 +629,7 @@ namespace LinqToDB.Linq
 
 		#region NonQueryQuery
 
-		public static void SetNonQueryQuery<T>(Query<T> query)
+		public static void SetNonQueryQuery(Query query)
 		{
 			FinalizeQuery(query);
 
@@ -599,6 +639,11 @@ namespace LinqToDB.Linq
 			ClearParameters(query);
 
 			query.GetElement = (ctx,db,expr,ps) => NonQueryQuery(query, db, expr, ps);
+
+#if !NOASYNC
+			query.GetElementAsync = (ctx, db, expr, ps, token, options) =>
+				NonQueryQueryAsync(query, db, expr, ps, token, options);
+#endif
 		}
 
 		static int NonQueryQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
@@ -611,6 +656,27 @@ namespace LinqToDB.Linq
 				return runner.ExecuteNonQuery();
 			}
 		}
+
+#if !NOASYNC
+
+		static async Task<object> NonQueryQueryAsync(
+			Query               query,
+			IDataContextEx      dataContext,
+			Expression          expression,
+			object[]            ps,
+			CancellationToken   cancellationToken,
+			TaskCreationOptions options)
+		{
+			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
+			{
+				runner.QueryContext = new QueryContext(dataContext, expression, ps);
+				runner.DataContext  = dataContext;
+
+				return await runner.ExecuteNonQueryAsync(cancellationToken, options);
+			}
+		}
+
+#endif
 
 		#endregion
 

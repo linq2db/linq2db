@@ -57,6 +57,11 @@ namespace LinqToDB
 				return _queryRunner.ExecuteReaderAsync(cancellationToken, options);
 			}
 
+			public Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			{
+				return _queryRunner.ExecuteNonQueryAsync(cancellationToken, options);
+			}
+
 #endif
 
 			public string GetSqlText()

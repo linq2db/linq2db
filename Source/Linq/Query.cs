@@ -23,6 +23,11 @@ namespace LinqToDB.Linq
 
 	abstract class Query
 	{
+		public Func<QueryContext,IDataContextEx,Expression,object[],object> GetElement;
+#if !SL4
+		public Func<QueryContext,IDataContextEx,Expression,object[],CancellationToken,TaskCreationOptions,Task<object>> GetElementAsync;
+#endif
+
 		#region Init
 
 		public readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
@@ -145,10 +150,8 @@ namespace LinqToDB.Linq
 		public bool     DoNotChache;
 		public Query<T> Next;
 
-		public Func<QueryContext,IDataContextEx,Expression,object[],object>         GetElement;
 		public Func<QueryContext,IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
-		public Func<QueryContext,IDataContextEx,Expression,object[],CancellationToken,TaskCreationOptions,Task<object>> GetElementAsync;
 		public Func<QueryContext,IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync;
 #endif
 
@@ -263,7 +266,6 @@ namespace LinqToDB.Linq
 		{
 			public static readonly object Sync = new object();
 
-			public static readonly Dictionary<object,Query<int>>    Insert             = new Dictionary<object,Query<int>>();
 			public static readonly Dictionary<object,Query<object>> InsertWithIdentity = new Dictionary<object,Query<object>>();
 			public static readonly Dictionary<object,Query<int>>    InsertOrUpdate     = new Dictionary<object,Query<int>>();
 			public static readonly Dictionary<object,Query<int>>    Update             = new Dictionary<object,Query<int>>();
@@ -308,67 +310,6 @@ namespace LinqToDB.Linq
 
 			return param;
 		}
-
-		#region Insert
-
-		public static int Insert(
-			IDataContext dataContext, T obj,
-			string tableName = null, string databaseName = null, string schemaName = null)
-		{
-			if (Equals(default(T), obj))
-				return 0;
-
-			Query<int> ei;
-
-			var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-
-			if (!ObjectOperation<T>.Insert.TryGetValue(key, out ei))
-				lock (ObjectOperation<T>.Sync)
-					if (!ObjectOperation<T>.Insert.TryGetValue(key, out ei))
-					{
-						var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-						var sqlQuery = new SelectQuery { QueryType = QueryType.Insert };
-
-						if (tableName    != null) sqlTable.PhysicalName = tableName;
-						if (databaseName != null) sqlTable.Database     = databaseName;
-						if (schemaName   != null) sqlTable.Owner        = schemaName;
-
-						sqlQuery.Insert.Into = sqlTable;
-
-						ei = new Query<int>(dataContext, null)
-						{
-							Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
-						};
-
-						foreach (var field in sqlTable.Fields)
-						{
-							if (field.Value.IsInsertable)
-							{
-								var param = GetParameter(dataContext, field.Value);
-
-								ei.Queries[0].Parameters.Add(param);
-
-								sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, param.SqlParameter));
-							}
-							else if (field.Value.IsIdentity)
-							{
-								var sqlb = dataContext.CreateSqlProvider();
-								var expr = sqlb.GetIdentityExpression(sqlTable);
-
-								if (expr != null)
-									sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, expr));
-							}
-						}
-
-						QueryRunner.SetNonQueryQuery(ei);
-
-						ObjectOperation<T>.Insert.Add(key, ei);
-					}
-
-			return (int)ei.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(obj), null);
-		}
-
-		#endregion
 
 		#region InsertWithIdentity
 

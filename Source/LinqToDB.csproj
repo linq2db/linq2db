@@ -208,6 +208,7 @@
     <Compile Include="Linq\IExpressionInfo.cs" />
     <Compile Include="Linq\IQueryProviderAsync.cs" />
     <Compile Include="Linq\IQueryRunner.cs" />
+    <Compile Include="Linq\QueryRunner.Insert.cs" />
     <Compile Include="Linq\QueryRunner.cs" />
     <Compile Include="Linq\QueryRunnerBase.cs" />
     <Compile Include="Linq\MethodHelper.cs" />

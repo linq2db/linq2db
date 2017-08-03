@@ -250,6 +250,52 @@ namespace LinqToDB.Data
 				return dataReader;
 			}
 
+			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			{
+				_isAsync = true;
+
+				base.SetCommand(true);
+
+				if (_preparedQuery.Commands.Length == 1)
+				{
+					await _dataConnection.InitCommandAsync(
+						CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints, cancellationToken);
+
+					if (_preparedQuery.Parameters != null)
+						foreach (var p in _preparedQuery.Parameters)
+							_dataConnection.Command.Parameters.Add(p);
+
+					return await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+				}
+
+				for (var i = 0; i < _preparedQuery.Commands.Length; i++)
+				{
+					await _dataConnection.InitCommandAsync(
+						CommandType.Text, _preparedQuery.Commands[i], null, i == 0 ? _preparedQuery.QueryHints : null, cancellationToken);
+
+					if (i == 0 && _preparedQuery.Parameters != null)
+						foreach (var p in _preparedQuery.Parameters)
+							_dataConnection.Command.Parameters.Add(p);
+
+					if (i < _preparedQuery.Commands.Length - 1 && _preparedQuery.Commands[i].StartsWith("DROP"))
+					{
+						try
+						{
+							await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+						}
+						catch
+						{
+						}
+					}
+					else
+					{
+						await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
+					}
+				}
+
+				return -1;
+			}
+
 #endif
 		}
 	}

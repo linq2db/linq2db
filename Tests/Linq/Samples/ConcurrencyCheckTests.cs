@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -224,6 +228,34 @@ namespace Tests.Samples
 			Assert.AreEqual(0, db.Delete(obj1000));
 			Assert.AreEqual(1, db.Delete(obj1001));
 		}
+
+#if !NOASYNC
+
+		// IT : # test
+		[Test]
+		public async Task InsertAndDeleteTestAsync()
+		{
+			var db = _connection;
+			var table = db.GetTable<TestTable>();
+
+			await db.InsertAsync(new TestTable { ID = 1000, Description = "Delete Candidate 1000" });
+			await db.InsertAsync(new TestTable { ID = 1001, Description = "Delete Candidate 1001" });
+
+			var obj1000 = await table.FirstAsync(_ => _.ID == 1000);
+			var obj1001 = await table.FirstAsync(_ => _.ID == 1001);
+
+			Assert.IsNotNull(obj1000);
+			Assert.IsNotNull(obj1001);
+			Assert.AreEqual(1, obj1000.RowVer);
+			Assert.AreEqual(1, obj1001.RowVer);
+
+			db.Update(obj1000);
+
+			Assert.AreEqual(0, db.Delete(obj1000));
+			Assert.AreEqual(1, db.Delete(obj1001));
+		}
+
+#endif
 
 		[Test]
 		public void CheckInsertOrUpdate()
