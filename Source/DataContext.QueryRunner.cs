@@ -57,12 +57,12 @@ namespace LinqToDB
 				return _queryRunner.ExecuteReaderAsync(cancellationToken, options);
 			}
 
+#endif
+
 			public string GetSqlText()
 			{
 				return _queryRunner.GetSqlText();
 			}
-
-#endif
 
 			public    QueryContext   QueryContext { get { return _queryRunner.QueryContext; } set { _queryRunner.QueryContext = value; } }
 			public    IDataContextEx DataContext  { get { return _queryRunner.DataContext;  } set { _queryRunner.DataContext  = value; } }
