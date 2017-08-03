@@ -144,6 +144,7 @@
     <Compile Include="Linq\QueryRunner.Insert.cs" />
     <Compile Include="Linq\QueryRunner.Delete.cs" />
     <Compile Include="Linq\QueryRunner.InsertWithIdentity.cs" />
+    <Compile Include="Linq\QueryRunner.InsertOrReplace.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />
     <Compile Include="Linq\Builder\AllAnyBuilder.cs" />
     <Compile Include="Linq\Builder\ContextParser.cs" />

@@ -184,6 +184,7 @@
     <Compile Include="Linq\QueryRunner.Insert.cs" />
     <Compile Include="Linq\QueryRunner.Delete.cs" />
     <Compile Include="Linq\QueryRunner.InsertWithIdentity.cs" />
+    <Compile Include="Linq\QueryRunner.InsertOrReplace.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="LinqToDBException.cs" />
