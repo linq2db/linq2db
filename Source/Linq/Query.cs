@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -18,7 +16,6 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Data;
 	using Common;
-	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
@@ -89,6 +86,8 @@ namespace LinqToDB.Linq
 
 		#endregion
 
+		#region Helpers
+
 		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
 
 		public object GetConvertedEnum(Type valueType, object value)
@@ -116,52 +115,7 @@ namespace LinqToDB.Linq
 			return converter(value);
 		}
 
-		internal void SetParameters(Expression expr, object[] parameters, int idx)
-		{
-			foreach (var p in Queries[idx].Parameters)
-			{
-				var value = p.Accessor(expr, parameters);
-
-				var vs = value as IEnumerable;
-
-				if (vs != null)
-				{
-					var type  = vs.GetType();
-					var etype = type.GetItemType();
-
-					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
-						type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArgumentsEx()[0].IsEnumEx() &&
-						etype.GetGenericArgumentsEx()[0].IsEnumEx())
-					{
-						var values = new List<object>();
-
-						foreach (var v in vs)
-						{
-							value = v;
-
-							if (v != null)
-							{
-								var valueType = v.GetType();
-
-								if (valueType.ToNullableUnderlying().IsEnumEx())
-									value = GetConvertedEnum(valueType, value);
-							}
-
-							values.Add(value);
-						}
-
-						value = values;
-					}
-				}
-
-				p.SqlParameter.Value = value;
-
-				var dataType = p.DataTypeAccessor(expr, parameters);
-
-				if (dataType != DataType.Undefined)
-					p.SqlParameter.DataType = dataType;
-			}
-		}
+		#endregion
 	}
 
 	class Query<T> : Query
@@ -300,19 +254,6 @@ namespace LinqToDB.Linq
 
 			return null;
 		}
-
-		#endregion
-
-		#region Inner Types
-
-		internal delegate TElement Mapper<out TElement>(
-			Query<T>      query,
-			QueryContext  qc,
-			IDataContext  dc,
-			IDataReader   rd,
-			MappingSchema ms,
-			Expression    expr,
-			object[]      ps);
 
 		#endregion
 

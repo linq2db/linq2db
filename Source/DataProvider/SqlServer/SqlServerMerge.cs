@@ -8,7 +8,6 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Data;
-	using SqlProvider;
 
 	class SqlServerMerge : BasicMerge
 	{

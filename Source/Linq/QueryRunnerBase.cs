@@ -54,55 +54,6 @@ namespace LinqToDB.Linq
 				DataContext.Close();
 		}
 
-		internal void SetParameters()
-		{
-			var queryContext = Query.Queries[QueryNumber];
-
-			foreach (var p in queryContext.Parameters)
-			{
-				var value = p.Accessor(Expression, Parameters);
-
-				var vs = value as IEnumerable;
-
-				if (vs != null)
-				{
-					var type = vs.GetType();
-					var etype = type.GetItemType();
-
-					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
-						type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
-						etype.GetGenericArgumentsEx()[0].IsEnumEx())
-					{
-						var values = new List<object>();
-
-						foreach (var v in vs)
-						{
-							value = v;
-
-							if (v != null)
-							{
-								var valueType = v.GetType();
-
-								if (valueType.ToNullableUnderlying().IsEnumEx())
-									value = Query.GetConvertedEnum(valueType, value);
-							}
-
-							values.Add(value);
-						}
-
-						value = values;
-					}
-				}
-
-				p.SqlParameter.Value = value;
-
-				var dataType = p.DataTypeAccessor(Expression, Parameters);
-
-				if (dataType != DataType.Undefined)
-					p.SqlParameter.DataType = dataType;
-			}
-		}
-
 		protected virtual void SetCommand(bool clearQueryHints)
 		{
 			lock (Query)
@@ -121,7 +72,7 @@ namespace LinqToDB.Linq
 						DataContext.NextQueryHints.Clear();
 				}
 
-				SetParameters();
+				QueryRunner.SetParameters(Query, Expression, Parameters, QueryNumber);
 				SetQuery();
 			}
 		}

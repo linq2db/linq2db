@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-
+using LinqToDB.Extensions;
 #if !SL4
 using System.Threading.Tasks;
 #endif
@@ -137,6 +138,55 @@ namespace LinqToDB.Linq
 			}
 
 			throw new InvalidOperationException();
+		}
+
+		internal static void SetParameters(Query query, Expression expression, object[] parameters, int queryNumber)
+		{
+			var queryContext = query.Queries[queryNumber];
+
+			foreach (var p in queryContext.Parameters)
+			{
+				var value = p.Accessor(expression, parameters);
+
+				var vs = value as IEnumerable;
+
+				if (vs != null)
+				{
+					var type = vs.GetType();
+					var etype = type.GetItemType();
+
+					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
+						type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+						etype.GetGenericArgumentsEx()[0].IsEnumEx())
+					{
+						var values = new List<object>();
+
+						foreach (var v in vs)
+						{
+							value = v;
+
+							if (v != null)
+							{
+								var valueType = v.GetType();
+
+								if (valueType.ToNullableUnderlying().IsEnumEx())
+									value = query.GetConvertedEnum(valueType, value);
+							}
+
+							values.Add(value);
+						}
+
+						value = values;
+					}
+				}
+
+				p.SqlParameter.Value = value;
+
+				var dataType = p.DataTypeAccessor(expression, parameters);
+
+				if (dataType != DataType.Undefined)
+					p.SqlParameter.DataType = dataType;
+			}
 		}
 
 		#endregion
@@ -646,6 +696,5 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
-
 	}
 }
