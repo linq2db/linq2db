@@ -68,18 +68,12 @@ namespace Tests.xUpdate
 						.Property(t => t.Field1)
 							.HasLength(50);
 
-				try
-				{
-					db.DropTable<TestTable>();
-				}
-				catch
-				{
-				}
+				await db.DropTableAsync<TestTable>(throwExceptionIfNotExists:false);
 
 				var table = await db.CreateTableAsync<TestTable>();
 				var list  = await table.ToListAsync();
 
-				db.DropTable<TestTable>();
+				await db.DropTableAsync<TestTable>();
 			}
 		}
 

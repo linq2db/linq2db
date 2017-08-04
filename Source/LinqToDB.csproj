@@ -208,6 +208,7 @@
     <Compile Include="Linq\IExpressionInfo.cs" />
     <Compile Include="Linq\IQueryProviderAsync.cs" />
     <Compile Include="Linq\IQueryRunner.cs" />
+    <Compile Include="Linq\QueryRunner.DropTable.cs" />
     <Compile Include="Linq\QueryRunner.Delete.cs" />
     <Compile Include="Linq\QueryRunner.InsertWithIdentity.cs" />
     <Compile Include="Linq\QueryRunner.InsertOrReplace.cs" />

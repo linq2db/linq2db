@@ -376,24 +376,109 @@ namespace LinqToDB
 
 #endif
 
-		public static void DropTable<T>([NotNull] this IDataContext dataContext,
-			string tableName    = null,
-			string databaseName = null,
-			string schemaName   = null)
+		public static void DropTable<T>(
+			[NotNull] this IDataContext dataContext,
+			string tableName                 = null,
+			string databaseName              = null,
+			string schemaName                = null,
+			bool   throwExceptionIfNotExists = true)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			Query<T>.DropTable(dataContext, tableName, databaseName, schemaName);
+
+			if (throwExceptionIfNotExists)
+			{
+				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
+			}
+			else try
+			{
+				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
+			}
+			catch
+			{
+			}
 		}
 
-		public static void DropTable<T>([NotNull] this ITable<T> table, string tableName = null, string databaseName = null, string schemaName = null)
+		public static void DropTable<T>(
+			[NotNull] this ITable<T> table,
+			string tableName                 = null,
+			string databaseName              = null,
+			string schemaName                = null,
+			bool   throwExceptionIfNotExists = true)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 
 			var tbl = (Table<T>)table;
 
-			Query<T>.DropTable(tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName);
+			if (throwExceptionIfNotExists)
+			{
+				QueryRunner.DropTable<T>.Query(tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName);
+			}
+			else try
+			{
+				QueryRunner.DropTable<T>.Query(tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName);
+			}
+			catch
+			{
+			}
 		}
 
-		#endregion
+#if !NOASYNC
+
+		public static async Task DropTableAsync<T>(
+			[NotNull] this IDataContext dataContext,
+			string tableName                 = null,
+			string databaseName              = null,
+			string schemaName                = null,
+			bool   throwExceptionIfNotExists = true,
+			CancellationToken   token        = default(CancellationToken),
+			TaskCreationOptions options      = TaskCreationOptions.None)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+
+			if (throwExceptionIfNotExists)
+			{
+				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token, options);
+			}
+			else try
+			{
+				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token, options);
+			}
+			catch
+			{
+			}
+		}
+
+		public static async Task DropTableAsync<T>(
+			[NotNull] this ITable<T> table,
+			string tableName                 = null,
+			string databaseName              = null,
+			string schemaName                = null,
+			bool   throwExceptionIfNotExists = true,
+			CancellationToken   token        = default(CancellationToken),
+			TaskCreationOptions options      = TaskCreationOptions.None)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl = (Table<T>)table;
+
+			if (throwExceptionIfNotExists)
+			{
+				await QueryRunner.DropTable<T>.QueryAsync(
+					tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName, token, options);
+			}
+			else try
+			{
+				await QueryRunner.DropTable<T>.QueryAsync(
+					tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName, token, options);
+			}
+			catch
+			{
+			}
+		}
+
+
+#endif
+
+#endregion
 	}
 }

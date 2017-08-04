@@ -146,6 +146,7 @@
     <Compile Include="Linq\QueryRunner.InsertWithIdentity.cs" />
     <Compile Include="Linq\QueryRunner.InsertOrReplace.cs" />
     <Compile Include="Linq\QueryRunner.CreateTable.cs" />
+    <Compile Include="Linq\QueryRunner.DropTable.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />
     <Compile Include="Linq\Builder\AllAnyBuilder.cs" />
     <Compile Include="Linq\Builder\ContextParser.cs" />

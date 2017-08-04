@@ -101,6 +101,7 @@
     <Compile Include="Linq\QueryRunner.InsertWithIdentity.cs" />
     <Compile Include="Linq\QueryRunner.InsertOrReplace.cs" />
     <Compile Include="Linq\QueryRunner.CreateTable.cs" />
+    <Compile Include="Linq\QueryRunner.DropTable.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdConfiguration.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdIdentifierQuoteMode.cs" />
