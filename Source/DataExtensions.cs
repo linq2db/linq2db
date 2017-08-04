@@ -198,40 +198,10 @@ namespace LinqToDB
 
 #if !NOASYNC
 
-		public static Task<int> InsertAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			string tableName = null, string databaseName = null, string schemaName = null)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.Insert<T>.QueryAsync(
-				dataContext, obj, tableName, databaseName, schemaName, CancellationToken.None, TaskCreationOptions.None);
-		}
-
-		public static Task<int> InsertAsync<T>([NotNull] this IDataContext dataContext, T obj, CancellationToken token)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.Insert<T>.QueryAsync(dataContext, obj, null, null, null, token, TaskCreationOptions.None);
-		}
-
-		public static Task<int> InsertAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token, TaskCreationOptions options)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.Insert<T>.QueryAsync(dataContext, obj, null, null, null, token, options);
-		}
-
 		public static Task<int> InsertAsync<T>(
 			[NotNull] this IDataContext dataContext, T obj,
-			string tableName, string databaseName, string schemaName, CancellationToken token)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.Insert<T>.QueryAsync(
-				dataContext, obj, tableName, databaseName, schemaName, token, TaskCreationOptions.None);
-		}
-
-		public static Task<int> InsertAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj,
-			string tableName, string databaseName, string schemaName,
-			CancellationToken token, TaskCreationOptions options)
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return QueryRunner.Insert<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token, options);
@@ -252,23 +222,10 @@ namespace LinqToDB
 #if !NOASYNC
 
 		public static Task<int> InsertOrReplaceAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token, TaskCreationOptions options)
+			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, token, options);
-		}
-
-		public static Task<int> InsertOrReplaceAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, token, TaskCreationOptions.None);
-		}
-
-		public static Task<int> InsertOrReplaceAsync<T>([NotNull] this IDataContext dataContext, T obj)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, CancellationToken.None, TaskCreationOptions.None);
 		}
 
 #endif
@@ -303,45 +260,15 @@ namespace LinqToDB
 
 #if !NOASYNC
 
-		public static Task<object> InsertWithIdentityAsync<T>([NotNull] this IDataContext dataContext, T obj)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, CancellationToken.None, TaskCreationOptions.None);
-		}
-
 		public static Task<object> InsertWithIdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, TaskCreationOptions.None);
-		}
-
-		public static Task<object> InsertWithIdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token, TaskCreationOptions options)
+			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, options);
 		}
 
-		public static async Task<int> InsertWithInt32IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, CancellationToken.None, TaskCreationOptions.None);
-			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
-		}
-
 		public static async Task<int> InsertWithInt32IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, TaskCreationOptions.None);
-			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
-		}
-
-		public static async Task<int> InsertWithInt32IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token, TaskCreationOptions options)
+			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 
@@ -349,25 +276,8 @@ namespace LinqToDB
 			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
 		}
 
-		public static async Task<long> InsertWithInt64IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, CancellationToken.None, TaskCreationOptions.None);
-			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
-		}
-
 		public static async Task<long> InsertWithInt64IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, TaskCreationOptions.None);
-			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
-		}
-
-		public static async Task<long> InsertWithInt64IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token, TaskCreationOptions options)
+			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 
@@ -375,25 +285,8 @@ namespace LinqToDB
 			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
 		}
 
-		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>([NotNull] this IDataContext dataContext, T obj)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, CancellationToken.None, TaskCreationOptions.None);
-			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
-		}
-
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, TaskCreationOptions.None);
-			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
-		}
-
-		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token, TaskCreationOptions options)
+			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 
@@ -415,20 +308,8 @@ namespace LinqToDB
 
 #if !NOASYNC
 
-		public static Task<int> UpdateAsync<T>([NotNull] this IDataContext dataContext, T obj)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, CancellationToken.None, TaskCreationOptions.None);
-		}
-
-		public static Task<int> UpdateAsync<T>([NotNull] this IDataContext dataContext, T obj, CancellationToken token)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, token, TaskCreationOptions.None);
-		}
-
 		public static Task<int> UpdateAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token, TaskCreationOptions options)
+			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, token, options);
@@ -448,20 +329,8 @@ namespace LinqToDB
 
 #if !NOASYNC
 
-		public static Task<int> DeleteAsync<T>([NotNull] this IDataContext dataContext, T obj)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, CancellationToken.None, TaskCreationOptions.None);
-		}
-
-		public static Task<int> DeleteAsync<T>([NotNull] this IDataContext dataContext, T obj, CancellationToken token)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, token, TaskCreationOptions.None);
-		}
-
 		public static Task<int> DeleteAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token, TaskCreationOptions options)
+			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, token, options);

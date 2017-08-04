@@ -103,25 +103,10 @@ namespace LinqToDB
 #>
 		#region <#= info.Method #>Async<<#= info.Type #><#= paramName #>>
 
-		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(this IQueryable<<#= info.SParam #>> source<#= param #>)
-		{
-			return <#= info.Method #>Async(source<#= paramName #>, CancellationToken.None, TaskCreationOptions.None);
-		}
-
-		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(this IQueryable<<#= info.SParam #>> source<#= param #>, CancellationToken token)
-		{
-			return <#= info.Method #>Async(source<#= paramName #>, token, TaskCreationOptions.None);
-		}
-
-		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(this IQueryable<<#= info.SParam #>> source<#= param #>, TaskCreationOptions options)
-		{
-			return <#= info.Method #>Async(source<#= paramName #>, CancellationToken.None, options);
-		}
-
 		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(
 			this IQueryable<<#= info.SParam #>> source<#= param #>,
-			CancellationToken   token,
-			TaskCreationOptions options)
+			CancellationToken   token   = default(CancellationToken),
+			TaskCreationOptions options = TaskCreationOptions.None)
 		{
 #if !NOASYNC
 
