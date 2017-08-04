@@ -3,5 +3,8 @@ apiRules:
       uidRegex: ^System\.Object\..*
       type: Member
 - exclude:
+      uidRegex: ^LinqToDB\.AnalyticFunctions\.I.*
+      type: Interface
+- exclude:
       uidRegex: ^System\.Attribute\..*
       type: Member
