@@ -120,6 +120,58 @@ namespace Tests.xUpdate
 			}
 		}
 
+#if !NOASYNC
+
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
+		public async Task CreateLocalTempTable1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<TestTable>()
+						.Property(t => t.Field1)
+							.HasLength(50);
+
+				const string tableName = "TestTable";
+
+				try
+				{
+					switch (context)
+					{
+						case ProviderName.SqlServer2008 : 
+						case ProviderName.SqlServer2012 : 
+						case ProviderName.SqlServer2014 : await db.DropTableAsync<TestTable>("#" + tableName); break;
+						default                         : await db.DropTableAsync<TestTable>(tableName);       break;
+					}
+				}
+				catch
+				{
+				}
+
+				ITable<TestTable> table;
+
+				switch (context)
+				{
+					case ProviderName.SqlServer2008 : 
+					case ProviderName.SqlServer2012 : 
+					case ProviderName.SqlServer2014 :
+						table = await db.CreateTableAsync<TestTable>("#" + tableName);
+						break;
+					case ProviderName.DB2 :
+						table = await db.CreateTableAsync<TestTable>(statementHeader:"DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}");
+						break;
+					default:
+						throw new InvalidOperationException();
+				}
+
+				var list = await table.ToListAsync();
+
+				await table.DropAsync();
+			}
+		}
+
+#endif
+
 		enum FieldType1
 		{
 			[MapValue(1)] Value1,

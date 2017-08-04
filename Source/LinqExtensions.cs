@@ -1561,7 +1561,7 @@ namespace LinqToDB
 
 		#endregion
 
-		#region DDL Operations
+		#region Drop
 
 		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null)).GetGenericMethodDefinition();
 
@@ -1577,6 +1577,32 @@ namespace LinqToDB
 					_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> DropAsync<T>(
+			[NotNull] this ITable<T> target,
+			CancellationToken        token   = default(CancellationToken),
+			TaskCreationOptions      options = TaskCreationOptions.None)
+		{
+			if (target == null) throw new ArgumentNullException("target");
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
+				null,
+				_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		#endregion
 
