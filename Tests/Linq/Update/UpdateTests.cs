@@ -175,7 +175,6 @@ namespace Tests.xUpdate
 
 #if !NOASYNC
 
-		// IT : # test
 		[Test, DataContextSource(ProviderName.Informix)]
 		public async Task Update4Async(string context)
 		{
@@ -186,7 +185,7 @@ namespace Tests.xUpdate
 					var id = 1001;
 
 					await db.Child.DeleteAsync(c => c.ChildID > 1000);
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
+					await db.Child.InsertAsync(() => new Child { ParentID = 1, ChildID = id});
 
 					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
 					Assert.AreEqual(1,
@@ -620,7 +619,6 @@ namespace Tests.xUpdate
 
 #if !NOASYNC
 
-		// IT : # test
 		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
 		public async Task UpdateAssociation1Async(string context)
 		{
@@ -634,8 +632,8 @@ namespace Tests.xUpdate
 					await db.Child. DeleteAsync(x => x.ChildID  == childId);
 					await db.Parent.DeleteAsync(x => x.ParentID == parentId);
 
-					db.Parent.Insert(() => new Parent { ParentID = parentId, Value1 = parentId });
-					db.Child. Insert(() => new Child  { ChildID = childId, ParentID = parentId });
+					await db.Parent.InsertAsync(() => new Parent { ParentID = parentId, Value1 = parentId });
+					await db.Child. InsertAsync(() => new Child  { ChildID = childId, ParentID = parentId });
 
 					var parents =
 						from child in db.Child

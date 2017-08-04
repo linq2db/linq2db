@@ -132,6 +132,36 @@ namespace Tests.xUpdate
 			}
 		}
 
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task Insert2Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+
+					Assert.AreEqual(1,
+						await db
+							.Into(db.Child)
+								.Value(c => c.ParentID, () => 1)
+								.Value(c => c.ChildID,  () => id)
+							.InsertAsync());
+					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
+				}
+				finally
+				{
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+				}
+			}
+		}
+
+#endif
+
 		[Test, DataContextSource]
 		public void Insert3(string context)
 		{
@@ -159,6 +189,38 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task Insert3Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+
+					Assert.AreEqual(1,
+						await db.Child
+							.Where(c => c.ChildID == 11)
+							.InsertAsync(db.Child, c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = id
+							}));
+					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
+				}
+				finally
+				{
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+				}
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void Insert31(string context)
@@ -215,6 +277,37 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task Insert4Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+
+					Assert.AreEqual(1,
+						await db.Child
+							.Where(c => c.ChildID == 11)
+							.Into(db.Child)
+								.Value(c => c.ParentID, c  => c.ParentID)
+								.Value(c => c.ChildID,  () => id)
+							.InsertAsync());
+					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
+				}
+				finally
+				{
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+				}
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void Insert5(string context)
@@ -630,6 +723,34 @@ namespace Tests.xUpdate
 			}
 		}
 
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task InsertWithIdentity1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
+			{
+				var id =
+					await db.Person
+						.InsertWithIdentityAsync(() => new Person
+						{
+							FirstName = "John",
+							LastName  = "Shepard",
+							Gender    = Gender.Male
+						});
+
+				Assert.NotNull(id);
+
+				var john = await db.Person.SingleAsync(p => p.FirstName == "John" && p.LastName == "Shepard");
+
+				Assert.NotNull (john);
+				Assert.AreEqual(id, john.ID);
+			}
+		}
+
+#endif
+
 		[Test, DataContextSource]
 		public void InsertWithIdentity2(string context)
 		{
@@ -651,6 +772,32 @@ namespace Tests.xUpdate
 				Assert.AreEqual(id, john.ID);
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task InsertWithIdentity2Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
+			{
+				var id = await db
+					.Into(db.Person)
+						.Value(p => p.FirstName, () => "John")
+						.Value(p => p.LastName,  () => "Shepard")
+						.Value(p => p.Gender,    () => Gender.Male)
+					.InsertWithIdentityAsync();
+
+				Assert.NotNull(id);
+
+				var john = await db.Person.SingleAsync(p => p.FirstName == "John" && p.LastName == "Shepard");
+
+				Assert.NotNull (john);
+				Assert.AreEqual(id, john.ID);
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void InsertWithIdentity3(string context)
