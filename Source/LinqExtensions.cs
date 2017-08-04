@@ -1574,8 +1574,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
-				new[] { query.Expression }));
-
+				new[] { query.Expression });
 
 			if (throwExceptionIfNotExists)
 			{
@@ -1749,6 +1748,33 @@ namespace LinqToDB
 					new[] { source.Expression, Expression.Quote(index) }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<TSource> ElementAtAsync<TSource>(
+			[NotNull]                this IQueryable<TSource> source,
+			[NotNull, InstantHandle] Expression<Func<int>>    index,
+			CancellationToken                                 token   = default(CancellationToken),
+			TaskCreationOptions                               options = TaskCreationOptions.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (index  == null) throw new ArgumentNullException("index");
+
+			var expr =
+				Expression.Call(
+					null,
+					_elementAtMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
+					new[] { source.Expression, Expression.Quote(index) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<TSource>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<TSource>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _elementAtOrDefaultMethodInfo = MemberHelper.MethodOf(() => ElementAtOrDefault<int>(null,null)).GetGenericMethodDefinition();
 
 		public static TSource ElementAtOrDefault<TSource>(
@@ -1764,6 +1790,33 @@ namespace LinqToDB
 					_elementAtOrDefaultMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
 					new[] { source.Expression, Expression.Quote(index) }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<TSource> ElementAtOrDefaultAsync<TSource>(
+			[NotNull]                this IQueryable<TSource> source,
+			[NotNull, InstantHandle] Expression<Func<int>>    index,
+			CancellationToken                                 token   = default(CancellationToken),
+			TaskCreationOptions                               options = TaskCreationOptions.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (index  == null) throw new ArgumentNullException("index");
+
+			var expr =
+				Expression.Call(
+					null,
+					_elementAtOrDefaultMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
+					new[] { source.Expression, Expression.Quote(index) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<TSource>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<TSource>(expr), token);
+		}
+
+#endif
 
 		#endregion
 
@@ -1788,7 +1841,7 @@ namespace LinqToDB
 
 		#endregion
 
-		#region IOrderedQueryable
+#region IOrderedQueryable
 
 		static readonly MethodInfo _thenOrBy = MemberHelper.MethodOf(() => ThenOrBy((IQueryable<int>)null,(Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
 
@@ -1824,9 +1877,9 @@ namespace LinqToDB
 					new[] { source.Expression, Expression.Quote(keySelector) }));
 		}
 
-		#endregion
+#endregion
 
-		#region GetContext
+#region GetContext
 
 		static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
 
@@ -1841,15 +1894,15 @@ namespace LinqToDB
 					new[] { source.Expression }));
 		}
 
-		#endregion
+#endregion
 
-		#region Stub helpers
+#region Stub helpers
 
 		internal static TOutput Where<TOutput,TSource,TInput>(this TInput source, Func<TSource,bool> predicate)
 		{
 			throw new InvalidOperationException();
 		}
 
-		#endregion
+#endregion
 	}
 }
