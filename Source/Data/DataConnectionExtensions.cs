@@ -4,6 +4,11 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Data
@@ -125,6 +130,45 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).Execute();
 		}
+
+#if !NOASYNC
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, CancellationToken token = default(CancellationToken))
+		{
+			return new CommandInfo(connection, sql).ExecuteAsync(token);
+		}
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteAsync();
+		}
+
+		public static Task<int> ExecuteProcAsync(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync();
+		}
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteAsync();
+		}
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, CancellationToken token, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteAsync(token);
+		}
+
+		public static Task<int> ExecuteProcAsync(this DataConnection connection, string sql, CancellationToken token, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync(token);
+		}
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, CancellationToken token, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteAsync(token);
+		}
+
+#endif
 
 		#endregion
 
@@ -386,6 +430,123 @@ namespace LinqToDB.Data
 				databaseName ?? tbl.DatabaseName,
 				schemaName   ?? tbl.SchemaName);
 		}
+
+#if !NOASYNC
+
+		public static Task<int> MergeAsync<T>(this DataConnection dataConnection, IQueryable<T> source, Expression<Func<T,bool>> predicate,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class
+		{
+			return dataConnection.DataProvider.MergeAsync(
+				dataConnection, predicate, true, source.Where(predicate), tableName, databaseName, schemaName, token);
+		}
+
+		public static Task<int> MergeAsync<T>(this DataConnection dataConnection, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class
+		{
+			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source, tableName, databaseName, schemaName, token);
+		}
+
+		public static Task<int> MergeAsync<T>(this DataConnection dataConnection, bool delete, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class
+		{
+			return dataConnection.DataProvider.MergeAsync(dataConnection, null, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+		public static Task<int> MergeAsync<T>(this DataConnection dataConnection, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class
+		{
+			return dataConnection.DataProvider.MergeAsync(dataConnection, null, false, source, tableName, databaseName, schemaName, token);
+		}
+
+		public static Task<int> MergeAsync<T>(this ITable<T> table, IQueryable<T> source, Expression<Func<T,bool>> predicate,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source.Where(predicate),
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName,
+				token);
+		}
+
+		public static Task<int> MergAsynce<T>(this ITable<T> table, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source,
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName,
+				token);
+		}
+
+		public static Task<int> MergeAsync<T>(this ITable<T> table, bool delete, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.MergeAsync(dataConnection, null, delete, source,
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName,
+				token);
+		}
+
+		public static Task<int> MergeAsync<T>(this ITable<T> table, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.MergeAsync(dataConnection, null, false, source,
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName,
+				token);
+		}
+
+#endif
 
 		#endregion
 	}

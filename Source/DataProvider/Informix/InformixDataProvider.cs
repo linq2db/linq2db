@@ -4,13 +4,17 @@ using System.Data;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Security;
+
+#if !NOASYNC
 using System.Threading;
-using LinqToDB.Extensions;
+using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SqlProvider;
 
@@ -247,6 +251,19 @@ namespace LinqToDB.DataProvider.Informix
 
 			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
+
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			if (delete)
+				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
+
+			return new InformixMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
 
 		#endregion
 	}

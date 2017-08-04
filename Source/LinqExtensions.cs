@@ -1841,7 +1841,7 @@ namespace LinqToDB
 
 		#endregion
 
-#region IOrderedQueryable
+		#region IOrderedQueryable
 
 		static readonly MethodInfo _thenOrBy = MemberHelper.MethodOf(() => ThenOrBy((IQueryable<int>)null,(Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
 
@@ -1877,9 +1877,9 @@ namespace LinqToDB
 					new[] { source.Expression, Expression.Quote(keySelector) }));
 		}
 
-#endregion
+		#endregion
 
-#region GetContext
+		#region GetContext
 
 		static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
 
@@ -1894,15 +1894,15 @@ namespace LinqToDB
 					new[] { source.Expression }));
 		}
 
-#endregion
+		#endregion
 
-#region Stub helpers
+		#region Stub helpers
 
 		internal static TOutput Where<TOutput,TSource,TInput>(this TInput source, Func<TSource,bool> predicate)
 		{
 			throw new InvalidOperationException();
 		}
 
-#endregion
+		#endregion
 	}
 }
