@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
 
-			return
+			var result = 
 			(
 				from fk in fks.AsEnumerable()
 				where fk.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY"
@@ -119,6 +119,19 @@ namespace LinqToDB.DataProvider.SQLite
 					Ordinal      = fk.Field<int>("FKEY_FROM_ORDINAL_POSITION"),
 				}
 			).ToList();
+
+			// Handle case where Foreign Key reference does not include a column name (Issue #784)
+			if (result.Any(fk => string.IsNullOrEmpty(fk.OtherColumn)))
+			{
+				var pks = GetPrimaryKeys(dataConnection).ToDictionary(pk => string.Format("{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
+				foreach (var f in result.Where(fk => string.IsNullOrEmpty(fk.OtherColumn)))
+				{
+					string k = string.Format("{0}:{1}", f.OtherTableID, f.Ordinal);
+					if (pks.ContainsKey(k))
+						f.OtherColumn = pks[k];
+				}
+			}
+			return result;
 		}
 
 		protected override string GetDatabaseName(DbConnection dbConnection)
