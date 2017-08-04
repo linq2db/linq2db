@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -47,6 +51,39 @@ namespace Tests.xUpdate
 				db.DropTable<TestTable>();
 			}
 		}
+
+#if !NOASYNC
+
+		// IT : # test
+		[Test, DataContextSource(ProviderName.OracleNative)]
+		public async Task CreateTable1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<TestTable>()
+						.Property(t => t.ID)
+							.IsIdentity()
+							.IsPrimaryKey()
+						.Property(t => t.Field1)
+							.HasLength(50);
+
+				try
+				{
+					db.DropTable<TestTable>();
+				}
+				catch
+				{
+				}
+
+				var table = await db.CreateTableAsync<TestTable>();
+				var list  = await table.ToListAsync();
+
+				db.DropTable<TestTable>();
+			}
+		}
+
+#endif
 
 		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
 		public void CreateLocalTempTable1(string context)

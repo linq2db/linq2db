@@ -353,9 +353,28 @@ namespace LinqToDB
 			DefaulNullable defaulNullable  = DefaulNullable.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.CreateTable(dataContext,
+			return QueryRunner.CreateTable<T>.Query(dataContext,
 				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable);
 		}
+
+#if !NOASYNC
+
+		public static Task<ITable<T>> CreateTableAsync<T>([NotNull] this IDataContext dataContext,
+			string              tableName       = null,
+			string              databaseName    = null,
+			string              schemaName      = null,
+			string              statementHeader = null,
+			string              statementFooter = null,
+			DefaulNullable      defaulNullable  = DefaulNullable.None,
+			CancellationToken   token           = default(CancellationToken),
+			TaskCreationOptions options         = TaskCreationOptions.None)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
+				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable, token, options);
+		}
+
+#endif
 
 		public static void DropTable<T>([NotNull] this IDataContext dataContext,
 			string tableName    = null,
