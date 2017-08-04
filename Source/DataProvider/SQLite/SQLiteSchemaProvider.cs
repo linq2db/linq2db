@@ -111,12 +111,12 @@ namespace LinqToDB.DataProvider.SQLite
 				where fk.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY"
 				select new ForeingKeyInfo
 				{
-					Name         = fk.Field<string>("CONSTRAINT_NAME"),
-					ThisTableID  = fk.Field<string>("TABLE_CATALOG")   + "." + fk.Field<string>("TABLE_SCHEMA")   + "." + fk.Field<string>("TABLE_NAME"),
-					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"),
-					OtherTableID = fk.Field<string>("FKEY_TO_CATALOG") + "." + fk.Field<string>("FKEY_TO_SCHEMA") + "." + fk.Field<string>("FKEY_TO_TABLE"),
-					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"),
-					Ordinal      = fk.Field<int>("FKEY_FROM_ORDINAL_POSITION"),
+					Name         = fk.Field<string>("CONSTRAINT_NAME"           ),
+					ThisTableID  = fk.Field<string>("TABLE_CATALOG"             ) + "." + fk.Field<string>("TABLE_SCHEMA")   + "." + fk.Field<string>("TABLE_NAME"),
+					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"          ),
+					OtherTableID = fk.Field<string>("FKEY_TO_CATALOG"           ) + "." + fk.Field<string>("FKEY_TO_SCHEMA") + "." + fk.Field<string>("FKEY_TO_TABLE"),
+					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"            ),
+					Ordinal      = fk.Field<int>   ("FKEY_FROM_ORDINAL_POSITION"),
 				}
 			).ToList();
 
@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.SQLite
 				var pks = GetPrimaryKeys(dataConnection).ToDictionary(pk => string.Format("{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
 				foreach (var f in result.Where(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 				{
-					string k = string.Format("{0}:{1}", f.OtherTableID, f.Ordinal);
+					var k = string.Format("{0}:{1}", f.OtherTableID, f.Ordinal);
 					if (pks.ContainsKey(k))
 						f.OtherColumn = pks[k];
 				}

@@ -166,30 +166,28 @@ GO
 --
 
 -- Parent table
-DROP TABLE IF EXISTS FKTestCompany
+DROP TABLE IF EXISTS PrimaryKeyTable
 GO
 
-CREATE TABLE FKTestCompany
+CREATE TABLE PrimaryKeyTable
 (
-    CompanyID    integer      NOT NULL PRIMARY KEY,
-    Name         nvarchar(50) NOT NULL
+	ID           integer      NOT NULL PRIMARY KEY,
+	Name         nvarchar(50) NOT NULL
 )
 GO
 
 -- Child table
-DROP TABLE IF EXISTS FKTestDepartment
+DROP TABLE IF EXISTS ForeignKeyTable
 GO
 
-CREATE TABLE FKTestDepartment
+CREATE TABLE ForeignKeyTable
 (
-    Company      integer      NOT NULL,
-    DepartmentID integer      NOT NULL,
-    Name         nvarchar(50) NOT NULL,
-    PRIMARY KEY(Company, DepartmentID),
-    -- Test: the foreign key targets the parent table without a column 
-    -- reference.  This should automatically match against the primary key
-    -- of the target table.
-    CONSTRAINT FK_Department_Company FOREIGN KEY(Company) REFERENCES FKTestCompany ON DELETE CASCADE
+	PrimaryKeyTableID integer      NOT NULL,
+	Name              nvarchar(50) NOT NULL,
+	-- Test: the foreign key targets the parent table without a column 
+	-- reference.  This should automatically match against the primary key
+	-- of the target table.
+	CONSTRAINT FK_ForeignKeyTable_PrimaryKeyTable FOREIGN KEY(PrimaryKeyTableID) REFERENCES PrimaryKeyTable ON DELETE CASCADE
 )
 GO
 
