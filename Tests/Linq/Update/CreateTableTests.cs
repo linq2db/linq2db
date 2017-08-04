@@ -94,7 +94,7 @@ namespace Tests.xUpdate
 						default                         : db.DropTable<TestTable>(tableName);       break;
 					}
 				}
-				catch (Exception)
+				catch
 				{
 				}
 

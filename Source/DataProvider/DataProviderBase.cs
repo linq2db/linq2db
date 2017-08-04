@@ -474,7 +474,16 @@ namespace LinqToDB.DataProvider
 
 #endif
 
-#endregion
+		#endregion
+
+		#region Async
+
+#if !NOASYNC
+
+
+#endif
+
+		#endregion
 
 		//public virtual TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay)
 		//{

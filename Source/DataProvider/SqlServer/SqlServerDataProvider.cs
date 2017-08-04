@@ -253,7 +253,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-#endregion
+		#endregion
 
 		#region Udt support
 
@@ -322,6 +322,15 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
 		}
+
+#endif
+
+		#endregion
+
+		#region Async
+
+#if !NOASYNC
+
 
 #endif
 

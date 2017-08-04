@@ -1574,7 +1574,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
-				new[] { query.Expression });
+				new[] { query.Expression, Expression.Constant(throwExceptionIfNotExists) });
 
 			if (throwExceptionIfNotExists)
 			{
@@ -1607,7 +1607,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
-				new[] { source.Expression });
+				new[] { source.Expression, Expression.Constant(throwExceptionIfNotExists)  });
 
 			var query = source as IQueryProviderAsync;
 
