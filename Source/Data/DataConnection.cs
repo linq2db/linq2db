@@ -302,15 +302,17 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets default connection configuration name. Used by <see cref="DataConnection"/> by default and could be set automatically from:
-		/// <para> - <see cref="DefaultSettings.DefaultConfiguration"/>;</para>
-		/// <para> - first non-global connection string name from <see cref="DefaultSettings.ConnectionStrings"/>;</para>
+		/// <para> - <see cref="ILinqToDBSettings.DefaultConfiguration"/>;</para>
+		/// <para> - first non-global connection string name from <see cref="ILinqToDBSettings.ConnectionStrings"/>;</para>
 		/// <para> - first non-global connection string name passed to <see cref="SetConnectionStrings"/> method.</para>
 		/// </summary>
+		/// <seealso cref="DefaultConfiguration"/>
 		public static string DefaultConfiguration { get; set; }
 		/// <summary>
 		/// Gets or sets name of default data provider, used by new connection if user didn't specified provider explicitly in constructor or in connection options.
-		/// Initialized with value from <see cref="DefaultSettings.DefaultDataProvider"/>.
+		/// Initialized with value from <see cref="DefaultSettings"/>.<see cref="ILinqToDBSettings.DefaultDataProvider"/>.
 		/// </summary>
+		/// <seealso cref="DefaultConfiguration"/>
 		public static string DefaultDataProvider  { get; set; }
 
 		private static Action<TraceInfo> _onTrace = OnTraceInternal;
@@ -430,8 +432,9 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Trace function. By Default use <see cref="Debug"/> class for logging, but could be replaced to log e.g. to your log file.
-		/// First parameter contains trace message.
-		/// Second parameter contains context (<see cref="TraceSwitch.DisplayName"/>).
+		/// <para>First parameter contains trace message.</para>
+		/// <para>Second parameter contains context (<see cref="Switch.DisplayName"/>)</para>
+		/// <seealso cref="TraceSwitch"/>
 		/// </summary>
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
@@ -442,7 +445,8 @@ namespace LinqToDB.Data
 		private static ILinqToDBSettings _defaultSettings;
 
 		/// <summary>
-		/// Gets or sets default connection settings. By default contains settings from linq2db configuration section from configuration file (not supported by .net core).
+		/// Gets or sets default connection settings. By default contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
+		/// <seealso cref="ILinqToDBSettings"/>
 		/// </summary>
 		public static ILinqToDBSettings DefaultSettings
 		{

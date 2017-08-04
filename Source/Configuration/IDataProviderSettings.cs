@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Configuration
 {
+	/// <summary>
+	/// Settings for <see cref="LinqToDB.DataProvider"/>
+	/// </summary>
 	public interface IDataProviderSettings
 	{
 		/// <summary>
