@@ -1462,6 +1462,36 @@ namespace LinqToDB
 					new[] { query.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> InsertOrUpdateAsync<T>(
+			[NotNull]                this ITable<T>        target,
+			[NotNull, InstantHandle] Expression<Func<T>>   insertSetter,
+			[NotNull, InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
+			CancellationToken                              token   = default(CancellationToken),
+			TaskCreationOptions                            options = TaskCreationOptions.None)
+		{
+			if (target                     == null) throw new ArgumentNullException("target");
+			if (insertSetter               == null) throw new ArgumentNullException("insertSetter");
+			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException("onDuplicateKeyUpdateSetter");
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
+				null,
+				_insertOrUpdateMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _insertOrUpdateMethodInfo2 =
 			MemberHelper.MethodOf(() => InsertOrUpdate<int>(null,null,null,null)).GetGenericMethodDefinition();
 
@@ -1490,6 +1520,44 @@ namespace LinqToDB
 						Expression.Quote(keySelector)
 					}));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> InsertOrUpdateAsync<T>(
+			[NotNull]                this ITable<T>        target,
+			[NotNull, InstantHandle] Expression<Func<T>>   insertSetter,
+			[NotNull, InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
+			[NotNull, InstantHandle] Expression<Func<T>>   keySelector,
+			CancellationToken                              token   = default(CancellationToken),
+			TaskCreationOptions                            options = TaskCreationOptions.None)
+		{
+			if (target                     == null) throw new ArgumentNullException("target");
+			if (insertSetter               == null) throw new ArgumentNullException("insertSetter");
+			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException("onDuplicateKeyUpdateSetter");
+			if (keySelector                == null) throw new ArgumentNullException("keySelector");
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
+				null,
+				_insertOrUpdateMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[]
+				{
+					source.Expression,
+					Expression.Quote(insertSetter),
+					Expression.Quote(onDuplicateKeyUpdateSetter),
+					Expression.Quote(keySelector)
+				});
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		#endregion
 
