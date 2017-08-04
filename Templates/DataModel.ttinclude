@@ -278,7 +278,23 @@ string CheckColumnName(string memberName)
         memberName = "Empty";
     else
     {
-        memberName = memberName.Replace("%", "Percent");
+        memberName = memberName
+			.Replace("%", "Percent")
+			.Replace(">", "Greater")
+			.Replace("<", "Lower")
+			.Replace("+", "Plus")
+			.Replace('(', '_')
+			.Replace(')', '_')
+			.Replace('-', '_')
+			.Replace('|', '_')
+			.Replace(',', '_')
+			.Replace('"', '_')
+			.Replace("'", "_")
+			.Replace(".", "_")
+			.Replace("\u00A3", "Pound");
+	
+		if (memberName == "new")
+			memberName = "@new";
     }
     return memberName;
 }
