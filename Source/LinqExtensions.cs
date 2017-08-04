@@ -732,25 +732,25 @@ namespace LinqToDB
 					new[] { query.Expression, Expression.Quote(setter) }));
 		}
 
-		public static int? InsertWithInt32Identity<T>(
+		public static int InsertWithInt32Identity<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter)
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<int?>(InsertWithIdentity(target, setter));
+			return target.DataContext.MappingSchema.ChangeTypeTo<int>(InsertWithIdentity(target, setter));
 		}
 
-		public static long? InsertWithInt64Identity<T>(
+		public static long InsertWithInt64Identity<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter)
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<long?>(InsertWithIdentity(target, setter));
+			return target.DataContext.MappingSchema.ChangeTypeTo<long>(InsertWithIdentity(target, setter));
 		}
 
-		public static decimal? InsertWithDecimalIdentity<T>(
+		public static decimal InsertWithDecimalIdentity<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter)
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<decimal?>(InsertWithIdentity(target, setter));
+			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(InsertWithIdentity(target, setter));
 		}
 
 #if !NOASYNC
@@ -779,31 +779,31 @@ namespace LinqToDB
 			return await Task.Run(() => source.Provider.Execute<object>(expr), token);
 		}
 
-		public static async Task<int?> InsertWithInt32IdentityAsync<T>(
+		public static async Task<int> InsertWithInt32IdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter,
 			CancellationToken                            token   = default(CancellationToken),
 			TaskCreationOptions                          options = TaskCreationOptions.None)
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<int?>(await InsertWithIdentityAsync(target, setter, token, options));
+			return target.DataContext.MappingSchema.ChangeTypeTo<int>(await InsertWithIdentityAsync(target, setter, token, options));
 		}
 
-		public static async Task<long?> InsertWithInt64IdentityAsync<T>(
+		public static async Task<long> InsertWithInt64IdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter,
 			CancellationToken                            token   = default(CancellationToken),
 			TaskCreationOptions                          options = TaskCreationOptions.None)
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<long?>(await InsertWithIdentityAsync(target, setter, token, options));
+			return target.DataContext.MappingSchema.ChangeTypeTo<long>(await InsertWithIdentityAsync(target, setter, token, options));
 		}
 
-		public static async Task<decimal?> InsertWithDecimalIdentityAsync<T>(
+		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter,
 			CancellationToken                            token   = default(CancellationToken),
 			TaskCreationOptions                          options = TaskCreationOptions.None)
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<decimal?>(await InsertWithIdentityAsync(target, setter, token, options));
+			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(await InsertWithIdentityAsync(target, setter, token, options));
 		}
 
 
@@ -1666,6 +1666,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _thenOrBy = MemberHelper.MethodOf(() => ThenOrBy((IQueryable<int>)null,(Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
 
+		[LinqTunnel]
 		public static IOrderedQueryable<TSource> ThenOrBy<TSource, TKey>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<TSource, TKey>> keySelector)
@@ -1682,6 +1683,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _thenOrByDescending = MemberHelper.MethodOf(() => ThenOrByDescending((IQueryable<int>)null, (Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
 
+		[LinqTunnel]
 		public static IOrderedQueryable<TSource> ThenOrByDescending<TSource, TKey>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<TSource, TKey>> keySelector)

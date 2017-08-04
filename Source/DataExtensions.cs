@@ -238,22 +238,22 @@ namespace LinqToDB
 			return QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj);
 		}
 
-		public static int? InsertWithInt32Identity<T>([NotNull] this IDataContext dataContext, T obj)
+		public static int InsertWithInt32Identity<T>([NotNull] this IDataContext dataContext, T obj)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return dataContext.MappingSchema.ChangeTypeTo<int?>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
+			return dataContext.MappingSchema.ChangeTypeTo<int>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
 		}
 
-		public static long? InsertWithInt64Identity<T>([NotNull] this IDataContext dataContext, T obj)
+		public static long InsertWithInt64Identity<T>([NotNull] this IDataContext dataContext, T obj)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return dataContext.MappingSchema.ChangeTypeTo<long?>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
+			return dataContext.MappingSchema.ChangeTypeTo<long>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
 		}
 
-		public static decimal? InsertWithDecimalIdentity<T>([NotNull] this IDataContext dataContext, T obj)
+		public static decimal InsertWithDecimalIdentity<T>([NotNull] this IDataContext dataContext, T obj)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return dataContext.MappingSchema.ChangeTypeTo<decimal?>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
+			return dataContext.MappingSchema.ChangeTypeTo<decimal>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
 		}
 
 #if !NOASYNC
@@ -265,31 +265,31 @@ namespace LinqToDB
 			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, options);
 		}
 
-		public static async Task<int?> InsertWithInt32IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
+		public static async Task<int> InsertWithInt32IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
 			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 
 			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, options);
-			return dataContext.MappingSchema.ChangeTypeTo<int?>(ret);
+			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
 		}
 
-		public static async Task<long?> InsertWithInt64IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
+		public static async Task<long> InsertWithInt64IdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
 			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 
 			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, options);
-			return dataContext.MappingSchema.ChangeTypeTo<long?>(ret);
+			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
 		}
 
-		public static async Task<decimal?> InsertWithDecimalIdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
+		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>([NotNull] this IDataContext dataContext, T obj,
 			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 
 			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, options);
-			return dataContext.MappingSchema.ChangeTypeTo<decimal?>(ret);
+			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
 		}
 
 #endif
