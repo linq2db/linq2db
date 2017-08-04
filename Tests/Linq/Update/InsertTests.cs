@@ -1014,7 +1014,7 @@ namespace Tests.xUpdate
 						});
 					}
 
-					Assert.AreEqual("abc2", db.Patient.Single(p => p.PersonID == id).Diagnosis);
+					Assert.AreEqual("abc2", (await db.Patient.SingleAsync(p => p.PersonID == id)).Diagnosis);
 				}
 				finally
 				{

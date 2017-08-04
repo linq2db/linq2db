@@ -89,7 +89,29 @@ namespace LinqToDB
 			options);
 		}
 
-#endregion
+		public static Task ForEachUntilAsync<TSource>(
+			this IQueryable<TSource> source, Func<TSource,bool> func,
+			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
+		{
+#if !NOASYNC
+
+			var query = source as ExpressionQuery<TSource>;
+			if (query != null)
+				return query.GetForEachUntilAsync(func, token, options);
+
+#endif
+
+			return GetActionTask(() =>
+			{
+				foreach (var item in source)
+					if (token.IsCancellationRequested || !func(item))
+						break;
+			},
+			token,
+			options);
+		}
+
+		#endregion
 
 #if !NOASYNC
 

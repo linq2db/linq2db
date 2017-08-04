@@ -3,6 +3,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -166,7 +170,36 @@ namespace LinqToDB
 			throw new InvalidOperationException();
 		}
 
-		#endregion
+#if !NOASYNC
+
+		public static async Task<T> SelectAsync<T>(
+			[NotNull]                this IDataContext   dataContext,
+			[NotNull, InstantHandle] Expression<Func<T>> selector)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (selector    == null) throw new ArgumentNullException("selector");
+
+			var q = new Table<T>(dataContext, selector);
+
+			var read = false;
+			var item = default(T);
+
+			await q.ForEachUntilAsync(r =>
+			{
+				read = true;
+				item = r;
+				return false;
+			});
+
+			if (read)
+				return item;
+
+			throw new InvalidOperationException();
+		}
+
+#endif
+
+#endregion
 
 		#region Delete
 

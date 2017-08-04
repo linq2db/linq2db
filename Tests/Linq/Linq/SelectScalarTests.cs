@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
+
+#if !NOASYNC
 using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -19,6 +23,18 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(p, db.Select(() => p));
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task Parameter1Async(string context)
+		{
+			var p = 1;
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(p, await db.SelectAsync(() => p));
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void Parameter2(string context)

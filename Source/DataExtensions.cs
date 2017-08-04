@@ -185,8 +185,6 @@ namespace LinqToDB
 
 		#endregion
 
-		#region Object Operations
-
 		#region Insert
 
 		public static int Insert<T>([NotNull] this IDataContext dataContext, T obj,
@@ -230,7 +228,7 @@ namespace LinqToDB
 
 #endif
 
-#endregion
+		#endregion
 
 		#region InsertWithIdentity
 
@@ -296,7 +294,7 @@ namespace LinqToDB
 
 #endif
 
-#endregion
+		#endregion
 
 		#region Update
 
@@ -340,9 +338,7 @@ namespace LinqToDB
 
 		#endregion
 
-		#endregion
-
-		#region DDL Operations
+		#region CreateTable
 
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
 			string         tableName       = null,
@@ -376,6 +372,10 @@ namespace LinqToDB
 
 #endif
 
+		#endregion
+
+		#region DropTable
+
 		public static void DropTable<T>(
 			[NotNull] this IDataContext dataContext,
 			string tableName                 = null,
@@ -476,9 +476,8 @@ namespace LinqToDB
 			}
 		}
 
-
 #endif
 
-#endregion
+		#endregion
 	}
 }

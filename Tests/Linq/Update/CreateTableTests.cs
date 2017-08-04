@@ -37,13 +37,7 @@ namespace Tests.xUpdate
 						.Property(t => t.Field1)
 							.HasLength(50);
 
-				try
-				{
-					db.DropTable<TestTable>();
-				}
-				catch (Exception)
-				{
-				}
+				db.DropTable<TestTable>(throwExceptionIfNotExists:false);
 
 				var table = db.CreateTable<TestTable>();
 				var list = table.ToList();
@@ -54,7 +48,6 @@ namespace Tests.xUpdate
 
 #if !NOASYNC
 
-		// IT : # test
 		[Test, DataContextSource(ProviderName.OracleNative)]
 		public async Task CreateTable1Async(string context)
 		{

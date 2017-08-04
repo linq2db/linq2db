@@ -103,6 +103,12 @@ namespace LinqToDB.Linq
 				.GetForEachAsync(null, (IDataContextEx)DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken, options);
 		}
 
+		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken, TaskCreationOptions options)
+		{
+			return GetQuery(Expression, true)
+				.GetForEachAsync(null, (IDataContextEx)DataContext, Expression, Parameters, func, cancellationToken, options);
+		}
+
 #endif
 
 		#endregion
