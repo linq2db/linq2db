@@ -80,6 +80,7 @@ namespace LinqToDB.DataProvider.SqlCe
 									return new SqlFunction(
 										func.SystemType,
 										func.Name,
+										false,
 										func.Precedence,
 										func.Parameters[0],
 										new SqlFunction(func.SystemType, "Floor", func.Parameters[1]));

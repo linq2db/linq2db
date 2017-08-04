@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Expressions
 {
@@ -780,7 +782,7 @@ namespace LinqToDB.Expressions
 			return accessors;
 		}
 
-		public static Expression GetRootObject(this Expression expr)
+		public static Expression GetRootObject(this Expression expr, MappingSchema mapping)
 		{
 			if (expr == null)
 				return null;
@@ -792,10 +794,10 @@ namespace LinqToDB.Expressions
 						var e = (MethodCallExpression)expr;
 
 						if (e.Object != null)
-							return GetRootObject(e.Object);
+							return GetRootObject(e.Object, mapping);
 
-						if (e.Arguments != null && e.Arguments.Count > 0 && e.IsQueryable())
-							return GetRootObject(e.Arguments[0]);
+						if (e.Arguments != null && e.Arguments.Count > 0 && (e.IsQueryable() || e.IsAggregate(mapping)))
+							return GetRootObject(e.Arguments[0], mapping);
 
 						break;
 					}
@@ -805,7 +807,7 @@ namespace LinqToDB.Expressions
 						var e = (MemberExpression)expr;
 
 						if (e.Expression != null)
-							return GetRootObject(e.Expression.Unwrap());
+							return GetRootObject(e.Expression.Unwrap(), mapping);
 
 						break;
 					}
@@ -863,6 +865,20 @@ namespace LinqToDB.Expressions
 			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions);
 		}
 
+		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
+		{
+			if (methodCall.IsQueryable(AggregationBuilder.MethodNames))
+				return true;
+
+			if (methodCall.Arguments.Count > 0)
+			{
+				var function = AggregationBuilder.GetAggregateDefinition(methodCall, mapping);
+				return function != null;
+			}
+
+			return false;
+		}
+
 		public static bool IsQueryable(this MethodCallExpression method, string name)
 		{
 			return method.Method.Name == name && method.IsQueryable();
@@ -878,7 +894,7 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
-		static Expression FindLevel(Expression expression, int level, ref int current)
+		static Expression FindLevel(Expression expression, MappingSchema mapping, int level, ref int current)
 		{
 			switch (expression.NodeType)
 			{
@@ -887,12 +903,12 @@ namespace LinqToDB.Expressions
 						var call = (MethodCallExpression)expression;
 						var expr = call.Object;
 
-						if (expr == null && call.IsQueryable() && call.Arguments.Count > 0)
+						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping)) && call.Arguments.Count > 0)
 							expr = call.Arguments[0];
 
 						if (expr != null)
 						{
-							var ex = FindLevel(expr, level, ref current);
+							var ex = FindLevel(expr, mapping, level, ref current);
 
 							if (level == current)
 								return ex;
@@ -909,7 +925,7 @@ namespace LinqToDB.Expressions
 
 						if (e.Expression != null)
 						{
-							var expr = FindLevel(e.Expression.Unwrap(), level, ref current);
+							var expr = FindLevel(e.Expression.Unwrap(), mapping, level, ref current);
 
 							if (level == current)
 								return expr;
@@ -924,10 +940,10 @@ namespace LinqToDB.Expressions
 			return expression;
 		}
 
-		public static Expression GetLevelExpression(this Expression expression, int level)
+		public static Expression GetLevelExpression(this Expression expression, MappingSchema mapping, int level)
 		{
 			var current = 0;
-			var expr    = FindLevel(expression, level, ref current);
+			var expr    = FindLevel(expression, mapping, level, ref current);
 
 			if (expr == null || current != level)
 				throw new InvalidOperationException();

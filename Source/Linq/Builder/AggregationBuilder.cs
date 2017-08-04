@@ -8,15 +8,24 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using LinqToDB.Expressions;
 	using Extensions;
+	using Mapping;
 	using SqlQuery;
 
 	class AggregationBuilder : MethodCallBuilder
 	{
-		public static string[] MethodNames = new[] { "Average", "Min", "Max", "Sum" };
+		public static string[] MethodNames = { "Average", "Min", "Max", "Sum" };
+
+		public static Sql.ExpressionAttribute GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
+		{
+			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedTypeEx(),
+				methodCall.Method,
+				f => f.Configuration);
+			return functions.FirstOrDefault(f => f.IsAggregate);
+		}
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(MethodNames);
+			return methodCall.IsAggregate(builder.MappingSchema);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -40,23 +49,58 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
-			var sql     = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
+			var attr    = GetAggregateDefinition(methodCall, builder.MappingSchema);
 
-			if (sql.Length == 1 && sql[0] is SelectQuery)
+			ISqlExpression sqlExpression = null;
+
+			if (attr != null)
 			{
-				var query = (SelectQuery)sql[0];
-
-				if (query.Select.Columns.Count == 1)
+				sqlExpression = attr.GetExpression(builder.MappingSchema, methodCall, e =>
 				{
-					var join = SelectQuery.OuterApply(query);
-					context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-					sql[0] = query.Select.Columns[0];
-				}
+					var ex = e.Unwrap();
+
+					var l = ex as LambdaExpression;
+					if (l != null)
+					{
+						var p = sequence.Parent;
+						var ctx = new ExpressionContext(buildInfo.Parent, sequence, l);
+
+						var res = builder.ConvertToSql(ctx, l.Body, true);
+
+						builder.ReplaceParent(ctx, p);
+						return res;
+					}
+					return builder.ConvertToSql(context, ex, true);
+				});
 			}
 
+			if (sqlExpression == null)
+			{
+				var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
+
+				if (sql.Length == 1 && sql[0] is SelectQuery)
+				{
+					var query = (SelectQuery)sql[0];
+
+					if (query.Select.Columns.Count == 1)
+					{
+						var join = SelectQuery.OuterApply(query);
+						context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+						sql[0] = query.Select.Columns[0];
+					}
+				}
+
+				if (attr != null)
+					sqlExpression = attr.GetExpression(methodCall.Method, sql);
+				else
+					sqlExpression = new SqlFunction(methodCall.Type, methodCall.Method.Name, true, sql);
+			}
+
+			if (sqlExpression == null)
+				throw new LinqToDBException("Invalid Aggregate function implementation");
+
 			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(
-				new SqlFunction(methodCall.Type, methodCall.Method.Name, sql));
+			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression);
 
 			return context;
 		}
