@@ -1563,25 +1563,41 @@ namespace LinqToDB
 
 		#region Drop
 
-		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null, true)).GetGenericMethodDefinition();
 
-		public static int Drop<T>([NotNull] this ITable<T> target)
+		public static int Drop<T>([NotNull] this ITable<T> target, bool throwExceptionIfNotExists = true)
 		{
 			if (target == null) throw new ArgumentNullException("target");
 
 			IQueryable<T> query = target;
 
-			return query.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
-					new[] { query.Expression }));
+			var expr = Expression.Call(
+				null,
+				_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { query.Expression }));
+
+
+			if (throwExceptionIfNotExists)
+			{
+				return query.Provider.Execute<int>(expr);
+			}
+
+			try
+			{
+				return query.Provider.Execute<int>(expr);
+			}
+			catch
+			{
+			}
+
+			return 0;
 		}
 
 #if !NOASYNC
 
 		public static async Task<int> DropAsync<T>(
 			[NotNull] this ITable<T> target,
+			bool                     throwExceptionIfNotExists = true,
 			CancellationToken        token   = default(CancellationToken),
 			TaskCreationOptions      options = TaskCreationOptions.None)
 		{
@@ -1596,10 +1612,26 @@ namespace LinqToDB
 
 			var query = source as IQueryProviderAsync;
 
-			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+			if (throwExceptionIfNotExists)
+			{
+				if (query != null)
+					return await query.ExecuteAsync<int>(expr, token, options);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+				return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			}
+
+			try
+			{
+				if (query != null)
+					return await query.ExecuteAsync<int>(expr, token, options);
+
+				return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			}
+			catch
+			{
+			}
+
+			return 0;
 		}
 
 #endif
