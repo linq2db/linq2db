@@ -988,7 +988,6 @@ namespace Tests.xUpdate
 
 #if !NOASYNC
 
-		// IT : # test
 		[Test, DataContextSource]
 		public async Task InsertOrReplace1Async(string context)
 		{
@@ -1018,8 +1017,8 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Patient.Delete(p => p.PersonID == id);
-					db.Person. Delete(p => p.ID       == id);
+					await db.Patient.Where     (p => p.PersonID == id).DeleteAsync();
+					await db.Person.DeleteAsync(p => p.ID       == id);
 				}
 			}
 		}

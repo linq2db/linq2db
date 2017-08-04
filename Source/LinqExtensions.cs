@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 #if !NOASYNC
+using System.Threading;
 using System.Threading.Tasks;
 #endif
 
@@ -199,7 +201,7 @@ namespace LinqToDB
 
 #endif
 
-#endregion
+		#endregion
 
 		#region Delete
 
@@ -216,6 +218,30 @@ namespace LinqToDB
 					new[] { source.Expression }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> DeleteAsync<T>(
+			[NotNull] this IQueryable<T> source,
+			CancellationToken            token = default(CancellationToken),
+			TaskCreationOptions          options = TaskCreationOptions.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			var expr = Expression.Call(
+				null,
+				_deleteMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _deleteMethodInfo2 = MemberHelper.MethodOf(() => Delete<int>(null, null)).GetGenericMethodDefinition();
 
 		public static int Delete<T>(
@@ -231,6 +257,32 @@ namespace LinqToDB
 					_deleteMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(predicate) }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> DeleteAsync<T>(
+			[NotNull]                this IQueryable<T>       source,
+			[NotNull, InstantHandle] Expression<Func<T,bool>> predicate,
+			CancellationToken                                 token   = default(CancellationToken),
+			TaskCreationOptions                               options = TaskCreationOptions.None)
+		{
+			if (source    == null) throw new ArgumentNullException("source");
+			if (predicate == null) throw new ArgumentNullException("predicate");
+
+			var expr = Expression.Call(
+				null,
+				_deleteMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(predicate) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		#endregion
 
@@ -254,6 +306,34 @@ namespace LinqToDB
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			CancellationToken                                          token   = default(CancellationToken),
+			TaskCreationOptions                                        options = TaskCreationOptions.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (target == null) throw new ArgumentNullException("target");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _updateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
 
 		public static int Update<T>(
@@ -269,6 +349,32 @@ namespace LinqToDB
 					_updateMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(setter) }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<T>(
+			[NotNull]                this IQueryable<T>    source,
+			[NotNull, InstantHandle] Expression<Func<T,T>> setter,
+			CancellationToken                              token   = default(CancellationToken),
+			TaskCreationOptions                            options = TaskCreationOptions.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		static readonly MethodInfo _updateMethodInfo3 = MemberHelper.MethodOf(() => Update<int>(null, null, null)).GetGenericMethodDefinition();
 
@@ -288,6 +394,34 @@ namespace LinqToDB
 					new[] { source.Expression, Expression.Quote(predicate), Expression.Quote(setter) }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<T>(
+			[NotNull]                this IQueryable<T>       source,
+			[NotNull, InstantHandle] Expression<Func<T,bool>> predicate,
+			[NotNull, InstantHandle] Expression<Func<T,T>>    setter,
+			CancellationToken                                 token   = default(CancellationToken),
+			TaskCreationOptions                               options = TaskCreationOptions.None)
+		{
+			if (source    == null) throw new ArgumentNullException("source");
+			if (predicate == null) throw new ArgumentNullException("predicate");
+			if (setter    == null) throw new ArgumentNullException("setter");
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo3.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(predicate), Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _updateMethodInfo4 = MemberHelper.MethodOf(() => Update<int>(null)).GetGenericMethodDefinition();
 
 		public static int Update<T>([NotNull] this IUpdatable<T> source)
@@ -302,6 +436,32 @@ namespace LinqToDB
 					_updateMethodInfo4.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<T>(
+			[NotNull] this IUpdatable<T> source,
+			CancellationToken            token   = default(CancellationToken),
+			TaskCreationOptions          options = TaskCreationOptions.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			var q = ((Updatable<T>)source).Query;
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo4.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { q.Expression });
+
+			var query = q as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => q.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		static readonly MethodInfo _updateMethodInfo5 = MemberHelper.MethodOf(() => Update<int,int>(null, (Expression<Func<int,int>>)null, null)).GetGenericMethodDefinition();
 
@@ -320,6 +480,34 @@ namespace LinqToDB
 					_updateMethodInfo5.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { source.Expression, Expression.Quote(target), Expression.Quote(setter) }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			CancellationToken                                          token   = default(CancellationToken),
+			TaskCreationOptions                                        options = TaskCreationOptions.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (target == null) throw new ArgumentNullException("target");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo5.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				new[] { source.Expression, Expression.Quote(target), Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token, options);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		class Updatable<T> : IUpdatable<T>
 		{
@@ -1097,6 +1285,8 @@ namespace LinqToDB
 
 		#endregion
 
+		#region GetContext
+
 		static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
 
 		internal static ContextParser.Context GetContext<TSource>(this IQueryable<TSource> source)
@@ -1109,6 +1299,8 @@ namespace LinqToDB
 					_setMethodInfo8.MakeGenericMethod(typeof(TSource)),
 					new[] { source.Expression }));
 		}
+
+		#endregion
 
 		#region Stub helpers
 

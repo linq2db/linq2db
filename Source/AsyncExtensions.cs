@@ -121,8 +121,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
-#if !NOASYNC
-
 			var query = source as ExpressionQuery<TSource>;
 
 			if (query != null)
@@ -131,8 +129,6 @@ namespace LinqToDB
 				await query.GetForEachAsync(list.Add, token, options);
 				return list;
 			}
-
-#endif
 
 			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(),
@@ -148,8 +144,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken), TaskCreationOptions options = TaskCreationOptions.None)
 		{
-#if !NOASYNC
-
 			var query = source as ExpressionQuery<TSource>;
 
 			if (query != null)
@@ -158,8 +152,6 @@ namespace LinqToDB
 				await query.GetForEachAsync(list.Add, token, options);
 				return list.ToArray();
 			}
-
-#endif
 
 			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
@@ -177,8 +169,6 @@ namespace LinqToDB
 			CancellationToken        token   = default(CancellationToken),
 			TaskCreationOptions      options = TaskCreationOptions.None)
 		{
-#if !NOASYNC
-
 			var query = source as ExpressionQuery<TSource>;
 
 			if (query != null)
@@ -187,8 +177,6 @@ namespace LinqToDB
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token, options);
 				return dic;
 			}
-
-#endif
 
 			return await GetTask(
 				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
