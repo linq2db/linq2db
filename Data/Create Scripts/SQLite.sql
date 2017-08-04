@@ -159,3 +159,56 @@ SELECT
 	       10
 
 GO
+
+
+--
+-- Demonstration Tables for Issue #784
+--
+
+-- Parent table
+DROP TABLE IF EXISTS FKTestCompany
+GO
+
+CREATE TABLE FKTestCompany
+(
+    CompanyID    integer      NOT NULL PRIMARY KEY,
+    Name         nvarchar(50) NOT NULL
+)
+GO
+
+-- Child table
+DROP TABLE IF EXISTS FKTestDepartment
+GO
+
+CREATE TABLE FKTestDepartment
+(
+    Company      integer      NOT NULL,
+    DepartmentID integer      NOT NULL,
+    Name         nvarchar(50) NOT NULL,
+    PRIMARY KEY(Company, DepartmentID),
+    -- Test: the foreign key targets the parent table without a column 
+    -- reference.  This should automatically match against the primary key
+    -- of the target table.
+    CONSTRAINT FK_Department_Company FOREIGN KEY(Company) REFERENCES FKTestCompany ON DELETE CASCADE
+)
+GO
+
+-- Second-level child table, alternate semantics
+DROP TABLE IF EXISTS FKTestPosition
+GO
+
+CREATE TABLE FKTestPosition
+(
+    Company      integer      NOT NULL,
+    Department   integer      NOT NULL,
+    PositionID   integer      NOT NULL,
+    Name         nvarchar(50) NOT NULL,
+    PRIMARY KEY(Company, Department, PositionID),
+    -- Test: one level deeper, this should link to both fields in the 
+    -- primary key of the FKTestDepartment table
+    CONSTRAINT FK_Position_Department FOREIGN KEY(Company, Department) REFERENCES FKTestDepartment ON DELETE CASCADE
+	-- A simpler foreign key for the above would be:
+	--    FOREIGN KEY(Department) REFERENCES FKTestDepartment(DepartmentID) ON DELETE CASCADE
+)
+GO
+
