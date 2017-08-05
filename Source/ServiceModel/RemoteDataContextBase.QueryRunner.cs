@@ -175,7 +175,7 @@ namespace LinqToDB.ServiceModel
 				}
 			}
 
-			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 			{
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
@@ -197,7 +197,7 @@ namespace LinqToDB.ServiceModel
 				return new DataReaderAsync(_dataContext, ret, SkipAction, TakeAction);
 			}
 
-			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				SetCommand(true);
 
@@ -217,7 +217,7 @@ namespace LinqToDB.ServiceModel
 						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints));
 			}
 
-			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 			{
 				SetCommand(true);
 

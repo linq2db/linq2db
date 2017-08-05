@@ -68,7 +68,7 @@ namespace LinqToDB.Linq
 
 #if !NOASYNC
 
-			public static Task<object> QueryAsync(IDataContext dataContext, T obj, CancellationToken token, TaskCreationOptions options)
+			public static Task<object> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return Task.FromResult((object)0);
@@ -76,7 +76,7 @@ namespace LinqToDB.Linq
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
 				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
 
-				return ei.GetElementAsync(null, (IDataContextEx)dataContext, Expression.Constant(obj), null, token, options);
+				return ei.GetElementAsync(null, (IDataContextEx)dataContext, Expression.Constant(obj), null, token);
 			}
 
 #endif

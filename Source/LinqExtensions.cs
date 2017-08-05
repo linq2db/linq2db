@@ -220,10 +220,7 @@ namespace LinqToDB
 
 #if !NOASYNC
 
-		public static async Task<int> DeleteAsync<T>(
-			[NotNull] this IQueryable<T> source,
-			CancellationToken            token = default(CancellationToken),
-			TaskCreationOptions          options = TaskCreationOptions.None)
+		public static async Task<int> DeleteAsync<T>([NotNull] this IQueryable<T> source, CancellationToken token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
@@ -235,7 +232,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -245,7 +242,7 @@ namespace LinqToDB
 		static readonly MethodInfo _deleteMethodInfo2 = MemberHelper.MethodOf(() => Delete<int>(null, null)).GetGenericMethodDefinition();
 
 		public static int Delete<T>(
-			[NotNull]                this IQueryable<T>       source,
+			[NotNull]           this IQueryable<T>            source,
 			[NotNull, InstantHandle] Expression<Func<T,bool>> predicate)
 		{
 			if (source    == null) throw new ArgumentNullException("source");
@@ -261,10 +258,9 @@ namespace LinqToDB
 #if !NOASYNC
 
 		public static async Task<int> DeleteAsync<T>(
-			[NotNull]                this IQueryable<T>       source,
+			[NotNull]           this IQueryable<T>            source,
 			[NotNull, InstantHandle] Expression<Func<T,bool>> predicate,
-			CancellationToken                                 token   = default(CancellationToken),
-			TaskCreationOptions                               options = TaskCreationOptions.None)
+			CancellationToken                                 token = default(CancellationToken))
 		{
 			if (source    == null) throw new ArgumentNullException("source");
 			if (predicate == null) throw new ArgumentNullException("predicate");
@@ -277,7 +273,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -312,8 +308,7 @@ namespace LinqToDB
 			[NotNull]                this IQueryable<TSource>          source,
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			CancellationToken                                          token   = default(CancellationToken),
-			TaskCreationOptions                                        options = TaskCreationOptions.None)
+			CancellationToken                                          token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (target == null) throw new ArgumentNullException("target");
@@ -327,7 +322,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -336,9 +331,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _updateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
 
-		public static int Update<T>(
-			[NotNull]                this IQueryable<T>    source,
-			[NotNull, InstantHandle] Expression<Func<T,T>> setter)
+		public static int Update<T>([NotNull] this IQueryable<T> source, [NotNull, InstantHandle] Expression<Func<T,T>> setter)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (setter == null) throw new ArgumentNullException("setter");
@@ -353,10 +346,9 @@ namespace LinqToDB
 #if !NOASYNC
 
 		public static async Task<int> UpdateAsync<T>(
-			[NotNull]                this IQueryable<T>    source,
+			[NotNull]           this IQueryable<T>         source,
 			[NotNull, InstantHandle] Expression<Func<T,T>> setter,
-			CancellationToken                              token   = default(CancellationToken),
-			TaskCreationOptions                            options = TaskCreationOptions.None)
+			CancellationToken                              token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (setter == null) throw new ArgumentNullException("setter");
@@ -369,7 +361,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -397,11 +389,10 @@ namespace LinqToDB
 #if !NOASYNC
 
 		public static async Task<int> UpdateAsync<T>(
-			[NotNull]                this IQueryable<T>       source,
+			[NotNull]           this IQueryable<T>            source,
 			[NotNull, InstantHandle] Expression<Func<T,bool>> predicate,
 			[NotNull, InstantHandle] Expression<Func<T,T>>    setter,
-			CancellationToken                                 token   = default(CancellationToken),
-			TaskCreationOptions                               options = TaskCreationOptions.None)
+			CancellationToken                                 token = default(CancellationToken))
 		{
 			if (source    == null) throw new ArgumentNullException("source");
 			if (predicate == null) throw new ArgumentNullException("predicate");
@@ -415,7 +406,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -439,10 +430,7 @@ namespace LinqToDB
 
 #if !NOASYNC
 
-		public static async Task<int> UpdateAsync<T>(
-			[NotNull] this IUpdatable<T> source,
-			CancellationToken            token   = default(CancellationToken),
-			TaskCreationOptions          options = TaskCreationOptions.None)
+		public static async Task<int> UpdateAsync<T>([NotNull] this IUpdatable<T> source, CancellationToken token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
@@ -456,7 +444,7 @@ namespace LinqToDB
 			var query = q as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => q.Provider.Execute<int>(expr), token);
 		}
@@ -487,8 +475,7 @@ namespace LinqToDB
 			[NotNull]                this IQueryable<TSource>          source,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			CancellationToken                                          token   = default(CancellationToken),
-			TaskCreationOptions                                        options = TaskCreationOptions.None)
+			CancellationToken                                          token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (target == null) throw new ArgumentNullException("target");
@@ -502,7 +489,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -626,7 +613,7 @@ namespace LinqToDB
 
 		[LinqTunnel]
 		public static IUpdatable<T> Set<T,TV>(
-			[NotNull]                this IQueryable<T>     source,
+			[NotNull]           this IQueryable<T>          source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
 			TV                                              value)
 		{
@@ -646,7 +633,7 @@ namespace LinqToDB
 
 		[LinqTunnel]
 		public static IUpdatable<T> Set<T,TV>(
-			[NotNull]                this IUpdatable<T>    source,
+			[NotNull]           this IUpdatable<T>          source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
 			TV                                              value)
 		{
@@ -691,8 +678,7 @@ namespace LinqToDB
 		public static async Task<int> InsertAsync<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token = default(CancellationToken),
-			TaskCreationOptions                          options = TaskCreationOptions.None)
+			CancellationToken                            token = default(CancellationToken))
 		{
 			if (target == null) throw new ArgumentNullException("target");
 			if (setter == null) throw new ArgumentNullException("setter");
@@ -707,7 +693,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -758,8 +744,7 @@ namespace LinqToDB
 		public static async Task<object> InsertWithIdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token   = default(CancellationToken),
-			TaskCreationOptions                          options = TaskCreationOptions.None)
+			CancellationToken                            token = default(CancellationToken))
 		{
 			if (target == null) throw new ArgumentNullException("target");
 			if (setter == null) throw new ArgumentNullException("setter");
@@ -774,7 +759,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<object>(expr, token, options);
+				return await query.ExecuteAsync<object>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<object>(expr), token);
 		}
@@ -782,28 +767,25 @@ namespace LinqToDB
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token   = default(CancellationToken),
-			TaskCreationOptions                          options = TaskCreationOptions.None)
+			CancellationToken                            token = default(CancellationToken))
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<int>(await InsertWithIdentityAsync(target, setter, token, options));
+			return target.DataContext.MappingSchema.ChangeTypeTo<int>(await InsertWithIdentityAsync(target, setter, token));
 		}
 
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token   = default(CancellationToken),
-			TaskCreationOptions                          options = TaskCreationOptions.None)
+			CancellationToken                            token = default(CancellationToken))
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<long>(await InsertWithIdentityAsync(target, setter, token, options));
+			return target.DataContext.MappingSchema.ChangeTypeTo<long>(await InsertWithIdentityAsync(target, setter, token));
 		}
 
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token   = default(CancellationToken),
-			TaskCreationOptions                          options = TaskCreationOptions.None)
+			CancellationToken                            token = default(CancellationToken))
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(await InsertWithIdentityAsync(target, setter, token, options));
+			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(await InsertWithIdentityAsync(target, setter, token));
 		}
 
 
@@ -945,10 +927,7 @@ namespace LinqToDB
 
 #if !NOASYNC
 
-		public static async Task<int> InsertAsync<T>(
-			[NotNull] this IValueInsertable<T> source,
-			CancellationToken                  token   = default(CancellationToken),
-			TaskCreationOptions                options = TaskCreationOptions.None)
+		public static async Task<int> InsertAsync<T>([NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
@@ -962,7 +941,7 @@ namespace LinqToDB
 			var query = queryable as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => queryable.Provider.Execute<int>(expr), token);
 		}
@@ -1002,9 +981,7 @@ namespace LinqToDB
 #if !NOASYNC
 
 		public static async Task<object> InsertWithIdentityAsync<T>(
-			[NotNull] this IValueInsertable<T> source,
-			CancellationToken                  token   = default(CancellationToken),
-			TaskCreationOptions                options = TaskCreationOptions.None)
+			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
@@ -1018,36 +995,30 @@ namespace LinqToDB
 			var query = queryable as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<object>(expr, token, options);
+				return await query.ExecuteAsync<object>(expr, token);
 
 			return await Task.Run(() => queryable.Provider.Execute<object>(expr), token);
 		}
 
 		public static async Task<int?> InsertWithInt32IdentityAsync<T>(
-			[NotNull] this IValueInsertable<T> source,
-			CancellationToken                  token   = default(CancellationToken),
-			TaskCreationOptions                options = TaskCreationOptions.None)
+			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
 		{
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
-				await InsertWithIdentityAsync(source, token, options));
+				await InsertWithIdentityAsync(source, token));
 		}
 
 		public static async Task<long?> InsertWithInt64IdentityAsync<T>(
-			[NotNull] this IValueInsertable<T> source,
-			CancellationToken                  token   = default(CancellationToken),
-			TaskCreationOptions                options = TaskCreationOptions.None)
+			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
 		{
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
-				await InsertWithIdentityAsync(source, token, options));
+				await InsertWithIdentityAsync(source, token));
 		}
 
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<T>(
-			[NotNull] this IValueInsertable<T> source,
-			CancellationToken                  token   = default(CancellationToken),
-			TaskCreationOptions                options = TaskCreationOptions.None)
+			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
 		{
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
-				await InsertWithIdentityAsync(source, token, options));
+				await InsertWithIdentityAsync(source, token));
 		}
 
 #endif
@@ -1081,8 +1052,7 @@ namespace LinqToDB
 			[NotNull]                this IQueryable<TSource>          source,
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			CancellationToken                                          token   = default(CancellationToken),
-			TaskCreationOptions                                        options = TaskCreationOptions.None)
+			CancellationToken                                          token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (target == null) throw new ArgumentNullException("target");
@@ -1096,7 +1066,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -1155,8 +1125,7 @@ namespace LinqToDB
 			[NotNull]                this IQueryable<TSource>          source,
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			CancellationToken                                          token   = default(CancellationToken),
-			TaskCreationOptions                                        options = TaskCreationOptions.None)
+			CancellationToken                                          token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (target == null) throw new ArgumentNullException("target");
@@ -1171,7 +1140,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<object>(expr, token, options);
+				return await query.ExecuteAsync<object>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<object>(expr), token);
 		}
@@ -1180,33 +1149,30 @@ namespace LinqToDB
 			[NotNull]                this IQueryable<TSource>          source,
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			CancellationToken                                          token   = default(CancellationToken),
-			TaskCreationOptions                                        options = TaskCreationOptions.None)
+			CancellationToken                                          token = default(CancellationToken))
 		{
 			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<int?>(
-				await InsertWithIdentityAsync(source, target, setter, token, options));
+				await InsertWithIdentityAsync(source, target, setter, token));
 		}
 
 		public static async Task<long?> InsertWithInt64IdentityAsync<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			CancellationToken                                          token   = default(CancellationToken),
-			TaskCreationOptions                                        options = TaskCreationOptions.None)
+			CancellationToken                                          token = default(CancellationToken))
 		{
 			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<long?>(
-				await InsertWithIdentityAsync(source, target, setter, token, options));
+				await InsertWithIdentityAsync(source, target, setter, token));
 		}
 
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			CancellationToken                                          token   = default(CancellationToken),
-			TaskCreationOptions                                        options = TaskCreationOptions.None)
+			CancellationToken                                          token = default(CancellationToken))
 		{
 			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
-				await InsertWithIdentityAsync(source, target, setter, token, options));
+				await InsertWithIdentityAsync(source, target, setter, token));
 		}
 
 #endif
@@ -1325,9 +1291,7 @@ namespace LinqToDB
 #if !NOASYNC
 
 		public static async Task<int> InsertAsync<TSource,TTarget>(
-			[NotNull] this ISelectInsertable<TSource,TTarget> source,
-			CancellationToken                                 token   = default(CancellationToken),
-			TaskCreationOptions                               options = TaskCreationOptions.None)
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
@@ -1341,7 +1305,7 @@ namespace LinqToDB
 			var query = queryable as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => queryable.Provider.Execute<int>(expr), token);
 		}
@@ -1385,9 +1349,7 @@ namespace LinqToDB
 #if !NOASYNC
 
 		public static async Task<object> InsertWithIdentityAsync<TSource,TTarget>(
-			[NotNull] this ISelectInsertable<TSource,TTarget> source,
-			CancellationToken                                 token   = default(CancellationToken),
-			TaskCreationOptions                               options = TaskCreationOptions.None)
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
@@ -1401,36 +1363,30 @@ namespace LinqToDB
 			var query = queryable as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<object>(expr, token, options);
+				return await query.ExecuteAsync<object>(expr, token);
 
 			return await Task.Run(() => queryable.Provider.Execute<object>(expr), token);
 		}
 
 		public static async Task<int?> InsertWithInt32IdentityAsync<TSource,TTarget>(
-			[NotNull] this ISelectInsertable<TSource,TTarget> source,
-			CancellationToken                                 token   = default(CancellationToken),
-			TaskCreationOptions                               options = TaskCreationOptions.None)
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
 		{
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
-				await InsertWithIdentityAsync(source, token, options));
+				await InsertWithIdentityAsync(source, token));
 		}
 
 		public static async Task<long?> InsertWithInt64IdentityAsync<TSource,TTarget>(
-			[NotNull] this ISelectInsertable<TSource,TTarget> source,
-			CancellationToken                                 token   = default(CancellationToken),
-			TaskCreationOptions                               options = TaskCreationOptions.None)
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
 		{
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
-				await InsertWithIdentityAsync(source, token, options));
+				await InsertWithIdentityAsync(source, token));
 		}
 
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<TSource,TTarget>(
-			[NotNull] this ISelectInsertable<TSource,TTarget> source,
-			CancellationToken                                 token   = default(CancellationToken),
-			TaskCreationOptions                               options = TaskCreationOptions.None)
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
 		{
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
-				await InsertWithIdentityAsync(source, token, options));
+				await InsertWithIdentityAsync(source, token));
 		}
 
 #endif
@@ -1468,8 +1424,7 @@ namespace LinqToDB
 			[NotNull]                this ITable<T>        target,
 			[NotNull, InstantHandle] Expression<Func<T>>   insertSetter,
 			[NotNull, InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
-			CancellationToken                              token   = default(CancellationToken),
-			TaskCreationOptions                            options = TaskCreationOptions.None)
+			CancellationToken                              token = default(CancellationToken))
 		{
 			if (target                     == null) throw new ArgumentNullException("target");
 			if (insertSetter               == null) throw new ArgumentNullException("insertSetter");
@@ -1485,7 +1440,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -1528,8 +1483,7 @@ namespace LinqToDB
 			[NotNull, InstantHandle] Expression<Func<T>>   insertSetter,
 			[NotNull, InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
 			[NotNull, InstantHandle] Expression<Func<T>>   keySelector,
-			CancellationToken                              token   = default(CancellationToken),
-			TaskCreationOptions                            options = TaskCreationOptions.None)
+			CancellationToken                              token = default(CancellationToken))
 		{
 			if (target                     == null) throw new ArgumentNullException("target");
 			if (insertSetter               == null) throw new ArgumentNullException("insertSetter");
@@ -1552,7 +1506,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<int>(expr, token, options);
+				return await query.ExecuteAsync<int>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 		}
@@ -1597,8 +1551,7 @@ namespace LinqToDB
 		public static async Task<int> DropAsync<T>(
 			[NotNull] this ITable<T> target,
 			bool                     throwExceptionIfNotExists = true,
-			CancellationToken        token   = default(CancellationToken),
-			TaskCreationOptions      options = TaskCreationOptions.None)
+			CancellationToken        token = default(CancellationToken))
 		{
 			if (target == null) throw new ArgumentNullException("target");
 
@@ -1614,7 +1567,7 @@ namespace LinqToDB
 			if (throwExceptionIfNotExists)
 			{
 				if (query != null)
-					return await query.ExecuteAsync<int>(expr, token, options);
+					return await query.ExecuteAsync<int>(expr, token);
 
 				return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 			}
@@ -1622,7 +1575,7 @@ namespace LinqToDB
 			try
 			{
 				if (query != null)
-					return await query.ExecuteAsync<int>(expr, token, options);
+					return await query.ExecuteAsync<int>(expr, token);
 
 				return await Task.Run(() => source.Provider.Execute<int>(expr), token);
 			}
@@ -1753,8 +1706,7 @@ namespace LinqToDB
 		public static async Task<TSource> ElementAtAsync<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    index,
-			CancellationToken                                 token   = default(CancellationToken),
-			TaskCreationOptions                               options = TaskCreationOptions.None)
+			CancellationToken                                 token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (index  == null) throw new ArgumentNullException("index");
@@ -1768,7 +1720,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<TSource>(expr, token, options);
+				return await query.ExecuteAsync<TSource>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<TSource>(expr), token);
 		}
@@ -1796,8 +1748,7 @@ namespace LinqToDB
 		public static async Task<TSource> ElementAtOrDefaultAsync<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    index,
-			CancellationToken                                 token   = default(CancellationToken),
-			TaskCreationOptions                               options = TaskCreationOptions.None)
+			CancellationToken                                 token = default(CancellationToken))
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (index  == null) throw new ArgumentNullException("index");
@@ -1811,7 +1762,7 @@ namespace LinqToDB
 			var query = source as IQueryProviderAsync;
 
 			if (query != null)
-				return await query.ExecuteAsync<TSource>(expr, token, options);
+				return await query.ExecuteAsync<TSource>(expr, token);
 
 			return await Task.Run(() => source.Provider.Execute<TSource>(expr), token);
 		}

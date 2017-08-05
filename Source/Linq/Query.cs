@@ -25,7 +25,7 @@ namespace LinqToDB.Linq
 	{
 		public Func<QueryContext,IDataContextEx,Expression,object[],object> GetElement;
 #if !SL4
-		public Func<QueryContext,IDataContextEx,Expression,object[],CancellationToken,TaskCreationOptions,Task<object>> GetElementAsync;
+		public Func<QueryContext,IDataContextEx,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
 #endif
 
 		#region Init
@@ -152,7 +152,7 @@ namespace LinqToDB.Linq
 
 		public Func<QueryContext,IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
-		public Func<QueryContext,IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,TaskCreationOptions,Task> GetForEachAsync;
+		public Func<QueryContext,IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
 #endif
 
 		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContextEx dc, Expression expr, object[] ps)

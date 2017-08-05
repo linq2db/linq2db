@@ -54,7 +54,7 @@ namespace LinqToDB.Linq
 			public static async Task<ITable<T>> QueryAsync(IDataContext dataContext,
 				string tableName, string databaseName, string schemaName, string statementHeader,
 				string statementFooter, DefaulNullable defaulNullable,
-				CancellationToken token, TaskCreationOptions options)
+				CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 				var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
@@ -75,7 +75,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				await query.GetElementAsync(null, (IDataContextEx)dataContext, Expression.Constant(null), null, token, options);
+				await query.GetElementAsync(null, (IDataContextEx)dataContext, Expression.Constant(null), null, token);
 
 				ITable<T> table = new Table<T>(dataContext);
 

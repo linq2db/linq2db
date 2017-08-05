@@ -113,13 +113,13 @@ namespace LinqToDB.Linq.Builder
 
 #if !NOASYNC
 
-				query.GetElementAsync = async (ctx, db, expr, ps, token, options) =>
+				query.GetElementAsync = async (ctx, db, expr, ps, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
 					await query.GetForEachAsync(ctx, db, expr, ps,
-						r => { obj = r; count++; return false; }, token, options);
+						r => { obj = r; count++; return false; }, token);
 
 					return count > 0 ? obj : Array<T>.Empty.First();
 				};
@@ -133,13 +133,13 @@ namespace LinqToDB.Linq.Builder
 
 #if !NOASYNC
 
-				query.GetElementAsync = async (ctx, db, expr, ps, token, options) =>
+				query.GetElementAsync = async (ctx, db, expr, ps, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
 					await query.GetForEachAsync(ctx, db, expr, ps,
-						r => { obj = r; count++; return false; }, token, options);
+						r => { obj = r; count++; return false; }, token);
 
 					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
 				};
@@ -153,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 
 #if !NOASYNC
 
-				query.GetElementAsync = async (ctx, db, expr, ps, token, options) =>
+				query.GetElementAsync = async (ctx, db, expr, ps, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
@@ -165,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 								obj = r;
 							count++;
 							return count == 1;
-						}, token, options);
+						}, token);
 
 					return count == 1 ? obj : new T[count].Single();
 				};
@@ -179,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 
 #if !NOASYNC
 
-				query.GetElementAsync = async (ctx, db, expr, ps, token, options) =>
+				query.GetElementAsync = async (ctx, db, expr, ps, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
@@ -191,7 +191,7 @@ namespace LinqToDB.Linq.Builder
 								obj = r;
 							count++;
 							return count == 1;
-						}, token, options);
+						}, token);
 
 					return count == 1 ? obj : new T[count].SingleOrDefault();
 				};
@@ -204,7 +204,7 @@ namespace LinqToDB.Linq.Builder
 				return new object[0].First();
 			}
 
-			bool _isJoinCreated = false;
+			bool _isJoinCreated;
 
 			void CreateJoin()
 			{

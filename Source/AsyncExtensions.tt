@@ -105,8 +105,7 @@ namespace LinqToDB
 
 		public static Task<<#= info.RetType #>> <#= info.Method #>Async<#= info.GParams #>(
 			this IQueryable<<#= info.SParam #>> source<#= param #>,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -119,13 +118,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<<#= info.SParam #>><#= paramType #>, <#= info.RetType #>>(Queryable.<#= info.Method #>), source<#= paramName #>),
 						arguments: new Expression[<#= exprCount #>] { source.Expression<#= paramExpr #> }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(<#= info.Lambda #>, token, options);
+			return GetTask(<#= info.Lambda #>, token);
 		}
 
 		#endregion

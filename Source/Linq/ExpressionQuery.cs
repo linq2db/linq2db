@@ -89,24 +89,24 @@ namespace LinqToDB.Linq
 
 #if !SL4 && !NOASYNC
 
-		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token, TaskCreationOptions options)
+		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 		{
 			var value = await GetQuery(expression, false).GetElementAsync(
-				null, (IDataContextEx)DataContext, expression, Parameters, token, options);
+				null, (IDataContextEx)DataContext, expression, Parameters, token);
 
 			return (TResult)value;
 		}
 
-		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken, TaskCreationOptions options)
+		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
 		{
 			return GetQuery(Expression, true)
-				.GetForEachAsync(null, (IDataContextEx)DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken, options);
+				.GetForEachAsync(null, (IDataContextEx)DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken);
 		}
 
-		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken, TaskCreationOptions options)
+		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
 			return GetQuery(Expression, true)
-				.GetForEachAsync(null, (IDataContextEx)DataContext, Expression, Parameters, func, cancellationToken, options);
+				.GetForEachAsync(null, (IDataContextEx)DataContext, Expression, Parameters, func, cancellationToken);
 		}
 
 #endif

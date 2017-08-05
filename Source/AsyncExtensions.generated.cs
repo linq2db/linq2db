@@ -14,8 +14,7 @@ namespace LinqToDB
 
 		public static Task<TSource> FirstAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -28,13 +27,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.First), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.First, token, options);
+			return GetTask(source.First, token);
 		}
 
 		#endregion
@@ -43,8 +41,7 @@ namespace LinqToDB
 
 		public static Task<TSource> FirstAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -57,13 +54,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, TSource>(Queryable.First), source, predicate),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.First(predicate), token, options);
+			return GetTask(() => source.First(predicate), token);
 		}
 
 		#endregion
@@ -72,8 +68,7 @@ namespace LinqToDB
 
 		public static Task<TSource> FirstOrDefaultAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -86,13 +81,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.FirstOrDefault), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.FirstOrDefault, token, options);
+			return GetTask(source.FirstOrDefault, token);
 		}
 
 		#endregion
@@ -101,8 +95,7 @@ namespace LinqToDB
 
 		public static Task<TSource> FirstOrDefaultAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -115,13 +108,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, TSource>(Queryable.FirstOrDefault), source, predicate),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.FirstOrDefault(predicate), token, options);
+			return GetTask(() => source.FirstOrDefault(predicate), token);
 		}
 
 		#endregion
@@ -130,8 +122,7 @@ namespace LinqToDB
 
 		public static Task<TSource> SingleAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -144,13 +135,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.Single), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Single, token, options);
+			return GetTask(source.Single, token);
 		}
 
 		#endregion
@@ -159,8 +149,7 @@ namespace LinqToDB
 
 		public static Task<TSource> SingleAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -173,13 +162,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, TSource>(Queryable.Single), source, predicate),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Single(predicate), token, options);
+			return GetTask(() => source.Single(predicate), token);
 		}
 
 		#endregion
@@ -188,8 +176,7 @@ namespace LinqToDB
 
 		public static Task<TSource> SingleOrDefaultAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -202,13 +189,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.SingleOrDefault), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.SingleOrDefault, token, options);
+			return GetTask(source.SingleOrDefault, token);
 		}
 
 		#endregion
@@ -217,8 +203,7 @@ namespace LinqToDB
 
 		public static Task<TSource> SingleOrDefaultAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -231,13 +216,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, TSource>(Queryable.SingleOrDefault), source, predicate),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.SingleOrDefault(predicate), token, options);
+			return GetTask(() => source.SingleOrDefault(predicate), token);
 		}
 
 		#endregion
@@ -246,8 +230,7 @@ namespace LinqToDB
 
 		public static Task<bool> ContainsAsync<TSource>(
 			this IQueryable<TSource> source, TSource item,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -260,13 +243,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource, bool>(Queryable.Contains), source, item),
 						arguments: new Expression[2] { source.Expression, (Expression)Expression.Constant((object)item, typeof (TSource)) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Contains(item), token, options);
+			return GetTask(() => source.Contains(item), token);
 		}
 
 		#endregion
@@ -275,8 +257,7 @@ namespace LinqToDB
 
 		public static Task<bool> AnyAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -289,13 +270,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, bool>(Queryable.Any), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Any, token, options);
+			return GetTask(source.Any, token);
 		}
 
 		#endregion
@@ -304,8 +284,7 @@ namespace LinqToDB
 
 		public static Task<bool> AnyAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -318,13 +297,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, bool>(Queryable.Any), source, predicate),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Any(predicate), token, options);
+			return GetTask(() => source.Any(predicate), token);
 		}
 
 		#endregion
@@ -333,8 +311,7 @@ namespace LinqToDB
 
 		public static Task<bool> AllAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -347,13 +324,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, bool>(Queryable.All), source, predicate),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.All(predicate), token, options);
+			return GetTask(() => source.All(predicate), token);
 		}
 
 		#endregion
@@ -362,8 +338,7 @@ namespace LinqToDB
 
 		public static Task<int> CountAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -376,13 +351,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, int>(Queryable.Count), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Count, token, options);
+			return GetTask(source.Count, token);
 		}
 
 		#endregion
@@ -391,8 +365,7 @@ namespace LinqToDB
 
 		public static Task<int> CountAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -405,13 +378,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, int>(Queryable.Count), source, predicate),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Count(predicate), token, options);
+			return GetTask(() => source.Count(predicate), token);
 		}
 
 		#endregion
@@ -420,8 +392,7 @@ namespace LinqToDB
 
 		public static Task<long> LongCountAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -434,13 +405,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, long>(Queryable.LongCount), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.LongCount, token, options);
+			return GetTask(source.LongCount, token);
 		}
 
 		#endregion
@@ -449,8 +419,7 @@ namespace LinqToDB
 
 		public static Task<long> LongCountAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -463,13 +432,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>, long>(Queryable.LongCount), source, predicate),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.LongCount(predicate), token, options);
+			return GetTask(() => source.LongCount(predicate), token);
 		}
 
 		#endregion
@@ -478,8 +446,7 @@ namespace LinqToDB
 
 		public static Task<TSource> MinAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -492,13 +459,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.Min), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Min, token, options);
+			return GetTask(source.Min, token);
 		}
 
 		#endregion
@@ -507,8 +473,7 @@ namespace LinqToDB
 
 		public static Task<TResult> MinAsync<TSource,TResult>(
 			this IQueryable<TSource> source, Expression<Func<TSource,TResult>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -521,13 +486,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>, TResult>(Queryable.Min), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Min(selector), token, options);
+			return GetTask(() => source.Min(selector), token);
 		}
 
 		#endregion
@@ -536,8 +500,7 @@ namespace LinqToDB
 
 		public static Task<TSource> MaxAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -550,13 +513,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource>(Queryable.Max), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Max, token, options);
+			return GetTask(source.Max, token);
 		}
 
 		#endregion
@@ -565,8 +527,7 @@ namespace LinqToDB
 
 		public static Task<TResult> MaxAsync<TSource,TResult>(
 			this IQueryable<TSource> source, Expression<Func<TSource,TResult>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -579,13 +540,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>, TResult>(Queryable.Max), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Max(selector), token, options);
+			return GetTask(() => source.Max(selector), token);
 		}
 
 		#endregion
@@ -594,8 +554,7 @@ namespace LinqToDB
 
 		public static Task<int> SumAsync(
 			this IQueryable<int> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -608,13 +567,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<int>, int>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -623,8 +581,7 @@ namespace LinqToDB
 
 		public static Task<int?> SumAsync(
 			this IQueryable<int?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -637,13 +594,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<int?>, int?>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -652,8 +608,7 @@ namespace LinqToDB
 
 		public static Task<long> SumAsync(
 			this IQueryable<long> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -666,13 +621,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<long>, long>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -681,8 +635,7 @@ namespace LinqToDB
 
 		public static Task<long?> SumAsync(
 			this IQueryable<long?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -695,13 +648,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<long?>, long?>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -710,8 +662,7 @@ namespace LinqToDB
 
 		public static Task<float> SumAsync(
 			this IQueryable<float> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -724,13 +675,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<float>, float>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -739,8 +689,7 @@ namespace LinqToDB
 
 		public static Task<float?> SumAsync(
 			this IQueryable<float?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -753,13 +702,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<float?>, float?>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -768,8 +716,7 @@ namespace LinqToDB
 
 		public static Task<double> SumAsync(
 			this IQueryable<double> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -782,13 +729,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<double>, double>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -797,8 +743,7 @@ namespace LinqToDB
 
 		public static Task<double?> SumAsync(
 			this IQueryable<double?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -811,13 +756,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<double?>, double?>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -826,8 +770,7 @@ namespace LinqToDB
 
 		public static Task<decimal> SumAsync(
 			this IQueryable<decimal> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -840,13 +783,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal>, decimal>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -855,8 +797,7 @@ namespace LinqToDB
 
 		public static Task<decimal?> SumAsync(
 			this IQueryable<decimal?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -869,13 +810,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal?>, decimal?>(Queryable.Sum), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Sum, token, options);
+			return GetTask(source.Sum, token);
 		}
 
 		#endregion
@@ -884,8 +824,7 @@ namespace LinqToDB
 
 		public static Task<int> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,int>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -898,13 +837,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int>>, int>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -913,8 +851,7 @@ namespace LinqToDB
 
 		public static Task<int?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,int?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -927,13 +864,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int?>>, int?>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -942,8 +878,7 @@ namespace LinqToDB
 
 		public static Task<long> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,long>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -956,13 +891,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long>>, long>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -971,8 +905,7 @@ namespace LinqToDB
 
 		public static Task<long?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,long?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -985,13 +918,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long?>>, long?>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1000,8 +932,7 @@ namespace LinqToDB
 
 		public static Task<float> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,float>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1014,13 +945,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float>>, float>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1029,8 +959,7 @@ namespace LinqToDB
 
 		public static Task<float?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,float?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1043,13 +972,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float?>>, float?>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1058,8 +986,7 @@ namespace LinqToDB
 
 		public static Task<double> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,double>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1072,13 +999,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double>>, double>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1087,8 +1013,7 @@ namespace LinqToDB
 
 		public static Task<double?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,double?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1101,13 +1026,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double?>>, double?>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1116,8 +1040,7 @@ namespace LinqToDB
 
 		public static Task<decimal> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1130,13 +1053,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal>>, decimal>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1145,8 +1067,7 @@ namespace LinqToDB
 
 		public static Task<decimal?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1159,13 +1080,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal?>>, decimal?>(Queryable.Sum), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Sum(selector), token, options);
+			return GetTask(() => source.Sum(selector), token);
 		}
 
 		#endregion
@@ -1174,8 +1094,7 @@ namespace LinqToDB
 
 		public static Task<double> AverageAsync(
 			this IQueryable<int> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1188,13 +1107,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<int>, double>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1203,8 +1121,7 @@ namespace LinqToDB
 
 		public static Task<double?> AverageAsync(
 			this IQueryable<int?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1217,13 +1134,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<int?>, double?>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1232,8 +1148,7 @@ namespace LinqToDB
 
 		public static Task<double> AverageAsync(
 			this IQueryable<long> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1246,13 +1161,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<long>, double>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1261,8 +1175,7 @@ namespace LinqToDB
 
 		public static Task<double?> AverageAsync(
 			this IQueryable<long?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1275,13 +1188,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<long?>, double?>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1290,8 +1202,7 @@ namespace LinqToDB
 
 		public static Task<float> AverageAsync(
 			this IQueryable<float> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1304,13 +1215,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<float>, float>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1319,8 +1229,7 @@ namespace LinqToDB
 
 		public static Task<float?> AverageAsync(
 			this IQueryable<float?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1333,13 +1242,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<float?>, float?>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1348,8 +1256,7 @@ namespace LinqToDB
 
 		public static Task<double> AverageAsync(
 			this IQueryable<double> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1362,13 +1269,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<double>, double>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1377,8 +1283,7 @@ namespace LinqToDB
 
 		public static Task<double?> AverageAsync(
 			this IQueryable<double?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1391,13 +1296,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<double?>, double?>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1406,8 +1310,7 @@ namespace LinqToDB
 
 		public static Task<decimal> AverageAsync(
 			this IQueryable<decimal> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1420,13 +1323,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal>, decimal>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1435,8 +1337,7 @@ namespace LinqToDB
 
 		public static Task<decimal?> AverageAsync(
 			this IQueryable<decimal?> source,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1449,13 +1350,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal?>, decimal?>(Queryable.Average), source),
 						arguments: new Expression[1] { source.Expression }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(source.Average, token, options);
+			return GetTask(source.Average, token);
 		}
 
 		#endregion
@@ -1464,8 +1364,7 @@ namespace LinqToDB
 
 		public static Task<double> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,int>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1478,13 +1377,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int>>, double>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1493,8 +1391,7 @@ namespace LinqToDB
 
 		public static Task<double?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,int?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1507,13 +1404,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int?>>, double?>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1522,8 +1418,7 @@ namespace LinqToDB
 
 		public static Task<double> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,long>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1536,13 +1431,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long>>, double>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1551,8 +1445,7 @@ namespace LinqToDB
 
 		public static Task<double?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,long?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1565,13 +1458,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long?>>, double?>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1580,8 +1472,7 @@ namespace LinqToDB
 
 		public static Task<float> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,float>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1594,13 +1485,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float>>, float>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1609,8 +1499,7 @@ namespace LinqToDB
 
 		public static Task<float?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,float?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1623,13 +1512,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float?>>, float?>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1638,8 +1526,7 @@ namespace LinqToDB
 
 		public static Task<double> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,double>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1652,13 +1539,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double>>, double>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1667,8 +1553,7 @@ namespace LinqToDB
 
 		public static Task<double?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,double?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1681,13 +1566,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double?>>, double?>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1696,8 +1580,7 @@ namespace LinqToDB
 
 		public static Task<decimal> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1710,13 +1593,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal>>, decimal>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion
@@ -1725,8 +1607,7 @@ namespace LinqToDB
 
 		public static Task<decimal?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal?>> selector,
-			CancellationToken   token   = default(CancellationToken),
-			TaskCreationOptions options = TaskCreationOptions.None)
+			CancellationToken token = default(CancellationToken))
 		{
 #if !NOASYNC
 
@@ -1739,13 +1620,12 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal?>>, decimal?>(Queryable.Average), source, selector),
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
-					token,
-					options);
+					token);
 			}
 
 #endif
 
-			return GetTask(() => source.Average(selector), token, options);
+			return GetTask(() => source.Average(selector), token);
 		}
 
 		#endregion

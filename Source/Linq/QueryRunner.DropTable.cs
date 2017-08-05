@@ -38,10 +38,7 @@ namespace LinqToDB.Linq
 
 #if !NOASYNC
 
-			public static async Task QueryAsync(
-				IDataContext dataContext,
-				string tableName, string databaseName, string ownerName,
-				CancellationToken token, TaskCreationOptions options)
+			public static async Task QueryAsync(IDataContext dataContext, string tableName, string databaseName, string ownerName, CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 				var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
@@ -60,7 +57,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				await query.GetElementAsync(null, (IDataContextEx)dataContext, Expression.Constant(null), null, token, options);
+				await query.GetElementAsync(null, (IDataContextEx)dataContext, Expression.Constant(null), null, token);
 			}
 
 #endif

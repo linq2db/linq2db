@@ -349,8 +349,7 @@ namespace LinqToDB.Linq
 			Func<T,bool>                  func,
 			Func<Expression,object[],int> skipAction,
 			Func<Expression,object[],int> takeAction,
-			CancellationToken             cancellationToken,
-			TaskCreationOptions           options)
+			CancellationToken             cancellationToken)
 		{
 			if (queryContext == null)
 				queryContext = new QueryContext(dataContext, expression, ps);
@@ -368,7 +367,7 @@ namespace LinqToDB.Linq
 				{
 					mapper.QueryRunner = runner;
 
-					var dr = await runner.ExecuteReaderAsync(cancellationToken, options);
+					var dr = await runner.ExecuteReaderAsync(cancellationToken);
 					await dr.QueryForEachAsync(m, r =>
 					{
 						var b = func(r);
@@ -403,8 +402,8 @@ namespace LinqToDB.Linq
 			var skipAction = executeQuery.Item2;
 			var takeAction = executeQuery.Item3;
 
-			query.GetForEachAsync = (ctx, db, expr, ps, action, token, options) =>
-				ExecuteQueryAsync(query, ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token, options);
+			query.GetForEachAsync = (ctx, db, expr, ps, action, token) =>
+				ExecuteQueryAsync(query, ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token);
 
 #endif
 		}
@@ -415,7 +414,8 @@ namespace LinqToDB.Linq
 		static readonly PropertyInfo _parametersnfo    = MemberHelper.PropertyOf<IQueryRunner>( p => p.Parameters);
 		static readonly PropertyInfo _rowsCountnfo     = MemberHelper.PropertyOf<IQueryRunner>( p => p.RowsCount);
 
-		static Expression<Func<IQueryRunner,IDataReader,T>> WrapMapper<T>(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
+		static Expression<Func<IQueryRunner,IDataReader,T>> WrapMapper<T>(
+			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
 		{
 			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 			var dataReaderParam = Expression.Parameter(typeof(IDataReader), "dr");
@@ -498,8 +498,7 @@ namespace LinqToDB.Linq
 			query.GetElement = (ctx, db, expr, ps) => ExecuteElement(query, ctx, db, mapper, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, token, options) =>
-				ExecuteElementAsync<object>(query, ctx, db, mapper, expr, ps, token, options);
+			query.GetElementAsync = (ctx, db, expr, ps, token) => ExecuteElementAsync<object>(query, ctx, db, mapper, expr, ps, token);
 #endif
 		}
 
@@ -507,7 +506,7 @@ namespace LinqToDB.Linq
 			Query          query,
 			QueryContext   queryContext,
 			IDataContextEx dataContext,
-			Mapper<T> mapper,
+			Mapper<T>      mapper,
 			Expression     expression,
 			object[]       ps)
 		{
@@ -545,14 +544,13 @@ namespace LinqToDB.Linq
 #if !NOASYNC
 
 		static async Task<T> ExecuteElementAsync<T>(
-			Query                         query,
-			QueryContext                  queryContext,
-			IDataContextEx                dataContext,
-			Mapper<object>                mapper,
-			Expression                    expression,
-			object[]                      ps,
-			CancellationToken             cancellationToken,
-			TaskCreationOptions           options)
+			Query             query,
+			QueryContext      queryContext,
+			IDataContextEx    dataContext,
+			Mapper<object>    mapper,
+			Expression        expression,
+			object[]          ps,
+			CancellationToken cancellationToken)
 		{
 			if (queryContext == null)
 				queryContext = new QueryContext(dataContext, expression, ps);
@@ -568,7 +566,7 @@ namespace LinqToDB.Linq
 				{
 					mapper.QueryRunner = runner;
 
-					var dr = await runner.ExecuteReaderAsync(cancellationToken, options);
+					var dr = await runner.ExecuteReaderAsync(cancellationToken);
 
 					var item = default(T);
 					var read = false;
@@ -614,8 +612,7 @@ namespace LinqToDB.Linq
 			query.GetElement = (ctx, db, expr, ps) => ScalarQuery(query, db, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, token, options) =>
-				ScalarQueryAsync(query, db, expr, ps, token, options);
+			query.GetElementAsync = (ctx, db, expr, ps, token) => ScalarQueryAsync(query, db, expr, ps, token);
 #endif
 		}
 
@@ -633,19 +630,18 @@ namespace LinqToDB.Linq
 #if !NOASYNC
 
 		static async Task<object> ScalarQueryAsync(
-			Query               query,
-			IDataContextEx      dataContext,
-			Expression          expression,
-			object[]            ps,
-			CancellationToken   cancellationToken,
-			TaskCreationOptions options)
+			Query             query,
+			IDataContextEx    dataContext,
+			Expression        expression,
+			object[]          ps,
+			CancellationToken cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
 			{
 				runner.QueryContext = new QueryContext(dataContext, expression, ps);
 				runner.DataContext  = dataContext;
 
-				return await runner.ExecuteScalarAsync(cancellationToken, options);
+				return await runner.ExecuteScalarAsync(cancellationToken);
 			}
 		}
 
@@ -667,8 +663,7 @@ namespace LinqToDB.Linq
 			query.GetElement = (ctx,db,expr,ps) => NonQueryQuery(query, db, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, token, options) =>
-				NonQueryQueryAsync(query, db, expr, ps, token, options);
+			query.GetElementAsync = (ctx, db, expr, ps, token) => NonQueryQueryAsync(query, db, expr, ps, token);
 #endif
 		}
 
@@ -686,19 +681,18 @@ namespace LinqToDB.Linq
 #if !NOASYNC
 
 		static async Task<object> NonQueryQueryAsync(
-			Query               query,
-			IDataContextEx      dataContext,
-			Expression          expression,
-			object[]            ps,
-			CancellationToken   cancellationToken,
-			TaskCreationOptions options)
+			Query             query,
+			IDataContextEx    dataContext,
+			Expression        expression,
+			object[]          ps,
+			CancellationToken cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
 			{
 				runner.QueryContext = new QueryContext(dataContext, expression, ps);
 				runner.DataContext  = dataContext;
 
-				return await runner.ExecuteNonQueryAsync(cancellationToken, options);
+				return await runner.ExecuteNonQueryAsync(cancellationToken);
 			}
 		}
 
@@ -720,8 +714,7 @@ namespace LinqToDB.Linq
 			query.GetElement = (ctx,db,expr,ps) => NonQueryQuery2(query, db, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, token, options) =>
-				NonQueryQuery2Async(query, db, expr, ps, token, options);
+			query.GetElementAsync = (ctx, db, expr, ps, token) => NonQueryQuery2Async(query, db, expr, ps, token);
 #endif
 		}
 
@@ -746,32 +739,31 @@ namespace LinqToDB.Linq
 #if !NOASYNC
 
 		static async Task<object> NonQueryQuery2Async(
-			Query               query,
-			IDataContextEx      dataContext,
-			Expression          expr,
-			object[]            parameters,
-			CancellationToken   cancellationToken,
-			TaskCreationOptions options)
+			Query             query,
+			IDataContextEx    dataContext,
+			Expression        expr,
+			object[]          parameters,
+			CancellationToken cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
 				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
 				runner.DataContext  = dataContext;
 
-				var n = await runner.ExecuteNonQueryAsync(cancellationToken, options);
+				var n = await runner.ExecuteNonQueryAsync(cancellationToken);
 
 				if (n != 0)
 					return n;
 
 				runner.QueryNumber = 1;
 
-				return await runner.ExecuteNonQueryAsync(cancellationToken, options);
+				return await runner.ExecuteNonQueryAsync(cancellationToken);
 			}
 		}
 
 #endif
 
-#endregion
+		#endregion
 
 		#region QueryQuery2
 
@@ -785,6 +777,10 @@ namespace LinqToDB.Linq
 			ClearParameters(query);
 
 			query.GetElement = (ctx, db, expr, ps) => QueryQuery2(query, db, expr, ps);
+
+#if !NOASYNC
+			query.GetElementAsync = (ctx, db, expr, ps, token) => QueryQuery2Async(query, db, expr, ps, token);
+#endif
 		}
 
 		static int QueryQuery2(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
@@ -804,6 +800,33 @@ namespace LinqToDB.Linq
 				return runner.ExecuteNonQuery();
 			}
 		}
+
+#if !NOASYNC
+
+		static async Task<object> QueryQuery2Async(
+			Query             query,
+			IDataContextEx    dataContext,
+			Expression        expr,
+			object[]          parameters,
+			CancellationToken cancellationToken)
+		{
+			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
+			{
+				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
+				runner.DataContext  = dataContext;
+
+				var n = await runner.ExecuteScalarAsync(cancellationToken);
+
+				if (n != null)
+					return 0;
+
+				runner.QueryNumber = 1;
+
+				return await runner.ExecuteNonQueryAsync(cancellationToken);
+			}
+		}
+
+#endif
 
 		#endregion
 

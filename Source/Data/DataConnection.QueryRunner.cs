@@ -233,7 +233,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 			{
 				_isAsync = true;
 
@@ -250,7 +250,7 @@ namespace LinqToDB.Data
 				return dataReader;
 			}
 
-			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 			{
 				_isAsync = true;
 
@@ -296,7 +296,7 @@ namespace LinqToDB.Data
 				return -1;
 			}
 
-			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				SetCommand();
 
