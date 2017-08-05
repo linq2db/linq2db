@@ -147,6 +147,7 @@
     <Compile Include="Linq\QueryRunner.InsertOrReplace.cs" />
     <Compile Include="Linq\QueryRunner.CreateTable.cs" />
     <Compile Include="Linq\QueryRunner.DropTable.cs" />
+    <Compile Include="ServiceModel\ILinqClient.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />
     <Compile Include="Linq\Builder\AllAnyBuilder.cs" />
     <Compile Include="Linq\Builder\ContextParser.cs" />
@@ -265,7 +266,7 @@
     <Compile Include="Reflection\TypeAccessor.cs" />
     <Compile Include="Reflection\TypeAccessorT.cs" />
     <Compile Include="ServiceModel\Async\ILinqService.cs" />
-    <Compile Include="ServiceModel\Async\ILinqSoapService.cs" />
+    <Compile Include="ServiceModel\Async\ILinqSoapClient.cs" />
     <Compile Include="ServiceModel\ILinqService.cs" />
     <Compile Include="ServiceModel\LinqServiceClient.Silverlight.cs" />
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />

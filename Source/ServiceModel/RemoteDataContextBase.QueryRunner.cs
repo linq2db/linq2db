@@ -31,7 +31,7 @@ namespace LinqToDB.ServiceModel
 
 			readonly RemoteDataContextBase _dataContext;
 
-			ILinqService _client;
+			ILinqClient _client;
 
 			public override Expression MapperExpression { get; set; }
 
@@ -173,23 +173,6 @@ namespace LinqToDB.ServiceModel
 					},
 					cancellationToken);
 				}
-
-				/*
-				async Task IDataReaderAsync.QueryElementAsync<T>(Func<IDataReader,T> objectReader, Func<T,bool> action, CancellationToken cancellationToken)
-				{
-					_dataContext.ThrowOnDisposed();
-
-					await Task.Run(() =>
-					{
-						var result = LinqServiceSerializer.DeserializeResult(_result);
-
-						using (var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result))
-							if (reader.Read())
-								action(objectReader(reader));
-					},
-					cancellationToken);
-				}
-				*/
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken, TaskCreationOptions options)
@@ -199,74 +182,62 @@ namespace LinqToDB.ServiceModel
 
 				SetCommand(true);
 
-				return await Task.Run(() =>
-				{
-					var queryContext = Query.Queries[QueryNumber];
+				var queryContext = Query.Queries[QueryNumber];
 
-					_client = _dataContext.GetClient();
+				_client = _dataContext.GetClient();
 
-					var q   = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
-					var ret = _client.ExecuteReader(
-						_dataContext.Configuration,
-						LinqServiceSerializer.Serialize(
-							q,
-							q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
-							QueryHints));
+				var q   = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+				var ret = await _client.ExecuteReaderAsync(
+					_dataContext.Configuration,
+					LinqServiceSerializer.Serialize(
+						q,
+						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+						QueryHints));
 
-					return new DataReaderAsync(_dataContext, ret, SkipAction, TakeAction);
-				},
-				cancellationToken);
+				return new DataReaderAsync(_dataContext, ret, SkipAction, TakeAction);
 			}
 
-			public override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken, TaskCreationOptions options)
+			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken, TaskCreationOptions options)
 			{
 				SetCommand(true);
 
-				return Task.Run(() =>
-				{
-					if (_dataContext._batchCounter > 0)
-						throw new LinqException("Incompatible batch operation.");
+				if (_dataContext._batchCounter > 0)
+					throw new LinqException("Incompatible batch operation.");
 
-					var queryContext = Query.Queries[QueryNumber];
+				var queryContext = Query.Queries[QueryNumber];
 
-					_client = _dataContext.GetClient();
+				_client = _dataContext.GetClient();
 
-					var q = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+				var q = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
 
-					return _client.ExecuteScalar(
-						_dataContext.Configuration,
-						LinqServiceSerializer.Serialize(
-							q,
-							q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints));
-				},
-				cancellationToken);
+				return await _client.ExecuteScalarAsync(
+					_dataContext.Configuration,
+					LinqServiceSerializer.Serialize(
+						q,
+						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(), QueryHints));
 			}
 
 			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken, TaskCreationOptions options)
 			{
 				SetCommand(true);
 
-				return await Task.Run(() =>
+				var queryContext = Query.Queries[QueryNumber];
+
+				var q    = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+				var data = LinqServiceSerializer.Serialize(
+					q,
+					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
+					QueryHints);
+
+				if (_dataContext._batchCounter > 0)
 				{
-					var queryContext = Query.Queries[QueryNumber];
+					_dataContext._queryBatch.Add(data);
+					return -1;
+				}
 
-					var q    = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
-					var data = LinqServiceSerializer.Serialize(
-						q,
-						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
-						QueryHints);
+				_client = _dataContext.GetClient();
 
-					if (_dataContext._batchCounter > 0)
-					{
-						_dataContext._queryBatch.Add(data);
-						return -1;
-					}
-
-					_client = _dataContext.GetClient();
-
-					return _client.ExecuteNonQuery(_dataContext.Configuration, data);
-				},
-				cancellationToken);
+				return await _client.ExecuteNonQueryAsync(_dataContext.Configuration, data);
 			}
 
 #endif

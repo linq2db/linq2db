@@ -62,7 +62,7 @@ namespace LinqToDB.ServiceModel
 
 		#region Overrides
 
-		protected override ILinqService GetClient()
+		protected override ILinqClient GetClient()
 		{
 			if (Binding != null)
 				return new LinqSoapServiceClient(Binding, _endpointAddress);

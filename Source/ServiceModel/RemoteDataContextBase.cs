@@ -78,7 +78,7 @@ namespace LinqToDB.ServiceModel
 			return _configurationInfo;
 		}
 
-		protected abstract ILinqService GetClient();
+		protected abstract ILinqClient  GetClient();
 		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
 
@@ -302,7 +302,7 @@ namespace LinqToDB.ServiceModel
 		class QueryContext
 		{
 			public IQueryContext Query;
-			public ILinqService  Client;
+			public ILinqClient   Client;
 		}
 
 		object IDataContext.SetQuery(IQueryContext queryContext)

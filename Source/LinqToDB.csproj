@@ -352,6 +352,7 @@
     <Compile Include="Mapping\PrimaryKeyAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ServiceModel\ILinqClient.cs" />
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
     <Compile Include="SqlProvider\BasicSqlOptimizer.cs" />
@@ -494,7 +495,7 @@
     <Compile Include="Extensions\ReflectionExtensions.cs" />
     <Compile Include="ServiceModel\DataService.cs" />
     <Compile Include="ServiceModel\ILinqService.cs" />
-    <Compile Include="ServiceModel\ILinqSoapService.cs" />
+    <Compile Include="ServiceModel\ILinqSoapClient.cs" />
     <Compile Include="ServiceModel\LinqService.cs" />
     <Compile Include="ServiceModel\LinqServiceClient.cs" />
     <Compile Include="ServiceModel\LinqServiceQuery.cs" />
