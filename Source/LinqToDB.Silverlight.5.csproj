@@ -102,7 +102,6 @@
     <Compile Include="Linq\QueryRunner.InsertOrReplace.cs" />
     <Compile Include="Linq\QueryRunner.CreateTable.cs" />
     <Compile Include="Linq\QueryRunner.DropTable.cs" />
-    <Compile Include="ServiceModel\ILinqClient.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdConfiguration.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdIdentifierQuoteMode.cs" />
@@ -262,15 +261,15 @@
     <Compile Include="Reflection\ObjectFactoryAttribute.cs" />
     <Compile Include="Reflection\TypeAccessor.cs" />
     <Compile Include="Reflection\TypeAccessorT.cs" />
-    <Compile Include="ServiceModel\Async\ILinqService.cs" />
-    <Compile Include="ServiceModel\Async\ILinqSoapClient.cs" />
+    <Compile Include="ServiceModel\ILinqClient.cs" />
     <Compile Include="ServiceModel\ILinqService.cs" />
-    <Compile Include="ServiceModel\LinqServiceClient.Silverlight.cs" />
+    <Compile Include="ServiceModel\ILinqSoapClient.cs" />
+    <Compile Include="ServiceModel\LinqServiceClient.cs" />
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="ServiceModel\LinqServiceQuery.cs" />
     <Compile Include="ServiceModel\LinqServiceResult.cs" />
     <Compile Include="ServiceModel\LinqServiceSerializer.cs" />
-    <Compile Include="ServiceModel\LinqSoapServiceClient.Silverlight.cs" />
+    <Compile Include="ServiceModel\LinqSoapServiceClient.cs" />
     <Compile Include="ServiceModel\RemoteDataContextBase.cs" />
     <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
     <Compile Include="ServiceModel\ServiceModelDataContext.cs" />

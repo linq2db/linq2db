@@ -65,7 +65,7 @@ namespace LinqToDB.ServiceModel
 		protected override ILinqClient GetClient()
 		{
 			if (Binding != null)
-				return new LinqSoapServiceClient(Binding, _endpointAddress);
+				return (ILinqClient)new LinqSoapServiceClient(Binding, _endpointAddress);
 
 			if (_endpointAddress != null)
 				return new LinqSoapServiceClient(_endpointConfigurationName, _endpointAddress);

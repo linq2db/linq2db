@@ -265,8 +265,7 @@
     <Compile Include="Reflection\ObjectFactoryAttribute.cs" />
     <Compile Include="Reflection\TypeAccessor.cs" />
     <Compile Include="Reflection\TypeAccessorT.cs" />
-    <Compile Include="ServiceModel\Async\ILinqService.cs" />
-    <Compile Include="ServiceModel\Async\ILinqSoapClient.cs" />
+    <Compile Include="ServiceModel\ILinqSoapClient.cs" />
     <Compile Include="ServiceModel\ILinqService.cs" />
     <Compile Include="ServiceModel\LinqServiceClient.Silverlight.cs" />
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
