@@ -170,51 +170,9 @@ namespace LinqToDB
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
 
-		object IDataContext.SetQuery(IQueryContext queryContext)
-		{
-			var ctx = GetDataConnection() as IDataContext;
-			return ctx.SetQuery(queryContext);
-		}
-
-		int IDataContext.ExecuteNonQuery(object query)
-		{
-			var ctx = GetDataConnection() as IDataContext;
-			return ctx.ExecuteNonQuery(query);
-		}
-
-		object IDataContext.ExecuteScalar(object query)
-		{
-			var ctx = GetDataConnection() as IDataContext;
-			return ctx.ExecuteScalar(query);
-		}
-
-		IDataReader IDataContext.ExecuteReader(object query)
-		{
-			var ctx = GetDataConnection() as IDataContext;
-			return ctx.ExecuteReader(query);
-		}
-
-		void IDataContext.ReleaseQuery(object query)
-		{
-			ReleaseQuery();
-		}
-
 		SqlProviderFlags IDataContext.SqlProviderFlags
 		{
 			get { return DataProvider.SqlProviderFlags; }
-		}
-
-		string IDataContext.GetSqlText(object query)
-		{
-			if (_dataConnection != null)
-				return ((IDataContext)_dataConnection).GetSqlText(query);
-
-			var ctx = GetDataConnection() as IDataContext;
-			var str = ctx.GetSqlText(query);
-
-			ReleaseQuery();
-
-			return str;
 		}
 
 		DataContext(int n) {}

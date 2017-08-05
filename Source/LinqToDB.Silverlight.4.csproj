@@ -267,12 +267,12 @@
     <Compile Include="Reflection\TypeAccessorT.cs" />
     <Compile Include="ServiceModel\ILinqSoapClient.cs" />
     <Compile Include="ServiceModel\ILinqService.cs" />
-    <Compile Include="ServiceModel\LinqServiceClient.Silverlight.cs" />
+    <Compile Include="ServiceModel\LinqServiceClient.cs" />
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="ServiceModel\LinqServiceQuery.cs" />
     <Compile Include="ServiceModel\LinqServiceResult.cs" />
     <Compile Include="ServiceModel\LinqServiceSerializer.cs" />
-    <Compile Include="ServiceModel\LinqSoapServiceClient.Silverlight.cs" />
+    <Compile Include="ServiceModel\LinqSoapServiceClient.cs" />
     <Compile Include="ServiceModel\RemoteDataContextBase.cs" />
     <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />

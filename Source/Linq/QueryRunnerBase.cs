@@ -36,8 +36,8 @@ namespace LinqToDB.Linq
 		public object[]             Parameters   { get; set; }
 
 		public abstract int         ExecuteNonQuery();
-		public abstract object      ExecuteScalar();
-		public abstract IDataReader ExecuteReader();
+		public abstract object      ExecuteScalar  ();
+		public abstract IDataReader ExecuteReader  ();
 		public abstract Expression  MapperExpression { get; set; }
 #if !NOASYNC
 		public abstract Task<object>           ExecuteScalarAsync  (CancellationToken cancellationToken);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
+using System.Text;
 using System.Threading;
 
 #if !NOASYNC
@@ -39,16 +40,79 @@ namespace LinqToDB.ServiceModel
 			{
 			}
 
+			#region GetSqlText
+
 			public override string GetSqlText()
 			{
 				SetCommand(false);
 
-				return DataContext.GetSqlText(new QueryContext
+				var query      = Query.Queries[QueryNumber];
+				var sqlBuilder = DataContext.CreateSqlProvider();
+				var sb         = new StringBuilder();
+
+				sb
+					.Append("-- ")
+					.Append("ServiceModel")
+					.Append(' ')
+					.Append(DataContext.ContextID)
+					.Append(' ')
+					.Append(sqlBuilder.Name)
+					.AppendLine();
+
+				if (query.SelectQuery.Parameters != null && query.SelectQuery.Parameters.Count > 0)
 				{
-					Query  = Query.Queries[QueryNumber],
-					Client = _client
-				});
+					foreach (var p in query.SelectQuery.Parameters)
+					{
+						var value = p.Value;
+
+						sb
+							.Append("-- DECLARE ")
+							.Append(p.Name)
+							.Append(' ')
+							.Append(value == null ? p.SystemType.ToString() : value.GetType().Name)
+							.AppendLine();
+					}
+
+					sb.AppendLine();
+
+					foreach (var p in query.SelectQuery.Parameters)
+					{
+						var value = p.Value;
+
+						if (value is string || value is char)
+							value = "'" + value.ToString().Replace("'", "''") + "'";
+
+						sb
+							.Append("-- SET ")
+							.Append(p.Name)
+							.Append(" = ")
+							.Append(value)
+							.AppendLine();
+					}
+
+					sb.AppendLine();
+				}
+
+				var cc = sqlBuilder.CommandCount(query.SelectQuery);
+
+				for (var i = 0; i < cc; i++)
+				{
+					sqlBuilder.BuildSql(i, query.SelectQuery, sb);
+
+					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
+					{
+						var sql = sb.ToString();
+
+						sql = sqlBuilder.ApplyQueryHints(sql, query.QueryHints);
+
+						sb = new StringBuilder(sql);
+					}
+				}
+
+				return sb.ToString();
 			}
+
+			#endregion
 
 			public override void Dispose()
 			{

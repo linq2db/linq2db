@@ -253,7 +253,7 @@ namespace LinqToDB.DataProvider
 
 						ctx.SetParameters();
 
-						var pq = (DataConnection.PreparedQuery)((IDataContext)dataConnection).SetQuery(new QueryContext
+						var pq = DataConnection.QueryRunner.SetQuery(dataConnection, new QueryContext
 						{
 							SelectQuery   = sql,
 							SqlParameters = sql.Parameters.ToArray(),
