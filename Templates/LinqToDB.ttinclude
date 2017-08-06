@@ -207,7 +207,9 @@ void GenerateTypesFromMetadata()
 		var columnAliases  = new MemberGroup { IsCompact = IsCompactColumnAliases, Region = "Alias members" };
 		var nPKs           = t.Columns.Values.Count(c => c.IsPrimaryKey);
 		var allNullable    = t.Columns.Values.All  (c => c.IsNullable || c.IsIdentity);
-		var nameMaxLen     = t.Columns.Values.Max  (c => (int?)(c.MemberName == c.ColumnName ? 0 : c.ColumnName.Length)) ?? 0;
+		var nameMaxLen     = t.Columns.Values.Max  (c => (int?)(c.MemberName == c.ColumnName 
+			? 0 
+			: NormalizeStringName(c.ColumnName).Length)) ?? 0;
 		var dbTypeMaxLen   = t.Columns.Values.Max  (c => (int?)(c.ColumnType.Length)) ?? 0;
 		var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => (int?)(c.DataType.Length)) ?? 0;
 		var dataTypePrefix = t.Columns.Values.Any  (c => c.MemberName == "DataType") ? "LinqToDB." : "";
@@ -221,9 +223,11 @@ void GenerateTypesFromMetadata()
 
 			if (c.MemberName != c.ColumnName)
 			{
-				var space = new string(' ', nameMaxLen - c.ColumnName.Length);
+				var columnNameInAttr = NormalizeStringName(c.ColumnName);
 
-				ca.Parameters.Add('"' + c.ColumnName + '"' + space);
+				var space = new string(' ', nameMaxLen - columnNameInAttr.Length);
+
+				ca.Parameters.Add(columnNameInAttr + space);
 				canBeReplaced = false;
 			}
 			else if (nameMaxLen > 0)
@@ -714,7 +718,7 @@ void GenerateTypesFromMetadata()
 				foreach (var c in p.ResultTable.Columns.Values)
 				{
 					if (c.MemberName != c.ColumnName)
-						c.Attributes.Add(new Attribute("Column") { Parameters = { '"' + c.ColumnName + '"' } });
+						c.Attributes.Add(new Attribute("Column") { Parameters = { NormalizeStringName(c.ColumnName) } });
 					columns.Members.Add(c);
 				}
 
@@ -768,5 +772,10 @@ void GenerateTypesFromMetadata()
 	Model.SetTree();
 
 	AfterGenerateLinqToDBModel();
+}
+
+string NormalizeStringName(string name)
+{
+	return @"@""" + name.Replace(@"""", @"""""") + @"""";
 }
 #>
