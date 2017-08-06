@@ -96,7 +96,7 @@ namespace LinqToDB
 					IsAggregate, ConvertArgs(member, args)) {CanBeNull = CanBeNull};
 			}
 
-			public virtual ISqlExpression GetExpression(MappingSchema mapping, Expression expression, Func<Expression, ISqlExpression> converter)
+			public virtual ISqlExpression GetExpression(MappingSchema mapping, SelectQuery query, Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				return null;
 			}
