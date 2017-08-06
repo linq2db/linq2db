@@ -24,19 +24,19 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// If <c>true</c> - data providers will try to use standard ADO.NET interfaces instead of provider-specific functionality when possible. This option could be usefull if you need to intercept
-		/// database calls using tools like <see cref="https://github.com/MiniProfiler/dotnet">MiniProfiler</see>.
+		/// database calls using tools such as <see cref="https://github.com/MiniProfiler/dotnet">MiniProfiler</see>.
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public static bool AvoidSpecificDataProviderAPI;
 
 		/// <summary>
-		/// LINQ queries settings.
+		/// LINQ query settings.
 		/// </summary>
 		[PublicAPI]
 		public static class Linq
 		{
 			/// <summary>
-			/// Controls when group data for LINQ queries, that end with GroupBy will be loaded:
+			/// Controls how group data for LINQ queries ended with GroupBy will be loaded:
 			/// - if <c>true</c> - group data will be loaded together with main query, resulting in 1 + N queries, where N - number of groups;
 			/// - if <c>false</c> - group data will be loaded when you call enumerator for specific group <see cref="System.Linq.IGrouping{TKey, TElement}"/>.
 			/// Default value: <c>false</c>.
