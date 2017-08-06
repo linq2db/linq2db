@@ -408,16 +408,22 @@ namespace LinqToDB.Data
 
 		#region Query with template
 		/// <summary>
-		/// Not implemented. See <see cref="Query{T}"/>.
+		/// Executes command and returns results as collection of values of specified type.
 		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
+		/// <returns>Returns collection of query result records.</returns>
 		public IEnumerable<T> Query<T>(T template)
 		{
 			return Query<T>();
 		}
 
 		/// <summary>
-		/// Not implemented. See <see cref="QueryProc{T}"/>.
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
+		/// <returns>Returns collection of query result records.</returns>
 		public IEnumerable<T> QueryProc<T>(T template)
 		{
 			return QueryProc<T>();

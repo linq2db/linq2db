@@ -219,18 +219,37 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Query with template
-
 		/// <summary>
-		/// Not implemented. See <see cref="Query{T}(DataConnection, string, DataParameter[])"/>.
+		/// Executes command and returns results as collection of values of specified type.
 		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>Returns collection of query result records.</returns>
 		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query(template);
 		}
 
 		/// <summary>
-		/// Not implemented. See <see cref="Query{T}(DataConnection, string, object)"/>.
+		/// Executes command and returns results as collection of values of specified type.
 		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// <returns>Returns collection of query result records.</returns>
 		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, object parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query(template);
