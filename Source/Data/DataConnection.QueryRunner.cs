@@ -22,8 +22,6 @@ namespace LinqToDB.Data
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
 		}
 
-		// IT : QueryRunner - DataConnection
-		//
 		internal class QueryRunner : QueryRunnerBase
 		{
 			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object[] parameters)

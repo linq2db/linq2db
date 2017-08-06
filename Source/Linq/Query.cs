@@ -130,8 +130,6 @@ namespace LinqToDB.Linq
 		public Query(IDataContext dataContext, Expression expression)
 			: base(dataContext, expression)
 		{
-			// IT : # check
-			GetIEnumerable = MakeEnumerable;
 		}
 
 		public override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
@@ -154,11 +152,6 @@ namespace LinqToDB.Linq
 #if !SL4
 		public Func<QueryContext,IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
 #endif
-
-		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContextEx dc, Expression expr, object[] ps)
-		{
-			yield return ConvertTo<T>.From(GetElement(qc, dc, expr, ps));
-		}
 
 		#endregion
 
@@ -291,8 +284,7 @@ namespace LinqToDB.Linq
 			Expression                           expression,
 			Func<Expression, object[], object>   accessor,
 			Func<Expression, object[], DataType> dataTypeAccessor,
-			SqlParameter                         sqlParameter
-			)
+			SqlParameter                         sqlParameter)
 		{
 			Expression       = expression;
 			Accessor         = accessor;

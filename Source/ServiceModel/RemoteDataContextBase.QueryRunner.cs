@@ -20,8 +20,6 @@ namespace LinqToDB.ServiceModel
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
 		}
 
-		// IT : QueryRunner - RemoteDataContextBase
-		//
 		class QueryRunner : QueryRunnerBase
 		{
 			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object[] parameters)

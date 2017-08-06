@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Linq;
+
+#if !NOASYNC
 using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 #region ReSharper disable
@@ -847,32 +852,35 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// IT : #
-//		[Test, DataContextSource]
-//		public async Task InsertWithIdentity4Async(string context)
-//		{
-//			using (var db = GetDataContext(context))
-//			using (new DeletePerson(db))
-//			{
-//				for (var i = 0; i < 2; i++)
-//				{
-//					var id = db.InsertWithIdentityAsync(
-//						new Person
-//						{
-//							FirstName = "John" + i,
-//							LastName  = "Shepard",
-//							Gender    = Gender.Male
-//						});
-//
-//					Assert.NotNull(id);
-//
-//					var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
-//
-//					Assert.NotNull (john);
-//					Assert.AreEqual(id, john.ID);
-//				}
-//			}
-//		}
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task InsertWithIdentity4Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
+			{
+				for (var i = 0; i < 2; i++)
+				{
+					var id = await db.InsertWithIdentityAsync(
+						new Person
+						{
+							FirstName = "John" + i,
+							LastName  = "Shepard",
+							Gender    = Gender.Male
+						});
+
+					Assert.NotNull(id);
+
+					var john = await db.Person.SingleAsync(p => p.FirstName == "John" + i && p.LastName == "Shepard");
+
+					Assert.NotNull (john);
+					Assert.AreEqual(id, john.ID);
+				}
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void InsertWithIdentity5(string context)
