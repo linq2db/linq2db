@@ -194,7 +194,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// The default maximum time delay between retries, must be nonnegative.
-			/// /// Default value: 30 seconds.
+			/// Default value: 30 seconds.
 			/// </summary>
 			public static TimeSpan DefaultMaxDelay = TimeSpan.FromSeconds(30);
 
