@@ -210,6 +210,15 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			// "db..table" syntax not supported
+			if (database != null && owner == null)
+				throw new LinqToDBException("DB2 requires schema name if database name provided.");
+
+			return base.BuildTableName(sb, database, owner, table);
+		}
+
 #if !SILVERLIGHT && !NETFX_CORE
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

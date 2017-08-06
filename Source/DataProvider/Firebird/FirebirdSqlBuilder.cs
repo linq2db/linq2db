@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Common;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Text;
 
 	public class FirebirdSqlBuilder : BasicSqlBuilder
 	{
@@ -294,6 +295,11 @@ namespace LinqToDB.DataProvider.Firebird
 						.AppendLine  ("END");
 				}
 			}
+		}
+
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			return sb.Append(table);
 		}
 
 #if !SILVERLIGHT
