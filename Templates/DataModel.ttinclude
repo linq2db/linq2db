@@ -50,6 +50,10 @@ LinqToDB.SqlProvider.ISqlBuilder SqlBuilder;
 
 Func<TableSchema,Table> LoadProviderSpecificTable = tableSchema => null;
 
+static Func<ColumnSchema,string>                 ConvertColumnMemberType          = (c) => c.MemberType;
+static Func<TableSchema,ColumnSchema,string>     ConvertTableColumnMemberType     = (t,c) => ConvertColumnMemberType(c);
+static Func<ProcedureSchema,ColumnSchema,string> ConvertProcedureColumnMemberType = (t,c) => ConvertColumnMemberType(c);
+
 void LoadServerMetadata(DataConnection dataConnection)
 {
 	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
@@ -105,7 +109,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						IsPrimaryKey    = c.IsPrimaryKey,
 						PrimaryKeyOrder = c.PrimaryKeyOrder,
 						MemberName      = CheckType(c.SystemType, c.MemberName),
-						Type            = c.MemberType,
+						Type            = ConvertTableColumnMemberType(t, c),
 						SkipOnInsert    = c.SkipOnInsert,
 						SkipOnUpdate    = c.SkipOnUpdate,
 						Description     = c.Description,
@@ -197,7 +201,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 								IsPrimaryKey    = c.IsPrimaryKey,
 								PrimaryKeyOrder = c.PrimaryKeyOrder,
 								MemberName      = CheckColumnName(CheckType(c.SystemType, c.MemberName)),
-								Type            = c.MemberType,
+								Type            = ConvertProcedureColumnMemberType(p, c),
 								SkipOnInsert    = c.SkipOnInsert,
 								SkipOnUpdate    = c.SkipOnUpdate,
 								Description     = c.Description,
