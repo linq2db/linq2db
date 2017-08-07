@@ -1993,6 +1993,16 @@ namespace LinqToDB.SqlProvider
 					BuildSearchCondition(expr.Precedence, (SelectQuery.SearchCondition)expr);
 					break;
 
+				case QueryElementType.SqlTable:
+				case QueryElementType.TableSource:
+					{
+						var table = (ISqlTableSource) expr;
+						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(table, null, true);
+						StringBuilder.Append(tableAlias);
+					}
+
+					break;
+
 				default:
 					throw new InvalidOperationException();
 			}
