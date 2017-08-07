@@ -26,6 +26,7 @@ namespace LinqToDB.Linq.Builder
 			var take     = 0;
 
 			if (!buildInfo.IsSubQuery || builder.DataContext.SqlProviderFlags.IsSubQueryTakeSupported)
+			{
 				switch (methodCall.Method.Name)
 				{
 					case "First"           :
@@ -38,13 +39,16 @@ namespace LinqToDB.Linq.Builder
 						if (!buildInfo.IsSubQuery)
 						{
 							var takeValue = buildInfo.SelectQuery.Select.TakeValue as SqlValue;
+
 							if (takeValue != null && (int) takeValue.Value >= 2)
 							{
 								take = 2;
 							}
 						}
+
 						break;
 				}
+			}
 
 			if (take != 0)
 				builder.BuildTake(sequence, new SqlValue(take), null);
@@ -109,16 +113,16 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstElement<T>(Query<T> query)
 			{
-				query.GetElement      = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).First();
+				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).First();
 
 #if !NOASYNC
 
-				query.GetElementAsync = async (ctx, db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
-					await query.GetForEachAsync(ctx, db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps,
 						r => { obj = r; count++; return false; }, token);
 
 					return count > 0 ? obj : Array<T>.Empty.First();
@@ -129,17 +133,16 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).FirstOrDefault();
+				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).FirstOrDefault();
 
 #if !NOASYNC
 
-				query.GetElementAsync = async (ctx, db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
-					await query.GetForEachAsync(ctx, db, expr, ps,
-						r => { obj = r; count++; return false; }, token);
+					await query.GetForEachAsync(db, expr, ps, r => { obj = r; count++; return false; }, token);
 
 					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
 				};
@@ -149,16 +152,16 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleElement<T>(Query<T> query)
 			{
-				query.GetElement      = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).Single();
+				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).Single();
 
 #if !NOASYNC
 
-				query.GetElementAsync = async (ctx, db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
-					await query.GetForEachAsync(ctx, db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps,
 						r =>
 						{
 							if (count == 0)
@@ -175,16 +178,16 @@ namespace LinqToDB.Linq.Builder
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).SingleOrDefault();
+				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).SingleOrDefault();
 
 #if !NOASYNC
 
-				query.GetElementAsync = async (ctx, db, expr, ps, token) =>
+				query.GetElementAsync = async (db, expr, ps, token) =>
 				{
 					var count = 0;
 					var obj   = default(T);
 
-					await query.GetForEachAsync(ctx, db, expr, ps,
+					await query.GetForEachAsync(db, expr, ps,
 						r =>
 						{
 							if (count == 0)

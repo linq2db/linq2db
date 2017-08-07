@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
@@ -12,7 +11,6 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using Data;
-	using Extensions;
 
 	abstract class QueryRunnerBase : IQueryRunner
 	{
@@ -30,7 +28,6 @@ namespace LinqToDB.Linq
 		protected List<string>      QueryHints = new List<string>();
 		protected DataParameter[]   DataParameters;
 
-		public QueryContext         QueryContext { get; set; }
 		public IDataContextEx       DataContext  { get; set; }
 		public Expression           Expression   { get; set; }
 		public object[]             Parameters   { get; set; }
@@ -79,8 +76,8 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		protected abstract void SetQuery();
+		protected abstract void   SetQuery  ();
 
-		public abstract string GetSqlText();
+		public    abstract string GetSqlText();
 	}
 }

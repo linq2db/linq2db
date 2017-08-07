@@ -6,17 +6,18 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-using LinqToDB.Extensions;
-using LinqToDB.Linq.Builder;
+
 #if !SL4
 using System.Threading.Tasks;
 #endif
 
 namespace LinqToDB.Linq
 {
+	using Builder;
 	using Common;
 	using Data;
 	using LinqToDB.Expressions;
+	using Extensions;
 	using SqlQuery;
 
 	static partial class QueryRunner
@@ -234,12 +235,12 @@ namespace LinqToDB.Linq
 		#region SetRunQuery
 
 		static Tuple<
-			Func<Query,QueryContext,IDataContextEx,Mapper<T>,Expression,object[],int,IEnumerable<T>>,
+			Func<Query,IDataContextEx,Mapper<T>,Expression,object[],int,IEnumerable<T>>,
 			Func<Expression,object[],int>,
 			Func<Expression,object[],int>>
 			GetExecuteQuery<T>(
 				Query query,
-				Func<Query,QueryContext,IDataContextEx,Mapper<T>,Expression,object[],int,IEnumerable<T>> queryFunc)
+				Func<Query,IDataContextEx,Mapper<T>,Expression,object[],int,IEnumerable<T>> queryFunc)
 		{
 			FinalizeQuery(query);
 
@@ -261,14 +262,14 @@ namespace LinqToDB.Linq
 
 					if (n > 0)
 					{
-						queryFunc = (qq, qc, db, mapper, expr, ps, qn) => q(qq, qc, db, mapper, expr, ps, qn).Skip(n);
+						queryFunc = (qq, db, mapper, expr, ps, qn) => q(qq, db, mapper, expr, ps, qn).Skip(n);
 						skip  = (expr, ps) => n;
 					}
 				}
 				else if (select.SkipValue is SqlParameter)
 				{
 					var i = GetParameterIndex(query, select.SkipValue);
-					queryFunc = (qq, qc, db, mapper, expr, ps, qn) => q(qq, qc, db, mapper, expr, ps, qn).Skip((int)query.Queries[0].Parameters[i].Accessor(expr, ps));
+					queryFunc = (qq, db, mapper, expr, ps, qn) => q(qq, db, mapper, expr, ps, qn).Skip((int)query.Queries[0].Parameters[i].Accessor(expr, ps));
 					skip  = (expr,ps) => (int)query.Queries[0].Parameters[i].Accessor(expr, ps);
 				}
 			}
@@ -284,14 +285,14 @@ namespace LinqToDB.Linq
 
 					if (n > 0)
 					{
-						queryFunc = (qq, qc, db, mapper, expr, ps, qn) => q(qq, qc, db, mapper, expr, ps, qn).Take(n);
+						queryFunc = (qq, db, mapper, expr, ps, qn) => q(qq, db, mapper, expr, ps, qn).Take(n);
 						take  = (expr, ps) => n;
 					}
 				}
 				else if (select.TakeValue is SqlParameter)
 				{
 					var i = GetParameterIndex(query, select.TakeValue);
-					queryFunc = (qq, qc, db, mapper, expr, ps, qn) => q(qq, qc, db, mapper, expr, ps, qn).Take((int)query.Queries[0].Parameters[i].Accessor(expr, ps));
+					queryFunc = (qq, db, mapper, expr, ps, qn) => q(qq, db, mapper, expr, ps, qn).Take((int)query.Queries[0].Parameters[i].Accessor(expr, ps));
 					take  = (expr,ps) => (int)query.Queries[0].Parameters[i].Accessor(expr, ps);
 				}
 			}
@@ -301,38 +302,29 @@ namespace LinqToDB.Linq
 
 		static IEnumerable<T> ExecuteQuery<T>(
 			Query          query,
-			QueryContext   queryContext,
 			IDataContextEx dataContext,
 			Mapper<T>      mapper,
 			Expression     expression,
 			object[]       ps,
 			int            queryNumber)
 		{
-			if (queryContext == null)
-				queryContext = new QueryContext(dataContext, expression, ps);
-
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps))
+			try
 			{
-				runner.QueryContext = queryContext;
-				runner.DataContext  = dataContext;
+				mapper.QueryRunner = runner;
 
-				try
+				using (var dr = runner.ExecuteReader())
 				{
-					mapper.QueryRunner = runner;
-
-					using (var dr = runner.ExecuteReader())
+					while (dr.Read())
 					{
-						while (dr.Read())
-						{
-							yield return mapper.Map(runner, dr);
-							runner.RowsCount++;
-						}
+						yield return mapper.Map(runner, dr);
+						runner.RowsCount++;
 					}
 				}
-				finally
-				{
-					mapper.QueryRunner = null;
-				}
+			}
+			finally
+			{
+				mapper.QueryRunner = null;
 			}
 		}
 
@@ -340,7 +332,6 @@ namespace LinqToDB.Linq
 
 		static async Task ExecuteQueryAsync<T>(
 			Query                         query,
-			QueryContext                  queryContext,
 			IDataContextEx                dataContext,
 			Mapper<T>                     mapper,
 			Expression                    expression,
@@ -351,17 +342,12 @@ namespace LinqToDB.Linq
 			Func<Expression,object[],int> takeAction,
 			CancellationToken             cancellationToken)
 		{
-			if (queryContext == null)
-				queryContext = new QueryContext(dataContext, expression, ps);
-
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps))
 			{
 				Func<IDataReader,T> m = dr => mapper.Map(runner, dr);
 
-				runner.SkipAction   = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
-				runner.TakeAction   = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;
-				runner.QueryContext = queryContext;
-				runner.DataContext  = dataContext;
+				runner.SkipAction = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
+				runner.TakeAction = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;
 
 				try
 				{
@@ -395,27 +381,26 @@ namespace LinqToDB.Linq
 			var mapper   = new Mapper<T>(expression);
 			var runQuery = executeQuery.Item1;
 
-			query.GetIEnumerable = (ctx,db,expr,ps) => runQuery(query, ctx, db, mapper, expr, ps, 0);
+			query.GetIEnumerable = (db, expr, ps) => runQuery(query, db, mapper, expr, ps, 0);
 
 #if !NOASYNC
 
 			var skipAction = executeQuery.Item2;
 			var takeAction = executeQuery.Item3;
 
-			query.GetForEachAsync = (ctx, db, expr, ps, action, token) =>
-				ExecuteQueryAsync(query, ctx, db, mapper, expr, ps, 0, action, skipAction, takeAction, token);
+			query.GetForEachAsync = (db, expr, ps, action, token) =>
+				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, action, skipAction, takeAction, token);
 
 #endif
 		}
 
-		static readonly PropertyInfo _queryContextInfo = MemberHelper.PropertyOf<IQueryRunner>( p => p.QueryContext);
 		static readonly PropertyInfo _dataContextInfo  = MemberHelper.PropertyOf<IQueryRunner>( p => p.DataContext);
 		static readonly PropertyInfo _expressionInfo   = MemberHelper.PropertyOf<IQueryRunner>( p => p.Expression);
 		static readonly PropertyInfo _parametersnfo    = MemberHelper.PropertyOf<IQueryRunner>( p => p.Parameters);
 		static readonly PropertyInfo _rowsCountnfo     = MemberHelper.PropertyOf<IQueryRunner>( p => p.RowsCount);
 
 		static Expression<Func<IQueryRunner,IDataReader,T>> WrapMapper<T>(
-			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
+			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>> expression)
 		{
 			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 			var dataReaderParam = Expression.Parameter(typeof(IDataReader), "dr");
@@ -423,9 +408,9 @@ namespace LinqToDB.Linq
 			return
 				Expression.Lambda<Func<IQueryRunner,IDataReader,T>>(
 					Expression.Invoke(
-						expression, new[]
+						expression, new Expression[]
 						{
-							Expression.Property(queryRunnerParam, _queryContextInfo) as Expression,
+							queryRunnerParam,
 							Expression.Property(queryRunnerParam, _dataContextInfo),
 							dataReaderParam,
 							Expression.Property(queryRunnerParam, _expressionInfo),
@@ -441,7 +426,7 @@ namespace LinqToDB.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
+			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>> expression)
 		{
 			var l = WrapMapper(expression);
 
@@ -454,7 +439,7 @@ namespace LinqToDB.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],int,T>> expression)
 		{
 			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 			var dataReaderParam  = Expression.Parameter(typeof(IDataReader),  "dr");
@@ -462,9 +447,9 @@ namespace LinqToDB.Linq
 			var l =
 				Expression.Lambda<Func<IQueryRunner,IDataReader,T>>(
 					Expression.Invoke(
-						expression, new[]
+						expression, new Expression[]
 						{
-							Expression.Property(queryRunnerParam, _queryContextInfo) as Expression,
+							queryRunnerParam,
 							Expression.Property(queryRunnerParam, _dataContextInfo),
 							dataReaderParam,
 							Expression.Property(queryRunnerParam, _expressionInfo),
@@ -483,7 +468,7 @@ namespace LinqToDB.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
-			Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],object>> expression)
+			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],object>> expression)
 		{
 			FinalizeQuery(query);
 
@@ -495,49 +480,40 @@ namespace LinqToDB.Linq
 			var l      = WrapMapper(expression);
 			var mapper = new Mapper<object>(l);
 
-			query.GetElement = (ctx, db, expr, ps) => ExecuteElement(query, ctx, db, mapper, expr, ps);
+			query.GetElement = (db, expr, ps) => ExecuteElement(query, db, mapper, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, token) => ExecuteElementAsync<object>(query, ctx, db, mapper, expr, ps, token);
+			query.GetElementAsync = (db, expr, ps, token) => ExecuteElementAsync<object>(query, db, mapper, expr, ps, token);
 #endif
 		}
 
 		static T ExecuteElement<T>(
 			Query          query,
-			QueryContext   queryContext,
 			IDataContextEx dataContext,
 			Mapper<T>      mapper,
 			Expression     expression,
 			object[]       ps)
 		{
-			if (queryContext == null)
-				queryContext = new QueryContext(dataContext, expression, ps);
-
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
+			try
 			{
-				runner.QueryContext = queryContext;
-				runner.DataContext  = dataContext;
+				mapper.QueryRunner = runner;
 
-				try
+				using (var dr = runner.ExecuteReader())
 				{
-					mapper.QueryRunner = runner;
-
-					using (var dr = runner.ExecuteReader())
+					while (dr.Read())
 					{
-						while (dr.Read())
-						{
-							var value = mapper.Map(runner, dr);
-							runner.RowsCount++;
-							return value;
-						}
+						var value = mapper.Map(runner, dr);
+						runner.RowsCount++;
+						return value;
 					}
+				}
 
-					return Array<T>.Empty.First();
-				}
-				finally
-				{
-					mapper.QueryRunner = null;
-				}
+				return Array<T>.Empty.First();
+			}
+			finally
+			{
+				mapper.QueryRunner = null;
 			}
 		}
 
@@ -545,22 +521,15 @@ namespace LinqToDB.Linq
 
 		static async Task<T> ExecuteElementAsync<T>(
 			Query             query,
-			QueryContext      queryContext,
 			IDataContextEx    dataContext,
 			Mapper<object>    mapper,
 			Expression        expression,
 			object[]          ps,
 			CancellationToken cancellationToken)
 		{
-			if (queryContext == null)
-				queryContext = new QueryContext(dataContext, expression, ps);
-
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
 			{
 				Func<IDataReader,object> m = dr => mapper.Map(runner, dr);
-
-				runner.QueryContext = queryContext;
-				runner.DataContext  = dataContext;
 
 				try
 				{
@@ -609,22 +578,17 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement = (ctx, db, expr, ps) => ScalarQuery(query, db, expr, ps);
+			query.GetElement = (db, expr, ps) => ScalarQuery(query, db, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, token) => ScalarQueryAsync(query, db, expr, ps, token);
+			query.GetElementAsync = (db, expr, ps, token) => ScalarQueryAsync(query, db, expr, ps, token);
 #endif
 		}
 
 		static object ScalarQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
-			{
-				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
-				runner.DataContext  = dataContext;
-
 				return runner.ExecuteScalar();
-			}
 		}
 
 #if !NOASYNC
@@ -637,12 +601,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
-			{
-				runner.QueryContext = new QueryContext(dataContext, expression, ps);
-				runner.DataContext  = dataContext;
-
 				return await runner.ExecuteScalarAsync(cancellationToken);
-			}
 		}
 
 #endif
@@ -660,22 +619,17 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement = (ctx,db,expr,ps) => NonQueryQuery(query, db, expr, ps);
+			query.GetElement = (db, expr, ps) => NonQueryQuery(query, db, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, token) => NonQueryQueryAsync(query, db, expr, ps, token);
+			query.GetElementAsync = (db, expr, ps, token) => NonQueryQueryAsync(query, db, expr, ps, token);
 #endif
 		}
 
 		static int NonQueryQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
-			{
-				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
-				runner.DataContext  = dataContext;
-
 				return runner.ExecuteNonQuery();
-			}
 		}
 
 #if !NOASYNC
@@ -688,12 +642,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
-			{
-				runner.QueryContext = new QueryContext(dataContext, expression, ps);
-				runner.DataContext  = dataContext;
-
 				return await runner.ExecuteNonQueryAsync(cancellationToken);
-			}
 		}
 
 #endif
@@ -711,10 +660,10 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement = (ctx,db,expr,ps) => NonQueryQuery2(query, db, expr, ps);
+			query.GetElement = (db, expr, ps) => NonQueryQuery2(query, db, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, token) => NonQueryQuery2Async(query, db, expr, ps, token);
+			query.GetElementAsync = (db, expr, ps, token) => NonQueryQuery2Async(query, db, expr, ps, token);
 #endif
 		}
 
@@ -722,9 +671,6 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
-				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
-				runner.DataContext  = dataContext;
-
 				var n = runner.ExecuteNonQuery();
 
 				if (n != 0)
@@ -747,9 +693,6 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
-				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
-				runner.DataContext  = dataContext;
-
 				var n = await runner.ExecuteNonQueryAsync(cancellationToken);
 
 				if (n != 0)
@@ -776,10 +719,10 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement = (ctx, db, expr, ps) => QueryQuery2(query, db, expr, ps);
+			query.GetElement = (db, expr, ps) => QueryQuery2(query, db, expr, ps);
 
 #if !NOASYNC
-			query.GetElementAsync = (ctx, db, expr, ps, token) => QueryQuery2Async(query, db, expr, ps, token);
+			query.GetElementAsync = (db, expr, ps, token) => QueryQuery2Async(query, db, expr, ps, token);
 #endif
 		}
 
@@ -787,9 +730,6 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
-				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
-				runner.DataContext  = dataContext;
-
 				var n = runner.ExecuteScalar();
 
 				if (n != null)
@@ -812,9 +752,6 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
-				runner.QueryContext = new QueryContext(dataContext, expr, parameters);
-				runner.DataContext  = dataContext;
-
 				var n = await runner.ExecuteScalarAsync(cancellationToken);
 
 				if (n != null)
@@ -835,10 +772,6 @@ namespace LinqToDB.Linq
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object[] parameters, int idx)
 		{
 			var runner = ((IDataContextEx)dataContext).GetQueryRunner(query, 0, expr, parameters);
-
-			runner.QueryContext = new QueryContext(dataContext, expr, parameters);
-			runner.DataContext = (IDataContextEx) dataContext;
-
 			return runner.GetSqlText();
 		}
 

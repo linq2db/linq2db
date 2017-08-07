@@ -25,7 +25,6 @@ namespace LinqToDB.Linq
 
 		Func<int>      SkipAction       { get; set; }
 		Func<int>      TakeAction       { get; set; }
-		QueryContext   QueryContext     { get; set; }
 		Expression     Expression       { get; set; }
 		IDataContextEx DataContext      { get; set; }
 		object[]       Parameters       { get; set; }

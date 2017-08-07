@@ -261,7 +261,6 @@
     <Compile Include="Linq\MethodHelper.cs" />
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
-    <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
     <Compile Include="Linq\TableT.cs" />
     <Compile Include="Mapping\AssociationAttribute.cs" />

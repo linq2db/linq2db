@@ -1509,7 +1509,7 @@ namespace LinqToDB.Linq.Builder
 					expression = Expression.Call(
 						null,
 						MemberHelper.MethodOf(() => ExecuteSubQuery(null, null, null)),
-							ExpressionBuilder.ContextParam,
+							ExpressionBuilder.QueryRunnerParam,
 							Expression.Convert(parentObject, typeof(object)),
 							Expression.Constant(queryReader));
 
@@ -1536,11 +1536,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				static IEnumerable<T> ExecuteSubQuery(
-					QueryContext                             queryContext,
+					IQueryRunner                             queryRunner,
 					object                                   parentObject,
 					Func<IDataContext,object,IEnumerable<T>> queryReader)
 				{
-					using (var db = queryContext.DataContext.Clone(true))
+					using (var db = queryRunner.DataContext.Clone(true))
 						foreach (var item in queryReader(db, parentObject))
 							yield return item;
 				}

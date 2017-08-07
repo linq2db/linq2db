@@ -66,7 +66,7 @@ namespace LinqToDB.Linq
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName };
 				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
 
-				return (int)ei.GetElement(null, (IDataContextEx)dataContext, Expression.Constant(obj), null);
+				return (int)ei.GetElement((IDataContextEx)dataContext, Expression.Constant(obj), null);
 			}
 
 #if !NOASYNC
@@ -80,7 +80,7 @@ namespace LinqToDB.Linq
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName };
 				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
 
-				var result = await ei.GetElementAsync(null, (IDataContextEx)dataContext, Expression.Constant(obj), null, token);
+				var result = await ei.GetElementAsync((IDataContextEx)dataContext, Expression.Constant(obj), null, token);
 
 				return (int)result;
 			}

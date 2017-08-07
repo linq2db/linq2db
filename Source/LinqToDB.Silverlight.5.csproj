@@ -212,7 +212,6 @@
     <Compile Include="Linq\MethodHelper.cs" />
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
-    <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\QueryRunner.cs" />
     <Compile Include="Linq\QueryRunnerBase.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />

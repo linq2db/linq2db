@@ -23,9 +23,9 @@ namespace LinqToDB.Linq
 
 	abstract class Query
 	{
-		public Func<QueryContext,IDataContextEx,Expression,object[],object> GetElement;
+		public Func<IDataContextEx,Expression,object[],object> GetElement;
 #if !SL4
-		public Func<QueryContext,IDataContextEx,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
+		public Func<IDataContextEx,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
 #endif
 
 		#region Init
@@ -148,9 +148,9 @@ namespace LinqToDB.Linq
 		public bool     DoNotChache;
 		public Query<T> Next;
 
-		public Func<QueryContext,IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
+		public Func<IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
-		public Func<QueryContext,IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
+		public Func<IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
 #endif
 
 		#endregion
@@ -281,10 +281,10 @@ namespace LinqToDB.Linq
 	class ParameterAccessor
 	{
 		public ParameterAccessor(
-			Expression                           expression,
-			Func<Expression, object[], object>   accessor,
-			Func<Expression, object[], DataType> dataTypeAccessor,
-			SqlParameter                         sqlParameter)
+			Expression                         expression,
+			Func<Expression,object[],object>   accessor,
+			Func<Expression,object[],DataType> dataTypeAccessor,
+			SqlParameter                       sqlParameter)
 		{
 			Expression       = expression;
 			Accessor         = accessor;

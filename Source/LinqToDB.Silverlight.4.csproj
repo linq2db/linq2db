@@ -218,7 +218,6 @@
     <Compile Include="Linq\MemberInfoComparer.cs" />
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
-    <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
     <Compile Include="Linq\TableT.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />

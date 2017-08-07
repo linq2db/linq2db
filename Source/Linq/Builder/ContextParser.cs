@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 				SqlOptimizer  = query.SqlOptimizer;
 				SetParameters = () => QueryRunner.SetParameters(query, Builder.Expression, null, 0);
 
-				query.GetElement = (ctx,db,expr,ps) => this;
+				query.GetElement = (db, expr, ps) => this;
 			}
 		}
 	}
