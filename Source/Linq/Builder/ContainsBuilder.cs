@@ -16,14 +16,16 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var buildIn  = false;
 
 			if (sequence.SelectQuery.Select.TakeValue != null ||
 			    sequence.SelectQuery.Select.SkipValue != null)
 			{
 				sequence = new SubQueryContext(sequence);
+				buildIn  = true;
 			}
 
-			return new ContainsContext(buildInfo.Parent, methodCall, sequence);
+			return new ContainsContext(buildInfo.Parent, methodCall, sequence, buildIn);
 		}
 
 		protected override SequenceConvertInfo Convert(
@@ -43,11 +45,13 @@ namespace LinqToDB.Linq.Builder
 		class ContainsContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;
+			readonly bool                 _buildIn;
 
-			public ContainsContext(IBuildContext parent, MethodCallExpression methodCall, IBuildContext sequence)
+			public ContainsContext(IBuildContext parent, MethodCallExpression methodCall, IBuildContext sequence, bool buildIn)
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
+				_buildIn    = buildIn;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -138,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 
 					SelectQuery.Condition cond;
 
-					if (Sequence.SelectQuery != SelectQuery &&
+					if ((Sequence.SelectQuery != SelectQuery || _buildIn) &&
 						(ctx.IsExpression(expr, 0, RequestFor.Field).     Result ||
 						 ctx.IsExpression(expr, 0, RequestFor.Expression).Result))
 					{
