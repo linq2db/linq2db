@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.SqlQuery;
@@ -989,16 +990,12 @@ namespace Tests.Linq
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
-			var methodInfo = typeof(Extensions).GetMethods()
-				.Single(method => method.Name == "GetMyContext" && method.GetParameters()
-					.ElementAt(0)
-					.ParameterType
-					.GetGenericTypeDefinition() == typeof(IQueryable<>));
+			var methodInfo = MemberHelper.MethodOf(() => GetMyContext<T>(null));
 
 			return source.Provider.Execute<MyContextParser.Context>(
 				Expression.Call(
 					null,
-					methodInfo.MakeGenericMethod(new[] { typeof(T) }),
+					methodInfo,
 					new[] { source.Expression }));
 		}
 	}
