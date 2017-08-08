@@ -4,6 +4,9 @@ using System.Configuration;
 
 namespace LinqToDB.Configuration
 {
+	/// <summary>
+	/// Configuration section element.
+	/// </summary>
 	public abstract class ElementBase : ConfigurationElement
 	{
 		private   readonly ConfigurationPropertyCollection _properties = new ConfigurationPropertyCollection();
@@ -34,6 +37,9 @@ namespace LinqToDB.Configuration
 		}
 
 		readonly NameValueCollection _attributes = new NameValueCollection(StringComparer.OrdinalIgnoreCase);
+		/// <summary>
+		/// Gets collection of unknown element attributes.
+		/// </summary>
 		public   NameValueCollection  Attributes
 		{
 			get { return _attributes; }

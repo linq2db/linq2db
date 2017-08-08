@@ -483,5 +483,26 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+#if !NETSTANDARD
+		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
+		public void Issue784Test(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var sp = db.DataProvider.GetSchemaProvider();
+				var s  = sp.GetSchema(db);
+
+				var table = s.Tables.FirstOrDefault(_ => _.TableName.Equals("ForeignKeyTable", StringComparison.OrdinalIgnoreCase));
+				Assert.IsNotNull(table);
+
+				Assert.AreEqual(1,                   table.ForeignKeys                   .Count);
+				Assert.AreEqual("PrimaryKeyTable",   table.ForeignKeys[0].OtherTable     .TableName);
+				Assert.AreEqual("ID",                table.ForeignKeys[0].OtherColumns[0].ColumnName);
+				Assert.AreEqual("PrimaryKeyTableID", table.ForeignKeys[0].ThisColumns[0] .ColumnName);
+
+			}
+		}
+#endif
 	}
 }

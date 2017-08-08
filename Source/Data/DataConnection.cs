@@ -22,7 +22,7 @@ namespace LinqToDB.Data
 #endif
 
 	/// <summary>
-	/// Implements database connection abstraction over different database engines. Could be initialized using connection string name or connection string,
+	/// Implements persistent database connection abstraction over different database engines. Could be initialized using connection string name or connection string,
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
