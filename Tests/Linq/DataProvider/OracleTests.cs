@@ -1951,30 +1951,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ScalarType]
 		class MyDate
 		{
-			public MyDate()
-			{
-			}
-
-			public MyDate(OracleTimeStampTZ tz)
-			{
-				Year        = tz.Year;
-				Month       = tz.Month;
-				Day         = tz.Day;
-				Hour        = tz.Hour;
-				Minute      = tz.Minute;
-				Second      = tz.Second;
-				Nanosecond  = tz.Nanosecond;
-				TimeZone    = tz.TimeZone;
-			}
-
-			public OracleTimeStampTZ ToOracleTimeStampTZ()
-			{
-				return new OracleTimeStampTZ(Year, Month, Day, Hour, Minute, Second, Nanosecond, TimeZone);
-			}
-
 			public int    Year;
 			public int    Month;
 			public int    Day;
@@ -1983,6 +1961,28 @@ namespace Tests.DataProvider
 			public int    Second;
 			public int    Nanosecond;
 			public string TimeZone;
+		}
+
+		static MyDate OracleTimeStampTZToMyDate(OracleTimeStampTZ tz)
+		{
+			return new MyDate
+			{
+				Year       = tz.Year,
+				Month      = tz.Month,
+				Day        = tz.Day,
+				Hour       = tz.Hour,
+				Minute     = tz.Minute,
+				Second     = tz.Second,
+				Nanosecond = tz.Nanosecond,
+				TimeZone   = tz.TimeZone,
+			};
+		}
+
+		static OracleTimeStampTZ MyDateToOracleTimeStampTZ(MyDate dt)
+		{
+			return dt == null ?
+				OracleTimeStampTZ.Null :
+				new OracleTimeStampTZ(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Nanosecond, dt.TimeZone);
 		}
 
 		[Table("AllTypes")]
@@ -2003,12 +2003,12 @@ namespace Tests.DataProvider
 			{
 				ToType            = typeof(MyDate),
 				ProviderFieldType = typeof(OracleTimeStampTZ),
-			}] = (Expression<Func<OracleDataReader,int,MyDate>>)((rd, idx) => new MyDate(rd.GetOracleTimeStampTZ(idx)));
+			}] = (Expression<Func<OracleDataReader,int,MyDate>>)((rd, idx) => OracleTimeStampTZToMyDate(rd.GetOracleTimeStampTZ(idx)));
 
 			// Converts object property value to data reader parameter.
 			//
 			dataProvider.MappingSchema.SetConverter<MyDate,DataParameter>(
-				dt => new DataParameter { Value = dt.ToOracleTimeStampTZ() });
+				dt => new DataParameter { Value = MyDateToOracleTimeStampTZ(dt) });
 
 			// Converts object property value to SQL.
 			//
@@ -2030,8 +2030,8 @@ namespace Tests.DataProvider
 
 			// Maps OracleTimeStampTZ to MyDate and the other way around.
 			//
-			dataProvider.MappingSchema.SetConverter<OracleTimeStampTZ,MyDate>(dt => new MyDate(dt));
-			dataProvider.MappingSchema.SetConverter<MyDate,OracleTimeStampTZ>(dt => dt.ToOracleTimeStampTZ());
+			dataProvider.MappingSchema.SetConverter<OracleTimeStampTZ,MyDate>(OracleTimeStampTZToMyDate);
+			dataProvider.MappingSchema.SetConverter<MyDate,OracleTimeStampTZ>(MyDateToOracleTimeStampTZ);
 
 			using (var db = GetDataContext(context))
 			{
