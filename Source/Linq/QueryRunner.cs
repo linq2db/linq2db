@@ -6,7 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-
+using LinqToDB.Mapping;
 #if !SL4
 using System.Threading.Tasks;
 #endif
@@ -122,9 +122,11 @@ namespace LinqToDB.Linq
 
 		static void ClearParameters(Query query)
 		{
+#if !DEBUG
 			foreach (var q in query.Queries)
 				foreach (var sqlParameter in q.Parameters)
 					sqlParameter.Expression = null;
+#endif
 		}
 
 		static int GetParameterIndex(Query query, ISqlExpression parameter)
@@ -142,7 +144,8 @@ namespace LinqToDB.Linq
 			throw new InvalidOperationException();
 		}
 
-		internal static void SetParameters(Query query, Expression expression, object[] parameters, int queryNumber)
+		internal static void SetParameters(
+			Query query, IDataContext dataContext, Expression expression, object[] parameters, int queryNumber)
 		{
 			var queryContext = query.Queries[queryNumber];
 
@@ -183,6 +186,14 @@ namespace LinqToDB.Linq
 				}
 
 				p.SqlParameter.Value = value;
+
+//				if (value != null && dataContext.InlineParameters && p.SqlParameter.IsQueryParameter)
+//				{
+//					var type = value.GetType();
+//
+//					if (type != typeof(byte[]) && dataContext.MappingSchema.IsScalarType(type))
+//						p.SqlParameter.IsQueryParameter = false;
+//				}
 
 				var dataType = p.DataTypeAccessor(expression, parameters);
 
@@ -230,9 +241,9 @@ namespace LinqToDB.Linq
 			return param;
 		}
 
-		#endregion
+#endregion
 
-		#region SetRunQuery
+#region SetRunQuery
 
 		static Tuple<
 			Func<Query,IDataContextEx,Mapper<T>,Expression,object[],int,IEnumerable<T>>,
@@ -420,9 +431,9 @@ namespace LinqToDB.Linq
 					dataReaderParam);
 		}
 
-		#endregion
+#endregion
 
-		#region SetRunQuery / Cast, Concat, Union, OfType, ScalarSelect, Select, SequenceContext, Table
+#region SetRunQuery / Cast, Concat, Union, OfType, ScalarSelect, Select, SequenceContext, Table
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -433,9 +444,9 @@ namespace LinqToDB.Linq
 			SetRunQuery(query, l);
 		}
 
-		#endregion
+#endregion
 
-		#region SetRunQuery / Select 2
+#region SetRunQuery / Select 2
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -462,9 +473,9 @@ namespace LinqToDB.Linq
 			SetRunQuery(query, l);
 		}
 
-		#endregion
+#endregion
 
-		#region SetRunQuery / Aggregation, All, Any, Contains, Count
+#region SetRunQuery / Aggregation, All, Any, Contains, Count
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -565,9 +576,9 @@ namespace LinqToDB.Linq
 
 #endif
 
-		#endregion
+#endregion
 
-		#region ScalarQuery
+#region ScalarQuery
 
 		public static void SetScalarQuery(Query query)
 		{
@@ -606,9 +617,9 @@ namespace LinqToDB.Linq
 
 #endif
 
-		#endregion
+#endregion
 
-		#region NonQueryQuery
+#region NonQueryQuery
 
 		public static void SetNonQueryQuery(Query query)
 		{
@@ -647,9 +658,9 @@ namespace LinqToDB.Linq
 
 #endif
 
-		#endregion
+#endregion
 
-		#region NonQueryQuery2
+#region NonQueryQuery2
 
 		public static void SetNonQueryQuery2(Query query)
 		{
@@ -706,9 +717,9 @@ namespace LinqToDB.Linq
 
 #endif
 
-		#endregion
+#endregion
 
-		#region QueryQuery2
+#region QueryQuery2
 
 		public static void SetQueryQuery2(Query query)
 		{
@@ -765,9 +776,9 @@ namespace LinqToDB.Linq
 
 #endif
 
-		#endregion
+#endregion
 
-		#region GetSqlText
+#region GetSqlText
 
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object[] parameters, int idx)
 		{
@@ -775,6 +786,6 @@ namespace LinqToDB.Linq
 			return runner.GetSqlText();
 		}
 
-		#endregion
+#endregion
 	}
 }

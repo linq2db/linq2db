@@ -42,6 +42,7 @@ namespace LinqToDB.Linq
 			ConfigurationID  = dataContext.MappingSchema.ConfigurationID;
 			SqlOptimizer     = dataContext.GetSqlOptimizer();
 			SqlProviderFlags = dataContext.SqlProviderFlags;
+			InlineParameters = dataContext.InlineParameters;
 		}
 
 		#endregion
@@ -52,16 +53,18 @@ namespace LinqToDB.Linq
 		public readonly Expression       Expression;
 		public readonly MappingSchema    MappingSchema;
 		public readonly string           ConfigurationID;
+		public readonly bool             InlineParameters;
 		public readonly ISqlOptimizer    SqlOptimizer;
 		public readonly SqlProviderFlags SqlProviderFlags;
 
-		public bool Compare(string contextID, MappingSchema mappingSchema, Expression expr)
+		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
 			return
-				ContextID.Length       == contextID.Length &&
-				ContextID              == contextID        &&
-				ConfigurationID.Length == mappingSchema.ConfigurationID.Length &&
-				ConfigurationID        == mappingSchema.ConfigurationID &&
+				ContextID.Length       == dataContext.ContextID.Length &&
+				ContextID              == dataContext.ContextID        &&
+				ConfigurationID.Length == dataContext.MappingSchema.ConfigurationID.Length &&
+				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
+				InlineParameters       == dataContext.InlineParameters &&
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
@@ -224,7 +227,7 @@ namespace LinqToDB.Linq
 
 			for (var query = _first; query != null; query = query.Next)
 			{
-				if (query.Compare(dataContext.ContextID, dataContext.MappingSchema, expr))
+				if (query.Compare(dataContext, expr))
 				{
 					if (prev != null)
 					{

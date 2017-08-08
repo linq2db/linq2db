@@ -71,7 +71,7 @@ namespace LinqToDB.Linq
 						DataContext.NextQueryHints.Clear();
 				}
 
-				QueryRunner.SetParameters(Query, Expression, Parameters, QueryNumber);
+				QueryRunner.SetParameters(Query, DataContext, Expression, Parameters, QueryNumber);
 				SetQuery();
 			}
 		}

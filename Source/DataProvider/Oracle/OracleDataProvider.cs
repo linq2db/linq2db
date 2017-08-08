@@ -218,7 +218,7 @@ namespace LinqToDB.DataProvider.Oracle
 				//    return (T) OracleDecimal.SetPrecision(rd.GetOracleDecimal(idx), 27);
 				// }
 
-				Func<Type, LambdaExpression> getDecimal = t =>
+				Func<Type,LambdaExpression> getDecimal = t =>
 					Expression.Lambda(
 						Expression.ConvertChecked(
 							Expression.Call(setPrecisionMethod,
