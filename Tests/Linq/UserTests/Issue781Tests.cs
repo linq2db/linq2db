@@ -27,7 +27,7 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.InvariantCultureIgnoreCase) != -1);
+				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -45,7 +45,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.InvariantCultureIgnoreCase) != -1);
+				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -65,7 +65,7 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.InvariantCultureIgnoreCase) != -1);
+				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -85,7 +85,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.InvariantCultureIgnoreCase) != -1);
+				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -105,7 +105,7 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.InvariantCultureIgnoreCase) != -1);
+				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -125,7 +125,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.InvariantCultureIgnoreCase) != -1);
+				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -147,7 +147,7 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.InvariantCultureIgnoreCase) != -1);
+				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 
@@ -169,7 +169,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 				Assert.AreEqual(expected, actual);
-				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.InvariantCultureIgnoreCase) != -1);
+				Assert.True(db.LastQuery.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase) != -1);
 			}
 		}
 	}
