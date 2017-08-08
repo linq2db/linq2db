@@ -24,6 +24,9 @@ namespace LinqToDB.Configuration
 		}
 
 		private static LinqToDBSection _instance;
+		/// <summary>
+		/// linq2db configuration section.
+		/// </summary>
 		public  static LinqToDBSection  Instance
 		{
 			get
@@ -50,12 +53,21 @@ namespace LinqToDB.Configuration
 			get { return _properties; }
 		}
 
+		/// <summary>
+		/// Gets list of data providers configuration elements.
+		/// </summary>
 		public DataProviderElementCollection DataProviders
 		{
 			get { return (DataProviderElementCollection) base[_propDataProviders]; }
 		}
 
+		/// <summary>
+		/// Gets default connection configuration name.
+		/// </summary>
 		public string DefaultConfiguration { get { return (string)base[_propDefaultConfiguration]; } }
+		/// <summary>
+		/// Gets default data provider configuration name.
+		/// </summary>
 		public string DefaultDataProvider  { get { return (string)base[_propDefaultDataProvider];  } }
 
 		IEnumerable<IConnectionStringSettings> ILinqToDBSettings.ConnectionStrings
