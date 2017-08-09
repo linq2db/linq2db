@@ -227,7 +227,7 @@ namespace Tests.Linq
 
 		}
 
-#if !SL4
+#if !SL4 && !NOASYNC
 
 		[Test, DataContextSource]
 		public async Task All4Async(string context)
