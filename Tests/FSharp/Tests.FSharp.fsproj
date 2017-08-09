@@ -69,9 +69,11 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\..\Source\LinqToDB.csproj">
-      <Name>LinqToDB</Name>
-      <Project>{7cbd2975-3d0c-4bc3-bb4e-932f910778cf}</Project>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Source\Source.csproj">
+      <Name>Source (Source\Source)</Name>
+      <Project>{0e4e9a56-f285-4067-adaa-392acb9caaa7}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
