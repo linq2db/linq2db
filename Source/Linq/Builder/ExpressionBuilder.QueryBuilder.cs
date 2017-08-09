@@ -212,6 +212,15 @@ namespace LinqToDB.Linq.Builder
 								break;
 							}
 
+							if (ce.IsAssociation(MappingSchema))
+							{
+								var ctx = GetContext(context, ce);
+								if (ctx == null)
+									throw new InvalidOperationException();
+
+								return new TransformInfo(ctx.BuildExpression(ce, 0));
+							}
+
 							if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(ce)) && IsSubQuery(context, ce))
 							{
 								if (IsMultipleQuery(ce))

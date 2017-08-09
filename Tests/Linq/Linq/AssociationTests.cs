@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -650,6 +651,123 @@ namespace Tests.Linq
 					orderby t.ParentID
 					select t);
 			}
+		}
+
+		[Test, DataContextSource]
+		public void ExtensionTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+				   Parent.SelectMany(_ => _.Children),
+				db.Parent.SelectMany(_ => _.Children()));
+
+			}
+		}
+
+		[Test, DataContextSource]
+		public void ExtensionTest11(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+				   Parent.SelectMany(_ => _.Children),
+				db.Parent.SelectMany(_ => AssociationExtension.Children(_)));
+
+			}
+		}
+
+		[Test, DataContextSource]
+		public void ExtensionTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+				   Child.Select(_ => _.Parent),
+				db.Child.Select(_ => _.Parent()));
+
+			}
+		}
+
+		[Test, DataContextSource]
+		public void ExtensionTest21(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+				   Child.Select(_ => _.Parent),
+				db.Child.Select(_ => AssociationExtension.Parent(_)));
+
+			}
+		}
+
+		[Test, DataContextSource]
+		public void QuerableExtensionTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+				   Parent.SelectMany(_ => _.Children),
+				db.Parent.SelectMany(_ => _.QuerableChildren(db)));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void QuerableExtensionTest11(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+				   Parent.SelectMany(_ => _.Children),
+				db.Parent.SelectMany(_ => AssociationExtension.QuerableChildren(_, db)));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void QuerableExtensionTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+				   Child.Select    (_ => _.Parent),
+				db.Child.SelectMany(_ => _.QuerableParent(db)));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void QuerableExtensionTest21(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+				   Child.Select    (_ => _.Parent),
+				db.Child.SelectMany(_ => AssociationExtension.QuerableParent(_, db)));
+			}
+		}
+	}
+	
+	public static class AssociationExtension
+	{
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+		public static IEnumerable<Child> Children(this Parent parent)
+		{
+			throw new InvalidOperationException("Used only as Association helper");
+		}
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+		public static IQueryable<Child> QuerableChildren(this Parent parent, IDataContext db)
+		{
+			return db.GetTable<Child>().Where(_ => _.ParentID == parent.ParentID);
+		}
+
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+		public static Parent Parent(this Child child)
+		{
+			throw new InvalidOperationException("Used only as Association helper");
+		}
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+		public static IQueryable<Parent> QuerableParent(this Child child, IDataContext db)
+		{
+			return db.GetTable<Parent>().Where(_ => _.ParentID == child.ParentID);
 		}
 	}
 }
