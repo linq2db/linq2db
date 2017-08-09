@@ -30,10 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0-preview-20170106-08" Condition=" '$(TargetFramework)' != 'net40' " />
-    <PackageReference Include="NUnit" Version="3.6.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-  </ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" Condition=" '$(TargetFramework)' != 'net40' " />
+		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+		<PackageReference Include="NUnit" Version="3.7.1" />
+		<PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
+	</ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
@@ -53,12 +54,11 @@
     <PackageReference Include="MySql.Data" Version="7.0.6-IR31" />
     <PackageReference Include="Npgsql" Version="3.2.1" />
     <PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
-    <PackageReference Include="dotnet-test-nunit" Version="3.4.0-beta-3" />
     <PackageReference Include="xunit.core" Version="2.1.0" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
-    <PackageReference Include="Microsoft.Bcl.Async" Version="1.0.*" />
+    <PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
     <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="4.10.0" />
     <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
     <PackageReference Include="Microsoft.SqlServer.Types" Version="11.0.2" />
@@ -70,7 +70,6 @@
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.101.0" />
     <PackageReference Include="xunit" Version="1.9.1" />
     <PackageReference Include="xunit.extensions" Version="1.9.1" />
-    <PackageReference Include="NUnit.Runners" Version="3.6.0" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -175,5 +174,9 @@
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 		<Reference Include="System.Threading.Tasks"></Reference>
 	</ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
 
 </Project>
