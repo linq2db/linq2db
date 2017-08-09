@@ -50,7 +50,6 @@ namespace LinqToDB.DataProvider.Informix
 
 		#endregion
 
-
 		#region BulkCopy
 
 		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;

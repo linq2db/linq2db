@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -295,6 +299,20 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(() => n));
 		}
 
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task ElementAt2Async(string context)
+		{
+			var n = 3;
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					      (from p in    Parent where p.ParentID > 1 select p).ElementAt(n),
+					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtAsync(() => n));
+		}
+
+#endif
+
 		[Test, DataContextSource]
 		public void ElementAtDefault1(string context)
 		{
@@ -320,6 +338,20 @@ namespace Tests.Linq
 					(from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(n),
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task ElementAtDefault3Async(string context)
+		{
+			var n = 3;
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					      (from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(n),
+					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefaultAsync(() => n));
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void ElementAtDefault4(string context)

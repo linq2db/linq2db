@@ -75,43 +75,6 @@ namespace LinqToDB
 		bool?               IsDBNullAllowed    (IDataReader reader, int idx);
 
 		/// <summary>
-		/// Prepares ready for execution query from <see cref="IQueryContext"/> query data.
-		/// </summary>
-		/// <param name="queryContext">Query data.</param>
-		/// <returns>Prepared query.</returns>
-		object              SetQuery           (IQueryContext queryContext);
-		/// <summary>
-		/// Executes prepared query and returns number of affected records.
-		/// </summary>
-		/// <param name="query">Query to execute. See <see cref="SetQuery(IQueryContext)"/> for more details.</param>
-		/// <returns>Number of affected records.</returns>
-		int                 ExecuteNonQuery    (object query);
-		/// <summary>
-		/// Executes prepared query and returns scalar value.
-		/// </summary>
-		/// <param name="query">Query to execute. See <see cref="SetQuery(IQueryContext)"/> for more details.</param>
-		/// <returns>Scalar value.</returns>
-		object              ExecuteScalar      (object query);
-		/// <summary>
-		/// Executes prepared query and returns data reader.
-		/// </summary>
-		/// <param name="query">Query to execute. See <see cref="SetQuery(IQueryContext)"/> for more details.</param>
-		/// <returns>Data reader with query results.</returns>
-		IDataReader         ExecuteReader      (object query);
-		/// <summary>
-		/// Performs cleanup work on query after query execution or <see cref="GetSqlText(object)" /> call.
-		/// </summary>
-		/// <param name="query">Executed query. See <see cref="SetQuery(IQueryContext)"/> for more details.</param>
-		void                ReleaseQuery       (object query);
-
-		/// <summary>
-		/// Returns SQL text for query.
-		/// See <see cref="SetQuery(IQueryContext)"/> for more details.
-		/// </summary>
-		/// <param name="query">Query object. See <see cref="SetQuery(IQueryContext)"/> for more details.</param>
-		/// <returns>Query SQL text.</returns>
-		string              GetSqlText         (object query);
-		/// <summary>
 		/// Clones current context.
 		/// </summary>
 		/// <returns>Cloned context.</returns>

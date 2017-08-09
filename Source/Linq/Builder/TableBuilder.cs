@@ -574,12 +574,14 @@ namespace LinqToDB.Linq.Builder
 
 					Expression testExpr;
 
+					var isNullExpr = Expression.Call(
+						ExpressionBuilder.DataReaderParam,
+						ReflectionHelper.DataReader.IsDBNull,
+						Expression.Constant(dindex));
+
 					if (mapping.m.Code == null)
 					{
-						testExpr = Expression.Call(
-							ExpressionBuilder.DataReaderParam,
-							ReflectionHelper.DataReader.IsDBNull,
-							Expression.Constant(dindex));
+						testExpr = isNullExpr;
 					}
 					else
 					{
@@ -589,6 +591,14 @@ namespace LinqToDB.Linq.Builder
 							Builder.MappingSchema,
 							Builder.BuildSql(codeType, dindex),
 							Expression.Constant(mapping.m.Code));
+
+						if (mapping.m.Discriminator.CanBeNull)
+						{
+							testExpr =
+								Expression.AndAlso(
+									Expression.Not(isNullExpr),
+									testExpr);
+						}
 					}
 
 					expr = Expression.Condition(
@@ -605,7 +615,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = BuildQuery(typeof(T), this, null);
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				query.SetQuery(mapper);
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
 			#endregion
@@ -1530,7 +1540,7 @@ namespace LinqToDB.Linq.Builder
 					expression = Expression.Call(
 						null,
 						MemberHelper.MethodOf(() => ExecuteSubQuery(null, null, null)),
-							ExpressionBuilder.ContextParam,
+							ExpressionBuilder.QueryRunnerParam,
 							Expression.Convert(parentObject, typeof(object)),
 							Expression.Constant(queryReader));
 
@@ -1557,11 +1567,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				static IEnumerable<T> ExecuteSubQuery(
-					QueryContext                             queryContext,
+					IQueryRunner                             queryRunner,
 					object                                   parentObject,
 					Func<IDataContext,object,IEnumerable<T>> queryReader)
 				{
-					using (var db = queryContext.DataContext.Clone(true))
+					using (var db = queryRunner.DataContext.Clone(true))
 						foreach (var item in queryReader(db, parentObject))
 							yield return item;
 				}

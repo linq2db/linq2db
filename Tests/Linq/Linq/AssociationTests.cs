@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 using JetBrains.Annotations;
+using LinqToDB.Common;
 
 #pragma warning disable 472 // The result of the expression is always the same since a value of this type is never equal to 'null'
 
@@ -186,6 +187,19 @@ namespace Tests.Linq
 					(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
 					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task GroupBy2Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
+					(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void GroupBy3(string context)

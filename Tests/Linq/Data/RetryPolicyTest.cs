@@ -98,6 +98,7 @@ namespace Tests.Data
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
 		}
 
+#if !NOASYNC
 		[Test, DataContextSource(false)]
 		public void RetryPoliceTestAsync(string context)
 		{
@@ -118,5 +119,6 @@ namespace Tests.Data
 
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
 		}
+#endif
 	}
 }

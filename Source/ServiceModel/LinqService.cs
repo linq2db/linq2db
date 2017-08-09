@@ -76,16 +76,14 @@ namespace LinqToDB.ServiceModel
 
 				ValidateQuery(query);
 
-				using (IDataContext db = CreateDataContext(configuration))
+				using (var db = CreateDataContext(configuration))
 				{
-					var obj = db.SetQuery(new QueryContext
+					return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
 						SelectQuery = query.Query,
-						Parameters  = query.Parameters,
-						QueryHints  = query.QueryHints
+						Parameters = query.Parameters,
+						QueryHints = query.QueryHints
 					});
-
-					return db.ExecuteNonQuery(obj);
 				}
 			}
 			catch (Exception exception)
@@ -104,16 +102,14 @@ namespace LinqToDB.ServiceModel
 
 				ValidateQuery(query);
 
-				using (IDataContext db = CreateDataContext(configuration))
+				using (var db = CreateDataContext(configuration))
 				{
-					var obj = db.SetQuery(new QueryContext
+					return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 					{
 						SelectQuery = query.Query,
 						Parameters  = query.Parameters,
 						QueryHints  = query.QueryHints
 					});
-
-					return db.ExecuteScalar(obj);
 				}
 			}
 			catch (Exception exception)
@@ -132,16 +128,14 @@ namespace LinqToDB.ServiceModel
 
 				ValidateQuery(query);
 
-				using (IDataContext db = CreateDataContext(configuration))
+				using (var db = CreateDataContext(configuration))
 				{
-					var obj = db.SetQuery(new QueryContext
+					using (var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 					{
 						SelectQuery = query.Query,
 						Parameters  = query.Parameters,
 						QueryHints  = query.QueryHints
-					});
-
-					using (var rd = db.ExecuteReader(obj))
+					}))
 					{
 						var ret = new LinqServiceResult
 						{
@@ -256,14 +250,12 @@ namespace LinqToDB.ServiceModel
 
 					foreach (var query in queries)
 					{
-						var obj = ((IDataContext)db).SetQuery(new QueryContext
+						DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 						{
 							SelectQuery = query.Query,
 							Parameters  = query.Parameters,
 							QueryHints  = query.QueryHints
 						});
-
-						((IDataContext)db).ExecuteNonQuery(obj);
 					}
 
 					db.CommitTransaction();

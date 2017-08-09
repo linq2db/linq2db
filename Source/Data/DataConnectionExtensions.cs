@@ -4,6 +4,11 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Data
@@ -36,7 +41,7 @@ namespace LinqToDB.Data
 		/// <param name="commandText">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Database command wrapper.</returns>
-		public static CommandInfo SetCommand(DataConnection dataConnection, string commandText, params DataParameter[] parameters)
+		public static CommandInfo SetCommand(this DataConnection dataConnection, string commandText, params DataParameter[] parameters)
 		{
 			return new CommandInfo(dataConnection, commandText, parameters);
 		}
@@ -48,7 +53,7 @@ namespace LinqToDB.Data
 		/// <param name="commandText">Command text.</param>
 		/// <param name="parameter">Command parameter.</param>
 		/// <returns>Database command wrapper.</returns>
-		public static CommandInfo SetCommand(DataConnection dataConnection, string commandText, DataParameter parameter)
+		public static CommandInfo SetCommand(this DataConnection dataConnection, string commandText, DataParameter parameter)
 		{
 			return new CommandInfo(dataConnection, commandText, parameter);
 		}
@@ -67,8 +72,9 @@ namespace LinqToDB.Data
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
 		/// <returns>Database command wrapper.</returns>
-		public static CommandInfo SetCommand(DataConnection dataConnection, string commandText, object parameters)
+		public static CommandInfo SetCommand(this DataConnection dataConnection, string commandText, object parameters)
 		{
 			return new CommandInfo(dataConnection, commandText, parameters);
 		}
@@ -134,6 +140,7 @@ namespace LinqToDB.Data
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object parameters)
 		{
@@ -210,6 +217,7 @@ namespace LinqToDB.Data
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, object parameters)
 		{
@@ -249,6 +257,7 @@ namespace LinqToDB.Data
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
 		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, object parameters)
 		{
@@ -308,11 +317,51 @@ namespace LinqToDB.Data
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
 		/// <returns>Number of records, affected by command execution.</returns>
 		public static int Execute(this DataConnection connection, string sql, object parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Execute();
 		}
+
+#if !NOASYNC
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, CancellationToken token = default(CancellationToken))
+		{
+			return new CommandInfo(connection, sql).ExecuteAsync(token);
+		}
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteAsync();
+		}
+
+		public static Task<int> ExecuteProcAsync(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync();
+		}
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteAsync();
+		}
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, CancellationToken token, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteAsync(token);
+		}
+
+		public static Task<int> ExecuteProcAsync(this DataConnection connection, string sql, CancellationToken token, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteProcAsync(token);
+		}
+
+		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, CancellationToken token, object parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).ExecuteAsync(token);
+		}
+
+#endif
 
 		#endregion
 
@@ -384,6 +433,7 @@ namespace LinqToDB.Data
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
 		/// <returns>Resulting value.</returns>
 		public static T Execute<T>(this DataConnection connection, string sql, object parameters)
 		{
@@ -443,6 +493,7 @@ namespace LinqToDB.Data
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
 		/// <returns>Data reader object.</returns>
 		public static DataReader ExecuteReader(this DataConnection connection, string sql, object parameters)
 		{
@@ -711,6 +762,123 @@ namespace LinqToDB.Data
 				databaseName ?? tbl.DatabaseName,
 				schemaName   ?? tbl.SchemaName);
 		}
+
+#if !NOASYNC
+
+		public static Task<int> MergeAsync<T>(this DataConnection dataConnection, IQueryable<T> source, Expression<Func<T,bool>> predicate,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class
+		{
+			return dataConnection.DataProvider.MergeAsync(
+				dataConnection, predicate, true, source.Where(predicate), tableName, databaseName, schemaName, token);
+		}
+
+		public static Task<int> MergeAsync<T>(this DataConnection dataConnection, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class
+		{
+			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source, tableName, databaseName, schemaName, token);
+		}
+
+		public static Task<int> MergeAsync<T>(this DataConnection dataConnection, bool delete, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class
+		{
+			return dataConnection.DataProvider.MergeAsync(dataConnection, null, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+		public static Task<int> MergeAsync<T>(this DataConnection dataConnection, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class
+		{
+			return dataConnection.DataProvider.MergeAsync(dataConnection, null, false, source, tableName, databaseName, schemaName, token);
+		}
+
+		public static Task<int> MergeAsync<T>(this ITable<T> table, IQueryable<T> source, Expression<Func<T,bool>> predicate,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source.Where(predicate),
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName,
+				token);
+		}
+
+		public static Task<int> MergAsynce<T>(this ITable<T> table, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source,
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName,
+				token);
+		}
+
+		public static Task<int> MergeAsync<T>(this ITable<T> table, bool delete, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.MergeAsync(dataConnection, null, delete, source,
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName,
+				token);
+		}
+
+		public static Task<int> MergeAsync<T>(this ITable<T> table, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null,
+			CancellationToken token = default(CancellationToken))
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.MergeAsync(dataConnection, null, false, source,
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName,
+				token);
+		}
+
+#endif
 
 		#endregion
 	}
