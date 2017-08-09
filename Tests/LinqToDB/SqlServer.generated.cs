@@ -59,7 +59,7 @@ namespace DataModel
 		public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
 		public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
 
-		public NorthwindDB()
+		public NorthwindDB(int i)
 		{
 			InitDataContext();
 		}
@@ -409,11 +409,11 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Order Details")]
 	public partial class OrderDetail
 	{
-		[Column(@"OrderID", DbType="int",      DataType=DataType.Int32),    PrimaryKey(1), NotNull] public int     ID        { get; set; } // int
-		[Column(              DbType="int",      DataType=DataType.Int32),  PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
-		[Column(              DbType="money",    DataType=DataType.Money),                 NotNull] public decimal UnitPrice { get; set; } // money
-		[Column(              DbType="smallint", DataType=DataType.Int16),                 NotNull] public short   Quantity  { get; set; } // smallint
-		[Column(              DbType="real",     DataType=DataType.Single),                NotNull] public float   Discount  { get; set; } // real
+		[Column(@"OrderID", DbType="int",      DataType=DataType.Int32),  PrimaryKey(1), NotNull] public int     ID        { get; set; } // int
+		[Column(            DbType="int",      DataType=DataType.Int32),  PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
+		[Column(            DbType="money",    DataType=DataType.Money),                 NotNull] public decimal UnitPrice { get; set; } // money
+		[Column(            DbType="smallint", DataType=DataType.Int16),                 NotNull] public short   Quantity  { get; set; } // smallint
+		[Column(            DbType="real",     DataType=DataType.Single),                NotNull] public float   Discount  { get; set; } // real
 
 		#region Associations
 
@@ -920,14 +920,31 @@ namespace DataModel
 		public ITable<TestTable2>        TestTable2          { get { return this.GetTable<TestTable2>(); } }
 		public ITable<TestTable3>        TestTable3          { get { return this.GetTable<TestTable3>(); } }
 
-		public TestDataDB()
+		#region Schemas
+
+		public Test1Schema.DataContext      Test1      { get; set; }
+		public Test2Schema.DataContext      Test2      { get; set; }
+		public Test3_dasdSchema.DataContext Test3_dasd { get; set; }
+
+		public void InitSchemas()
 		{
+			Test1      = new Test1Schema.     DataContext(this);
+			Test2      = new Test2Schema.     DataContext(this);
+			Test3_dasd = new Test3_dasdSchema.DataContext(this);
+		}
+
+		#endregion
+
+		public TestDataDB(int i)
+		{
+			InitSchemas();
 			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
+			InitSchemas();
 			InitDataContext();
 		}
 
@@ -991,7 +1008,7 @@ namespace DataModel
 	[Table(Database="TestData", Name="AllTypes")]
 	public partial class AllType
 	{
-		[Column(                               DbType="int",               DataType=DataType.Int32),                                              PrimaryKey, Identity] public int             ID                       { get; set; } // int
+		[Column(                             DbType="int",               DataType=DataType.Int32),                                                PrimaryKey, Identity] public int             ID                       { get; set; } // int
 		[Column(@"bigintDataType",           DbType="bigint",            DataType=DataType.Int64),                                                Nullable            ] public long?           BigintDataType           { get; set; } // bigint
 		[Column(@"numericDataType",          DbType="numeric(18, 1)",    DataType=DataType.Decimal,        Precision=18, Scale=1),                Nullable            ] public decimal?        NumericDataType          { get; set; } // numeric(18, 1)
 		[Column(@"bitDataType",              DbType="bit",               DataType=DataType.Boolean),                                              Nullable            ] public bool?           BitDataType              { get; set; } // bit
@@ -1039,7 +1056,7 @@ namespace DataModel
 	[Table(Database="TestData", Name="AllTypes2")]
 	public partial class AllTypes2
 	{
-		[Column(                             DbType="int",               DataType=DataType.Int32),                     PrimaryKey, Identity] public int             ID                     { get; set; } // int
+		[Column(                           DbType="int",               DataType=DataType.Int32),                       PrimaryKey, Identity] public int             ID                     { get; set; } // int
 		[Column(@"dateDataType",           DbType="date",              DataType=DataType.Date),                        Nullable            ] public DateTime?       DateDataType           { get; set; } // date
 		[Column(@"datetimeoffsetDataType", DbType="datetimeoffset(7)", DataType=DataType.DateTimeOffset, Precision=7), Nullable            ] public DateTimeOffset? DatetimeoffsetDataType { get; set; } // datetimeoffset(7)
 		[Column(@"datetime2DataType",      DbType="datetime2(7)",      DataType=DataType.DateTime2,      Precision=7), Nullable            ] public DateTime?       Datetime2DataType      { get; set; } // datetime2(7)
@@ -1060,18 +1077,18 @@ namespace DataModel
 	[Table(Database="TestData", Name="Child")]
 	public partial class Child
 	{
-		[Column(          DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
+		[Column(        DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
 		/// <summary>
 		/// This ChildID column
 		/// </summary>
-		[Column(          DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
-		[Column(@"_ID", DbType="int", DataType=DataType.Int32),   PrimaryKey, Identity] public int  ID       { get; set; } // int
+		[Column(        DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
+		[Column(@"_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  ID       { get; set; } // int
 	}
 
 	[Table(Database="TestData", Name="DataTypeTest")]
 	public partial class DataTypeTest
 	{
-		[Column(                DbType="int",              DataType=DataType.Int32),                          PrimaryKey, Identity] public int       DataTypeID { get; set; } // int
+		[Column(              DbType="int",              DataType=DataType.Int32),                            PrimaryKey, Identity] public int       DataTypeID { get; set; } // int
 		[Column(@"Binary_",   DbType="binary(50)",       DataType=DataType.Binary,    Length=50),             Nullable            ] public byte[]    Binary     { get; set; } // binary(50)
 		[Column(@"Boolean_",  DbType="bit",              DataType=DataType.Boolean),                          Nullable            ] public bool?     Boolean    { get; set; } // bit
 		[Column(@"Byte_",     DbType="tinyint",          DataType=DataType.Byte),                             Nullable            ] public byte?     Byte       { get; set; } // tinyint
@@ -1125,10 +1142,10 @@ namespace DataModel
 	[Table(Database="TestData", Name="GrandChild")]
 	public partial class GrandChild
 	{
-		[Column(          DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID     { get; set; } // int
-		[Column(          DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID      { get; set; } // int
-		[Column(          DbType="int", DataType=DataType.Int32), Nullable            ] public int? GrandChildID { get; set; } // int
-		[Column(@"_ID", DbType="int", DataType=DataType.Int32),   PrimaryKey, Identity] public int  ID           { get; set; } // int
+		[Column(        DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID     { get; set; } // int
+		[Column(        DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID      { get; set; } // int
+		[Column(        DbType="int", DataType=DataType.Int32), Nullable            ] public int? GrandChildID { get; set; } // int
+		[Column(@"_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  ID           { get; set; } // int
 	}
 
 	[Table(Database="TestData", Name="GuidID")]
@@ -1226,9 +1243,9 @@ namespace DataModel
 	[Table(Database="TestData", Name="Parent")]
 	public partial class Parent
 	{
-		[Column(          DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
-		[Column(          DbType="int", DataType=DataType.Int32), Nullable            ] public int? Value1   { get; set; } // int
-		[Column(@"_ID", DbType="int", DataType=DataType.Int32),   PrimaryKey, Identity] public int  ID       { get; set; } // int
+		[Column(        DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
+		[Column(        DbType="int", DataType=DataType.Int32), Nullable            ] public int? Value1   { get; set; } // int
+		[Column(@"_ID", DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  ID       { get; set; } // int
 	}
 
 	[Table(Database="TestData", Name="ParentChildView", IsView=true)]
@@ -1242,9 +1259,9 @@ namespace DataModel
 	[Table(Database="TestData", Name="ParentView", IsView=true)]
 	public partial class ParentView
 	{
-		[Column(          DbType="int", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // int
-		[Column(          DbType="int", DataType=DataType.Int32), Nullable] public int? Value1   { get; set; } // int
-		[Column(@"_ID", DbType="int", DataType=DataType.Int32),   Identity] public int  ID       { get; set; } // int
+		[Column(        DbType="int", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // int
+		[Column(        DbType="int", DataType=DataType.Int32), Nullable] public int? Value1   { get; set; } // int
+		[Column(@"_ID", DbType="int", DataType=DataType.Int32), Identity] public int  ID       { get; set; } // int
 	}
 
 	[Table(Database="TestData", Name="Patient")]
@@ -1699,5 +1716,115 @@ namespace DataModel
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
+	}
+
+	public static partial class Test1Schema
+	{
+		public partial class DataContext
+		{
+			public ITable<Table1>    Table1    { get { return _dataContext.GetTable<Table1>(); } }
+			public ITable<Table2543> Table2543 { get { return _dataContext.GetTable<Table2543>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+		}
+
+		[Table(Database="TestData", Schema="Test1", Name="Table_1")]
+		public partial class Table1
+		{
+			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
+			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
+		}
+
+		[Table(Database="TestData", Schema="Test1", Name="Table_2_543")]
+		public partial class Table2543
+		{
+			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
+			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
+		}
+
+		#region Table Extensions
+
+		public static Table1 Find(this ITable<Table1> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static Table2543 Find(this ITable<Table2543> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		#endregion
+	}
+
+	public static partial class Test2Schema
+	{
+		public partial class DataContext
+		{
+			public ITable<Table2543> Table2543 { get { return _dataContext.GetTable<Table2543>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+		}
+
+		[Table(Database="TestData", Schema="Test2", Name="Table_2_543")]
+		public partial class Table2543
+		{
+			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
+			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
+		}
+
+		#region Table Extensions
+
+		public static Table2543 Find(this ITable<Table2543> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		#endregion
+	}
+
+	public static partial class Test3_dasdSchema
+	{
+		public partial class DataContext
+		{
+			public ITable<Table2543> Table2543 { get { return _dataContext.GetTable<Table2543>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+		}
+
+		[Table(Database="TestData", Schema="Test3_dasd", Name="Table_2_543")]
+		public partial class Table2543
+		{
+			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
+			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
+		}
+
+		#region Table Extensions
+
+		public static Table2543 Find(this ITable<Table2543> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		#endregion
 	}
 }

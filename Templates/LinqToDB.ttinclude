@@ -28,6 +28,17 @@ string SchemaDataContextTypeName = "DataContext";
 
 Dictionary<string,string> SchemaNameMapping = new Dictionary<string,string>();
 
+Func<string,string,IEnumerable<Method>> GetConstructors =  (conf, name) => GetConstructorsImpl(conf, name);
+
+static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, string name)
+{
+	if (defaultConfiguration == null)
+		yield return new Method(null, name);
+	else
+		yield return new Method(null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
+	yield return new Method(null, name, new[] { "string configuration" }) { AfterSignature = { ": base(configuration)" } };
+}
+
 void GenerateTypesFromMetadata()
 {
 	BeforeGenerateLinqToDBModel();
@@ -68,39 +79,52 @@ void GenerateTypesFromMetadata()
 	var defAliases         = new MemberGroup { IsCompact = true, Region = "Alias members" };
 	var defTableExtensions = new MemberGroup { };
 
-	if (GenerateConstructors)
+	if (schemas.Count > 0)
 	{
 		var body = new List<string>();
 
-		if (schemas.Count > 0)
+		var schemaGroup   = new MemberGroup { Region = "Schemas" };
+		var schemaMembers = new MemberGroup { IsCompact = true   };
+
+		var maxLen1 = schemas.Values.Max(schema => schema.PropertyName.Trim().Length);
+		var maxLen2 = schemas.Values.Max(schema => schema.TypeName.    Trim().Length);
+
+		foreach (var schema in schemas.Values)
 		{
-			var schemaGroup = new MemberGroup { IsCompact = true, Region = "Schemas" };
-
-			foreach (var schema in schemas.Values)
-			{
-				schemaGroup.Members.Add(new Property(schema.TypeName + "." + SchemaDataContextTypeName, schema.PropertyName));
-				body.Add(schema.PropertyName + " = new " + schema.TypeName + "." + SchemaDataContextTypeName + "(this);");
-			}
-
-			body.Add("");
-
-			DataContextObject.Members.Add(schemaGroup);
+			schemaMembers.Members.Add(new Property(schema.TypeName + "." + SchemaDataContextTypeName, schema.PropertyName));
+			body.Add(
+				schema.PropertyName + LenDiff(maxLen1, schema.PropertyName) +
+				" = new " + schema.TypeName + "." + LenDiff(maxLen2, schema.TypeName) +
+				SchemaDataContextTypeName + "(this);");
 		}
 
-		body.Add("InitDataContext();");
+		schemaGroup.Members.Add(schemaMembers);
+		schemaGroup.Members.Add(new Method("void", "InitSchemas", new string[0], body));
 
-		if (DefaultConfiguration == null)
-			DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new string[0], body));
-		else
-			DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new string[0], body) { AfterSignature = { ": base(\"" + DefaultConfiguration + "\")" } });
-		DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new[] { "string configuration" }, body) { AfterSignature = { ": base(configuration)" } });
-
-		DataContextObject.Members.Add(new MemberGroup
-		{
-			IsCompact = true,
-			Members   = { new Method("void", "InitDataContext") { AccessModifier = AccessModifier.Partial } }
-		});
+		DataContextObject.Members.Add(schemaGroup);
 	}
+
+	if (GenerateConstructors)
+	{
+		foreach (var c in GetConstructors(DefaultConfiguration, DataContextObject.Name))
+		{
+			if (c.Body.Count > 0)
+				c.Body.Add("");
+
+			if (schemas.Count > 0)
+				c.Body.Add("InitSchemas();");
+
+			c.Body.Add("InitDataContext();");
+
+			DataContextObject.Members.Add(c);
+		}
+	}
+
+	DataContextObject.Members.Add(new MemberGroup
+	{
+		IsCompact = true,
+		Members   = { new Method("void", "InitDataContext") { AccessModifier = AccessModifier.Partial } }
+	});
 
 	if (Tables.Count > 0)
 		DataContextObject.Members.Insert(0, defProps);
@@ -232,7 +256,7 @@ void GenerateTypesFromMetadata()
 			}
 			else if (nameMaxLen > 0)
 			{
-				ca.Parameters.Add(new string(' ', nameMaxLen + 2));
+				ca.Parameters.Add(new string(' ', nameMaxLen));
 				canBeReplaced = false;
 			}
 
@@ -251,7 +275,7 @@ void GenerateTypesFromMetadata()
 				canBeReplaced = false;
 			}
 
-			if(GenerateDataTypes && !GenerateLengthProperty.HasValue || GenerateLengthProperty == true)
+			if (GenerateDataTypes && !GenerateLengthProperty.HasValue || GenerateLengthProperty == true)
 			{
 				if (c.Length    != null) ca.Parameters.Add("Length="    + (c.Length == int.MaxValue ? "int.MaxValue" : c.Length.ToString()));
 				canBeReplaced = false;
@@ -263,7 +287,7 @@ void GenerateTypesFromMetadata()
 				canBeReplaced = false;
 			}
 
-			if(GenerateDataTypes && !GenerateScaleProperty.HasValue || GenerateScaleProperty == true)
+			if (GenerateDataTypes && !GenerateScaleProperty.HasValue || GenerateScaleProperty == true)
 			{
 				if (c.Scale     != null) ca.Parameters.Add("Scale=" + c.Scale);
 				canBeReplaced = false;
