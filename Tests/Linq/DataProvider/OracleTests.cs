@@ -7,14 +7,19 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Globalization;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
@@ -1943,6 +1948,111 @@ namespace Tests.DataProvider
 				Assert.AreEqual(origin.BinaryGuid, result.BinaryGuid);
 				Assert.AreEqual(origin.BlobValue,  result.BlobValue);
 				Assert.AreEqual(origin.RawValue,   result.RawValue);
+			}
+		}
+
+		class MyDate
+		{
+			public int    Year;
+			public int    Month;
+			public int    Day;
+			public int    Hour;
+			public int    Minute;
+			public int    Second;
+			public int    Nanosecond;
+			public string TimeZone;
+		}
+
+		static MyDate OracleTimeStampTZToMyDate(OracleTimeStampTZ tz)
+		{
+			return new MyDate
+			{
+				Year       = tz.Year,
+				Month      = tz.Month,
+				Day        = tz.Day,
+				Hour       = tz.Hour,
+				Minute     = tz.Minute,
+				Second     = tz.Second,
+				Nanosecond = tz.Nanosecond,
+				TimeZone   = tz.TimeZone,
+			};
+		}
+
+		static OracleTimeStampTZ MyDateToOracleTimeStampTZ(MyDate dt)
+		{
+			return dt == null ?
+				OracleTimeStampTZ.Null :
+				new OracleTimeStampTZ(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Nanosecond, dt.TimeZone);
+		}
+
+		[Table("AllTypes")]
+		class MappingTest
+		{
+			[Column] public int    ID;
+			[Column("datetimeoffsetDataType")] public MyDate MyDate;
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]
+		public void CustomMappingNonstandardTypeTest(string context)
+		{
+			var dataProvider = (DataProviderBase)DataConnection.GetDataProvider(context);
+
+			// Expression to read column value from data reader.
+			//
+			dataProvider.ReaderExpressions[new ReaderInfo
+			{
+				ToType            = typeof(MyDate),
+				ProviderFieldType = typeof(OracleTimeStampTZ),
+			}] = (Expression<Func<OracleDataReader,int,MyDate>>)((rd, idx) => OracleTimeStampTZToMyDate(rd.GetOracleTimeStampTZ(idx)));
+
+			// Converts object property value to data reader parameter.
+			//
+			dataProvider.MappingSchema.SetConverter<MyDate,DataParameter>(
+				dt => new DataParameter { Value = MyDateToOracleTimeStampTZ(dt) });
+
+			// Converts object property value to SQL.
+			//
+			dataProvider.MappingSchema.SetValueToSqlConverter(typeof(MyDate), (sb,tp,v) =>
+			{
+				var value = v as MyDate;
+				if (value == null) sb.Append("NULL");
+				else               sb.AppendFormat("DATE '{0}-{1}-{2}'", value.Year, value.Month, value.Day);
+			});
+
+			// Converts object property value to SQL.
+			//
+			dataProvider.MappingSchema.SetValueToSqlConverter(typeof(OracleTimeStampTZ), (sb,tp,v) =>
+			{
+				var value = (OracleTimeStampTZ)v;
+				if (value.IsNull) sb.Append("NULL");
+				else              sb.AppendFormat("DATE '{0}-{1}-{2}'", value.Year, value.Month, value.Day);
+			});
+
+			// Maps OracleTimeStampTZ to MyDate and the other way around.
+			//
+			dataProvider.MappingSchema.SetConverter<OracleTimeStampTZ,MyDate>(OracleTimeStampTZToMyDate);
+			dataProvider.MappingSchema.SetConverter<MyDate,OracleTimeStampTZ>(MyDateToOracleTimeStampTZ);
+
+			using (var db = GetDataContext(context))
+			{
+				var table = db.GetTable<MappingTest>();
+				var list  = table.ToList();
+
+				table.Update(
+					mt => mt.ID == list[0].ID,
+					mt => new MappingTest
+					{
+						MyDate = list[0].MyDate
+					});
+
+				db.InlineParameters = true;
+
+				table.Update(
+					mt => mt.ID == list[0].ID,
+					mt => new MappingTest
+					{
+						MyDate = list[0].MyDate
+					});
 			}
 		}
 	}

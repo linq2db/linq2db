@@ -8,6 +8,11 @@ using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
+
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Configuration;
@@ -248,7 +253,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-#endregion
+		#endregion
 
 		#region Udt support
 
@@ -309,6 +314,25 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
+
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+
+		#endregion
+
+		#region Async
+
+#if !NOASYNC
+
+
+#endif
 
 		#endregion
 	}

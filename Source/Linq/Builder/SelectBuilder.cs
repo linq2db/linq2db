@@ -82,10 +82,10 @@ namespace LinqToDB.Linq.Builder
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));
 
-				var mapper = Expression.Lambda<Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>>(
+				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],int,T>>(
 					Builder.BuildBlock(expr), new []
 					{
-						ExpressionBuilder.ContextParam,
+						ExpressionBuilder.QueryRunnerParam,
 						ExpressionBuilder.DataContextParam,
 						ExpressionBuilder.DataReaderParam,
 						ExpressionBuilder.ExpressionParam,
@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 						_counterParam
 					});
 
-				query.SetQuery(mapper);
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)

@@ -488,7 +488,9 @@ namespace Tests.Linq
 						(m, i) =>
 							ConvertString(m.Parent.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
 
-				Assert.AreEqual("7.77.True.0", lines[0]);
+				Assert.AreEqual("7.77.True.0",  lines[0]);
+				Assert.AreEqual("6.66.False.1", lines[1]);
+				Assert.AreEqual("6.65.True.2",  lines[2]);
 
 				q =
 					db.Child

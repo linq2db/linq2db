@@ -484,7 +484,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETFX_CORE && !NETSTANDARD
+
 		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
 		public void Issue784Test(string context)
 		{
@@ -503,6 +504,7 @@ namespace Tests.DataProvider
 
 			}
 		}
+
 #endif
 	}
 }
