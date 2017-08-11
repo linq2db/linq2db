@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -13,7 +15,7 @@ namespace Tests.Linq
 	{
 		#region DatePart
 
-		class DatePartBuilder: Sql.IExtensionCallBuilder
+		class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -357,7 +359,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Sql.Extension(               "DatePart({part}, {date})",                 ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilder))]
 		[Sql.Extension(PN.DB2,        "",                                         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
 		[Sql.Extension(PN.Informix,   "",                                         ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(DatePartBuilderInformix))] 
@@ -436,6 +437,7 @@ namespace Tests.Linq
 				var number  = builder.GetExpression("number");
 
 				string expStr;
+
 				switch (part)
 				{
 					case Sql.DateParts.Year        : expStr = "{0} + {1} Year";                 break;
@@ -444,11 +446,11 @@ namespace Tests.Linq
 					case Sql.DateParts.DayOfYear   : 
 					case Sql.DateParts.WeekDay     : 
 					case Sql.DateParts.Day         : expStr = "{0} + {1} Day";                  break;
-					case Sql.DateParts.Week        : expStr = "({0} * 7) Day";                  break;
+					case Sql.DateParts.Week        : expStr = "{0} + ({1} * 7) Day";            break;
 					case Sql.DateParts.Hour        : expStr = "{0} + {1} Hour";                 break;
 					case Sql.DateParts.Minute      : expStr = "{0} + {1} Minute";               break;
 					case Sql.DateParts.Second      : expStr = "{0} + {1} Second";               break;
-					case Sql.DateParts.Millisecond : expStr = "{0} + ({0} * 1000) Microsecond"; break;
+					case Sql.DateParts.Millisecond : expStr = "{0} + ({1} * 1000) Microsecond"; break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -988,6 +990,5 @@ namespace Tests.Linq
 		}
 
 		#endregion
-
 	}
 }
