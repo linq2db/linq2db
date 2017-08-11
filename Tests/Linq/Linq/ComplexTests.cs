@@ -201,6 +201,30 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource(ProviderName.Access)]
+		public void Contains5(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Child.Where(c =>    Parent.Skip(1).Take(100).Select(p => p.ParentID).Contains(c.ParentID)),
+					db.Child.Where(c => db.Parent.Skip(1).Take(100).Select(p => p.ParentID).Contains(c.ParentID))
+					);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.Access)]
+		public void Contains6(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Child.Where(c =>    Parent.Select(p => p.ParentID).Contains(c.ParentID)),
+					db.Child.Where(c => db.Parent.Select(p => p.ParentID).Contains(c.ParentID))
+					);
+			}
+		}
+
 		[Test, DataContextSource]
 		public void Join1(string context)
 		{
