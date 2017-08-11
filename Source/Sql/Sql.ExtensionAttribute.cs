@@ -6,17 +6,14 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Expressions;
-
+	using Common;
 	using Extensions;
-
-	using JetBrains.Annotations;
-
+	using Mapping;
 	using SqlQuery;
 
 	[AttributeUsage(AttributeTargets.Parameter)]
@@ -254,12 +251,12 @@ namespace LinqToDB
 				readonly ConvertHelper _convert;
 
 				public ExtensionBuilder(
-					string                     configuration,
-					[NotNull]   MappingSchema  mapping,
-					[NotNull]   SqlExtension   extension, 
-					[NotNull]   ConvertHelper  convertHeper,
-					[NotNull]   MemberInfo     member,
-					[NotNull]   Expression[]   arguments)
+					string                                         configuration,
+					[JetBrains.Annotations.NotNull] MappingSchema  mapping,
+					[JetBrains.Annotations.NotNull] SqlExtension   extension,
+					[JetBrains.Annotations.NotNull] ConvertHelper  convertHeper,
+					[JetBrains.Annotations.NotNull] MemberInfo     member,
+					[JetBrains.Annotations.NotNull] Expression[]   arguments)
 				{
 					if (mapping      == null) throw new ArgumentNullException("mapping");
 					if (extension    == null) throw new ArgumentNullException("extension");
@@ -355,7 +352,7 @@ namespace LinqToDB
 
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
 				{
-					return Extension.AddParameter(name, expr);;
+					return Extension.AddParameter(name, expr);
 				}
 
 				#endregion
@@ -451,7 +448,9 @@ namespace LinqToDB
 				return chains;
 			}
 
-			public static string ResolveExpressionValues([NotNull] string expression, [NotNull] Func<string, string, string> valueProvider)
+			public static string ResolveExpressionValues(
+				[JetBrains.Annotations.NotNull] string expression,
+				[JetBrains.Annotations.NotNull] Func<string, string, string> valueProvider)
 			{
 				if (expression == null) throw new ArgumentNullException("expression");
 				if (valueProvider == null) throw new ArgumentNullException("valueProvider");
@@ -564,7 +563,9 @@ namespace LinqToDB
 					var builder = new ExtensionBuilder(Configuration, mapping, extension, convertHelper, member, arguments);
 					callBuilder.Build(builder);
 
-					result = builder.ResultExpression != null ? new SqlExtensionParam(TokenName, builder.ResultExpression) : new SqlExtensionParam(TokenName, builder.Extension);
+					result = builder.ResultExpression != null ?
+						new SqlExtensionParam(TokenName, builder.ResultExpression) :
+						new SqlExtensionParam(TokenName, builder.Extension);
 				}
 
 				result = result ?? new SqlExtensionParam(TokenName, extension);
@@ -582,7 +583,7 @@ namespace LinqToDB
 			{
 				readonly Func<Expression, ISqlExpression> _converter;
 
-				public ConvertHelper([NotNull] Func<Expression, ISqlExpression> converter)
+				public ConvertHelper([JetBrains.Annotations.NotNull] Func<Expression, ISqlExpression> converter)
 				{
 					if (converter == null) throw new ArgumentNullException("converter");
 					_converter = converter;
@@ -671,7 +672,7 @@ namespace LinqToDB
 				var chain  = BuildFunctionsChain(mapping, expression, helper);
 
 				if (chain.Count == 0)
-					throw new InvalidOperationException("No sequnce found");
+					throw new InvalidOperationException("No sequence found");
 
 				var ordered = chain.Where(c => c.Extension != null).OrderByDescending(c => c.Extension.ChainPrecedence).ToArray();
 				var main    = ordered.FirstOrDefault();
@@ -718,6 +719,5 @@ namespace LinqToDB
 				return res;
 			}
 		}
-
 	}
 }
