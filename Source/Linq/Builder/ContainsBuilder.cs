@@ -15,17 +15,17 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var buildIn  = false;
+			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var buildInStatement = false;
 
 			if (sequence.SelectQuery.Select.TakeValue != null ||
 			    sequence.SelectQuery.Select.SkipValue != null)
 			{
-				sequence = new SubQueryContext(sequence);
-				buildIn  = true;
+				sequence         = new SubQueryContext(sequence);
+				buildInStatement = true;
 			}
 
-			return new ContainsContext(buildInfo.Parent, methodCall, sequence, buildIn);
+			return new ContainsContext(buildInfo.Parent, methodCall, sequence, buildInStatement);
 		}
 
 		protected override SequenceConvertInfo Convert(
@@ -45,13 +45,13 @@ namespace LinqToDB.Linq.Builder
 		class ContainsContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;
-			readonly bool                 _buildIn;
+			readonly bool                 _buildInStatement;
 
-			public ContainsContext(IBuildContext parent, MethodCallExpression methodCall, IBuildContext sequence, bool buildIn)
+			public ContainsContext(IBuildContext parent, MethodCallExpression methodCall, IBuildContext sequence, bool buildInStatement)
 				: base(parent, sequence, null)
 			{
-				_methodCall = methodCall;
-				_buildIn    = buildIn;
+				_methodCall       = methodCall;
+				_buildInStatement = buildInStatement;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 
 					SelectQuery.Condition cond;
 
-					if ((Sequence.SelectQuery != SelectQuery || _buildIn) &&
+					if ((Sequence.SelectQuery != SelectQuery || _buildInStatement) &&
 						(ctx.IsExpression(expr, 0, RequestFor.Field).     Result ||
 						 ctx.IsExpression(expr, 0, RequestFor.Expression).Result))
 					{
