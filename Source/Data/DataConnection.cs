@@ -1081,7 +1081,7 @@ namespace LinqToDB.Data
 		public IDbTransaction Transaction { get; private set; }
 		
 		/// <summary>
-		/// Starts new transaction for current connection with default isolation level. If connection already have transaction, it will be rolled back.
+		/// Starts new transaction for current connection with default isolation level. If connection already has transaction, it will be rolled back.
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		public virtual DataConnectionTransaction BeginTransaction()
