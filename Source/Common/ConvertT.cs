@@ -121,6 +121,9 @@ namespace LinqToDB.Common
 			}
 		}
 
+		/// <summary>
+		/// Gets conversion function delegate.
+		/// </summary>
 		public static Func<TFrom,TTo> From
 		{
 			get { return _lambda; }
