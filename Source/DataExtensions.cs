@@ -17,6 +17,9 @@ namespace LinqToDB
 
 	using SqlQuery;
 
+	/// <summary>
+	/// Data context extension methods.
+	/// </summary>
 	[PublicAPI]
 	public static class DataExtensions
 	{
