@@ -1015,7 +1015,7 @@ namespace LinqToDB.Data
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
+				return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -1031,7 +1031,7 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
+				var ret = Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
 				if (TraceSwitch.TraceInfo)
 				{
