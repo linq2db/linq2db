@@ -340,7 +340,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Mapping class for delete operation target table.</typeparam>
 		/// <param name="source">Query that returns records to delete.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of deleted records.</returns>
 		public static async Task<int> DeleteAsync<T>([NotNull] this IQueryable<T> source, CancellationToken token = default(CancellationToken))
 		{
@@ -392,7 +392,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class for delete operation target table.</typeparam>
 		/// <param name="source">Query that returns records to delete.</param>
 		/// <param name="predicate">Filter expression, to specify what records from source should be deleted.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of deleted records.</returns>
 		public static async Task<int> DeleteAsync<T>(
 			[NotNull]           this IQueryable<T>            source,
@@ -458,7 +458,7 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
 		public static async Task<int> UpdateAsync<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -514,7 +514,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Updated table record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
 		public static async Task<int> UpdateAsync<T>(
 			[NotNull]           this IQueryable<T>         source,
@@ -574,7 +574,7 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="predicate">Filter expression, to specify what records from source query should be updated.</param>
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
 		public static async Task<int> UpdateAsync<T>(
 			[NotNull]           this IQueryable<T>            source,
@@ -629,7 +629,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Updated table record type.</typeparam>
 		/// <param name="source">Update query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
 		public static async Task<int> UpdateAsync<T>([NotNull] this IUpdatable<T> source, CancellationToken token = default(CancellationToken))
 		{
@@ -691,7 +691,7 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table selection expression.</param>
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
 		public static async Task<int> UpdateAsync<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -970,7 +970,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Inserted record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertAsync<T>(
 			[NotNull]                this ITable<T>      target,
@@ -1072,7 +1072,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Inserted record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<object> InsertWithIdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
@@ -1103,7 +1103,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Inserted record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
@@ -1119,7 +1119,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Inserted record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
@@ -1135,7 +1135,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Inserted record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			[NotNull]                this ITable<T>      target,
@@ -1338,7 +1338,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertAsync<T>([NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
 		{
@@ -1422,7 +1422,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<object> InsertWithIdentityAsync<T>(
 			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
@@ -1449,7 +1449,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<int?> InsertWithInt32IdentityAsync<T>(
 			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
@@ -1463,7 +1463,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<long?> InsertWithInt64IdentityAsync<T>(
 			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
@@ -1477,7 +1477,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<T>(
 			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
@@ -1532,7 +1532,7 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Inserted record constructor expression.
 		/// Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertAsync<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -1656,7 +1656,7 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Inserted record constructor expression.
 		/// Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Last inserted record's identity value.</returns>
 		public static async Task<object> InsertWithIdentityAsync<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -1691,7 +1691,7 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Inserted record constructor expression.
 		/// Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Last inserted record's identity value.</returns>
 		public static async Task<int?> InsertWithInt32IdentityAsync<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -1712,7 +1712,7 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Inserted record constructor expression.
 		/// Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Last inserted record's identity value.</returns>
 		public static async Task<long?> InsertWithInt64IdentityAsync<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -1733,7 +1733,7 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Inserted record constructor expression.
 		/// Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Last inserted record's identity value.</returns>
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -1911,7 +1911,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
@@ -2005,7 +2005,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<object> InsertWithIdentityAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
@@ -2033,7 +2033,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int?> InsertWithInt32IdentityAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
@@ -2048,7 +2048,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<long?> InsertWithInt64IdentityAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
@@ -2063,7 +2063,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<TSource,TTarget>(
 			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
@@ -2124,7 +2124,7 @@ namespace LinqToDB
 		/// <param name="onDuplicateKeyUpdateSetter">Updated record constructor expression.
 		/// Expression supports only target table record new expression with field initializers.
 		/// Accepts updated record as parameter.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertOrUpdateAsync<T>(
 			[NotNull]                this ITable<T>        target,
@@ -2209,7 +2209,7 @@ namespace LinqToDB
 		/// Accepts updated record as parameter.</param>
 		/// <param name="keySelector">Key fields selector to specify what fields and values must be used as key fields for selection between insert and update operations.
 		/// Expression supports only target table record new expression with field initializers for each key field. Assigned key field value will be used as key value by operation type selector.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertOrUpdateAsync<T>(
 			[NotNull]                this ITable<T>        target,
@@ -2300,7 +2300,7 @@ namespace LinqToDB
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
 		/// Tracked by <see cref="https://github.com/linq2db/linq2db/issues/798"/>.
 		/// Default value: <c>true</c>.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static async Task<int> DropAsync<T>(
 			[NotNull] this ITable<T> target,
@@ -2481,7 +2481,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source table record type.</typeparam>
 		/// <param name="source">Source query.</param>
 		/// <param name="index">Expression that defines index of record to select.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <exception cref="InvalidOperationException">Source query doesn't have record with specified index.</exception>
 		/// <returns>Record at specified position.</returns>
 		public static async Task<TSource> ElementAtAsync<TSource>(
@@ -2539,7 +2539,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source table record type.</typeparam>
 		/// <param name="source">Source query.</param>
 		/// <param name="index">Expression that defines index of record to select.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Record at specified position or default value, if source query doesn't have record with such index.</returns>
 		public static async Task<TSource> ElementAtOrDefaultAsync<TSource>(
 			[NotNull]                this IQueryable<TSource> source,

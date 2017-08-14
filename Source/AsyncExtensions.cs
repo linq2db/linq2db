@@ -21,7 +21,7 @@ namespace LinqToDB
 		/// Executes provided action using task scheduler.
 		/// </summary>
 		/// <param name="action">Action to execute.</param>
-		/// <param name="token">Asynchronous operation cancelation token.</param>
+		/// <param name="token">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		internal static Task GetActionTask(Action action, CancellationToken token)
 		{
@@ -52,7 +52,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Function result type.</typeparam>
 		/// <param name="func">Function to execute.</param>
-		/// <param name="token">Asynchronous operation cancelation token.</param>
+		/// <param name="token">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		static Task<T> GetTask<T>(Func<T> func, CancellationToken token)
 		{
@@ -74,7 +74,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source sequence element type.</typeparam>
 		/// <param name="source">Source sequence.</param>
 		/// <param name="action">Action to apply to each sequence element.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static Task ForEachAsync<TSource>(
 			this IQueryable<TSource> source, Action<TSource> action,
@@ -107,7 +107,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source sequence element type.</typeparam>
 		/// <param name="source">Source sequence.</param>
 		/// <param name="func">Function to apply to each sequence element. Returning <c>false</c> from function will stop numeration.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static Task ForEachUntilAsync<TSource>(
 			this IQueryable<TSource> source, Func<TSource,bool> func,
@@ -141,7 +141,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="TSource">Query element type.</typeparam>
 		/// <param name="source">Source query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>List with query results.</returns>
 		public static async Task<List<TSource>> ToListAsync<TSource>(
 			this IQueryable<TSource> source,
@@ -168,7 +168,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="TSource">Query element type.</typeparam>
 		/// <param name="source">Source query.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Array with query results.</returns>
 		public static async Task<TSource[]> ToArrayAsync<TSource>(
 			this IQueryable<TSource> source,
@@ -197,7 +197,7 @@ namespace LinqToDB
 		/// <typeparam name="TKey">Dictionary key type.</typeparam>
 		/// <param name="source">Source query.</param>
 		/// <param name="keySelector">Source element key selector.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Dictionary with query results.</returns>
 		public static async Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
 			this IQueryable<TSource> source,
@@ -224,7 +224,7 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="keySelector">Source element key selector.</param>
 		/// <param name="comparer">Dictionary key comparer.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Dictionary with query results.</returns>
 		public static async Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
 			this IQueryable<TSource> source,
@@ -252,7 +252,7 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="keySelector">Source element key selector.</param>
 		/// <param name="elementSelector">Dictionary element selector.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Dictionary with query results.</returns>
 		public static async Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
 			this IQueryable<TSource> source,
@@ -281,7 +281,7 @@ namespace LinqToDB
 		/// <param name="keySelector">Source element key selector.</param>
 		/// <param name="elementSelector">Dictionary element selector.</param>
 		/// <param name="comparer">Dictionary key comparer.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Dictionary with query results.</returns>
 		public static async Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
 			this IQueryable<TSource> source,

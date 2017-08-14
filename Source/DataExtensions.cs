@@ -199,7 +199,7 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <paramref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> InsertAsync<T>(
 			[NotNull] this IDataContext dataContext, T obj,
@@ -239,7 +239,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert or update.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> InsertOrReplaceAsync<T>([NotNull] this IDataContext dataContext, T obj,
 			CancellationToken token = default(CancellationToken))
@@ -319,7 +319,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static Task<object> InsertWithIdentityAsync<T>(
 			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
@@ -335,7 +335,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
 			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
@@ -353,7 +353,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
 			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
@@ -371,7 +371,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
@@ -411,7 +411,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to update.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> UpdateAsync<T>(
 			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
@@ -449,7 +449,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data for delete operation.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> DeleteAsync<T>(
 			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
@@ -514,7 +514,7 @@ namespace LinqToDB
 		/// <para> - <see cref="DefaulNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
 		/// Default value: <see cref="DefaulNullable.None"/>.
 		/// </param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
 		public static Task<ITable<T>> CreateTableAsync<T>([NotNull] this IDataContext dataContext,
 			string              tableName       = null,
@@ -620,7 +620,7 @@ namespace LinqToDB
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
 		/// Tracked by <see cref="https://github.com/linq2db/linq2db/issues/798"/>.
 		/// Default value: <c>true</c>.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static async Task DropTableAsync<T>(
 			[NotNull] this IDataContext dataContext,
@@ -657,7 +657,7 @@ namespace LinqToDB
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
 		/// Tracked by <see cref="https://github.com/linq2db/linq2db/issues/798"/>.
 		/// Default value: <c>true</c>.</param>
-		/// <param name="token">Optional asynchronous operation cancelation token.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static async Task DropTableAsync<T>(
 			[NotNull] this ITable<T> table,
