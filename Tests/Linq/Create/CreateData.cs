@@ -65,7 +65,8 @@ namespace Tests._Create
 					try 
 					{
 						Console.WriteLine(command);
-						db.Execute(command);
+						using (new DisableLogging())
+							db.Execute(command);
 						Console.WriteLine("\nOK\n");
 					}
 					catch (Exception ex)
