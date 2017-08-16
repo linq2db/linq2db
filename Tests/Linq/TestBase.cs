@@ -393,7 +393,7 @@ namespace Tests
 								attr.ApplyToTest(test);
 
 							test.Properties.Set(PropertyNames.Order,         GetOrder(method));
-							//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
+							test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
 							test.Properties.Set(PropertyNames.Category,      provider);
 
 							SetName(test, method, provider, true);

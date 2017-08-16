@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Common;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Text;
 
 	class OracleSqlBuilder : BasicSqlBuilder
 	{
@@ -368,6 +369,13 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			if (owner != null)
+				sb.Append(owner).Append(".");
+
+			return sb.Append(table);
+		}
 
 #if !SILVERLIGHT
 

@@ -22,7 +22,7 @@ namespace LinqToDB.Data
 #endif
 
 	/// <summary>
-	/// Implements database connection abstraction over different database engines. Could be initialized using connection string name or connection string,
+	/// Implements persistent database connection abstraction over different database engines. Could be initialized using connection string name or connection string,
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
@@ -347,8 +347,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					WriteTraceLine(
 						info.RecordsAffected != null
-							? "Query Execution Time: {0}. Records Affected: {1}.\r\n".Args(info.ExecutionTime, info.RecordsAffected)
-							: "Query Execution Time: {0}\r\n".Args(info.ExecutionTime),
+							? "Query Execution Time{0}: {1}. Records Affected: {2}.\r\n".Args(info.IsAsync ? " (async)" : "", info.ExecutionTime, info.RecordsAffected)
+							: "Query Execution Time{0}: {1}\r\n".                        Args(info.IsAsync ? " (async)" : "", info.ExecutionTime),
 						TraceSwitch.DisplayName);
 					break;
 
@@ -367,10 +367,9 @@ namespace LinqToDB.Data
 					}
 
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-					
-				}
 
 					break;
+				}
 
 				case TraceInfoStep.MapperCreated:
 				{
@@ -380,15 +379,15 @@ namespace LinqToDB.Data
 						sb.AppendLine(info.MapperExpression.GetDebugView());
 
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-				}
 
 					break;
+				}
 
 				case TraceInfoStep.Completed:
 				{
 					var sb = new StringBuilder();
 
-					sb.Append("Total Execution Time: {0}.".Args(info.ExecutionTime));
+					sb.Append("Total Execution Time{0}: {1}.".Args(info.IsAsync ? " (async)" : "", info.ExecutionTime));
 
 					if (info.RecordsAffected != null)
 						sb.Append(" Rows Count: {0}.".Args(info.RecordsAffected));
@@ -396,9 +395,9 @@ namespace LinqToDB.Data
 					sb.AppendLine();
 
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-				}
 
 					break;
+				}
 			}
 		}
 

@@ -9,11 +9,8 @@ using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-
 	using LinqToDB.Expressions;
 	using Extensions;
-
 	using Mapping;
 
 	partial class ExpressionBuilder
@@ -213,6 +210,15 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								break;
+							}
+
+							if (ce.IsAssociation(MappingSchema))
+							{
+								var ctx = GetContext(context, ce);
+								if (ctx == null)
+									throw new InvalidOperationException();
+
+								return new TransformInfo(ctx.BuildExpression(ce, 0));
 							}
 
 							if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(ce)) && IsSubQuery(context, ce))
@@ -438,17 +444,17 @@ namespace LinqToDB.Linq.Builder
 			return variable;
 		}
 
-		public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> BuildMapper<T>(Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>> BuildMapper<T>(Expression expr)
 		{
 			var type = typeof(T);
 
 			if (expr.Type != type)
 				expr = Expression.Convert(expr, type);
 
-			var mapper = Expression.Lambda<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>(
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>>(
 				BuildBlock(expr), new []
 				{
-					ContextParam,
+					QueryRunnerParam,
 					DataContextParam,
 					DataReaderParam,
 					ExpressionParam,

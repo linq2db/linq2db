@@ -6,6 +6,12 @@ using System.Data.Common;
 using System.Data.Linq;
 using System.IO;
 using System.Linq.Expressions;
+
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
+
 using System.Xml;
 using System.Xml.Linq;
 
@@ -449,12 +455,34 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Merge
+
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
 			where T : class
 		{
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
+
+#if !NOASYNC
+
+		public virtual Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+			where T : class
+		{
+			return new BasicMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+
+		#endregion
+
+		#region Async
+
+#if !NOASYNC
+
+
+#endif
+
 		#endregion
 
 		//public virtual TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay)

@@ -6,27 +6,24 @@ using LinqToDB.DataProvider;
 namespace LinqToDB.Configuration
 {
 	/// <summary>
-	/// Database connection configuration
+	/// Connection string configuration provider.
 	/// </summary>
 	public interface IConnectionStringSettings
 	{
 		/// <summary>
-		/// Connection String <see cref="IDbConnection.ConnectionString"/>
+		/// Gets connection string.
 		/// </summary>
 		string ConnectionString { get; }
 		/// <summary>
-		/// Configuration name, used to identify configuration. Should be unique.
-		/// <seealso cref="ILinqToDBSettings.DefaultConfiguration"/>
-		/// <seealso cref="DataConnection.DefaultConfiguration"/>
+		/// Gets connection configuration name.
 		/// </summary>
 		string Name             { get; }
 		/// <summary>
-		/// <see cref="LinqToDB.DataProvider"/> name
-		/// <seealso cref="IDataProvider.Name"/>
+		/// Gets data provider configuration name.
 		/// </summary>
 		string ProviderName     { get; }
 		/// <summary>
-		/// Used to define if configuration is global for machine
+		/// Is this connection configuration defined on global level (machine.config) or on application level.
 		/// </summary>
 		bool   IsGlobal         { get; }
 	}
