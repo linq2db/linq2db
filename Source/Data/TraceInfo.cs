@@ -24,6 +24,7 @@ namespace LinqToDB.Data
 		public Exception      Exception        { get; set; }
 		public string         CommandText      { get; set; }
 		public Expression     MapperExpression { get; set; }
+		public bool           IsAsync          { get; set; }
 
 		[Obsolete("Use TraceInfoStep instead.")]
 		public bool BeforeExecute              { get { return TraceInfoStep == TraceInfoStep.BeforeExecute; } }
@@ -51,6 +52,9 @@ namespace LinqToDB.Data
 
 					if (DataConnection.DataProvider.Name != sqlProvider.Name)
 						sb.Append(' ').Append(sqlProvider.Name);
+
+					if (IsAsync)
+						sb.Append(" (asynchronously)");
 
 					sb.AppendLine();
 

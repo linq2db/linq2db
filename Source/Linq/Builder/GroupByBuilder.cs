@@ -5,13 +5,13 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using Mapping;
 	using SqlQuery;
 
 	class GroupByBuilder : MethodCallBuilder
@@ -146,13 +146,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				public Grouping(
 					TKey                    key,
-					QueryContext            queryContext,
+					IQueryRunner            queryRunner,
 					List<ParameterAccessor> parameters,
 					Func<IDataContext,TKey,object[],IQueryable<TElement>> itemReader)
 				{
 					Key = key;
 
-					_queryContext = queryContext;
+					_queryRunner = queryRunner;
 					_parameters   = parameters;
 					_itemReader   = itemReader;
 
@@ -163,7 +163,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				private  IList<TElement>                                       _items;
-				readonly QueryContext                                          _queryContext;
+				readonly IQueryRunner                                          _queryRunner;
 				readonly List<ParameterAccessor>                               _parameters;
 				readonly Func<IDataContext,TKey,object[],IQueryable<TElement>> _itemReader;
 
@@ -171,12 +171,12 @@ namespace LinqToDB.Linq.Builder
 
 				List<TElement> GetItems()
 				{
-					using (var db = _queryContext.DataContext.Clone(true))
+					using (var db = _queryRunner.DataContext.Clone(true))
 					{
 						var ps = new object[_parameters.Count];
 
 						for (var i = 0; i < ps.Length; i++)
-							ps[i] = _parameters[i].Accessor(_queryContext.Expression, _queryContext.CompiledParameters);
+							ps[i] = _parameters[i].Accessor(_queryRunner.Expression, _queryRunner.Parameters);
 
 						return _itemReader(db, Key, ps).ToList();
 					}
@@ -213,8 +213,10 @@ namespace LinqToDB.Linq.Builder
 							var ex = new LinqToDBException(
 								"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
 								"Set Configuration.Linq.GuardGrouping = false to disable this check."
-								);
-							ex.HelpLink = "https://github.com/linq2db/linq2db/issues/365";
+							)
+							{
+								HelpLink = "https://github.com/linq2db/linq2db/issues/365"
+							};
 							throw ex;
 						}
 					}
@@ -280,11 +282,11 @@ namespace LinqToDB.Linq.Builder
 							});
 					}
 
-					var keyReader  = Expression.Lambda<Func<QueryContext,IDataContext,IDataReader,Expression,object[],TKey>>(
+					var keyReader  = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],TKey>>(
 						keyExpr,
 						new []
 						{
-							ExpressionBuilder.ContextParam,
+							ExpressionBuilder.QueryRunnerParam,
 							ExpressionBuilder.DataContextParam,
 							ExpressionBuilder.DataReaderParam,
 							ExpressionBuilder.ExpressionParam,
@@ -296,7 +298,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => GetGrouping(null, null, null, null, null, null, null, null)),
 						new Expression[]
 						{
-							ExpressionBuilder.ContextParam,
+							ExpressionBuilder.QueryRunnerParam,
 							ExpressionBuilder.DataContextParam,
 							ExpressionBuilder.DataReaderParam,
 							Expression.Constant(context.Builder.CurrentSqlParameters),
@@ -308,17 +310,17 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				static IGrouping<TKey,TElement> GetGrouping(
-					QueryContext             context,
+					IQueryRunner             runner,
 					IDataContext             dataContext,
 					IDataReader              dataReader,
 					List<ParameterAccessor>  parameterAccessor,
 					Expression               expr,
 					object[]                 ps,
-					Func<QueryContext,IDataContext,IDataReader,Expression,object[],TKey> keyReader,
+					Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],TKey> keyReader,
 					Func<IDataContext,TKey,object[],IQueryable<TElement>>                itemReader)
 				{
-					var key = keyReader(context, dataContext, dataReader, expr, ps);
-					return new Grouping<TKey,TElement>(key, context, parameterAccessor, itemReader);
+					var key = keyReader(runner, dataContext, dataReader, expr, ps);
+					return new Grouping<TKey,TElement>(key, runner, parameterAccessor, itemReader);
 				}
 			}
 
@@ -434,7 +436,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (attribute != null)
 				{
-					var expr = attribute.GetExpression(Builder.MappingSchema, call, e =>
+					var expr = attribute.GetExpression(Builder.MappingSchema, SelectQuery, call, e =>
 					{
 						var ex = e.Unwrap();
 
@@ -548,7 +550,8 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Expression '{0}' cannot be converted to SQL.", expression);
 			}
 
-			readonly Dictionary<Tuple<Expression,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new Dictionary<Tuple<Expression,int,ConvertFlags>,SqlInfo[]>();
+			readonly Dictionary<Tuple<Expression,int,ConvertFlags>,SqlInfo[]> _expressionIndex =
+				new Dictionary<Tuple<Expression,int,ConvertFlags>,SqlInfo[]>();
 
 			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
 			{

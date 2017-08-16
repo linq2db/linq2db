@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -72,6 +76,22 @@ namespace Tests.xUpdate
 				db.Merge(db.Types2, t => t.ID > 5);
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
+			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public async Task MergeWithDeletePredicate2Async(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				await db.MergeAsync(db.Types2, t => t.ID > 5);
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,

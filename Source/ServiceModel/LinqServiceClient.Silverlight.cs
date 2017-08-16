@@ -3,7 +3,7 @@ using System.ServiceModel;
 
 namespace LinqToDB.ServiceModel
 {
-	class LinqServiceClient : ClientBase<Async.ILinqService>, ILinqService, IDisposable
+	class LinqServiceClient : ClientBase<Async.ILinqClient>, ILinqService, IDisposable
 	{
 		#region Init
 
@@ -78,7 +78,7 @@ namespace LinqToDB.ServiceModel
 
 		#region Overrides
 
-		protected override Async.ILinqService CreateChannel()
+		protected override Async.ILinqClient CreateChannel()
 		{
 			return new LinqServiceClientChannel(this);
 		}
@@ -87,9 +87,9 @@ namespace LinqToDB.ServiceModel
 
 		#region Channel
 
-		class LinqServiceClientChannel : ChannelBase<Async.ILinqService>, Async.ILinqService
+		class LinqServiceClientChannel : ChannelBase<Async.ILinqClient>, Async.ILinqClient
 		{
-			public LinqServiceClientChannel(ClientBase<Async.ILinqService> client) :
+			public LinqServiceClientChannel(ClientBase<Async.ILinqClient> client) :
 				base(client)
 			{
 			}

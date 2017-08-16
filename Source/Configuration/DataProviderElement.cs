@@ -7,6 +7,9 @@ namespace LinqToDB.Configuration
 {
 	using DataProvider;
 
+	/// <summary>
+	/// Data provider configuration element.
+	/// </summary>
 	public sealed class DataProviderElement : ElementBase, IDataProviderSettings
 	{
 		static readonly ConfigurationProperty _propTypeName = new ConfigurationProperty("type",    typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
@@ -21,7 +24,7 @@ namespace LinqToDB.Configuration
 		}
 
 		/// <summary>
-		/// Gets or sets an assembly qualified type name of this data provider.
+		/// Gets an assembly qualified type name of this data provider.
 		/// </summary>
 		public string TypeName
 		{
@@ -29,7 +32,7 @@ namespace LinqToDB.Configuration
 		}
 
 		/// <summary>
-		/// Gets or sets a name of this data provider.
+		/// Gets a name of this data provider.
 		/// If not set, <see cref="DataProviderBase.Name"/> is used.
 		/// </summary>
 		public string Name

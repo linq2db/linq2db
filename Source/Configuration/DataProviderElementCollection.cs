@@ -3,6 +3,9 @@ using System.Configuration;
 
 namespace LinqToDB.Configuration
 {
+	/// <summary>
+	/// Collection of data provider configuration elements.
+	/// </summary>
 	[ConfigurationCollection(typeof(DataProviderElement))]
 	public class DataProviderElementCollection : ElementCollectionBase<DataProviderElement>
 	{

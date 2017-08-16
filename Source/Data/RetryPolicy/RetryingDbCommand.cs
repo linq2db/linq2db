@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using System.Data.Common;
-using LinqToDB.Configuration;
 #if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data.RetryPolicy
 {
+	using Configuration;
+
 	class RetryingDbCommand : DbCommand, IProxy<DbCommand>
 	{
 		readonly DbCommand    _command;
@@ -97,6 +98,7 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 
 #if !NOASYNC
+
 		protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
 		{
 			return _policy.ExecuteAsync(ct => _command.ExecuteReaderAsync(behavior, ct), cancellationToken);
@@ -111,6 +113,7 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			return _policy.ExecuteAsync(ct => _command.ExecuteScalarAsync(ct), cancellationToken);
 		}
+
 #endif
 
 		public DbCommand UnderlyingObject
