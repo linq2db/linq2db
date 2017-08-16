@@ -5,11 +5,16 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Configuration;
+
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
+	using Configuration;
 	using Data;
 	using Expressions;
 	using Extensions;
@@ -18,7 +23,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public class OracleDataProvider : DynamicDataProviderBase
 	{
-		private static readonly int NanosecondsPerTick = Convert.ToInt32(1000000000 / TimeSpan.TicksPerSecond);
+		static readonly int NanosecondsPerTick = Convert.ToInt32(1000000000 / TimeSpan.TicksPerSecond);
 
 		public OracleDataProvider()
 			: this(OracleTools.DetectedProviderName)
@@ -213,7 +218,7 @@ namespace LinqToDB.DataProvider.Oracle
 				//    return (T) OracleDecimal.SetPrecision(rd.GetOracleDecimal(idx), 27);
 				// }
 
-				Func<Type, LambdaExpression> getDecimal = t =>
+				Func<Type,LambdaExpression> getDecimal = t =>
 					Expression.Lambda(
 						Expression.ConvertChecked(
 							Expression.Call(setPrecisionMethod,
@@ -575,7 +580,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
 		OracleBulkCopy _bulkCopy;
 
@@ -633,9 +638,9 @@ namespace LinqToDB.DataProvider.Oracle
 				sourceList ?? source);
 		}
 
-#endregion
+		#endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -646,6 +651,19 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#endregion
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			if (delete)
+				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
+
+			return new OracleMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+
+		#endregion
 	}
 }

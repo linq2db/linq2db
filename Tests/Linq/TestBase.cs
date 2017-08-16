@@ -373,7 +373,7 @@ namespace Tests
 
 						test.Properties.Set(PropertyNames.Order,         GetOrder(method));
 						//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
-						test.Properties.Set(PropertyNames.Category, provider);
+						test.Properties.Set(PropertyNames.Category,      provider);
 
 						SetName(test, method, provider, false, caseNumber++, parameters.Item2);
 
@@ -405,8 +405,8 @@ namespace Tests
 								attr.ApplyToTest(test);
 
 							test.Properties.Set(PropertyNames.Order,         GetOrder(method));
-							//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
-							test.Properties.Set(PropertyNames.Category, provider);
+							test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
+							test.Properties.Set(PropertyNames.Category,      provider);
 
 							SetName(test, method, provider, true, linqCaseNumber++, parameters.Item2);
 

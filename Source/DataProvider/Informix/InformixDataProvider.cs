@@ -5,12 +5,16 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Security;
 using System.Threading;
-using LinqToDB.Extensions;
+
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SqlProvider;
 
@@ -190,9 +194,10 @@ namespace LinqToDB.DataProvider.Informix
 				if (dataType != DataType.Int64)
 					value = _newIfxTimeSpan((TimeSpan)value);
 			}
-			else if (value is Guid)
+			else if (value is Guid || value == null && dataType == DataType.Guid)
 			{
-				value    = value.ToString();
+				if (value != null)
+					value = value.ToString();
 				dataType = DataType.Char;
 			}
 			else if (value is bool)
@@ -222,7 +227,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameterType(parameter, dataType);
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -234,9 +239,9 @@ namespace LinqToDB.DataProvider.Informix
 				source);
 		}
 
-#endregion
+		#endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -247,6 +252,19 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#endregion
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			if (delete)
+				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
+
+			return new InformixMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+
+		#endregion
 	}
 }

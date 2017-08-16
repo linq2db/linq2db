@@ -360,7 +360,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => GetGrouping(null, null, default(TKey), null)),
 						new[]
 						{
-							ExpressionBuilder.ContextParam,
+							ExpressionBuilder.QueryRunnerParam,
 							Expression.Constant(context.Builder.CurrentSqlParameters),
 							outerKey,
 							Expression.Constant(itemReader),
@@ -368,12 +368,12 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				static IEnumerable<TElement> GetGrouping(
-					QueryContext             context,
+					IQueryRunner             runner,
 					List<ParameterAccessor>  parameterAccessor,
 					TKey                     key,
 					Func<IDataContext,TKey,object[],IQueryable<TElement>> itemReader)
 				{
-					return new GroupByBuilder.GroupByContext.Grouping<TKey,TElement>(key, context, parameterAccessor, itemReader);
+					return new GroupByBuilder.GroupByContext.Grouping<TKey,TElement>(key, runner, parameterAccessor, itemReader);
 				}
 			}
 

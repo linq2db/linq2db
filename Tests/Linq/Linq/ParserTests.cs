@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
-using LinqToDB.Extensions;
+using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.SqlQuery;
@@ -905,10 +904,8 @@ namespace Tests.Linq
 			{
 				Assert.IsNotNull(db.OracleXmlTable<Person>(() => "<xml/>"));
 				Assert.IsNotNull(db.OracleXmlTable<Person>("<xml/>"));
-				Assert.IsNotNull(db.OracleXmlTable<Person>(new [] {new Person(), }));
-
+				Assert.IsNotNull(db.OracleXmlTable(new [] { new Person() }));
 			}
-
 		}
 
 		[Test]
@@ -933,9 +930,7 @@ namespace Tests.Linq
 				q   = db.GetTable<Issue95Entity>().Where(_ => p == _.EnumValue);
 				ctx = q.GetMyContext();
 				Assert.IsNull(QueryVisitor.Find(ctx.SelectQuery.Where, _ => _.ElementType == QueryElementType.SqlExpression), db.GetSqlText(ctx.SelectQuery));
-
 			}
-
 		}
 	}
 
@@ -984,7 +979,7 @@ namespace Tests.Linq
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				query.GetElement = (ctx,db,expr,ps) => this;
+				query.GetElement = (db, expr, ps) => this;
 			}
 		}
 	}
@@ -993,20 +988,14 @@ namespace Tests.Linq
 	{
 		public static MyContextParser.Context GetMyContext<T>(this IQueryable<T> source)
 		{
-
 			if (source == null) throw new ArgumentNullException("source");
 
-			var methodInfo = typeof(Extensions).GetMethods()
-				.Single(method => method.Name == "GetMyContext" 
-				&& method.GetParameters()
-				.ElementAt(0)
-				.ParameterType
-				.GetGenericTypeDefinition() == typeof(IQueryable<>));
+			var methodInfo = MemberHelper.MethodOf(() => GetMyContext<T>(null));
 
 			return source.Provider.Execute<MyContextParser.Context>(
 				Expression.Call(
 					null,
-					methodInfo.MakeGenericMethod(new[] { typeof(T) }),
+					methodInfo,
 					new[] { source.Expression }));
 		}
 	}

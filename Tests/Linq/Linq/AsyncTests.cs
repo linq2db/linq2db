@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -107,6 +108,30 @@ namespace Tests.Linq
 
 					Assert.That(list[0], Is.EqualTo("John"));
 				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task FirstAsyncTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var person = await db.Person.FirstAsync(p => p.ID == 1);
+
+				Assert.That(person.ID, Is.EqualTo(1));
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task ContainsAsyncTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var p = new Person { ID = 1 };
+
+				var r = await db.Person.ContainsAsync(p);
+
+				Assert.That(r, Is.True);
 			}
 		}
 	}

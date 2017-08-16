@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.Oracle
 			get { return _detectedProviderName ?? (_detectedProviderName = DetectProviderName()); }
 		}
 
-		static OracleDataProvider  DetectedProvider
+		static OracleDataProvider DetectedProvider
 		{
 			get { return DetectedProviderName == ProviderName.OracleNative ? _oracleNativeDataProvider : _oracleManagedDataProvider; }
 		}
