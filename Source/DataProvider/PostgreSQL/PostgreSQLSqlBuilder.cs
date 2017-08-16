@@ -64,6 +64,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");      break;
+				case DataType.DateTimeOffset: StringBuilder.Append("TimeStampTZ");    break;
 				case DataType.Boolean       : StringBuilder.Append("Boolean");        break;
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
