@@ -36,9 +36,7 @@ namespace LinqToDB.Linq
 		{
 			get
 			{
-				var rv = _value.Value;
-				Console.WriteLine(rv);
-				return rv;
+				return _value.Value;
 			}
 		}
 	}
