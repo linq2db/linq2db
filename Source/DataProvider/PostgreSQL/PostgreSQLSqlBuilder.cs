@@ -76,6 +76,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					break;
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
+				case DataType.Guid	     : StringBuilder.Append("uuid");           break;
 				default                      : base.BuildDataType(type, createDbType); break;
 			}
 		}
