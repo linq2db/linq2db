@@ -102,7 +102,12 @@ namespace Tests
 			ProjectPath = FindProjectPath(assemblyPath);
 
 #if !NETSTANDARD && !MONO
-			SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+			try
+			{
+				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+			}
+			catch // this can fail during tests discovering with NUnitTestAdapter
+			{ }
 #endif
 
 #if NETSTANDARD
