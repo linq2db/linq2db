@@ -1,3 +1,14 @@
+LINQ to DB 1.8.4  Release Notes
+---------------------------------
+[!] Better support for aggregates (#353 #679 #699)
+
+Added possibility to provide predicate expression for associations (#753)
+Better support for providing explicit database and schema names (#681 #682 #683)
+Fixed generating IN statement (#329)
+Added possibility to set associations with extension methods (#786)
+
+Details: https://github.com/linq2db/linq2db/milestone/5
+
 LINQ to DB 1.8.3  Release Notes
 ---------------------------------
 [!] Fixed problems with Configuration.Linq.UseBinaryAggregateExpression (#708, #716)
