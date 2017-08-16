@@ -110,17 +110,17 @@ namespace Tests.Merge
 		}
 
 		private static ITable<TestMapping1> GetTarget(IDataContext db)
-		{
+			{
 			return db.GetTable<TestMapping1>().TableName("TestMerge1");
 		}
 
 		private static ITable<TestMapping1> GetSource1(IDataContext db)
-		{
+			{
 			return db.GetTable<TestMapping1>().TableName("TestMerge2");
 		}
 
 		private static ITable<TestMapping2> GetSource2(IDataContext db)
-		{
+			{
 			return db.GetTable<TestMapping2>().TableName("TestMerge2");
 		}
 
@@ -153,7 +153,7 @@ namespace Tests.Merge
 		}
 
 		private static readonly TestMapping1[] InitialTargetData = new[]
-				{
+		{
 			new TestMapping1() { Id = 1                                                                   },
 			new TestMapping1() { Id = 2, Field1 = 2,             Field3 = 101                             },
 			new TestMapping1() { Id = 3,             Field2 = 3,               Field4 = 203               },
@@ -161,7 +161,7 @@ namespace Tests.Merge
 		};
 
 		private static readonly TestMapping1[] InitialSourceData = new[]
-		{
+			{
 			new TestMapping1() { Id = 3,              Field2 = 3,  Field3 = 113                             },
 			new TestMapping1() { Id = 4, Field1 = 5,  Field2 = 7,                Field4 = 214               },
 			new TestMapping1() { Id = 5, Field1 = 10, Field2 = 4,                             Field5 = 315 },
@@ -169,11 +169,11 @@ namespace Tests.Merge
 		};
 
 		private static IEnumerable<TestMapping2> GetInitialSourceData2()
-		{
-			foreach (var record in InitialSourceData)
-			{
-				yield return new TestMapping2()
 				{
+			foreach (var record in InitialSourceData)
+					{
+				yield return new TestMapping2()
+						{
 					OtherId = record.Id,
 					OtherField1 = record.Field1,
 					OtherField2 = record.Field2,
@@ -182,14 +182,14 @@ namespace Tests.Merge
 					OtherField5 = record.Field5,
 					OtherFake = record.Fake
 				};
-			}
-		}
+						}
+				}
 
 		[DataContextSource(false)]
 		public void TestDataGenerationTest(string context)
 		{
 			using (var db = new TestDataConnection(context))
-			{
+				{
 				PrepareData(db);
 
 				var result1 = GetTarget(db).OrderBy(_ => _.Id).ToList();
@@ -207,8 +207,8 @@ namespace Tests.Merge
 				AssertRow(InitialSourceData[1], result2[1], null, 214);
 				AssertRow(InitialSourceData[2], result2[2], null, null);
 				AssertRow(InitialSourceData[3], result2[3], null, 216);
+				}
 			}
-		}
 
 		private void AssertRowCount(int expected, int actual, string context)
 		{

@@ -2,13 +2,20 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Security;
+using System.Threading;
+
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SqlProvider;
 
@@ -158,8 +165,9 @@ namespace LinqToDB.DataProvider.Informix
 				if (dataType != DataType.Int64)
 					value = _newIfxTimeSpan((TimeSpan)value);
 			}
-			else if (value is Guid)
+			else if (value is Guid || value == null && dataType == DataType.Guid)
 			{
+				if (value != null)
 				value    = value.ToString();
 				dataType = DataType.Char;
 			}
@@ -204,7 +212,7 @@ namespace LinqToDB.DataProvider.Informix
 
 #endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -215,6 +223,19 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			if (delete)
+				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
+
+			return new InformixMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection,
 			IMergeable<TTarget, TSource> merge)
@@ -222,6 +243,6 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
-		#endregion
+#endregion
 	}
 }

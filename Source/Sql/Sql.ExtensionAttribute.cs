@@ -141,6 +141,7 @@ namespace LinqToDB
 		{
 			string         Configuration    { get; }
 			MappingSchema  Mapping          { get; }
+			SelectQuery    Query            { get; }
 			MemberInfo     Member           { get; }
 			SqlExtension   Extension        { get; }
 			ISqlExpression ResultExpression { get; set; }
@@ -256,17 +257,20 @@ namespace LinqToDB
 				public ExtensionBuilder(
 					string                     configuration,
 					[NotNull]   MappingSchema  mapping,
+					[NotNull]	SelectQuery    query, 
 					[NotNull]   SqlExtension   extension, 
 					[NotNull]   ConvertHelper  convertHeper,
 					[NotNull]   MemberInfo     member,
 					[NotNull]   Expression[]   arguments)
 				{
 					if (mapping      == null) throw new ArgumentNullException("mapping");
+					if (query        == null) throw new ArgumentNullException("query");
 					if (extension    == null) throw new ArgumentNullException("extension");
 					if (convertHeper == null) throw new ArgumentNullException("convertHeper");
 					if (arguments    == null) throw new ArgumentNullException("arguments");
 
 					Mapping       = mapping;
+					Query         = query;
 					Configuration = configuration;
 					Extension     = extension;
 					_convert      = convertHeper;
@@ -288,6 +292,7 @@ namespace LinqToDB
 
 				public string         Configuration    { get; private set; }
 				public MappingSchema  Mapping          { get; private set; }
+				public SelectQuery    Query            { get; private set; }
 				public MemberInfo     Member           { get; private set; }
 				public SqlExtension   Extension        { get; private set; }
 				public ISqlExpression ResultExpression { get;         set; }
@@ -387,7 +392,7 @@ namespace LinqToDB
 				return lambda.Compile()();
 			}
 
-			protected List<SqlExtensionParam> BuildFunctionsChain(MappingSchema mapping, Expression expr, ConvertHelper convertHelper)
+			protected List<SqlExtensionParam> BuildFunctionsChain(MappingSchema mapping, SelectQuery query, Expression expr, ConvertHelper convertHelper)
 			{
 				var chains   = new List<SqlExtensionParam>();
 				var current  = expr;
@@ -442,7 +447,7 @@ namespace LinqToDB
 
 					foreach (var attr in attributes)
 					{
-						var param = attr.BuildExtensionParam(mapping, memberInfo, arguments, convertHelper);
+						var param = attr.BuildExtensionParam(mapping, query, memberInfo, arguments, convertHelper);
 						chains.Add(param);
 					}
 
@@ -505,7 +510,7 @@ namespace LinqToDB
 				return str;
 			}
 
-			SqlExtensionParam BuildExtensionParam(MappingSchema mapping, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
+			SqlExtensionParam BuildExtensionParam(MappingSchema mapping, SelectQuery query, MemberInfo member, Expression[] arguments, ConvertHelper convertHelper)
 			{
 				var method = member as MethodInfo;
 				var type   = member.GetMemberType();
@@ -561,7 +566,7 @@ namespace LinqToDB
 						}
 					);
 
-					var builder = new ExtensionBuilder(Configuration, mapping, extension, convertHelper, member, arguments);
+					var builder = new ExtensionBuilder(Configuration, mapping, query, extension, convertHelper, member, arguments);
 					callBuilder.Build(builder);
 
 					result = builder.ResultExpression != null ? new SqlExtensionParam(TokenName, builder.ResultExpression) : new SqlExtensionParam(TokenName, builder.Extension);
@@ -663,12 +668,12 @@ namespace LinqToDB
 				return sqlExpression;
 			}
 
-			public override ISqlExpression GetExpression(MappingSchema mapping, Expression expression, Func<Expression, ISqlExpression> converter)
+			public override ISqlExpression GetExpression(MappingSchema mapping, SelectQuery query, Expression expression, Func<Expression, ISqlExpression> converter)
 			{
 				var helper = new ConvertHelper(converter);
 
 				// chain starts from the tail
-				var chain  = BuildFunctionsChain(mapping, expression, helper);
+				var chain  = BuildFunctionsChain(mapping, query, expression, helper);
 
 				if (chain.Count == 0)
 					throw new InvalidOperationException("No sequnce found");

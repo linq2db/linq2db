@@ -6,6 +6,12 @@ using System.Data.Common;
 using System.Data.Linq;
 using System.IO;
 using System.Linq.Expressions;
+
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
+
 using System.Xml;
 using System.Xml.Linq;
 
@@ -408,7 +414,7 @@ namespace LinqToDB.DataProvider
 
 #endregion
 
-#region Create/Drop Database
+		#region Create/Drop Database
 
 		internal static void CreateFileDatabase(
 			string databaseName,
@@ -453,16 +459,16 @@ namespace LinqToDB.DataProvider
 
 #endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
 		}
 
-#endregion
+		#endregion
 
-#region Merge
+		#region Merge
 
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -470,6 +476,17 @@ namespace LinqToDB.DataProvider
 		{
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
+
+#if !NOASYNC
+
+		public virtual Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+			where T : class
+		{
+			return new BasicMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
 
 		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 			where TTarget : class
@@ -493,6 +510,30 @@ namespace LinqToDB.DataProvider
 			return dataConnection.Execute(cmd, builder.Parameters);
 		}
 
+#if !NOASYNC
+		public Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
+			where TTarget : class
+			where TSource : class
+		{
+			if (dataConnection == null)
+				throw new ArgumentNullException("dataConnection");
+
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			var builder = GetMergeBuilder(dataConnection, merge);
+
+			builder.Validate();
+
+			var cmd = builder.BuildCommand();
+
+			if (builder.NoopCommand)
+				return Task.FromResult(0);
+
+			return dataConnection.ExecuteAsync(cmd, token, builder.Parameters);
+		}
+#endif
+
 		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection,
 			IMergeable<TTarget, TSource> merge)
@@ -502,6 +543,23 @@ namespace LinqToDB.DataProvider
 			return new UnsupportedMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
-#endregion
+		#endregion
+
+		#region Async
+
+#if !NOASYNC
+
+
+#endif
+
+		#endregion
+
+		//public virtual TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay)
+		//{
+		//	return
+		//		retryCount <= MaxRetryCount && exception is TimeoutException
+		//			? baseDelay
+		//			: (TimeSpan?)null;
+		//}
 	}
 }

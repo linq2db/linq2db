@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Linq;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 #region ReSharper disable
@@ -132,6 +137,36 @@ namespace Tests.xUpdate
 			}
 		}
 
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task Insert2Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+
+					Assert.AreEqual(1,
+						await db
+							.Into(db.Child)
+								.Value(c => c.ParentID, () => 1)
+								.Value(c => c.ChildID,  () => id)
+							.InsertAsync());
+					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
+				}
+				finally
+				{
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+				}
+			}
+		}
+
+#endif
+
 		[Test, DataContextSource]
 		public void Insert3(string context)
 		{
@@ -159,6 +194,38 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task Insert3Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+
+					Assert.AreEqual(1,
+						await db.Child
+							.Where(c => c.ChildID == 11)
+							.InsertAsync(db.Child, c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = id
+							}));
+					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
+				}
+				finally
+				{
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+				}
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void Insert31(string context)
@@ -215,6 +282,37 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task Insert4Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+
+					Assert.AreEqual(1,
+						await db.Child
+							.Where(c => c.ChildID == 11)
+							.Into(db.Child)
+								.Value(c => c.ParentID, c  => c.ParentID)
+								.Value(c => c.ChildID,  () => id)
+							.InsertAsync());
+					Assert.AreEqual(1, await db.Child.CountAsync(c => c.ChildID == id));
+				}
+				finally
+				{
+					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+				}
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void Insert5(string context)
@@ -630,6 +728,34 @@ namespace Tests.xUpdate
 			}
 		}
 
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task InsertWithIdentity1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
+			{
+				var id =
+					await db.Person
+						.InsertWithIdentityAsync(() => new Person
+						{
+							FirstName = "John",
+							LastName  = "Shepard",
+							Gender    = Gender.Male
+						});
+
+				Assert.NotNull(id);
+
+				var john = await db.Person.SingleAsync(p => p.FirstName == "John" && p.LastName == "Shepard");
+
+				Assert.NotNull (john);
+				Assert.AreEqual(id, john.ID);
+			}
+		}
+
+#endif
+
 		[Test, DataContextSource]
 		public void InsertWithIdentity2(string context)
 		{
@@ -651,6 +777,32 @@ namespace Tests.xUpdate
 				Assert.AreEqual(id, john.ID);
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task InsertWithIdentity2Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
+			{
+				var id = await db
+					.Into(db.Person)
+						.Value(p => p.FirstName, () => "John")
+						.Value(p => p.LastName,  () => "Shepard")
+						.Value(p => p.Gender,    () => Gender.Male)
+					.InsertWithIdentityAsync();
+
+				Assert.NotNull(id);
+
+				var john = await db.Person.SingleAsync(p => p.FirstName == "John" && p.LastName == "Shepard");
+
+				Assert.NotNull (john);
+				Assert.AreEqual(id, john.ID);
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void InsertWithIdentity3(string context)
@@ -682,7 +834,6 @@ namespace Tests.xUpdate
 			{
 				for (var i = 0; i < 2; i++)
 				{
-
 					var id = db.InsertWithIdentity(
 						new Person
 						{
@@ -700,6 +851,36 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task InsertWithIdentity4Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new DeletePerson(db))
+			{
+				for (var i = 0; i < 2; i++)
+				{
+					var id = await db.InsertWithIdentityAsync(
+						new Person
+						{
+							FirstName = "John" + i,
+							LastName  = "Shepard",
+							Gender    = Gender.Male
+						});
+
+					Assert.NotNull(id);
+
+					var john = await db.Person.SingleAsync(p => p.FirstName == "John" + i && p.LastName == "Shepard");
+
+					Assert.NotNull (john);
+					Assert.AreEqual(id, john.ID);
+				}
+			}
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void InsertWithIdentity5(string context)
@@ -872,12 +1053,12 @@ namespace Tests.xUpdate
 				try
 				{
 					var records = db.Patient.InsertOrUpdate(
-						() => new Patient()
+						() => new Patient
 						{
 							PersonID  = id,
 							Diagnosis = "negative"
 						},
-						p => new Patient()
+						p => new Patient
 						{
 						});
 
@@ -894,12 +1075,12 @@ namespace Tests.xUpdate
 						Assert.AreEqual("negative", patients[0].Diagnosis);
 
 						records = db.Patient.InsertOrUpdate(
-							() => new Patient()
+							() => new Patient
 							{
 								PersonID  = id,
 								Diagnosis = "positive"
 							},
-							p => new Patient()
+							p => new Patient
 							{
 							});
 
@@ -959,6 +1140,45 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task InsertOrReplace1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 0;
+
+				try
+				{
+					id = Convert.ToInt32(db.Person.InsertWithIdentity(() => new Person
+					{
+						FirstName = "John",
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					}));
+
+					for (var i = 0; i < 3; i++)
+					{
+						await db.InsertOrReplaceAsync(new Patient
+						{
+							PersonID  = id,
+							Diagnosis = ("abc" + i).ToString(),
+						});
+					}
+
+					Assert.AreEqual("abc2", (await db.Patient.SingleAsync(p => p.PersonID == id)).Diagnosis);
+				}
+				finally
+				{
+					await db.Patient.Where     (p => p.PersonID == id).DeleteAsync();
+					await db.Person.DeleteAsync(p => p.ID       == id);
+				}
+			}
+		}
+
+#endif
 
 		[Test]
 		public void InsertOrReplaceWithIdentity()
@@ -1026,6 +1246,59 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task InsertOrUpdate3Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 0;
+
+				try
+				{
+					id = await db.Person.InsertWithInt32IdentityAsync(() => new Person
+					{
+						FirstName = "John",
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					});
+
+					var diagnosis = "abc";
+
+					for (var i = 0; i < 3; i++)
+					{
+						await db.Patient.InsertOrUpdateAsync(
+							() => new Patient
+							{
+								PersonID  = id,
+								Diagnosis = "abc",
+							},
+							p => new Patient
+							{
+								Diagnosis = (p.Diagnosis.Length + i).ToString(),
+							},
+							() => new Patient
+							{
+								PersonID  = id,
+								//Diagnosis = diagnosis,
+							});
+
+						diagnosis = (diagnosis.Length + i).ToString();
+					}
+
+					Assert.AreEqual("3", (await db.Patient.SingleAsync(p => p.PersonID == id)).Diagnosis);
+				}
+				finally
+				{
+					await db.Patient.DeleteAsync(p => p.PersonID == id);
+					await db.Person. DeleteAsync(p => p.ID       == id);
+				}
+			}
+		}
+
+#endif
 
 		[Test, IncludeDataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void InsertBatch1(string context)

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
+	using Linq;
+
 #if !NOASYNC
 
 	public class DataReaderAsync : IDisposable

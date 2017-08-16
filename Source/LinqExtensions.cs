@@ -1,7 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
 
 using JetBrains.Annotations;
 
@@ -166,6 +172,35 @@ namespace LinqToDB
 			throw new InvalidOperationException();
 		}
 
+#if !NOASYNC
+
+		public static async Task<T> SelectAsync<T>(
+			[NotNull]                this IDataContext   dataContext,
+			[NotNull, InstantHandle] Expression<Func<T>> selector)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (selector    == null) throw new ArgumentNullException("selector");
+
+			var q = new Table<T>(dataContext, selector);
+
+			var read = false;
+			var item = default(T);
+
+			await q.ForEachUntilAsync(r =>
+			{
+				read = true;
+				item = r;
+				return false;
+			});
+
+			if (read)
+				return item;
+
+			throw new InvalidOperationException();
+		}
+
+#endif
+
 		#endregion
 
 		#region Delete
@@ -183,6 +218,27 @@ namespace LinqToDB
 					new[] { source.Expression }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> DeleteAsync<T>([NotNull] this IQueryable<T> source, CancellationToken token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			var expr = Expression.Call(
+				null,
+				_deleteMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _deleteMethodInfo2 = MemberHelper.MethodOf(() => Delete<int>(null, null)).GetGenericMethodDefinition();
 
 		public static int Delete<T>(
@@ -198,6 +254,31 @@ namespace LinqToDB
 					_deleteMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(predicate) }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> DeleteAsync<T>(
+			[NotNull]           this IQueryable<T>            source,
+			[NotNull, InstantHandle] Expression<Func<T,bool>> predicate,
+			CancellationToken                                 token = default(CancellationToken))
+		{
+			if (source    == null) throw new ArgumentNullException("source");
+			if (predicate == null) throw new ArgumentNullException("predicate");
+
+			var expr = Expression.Call(
+				null,
+				_deleteMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(predicate) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		#endregion
 
@@ -221,11 +302,36 @@ namespace LinqToDB
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			CancellationToken                                          token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (target == null) throw new ArgumentNullException("target");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		internal static readonly MethodInfo _updateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
 
-		public static int Update<T>(
-			[NotNull]                this IQueryable<T>    source,
-			[NotNull, InstantHandle] Expression<Func<T,T>> setter)
+		public static int Update<T>([NotNull] this IQueryable<T> source, [NotNull, InstantHandle] Expression<Func<T,T>> setter)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (setter == null) throw new ArgumentNullException("setter");
@@ -236,6 +342,31 @@ namespace LinqToDB
 					_updateMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(setter) }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<T>(
+			[NotNull]           this IQueryable<T>         source,
+			[NotNull, InstantHandle] Expression<Func<T,T>> setter,
+			CancellationToken                              token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		static readonly MethodInfo _updateMethodInfo3 = MemberHelper.MethodOf(() => Update<int>(null, null, null)).GetGenericMethodDefinition();
 
@@ -255,6 +386,33 @@ namespace LinqToDB
 					new[] { source.Expression, Expression.Quote(predicate), Expression.Quote(setter) }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<T>(
+			[NotNull]           this IQueryable<T>            source,
+			[NotNull, InstantHandle] Expression<Func<T,bool>> predicate,
+			[NotNull, InstantHandle] Expression<Func<T,T>>    setter,
+			CancellationToken                                 token = default(CancellationToken))
+		{
+			if (source    == null) throw new ArgumentNullException("source");
+			if (predicate == null) throw new ArgumentNullException("predicate");
+			if (setter    == null) throw new ArgumentNullException("setter");
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo3.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(predicate), Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _updateMethodInfo4 = MemberHelper.MethodOf(() => Update<int>(null)).GetGenericMethodDefinition();
 
 		public static int Update<T>([NotNull] this IUpdatable<T> source)
@@ -269,6 +427,29 @@ namespace LinqToDB
 					_updateMethodInfo4.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<T>([NotNull] this IUpdatable<T> source, CancellationToken token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			var q = ((Updatable<T>)source).Query;
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo4.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { q.Expression });
+
+			var query = q as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => q.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		static readonly MethodInfo _updateMethodInfo5 = MemberHelper.MethodOf(() => Update<int,int>(null, (Expression<Func<int,int>>)null, null)).GetGenericMethodDefinition();
 
@@ -287,6 +468,33 @@ namespace LinqToDB
 					_updateMethodInfo5.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { source.Expression, Expression.Quote(target), Expression.Quote(setter) }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> UpdateAsync<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			CancellationToken                                          token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (target == null) throw new ArgumentNullException("target");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			var expr = Expression.Call(
+				null,
+				_updateMethodInfo5.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				new[] { source.Expression, Expression.Quote(target), Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		class Updatable<T> : IUpdatable<T>
 		{
@@ -465,6 +673,33 @@ namespace LinqToDB
 					new[] { query.Expression, Expression.Quote(setter) }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> InsertAsync<T>(
+			[NotNull]                this ITable<T>      target,
+			[NotNull, InstantHandle] Expression<Func<T>> setter,
+			CancellationToken                            token = default(CancellationToken))
+		{
+			if (target == null) throw new ArgumentNullException("target");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
+				null,
+				_insertMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _insertWithIdentityMethodInfo = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null,null)).GetGenericMethodDefinition();
 
 		public static object InsertWithIdentity<T>(
@@ -482,6 +717,79 @@ namespace LinqToDB
 					_insertWithIdentityMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression, Expression.Quote(setter) }));
 		}
+
+		public static int InsertWithInt32Identity<T>(
+			[NotNull]                this ITable<T>      target,
+			[NotNull, InstantHandle] Expression<Func<T>> setter)
+		{
+			return target.DataContext.MappingSchema.ChangeTypeTo<int>(InsertWithIdentity(target, setter));
+		}
+
+		public static long InsertWithInt64Identity<T>(
+			[NotNull]                this ITable<T>      target,
+			[NotNull, InstantHandle] Expression<Func<T>> setter)
+		{
+			return target.DataContext.MappingSchema.ChangeTypeTo<long>(InsertWithIdentity(target, setter));
+		}
+
+		public static decimal InsertWithDecimalIdentity<T>(
+			[NotNull]                this ITable<T>      target,
+			[NotNull, InstantHandle] Expression<Func<T>> setter)
+		{
+			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(InsertWithIdentity(target, setter));
+		}
+
+#if !NOASYNC
+
+		public static async Task<object> InsertWithIdentityAsync<T>(
+			[NotNull]                this ITable<T>      target,
+			[NotNull, InstantHandle] Expression<Func<T>> setter,
+			CancellationToken                            token = default(CancellationToken))
+		{
+			if (target == null) throw new ArgumentNullException("target");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
+				null,
+				_insertWithIdentityMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<object>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<object>(expr), token);
+		}
+
+		public static async Task<int> InsertWithInt32IdentityAsync<T>(
+			[NotNull]                this ITable<T>      target,
+			[NotNull, InstantHandle] Expression<Func<T>> setter,
+			CancellationToken                            token = default(CancellationToken))
+		{
+			return target.DataContext.MappingSchema.ChangeTypeTo<int>(await InsertWithIdentityAsync(target, setter, token));
+		}
+
+		public static async Task<long> InsertWithInt64IdentityAsync<T>(
+			[NotNull]                this ITable<T>      target,
+			[NotNull, InstantHandle] Expression<Func<T>> setter,
+			CancellationToken                            token = default(CancellationToken))
+		{
+			return target.DataContext.MappingSchema.ChangeTypeTo<long>(await InsertWithIdentityAsync(target, setter, token));
+		}
+
+		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
+			[NotNull]                this ITable<T>      target,
+			[NotNull, InstantHandle] Expression<Func<T>> setter,
+			CancellationToken                            token = default(CancellationToken))
+		{
+			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(await InsertWithIdentityAsync(target, setter, token));
+		}
+
+
+#endif
 
 		#region ValueInsertable
 
@@ -617,20 +925,103 @@ namespace LinqToDB
 					new[] { query.Expression }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> InsertAsync<T>([NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			var queryable = ((ValueInsertable<T>)source).Query;
+
+			var expr = Expression.Call(
+				null,
+				_insertMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { queryable.Expression });
+
+			var query = queryable as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => queryable.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _insertWithIdentityMethodInfo2 = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null)).GetGenericMethodDefinition();
 
 		public static object InsertWithIdentity<T>([NotNull] this IValueInsertable<T> source)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
-			var query = ((ValueInsertable<T>)source).Query;
+			var queryable = ((ValueInsertable<T>)source).Query;
 
-			return query.Provider.Execute<object>(
+			return queryable.Provider.Execute<object>(
 				Expression.Call(
 					null,
 					_insertWithIdentityMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
-					new[] { query.Expression }));
+					new[] { queryable.Expression }));
 		}
+
+		public static int? InsertWithInt32Identity<T>([NotNull] this IValueInsertable<T> source)
+		{
+			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(InsertWithIdentity(source));
+		}
+
+		public static long? InsertWithInt64Identity<T>([NotNull] this IValueInsertable<T> source)
+		{
+			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(InsertWithIdentity(source));
+		}
+
+		public static decimal? InsertWithDecimalIdentity<T>([NotNull] this IValueInsertable<T> source)
+		{
+			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(InsertWithIdentity(source));
+		}
+
+#if !NOASYNC
+
+		public static async Task<object> InsertWithIdentityAsync<T>(
+			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			var queryable = ((ValueInsertable<T>)source).Query;
+
+			var expr = Expression.Call(
+				null,
+				_insertWithIdentityMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { queryable.Expression });
+
+			var query = queryable as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<object>(expr, token);
+
+			return await Task.Run(() => queryable.Provider.Execute<object>(expr), token);
+		}
+
+		public static async Task<int?> InsertWithInt32IdentityAsync<T>(
+			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
+		{
+			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
+				await InsertWithIdentityAsync(source, token));
+		}
+
+		public static async Task<long?> InsertWithInt64IdentityAsync<T>(
+			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
+		{
+			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
+				await InsertWithIdentityAsync(source, token));
+		}
+
+		public static async Task<decimal?> InsertWithDecimalIdentityAsync<T>(
+			[NotNull] this IValueInsertable<T> source, CancellationToken token = default(CancellationToken))
+		{
+			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
+				await InsertWithIdentityAsync(source, token));
+		}
+
+#endif
 
 		#endregion
 
@@ -655,6 +1046,33 @@ namespace LinqToDB
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> InsertAsync<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			CancellationToken                                          token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (target == null) throw new ArgumentNullException("target");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			var expr = Expression.Call(
+				null,
+				_insertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _insertWithIdentityMethodInfo3 =
 			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null,null,null)).GetGenericMethodDefinition();
 
@@ -673,6 +1091,91 @@ namespace LinqToDB
 					_insertWithIdentityMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
+
+		public static int? InsertWithInt32Identity<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
+		{
+			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<int?>(
+				InsertWithIdentity(source, target, setter));
+		}
+
+		public static long? InsertWithInt64Identity<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
+		{
+			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<long?>(
+				InsertWithIdentity(source, target, setter));
+		}
+
+		public static decimal? InsertWithDecimalIdentity<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
+		{
+			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
+				InsertWithIdentity(source, target, setter));
+		}
+
+#if !NOASYNC
+
+		public static async Task<object> InsertWithIdentityAsync<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			CancellationToken                                          token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (target == null) throw new ArgumentNullException("target");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			var expr =
+				Expression.Call(
+					null,
+					_insertWithIdentityMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<object>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<object>(expr), token);
+		}
+
+		public static async Task<int?> InsertWithInt32IdentityAsync<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			CancellationToken                                          token = default(CancellationToken))
+		{
+			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<int?>(
+				await InsertWithIdentityAsync(source, target, setter, token));
+		}
+
+		public static async Task<long?> InsertWithInt64IdentityAsync<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			CancellationToken                                          token = default(CancellationToken))
+		{
+			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<long?>(
+				await InsertWithIdentityAsync(source, target, setter, token));
+		}
+
+		public static async Task<decimal?> InsertWithDecimalIdentityAsync<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			CancellationToken                                          token = default(CancellationToken))
+		{
+			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
+				await InsertWithIdentityAsync(source, target, setter, token));
+		}
+
+#endif
 
 		class SelectInsertable<T,TT> : ISelectInsertable<T,TT>
 		{
@@ -785,6 +1288,30 @@ namespace LinqToDB
 					new[] { query.Expression }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> InsertAsync<TSource,TTarget>(
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
+
+			var expr = Expression.Call(
+				null,
+				_insertMethodInfo4.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				new[] { queryable.Expression });
+
+			var query = queryable as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => queryable.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _insertWithIdentityMethodInfo4 =
 			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null)).GetGenericMethodDefinition();
 
@@ -792,14 +1319,77 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
-			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
+			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
-			return query.Provider.Execute<object>(
+			return queryable.Provider.Execute<object>(
 				Expression.Call(
 					null,
 					_insertWithIdentityMethodInfo4.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
-					new[] { query.Expression }));
+					new[] { queryable.Expression }));
 		}
+
+		public static int? InsertWithInt32Identity<TSource,TTarget>([NotNull] this ISelectInsertable<TSource,TTarget> source)
+		{
+			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
+				InsertWithIdentity(source));
+		}
+
+		public static long? InsertWithInt64Identity<TSource,TTarget>([NotNull] this ISelectInsertable<TSource,TTarget> source)
+		{
+			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
+				InsertWithIdentity(source));
+		}
+
+		public static decimal? InsertWithDecimalIdentity<TSource,TTarget>([NotNull] this ISelectInsertable<TSource,TTarget> source)
+		{
+			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
+				InsertWithIdentity(source));
+		}
+
+#if !NOASYNC
+
+		public static async Task<object> InsertWithIdentityAsync<TSource,TTarget>(
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
+
+			var expr = Expression.Call(
+				null,
+				_insertWithIdentityMethodInfo4.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				new[] { queryable.Expression });
+
+			var query = queryable as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<object>(expr, token);
+
+			return await Task.Run(() => queryable.Provider.Execute<object>(expr), token);
+		}
+
+		public static async Task<int?> InsertWithInt32IdentityAsync<TSource,TTarget>(
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
+		{
+			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
+				await InsertWithIdentityAsync(source, token));
+		}
+
+		public static async Task<long?> InsertWithInt64IdentityAsync<TSource,TTarget>(
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
+		{
+			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
+				await InsertWithIdentityAsync(source, token));
+		}
+
+		public static async Task<decimal?> InsertWithDecimalIdentityAsync<TSource,TTarget>(
+			[NotNull] this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default(CancellationToken))
+		{
+			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
+				await InsertWithIdentityAsync(source, token));
+		}
+
+#endif
 
 		#endregion
 
@@ -827,6 +1417,35 @@ namespace LinqToDB
 					_insertOrUpdateMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<int> InsertOrUpdateAsync<T>(
+			[NotNull]                this ITable<T>        target,
+			[NotNull, InstantHandle] Expression<Func<T>>   insertSetter,
+			[NotNull, InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
+			CancellationToken                              token = default(CancellationToken))
+		{
+			if (target                     == null) throw new ArgumentNullException("target");
+			if (insertSetter               == null) throw new ArgumentNullException("insertSetter");
+			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException("onDuplicateKeyUpdateSetter");
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
+				null,
+				_insertOrUpdateMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { source.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
 
 		static readonly MethodInfo _insertOrUpdateMethodInfo2 =
 			MemberHelper.MethodOf(() => InsertOrUpdate<int>(null,null,null,null)).GetGenericMethodDefinition();
@@ -857,24 +1476,117 @@ namespace LinqToDB
 					}));
 		}
 
+#if !NOASYNC
+
+		public static async Task<int> InsertOrUpdateAsync<T>(
+			[NotNull]                this ITable<T>        target,
+			[NotNull, InstantHandle] Expression<Func<T>>   insertSetter,
+			[NotNull, InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
+			[NotNull, InstantHandle] Expression<Func<T>>   keySelector,
+			CancellationToken                              token = default(CancellationToken))
+		{
+			if (target                     == null) throw new ArgumentNullException("target");
+			if (insertSetter               == null) throw new ArgumentNullException("insertSetter");
+			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException("onDuplicateKeyUpdateSetter");
+			if (keySelector                == null) throw new ArgumentNullException("keySelector");
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
+				null,
+				_insertOrUpdateMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[]
+				{
+					source.Expression,
+					Expression.Quote(insertSetter),
+					Expression.Quote(onDuplicateKeyUpdateSetter),
+					Expression.Quote(keySelector)
+				});
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+#endif
+
 		#endregion
 
-		#region DDL Operations
+		#region Drop
 
-		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null, true)).GetGenericMethodDefinition();
 
-		public static int Drop<T>([NotNull] this ITable<T> target)
+		public static int Drop<T>([NotNull] this ITable<T> target, bool throwExceptionIfNotExists = true)
 		{
 			if (target == null) throw new ArgumentNullException("target");
 
 			IQueryable<T> query = target;
 
-			return query.Provider.Execute<int>(
-				Expression.Call(
+			var expr = Expression.Call(
+				null,
+				_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { query.Expression, Expression.Constant(throwExceptionIfNotExists) });
+
+			if (throwExceptionIfNotExists)
+			{
+				return query.Provider.Execute<int>(expr);
+			}
+
+			try
+			{
+				return query.Provider.Execute<int>(expr);
+			}
+			catch
+			{
+			}
+
+			return 0;
+		}
+
+#if !NOASYNC
+
+		public static async Task<int> DropAsync<T>(
+			[NotNull] this ITable<T> target,
+			bool                     throwExceptionIfNotExists = true,
+			CancellationToken        token = default(CancellationToken))
+		{
+			if (target == null) throw new ArgumentNullException("target");
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
 					null,
 					_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
-					new[] { query.Expression }));
+				new[] { source.Expression, Expression.Constant(throwExceptionIfNotExists)  });
+
+			var query = source as IQueryProviderAsync;
+
+			if (throwExceptionIfNotExists)
+			{
+				if (query != null)
+					return await query.ExecuteAsync<int>(expr, token);
+
+				return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			}
+
+			try
+			{
+				if (query != null)
+					return await query.ExecuteAsync<int>(expr, token);
+
+				return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			}
+			catch
+			{
+			}
+
+			return 0;
 		}
+
+#endif
 
 		#endregion
 
@@ -989,6 +1701,32 @@ namespace LinqToDB
 					new[] { source.Expression, Expression.Quote(index) }));
 		}
 
+#if !NOASYNC
+
+		public static async Task<TSource> ElementAtAsync<TSource>(
+			[NotNull]                this IQueryable<TSource> source,
+			[NotNull, InstantHandle] Expression<Func<int>>    index,
+			CancellationToken                                 token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (index  == null) throw new ArgumentNullException("index");
+
+			var expr =
+				Expression.Call(
+					null,
+					_elementAtMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
+					new[] { source.Expression, Expression.Quote(index) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<TSource>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<TSource>(expr), token);
+		}
+
+#endif
+
 		static readonly MethodInfo _elementAtOrDefaultMethodInfo = MemberHelper.MethodOf(() => ElementAtOrDefault<int>(null,null)).GetGenericMethodDefinition();
 
 		public static TSource ElementAtOrDefault<TSource>(
@@ -1004,6 +1742,32 @@ namespace LinqToDB
 					_elementAtOrDefaultMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
 					new[] { source.Expression, Expression.Quote(index) }));
 		}
+
+#if !NOASYNC
+
+		public static async Task<TSource> ElementAtOrDefaultAsync<TSource>(
+			[NotNull]                this IQueryable<TSource> source,
+			[NotNull, InstantHandle] Expression<Func<int>>    index,
+			CancellationToken                                 token = default(CancellationToken))
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (index  == null) throw new ArgumentNullException("index");
+
+			var expr =
+				Expression.Call(
+					null,
+					_elementAtOrDefaultMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
+					new[] { source.Expression, Expression.Quote(index) });
+
+			var query = source as IQueryProviderAsync;
+
+			if (query != null)
+				return await query.ExecuteAsync<TSource>(expr, token);
+
+			return await Task.Run(() => source.Provider.Execute<TSource>(expr), token);
+		}
+
+#endif
 
 		#endregion
 
@@ -1032,6 +1796,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _thenOrBy = MemberHelper.MethodOf(() => ThenOrBy((IQueryable<int>)null,(Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
 
+		[LinqTunnel]
 		public static IOrderedQueryable<TSource> ThenOrBy<TSource, TKey>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<TSource, TKey>> keySelector)
@@ -1048,6 +1813,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _thenOrByDescending = MemberHelper.MethodOf(() => ThenOrByDescending((IQueryable<int>)null, (Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
 
+		[LinqTunnel]
 		public static IOrderedQueryable<TSource> ThenOrByDescending<TSource, TKey>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<TSource, TKey>> keySelector)
@@ -1064,6 +1830,8 @@ namespace LinqToDB
 
 		#endregion
 
+		#region GetContext
+
 		internal static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
 
 		internal static ContextParser.Context GetContext<TSource>(this IQueryable<TSource> source)
@@ -1076,6 +1844,8 @@ namespace LinqToDB
 					_setMethodInfo8.MakeGenericMethod(typeof(TSource)),
 					new[] { source.Expression }));
 		}
+
+		#endregion
 
 		#region Stub helpers
 

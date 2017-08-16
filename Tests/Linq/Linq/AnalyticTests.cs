@@ -112,7 +112,7 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleNative)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleNative)]
 		public void TestAvg(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -289,7 +289,7 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
 		public void TestCount(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -584,7 +584,7 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle)]
 		public void TestMax(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -672,7 +672,7 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
 		public void TestMin(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -945,7 +945,7 @@
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void TestStdDev(string context)
 		{
 			using (var db = GetDataContext(context))

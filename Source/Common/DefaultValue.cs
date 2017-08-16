@@ -7,8 +7,14 @@ namespace LinqToDB.Common
 {
 	using Expressions;
 	using Extensions;
+	using JetBrains.Annotations;
 	using Mapping;
 
+	/// <summary>
+	/// Default value provider.
+	/// Default value used for mapping from NULL database value to C# value.
+	/// </summary>
+	[PublicAPI]
 	public static class DefaultValue
 	{
 		static DefaultValue()
@@ -35,6 +41,12 @@ namespace LinqToDB.Common
 
 		static readonly ConcurrentDictionary<Type,object> _values = new ConcurrentDictionary<Type,object>();
 
+		/// <summary>
+		/// Returns default value for provided type.
+		/// </summary>
+		/// <param name="type">Type, for which default value requested.</param>
+		/// <param name="mappingSchema">Optional mapping schema to provide mapping information for enum type.</param>
+		/// <returns>Default value for specific type.</returns>
 		public static object GetValue([JetBrains.Annotations.NotNull] Type type, MappingSchema mappingSchema = null)
 		{
 			if (type == null) throw new ArgumentNullException("type");
@@ -78,6 +90,11 @@ namespace LinqToDB.Common
 			return value;
 		}
 
+		/// <summary>
+		/// Returns default value for provided type.
+		/// </summary>
+		/// <typeparam name="T">Type, for which default value requested.</typeparam>
+		/// <returns>Default value for specific type.</returns>
 		public static T GetValue<T>()
 		{
 			object value;
@@ -90,16 +107,30 @@ namespace LinqToDB.Common
 			return default(T);
 		}
 
+		/// <summary>
+		/// Sets default value for provided type.
+		/// </summary>
+		/// <typeparam name="T">Type, for which default value set.</typeparam>
+		/// <param name="value">Default value for specific type.</param>
 		public static void SetValue<T>(T value)
 		{
 			_values[typeof(T)] = value;
 		}
 	}
 
+	/// <summary>
+	/// Default value provider for specific type.
+	/// Default value used for mapping from NULL database value to C# value.
+	/// </summary>
+	/// <typeparam name="T">Type parameter.</typeparam>
+	[PublicAPI]
 	public static class DefaultValue<T>
 	{
 		static T _value = DefaultValue.GetValue<T>();
 
+		/// <summary>
+		/// Gets or sets default value for specific type.
+		/// </summary>
 		public static T Value
 		{
 			get { return _value; }

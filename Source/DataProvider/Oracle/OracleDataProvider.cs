@@ -5,11 +5,16 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Configuration;
+
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
+	using Configuration;
 	using Data;
 	using Expressions;
 	using Extensions;
@@ -18,7 +23,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public class OracleDataProvider : DynamicDataProviderBase
 	{
-		private static readonly int NanosecondsPerTick = Convert.ToInt32(1000000000 / TimeSpan.TicksPerSecond);
+		static readonly int NanosecondsPerTick = Convert.ToInt32(1000000000 / TimeSpan.TicksPerSecond);
 
 		public OracleDataProvider()
 			: this(OracleTools.DetectedProviderName)
@@ -633,7 +638,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 #endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -644,6 +649,19 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			if (delete)
+				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
+
+			return new OracleMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection, 
 			IMergeable<TTarget, TSource> merge)
@@ -651,7 +669,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
-
-		#endregion
+#endregion
 	}
 }

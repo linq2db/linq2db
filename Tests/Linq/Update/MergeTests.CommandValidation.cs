@@ -14,6 +14,8 @@ using Tests.Model;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlProvider;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Tests.Merge
 {
@@ -262,6 +264,16 @@ namespace Tests.Merge
 				}
 
 				int IDataProvider.Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
+				{
+					throw new NotImplementedException();
+				}
+
+				Task<int> IDataProvider.MergeAsync<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName, CancellationToken token)
+				{
+					throw new NotImplementedException();
+				}
+
+				Task<int> IDataProvider.MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
 				{
 					throw new NotImplementedException();
 				}

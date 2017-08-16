@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
 #if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;
@@ -2018,6 +2017,16 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SearchCondition:
 					BuildSearchCondition(expr.Precedence, (SelectQuery.SearchCondition)expr);
+					break;
+
+				case QueryElementType.SqlTable:
+				case QueryElementType.TableSource:
+					{
+						var table = (ISqlTableSource) expr;
+						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(table, null, true);
+						StringBuilder.Append(tableAlias);
+					}
+
 					break;
 
 				default:

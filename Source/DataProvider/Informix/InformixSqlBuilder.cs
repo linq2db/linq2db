@@ -177,6 +177,20 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append(")");
 		}
 
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			// TODO: FQN could also contain server name, but we don't have such API for now
+			// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
+			if (database != null)
+				sb.Append(database).Append(":");
+
+			if (owner != null)
+				sb.Append(owner).Append(".");
+
+			return sb.Append(table);
+		}
+
+
 #if !SILVERLIGHT
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

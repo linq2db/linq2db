@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Tests.Model;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Tests.Merge
 {
@@ -200,6 +202,11 @@ namespace Tests.Merge
 			}
 
 			TResult IQueryProvider.Execute<TResult>(Expression expression)
+			{
+				throw new NotImplementedException();
+			}
+
+			Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 			{
 				throw new NotImplementedException();
 			}

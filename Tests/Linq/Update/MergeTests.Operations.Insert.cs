@@ -12,6 +12,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using Tests.Model;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 namespace Tests.Merge
 {
 	public partial class MergeTests
@@ -1083,5 +1087,70 @@ namespace Tests.Merge
 			}
 		}
 		#endregion
+
+#if !NOASYNC
+		#region Async
+		[MergeDataContextSource]
+		public async Task SameSourceInsertFromTableAsyn(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = await table
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeAsync();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(6, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+				AssertRow(InitialSourceData[2], result[4], null, null);
+				AssertRow(InitialSourceData[3], result[5], null, 216);
+			}
+		}
+
+		[MergeDataContextSource]
+		public async Task SameSourceInsertFromQueryAsyn(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = await table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeAsync();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+				AssertRow(InitialSourceData[2], result[4], null, null);
+			}
+		}
+		#endregion
+#endif
 	}
 }

@@ -1,3 +1,6 @@
+---
+uid: contributing
+---
 # Development rules and regulations, code style
 Follow this [document](https://github.com/linq2db/linq2db/files/1056002/Development.rules.and.regulations.docx)
 

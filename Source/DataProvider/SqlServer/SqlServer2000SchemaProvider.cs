@@ -37,8 +37,12 @@ namespace LinqToDB.DataProvider.SqlServer
 					ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)         as [Precision],
 					NUMERIC_SCALE                                         as Scale,
 					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
-					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnUpdate
+					CASE WHEN c.DATA_TYPE = 'timestamp' 
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						THEN 1 ELSE 0 END as SkipOnInsert,
+					CASE WHEN c.DATA_TYPE = 'timestamp' 
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						THEN 1 ELSE 0 END as SkipOnUpdate
 				FROM
 					INFORMATION_SCHEMA.COLUMNS c")
 				.ToList();

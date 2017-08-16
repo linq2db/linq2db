@@ -783,6 +783,30 @@ namespace Tests.Linq
 					});
 		}
 
+		[Test, DataContextSource(ProviderName.SqlCe)]
+		public void Aggregates5(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from ch in Child
+					group ch by ch.ParentID into g
+					select new
+					{
+						Count1 = g.Count(c => c.ChildID > 30),
+						Count2 = g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
+						Count3 = g.Count()
+					},
+					from ch in db.Child
+					group ch by ch.ParentID into g
+					select new
+					{
+						Count1 = g.Count(c => c.ChildID > 30),
+						Count2 = g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
+						Count3 = g.Count()
+					});
+		}
+
+
 		[Test, DataContextSource]
 		public void SelectMax(string context)
 		{

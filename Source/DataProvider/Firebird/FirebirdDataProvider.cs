@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
+
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
@@ -118,7 +123,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 #endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -129,6 +134,19 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			if (delete)
+				throw new LinqToDBException("Firebird MERGE statement does not support DELETE by source.");
+
+			return new FirebirdMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection,
 			IMergeable<TTarget, TSource> merge)
@@ -136,6 +154,6 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
-		#endregion
+#endregion
 	}
 }

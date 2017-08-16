@@ -442,7 +442,7 @@ namespace LinqToDB.DataProvider
 					SqlParameters = query.Parameters.ToArray()
 				};
 
-				var preparedQuery = (DataConnection.PreparedQuery)DataContext.SetQuery(queryContext);
+				var preparedQuery = DataConnection.QueryRunner.SetQuery(_connection, queryContext);
 
 				Command.Append(preparedQuery.Commands[0]);
 			}
@@ -682,7 +682,7 @@ namespace LinqToDB.DataProvider
 			// we need InsertOrUpdate for sql builder to generate values clause
 			query.QueryType = QueryType.InsertOrUpdate;
 
-			qry.SetParameters(insertExpression, null, 0);
+			QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
 
 			SaveParameters(query.Parameters);
 
@@ -802,7 +802,7 @@ namespace LinqToDB.DataProvider
 				SetSourceColumnAliases(query.Update, tables.Item2.Source);
 			}
 
-			qry.SetParameters(updateExpression, null, 0);
+			QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
 			SaveParameters(query.Parameters);
 
 			SqlBuilder.BuildUpdateSetHelper(query, Command);
@@ -1069,7 +1069,7 @@ namespace LinqToDB.DataProvider
 
 			MoveJoinsToSubqueries(query, _targetAlias, null, QueryElement.UpdateSetter);
 
-			qry.SetParameters(updateExpression, null, 0);
+			QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
 			SaveParameters(query.Parameters);
 
 			SqlBuilder.BuildUpdateSetHelper(query, Command);
@@ -1542,11 +1542,12 @@ namespace LinqToDB.DataProvider
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				query.DoNotChache = true;
-				query.SetNonQueryQuery();
 
-				SetParameters = () => query.SetParameters(query.Expression, null, 0);
+				QueryRunner.SetNonQueryQuery(query);
 
-				query.GetElement = (ctx, db, expr, ps) => this;
+				SetParameters = () => QueryRunner.SetParameters(query, Builder.DataContext, query.Expression, null, 0);
+
+				query.GetElement = (db, expr, ps) => this;
 
 				UpdateParameters = () =>
 				{

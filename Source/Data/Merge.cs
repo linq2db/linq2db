@@ -3,7 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading;
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
 namespace LinqToDB.Data
 {
 	/// <summary>
@@ -719,6 +722,39 @@ namespace LinqToDB.Data
 			return dataConnection.DataProvider.Merge(dataConnection, definition);
 		}
 		#endregion
+
+#if !NOASYNC
+		#region MergeAsync
+		/// <summary>
+		/// Executes merge command and returns total number of target records, affected by merge operations.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <param name="merge">Merge command definition.</param>
+		/// <returns>Returns number of target table records, affected by merge comand.</returns>
+		public async static Task<int> MergeAsync<TTarget, TSource>(
+			this IMergeable<TTarget, TSource> merge,
+			CancellationToken token = default(CancellationToken))
+				where TTarget : class
+				where TSource : class
+		{
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			var definition = (MergeDefinition<TTarget, TSource>)merge;
+
+			DataConnection dataConnection;
+			if (definition.Target.DataContext is DataConnection)
+				dataConnection = (DataConnection)definition.Target.DataContext;
+			else if (definition.Target.DataContext is DataContext)
+				dataConnection = ((DataContext)definition.Target.DataContext).GetDataConnection();
+			else
+				throw new ArgumentException("DataContext must be of DataConnection or DataContext type.");
+
+			return await dataConnection.DataProvider.MergeAsync(dataConnection, definition, token);
+		}
+		#endregion
+#endif
 	}
 
 	/// <summary>
