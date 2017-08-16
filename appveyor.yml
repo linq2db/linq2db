@@ -59,6 +59,7 @@ build_script:
   - ps: |
       if ($env:buildConfiguration -eq "docfx" -and ($env:APPVEYOR_REPO_BRANCH -eq "release" -or $env:APPVEYOR_REPO_BRANCH -eq "docfx"))
       {
+        Write-Host Building docfx with config $env:buildConfiguration in $env:APPVEYOR_REPO_BRANCH
         choco install docfx
         cd ./doc
         docfx docfx.json
@@ -83,9 +84,14 @@ build_script:
         
         git push "https://ili:$($env:access_token)@github.com/linq2db/linq2db.github.io.git" master -q
       }
-      else 
+      elseif ($env:buildConfiguration -ne "docfx") 
       {
+        Write-Host Building solution $env:solutionName with config $env:buildConfiguration in $env:APPVEYOR_REPO_BRANCH
         & msbuild $env:solutionName /property:Configuration=Release
+      }
+      else
+      {
+        Write-Host Nothing to do with config $env:buildConfiguration in $env:APPVEYOR_REPO_BRANCH
       }
 
 
