@@ -35,7 +35,7 @@ init:
     {
         $env:nugetVersion = "$env:packageVersion-rc$env:appveyor_build_number"
     }
--ps: |    
+- ps: |    
     Push-Location -Path $env:appveyor_build_folder
     .\AvInitDatabases.ps1
 - ps: Update-AppveyorBuild -Version $env:buildVersion
