@@ -27,6 +27,8 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
 			SqlProviderFlags.IsDistinctOrderBySupported   = version != DB2Version.zOS;
 
+			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
+
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
@@ -281,6 +283,13 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 #endif
+
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection,
+			IMergeable<TTarget, TSource> merge)
+		{
+			return new DB2MergeBuilder<TTarget, TSource>(connection, merge);
+		}
 
 		#endregion
 	}

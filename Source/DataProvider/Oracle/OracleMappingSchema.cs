@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Expressions;
 	using Mapping;
 	using SqlQuery;
+	using System.Globalization;
 
 	public class OracleMappingSchema : MappingSchema
 	{
@@ -30,6 +31,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+
+			SetValueToSqlConverter(typeof(double), (sb, dt, v) => sb.Append(((double)v).ToString("G17", NumberFormatInfo.InvariantInfo)).Append("D"));
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
@@ -43,7 +46,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", "'", AppendConversion, value);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)

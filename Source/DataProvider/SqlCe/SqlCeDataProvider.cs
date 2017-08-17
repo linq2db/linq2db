@@ -31,6 +31,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 			SqlProviderFlags.IsCrossJoinSupported      = true;
 
+			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
+
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags);

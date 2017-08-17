@@ -60,7 +60,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird)]
+		[Test, DataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
 		public void ContainsConstant4(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -340,7 +340,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix,
+			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix,
 			ProviderName.SqlCe, ProviderName.Sybase, ProviderName.Access, TestProvName.SQLiteMs)]
 		public void IndexOf3(string context)
 		{

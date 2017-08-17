@@ -158,7 +158,7 @@ CREATE TABLE AllTypes
 	datetimeDataType datetime year to second NULL,
 	intervalDataType interval hour to second NULL,
 
-    byteDataType     byte                    NULL,
+	byteDataType     byte                    NULL,
 
 	PRIMARY KEY(ID)
 )
@@ -248,5 +248,64 @@ CREATE TABLE TestFKUnique (
 	ID4 INT NOT NULL,
 	FOREIGN KEY (ID1,ID2) REFERENCES TestUnique (ID1,ID2),
 	FOREIGN KEY (ID3,ID4) REFERENCES TestUnique (ID3,ID4)
+)
+GO
+
+
+DROP TABLE TestMerge1
+GO
+DROP TABLE TestMerge2
+GO
+
+CREATE TABLE TestMerge1
+(
+	Id       int          NOT NULL,
+	Field1   int              NULL,
+	Field2   int              NULL,
+	Field3   int              NULL,
+	Field4   int              NULL,
+	Field5   int              NULL,
+
+	FieldInt64      BIGINT                       NULL,
+	FieldBoolean    BOOLEAN                      NULL,
+	FieldString     VARCHAR(20)                  NULL,
+	FieldChar       CHAR(1)                      NULL,
+	FieldFloat      REAL                         NULL,
+	FieldDouble     FLOAT                        NULL,
+	FieldDateTime   DATETIME YEAR TO fraction(3) NULL,
+	FieldBinary     BYTE                         NULL,
+	FieldDecimal    DECIMAL(24, 10)              NULL,
+	FieldDate       DATE                         NULL,
+	FieldTime       INTERVAL HOUR TO fraction(5) NULL,
+	FieldEnumString VARCHAR(20)                  NULL,
+	FieldEnumNumber INT                          NULL,
+
+	PRIMARY KEY(Id)
+)
+GO
+CREATE TABLE TestMerge2
+(
+	Id       int          NOT NULL,
+	Field1   int              NULL,
+	Field2   int              NULL,
+	Field3   int              NULL,
+	Field4   int              NULL,
+	Field5   int              NULL,
+
+	FieldInt64      BIGINT                       NULL,
+	FieldBoolean    BOOLEAN                      NULL,
+	FieldString     VARCHAR(20)                  NULL,
+	FieldChar       CHAR(1)                      NULL,
+	FieldFloat      REAL                         NULL,
+	FieldDouble     FLOAT                        NULL,
+	FieldDateTime   DATETIME YEAR TO fraction(3) NULL,
+	FieldBinary     BYTE                         NULL,
+	FieldDecimal    DECIMAL(24, 10)              NULL,
+	FieldDate       DATE                         NULL,
+	FieldTime       INTERVAL HOUR TO fraction(5) NULL,
+	FieldEnumString VARCHAR(20)                  NULL,
+	FieldEnumNumber INT                          NULL,
+
+	PRIMARY KEY(Id)
 )
 GO

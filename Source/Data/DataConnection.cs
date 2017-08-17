@@ -358,6 +358,8 @@ namespace LinqToDB.Data
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
+							try
+							{
 						sb
 							.AppendLine()
 							.AppendLine("Exception: {0}".Args(ex.GetType()))
@@ -365,9 +367,21 @@ namespace LinqToDB.Data
 							.AppendLine(ex.StackTrace)
 							;
 					}
+							catch
+							{
+								// Sybase provider could generate exception that will throw another exception when you
+								// try to access Message property due to bug in AseErrorCollection.Message property.
+								// There it tries to fetch error from first element of list without checking wether
+								// list contains any elements or not
+								sb
+									.AppendLine()
+									.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
+									;
+							}
+						}
 
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-
+					
 					break;
 				}
 
@@ -397,8 +411,8 @@ namespace LinqToDB.Data
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
 
 					break;
-				}
 			}
+		}
 		}
 
 		private static TraceSwitch _traceSwitch;
@@ -909,6 +923,7 @@ namespace LinqToDB.Data
 		internal int ExecuteNonQuery()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+				using (DataProvider.ExecuteScope())
 				return Command.ExecuteNonQuery();
 
 			if (TraceSwitch.TraceInfo)
@@ -925,7 +940,9 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteNonQuery();
+				int ret;
+				using (DataProvider.ExecuteScope())
+					ret = Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1019,6 +1036,7 @@ namespace LinqToDB.Data
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+				using (DataProvider.ExecuteScope())
 				return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
 			if (TraceSwitch.TraceInfo)
@@ -1035,7 +1053,10 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteReader(GetCommandBehavior(commandBehavior));
+				IDataReader ret;
+
+				using (DataProvider.ExecuteScope())
+					ret = Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1208,7 +1229,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
-		public List<string>  NextQueryHints
+		public  List<string>  NextQueryHints
 		{
 			get { return _nextQueryHints ?? (_nextQueryHints = new List<string>()); }
 		}

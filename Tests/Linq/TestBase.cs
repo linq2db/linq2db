@@ -291,7 +291,8 @@ namespace Tests
 			TestProvName.SqlAzure,
 			TestProvName.MariaDB,
 			TestProvName.MySql57,
-			TestProvName.SQLiteMs
+			TestProvName.SQLiteMs,
+			TestProvName.Firebird3
 		};
 
 		[AttributeUsage(AttributeTargets.Method)]
