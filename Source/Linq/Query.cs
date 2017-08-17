@@ -148,8 +148,8 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public bool     DoNotChache;
-		public Query<T> Next;
+		public          bool            DoNotChache;
+		public          Query<T>        Next;
 
 		public Func<IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
@@ -182,9 +182,9 @@ namespace LinqToDB.Linq
 							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
 #if !SILVERLIGHT && !NETFX_CORE
 							if (DataConnection.TraceSwitch.TraceInfo)
-								DataConnection.WriteTraceLine(
-									"Expression test code generated: '" + testFile + "'.", 
-									DataConnection.TraceSwitch.DisplayName);
+							DataConnection.WriteTraceLine(
+								"Expression test code generated: '" + testFile + "'.", 
+								DataConnection.TraceSwitch.DisplayName);
 #endif
 						}
 
@@ -255,38 +255,38 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
-	}
+		}
 
 	class QueryInfo : IQueryContext
-	{
-		public QueryInfo()
 		{
-			SelectQuery = new SelectQuery();
+			public QueryInfo()
+			{
+				SelectQuery = new SelectQuery();
+			}
+
+			public SelectQuery  SelectQuery { get; set; }
+			public object       Context     { get; set; }
+			public List<string> QueryHints  { get; set; }
+
+			public SqlParameter[] GetParameters()
+			{
+				var ps = new SqlParameter[Parameters.Count];
+
+				for (var i = 0; i < ps.Length; i++)
+					ps[i] = Parameters[i].SqlParameter;
+
+				return ps;
+			}
+
+			public List<ParameterAccessor> Parameters = new List<ParameterAccessor>();
 		}
-
-		public SelectQuery  SelectQuery { get; set; }
-		public object       Context     { get; set; }
-		public List<string> QueryHints  { get; set; }
-
-		public SqlParameter[] GetParameters()
-		{
-			var ps = new SqlParameter[Parameters.Count];
-
-			for (var i = 0; i < ps.Length; i++)
-				ps[i] = Parameters[i].SqlParameter;
-
-			return ps;
-		}
-
-		public List<ParameterAccessor> Parameters = new List<ParameterAccessor>();
-	}
 
 	class ParameterAccessor
 	{
 		public ParameterAccessor(
-			Expression                         expression,
-			Func<Expression,object[],object>   accessor,
-			Func<Expression,object[],DataType> dataTypeAccessor,
+			Expression                           expression,
+			Func<Expression, object[], object>   accessor,
+			Func<Expression, object[], DataType> dataTypeAccessor,
 			SqlParameter                       sqlParameter)
 		{
 			Expression       = expression;

@@ -242,7 +242,7 @@ namespace LinqToDB
 		static readonly MethodInfo _deleteMethodInfo2 = MemberHelper.MethodOf(() => Delete<int>(null, null)).GetGenericMethodDefinition();
 
 		public static int Delete<T>(
-			[NotNull]           this IQueryable<T>            source,
+			[NotNull]                this IQueryable<T>       source,
 			[NotNull, InstantHandle] Expression<Func<T,bool>> predicate)
 		{
 			if (source    == null) throw new ArgumentNullException("source");
@@ -284,7 +284,7 @@ namespace LinqToDB
 
 		#region Update
 
-		static readonly MethodInfo _updateMethodInfo = MemberHelper.MethodOf(() => Update<int,int>(null, (ITable<int>)null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo _updateMethodInfo = MemberHelper.MethodOf(() => Update<int,int>(null, (ITable<int>)null, null)).GetGenericMethodDefinition();
 
 		public static int Update<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -329,7 +329,7 @@ namespace LinqToDB
 
 #endif
 
-		static readonly MethodInfo _updateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo _updateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
 
 		public static int Update<T>([NotNull] this IQueryable<T> source, [NotNull, InstantHandle] Expression<Func<T,T>> setter)
 		{
@@ -613,7 +613,7 @@ namespace LinqToDB
 
 		[LinqTunnel]
 		public static IUpdatable<T> Set<T,TV>(
-			[NotNull]           this IQueryable<T>          source,
+			[NotNull]                this IQueryable<T>     source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
 			TV                                              value)
 		{
@@ -633,7 +633,7 @@ namespace LinqToDB
 
 		[LinqTunnel]
 		public static IUpdatable<T> Set<T,TV>(
-			[NotNull]           this IUpdatable<T>          source,
+			[NotNull]                this IUpdatable<T>    source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
 			TV                                              value)
 		{
@@ -1023,11 +1023,11 @@ namespace LinqToDB
 
 #endif
 
-#endregion
+		#endregion
 
 		#region SelectInsertable
 
-		static readonly MethodInfo _insertMethodInfo3 =
+		internal static readonly MethodInfo _insertMethodInfo3 =
 			MemberHelper.MethodOf(() => Insert<int,int>(null,null,null)).GetGenericMethodDefinition();
 
 		public static int Insert<TSource,TTarget>(
@@ -1558,8 +1558,8 @@ namespace LinqToDB
 			IQueryable<T> source = target;
 
 			var expr = Expression.Call(
-				null,
-				_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+					null,
+					_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { source.Expression, Expression.Constant(throwExceptionIfNotExists)  });
 
 			var query = source as IQueryProviderAsync;
@@ -1832,7 +1832,7 @@ namespace LinqToDB
 
 		#region GetContext
 
-		static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
 
 		internal static ContextParser.Context GetContext<TSource>(this IQueryable<TSource> source)
 		{

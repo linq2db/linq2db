@@ -322,13 +322,14 @@ namespace Tests.xUpdate
 			ProviderName.SqlCe,
 			ProviderName.DB2,
 			ProviderName.Firebird,
+			TestProvName.Firebird3,
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, 
+			ProviderName.PostgreSQL,
 			ProviderName.MySql,
-			TestProvName.MariaDB, 
+			TestProvName.MariaDB,
 			TestProvName.MySql57,
-			ProviderName.SQLite, 
+			ProviderName.SQLite,
 			TestProvName.SQLiteMs,
 			ProviderName.Access,
 			ProviderName.SapHana)]
@@ -365,6 +366,7 @@ namespace Tests.xUpdate
 			ProviderName.SqlCe,
 			ProviderName.DB2,
 			ProviderName.Firebird,
+			TestProvName.Firebird3,
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
@@ -420,7 +422,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
 		public void Update12(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -458,7 +460,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
 		public void Update13(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -874,6 +876,7 @@ namespace Tests.xUpdate
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Firebird,
+			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
 			ProviderName.SQLite, 
@@ -914,6 +917,7 @@ namespace Tests.xUpdate
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Firebird,
+			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
 			ProviderName.SQLite, 
@@ -962,6 +966,7 @@ namespace Tests.xUpdate
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Firebird,
+			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
 			ProviderName.SQLite, 
@@ -1014,6 +1019,7 @@ namespace Tests.xUpdate
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Firebird,
+			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
 			ProviderName.SQLite, 
@@ -1079,7 +1085,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase)]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase, TestProvName.Firebird3)]
 		public void UpdateIssue319Regression(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1117,7 +1123,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Sybase)]
 		public void UpdateIssue321Regression(string context)
 		{
 			using (var db = GetDataContext(context))

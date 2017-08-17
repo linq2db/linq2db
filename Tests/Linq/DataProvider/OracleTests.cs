@@ -1664,9 +1664,9 @@ namespace Tests.DataProvider
 		{
 			using (var db = new DataConnection(context))
 			{
-				db.CreateTable<ClobEntity>();
 				try
 				{
+					db.CreateTable<ClobEntity>();
 					var obj = new ClobEntity(1);
 					db.Insert(obj);
 
@@ -1690,9 +1690,9 @@ namespace Tests.DataProvider
 			{
 				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
 
-				db.CreateTable<ClobEntity>();
 				try
 				{
+					db.CreateTable<ClobEntity>();
 					db.BulkCopy(data);
 
 					var selected = db.GetTable<ClobEntity>().ToList();

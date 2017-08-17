@@ -82,11 +82,11 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.Double:
 					StringBuilder.Append("Double");
 					break;
-				case DataType.Money         : 
-					StringBuilder.Append("Decimal(19,4)");   
+				case DataType.Money         :
+					StringBuilder.Append("Decimal(19,4)");
 					break;
 				case DataType.SmallMoney    : 
-					StringBuilder.Append("Decimal(10,4)");   
+					StringBuilder.Append("Decimal(10,4)");
 					break;
 				case DataType.DateTime2     :
 				case DataType.DateTime      :

@@ -6,9 +6,9 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
 {
-    using System.Linq;
+	using System.Linq;
 
-    using Expressions;
+	using Expressions;
 
 	public class PropertyMappingBuilder<T>
 	{
