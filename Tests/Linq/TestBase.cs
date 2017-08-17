@@ -296,7 +296,8 @@ namespace Tests
 			TestProvName.SqlAzure,
 			TestProvName.MariaDB,
 			TestProvName.MySql57,
-			TestProvName.SQLiteMs
+			TestProvName.SQLiteMs,
+			TestProvName.Firebird3
 		};
 
 		[AttributeUsage(AttributeTargets.Method)]
@@ -314,11 +315,21 @@ namespace Tests
 			readonly bool     _includeLinqService;
 			readonly string[] _providerNames;
 
-			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService)
+			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService, int caseNumber, string baseName)
 			{
-				var name = method.Name + "." + provider;
+				var name = (baseName ?? method.Name) + "." + provider;
+
 				if (isLinqService)
 					name += ".LinqService";
+
+				// numerate cases starting from second case to preserve naming for most of tests
+				if (caseNumber > 0)
+				{
+					if (baseName == null)
+						name += "." + caseNumber;
+
+					test.FullName += "." + caseNumber;
+				}
 
 				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
 			}
@@ -335,9 +346,9 @@ namespace Tests
 				return Order;
 			}
 
-			protected virtual IEnumerable<object[]> GetParameters(string provider)
+			protected virtual IEnumerable<Tuple<object[], string>> GetParameters(string provider)
 			{
-				yield return new object[] {provider};
+				yield return Tuple.Create(new object[] {provider}, (string)null);
 			}
 
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
@@ -356,9 +367,10 @@ namespace Tests
 				{
 					var isIgnore = !UserProviders.ContainsKey(provider);
 
+					var caseNumber = 0;
 					foreach (var parameters in GetParameters(provider))
 					{
-						var data = new TestCaseParameters(parameters);
+						var data = new TestCaseParameters(parameters.Item1);
 
 						test = builder.BuildTestMethod(method, suite, data);
 
@@ -369,7 +381,7 @@ namespace Tests
 						//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
 						test.Properties.Set(PropertyNames.Category,      provider);
 
-						SetName(test, method, provider, false);
+						SetName(test, method, provider, false, caseNumber++, parameters.Item2);
 
 						if (isIgnore)
 						{
@@ -388,10 +400,11 @@ namespace Tests
 #if !NETSTANDARD && !MONO
 					if (!isIgnore && _includeLinqService)
 					{
-						foreach (var paremeters in GetParameters(provider + ".LinqService"))
+						var linqCaseNumber = 0;
+						foreach (var parameters in GetParameters(provider + ".LinqService"))
 						{
 
-							var data = new TestCaseParameters(paremeters);
+							var data = new TestCaseParameters(parameters.Item1);
 							test = builder.BuildTestMethod(method, suite, data);
 
 							foreach (var attr in explic)
@@ -401,7 +414,7 @@ namespace Tests
 							test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
 							test.Properties.Set(PropertyNames.Category,      provider);
 
-							SetName(test, method, provider, true);
+							SetName(test, method, provider, true, linqCaseNumber++, parameters.Item2);
 
 							yield return test;
 						}
@@ -1094,7 +1107,7 @@ namespace Tests
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);
-			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Lenght: ");
+			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
 			var exceptExpectedList = resultList.  Except(expectedList).ToList();
 			var exceptResultList   = expectedList.Except(resultList).  ToList();
@@ -1121,7 +1134,7 @@ namespace Tests
 			var expectedList = expected.ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);
-			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Lenght: ");
+			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
 			for (var i = 0; i < resultList.Count; i++)
 			{

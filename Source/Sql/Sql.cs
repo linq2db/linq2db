@@ -370,6 +370,7 @@ namespace LinqToDB
 		[Sql.Function(PN.DB2,     "Locate")]
 		[Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate", 1, 0)]
+		[Sql.Function(PN.Firebird, "Position")]
 		public static int? CharIndex(string value, string str)
 		{
 			if (str == null || value == null)
@@ -381,6 +382,7 @@ namespace LinqToDB
 		[Sql.Function]
 		[Sql.Function  (ProviderName.DB2,   "Locate")]
 		[Sql.Function  (ProviderName.MySql, "Locate")]
+		[Sql.Function  (PN.Firebird,        "Position")]
 		[Sql.Expression(PN.SapHana,         "Locate(Substring({1},{2} + 1),{0}) + {2}")]
 		public static int? CharIndex(string value, string str, int? startLocation)
 		{

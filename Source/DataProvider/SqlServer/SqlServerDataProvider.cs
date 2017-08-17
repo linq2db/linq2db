@@ -253,7 +253,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		#endregion
+#endregion
 
 		#region Udt support
 
@@ -324,6 +324,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 #endif
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection, 
+			IMergeable<TTarget, TSource> merge)
+		{
+			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);
+		}
 
 		#endregion
 

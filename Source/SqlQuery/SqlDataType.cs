@@ -237,7 +237,7 @@ namespace LinqToDB.SqlQuery
 			switch (underlyingType.GetTypeCodeEx())
 			{
 				case TypeCode.Boolean  : return Boolean;
-				case TypeCode.Char     : return Char;
+				case TypeCode.Char     : return DbNChar;
 				case TypeCode.SByte    : return SByte;
 				case TypeCode.Byte     : return Byte;
 				case TypeCode.Int16    : return Int16;

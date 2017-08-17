@@ -25,7 +25,7 @@ namespace LinqToDB.Mapping
 	{
 		/// <summary>
 		/// Adds <see cref="MapValueAttribute"/> mapping to enum field. If you don't specify <see cref="Value"/> property,
-		/// <code>null</code> value will be used.
+		/// <c>null</c> value will be used.
 		/// </summary>
 		public MapValueAttribute()
 		{
@@ -55,7 +55,7 @@ namespace LinqToDB.Mapping
 		/// Adds <see cref="MapValueAttribute"/> to enum field.
 		/// </summary>
 		/// <param name="value">Database value, mapped to current enumeration field.</param>
-		/// <param name="isDefault">If <code>true</code>, database value from this attribute will be used for mapping
+		/// <param name="isDefault">If <c>true</c>, database value from this attribute will be used for mapping
 		/// to database value.</param>
 		public MapValueAttribute(object value, bool isDefault)
 		{
@@ -68,7 +68,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="configuration">Name of configuration, for which this attribute instance will be used.</param>
 		/// <param name="value">Database value, mapped to current enumeration field.</param>
-		/// <param name="isDefault">If <code>true</code>, database value from this attribute will be used for mapping
+		/// <param name="isDefault">If <c>true</c>, database value from this attribute will be used for mapping
 		/// to database value.</param>
 		public MapValueAttribute(string configuration, object value, bool isDefault)
 		{
@@ -78,8 +78,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Name of configuration, for which this attribute instance will be used. <code>null</code> or empty string
-		/// values correspond to default configuration.
+		/// Mapping schema configuration name, for which this attribute should be taken into account.
+		/// <see cref="ProviderName"/> for standard names.
+		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
 		public string Configuration { get; set; }
 
@@ -90,7 +91,7 @@ namespace LinqToDB.Mapping
 		public object Value         { get; set; }
 
 		/// <summary>
-		/// If <code>true</code>, <see cref="Value"/> property value will be used for conversion from enumeration to
+		/// If <c>true</c>, <see cref="Value"/> property value will be used for conversion from enumeration to
 		/// database value.
 		/// </summary>
 		public bool   IsDefault     { get; set; }

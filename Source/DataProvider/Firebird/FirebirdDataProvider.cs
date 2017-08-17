@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.Firebird
 			base.SetParameterType(parameter, dataType);
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -121,9 +121,9 @@ namespace LinqToDB.DataProvider.Firebird
 				source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -147,6 +147,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 #endif
 
-		#endregion
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection,
+			IMergeable<TTarget, TSource> merge)
+		{
+			return new FirebirdMergeBuilder<TTarget, TSource>(connection, merge);
+		}
+
+#endregion
 	}
 }

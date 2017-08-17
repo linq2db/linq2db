@@ -150,7 +150,8 @@
     <Compile Include="NortwindExtensions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QueryTests.cs" />
+    <Compile Include="Benchmarks\QueryCacheCollectionsBenchmark.cs" />
+    <Compile Include="Benchmarks\QueryTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

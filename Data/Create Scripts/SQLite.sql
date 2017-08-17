@@ -210,3 +210,54 @@ CREATE TABLE FKTestPosition
 )
 GO
 
+-- merge test tables
+DROP TABLE IF EXISTS TestMerge1;
+DROP TABLE IF EXISTS TestMerge2;
+CREATE TABLE TestMerge1
+(
+	Id              INTEGER       NOT NULL CONSTRAINT PK_TestMerge1,
+	Field1          INTEGER           NULL,
+	Field2          INTEGER           NULL,
+	Field3          INTEGER           NULL,
+	Field4          INTEGER           NULL,
+	Field5          INTEGER           NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDate       DATE              NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+);
+CREATE TABLE TestMerge2
+(
+	Id              INTEGER       NOT NULL CONSTRAINT PK_TestMerge2,
+	Field1          INTEGER           NULL,
+	Field2          INTEGER           NULL,
+	Field3          INTEGER           NULL,
+	Field4          INTEGER           NULL,
+	Field5          INTEGER           NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDate       DATE              NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+);

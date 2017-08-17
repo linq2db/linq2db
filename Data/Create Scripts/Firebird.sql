@@ -370,8 +370,6 @@ VALUES
 COMMIT;
 
 
-
-
 CREATE VIEW PersonView
 AS
 	SELECT * FROM Person
@@ -710,4 +708,64 @@ CREATE TABLE "CamelCaseName"
 	"_NAME4" VARCHAR(20),
 	"NAME 5" VARCHAR(20)
 )
+COMMIT;
+
+
+DROP TABLE TestMerge1;                            COMMIT;
+DROP TABLE TestMerge2;                            COMMIT;
+
+CREATE TABLE TestMerge1
+(
+	Id     INTEGER     NOT NULL PRIMARY KEY,
+	Field1 INTEGER,
+	Field2 INTEGER,
+	Field3 INTEGER,
+	Field4 INTEGER,
+	Field5 INTEGER,
+
+	FieldInt64      BIGINT,
+	FieldBoolean    CHAR(1),
+	FieldString     VARCHAR(20),
+	FieldNString    VARCHAR(20) CHARACTER SET UNICODE_FSS,
+	FieldChar       CHAR(1),
+	FieldNChar      CHAR(1) CHARACTER SET UNICODE_FSS,
+	FieldFloat      FLOAT,
+	FieldDouble     DOUBLE PRECISION,
+	FieldDateTime   TIMESTAMP,
+	FieldBinary     BLOB(20),
+	FieldGuid       CHAR(38),
+	FieldDecimal    DECIMAL(18, 10),
+	FieldDate       DATE,
+	FieldTime       TIMESTAMP,
+	FieldEnumString VARCHAR(20),
+	FieldEnumNumber INT
+);
+COMMIT;
+
+CREATE TABLE TestMerge2
+(
+	Id     INTEGER     NOT NULL PRIMARY KEY,
+	Field1 INTEGER,
+	Field2 INTEGER,
+	Field3 INTEGER,
+	Field4 INTEGER,
+	Field5 INTEGER,
+
+	FieldInt64      BIGINT,
+	FieldBoolean    CHAR(1),
+	FieldString     VARCHAR(20),
+	FieldNString    VARCHAR(20) CHARACTER SET UNICODE_FSS,
+	FieldChar       CHAR(1),
+	FieldNChar      CHAR(1) CHARACTER SET UNICODE_FSS,
+	FieldFloat      FLOAT,
+	FieldDouble     DOUBLE PRECISION,
+	FieldDateTime   TIMESTAMP,
+	FieldBinary     BLOB(20),
+	FieldGuid       CHAR(38),
+	FieldDecimal    DECIMAL(18, 10),
+	FieldDate       DATE,
+	FieldTime       TIMESTAMP,
+	FieldEnumString VARCHAR(20),
+	FieldEnumNumber INT
+);
 COMMIT;

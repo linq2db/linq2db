@@ -64,6 +64,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");      break;
+				case DataType.DateTimeOffset: StringBuilder.Append("TimeStampTZ");    break;
 				case DataType.Boolean       : StringBuilder.Append("Boolean");        break;
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
@@ -76,6 +77,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					break;
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
+				case DataType.Guid           : StringBuilder.Append("uuid");           break;
 				default                      : base.BuildDataType(type, createDbType); break;
 			}
 		}

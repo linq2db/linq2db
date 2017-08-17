@@ -87,7 +87,10 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// If enabled, linq2db will try to reduce number of generated SQL JOINs for LINQ query.
-			/// TODO: add more details on what kind of optimizations performed.
+			/// Attempted optimizations:
+			/// - removes duplicate joins by unique target table key;
+			/// - removes self-joins by unique key;
+			/// - removes left joins if joined table is not used in query.
 			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool OptimizeJoins = true;
@@ -131,11 +134,28 @@ namespace LinqToDB.Common
 			/// </summary>
 			/// <remarks>
 			/// Switched off in 1.8.2 due to instability (<seealso cref="https://github.com/linq2db/linq2db/issues/708"/>).
-			/// See:
+			/// See: 
 			/// https://github.com/linq2db/linq2db/issues/447
 			/// https://github.com/linq2db/linq2db/pull/563
 			/// </remarks>
 			public static bool UseBinaryAggregateExpression;
+
+			/// <summary>
+			/// Used to disable LINQ expressions caching for queries.
+			/// This cache reduces time, required for query parsing but have several side-effects:
+			/// <para />
+			/// - cached LINQ expressions could contain references to external objects as parameters, which could lead to memory leaks if those objects are not used anymore by other code
+			/// <para />
+			/// - cache access synchronization could lead to bigger latencies than it saves.
+			/// <para />
+			/// Default value: <c>false</c>.
+			/// <para />
+			/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
+			/// to call <see cref="LinqToDB.Linq.Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
+			/// <para />
+			/// See <see cref="https://github.com/linq2db/linq2db/issues/256"/> for more details.
+			/// </summary>
+			public static bool DisableQueryCache;
 		}
 
 		/// <summary>

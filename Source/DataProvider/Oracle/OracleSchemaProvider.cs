@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Data;
-using LinqToDB.Configuration;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
+	using Configuration;
 	using Data;
 	using SchemaProvider;
 

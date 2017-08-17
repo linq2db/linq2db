@@ -40,7 +40,6 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public override void Open()
 		{
-			_connection.ConnectionString = ConnectionString;
 			_policy.Execute(_connection.Open);
 		}
 
