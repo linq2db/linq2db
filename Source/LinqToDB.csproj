@@ -77,6 +77,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AsyncExtensions.tt</DependentUpon>
     </Compile>
+    <Compile Include="AsyncLocal.cs" />
     <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Configuration\IConnectionStringSettings.cs" />
     <Compile Include="Configuration\IDataProviderSettings.cs" />
@@ -84,8 +85,20 @@
     <Compile Include="Configuration\IProxy.cs" />
     <Compile Include="Configuration\NamedValue.cs" />
     <Compile Include="DataContext.QueryRunner.cs" />
+    <Compile Include="DataProvider\BasicMergeBuilder.cs" />
+    <Compile Include="DataProvider\DB2\DB2MergeBuilder.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdMergeBuilder.cs" />
+    <Compile Include="DataProvider\Informix\InformixCultureFixRegion.cs" />
+    <Compile Include="DataProvider\Informix\InformixMergeBuilder.cs" />
+    <Compile Include="DataProvider\Oracle\OracleMergeBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaMergeBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
+    <Compile Include="DataProvider\UnsupportedMergeBuilder.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerMergeBuilder.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseMergeBuilder.cs" />
+    <Compile Include="Data\Merge.cs" />
+    <Compile Include="Data\MergeDefinition.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerRetryPolicy.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerTransientErrorDetector.cs" />
     <Compile Include="Data\DataConnection.QueryRunner.cs" />
@@ -218,6 +231,7 @@
     <Compile Include="Linq\QueryRunner.cs" />
     <Compile Include="Linq\QueryRunnerBase.cs" />
     <Compile Include="Linq\MethodHelper.cs" />
+    <Compile Include="Linq\NoLinqCache.cs" />
     <Compile Include="Mapping\Relationship.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Expressions\IGenericInfoProvider.cs" />

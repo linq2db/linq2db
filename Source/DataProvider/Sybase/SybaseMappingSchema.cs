@@ -15,10 +15,29 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected SybaseMappingSchema(string configuration) : base(configuration)
 		{
-			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(String)  , (sb, dt, v) => ConvertStringToSql(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(Char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb, dt, v) => ConvertTimeSpanToSql(sb, dt, (TimeSpan)v));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+		}
+
+		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
+		{
+			if (sqlDataType.DataType == DataType.Int64)
+			{
+				stringBuilder.Append(value.Ticks);
+			}
+			else
+			{
+				var format = "hh\\:mm\\:ss\\.fff";
+
+				stringBuilder
+					.Append('\'')
+					.Append(value.ToString(format))
+					.Append('\'')
+					;
+			}
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
@@ -32,12 +51,12 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			var start = "'";
+			string startPrefix = null;
 
 			if (value.Any(ch => ch > 127))
-				start = "N'";
+				startPrefix = "N";
 
-			DataTools.ConvertStringToSql(stringBuilder, "+", start, AppendConversion, value);
+			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversion, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)

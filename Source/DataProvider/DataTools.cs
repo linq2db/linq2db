@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider
@@ -8,9 +9,16 @@ namespace LinqToDB.DataProvider
 	{
 		static readonly char[] _escapes = { '\x0', '\'' };
 
-		public static void ConvertStringToSql(StringBuilder stringBuilder, string plusOperator, string startString, Action<StringBuilder,int> appendConversion, string value)
+		public static void ConvertStringToSql(
+			StringBuilder stringBuilder,
+			string plusOperator,
+			string startPrefix,
+			Action<StringBuilder,int> appendConversion,
+			string value,
+			char[] extraEscapes)
 		{
-			if (value.Length > 0 && value.IndexOfAny(_escapes) >= 0)
+			if (value.Length > 0
+				&& (value.IndexOfAny(_escapes) >= 0 || (extraEscapes != null && value.IndexOfAny(extraEscapes) >= 0)))
 			{
 				var isInString = false;
 
@@ -24,13 +32,16 @@ namespace LinqToDB.DataProvider
 							if (isInString)
 							{
 								isInString = false;
-
 								stringBuilder
-									.Append("' ")
+									.Append("'");
+							}
+
+							if (i != 0)
+								stringBuilder
+									.Append(" ")
 									.Append(plusOperator)
 									.Append(' ')
 									;
-							}
 
 							appendConversion(stringBuilder, c);
 
@@ -48,7 +59,7 @@ namespace LinqToDB.DataProvider
 										.Append(' ')
 										;
 
-								stringBuilder.Append(startString);
+								stringBuilder.Append(startPrefix).Append("'");
 							}
 
 							stringBuilder.Append("''");
@@ -56,6 +67,26 @@ namespace LinqToDB.DataProvider
 							break;
 
 						default   :
+							if (extraEscapes != null && extraEscapes.Any(e => e == c))
+							{
+								if (isInString)
+								{
+									isInString = false;
+									stringBuilder
+										.Append("'");
+								}
+
+								if (i != 0)
+									stringBuilder
+										.Append(" ")
+										.Append(plusOperator)
+										.Append(' ')
+										;
+
+								appendConversion(stringBuilder, c);
+								break;
+							}
+
 							if (!isInString)
 							{
 								isInString = true;
@@ -67,7 +98,7 @@ namespace LinqToDB.DataProvider
 										.Append(' ')
 										;
 
-								stringBuilder.Append(startString);
+								stringBuilder.Append(startPrefix).Append("'");
 							}
 
 							stringBuilder.Append(c);
@@ -82,7 +113,8 @@ namespace LinqToDB.DataProvider
 			else
 			{
 				stringBuilder
-					.Append(startString)
+					.Append(startPrefix)
+					.Append("'")
 					.Append(value)
 					.Append('\'')
 					;

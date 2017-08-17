@@ -218,7 +218,7 @@ namespace LinqToDB.DataProvider.Oracle
 				//    return (T) OracleDecimal.SetPrecision(rd.GetOracleDecimal(idx), 27);
 				// }
 
-				Func<Type,LambdaExpression> getDecimal = t =>
+				Func<Type, LambdaExpression> getDecimal = t =>
 					Expression.Lambda(
 						Expression.ConvertChecked(
 							Expression.Call(setPrecisionMethod,
@@ -490,9 +490,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is DateTimeOffset)
 					{
 						var dto  = (DateTimeOffset)value;
-						var zone = dto.Offset.ToString("hh\\:mm");
-						if (!zone.StartsWith("-") && !zone.StartsWith("+"))
-							zone = "+" + zone;
+						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm");
 						value = _createOracleTimeStampTZ(dto, zone);
 					}
 					break;
@@ -580,7 +578,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		OracleBulkCopy _bulkCopy;
 
@@ -638,9 +636,9 @@ namespace LinqToDB.DataProvider.Oracle
 				sourceList ?? source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -664,6 +662,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 #endif
 
-		#endregion
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection, 
+			IMergeable<TTarget, TSource> merge)
+		{
+			return new OracleMergeBuilder<TTarget, TSource>(connection, merge);
+		}
+
+#endregion
 	}
 }

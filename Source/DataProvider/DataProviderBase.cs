@@ -128,6 +128,18 @@ namespace LinqToDB.DataProvider
 			return commandBehavior;
 		}
 
+		public virtual IDisposable ExecuteScope()
+		{
+			return Disposable.Instance;
+		}
+
+		private class Disposable : IDisposable
+		{
+			public static IDisposable Instance = new Disposable();
+
+			void IDisposable.Dispose() { }
+		}
+
 		#endregion
 
 		#region Helpers
@@ -448,10 +460,12 @@ namespace LinqToDB.DataProvider
 #endregion
 
 		#region BulkCopy
+
 		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
 		}
+
 		#endregion
 
 		#region Merge
@@ -473,6 +487,61 @@ namespace LinqToDB.DataProvider
 		}
 
 #endif
+
+		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
+			where TTarget : class
+			where TSource : class
+		{
+			if (dataConnection == null)
+				throw new ArgumentNullException("dataConnection");
+
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			var builder = GetMergeBuilder(dataConnection, merge);
+
+			builder.Validate();
+
+			var cmd = builder.BuildCommand();
+
+			if (builder.NoopCommand)
+				return 0;
+
+			return dataConnection.Execute(cmd, builder.Parameters);
+		}
+
+#if !NOASYNC
+		public Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
+			where TTarget : class
+			where TSource : class
+		{
+			if (dataConnection == null)
+				throw new ArgumentNullException("dataConnection");
+
+			if (merge == null)
+				throw new ArgumentNullException("merge");
+
+			var builder = GetMergeBuilder(dataConnection, merge);
+
+			builder.Validate();
+
+			var cmd = builder.BuildCommand();
+
+			if (builder.NoopCommand)
+				return Task.FromResult(0);
+
+			return dataConnection.ExecuteAsync(cmd, token, builder.Parameters);
+		}
+#endif
+
+		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection,
+			IMergeable<TTarget, TSource> merge)
+			where TTarget : class
+			where TSource : class
+		{
+			return new UnsupportedMergeBuilder<TTarget, TSource>(connection, merge);
+		}
 
 		#endregion
 

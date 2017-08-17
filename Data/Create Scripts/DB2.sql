@@ -254,3 +254,63 @@ BEGIN
 	OPEN C1;
 END
 GO
+
+DROP TABLE "TestMerge1"
+GO
+DROP TABLE "TestMerge2"
+GO
+
+CREATE TABLE "TestMerge1"
+(
+	"Id"       INTEGER            PRIMARY KEY NOT NULL,
+	"Field1"   INTEGER                            NULL,
+	"Field2"   INTEGER                            NULL,
+	"Field3"   INTEGER                            NULL,
+	"Field4"   INTEGER                            NULL,
+	"Field5"   INTEGER                            NULL,
+
+	"FieldInt64"      BIGINT                      NULL,
+	"FieldBoolean"    BOOLEAN                     NULL,
+	"FieldString"     VARCHAR(20)                 NULL,
+	"FieldNString"    NVARCHAR(20)                NULL,
+	"FieldChar"       CHAR(1)                     NULL,
+	"FieldNChar"      NCHAR(1)                    NULL,
+	"FieldFloat"      REAL                        NULL,
+	"FieldDouble"     DOUBLE                      NULL,
+	"FieldDateTime"   TIMESTAMP(3)                NULL,
+	"FieldBinary"     VARBINARY(20)               NULL,
+	"FieldGuid"       CHAR(16) FOR BIT DATA,
+	"FieldDecimal"    DECIMAL(24, 10)             NULL,
+	"FieldDate"       DATE                        NULL,
+	"FieldTime"       TIME                        NULL,
+	"FieldEnumString" VARCHAR(20)                 NULL,
+	"FieldEnumNumber" INT                         NULL
+)
+GO
+CREATE TABLE "TestMerge2"
+(
+	"Id"       INTEGER            PRIMARY KEY NOT NULL,
+	"Field1"   INTEGER                            NULL,
+	"Field2"   INTEGER                            NULL,
+	"Field3"   INTEGER                            NULL,
+	"Field4"   INTEGER                            NULL,
+	"Field5"   INTEGER                            NULL,
+
+	"FieldInt64"      BIGINT                      NULL,
+	"FieldBoolean"    BOOLEAN                     NULL,
+	"FieldString"     VARCHAR(20)                 NULL,
+	"FieldNString"    NVARCHAR(20)                NULL,
+	"FieldChar"       CHAR(1)                     NULL,
+	"FieldNChar"      NCHAR(1)                    NULL,
+	"FieldFloat"      REAL                        NULL,
+	"FieldDouble"     DOUBLE                      NULL,
+	"FieldDateTime"   TIMESTAMP(3)                NULL,
+	"FieldBinary"     VARBINARY(20)               NULL,
+	"FieldGuid"       CHAR(16) FOR BIT DATA,
+	"FieldDecimal"    DECIMAL(24, 10)             NULL,
+	"FieldDate"       DATE                        NULL,
+	"FieldTime"       TIME                        NULL,
+	"FieldEnumString" VARCHAR(20)                 NULL,
+	"FieldEnumNumber" INT                         NULL
+)
+GO
