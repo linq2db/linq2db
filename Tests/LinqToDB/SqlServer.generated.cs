@@ -29,35 +29,35 @@ namespace DataModel
 	/// </summary>
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
-		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
-		public ITable<CategorySalesFor1997>       CategorySalesFor1997         { get { return this.GetTable<CategorySalesFor1997>(); } }
-		public ITable<CurrentProductList>         CurrentProductLists          { get { return this.GetTable<CurrentProductList>(); } }
-		public ITable<Customer>                   Customers                    { get { return this.GetTable<Customer>(); } }
-		public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
-		public ITable<CustomerCustomerDemo>       CustomerCustomerDemoes       { get { return this.GetTable<CustomerCustomerDemo>(); } }
-		public ITable<CustomerDemographic>        CustomerDemographics         { get { return this.GetTable<CustomerDemographic>(); } }
-		public ITable<Employee>                   Employees                    { get { return this.GetTable<Employee>(); } }
-		public ITable<EmployeeTerritory>          EmployeeTerritories          { get { return this.GetTable<EmployeeTerritory>(); } }
-		public ITable<Invoice>                    Invoices                     { get { return this.GetTable<Invoice>(); } }
-		public ITable<Order>                      Orders                       { get { return this.GetTable<Order>(); } }
-		public ITable<OrderDetail>                OrderDetails                 { get { return this.GetTable<OrderDetail>(); } }
-		public ITable<OrderDetailsExtended>       OrderDetailsExtendeds        { get { return this.GetTable<OrderDetailsExtended>(); } }
-		public ITable<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
-		public ITable<OrderSubtotal>              OrderSubtotals               { get { return this.GetTable<OrderSubtotal>(); } }
-		public ITable<Product>                    Products                     { get { return this.GetTable<Product>(); } }
-		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
-		public ITable<ProductSalesFor1997>        ProductSalesFor1997          { get { return this.GetTable<ProductSalesFor1997>(); } }
-		public ITable<ProductsByCategory>         ProductsByCategories         { get { return this.GetTable<ProductsByCategory>(); } }
-		public ITable<QuarterlyOrder>             QuarterlyOrders              { get { return this.GetTable<QuarterlyOrder>(); } }
-		public ITable<Region>                     Regions                      { get { return this.GetTable<Region>(); } }
-		public ITable<SalesByCategory>            SalesByCategories            { get { return this.GetTable<SalesByCategory>(); } }
-		public ITable<SalesTotalsByAmount>        SalesTotalsByAmounts         { get { return this.GetTable<SalesTotalsByAmount>(); } }
-		public ITable<Shipper>                    Shippers                     { get { return this.GetTable<Shipper>(); } }
-		public ITable<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarters     { get { return this.GetTable<SummaryOfSalesByQuarter>(); } }
-		public ITable<SummaryOfSalesByYear>       SummaryOfSalesByYears        { get { return this.GetTable<SummaryOfSalesByYear>(); } }
-		public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
-		public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
+		                         public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
+		                         public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
+		                         public ITable<CategorySalesFor1997>       CategorySalesFor1997         { get { return this.GetTable<CategorySalesFor1997>(); } }
+		                         public ITable<CurrentProductList>         CurrentProductLists          { get { return this.GetTable<CurrentProductList>(); } }
+		                         public ITable<Customer>                   Customers                    { get { return this.GetTable<Customer>(); } }
+		                         public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
+		                         public ITable<CustomerCustomerDemo>       CustomerCustomerDemoes       { get { return this.GetTable<CustomerCustomerDemo>(); } }
+		                         public ITable<CustomerDemographic>        CustomerDemographics         { get { return this.GetTable<CustomerDemographic>(); } }
+		                         public ITable<Employee>                   Employees                    { get { return this.GetTable<Employee>(); } }
+		                         public ITable<EmployeeTerritory>          EmployeeTerritories          { get { return this.GetTable<EmployeeTerritory>(); } }
+		                         public ITable<Invoice>                    Invoices                     { get { return this.GetTable<Invoice>(); } }
+		[Obsolete("Do not use")] public ITable<Order>                      Orders                       { get { return this.GetTable<Order>(); } }
+		                         public ITable<OrderDetail>                OrderDetails                 { get { return this.GetTable<OrderDetail>(); } }
+		                         public ITable<OrderDetailsExtended>       OrderDetailsExtendeds        { get { return this.GetTable<OrderDetailsExtended>(); } }
+		                         public ITable<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
+		                         public ITable<OrderSubtotal>              OrderSubtotals               { get { return this.GetTable<OrderSubtotal>(); } }
+		                         public ITable<Product>                    Products                     { get { return this.GetTable<Product>(); } }
+		                         public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
+		                         public ITable<ProductSalesFor1997>        ProductSalesFor1997          { get { return this.GetTable<ProductSalesFor1997>(); } }
+		                         public ITable<ProductsByCategory>         ProductsByCategories         { get { return this.GetTable<ProductsByCategory>(); } }
+		                         public ITable<QuarterlyOrder>             QuarterlyOrders              { get { return this.GetTable<QuarterlyOrder>(); } }
+		                         public ITable<Region>                     Regions                      { get { return this.GetTable<Region>(); } }
+		                         public ITable<SalesByCategory>            SalesByCategories            { get { return this.GetTable<SalesByCategory>(); } }
+		                         public ITable<SalesTotalsByAmount>        SalesTotalsByAmounts         { get { return this.GetTable<SalesTotalsByAmount>(); } }
+		                         public ITable<Shipper>                    Shippers                     { get { return this.GetTable<Shipper>(); } }
+		                         public ITable<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarters     { get { return this.GetTable<SummaryOfSalesByQuarter>(); } }
+		                         public ITable<SummaryOfSalesByYear>       SummaryOfSalesByYears        { get { return this.GetTable<SummaryOfSalesByYear>(); } }
+		                         public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
+		                         public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
 
 		public NorthwindDB(int i)
 		{
@@ -199,7 +199,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true), Obsolete("Do not use")]
 		public List<Order> Orders { get; set; }
 
 		#endregion
@@ -299,7 +299,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true), Obsolete("Do not use")]
 		public List<Order> Orders { get; set; }
 
 		#endregion
@@ -359,23 +359,24 @@ namespace DataModel
 		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal?  Freight        { get; set; } // money
 	}
 
+	[Obsolete("Do not use")]
 	[Table(Database="Northwind", Name="Orders")]
 	public partial class Order
 	{
-		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, Identity] public int       OrderID        { get; set; } // int
-		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),  Nullable            ] public string    CustomerID     { get; set; } // nchar(5)
-		[Column(DbType="int",          DataType=DataType.Int32),               Nullable            ] public int?      EmployeeID     { get; set; } // int
-		[Column(DbType="datetime",     DataType=DataType.DateTime),            Nullable            ] public DateTime? OrderDate      { get; set; } // datetime
-		[Column(DbType="datetime",     DataType=DataType.DateTime),            Nullable            ] public DateTime? RequiredDate   { get; set; } // datetime
-		[Column(DbType="datetime",     DataType=DataType.DateTime),            Nullable            ] public DateTime? ShippedDate    { get; set; } // datetime
-		[Column(DbType="int",          DataType=DataType.Int32),               Nullable            ] public int?      ShipVia        { get; set; } // int
-		[Column(DbType="money",        DataType=DataType.Money),               Nullable            ] public decimal?  Freight        { get; set; } // money
-		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), Nullable            ] public string    ShipName       { get; set; } // nvarchar(40)
-		[Column(DbType="nvarchar(60)", DataType=DataType.NVarChar, Length=60), Nullable            ] public string    ShipAddress    { get; set; } // nvarchar(60)
-		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), Nullable            ] public string    ShipCity       { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), Nullable            ] public string    ShipRegion     { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(10)", DataType=DataType.NVarChar, Length=10), Nullable            ] public string    ShipPostalCode { get; set; } // nvarchar(10)
-		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), Nullable            ] public string    ShipCountry    { get; set; } // nvarchar(15)
+		[Obsolete, Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, Identity] public int       OrderID        { get; set; } // int
+		[Nullable, Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5)                       ] public string    CustomerID     { get; set; } // nchar(5)
+		[Nullable, Column(DbType="int",          DataType=DataType.Int32)                                    ] public int?      EmployeeID     { get; set; } // int
+		[Nullable, Column(DbType="datetime",     DataType=DataType.DateTime)                                 ] public DateTime? OrderDate      { get; set; } // datetime
+		[Nullable, Column(DbType="datetime",     DataType=DataType.DateTime)                                 ] public DateTime? RequiredDate   { get; set; } // datetime
+		[Nullable, Column(DbType="datetime",     DataType=DataType.DateTime)                                 ] public DateTime? ShippedDate    { get; set; } // datetime
+		[Nullable, Column(DbType="int",          DataType=DataType.Int32)                                    ] public int?      ShipVia        { get; set; } // int
+		[Nullable, Column(DbType="money",        DataType=DataType.Money)                                    ] public decimal?  Freight        { get; set; } // money
+		[Nullable, Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40)                      ] public string    ShipName       { get; set; } // nvarchar(40)
+		[Nullable, Column(DbType="nvarchar(60)", DataType=DataType.NVarChar, Length=60)                      ] public string    ShipAddress    { get; set; } // nvarchar(60)
+		[Nullable, Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15)                      ] public string    ShipCity       { get; set; } // nvarchar(15)
+		[Nullable, Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15)                      ] public string    ShipRegion     { get; set; } // nvarchar(15)
+		[Nullable, Column(DbType="nvarchar(10)", DataType=DataType.NVarChar, Length=10)                      ] public string    ShipPostalCode { get; set; } // nvarchar(10)
+		[Nullable, Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15)                      ] public string    ShipCountry    { get; set; } // nvarchar(15)
 
 		#region Associations
 
@@ -420,7 +421,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails"), Obsolete("Do not use")]
 		public Order OrderDetailsOrder { get; set; }
 
 		/// <summary>
@@ -599,7 +600,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers_BackReference
 		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=Relationship.OneToMany, IsBackReference=true), Obsolete("Do not use")]
 		public List<Order> Orders { get; set; }
 
 		#endregion
@@ -840,6 +841,7 @@ namespace DataModel
 				t.TerritoryID == TerritoryID);
 		}
 
+		[Obsolete("Do not use")]
 		public static Order Find(this ITable<Order> table, int OrderID)
 		{
 			return table.FirstOrDefault(t =>
