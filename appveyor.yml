@@ -19,7 +19,7 @@ cache:
 - packages -> **\packages.config
 
 services:
-- mssql2012sp1
+- mssql2014sp1
 - mysql
 - postgresql
 
@@ -39,7 +39,7 @@ init:
 before_build:
 - ps: |
     $startPath = "$($env:appveyor_build_folder)\Data"
-    $sqlInstance = "(local)\SQL2012SP1"
+    $sqlInstance = "(local)\SQL2014SP1"
     $dbName = "TestData"
 
     # create database
@@ -63,7 +63,7 @@ before_build:
     iex "& $cmd"
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: 7z e Data\northwind.sql.zip
-- cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2012SP1 -i "northwind.sql" > nul
+- cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014SP1 -i "northwind.sql" > nul
 
 nuget:
   account_feed: false
