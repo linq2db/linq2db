@@ -40,10 +40,10 @@ namespace Tests.DataProvider
 		[AttributeUsage(AttributeTargets.Method)]
 		class OracleDataContextWithBulkCopyAttribute : OracleDataContextAttribute
 		{
-			protected override IEnumerable<object[]> GetParameters(string provider)
+			protected override IEnumerable<Tuple<object[], string>> GetParameters(string provider)
 			{
-				yield return new object[] {provider, false};
-				yield return new object[] {provider, true};
+				yield return Tuple.Create(new object[] { provider, false }, (string)null);
+				yield return Tuple.Create(new object[] { provider, true }, (string)null);
 			}
 		}
 
@@ -1664,9 +1664,9 @@ namespace Tests.DataProvider
 		{
 			using (var db = new DataConnection(context))
 			{
-				db.CreateTable<ClobEntity>();
 				try
 				{
+					db.CreateTable<ClobEntity>();
 					var obj = new ClobEntity(1);
 					db.Insert(obj);
 
@@ -1690,9 +1690,9 @@ namespace Tests.DataProvider
 			{
 				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
 
-				db.CreateTable<ClobEntity>();
 				try
 				{
+					db.CreateTable<ClobEntity>();
 					db.BulkCopy(data);
 
 					var selected = db.GetTable<ClobEntity>().ToList();

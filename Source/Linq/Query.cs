@@ -133,6 +133,9 @@ namespace LinqToDB.Linq
 		public Query(IDataContext dataContext, Expression expression)
 			: base(dataContext, expression)
 		{
+#if !SILVERLIGHT && !WINSTORE
+			DoNotCache     = NoLinqCache.IsNoCache;
+#endif
 		}
 
 		public override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
@@ -148,8 +151,7 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public bool     DoNotChache;
-		public Query<T> Next;
+		public          bool            DoNotCache;
 
 		public Func<IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
@@ -160,23 +162,71 @@ namespace LinqToDB.Linq
 
 		#region GetInfo
 
-		static          Query<T> _first;
+		static          List<Query<T>> _orderedCache = new List<Query<T>>(CacheSize);
+
+		/// <summary>
+		/// LINQ query cache version. Changed when query added or removed from cache.
+		/// Not changed when cache reordered.
+		/// </summary>
+		static          int            _cacheVersion;
+		/// <summary>
+		/// LINQ query cache synchronization object.
+		/// </summary>
 		static readonly object   _sync = new object();
 
+		/// <summary>
+		/// LINQ query cache size (per entity type).
+		/// </summary>
 		const int CacheSize = 100;
+
+		/// <summary>
+		/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
+		/// </summary>
+		public static void ClearCache()
+		{
+			if (_orderedCache.Count != 0)
+				lock (_sync)
+				{
+					if (_orderedCache.Count != 0)
+						_cacheVersion++;
+
+					_orderedCache.Clear();
+				}
+		}
 
 		public static Query<T> GetQuery(IDataContext dataContext, Expression expr)
 		{
+			if (Configuration.Linq.DisableQueryCache)
+				return CreateQuery(dataContext, expr);
+
 			var query = FindQuery(dataContext, expr);
 
 			if (query == null)
 			{
+				var oldVersion = _cacheVersion;
+				query = CreateQuery(dataContext, expr);
+
+				// move lock as far as possible, because this method called a lot
+				if (!query.DoNotCache)
 				lock (_sync)
 				{
-					query = FindQuery(dataContext, expr);
+						if (oldVersion == _cacheVersion || FindQuery(dataContext, expr) == null)
+						{
+							if (_orderedCache.Count == CacheSize)
+								_orderedCache.RemoveAt(CacheSize - 1);
 
-					if (query == null)
+							_orderedCache.Insert(0, query);
+							_cacheVersion++;
+						}
+					}
+			}
+
+			return query;
+		}
+
+		private static Query<T> CreateQuery(IDataContext dataContext, Expression expr)
 					{
+			Query<T> query;
 						if (Configuration.Linq.GenerateExpressionTest)
 						{
 							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
@@ -208,47 +258,44 @@ namespace LinqToDB.Linq
 							throw;
 						}
 
-						if (!query.DoNotChache)
-						{
-							query.Next = _first;
-							_first = query;
-						}
-					}
-				}
-			}
-
 			return query;
 		}
 
 		static Query<T> FindQuery(IDataContext dataContext, Expression expr)
 		{
-			Query<T> prev = null;
-			var      n    = 0;
+			Query<T>[] queries;
 
-			for (var query = _first; query != null; query = query.Next)
+			// create thread-safe copy
+			lock (_sync)
+				queries = _orderedCache.ToArray();
+
+			foreach (var query in queries)
 			{
 				if (query.Compare(dataContext, expr))
 				{
-					if (prev != null)
+					// move found query up in cache
+					lock (_sync)
 					{
-						lock (_sync)
+						var oldIndex = _orderedCache.IndexOf(query);
+						if (oldIndex > 0)
 						{
-							prev.Next  = query.Next;
-							query.Next = _first;
-							_first     = query;
+							var prev = _orderedCache[oldIndex - 1];
+							_orderedCache[oldIndex - 1] = query;
+							_orderedCache[oldIndex] = prev;
+						}
+						else if (oldIndex == -1)
+						{
+							// query were evicted from cache - readd it
+							if (_orderedCache.Count == CacheSize)
+								_orderedCache.RemoveAt(CacheSize - 1);
+
+							_orderedCache.Insert(0, query);
+							_cacheVersion++;
 						}
 					}
 
 					return query;
 				}
-
-				if (n++ >= CacheSize)
-				{
-					query.Next = null;
-					return null;
-				}
-
-				prev = query;
 			}
 
 			return null;

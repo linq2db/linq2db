@@ -13,6 +13,9 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Expressions;
+#if !SILVERLIGHT
+	using DataProvider;
+#endif
 
 	partial class ExpressionBuilder
 	{
@@ -57,6 +60,9 @@ namespace LinqToDB.Linq.Builder
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),
+#if !SILVERLIGHT && !NETFX_CORE
+			new MergeContextParser         (),
+#endif
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)

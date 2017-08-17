@@ -43,7 +43,7 @@
     <DefineConstants>TRACE;DEBUG;FW4;MOBILE1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <NoWarn>649 429</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
@@ -157,8 +157,8 @@
       <HintPath>..\..\Packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Npgsql, Version=3.2.2.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
-      <HintPath>..\..\Packages\Npgsql.3.2.2\lib\net45\Npgsql.dll</HintPath>
+    <Reference Include="Npgsql, Version=3.2.5.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Npgsql.3.2.5\lib\net45\Npgsql.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework, Version=3.6.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
@@ -248,6 +248,7 @@
     <Compile Include="Common\ConvertTests.cs" />
     <Compile Include="Common\DefaultValueTests.cs" />
     <Compile Include="Common\ReservedWordTest.cs" />
+    <Compile Include="Common\DataToolsTests.cs" />
     <Compile Include="Common\ToolsTest.cs" />
     <Compile Include="DataProvider\ALLTYPE.cs" />
     <Compile Include="DataProvider\SapHanaTests.cs" />
@@ -273,7 +274,9 @@
     <Compile Include="OrmBattle\Helper\GenericEqualityComparer.cs" />
     <Compile Include="OrmBattle\OrmBattleTests.cs" />
     <Compile Include="SqlServerTypes\Loader.cs" />
+    <Compile Include="TestNoopProvider.cs" />
     <Compile Include="TestProvName.cs" />
+    <Compile Include="TestsInitialization.cs" />
     <Compile Include="Update\CreateTableTests.cs" />
     <Compile Include="Linq\QueryHintsTests.cs" />
     <Compile Include="Linq\AsyncTests.cs" />
@@ -333,7 +336,25 @@
     <Compile Include="DataProvider\OracleTests.cs" />
     <Compile Include="Linq\TableFunctionTests.cs" />
     <Compile Include="Linq\VisualBasicTests.cs" />
+    <Compile Include="Update\MergeTests.Types.cs" />
+    <Compile Include="Update\MergeTests.Issues.cs" />
+    <Compile Include="Update\MergeTests.Operations.Combined.cs" />
+    <Compile Include="Update\MergeTests.TargetSourceOn.cs" />
+    <Compile Include="Update\MergeTests.Operations.LoadTests.cs" />
+    <Compile Include="Update\MergeTests.Operations.Associations.cs" />
+    <Compile Include="Update\MergeTests.Operations.IdentityInsert.cs" />
+    <Compile Include="Update\MergeTests.Operations.UpdateWithDelete.cs" />
+    <Compile Include="Update\MergeTests.Operations.Update.cs" />
+    <Compile Include="Update\MergeTests.Operations.Delete.cs" />
+    <Compile Include="Update\MergeTests.Operations.Parameters.cs" />
+    <Compile Include="Update\MergeTests.Operations.UpdateBySource.cs" />
+    <Compile Include="Update\MergeTests.Operations.DeleteBySource.cs" />
+    <Compile Include="Update\MergeTests.Operations.Insert.cs" />
+    <Compile Include="Update\MergeTests.ApiParametersValidation.cs" />
+    <Compile Include="Update\MergeTests.CommandValidation.cs" />
+    <Compile Include="Update\MergeTests.OldApiMigratedTests.cs" />
     <Compile Include="Update\MergeTests.cs" />
+    <Compile Include="Update\OldMergeTests.cs" />
     <Compile Include="Update\UpdateTests.cs" />
     <Compile Include="Update\DeleteTests.cs" />
     <Compile Include="Update\InsertTests.cs" />
@@ -377,13 +398,17 @@
     <Compile Include="UserTests\Issue192Tests.cs" />
     <Compile Include="UserTests\Issue175Tests.cs" />
     <Compile Include="UserTests\Issue228Tests.cs" />
+    <Compile Include="UserTests\Issue278Tests.cs" />
+    <Compile Include="UserTests\Issue256Tests.cs" />
     <Compile Include="UserTests\Issue269Tests.cs" />
     <Compile Include="UserTests\Issue271Tests.cs" />
     <Compile Include="UserTests\Issue358Tests.cs" />
     <Compile Include="UserTests\Issue356Tests.cs" />
     <Compile Include="UserTests\Issue082Tests.cs" />
+    <Compile Include="UserTests\Issue264Tests.cs" />
     <Compile Include="UserTests\Issue564Tests.cs" />
     <Compile Include="UserTests\Issue681Tests.cs" />
+    <Compile Include="UserTests\Issue781Tests.cs" />
     <Compile Include="UserTests\Issue737Tests.cs" />
     <Compile Include="UserTests\Issue395Tests.cs" />
     <Compile Include="UserTests\Issue273Tests.cs" />

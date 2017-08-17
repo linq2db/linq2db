@@ -210,7 +210,7 @@ namespace Tests.Samples
 		[Test, Parallelizable(ParallelScope.None)]
 		public void InsertAndDeleteTest()
 		{
-			var db    = _connection;
+			var db = _connection;
 			var table = db.GetTable<TestTable>();
 
 			db.Insert(new TestTable { ID = 1000, Description = "Delete Candidate 1000" });

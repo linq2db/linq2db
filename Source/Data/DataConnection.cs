@@ -302,15 +302,17 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets default connection configuration name. Used by <see cref="DataConnection"/> by default and could be set automatically from:
-		/// <para> - <see cref="DefaultSettings.DefaultConfiguration"/>;</para>
-		/// <para> - first non-global connection string name from <see cref="DefaultSettings.ConnectionStrings"/>;</para>
+		/// <para> - <see cref="ILinqToDBSettings.DefaultConfiguration"/>;</para>
+		/// <para> - first non-global connection string name from <see cref="ILinqToDBSettings.ConnectionStrings"/>;</para>
 		/// <para> - first non-global connection string name passed to <see cref="SetConnectionStrings"/> method.</para>
 		/// </summary>
+		/// <seealso cref="DefaultConfiguration"/>
 		public static string DefaultConfiguration { get; set; }
 		/// <summary>
 		/// Gets or sets name of default data provider, used by new connection if user didn't specified provider explicitly in constructor or in connection options.
-		/// Initialized with value from <see cref="DefaultSettings.DefaultDataProvider"/>.
+		/// Initialized with value from <see cref="DefaultSettings"/>.<see cref="ILinqToDBSettings.DefaultDataProvider"/>.
 		/// </summary>
+		/// <seealso cref="DefaultConfiguration"/>
 		public static string DefaultDataProvider  { get; set; }
 
 		private static Action<TraceInfo> _onTrace = OnTraceInternal;
@@ -356,6 +358,8 @@ namespace LinqToDB.Data
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
+							try
+							{
 						sb
 							.AppendLine()
 							.AppendLine("Exception: {0}".Args(ex.GetType()))
@@ -363,9 +367,21 @@ namespace LinqToDB.Data
 							.AppendLine(ex.StackTrace)
 							;
 					}
+							catch
+							{
+								// Sybase provider could generate exception that will throw another exception when you
+								// try to access Message property due to bug in AseErrorCollection.Message property.
+								// There it tries to fetch error from first element of list without checking wether
+								// list contains any elements or not
+								sb
+									.AppendLine()
+									.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
+									;
+							}
+						}
 
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-
+					
 					break;
 				}
 
@@ -395,8 +411,8 @@ namespace LinqToDB.Data
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
 
 					break;
-				}
 			}
+		}
 		}
 
 		private static TraceSwitch _traceSwitch;
@@ -429,8 +445,9 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Trace function. By Default use <see cref="Debug"/> class for logging, but could be replaced to log e.g. to your log file.
-		/// First parameter contains trace message.
-		/// Second parameter contains context (<see cref="TraceSwitch.DisplayName"/>).
+		/// <para>First parameter contains trace message.</para>
+		/// <para>Second parameter contains context (<see cref="Switch.DisplayName"/>)</para>
+		/// <seealso cref="TraceSwitch"/>
 		/// </summary>
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
@@ -441,7 +458,8 @@ namespace LinqToDB.Data
 		private static ILinqToDBSettings _defaultSettings;
 
 		/// <summary>
-		/// Gets or sets default connection settings. By default contains settings from linq2db configuration section from configuration file (not supported by .net core).
+		/// Gets or sets default connection settings. By default contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
+		/// <seealso cref="ILinqToDBSettings"/>
 		/// </summary>
 		public static ILinqToDBSettings DefaultSettings
 		{
@@ -905,6 +923,7 @@ namespace LinqToDB.Data
 		internal int ExecuteNonQuery()
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
+				using (DataProvider.ExecuteScope())
 				return Command.ExecuteNonQuery();
 
 			if (TraceSwitch.TraceInfo)
@@ -921,7 +940,9 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteNonQuery();
+				int ret;
+				using (DataProvider.ExecuteScope())
+					ret = Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1015,7 +1036,8 @@ namespace LinqToDB.Data
 		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
-				return Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
+				using (DataProvider.ExecuteScope())
+				return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -1031,7 +1053,10 @@ namespace LinqToDB.Data
 
 			try
 			{
-				var ret = Command.ExecuteReader(GetCommandBehavior(CommandBehavior.Default));
+				IDataReader ret;
+
+				using (DataProvider.ExecuteScope())
+					ret = Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
 				if (TraceSwitch.TraceInfo)
 				{
@@ -1204,7 +1229,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
-		public List<string>  NextQueryHints
+		public  List<string>  NextQueryHints
 		{
 			get { return _nextQueryHints ?? (_nextQueryHints = new List<string>()); }
 		}

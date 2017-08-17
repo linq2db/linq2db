@@ -793,3 +793,76 @@ GO
 
 -- SKIP SqlServer.2005 END
 
+
+-- merge test tables
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestMerge1') AND type in (N'U'))
+BEGIN DROP TABLE TestMerge1 END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestMerge2') AND type in (N'U'))
+BEGIN DROP TABLE TestMerge2 END
+GO
+CREATE TABLE TestMerge1
+(
+	Id     int NOT NULL CONSTRAINT PK_TestMerge1 PRIMARY KEY CLUSTERED,
+	Field1 int NULL,
+	Field2 int NULL,
+	Field3 int NULL,
+	Field4 int NULL,
+	Field5 int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+-- SKIP SqlServer.2005 BEGIN
+	FieldDateTime2  DATETIMEOFFSET(7) NULL,
+-- SKIP SqlServer.2005 END
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+-- SKIP SqlServer.2005 BEGIN
+	FieldDate       DATE              NULL,
+	FieldTime       TIME(7)           NULL,
+-- SKIP SqlServer.2005 END
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+)
+GO
+
+CREATE TABLE TestMerge2
+(
+	Id     int NOT NULL CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED,
+	Field1 int NULL,
+	Field2 int NULL,
+	Field3 int NULL,
+	Field4 int NULL,
+	Field5 int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+-- SKIP SqlServer.2005 BEGIN
+	FieldDateTime2  DATETIMEOFFSET(7) NULL,
+-- SKIP SqlServer.2005 END
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+-- SKIP SqlServer.2005 BEGIN
+	FieldDate       DATE              NULL,
+	FieldTime       TIME(7)           NULL,
+-- SKIP SqlServer.2005 END
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+)
+GO

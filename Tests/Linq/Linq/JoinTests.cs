@@ -386,7 +386,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird)]
+		[Test, DataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
 		public void GroupJoin7(string context)
 		{
 			var n = 1;

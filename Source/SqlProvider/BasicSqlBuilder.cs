@@ -356,6 +356,13 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		internal virtual void BuildUpdateSetHelper(SelectQuery qry, StringBuilder sb)
+		{
+			SelectQuery = qry;
+			StringBuilder = sb;
+			BuildUpdateSet();
+		}
+
 		protected virtual void BuildUpdateSet()
 		{
 			AppendIndent()
@@ -402,6 +409,13 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOutputSubclause()
 		{
+		}
+
+		internal virtual void BuildInsertClauseHelper(SelectQuery qry, StringBuilder sb)
+		{
+			SelectQuery = qry;
+			StringBuilder = sb;
+			BuildInsertClause(null, false);
 		}
 
 		protected virtual void BuildInsertClause(string insertText, bool appendTableName)
@@ -897,6 +911,12 @@ namespace LinqToDB.SqlProvider
 			BuildEndCreateTableStatement(SelectQuery.CreateTable);
 		}
 
+		internal void BuildTypeName(StringBuilder sb, SqlDataType type)
+		{
+			StringBuilder = sb;
+			BuildDataType(type, true);
+		}
+
 		protected virtual void BuildCreateTableFieldType(SqlField field)
 		{
 			BuildDataType(new SqlDataType(
@@ -1325,6 +1345,12 @@ namespace LinqToDB.SqlProvider
 		#region Builders
 
 		#region BuildSearchCondition
+		internal virtual void BuildSearchCondition(SelectQuery qry, SelectQuery.SearchCondition condition, StringBuilder sb)
+		{
+			SelectQuery = qry;
+			StringBuilder = sb;
+			BuildWhereSearchCondition(condition);
+		}
 
 		protected virtual void BuildWhereSearchCondition(SelectQuery.SearchCondition condition)
 		{

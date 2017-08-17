@@ -91,11 +91,14 @@ INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoi
 GO
 
 
-DROP TABLE Parent
+IF OBJECT_ID('dbo.Parent') IS NOT NULL
+BEGIN DROP TABLE Parent END
 GO
-DROP TABLE Child
+IF OBJECT_ID('dbo.Child') IS NOT NULL
+BEGIN DROP TABLE Child END
 GO
-DROP TABLE GrandChild
+IF OBJECT_ID('dbo.GrandChild') IS NOT NULL
+BEGIN DROP TABLE GrandChild END
 GO
 
 CREATE TABLE Parent      (ParentID int, Value1 int NULL)
@@ -105,8 +108,9 @@ GO
 CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
 GO
 
+IF OBJECT_ID('dbo.LinqDataTypes') IS NOT NULL
+BEGIN DROP TABLE LinqDataTypes END
 
-DROP TABLE LinqDataTypes
 GO
 
 CREATE TABLE LinqDataTypes
@@ -126,7 +130,8 @@ CREATE TABLE LinqDataTypes
 GO
 
 
-DROP TABLE TestIdentity
+IF OBJECT_ID('dbo.TestIdentity') IS NOT NULL
+BEGIN DROP TABLE TestIdentity END
 GO
 
 CREATE TABLE TestIdentity
@@ -211,3 +216,68 @@ SELECT
 	        1,         2, Cast(3 as varbinary)
 
 GO
+
+-- merge test tables
+IF OBJECT_ID('dbo.TestMerge1') IS NOT NULL
+BEGIN DROP TABLE TestMerge1 END
+GO
+IF OBJECT_ID('dbo.TestMerge2') IS NOT NULL
+BEGIN DROP TABLE TestMerge2 END
+GO
+
+CREATE TABLE TestMerge1
+(
+	Id     int NOT NULL,
+	Field1 int NULL,
+	Field2 int NULL,
+	Field3 int NULL,
+	Field4 int NULL,
+	Field5 int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      REAL              NULL,
+	FieldDouble     FLOAT             NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       CHAR(36)          NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+	FieldDate       DATE              NULL,
+	FieldTime       TIME              NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL,
+
+	CONSTRAINT PK_TestMerge1 PRIMARY KEY CLUSTERED (Id)
+)
+GO
+
+CREATE TABLE TestMerge2
+(
+	Id     int NOT NULL,
+	Field1 int NULL,
+	Field2 int NULL,
+	Field3 int NULL,
+	Field4 int NULL,
+	Field5 int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      REAL              NULL,
+	FieldDouble     FLOAT             NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       CHAR(36)          NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+	FieldDate       DATE              NULL,
+	FieldTime       TIME              NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL,
+
+	CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED (Id)
+)
