@@ -35,6 +35,8 @@ init:
     {
         $env:nugetVersion = "$env:packageVersion-rc$env:appveyor_build_number"
     }
+
+before_build:
 - ps: |
     $startPath = "$($env:appveyor_build_folder)\Data"
     $sqlInstance = "(local)\SQL2012SP1"
