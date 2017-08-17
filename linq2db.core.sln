@@ -10,7 +10,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		appveyor.mono.yml = appveyor.mono.yml
 		appveyor.yml = appveyor.yml
 		Av-InitDatabases.ps1 = Av-InitDatabases.ps1
+		build.cake = build.cake
+		build.ps1 = build.ps1
 		build.sh = build.sh
+		travisbuild.sh = travisbuild.sh
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{AF93451E-198C-4A94-8EB4-C330D886E102}"
