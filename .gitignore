@@ -35,8 +35,8 @@ NuGet/*.nupkg
 linq2db.sln.ide/graph
 linq2db.sln.ide/
 !Redist/**
-!packages/**
-.vs/*
+/packages
+/.vs/*
 *.lock.json
 /api
 /linq2db.github.io
