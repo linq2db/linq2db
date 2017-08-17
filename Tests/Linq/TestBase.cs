@@ -1102,7 +1102,7 @@ namespace Tests
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);
-			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Lenght: ");
+			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
 			var exceptExpectedList = resultList.  Except(expectedList).ToList();
 			var exceptResultList   = expectedList.Except(resultList).  ToList();
@@ -1129,7 +1129,7 @@ namespace Tests
 			var expectedList = expected.ToList();
 
 			Assert.AreNotEqual(0, expectedList.Count);
-			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Lenght: ");
+			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
 			for (var i = 0; i < resultList.Count; i++)
 			{
