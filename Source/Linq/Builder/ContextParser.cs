@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				query.DoNotChache = true;
+				query.DoNotCache = true;
 
 				QueryRunner.SetNonQueryQuery(query);
 

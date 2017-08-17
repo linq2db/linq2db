@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BenchmarkDotNet.Running;
+using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BenchmarkDotNet.Running;
+using Tests.Benchmarks;
 
 namespace Tests.Benchmark
 {
@@ -20,7 +17,8 @@ namespace Tests.Benchmark
 			}
 			else
 			{
-				var summary = BenchmarkRunner.Run<QueryTests>();
+				BenchmarkRunner.Run<QueryTests>();
+				BenchmarkRunner.Run<QueryCacheCollectionsBenchmark>();
 			}
 		}
 	}

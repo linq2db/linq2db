@@ -40,10 +40,10 @@ namespace Tests.DataProvider
 		[AttributeUsage(AttributeTargets.Method)]
 		class OracleDataContextWithBulkCopyAttribute : OracleDataContextAttribute
 		{
-			protected override IEnumerable<object[]> GetParameters(string provider)
+			protected override IEnumerable<Tuple<object[], string>> GetParameters(string provider)
 			{
-				yield return new object[] {provider, false};
-				yield return new object[] {provider, true};
+				yield return Tuple.Create(new object[] { provider, false }, (string)null);
+				yield return Tuple.Create(new object[] { provider, true }, (string)null);
 			}
 		}
 
