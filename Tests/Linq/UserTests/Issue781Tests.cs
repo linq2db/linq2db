@@ -129,7 +129,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB)]
+		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void TestHavingCountWithSelect(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -151,7 +151,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB)]
+		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void TestHavingLongCountWithSelect(string context)
 		{
 			using (var db = new DataConnection(context))
