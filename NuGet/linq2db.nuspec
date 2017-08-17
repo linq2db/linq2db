@@ -7,7 +7,7 @@
 		<authors>Igor Tkachev</authors>
 		<owners />
 		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
-		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
+		<projectUrl>http://linq2db.com</projectUrl>
 		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>

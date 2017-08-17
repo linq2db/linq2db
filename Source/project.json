@@ -6,7 +6,7 @@
 
   "packOptions": {
     "licenseUrl": "https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt",
-    "projectUrl": "https://github.com/linq2db/linq2db",
+    "projectUrl": "http://linq2db.com",
     "iconUrl": "http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320",
 
     "requireLicenseAcceptance": false,
