@@ -10,7 +10,7 @@ namespace LinqToDB
 	using Linq;
 
 	/// <summary>
-	/// Provides for compilation and caching of queries for reuse.
+	/// Provides API for compilation and caching of queries for reuse.
 	/// </summary>
 	public class CompiledQuery
 	{
@@ -114,31 +114,103 @@ namespace LinqToDB
 
 		#region Invoke
 
+		/// <summary>
+		/// Executes compiled query against provided database connection context.
+		/// </summary>
+		/// <typeparam name="TDC">Database connection context type.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <returns>Query execution result.</returns>
 		public TResult Invoke<TDC,TResult>(TDC dataContext)
 		{
 			return ExecuteQuery<TResult>(dataContext);
 		}
 
+		/// <summary>
+		/// Executes compiled query with one parameter against provided database connection context.
+		/// </summary>
+		/// <typeparam name="TDC">Database connection context type.</typeparam>
+		/// <typeparam name="T1">Query parameter type.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="arg1">Query parameter value.</param>
+		/// <returns>Query execution result.</returns>
 		public TResult Invoke<TDC,T1,TResult>(TDC dataContext, T1 arg1)
 		{
 			return ExecuteQuery<TResult>(dataContext, arg1);
 		}
 
+		/// <summary>
+		/// Executes compiled query with two parameters against provided database connection context.
+		/// </summary>
+		/// <typeparam name="TDC">Database connection context type.</typeparam>
+		/// <typeparam name="T1">First query parameter type.</typeparam>
+		/// <typeparam name="T2">Second query parameter type.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="arg1">First query parameter value.</param>
+		/// <param name="arg2">Second query parameter value.</param>
+		/// <returns>Query execution result.</returns>
 		public TResult Invoke<TDC,T1,T2,TResult>(TDC dataContext, T1 arg1, T2 arg2)
 		{
 			return ExecuteQuery<TResult>(dataContext, arg1, arg2);
 		}
 
+		/// <summary>
+		/// Executes compiled query with three parameters against provided database connection context.
+		/// </summary>
+		/// <typeparam name="TDC">Database connection context type.</typeparam>
+		/// <typeparam name="T1">First query parameter type.</typeparam>
+		/// <typeparam name="T2">Second query parameter type.</typeparam>
+		/// <typeparam name="T3">Third query parameter type.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="arg1">First query parameter value.</param>
+		/// <param name="arg2">Second query parameter value.</param>
+		/// <param name="arg3">Third query parameter value.</param>
+		/// <returns>Query execution result.</returns>
 		public TResult Invoke<TDC,T1,T2,T3,TResult>(TDC dataContext, T1 arg1, T2 arg2, T3 arg3)
 		{
 			return ExecuteQuery<TResult>(dataContext, arg1, arg2, arg3);
 		}
 
+		/// <summary>
+		/// Executes compiled query with four parameters against provided database connection context.
+		/// </summary>
+		/// <typeparam name="TDC">Database connection context type.</typeparam>
+		/// <typeparam name="T1">First query parameter type.</typeparam>
+		/// <typeparam name="T2">Second query parameter type.</typeparam>
+		/// <typeparam name="T3">Third query parameter type.</typeparam>
+		/// <typeparam name="T4">Forth query parameter type.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="arg1">First query parameter value.</param>
+		/// <param name="arg2">Second query parameter value.</param>
+		/// <param name="arg3">Third query parameter value.</param>
+		/// <param name="arg4">Forth query parameter value.</param>
+		/// <returns>Query execution result.</returns>
 		public TResult Invoke<TDC,T1,T2,T3,T4,TResult>(TDC dataContext, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
 		{
 			return ExecuteQuery<TResult>(dataContext, arg1, arg2, arg3, arg4);
 		}
 
+		/// <summary>
+		/// Executes compiled query with five parameters against provided database connection context.
+		/// </summary>
+		/// <typeparam name="TDC">Database connection context type.</typeparam>
+		/// <typeparam name="T1">First query parameter type.</typeparam>
+		/// <typeparam name="T2">Second query parameter type.</typeparam>
+		/// <typeparam name="T3">Third query parameter type.</typeparam>
+		/// <typeparam name="T4">Forth query parameter type.</typeparam>
+		/// <typeparam name="T5">Fifth query parameter type.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="arg1">First query parameter value.</param>
+		/// <param name="arg2">Second query parameter value.</param>
+		/// <param name="arg3">Third query parameter value.</param>
+		/// <param name="arg4">Forth query parameter value.</param>
+		/// <param name="arg5">Fifth query parameter value.</param>
+		/// <returns>Query execution result.</returns>
 		public TResult Invoke<TDC,T1,T2,T3,T4,T5,TResult>(TDC dataContext, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
 		{
 			return ExecuteQuery<TResult>(dataContext, arg1, arg2, arg3, arg4, arg5);
@@ -154,15 +226,9 @@ namespace LinqToDB
 		/// <returns>
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
-		/// <param name="query">
-		/// The query expression to be compiled.
-		/// </param>
-		/// <typeparam name="TDC ">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TResult">
-		/// Returned type of the delegate returned by the method.
-		/// </typeparam>
+		/// <param name="query">The query expression to be compiled.</param>
+		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TResult> Compile<TDC,TResult>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TResult>> query)
 			  where TDC : IDataContext
@@ -172,23 +238,15 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Compiles the query.
+		/// Compiles the query with parameter.
 		/// </summary>
 		/// <returns>
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
-		/// <param name="query">
-		/// The query expression to be compiled.
-		/// </param>
-		/// <typeparam name="TDC">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg1">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TResult">
-		/// Returned type of the delegate returned by the method.
-		/// </typeparam>
+		/// <param name="query">The query expression to be compiled.</param>
+		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TArg1">Type of parameter for compiled query.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TResult> Compile<TDC,TArg1,TResult>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TResult>> query)
 			where TDC : IDataContext
@@ -198,26 +256,16 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Compiles the query.
+		/// Compiles the query with two parameters.
 		/// </summary>
 		/// <returns>
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
-		/// <param name="query">
-		/// The query expression to be compiled.
-		/// </param>
-		/// <typeparam name="TDC ">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg1">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg2">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TResult">
-		/// Returned type of the delegate returned by the method.
-		/// </typeparam>
+		/// <param name="query">The query expression to be compiled.</param>
+		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TResult> Compile<TDC,TArg1,TArg2,TResult>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TResult>> query)
 			where TDC : IDataContext
@@ -227,29 +275,17 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Compiles the query.
+		/// Compiles the query with three parameters.
 		/// </summary>
 		/// <returns>
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
-		/// <param name="query">
-		/// The query expression to be compiled.
-		/// </param>
-		/// <typeparam name="TDC ">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg1">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg2">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg3">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TResult">
-		/// Returned type of the delegate returned by the method.
-		/// </typeparam>
+		/// <param name="query">The query expression to be compiled.</param>
+		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TArg3,TResult> Compile<TDC,TArg1,TArg2,TArg3,TResult>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TArg3,TResult>> query)
 			where TDC : IDataContext
@@ -259,32 +295,18 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Compiles the query.
+		/// Compiles the query with four parameters.
 		/// </summary>
 		/// <returns>
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
-		/// <param name="query">
-		/// The query expression to be compiled.
-		/// </param>
-		/// <typeparam name="TDC ">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg1">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg2">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg3">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg4">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TResult">
-		/// Returned type of the delegate returned by the method.
-		/// </typeparam>
+		/// <param name="query">The query expression to be compiled.</param>
+		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg4">Type of forth parameter for compiled query.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TArg3,TArg4,TResult> Compile<TDC,TArg1,TArg2,TArg3,TArg4,TResult>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TResult>> query)
 			where TDC : IDataContext
@@ -294,35 +316,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Compiles the query.
+		/// Compiles the query with five parameters.
 		/// </summary>
 		/// <returns>
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
-		/// <param name="query">
-		/// The query expression to be compiled.
-		/// </param>
-		/// <typeparam name="TDC ">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg1">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg2">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg3">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg4">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TArg5">
-		/// Represents the type of the parameter that has to be passed in when executing the delegate returned by the method.
-		/// </typeparam>
-		/// <typeparam name="TResult">
-		/// Returned type of the delegate returned by the method.
-		/// </typeparam>
+		/// <param name="query">The query expression to be compiled.</param>
+		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg4">Type of forth parameter for compiled query.</typeparam>
+		/// <typeparam name="TArg5">Type of fifth parameter for compiled query.</typeparam>
+		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult> Compile<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TArg1,TArg2,TArg3,TArg4,TArg5,TResult>> query)
 			where TDC : IDataContext

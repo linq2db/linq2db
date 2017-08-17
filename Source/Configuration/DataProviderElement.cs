@@ -16,6 +16,9 @@ namespace LinqToDB.Configuration
 		static readonly ConfigurationProperty _propName     = new ConfigurationProperty("name",    typeof(string), string.Empty, ConfigurationPropertyOptions.None);
 		static readonly ConfigurationProperty _propDefault  = new ConfigurationProperty("default", typeof(bool),   false,        ConfigurationPropertyOptions.None);
 
+		/// <summary>
+		/// Creates data provider configuration element.
+		/// </summary>
 		public DataProviderElement()
 		{
 			Properties.Add(_propTypeName);

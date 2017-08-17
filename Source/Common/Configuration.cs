@@ -87,7 +87,10 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// If enabled, linq2db will try to reduce number of generated SQL JOINs for LINQ query.
-			/// TODO: add more details on what kind of optimizations performed.
+			/// Attempted optimizations:
+			/// - removes duplicate joins by unique target table key;
+			/// - removes self-joins by unique key;
+			/// - removes left joins if joined table is not used in query.
 			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool OptimizeJoins = true;

@@ -166,7 +166,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
 		public async Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
 		{
@@ -191,7 +191,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
 		public async Task<T[]> QueryToArrayAsync<T>(Func<IDataReader,T> objectReader, CancellationToken cancellationToken)
 		{
@@ -218,7 +218,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="action">Action, applied to each result record.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
@@ -313,7 +313,7 @@ namespace LinqToDB.Data
 		/// Executes command asynchronously and returns list of values.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
 		public async Task<List<T>> QueryToListAsync<T>(CancellationToken cancellationToken)
 		{
@@ -336,7 +336,7 @@ namespace LinqToDB.Data
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
 		public async Task<T[]> QueryToArrayAsync<T>(CancellationToken cancellationToken)
 		{
@@ -361,7 +361,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="action">Action, applied to each result record.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
 		{
@@ -482,7 +482,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public Task<int> ExecuteProcAsync(CancellationToken cancellationToken)
 		{
@@ -502,7 +502,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Executes command asynchronously and returns number of affected records.
 		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public async Task<int> ExecuteAsync(CancellationToken cancellationToken)
 		{
@@ -592,7 +592,7 @@ namespace LinqToDB.Data
 		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with resulting value.</returns>
 		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken)
 		{
@@ -715,7 +715,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Executes command asynchronously and returns data reader instance.
 		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancelation token.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with data reader object.</returns>
 		public async Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 		{
