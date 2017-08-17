@@ -35,9 +35,7 @@ init:
     {
         $env:nugetVersion = "$env:packageVersion-rc$env:appveyor_build_number"
     }
-- ps: |    
-    Push-Location -Path $env:appveyor_build_folder
-    .\AvInitDatabases.ps1
+- ps: & "$env:appveyor_build_folder\AvInitDatabases.ps1"
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: 7z e Data\northwind.sql.zip
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2012SP1 -i "northwind.sql" > nul
