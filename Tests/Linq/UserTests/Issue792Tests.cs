@@ -19,6 +19,7 @@ namespace Tests.UserTests
 			public string char20DataType;
 		}
 
+#if !NETSTANDARD
 		[Test, IncludeDataContextSource(false, ProviderName.Sybase)]
 		[Explicit("https://github.com/linq2db/linq2db/issues/792")]
 		public void Test(string context)
@@ -43,5 +44,6 @@ namespace Tests.UserTests
 				Assert.AreEqual(recordsBefore, recordsAfter);
 			}
 		}
+#endif
 	}
 }
