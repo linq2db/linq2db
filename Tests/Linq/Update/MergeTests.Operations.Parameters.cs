@@ -513,7 +513,7 @@ namespace Tests.Merge
 					.UpdateWhenMatched()
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}

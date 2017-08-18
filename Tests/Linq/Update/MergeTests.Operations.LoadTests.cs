@@ -19,7 +19,7 @@ namespace Tests.Merge
 			// ASE: you may need to increace memory procedure cache sizes like that:
 			// exec sp_configure 'max memory', NEW_MEMORY_SIZE
 			// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
-			RunTest(context, 2000);
+			RunTest(context, 1000);
 		}
 
 		[Test, IncludeDataContextSource(false, ProviderName.Firebird)]

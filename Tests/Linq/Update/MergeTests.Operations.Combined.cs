@@ -289,7 +289,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -414,7 +414,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(2, rows);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
@@ -678,7 +678,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 

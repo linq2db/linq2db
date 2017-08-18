@@ -63,7 +63,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(4, result.Count);
 

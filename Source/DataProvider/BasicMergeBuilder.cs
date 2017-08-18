@@ -300,7 +300,10 @@ namespace LinqToDB.DataProvider
 
 		private void BuildEmptySource()
 		{
-			Command.Append("(SELECT ");
+			Command
+				.AppendLine("(")
+				.Append("\tSELECT ")
+				;
 
 			var columnTypes = GetSourceColumnTypes();
 
@@ -321,9 +324,11 @@ namespace LinqToDB.DataProvider
 			}
 
 			Command
-				.Append(" FROM ")
-				.Append(TargetTableName)
-				.Append(" WHERE 1 = 0) ")
+				.AppendLine()
+				.Append("\tFROM ")
+				.AppendLine(TargetTableName)
+				.AppendLine("\tWHERE 1 = 0")
+				.Append(") ")
 				.AppendLine((string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
 		}
 

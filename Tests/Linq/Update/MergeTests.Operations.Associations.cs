@@ -181,7 +181,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(7, result.Count);
 
@@ -224,7 +224,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -266,7 +266,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -389,7 +389,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -582,7 +582,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(7, result.Count);
 
@@ -625,7 +625,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -667,7 +667,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -792,7 +792,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -868,7 +868,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 
@@ -902,7 +902,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 
