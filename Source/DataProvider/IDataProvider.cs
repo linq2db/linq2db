@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
+
 #if !NOASYNC
 using System.Threading.Tasks;
 #endif
@@ -47,15 +48,28 @@ namespace LinqToDB.DataProvider
 		ISchemaProvider    GetSchemaProvider     ();
 #endif
 
-		BulkCopyRowsCopied BulkCopy<T>           (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
+		BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
 
-		int                Merge<T>              (DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
-		                                          string tableName, string databaseName, string schemaName)
+		int Merge<T>(
+			DataConnection           dataConnection,
+			Expression<Func<T,bool>> predicate,
+			bool                     delete,
+			IEnumerable<T>           source,
+			string                   tableName,
+			string                   databaseName,
+			string                   schemaName)
 			where T : class;
 
 #if !NOASYNC
-		Task<int>          MergeAsync<T>         (DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
-		                                          string tableName, string databaseName, string schemaName, CancellationToken token)
+		Task<int> MergeAsync<T>(
+			DataConnection           dataConnection,
+			Expression<Func<T,bool>> predicate,
+			bool                     delete,
+			IEnumerable<T>           source,
+			string                   tableName,
+			string                   databaseName,
+			string                   schemaName,
+			CancellationToken        token)
 			where T : class;
 #endif
 

@@ -1,22 +1,19 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Merge
 {
+	using Model;
+
 	public partial class MergeTests
 	{
-		[IncludeDataContextSource(false, ProviderName.Sybase)]
+		[Test, IncludeDataContextSource(false, ProviderName.Sybase)]
 		public void SybaseBigSource(string context)
 		{
 			// ASE: you may need to increace memory procedure cache sizes like that:
@@ -25,7 +22,7 @@ namespace Tests.Merge
 			RunTest(context, 2000);
 		}
 
-		[IncludeDataContextSource(false, ProviderName.Firebird)]
+		[Test, IncludeDataContextSource(false, ProviderName.Firebird)]
 		public void FirebirdBigSource(string context)
 		{
 			// hard limit around 100 records
@@ -33,17 +30,17 @@ namespace Tests.Merge
 			RunTest(context, 100);
 		}
 
-		[IncludeDataContextSource(false, TestProvName.Firebird3)]
+		[Test, IncludeDataContextSource(false, TestProvName.Firebird3)]
 		public void Firebird3BigSource(string context)
 		{
 			// hard limit around 250 records
 			RunTest(context, 250);
 		}
 
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, TestProvName.Firebird3)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, TestProvName.Firebird3)]
 		public void BigSource(string context)
 		{
-			RunTest(context, 5000);
+			RunTest(context, 1000);
 		}
 
 		private void RunTest(string context, int size)

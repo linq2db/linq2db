@@ -1,22 +1,18 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Merge
 {
+	using Model;
+
 	public partial class MergeTests
 	{
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void SameSourceUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -68,7 +64,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -105,7 +101,7 @@ namespace Tests.Merge
 
 		// Oracle: updates field, used in match
 		// Firebird: update of match key leads to incorrect update
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Firebird)]
 		public void SameSourceUpdateWithUpdate(string context)
 		{
@@ -155,7 +151,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void SameSourceUpdateWithUpdateOracle(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -203,7 +199,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceUpdateWithPredicateAndUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -248,7 +244,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void OtherSourceUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -296,7 +292,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void OtherSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -340,7 +336,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void AnonymousSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -392,7 +388,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void AnonymousListSourceUpdateWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -433,6 +429,7 @@ namespace Tests.Merge
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
+				if (context != ProviderName.Sybase)
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 
 				Assert.AreEqual(4, result[3].Id);
@@ -444,7 +441,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void UpdateReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -496,7 +493,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void UpdateReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))

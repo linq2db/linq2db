@@ -1,12 +1,4 @@
-﻿using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,6 +7,15 @@ using System.Text;
 
 namespace LinqToDB.DataProvider
 {
+	using Data;
+	using Expressions;
+	using Extensions;
+	using Linq;
+	using Linq.Builder;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
+
 	/// <summary>
 	/// Basic merge builder's validation options set to validate merge operation on SQL:2008 level without specific
 	/// database limitations or extensions.
@@ -235,9 +236,10 @@ namespace LinqToDB.DataProvider
 
 		protected virtual void AddSourceValue(
 			ValueToSqlConverter valueConverter,
-			ColumnDescriptor column,
-			SqlDataType columnType,
-			object value)
+			ColumnDescriptor    column,
+			SqlDataType         columnType,
+			object              value,
+			bool                isFirstRow)
 		{
 			// avoid parameters in source due to low limits for parameters number in providers
 			if (!valueConverter.TryConvert(Command, columnType, value))
@@ -261,22 +263,24 @@ namespace LinqToDB.DataProvider
 		{
 			Command
 				.AppendLine()
-				.AppendFormat("\t) {0}", SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
+				.AppendFormat(") {0}", SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
 
 			if (columnNames != null && SupportsColumnAliasesInTableAlias)
 			{
-				if (!columnNames.Any())
+				var nameList = columnNames.ToList();
+
+				if (!nameList.Any())
 					throw new LinqToDBException("Merge source doesn't have any columns.");
 
 				Command.Append(" (");
 
 				var first = true;
-				foreach (var columnName in columnNames)
+				foreach (var columnName in nameList)
 				{
 					if (!first)
 						Command.Append(", ");
-
-					first = false;
+					else
+						first = false;
 
 					Command
 						.AppendFormat("{0}", CreateSourceColumnAlias(columnName, true));
@@ -304,7 +308,7 @@ namespace LinqToDB.DataProvider
 					DataContext.MappingSchema.ValueToSqlConverter,
 					_sourceDescriptor.Columns[i],
 					columnTypes[i],
-					null);
+					null, true);
 
 				Command
 					.Append(" ")
@@ -320,7 +324,7 @@ namespace LinqToDB.DataProvider
 
 		private void BuildSource()
 		{
-			Command.Append("USING ");
+			Command.AppendLine("USING");
 
 			if (Merge.QueryableSource != null && SuportsSourceSubQuery)
 				BuildSourceSubQuery(Merge.QueryableSource);
@@ -336,7 +340,7 @@ namespace LinqToDB.DataProvider
 
 		private string CreateSourceColumnAlias(string columnName, bool returnEscaped)
 		{
-			var alias = "src" + _sourceAliases.Count;
+			var alias = "c" + _sourceAliases.Count;
 			_sourceAliases.Add(columnName, alias);
 
 			if (returnEscaped)
@@ -347,10 +351,8 @@ namespace LinqToDB.DataProvider
 
 		private void BuildSourceDirectValues(IEnumerable<TSource> source)
 		{
-			var hasData = false;
-
-			var columnTypes = GetSourceColumnTypes();
-
+			var hasData        = false;
+			var columnTypes    = GetSourceColumnTypes();
 			var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
 
 			foreach (var item in source)
@@ -362,8 +364,6 @@ namespace LinqToDB.DataProvider
 						.AppendLine("(")
 						.AppendLine("\tVALUES");
 
-				hasData = true;
-
 				Command.Append("\t(");
 
 				for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
@@ -372,15 +372,17 @@ namespace LinqToDB.DataProvider
 						Command.Append(",");
 
 					var column = _sourceDescriptor.Columns[i];
-					var value = column.GetValue(DataContext.MappingSchema, item);
+					var value  = column.GetValue(DataContext.MappingSchema, item);
 
-					AddSourceValue(valueConverter, column, columnTypes[i], value);
+					AddSourceValue(valueConverter, column, columnTypes[i], value, hasData == false);
 
 					if (!SupportsColumnAliasesInTableAlias)
 						Command.AppendFormat(" {0}", CreateSourceColumnAlias(column.ColumnName, true));
 				}
 
 				Command.Append(")");
+
+				hasData = true;
 			}
 
 			if (hasData)
@@ -409,7 +411,7 @@ namespace LinqToDB.DataProvider
 				query.Select.Columns.Clear();
 				foreach (var column in info)
 				{
-					var columnDescriptor = _sourceDescriptor.Columns.Where(_ => _.MemberInfo == column.Members[0]).Single();
+					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == column.Members[0]);
 
 					var alias = CreateSourceColumnAlias(columnDescriptor.ColumnName, false);
 					query.Select.Columns.Add(new SelectQuery.Column(query, column.Sql, alias));
@@ -467,7 +469,7 @@ namespace LinqToDB.DataProvider
 				if (hasData)
 					Command
 						.AppendLine()
-						.AppendLine("\t\tUNION ALL");
+						.AppendLine("\tUNION ALL");
 				else
 					Command
 						.AppendLine("(");
@@ -477,15 +479,18 @@ namespace LinqToDB.DataProvider
 				for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
 				{
 					if (i > 0)
-						Command.Append(",");
+						Command.Append(", ");
 
 					var column = _sourceDescriptor.Columns[i];
-					var value = column.GetValue(DataContext.MappingSchema, item);
+					var value  = column.GetValue(DataContext.MappingSchema, item);
 
-					AddSourceValue(valueConverter, column, columnTypes[i], value);
+					AddSourceValue(valueConverter, column, columnTypes[i], value, hasData == false);
 
 					if (!SupportsColumnAliasesInTableAlias)
-						Command.AppendFormat(" {0}", hasData ? GetEscapedSourceColumnAlias(column.ColumnName) : CreateSourceColumnAlias(column.ColumnName, true));
+						Command
+							.Append(" ")
+							.Append(hasData ? GetEscapedSourceColumnAlias(column.ColumnName) : CreateSourceColumnAlias(column.ColumnName, true))
+							;
 				}
 
 				hasData = true;
@@ -534,6 +539,9 @@ namespace LinqToDB.DataProvider
 				BuildPredicateByKeys(Merge.KeyType, Merge.TargetKey, Merge.SourceKey);
 			else
 				BuildDefaultMatchPredicate();
+
+			while (Command[Command.Length - 1] == ' ')
+				Command.Length--;
 
 			Command.AppendLine(")");
 		}
@@ -633,7 +641,9 @@ namespace LinqToDB.DataProvider
 			}
 
 			Command
-				.AppendLine("THEN DELETE");
+				.AppendLine("THEN")
+				.AppendLine("DELETE")
+				;
 		}
 		#endregion
 
@@ -651,7 +661,9 @@ namespace LinqToDB.DataProvider
 			}
 
 			Command
-				.AppendLine("THEN DELETE");
+				.AppendLine("THEN")
+				.AppendLine("DELETE")
+				;
 		}
 		#endregion
 
@@ -744,8 +756,8 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected virtual void BuildInsert(
-					Expression<Func<TSource, bool>> predicate,
-					Expression<Func<TSource, TTarget>> create)
+			Expression<Func<TSource,bool>>    predicate,
+			Expression<Func<TSource,TTarget>> create)
 		{
 			Command
 				.AppendLine()
@@ -758,12 +770,17 @@ namespace LinqToDB.DataProvider
 			}
 
 			Command
-				.AppendLine("THEN INSERT");
+				.AppendLine("THEN")
+				.Append("INSERT")
+				;
 
 			if (create != null)
 				BuildCustomInsert(create);
 			else
+			{
+				Command.AppendLine();
 				BuildDefaultInsert();
+			}
 		}
 
 		protected virtual void OnInsertWithIdentity()
@@ -896,7 +913,8 @@ namespace LinqToDB.DataProvider
 				BuildPredicateByTargetAndSource(predicate);
 			}
 
-			Command.AppendLine(" THEN UPDATE");
+			Command.AppendLine(" THEN");
+			Command.AppendLine("UPDATE");
 
 			if (update != null)
 				BuildCustomUpdate(update);
