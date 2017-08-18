@@ -535,6 +535,9 @@ void GenerateTypesFromMetadata()
 		Model.Usings.Add("LinqToDB.Data");
 		Model.Usings.Add("LinqToDB.Common");
 
+		if (Procedures.Values.Any(p => p.IsTableFunction))
+			Model.Usings.Add("System.Reflection");
+
 		var procs = new MemberGroup();
 		var funcs = new MemberGroup();
 		var tabfs = new MemberGroup { Region = "Table Functions" };

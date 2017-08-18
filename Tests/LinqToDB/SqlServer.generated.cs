@@ -919,6 +919,8 @@ namespace DataModel
 		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
 		public ITable<SqlType>           SqlTypes            { get { return this.GetTable<SqlType>(); } }
 		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestTable2>        TestTable2          { get { return this.GetTable<TestTable2>(); } }
 		public ITable<TestTable3>        TestTable3          { get { return this.GetTable<TestTable3>(); } }
 
@@ -1322,6 +1324,62 @@ namespace DataModel
 		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // int
 	}
 
+	[Table(Database="TestData", Name="TestMerge1")]
+	public partial class TestMerge1
+	{
+		[Column(DbType="int",               DataType=DataType.Int32),                                  PrimaryKey,  NotNull] public int             Id              { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field1          { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field2          { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field3          { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field4          { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field5          { get; set; } // int
+		[Column(DbType="bigint",            DataType=DataType.Int64),                                     Nullable         ] public long?           FieldInt64      { get; set; } // bigint
+		[Column(DbType="bit",               DataType=DataType.Boolean),                                   Nullable         ] public bool?           FieldBoolean    { get; set; } // bit
+		[Column(DbType="varchar(20)",       DataType=DataType.VarChar,        Length=20),                 Nullable         ] public string          FieldString     { get; set; } // varchar(20)
+		[Column(DbType="nvarchar(20)",      DataType=DataType.NVarChar,       Length=20),                 Nullable         ] public string          FieldNString    { get; set; } // nvarchar(20)
+		[Column(DbType="char(1)",           DataType=DataType.Char,           Length=1),                  Nullable         ] public char?           FieldChar       { get; set; } // char(1)
+		[Column(DbType="nchar(1)",          DataType=DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldNChar      { get; set; } // nchar(1)
+		[Column(DbType="real",              DataType=DataType.Single),                                    Nullable         ] public float?          FieldFloat      { get; set; } // real
+		[Column(DbType="float",             DataType=DataType.Double),                                    Nullable         ] public double?         FieldDouble     { get; set; } // float
+		[Column(DbType="datetime",          DataType=DataType.DateTime),                                  Nullable         ] public DateTime?       FieldDateTime   { get; set; } // datetime
+		[Column(DbType="datetimeoffset(7)", DataType=DataType.DateTimeOffset, Precision=7),               Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
+		[Column(DbType="varbinary(20)",     DataType=DataType.VarBinary,      Length=20),                 Nullable         ] public byte[]          FieldBinary     { get; set; } // varbinary(20)
+		[Column(DbType="uniqueidentifier",  DataType=DataType.Guid),                                      Nullable         ] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
+		[Column(DbType="decimal(24, 10)",   DataType=DataType.Decimal,        Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
+		[Column(DbType="date",              DataType=DataType.Date),                                      Nullable         ] public DateTime?       FieldDate       { get; set; } // date
+		[Column(DbType="time(7)",           DataType=DataType.Time,           Precision=7),               Nullable         ] public TimeSpan?       FieldTime       { get; set; } // time(7)
+		[Column(DbType="varchar(20)",       DataType=DataType.VarChar,        Length=20),                 Nullable         ] public string          FieldEnumString { get; set; } // varchar(20)
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            FieldEnumNumber { get; set; } // int
+	}
+
+	[Table(Database="TestData", Name="TestMerge2")]
+	public partial class TestMerge2
+	{
+		[Column(DbType="int",               DataType=DataType.Int32),                                  PrimaryKey,  NotNull] public int             Id              { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field1          { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field2          { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field3          { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field4          { get; set; } // int
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            Field5          { get; set; } // int
+		[Column(DbType="bigint",            DataType=DataType.Int64),                                     Nullable         ] public long?           FieldInt64      { get; set; } // bigint
+		[Column(DbType="bit",               DataType=DataType.Boolean),                                   Nullable         ] public bool?           FieldBoolean    { get; set; } // bit
+		[Column(DbType="varchar(20)",       DataType=DataType.VarChar,        Length=20),                 Nullable         ] public string          FieldString     { get; set; } // varchar(20)
+		[Column(DbType="nvarchar(20)",      DataType=DataType.NVarChar,       Length=20),                 Nullable         ] public string          FieldNString    { get; set; } // nvarchar(20)
+		[Column(DbType="char(1)",           DataType=DataType.Char,           Length=1),                  Nullable         ] public char?           FieldChar       { get; set; } // char(1)
+		[Column(DbType="nchar(1)",          DataType=DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldNChar      { get; set; } // nchar(1)
+		[Column(DbType="real",              DataType=DataType.Single),                                    Nullable         ] public float?          FieldFloat      { get; set; } // real
+		[Column(DbType="float",             DataType=DataType.Double),                                    Nullable         ] public double?         FieldDouble     { get; set; } // float
+		[Column(DbType="datetime",          DataType=DataType.DateTime),                                  Nullable         ] public DateTime?       FieldDateTime   { get; set; } // datetime
+		[Column(DbType="datetimeoffset(7)", DataType=DataType.DateTimeOffset, Precision=7),               Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
+		[Column(DbType="varbinary(20)",     DataType=DataType.VarBinary,      Length=20),                 Nullable         ] public byte[]          FieldBinary     { get; set; } // varbinary(20)
+		[Column(DbType="uniqueidentifier",  DataType=DataType.Guid),                                      Nullable         ] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
+		[Column(DbType="decimal(24, 10)",   DataType=DataType.Decimal,        Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
+		[Column(DbType="date",              DataType=DataType.Date),                                      Nullable         ] public DateTime?       FieldDate       { get; set; } // date
+		[Column(DbType="time(7)",           DataType=DataType.Time,           Precision=7),               Nullable         ] public TimeSpan?       FieldTime       { get; set; } // time(7)
+		[Column(DbType="varchar(20)",       DataType=DataType.VarChar,        Length=20),                 Nullable         ] public string          FieldEnumString { get; set; } // varchar(20)
+		[Column(DbType="int",               DataType=DataType.Int32),                                     Nullable         ] public int?            FieldEnumNumber { get; set; } // int
+	}
+
 	[Table(Database="TestData", Name="TestTable2")]
 	public partial class TestTable2
 	{
@@ -1705,6 +1763,18 @@ namespace DataModel
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
+		}
+
+		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static TestMerge2 Find(this ITable<TestMerge2> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static TestTable2 Find(this ITable<TestTable2> table, int ID)
