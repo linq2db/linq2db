@@ -69,9 +69,10 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override void AddSourceValue(
 			ValueToSqlConverter valueConverter,
-			ColumnDescriptor column,
-			SqlDataType columnType,
-			object value)
+			ColumnDescriptor    column,
+			SqlDataType         columnType,
+			object              value,
+			bool                isFirstRow)
 		{
 			// informix have really hard times to recognize it's own types, so in source we need to specify type
 			// hint for most of types

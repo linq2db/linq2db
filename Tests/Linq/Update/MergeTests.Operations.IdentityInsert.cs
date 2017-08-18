@@ -1,23 +1,19 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Merge
 {
+	using Model;
+
 	public partial class MergeTests
 	{
 		// DB2, Firebird, Oracle: identity instert not supported
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Informix, ProviderName.SapHana)]
 		public void ImplicitIdentityInsert(string context)
@@ -62,7 +58,7 @@ namespace Tests.Merge
 
 		// DB2, Firebird: identity instert not supported
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
 		public void ExplicitIdentityInsert(string context)
@@ -111,7 +107,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void ExplicitNoIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -137,7 +133,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(7, result.Count);
 

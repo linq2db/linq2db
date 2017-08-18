@@ -60,9 +60,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void AddSourceValue(
 			ValueToSqlConverter valueConverter,
-			ColumnDescriptor column,
-			SqlDataType columnType,
-			object value)
+			ColumnDescriptor    column,
+			SqlDataType         columnType,
+			object              value,
+			bool                isFirstRow)
 		{
 			if (value is string)
 			{
@@ -78,7 +79,7 @@ namespace LinqToDB.DataProvider.Firebird
 				Command.AppendFormat(" AS VARCHAR({0}))", length.ToString(CultureInfo.InvariantCulture));
 			}
 			else
-				base.AddSourceValue(valueConverter, column, columnType, value);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
 		}
 	}
 }

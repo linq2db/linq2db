@@ -1,14 +1,10 @@
-﻿using LinqToDB;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Data.Linq;
-using System.Globalization;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {

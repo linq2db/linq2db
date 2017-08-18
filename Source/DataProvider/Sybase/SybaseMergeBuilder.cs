@@ -1,13 +1,14 @@
-﻿using LinqToDB.Data;
-using System;
+﻿using System;
 using System.Linq;
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using Data;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
+	using Extensions;
+
 	class SybaseMergeBuilder<TTarget, TSource> : BasicMergeBuilder<TTarget, TSource>
 		where TTarget : class
 		where TSource : class
@@ -73,39 +74,100 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void AddSourceValue(
 			ValueToSqlConverter valueConverter,
-			ColumnDescriptor column,
-			SqlDataType columnType,
-			object value)
+			ColumnDescriptor    column,
+			SqlDataType         columnType,
+			object              value,
+			bool                isFirstRow)
 		{
 			// strange thing, that real type needs explicit typing only on some combinations of columns and values
 			// from other side, for Sybase it is not surprising
-			if (column.DataType == DataType.Single
-				|| (column.DataType == DataType.Undefined && column.MemberType.ToNullableUnderlying() == typeof(float)))
+			if (column.DataType == DataType.Single || (column.DataType == DataType.Undefined && column.MemberType.ToNullableUnderlying() == typeof(float)))
 			{
 				Command.Append("CAST(");
-				base.AddSourceValue(valueConverter, column, columnType, value);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
 				Command.Append(" AS REAL)");
 			}
-			else if (column.DataType == DataType.DateTime)
+			else if (column.DataType == DataType.DateTime || column.DataType == DataType.DateTime2)
 			{
 				Command.Append("CAST(");
-				base.AddSourceValue(valueConverter, column, columnType, value);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
 				Command.Append(" AS DATETIME)");
 			}
 			else if (column.DataType == DataType.Date)
 			{
 				Command.Append("CAST(");
-				base.AddSourceValue(valueConverter, column, columnType, value);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
 				Command.Append(" AS DATE)");
 			}
 			else if (column.DataType == DataType.Time)
 			{
 				Command.Append("CAST(");
-				base.AddSourceValue(valueConverter, column, columnType, value);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
 				Command.Append(" AS TIME)");
 			}
+			else if (isFirstRow && value == null)
+			{
+				string type;
+
+				if (column.DbType != null)
+				{
+					type = column.DbType;
+				}
+				else
+				{
+					var dataType = column.DataType != DataType.Undefined ?
+						column.DataType :
+						SqlDataType.GetDataType(column.MemberType).DataType;
+
+					switch (dataType)
+					{
+						case DataType.Double : type = "FLOAT";    break;
+						case DataType.Single : type = "REAL";     break;
+						case DataType.SByte  : type = "TINYINT";  break;
+						case DataType.UInt16 : type = "INT";      break;
+						case DataType.UInt32 : type = "BIGINt";   break;
+						case DataType.UInt64 : type = "DECIMAL";  break;
+						case DataType.Byte   : type = "TINYINT";  break;
+						case DataType.Int16  : type = "SMALLINT"; break;
+						case DataType.Int32  : type = "INT";      break;
+						case DataType.Int64  : type = "BIGINT";   break;
+						case DataType.Boolean: type = "BIT";      break;
+						default              : type = null;       break;
+					}
+				}
+
+				if (type != null)
+				{
+					Command
+						.Append("CAST(NULL AS ")
+						.Append(type)
+						;
+
+					if (column.Length > 0)
+						Command
+							.Append('(')
+							.Append(column.Length)
+							.Append(')')
+							;
+
+					if (column.Precision > 0)
+						Command
+							.Append('(')
+							.Append(column.Precision)
+							.Append(',')
+							.Append(column.Scale)
+							.Append(')')
+							;
+
+					Command
+						.Append(")")
+						;
+				}
+				else
+					base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
+			}
 			else
-				base.AddSourceValue(valueConverter, column, columnType, value);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
 		}
 	}
 }

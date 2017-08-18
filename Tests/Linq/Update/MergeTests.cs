@@ -1,19 +1,16 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Merge
 {
+	using Model;
+
 	[TestFixture]
 	public partial class MergeTests : TestBase
 	{
@@ -30,6 +27,7 @@ namespace Tests.Merge
 			public MergeBySourceDataContextSourceAttribute()
 				: base(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)
 			{
+				ParallelScope = ParallelScope.None;
 			}
 		}
 
@@ -54,6 +52,7 @@ namespace Tests.Merge
 			public MergeDataContextSourceAttribute(params string[] except)
 				: base(false, Unsupported.Concat(except).ToArray())
 			{
+				ParallelScope = ParallelScope.None;
 			}
 		}
 
@@ -185,11 +184,11 @@ namespace Tests.Merge
 						}
 				}
 
-		[DataContextSource(false)]
+		[Test, DataContextSource(false)]
 		public void TestDataGenerationTest(string context)
 		{
 			using (var db = new TestDataConnection(context))
-				{
+			{
 				PrepareData(db);
 
 				var result1 = GetTarget(db).OrderBy(_ => _.Id).ToList();
@@ -207,14 +206,16 @@ namespace Tests.Merge
 				AssertRow(InitialSourceData[1], result2[1], null, 214);
 				AssertRow(InitialSourceData[2], result2[2], null, null);
 				AssertRow(InitialSourceData[3], result2[3], null, 216);
-				}
 			}
+		}
 
 		private void AssertRowCount(int expected, int actual, string context)
 		{
 			// another sybase quirk, nothing surprising
 			if (context == ProviderName.Sybase)
 				Assert.LessOrEqual(expected, actual);
+			else if (context == ProviderName.OracleNative && actual == -1)
+			{ }
 			else
 				Assert.AreEqual(expected, actual);
 		}

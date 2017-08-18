@@ -66,6 +66,9 @@ build_script:
         
         cd ..
         
+        if ($env:APPVEYOR_PULL_REQUEST_NUMBER -ne "")
+          return;
+          
         git config --global core.autocrlf true
         git config --global credential.helper store
         Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"

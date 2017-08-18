@@ -140,7 +140,7 @@ namespace LinqToDB.Data
 
 			PreparedQuery _preparedQuery;
 
-			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query)
+			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, int startIndent = 0)
 			{
 				if (query.Context != null)
 				{
@@ -173,7 +173,7 @@ namespace LinqToDB.Data
 				{
 					sb.Length = 0;
 
-					sqlProvider.BuildSql(i, sql, sb);
+					sqlProvider.BuildSql(i, sql, sb, startIndent);
 					commands[i] = sb.ToString();
 				}
 
@@ -247,9 +247,9 @@ namespace LinqToDB.Data
 				parms.Add(p);
 			}
 
-			public static PreparedQuery SetQuery(DataConnection dataConnection, IQueryContext queryContext)
+			public static PreparedQuery SetQuery(DataConnection dataConnection, IQueryContext queryContext, int startIndent = 0)
 			{
-				var preparedQuery = GetCommand(dataConnection, queryContext);
+				var preparedQuery = GetCommand(dataConnection, queryContext, startIndent);
 
 				GetParameters(dataConnection, queryContext, preparedQuery);
 

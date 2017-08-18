@@ -358,27 +358,27 @@ namespace LinqToDB.Data
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
-							try
-							{
-						sb
-							.AppendLine()
-							.AppendLine("Exception: {0}".Args(ex.GetType()))
-							.AppendLine("Message  : {0}".Args(ex.Message))
-							.AppendLine(ex.StackTrace)
-							;
-					}
-							catch
-							{
-								// Sybase provider could generate exception that will throw another exception when you
-								// try to access Message property due to bug in AseErrorCollection.Message property.
-								// There it tries to fetch error from first element of list without checking wether
-								// list contains any elements or not
-								sb
-									.AppendLine()
-									.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
-									;
-							}
+						try
+						{
+							sb
+								.AppendLine()
+								.AppendLine("Exception: {0}".Args(ex.GetType()))
+								.AppendLine("Message  : {0}".Args(ex.Message))
+								.AppendLine(ex.StackTrace)
+								;
 						}
+						catch
+						{
+							// Sybase provider could generate exception that will throw another exception when you
+							// try to access Message property due to bug in AseErrorCollection.Message property.
+							// There it tries to fetch error from first element of list without checking wether
+							// list contains any elements or not
+							sb
+								.AppendLine()
+								.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
+								;
+						}
+					}
 
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
 					

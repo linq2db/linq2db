@@ -1,22 +1,17 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
+
+using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Merge
 {
+	using Model;
+
 	public partial class MergeTests
 	{
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void SameSourceUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -65,7 +60,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void SameSourceUpdateBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -110,7 +105,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void OtherSourceUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -159,7 +154,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void OtherSourceUpdateBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -211,7 +206,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void AnonymousSourceUpdateBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -271,7 +266,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void AnonymousListSourceUpdateBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -331,7 +326,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void UpdateBySourceReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -391,7 +386,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void UpdateBySourceReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))

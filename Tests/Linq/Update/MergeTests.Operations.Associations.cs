@@ -1,22 +1,17 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
 using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Merge
 {
 	public partial class MergeTests
 	{
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void OtherSourceAssociationInDeleteBySourcePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -46,7 +41,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void OtherSourceAssociationInDeletePredicate(string context)
 		{
@@ -75,7 +70,7 @@ namespace Tests.Merge
 
 		// ASE: server dies
 		// Oracle: associations in insert setter
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void OtherSourceAssociationInInsertCreate(string context)
 		{
@@ -121,7 +116,7 @@ namespace Tests.Merge
 		// Oracle: associations in insert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
 		public void OtherSourceAssociationInInsertCreate2(string context)
 		{
@@ -164,7 +159,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void OtherSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -186,7 +181,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(7, result.Count);
 
@@ -207,7 +202,7 @@ namespace Tests.Merge
 
 		// ASE, DB2: Associations in match not supported
 		// Informix: associations doesn't work right now
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
 		public void OtherSourceAssociationInMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -229,7 +224,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -250,7 +245,7 @@ namespace Tests.Merge
 
 		// ASE: server dies
 		// Informix: associations doesn't work right now
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix)]
 		public void OtherSourceAssociationInUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -271,7 +266,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -290,7 +285,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void OtherSourceAssociationInUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -331,7 +326,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void OtherSourceAssociationInUpdateBySourcePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -372,7 +367,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void OtherSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -394,7 +389,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -413,7 +408,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void SameSourceAssociationInDeleteBySourcePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -443,7 +438,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceAssociationInDeletePredicate(string context)
 		{
@@ -472,7 +467,7 @@ namespace Tests.Merge
 
 		// ASE: server dies
 		// Oracle: associations in instert setters
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceAssociationInInsertCreate(string context)
 		{
@@ -520,7 +515,7 @@ namespace Tests.Merge
 		// Oracle: associations in instert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
 		public void SameSourceAssociationInInsertCreate2(string context)
 		{
@@ -563,7 +558,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceAssociationInInsertPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -587,7 +582,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(7, result.Count);
 
@@ -608,7 +603,7 @@ namespace Tests.Merge
 
 		// ASE, DB2: Associations in match not supported
 		// Informix: associations doesn't work right now
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
 		public void SameSourceAssociationInMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -630,7 +625,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -651,7 +646,7 @@ namespace Tests.Merge
 
 		// ASE: server dies
 		// Informix: associations doesn't work right now
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix)]
 		public void SameSourceAssociationInUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -672,7 +667,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -691,7 +686,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void SameSourceAssociationInUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -733,7 +728,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void SameSourceAssociationInUpdateBySourcePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -775,7 +770,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: server dies
-		[MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceAssociationInUpdatePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -797,7 +792,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -816,7 +811,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[DataContextSource(false)]
+		[Test, DataContextSource(false)]
 		public void TestAssociationsData(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -851,7 +846,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -873,7 +868,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 
@@ -885,7 +880,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void OtherSourceAssociationInUpdateWithDeleteDeletePredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -907,7 +902,7 @@ namespace Tests.Merge
 
 				var result = db.Person.OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 

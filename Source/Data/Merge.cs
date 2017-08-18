@@ -703,8 +703,8 @@ namespace LinqToDB.Data
 		/// <param name="merge">Merge command definition.</param>
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
 		public static int Merge<TTarget, TSource>(this IMergeable<TTarget, TSource> merge)
-				where TTarget : class
-				where TSource : class
+			where TTarget : class
+			where TSource : class
 		{
 			if (merge == null)
 				throw new ArgumentNullException("merge");

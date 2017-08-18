@@ -1,24 +1,24 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
+﻿using System;
+using System.Data;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Tests.Model;
-using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
-using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
+using NUnit.Framework;
+
 namespace Tests.Merge
 {
+	using Model;
+
 	public partial class MergeTests
 	{
 		public static IEnumerable<TestCaseData> _validationNegativeCases
@@ -389,7 +389,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[DataContextSource(false, ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+		[Test, DataContextSource(false, ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Sybase,
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 			TestProvName.SqlAzure, ProviderName.Informix, ProviderName.SapHana,
