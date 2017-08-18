@@ -178,15 +178,20 @@ namespace LinqToDB.DataProvider
 			var first = true;
 			var targetAlias = (string)SqlBuilder.Convert(_targetAlias, ConvertType.NameToQueryTableAlias);
 			var sourceAlias = (string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
+
 			foreach (var column in TargetDescriptor.Columns.Where(c => c.IsPrimaryKey))
 			{
 				if (!first)
-					Command.AppendLine(" AND");
+					Command
+						.AppendLine(" AND")
+						.Append('\t')
+						;
+				else
+					first = false;
 
-				first = false;
 				Command
 					.AppendFormat(
-						"\t{0}.{1} = {2}.{3}",
+						"{0}.{1} = {2}.{3}",
 						targetAlias, SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField),
 						sourceAlias, GetEscapedSourceColumnAlias(column.ColumnName));
 			}
@@ -395,7 +400,7 @@ namespace LinqToDB.DataProvider
 
 		private void BuildSourceSubQuery(IQueryable<TSource> queryableSource)
 		{
-			Command.Append("(");
+			Command.AppendLine("(");
 
 			var inlineParameters = _connection.InlineParameters;
 			try
@@ -438,15 +443,20 @@ namespace LinqToDB.DataProvider
 
 				SaveParameters(query.Parameters);
 
-				var queryContext = new QueryContext()
+				var queryContext = new QueryContext
 				{
 					SelectQuery = query,
 					SqlParameters = query.Parameters.ToArray()
 				};
 
-				var preparedQuery = DataConnection.QueryRunner.SetQuery(_connection, queryContext);
+				var preparedQuery = DataConnection.QueryRunner.SetQuery(_connection, queryContext, 1);
 
 				Command.Append(preparedQuery.Commands[0]);
+
+				var cs = new [] { ' ', '\t', '\r', '\n' };
+
+				while (cs.Contains(Command[Command.Length - 1]))
+					Command.Length--;
 			}
 			finally
 			{
@@ -714,7 +724,7 @@ namespace LinqToDB.DataProvider
 			if (IsIdentityInsertSupported && TargetDescriptor.Columns.Any(c => c.IsIdentity))
 				OnInsertWithIdentity();
 
-			Command.AppendLine("\t(");
+			Command.AppendLine("(");
 
 			var first = true;
 			foreach (var column in insertColumns)
@@ -725,14 +735,14 @@ namespace LinqToDB.DataProvider
 						.AppendLine();
 
 				first = false;
-				Command.AppendFormat("\t\t{0}", SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField));
+				Command.AppendFormat("\t{0}", SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField));
 			}
 
 			Command
 				.AppendLine()
-				.AppendLine("\t)")
-				.AppendLine("\tVALUES")
-				.AppendLine("\t(");
+				.AppendLine(")")
+				.AppendLine("VALUES")
+				.AppendLine("(");
 
 			var sourceAlias = SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
 			first = true;
@@ -745,14 +755,14 @@ namespace LinqToDB.DataProvider
 
 				first = false;
 				Command.AppendFormat(
-					"\t\t{1}.{0}",
+					"\t{1}.{0}",
 					GetEscapedSourceColumnAlias(column.ColumnName),
 					sourceAlias);
 			}
 
 			Command
 				.AppendLine()
-				.AppendLine("\t)");
+				.AppendLine(")");
 		}
 
 		protected virtual void BuildInsert(
@@ -875,7 +885,7 @@ namespace LinqToDB.DataProvider
 
 			if (updateColumns.Count > 0)
 			{
-				Command.AppendLine("\tSET");
+				Command.AppendLine("SET");
 
 				var sourceAlias = (string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
 				var maxLen = updateColumns.Max(c => ((string)SqlBuilder.Convert(c.ColumnName, ConvertType.NameToQueryField)).Length);
@@ -890,10 +900,12 @@ namespace LinqToDB.DataProvider
 
 					var fieldName = (string)SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField);
 					Command
-						.AppendFormat("\t\t{0} ", fieldName)
+						.AppendFormat("\t{0} ", fieldName)
 						.Append(' ', maxLen - fieldName.Length)
 						.AppendFormat("= {1}.{0}", GetEscapedSourceColumnAlias(column.ColumnName), sourceAlias);
 				}
+
+				Command.AppendLine();
 			}
 			else
 				throw new LinqToDBException("Merge.Update call requires updatable columns");
@@ -912,6 +924,9 @@ namespace LinqToDB.DataProvider
 				Command.Append("AND ");
 				BuildPredicateByTargetAndSource(predicate);
 			}
+
+			while (Command[Command.Length - 1] ==  ' ')
+				Command.Length--;
 
 			Command.AppendLine(" THEN");
 			Command.AppendLine("UPDATE");

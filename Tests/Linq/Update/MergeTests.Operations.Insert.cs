@@ -528,7 +528,7 @@ namespace Tests.Merge
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
-					.InsertWhenNotMatched(_ => new TestMapping1()
+					.InsertWhenNotMatched(_ => new TestMapping1
 					{
 						Id = 10 + _.Id,
 						Field1 = 123,
@@ -1073,12 +1073,14 @@ namespace Tests.Merge
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(5, result.Count);
+				if (context != ProviderName.Sybase)
+					Assert.AreEqual(5, result.Count);
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
+				if (context != ProviderName.Sybase)
 				AssertRow(InitialSourceData[3], result[4], null, 216);
 			}
 		}

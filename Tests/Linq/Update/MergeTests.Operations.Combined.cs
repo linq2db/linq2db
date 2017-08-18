@@ -31,7 +31,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -258,12 +258,15 @@ namespace Tests.Merge
 
 				AssertRowCount(5, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				if (context != ProviderName.Sybase)
+				{
+					Assert.AreEqual(4, result.Count);
 
-				AssertRow(InitialTargetData[1], result[0], null, null);
-				AssertRow(InitialTargetData[2], result[1], null, 203);
-				AssertRow(InitialSourceData[2], result[2], null, null);
-				AssertRow(InitialSourceData[3], result[3], null, 216);
+					AssertRow(InitialTargetData[1], result[0], null, null);
+					AssertRow(InitialTargetData[2], result[1], null, 203);
+					AssertRow(InitialSourceData[2], result[2], null, null);
+					AssertRow(InitialSourceData[3], result[3], null, 216);
+				}
 			}
 		}
 
@@ -474,7 +477,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 

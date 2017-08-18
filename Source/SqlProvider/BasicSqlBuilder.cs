@@ -63,9 +63,9 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb)
+		public void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int startIndent = 0)
 		{
-			BuildSql(commandNumber, selectQuery, sb, 0, false);
+			BuildSql(commandNumber, selectQuery, sb, startIndent, false);
 		}
 
 		protected virtual void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)

@@ -184,7 +184,8 @@ namespace Tests.Merge
 
 		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
+		// Informix: install the latest server
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
 		public void MergeChar1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -192,7 +193,7 @@ namespace Tests.Merge
 			{
 				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
 				{
-					charDataType = '\x0',
+					charDataType  = '\x0',
 					ncharDataType = "\x0"
 				}));
 
@@ -208,7 +209,8 @@ namespace Tests.Merge
 
 		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
+		// Informix: install the latest server
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
 		public void MergeChar2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -260,7 +262,7 @@ namespace Tests.Merge
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				var row = db.GetTable<AllType>().OrderByDescending(_ => _.ID).Take(1).Single();
 
