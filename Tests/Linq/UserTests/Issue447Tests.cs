@@ -144,6 +144,29 @@
 			}
 		}
 
+		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
+		public void TestLinq2DbComplexQueryWithParameters(string context)
+		{
+			var old = Configuration.Linq.UseBinaryAggregateExpression;
+			try
+			{
+				Configuration.Linq.UseBinaryAggregateExpression = true;
+
+				var value = true;
+
+				using (var db = GetDataContext(context))
+				{
+					var query = from p in db.Parent where p.ParentID > 2 && value && true && !false select p;
+
+					var res = query.ToList();
+				}
+			}
+			finally
+			{
+				Configuration.Linq.UseBinaryAggregateExpression = old;
+			}
+		}
+
 		public static Expression<Func<T, bool>> And<T>(Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
 		{
 			var invokedExpr = Expression.Invoke(expr2, expr1.Parameters);
