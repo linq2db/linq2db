@@ -334,7 +334,30 @@ namespace LinqToDB.Linq.Builder
 
 							if (items.Count > 2)
 							{
-								return new BinaryAggregateExpression(expr.NodeType, expr.Type, items.ToArray());
+								// having N items will lead to NxM recursive calls in expression visitors and
+								// will result in stack overflow on relatively small numbers (~1000 items).
+								// To fix it we will rebalance condition tree here which will result in 
+								// LOG2(N)*M recursive calls, or 10*M calls for 1000 items.
+								//
+								// E.g. we have condition A OR B OR C OR D OR E
+								// as an expression tree it represented as tree with depth 5
+								//   OR
+								// A    OR
+								//    B    OR
+								//       C    OR
+								//          D    E
+								// for rebalanced tree it will have depth 4
+								//                  OR
+								//        OR
+								//   OR        OR        OR
+								// A    B    C    D    E    F
+								// Not much on small numbers, but huge improvement on bigger numbers
+								while (items.Count != 1)
+								{
+									items = CompactTree(items, expr.NodeType);
+								}
+
+								return items[0];
 							}
 							break;
 						}
@@ -342,6 +365,25 @@ namespace LinqToDB.Linq.Builder
 
 				return expr;
 			});
+		}
+
+		private List<Expression> CompactTree(List<Expression> items, ExpressionType nodeType)
+		{
+			var result = new List<Expression>();
+			for (var i = 0; i < items.Count; i += 2)
+			{
+				if (i + 1 == items.Count)
+				{
+					// last non-paired item
+					result.Add(items[i]);
+				}
+				else
+				{
+					result.Add(Expression.MakeBinary(nodeType, items[i], items[i + 1]));
+				}
+			}
+
+			return result;
 		}
 
 		Expression ConvertParameters(Expression expression)
