@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider.Sybase
 				{
 					var dataType = column.DataType != DataType.Undefined ?
 						column.DataType :
-						SqlDataType.GetDataType(column.MemberType).DataType;
+						DataContext.MappingSchema.GetDataType(column.MemberType).DataType;
 
 					switch (dataType)
 					{
@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.Sybase
 						case DataType.Single : type = "REAL";     break;
 						case DataType.SByte  : type = "TINYINT";  break;
 						case DataType.UInt16 : type = "INT";      break;
-						case DataType.UInt32 : type = "BIGINt";   break;
+						case DataType.UInt32 : type = "BIGINT";   break;
 						case DataType.UInt64 : type = "DECIMAL";  break;
 						case DataType.Byte   : type = "TINYINT";  break;
 						case DataType.Int16  : type = "SMALLINT"; break;
