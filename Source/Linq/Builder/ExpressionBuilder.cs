@@ -103,9 +103,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			_query               = query;
 
-			if (Configuration.Linq.UseBinaryAggregateExpression)
-				expression = AggregateExpression(expression);
-
 			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
 			CompiledParameters   = compiledParameters;
@@ -302,7 +299,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertParameters
 
-		Expression AggregateExpression(Expression expression)
+		internal static Expression AggregateExpression(Expression expression)
 		{
 			return expression.Transform(expr =>
 			{
@@ -367,7 +364,7 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
-		private List<Expression> CompactTree(List<Expression> items, ExpressionType nodeType)
+		private static List<Expression> CompactTree(List<Expression> items, ExpressionType nodeType)
 		{
 			var result = new List<Expression>();
 
