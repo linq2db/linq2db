@@ -685,7 +685,7 @@ namespace LinqToDB.DataProvider
 		#region Operations: INSERT
 		protected void BuildCustomInsert(Expression<Func<TSource, TTarget>> create)
 		{
-			var insertExpression = Expression.Call(
+			Expression insertExpression = Expression.Call(
 				null,
 				LinqExtensions._insertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 				new[]
@@ -695,7 +695,7 @@ namespace LinqToDB.DataProvider
 					Expression.Quote(create)
 				});
 
-			var qry = Query<int>.GetQuery(DataContext, insertExpression);
+			var qry = Query<int>.GetQuery(DataContext, ref insertExpression);
 			var query = qry.Queries[0].SelectQuery;
 
 			query.Insert.Into.Alias = _targetAlias;
@@ -818,12 +818,12 @@ namespace LinqToDB.DataProvider
 			var updateQuery = target.SelectMany(_ => _connection.GetTable<TSource>(), (t, s) => new { t, s });
 			var predicate = RewriteUpdatePredicateParameters(updateQuery, update);
 
-			var updateExpression = Expression.Call(
+			Expression updateExpression = Expression.Call(
 				null,
 				LinqExtensions._updateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
-			var qry = Query<int>.GetQuery(DataContext, updateExpression);
+			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
 			var query = qry.Queries[0].SelectQuery;
 
 			if (ProviderUsesAlternativeUpdate)
@@ -1097,12 +1097,12 @@ namespace LinqToDB.DataProvider
 
 			Command.AppendLine("THEN UPDATE");
 
-			var updateExpression = Expression.Call(
+			Expression updateExpression = Expression.Call(
 				null,
 				LinqExtensions._updateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
-			var qry = Query<int>.GetQuery(DataContext, updateExpression);
+			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
 			var query = qry.Queries[0].SelectQuery;
 
 			MoveJoinsToSubqueries(query, _targetAlias, null, QueryElement.UpdateSetter);
