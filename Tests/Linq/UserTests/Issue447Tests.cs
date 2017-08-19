@@ -96,6 +96,54 @@
 			}
 		}
 
+		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
+		public void TestLinq2DbComplexQueryCache(string context)
+		{
+			var old = Configuration.Linq.UseBinaryAggregateExpression;
+			try
+			{
+				Configuration.Linq.UseBinaryAggregateExpression = true;
+				using (var db = GetDataContext(context))
+				{
+					var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+
+					var array = Enumerable.Range(0, 3000).ToArray();
+
+					// Build "where" conditions
+					var param = Expression.Parameter(typeof(Model.Child));
+					Expression<Func<Model.Child, bool>> predicate1 = null;
+					Expression<Func<Model.Child, bool>> predicate2 = null;
+
+					for (int i = 0; i < array.Length; i++)
+					{
+						var id = array[i];
+
+						var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
+						(Expression.Equal(
+							Expression.Convert(Expression.Field(param, "ChildID"), typeof(int)),
+							Expression.Constant(id)
+						), param);
+
+						predicate1 = predicate1 != null ? Or(predicate1, filterExpression) : filterExpression;
+						predicate2 = predicate2 != null ? Or(predicate2, filterExpression) : filterExpression;
+					}
+
+					var result1 = result.Where(predicate1);
+					var result2 = result.Where(predicate2);
+
+					// StackOverflowException cannot be handled and will terminate process
+					result1.ToString();
+
+					// from cache
+					result2.ToString();
+				}
+			}
+			finally
+			{
+				Configuration.Linq.UseBinaryAggregateExpression = old;
+			}
+		}
+
 		public static Expression<Func<T, bool>> And<T>(Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
 		{
 			var invokedExpr = Expression.Invoke(expr2, expr1.Parameters);
