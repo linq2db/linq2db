@@ -43,8 +43,14 @@ namespace Tests.UserTests
 		}
 
 		[AttributeUsage(AttributeTargets.Method)]
-		class Issue256TestSourceAttribute : DataContextSourceAttribute
+		class Issue256TestSourceAttribute : IncludeDataContextSourceAttribute
 		{
+			// tests are provider-agnostic
+			public Issue256TestSourceAttribute()
+				: base(ProviderName.SQLite)
+			{
+			}
+
 			protected override IEnumerable<Tuple<object[], string>> GetParameters(string provider)
 			{
 				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)Unused }, (string)null);
