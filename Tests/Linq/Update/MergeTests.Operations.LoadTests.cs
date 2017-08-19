@@ -37,7 +37,15 @@ namespace Tests.Merge
 			RunTest(context, 250);
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, TestProvName.Firebird3)]
+		[Test, IncludeDataContextSource(ProviderName.OracleManaged, ProviderName.Oracle, ProviderName.OracleNative)]
+		public void OracleBigSource(string context)
+		{
+			// big query makes Oracle to heavy eat memory
+			// this will affect other servers
+			RunTest(context, 100);
+		}
+
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleManaged, ProviderName.Oracle, ProviderName.OracleNative)]
 		public void BigSource(string context)
 		{
 			RunTest(context, 1000);

@@ -67,7 +67,9 @@ build_script:
         cd ..
         
         if ($env:APPVEYOR_PULL_REQUEST_NUMBER -ne "")
+        {
           return;
+        }
           
         git config --global core.autocrlf true
         git config --global credential.helper store
