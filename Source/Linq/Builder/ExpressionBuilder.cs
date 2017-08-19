@@ -370,6 +370,8 @@ namespace LinqToDB.Linq.Builder
 		private List<Expression> CompactTree(List<Expression> items, ExpressionType nodeType)
 		{
 			var result = new List<Expression>();
+
+			// traverse list from left to right to preserve calculation order
 			for (var i = 0; i < items.Count; i += 2)
 			{
 				if (i + 1 == items.Count)

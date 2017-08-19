@@ -126,7 +126,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Experimental feature.
-			/// Used to optimize huge logical operations with large number of operands like expr1.and.axpr2...and.exprN into to one <see cref="LinqToDB.Expressions.BinaryAggregateExpression"/>.
+			/// Used to optimize huge logical operations with large number of operands like expr1.and.axpr2...and.exprN into balanced tree.
 			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
 			/// Default value: <c>false</c>.
 			/// <remarks>

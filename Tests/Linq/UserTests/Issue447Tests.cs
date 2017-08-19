@@ -11,7 +11,7 @@
 	public class Issue447Tests : TestBase
 	{
 		[Explicit("https://github.com/linq2db/linq2db/issues/447")]
-		[Test, DataContextSource()]
+		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
 		public void TestLinq2DbComplexQuery2(string context)
 		{
 			var old = Configuration.Linq.UseBinaryAggregateExpression;
@@ -54,7 +54,7 @@
 			}
 		}
 
-		[Test, DataContextSource()]
+		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
 		public void TestLinq2DbComplexQuery3(string context)
 		{
 			var old = Configuration.Linq.UseBinaryAggregateExpression;

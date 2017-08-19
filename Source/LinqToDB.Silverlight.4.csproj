@@ -125,7 +125,6 @@
     <Compile Include="ExpressionMethodAttribute.cs" />
     <Compile Include="Expressions\ChangeTypeExpression.cs" />
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
-    <Compile Include="Expressions\BinaryAggregateExpression.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\GetItemExpression.cs" />
