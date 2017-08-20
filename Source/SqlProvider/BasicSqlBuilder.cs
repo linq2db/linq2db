@@ -514,9 +514,37 @@ namespace LinqToDB.SqlProvider
 
 			AppendIndent().Append("USING (SELECT ");
 
+			var insertIdx = 0;
 			for (var i = 0; i < keys.Count; i++)
 			{
-				BuildExpression(keys[i].Expression, false, false);
+				var keyExpression = keys[i].Expression;
+
+				if (!SqlProviderFlags.CanCombineParameters)
+				{
+					keyExpression = new QueryVisitor().Convert(keyExpression, e =>
+					{
+						switch (e.ElementType)
+						{
+							case QueryElementType.SqlParameter:
+								{
+									var p = (SqlParameter)e;
+
+									if (p.IsQueryParameter)
+									{
+										var clonedParameter = (SqlParameter)p.Clone(new Dictionary<ICloneableElement, ICloneableElement>(), _ => true);
+										SelectQuery.Parameters.Insert(insertIdx++, clonedParameter);
+										return clonedParameter;
+									}
+								}
+
+								break;
+						}
+
+						return e;
+					});
+				}
+
+				BuildExpression(keyExpression, false, false);
 				StringBuilder.Append(" AS ");
 				BuildExpression(keys[i].Column, false, false);
 
