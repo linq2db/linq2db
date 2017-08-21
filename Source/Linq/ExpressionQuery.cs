@@ -102,8 +102,9 @@ namespace LinqToDB.Linq
 		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
 		{
 			var expression = Expression;
-			var query = GetQuery(ref expression, true);
-			Expression = expression;
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+			
 			return query
 				.GetForEachAsync((IDataContextEx)DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken);
 		}
@@ -182,16 +183,18 @@ namespace LinqToDB.Linq
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
 			var expression = Expression;
-			var query = GetQuery(ref expression, true);
-			Expression = expression;
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+			
 			return query.GetIEnumerable((IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			var expression = Expression;
-			var query = GetQuery(ref expression, true);
-			Expression = expression;
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+			
 			return query.GetIEnumerable((IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
 		}
 
