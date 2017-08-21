@@ -1,21 +1,21 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Tests.Model;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Linq;
+
+using NUnit.Framework;
+
 namespace Tests.Merge
 {
+	using Model;
+
 	public partial class MergeTests
 	{
 		public static IEnumerable<TestCaseData> _nullParameterCases

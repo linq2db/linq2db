@@ -1,22 +1,17 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
+
+using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Merge
 {
+	using Model;
+
 	public partial class MergeTests
 	{
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void SameSourceUpdateWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -61,7 +56,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void SameSourceUpdateWithDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -95,7 +90,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void SameSourceUpdateWithDeleteWithUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -138,7 +133,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void SameSourceUpdateWithDeleteWithPredicateAndUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -182,7 +177,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void OtherSourceUpdateWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -225,7 +220,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void OtherSourceUpdateWithDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -269,7 +264,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void AnonymousSourceUpdateWithDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -321,7 +316,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void AnonymousListSourceUpdateWithDeleteWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -373,7 +368,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void UpdateWithDeleteReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -425,7 +420,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void UpdateWithDeleteReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -477,7 +472,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void UpdateWithDeleteDeleteByConditionOnUpdatedField(string context)
 		{
 			using (var db = new TestDataConnection(context))

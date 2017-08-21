@@ -1,17 +1,14 @@
-﻿IF OBJECT_ID('dbo.Doctor') IS NOT NULL
-BEGIN DROP TABLE Doctor END
+﻿USE master
 GO
 
-IF OBJECT_ID('dbo.Patient') IS NOT NULL
-BEGIN DROP TABLE Patient END
+DROP DATABASE TestData
 GO
 
-IF OBJECT_ID('dbo.InheritanceParent') IS NOT NULL
-BEGIN DROP TABLE InheritanceParent END
+CREATE DATABASE TestData
+	ON master = '102400K'
 GO
 
-IF OBJECT_ID('dbo.InheritanceChild') IS NOT NULL
-BEGIN DROP TABLE InheritanceChild END
+USE TestData
 GO
 
 CREATE TABLE InheritanceParent
@@ -36,10 +33,6 @@ CREATE TABLE InheritanceChild
 GO
 
 -- Person Table
-
-IF OBJECT_ID('dbo.Person') IS NOT NULL
-BEGIN DROP TABLE Person END
-GO
 
 CREATE TABLE Person
 (
@@ -91,26 +84,11 @@ INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoi
 GO
 
 
-IF OBJECT_ID('dbo.Parent') IS NOT NULL
-BEGIN DROP TABLE Parent END
-GO
-IF OBJECT_ID('dbo.Child') IS NOT NULL
-BEGIN DROP TABLE Child END
-GO
-IF OBJECT_ID('dbo.GrandChild') IS NOT NULL
-BEGIN DROP TABLE GrandChild END
-GO
-
 CREATE TABLE Parent      (ParentID int, Value1 int NULL)
 GO
 CREATE TABLE Child       (ParentID int, ChildID int)
 GO
 CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
-GO
-
-IF OBJECT_ID('dbo.LinqDataTypes') IS NOT NULL
-BEGIN DROP TABLE LinqDataTypes END
-
 GO
 
 CREATE TABLE LinqDataTypes
@@ -130,10 +108,6 @@ CREATE TABLE LinqDataTypes
 GO
 
 
-IF OBJECT_ID('dbo.TestIdentity') IS NOT NULL
-BEGIN DROP TABLE TestIdentity END
-GO
-
 CREATE TABLE TestIdentity
 (
 	ID int IDENTITY CONSTRAINT PK_TestIdentity PRIMARY KEY CLUSTERED
@@ -141,10 +115,6 @@ CREATE TABLE TestIdentity
 GO
 
 -- AllTypes
-
-IF OBJECT_ID('dbo.AllTypes') IS NOT NULL
-BEGIN DROP TABLE AllTypes END
-GO
 
 CREATE TABLE AllTypes
 (
@@ -218,13 +188,6 @@ SELECT
 GO
 
 -- merge test tables
-IF OBJECT_ID('dbo.TestMerge1') IS NOT NULL
-BEGIN DROP TABLE TestMerge1 END
-GO
-IF OBJECT_ID('dbo.TestMerge2') IS NOT NULL
-BEGIN DROP TABLE TestMerge2 END
-GO
-
 CREATE TABLE TestMerge1
 (
 	Id     int NOT NULL,

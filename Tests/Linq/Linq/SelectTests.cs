@@ -215,7 +215,9 @@ namespace Tests.Linq
 					.Select(p4 => new Person { ID = p4.p11.ID, FirstName = p4.p3.p1.FirstName }));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana, ParallelScope = ParallelScope.None)]
+		// ProviderName.SqlServer2014 disabled due to:
+		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana, ParallelScope = ParallelScope.None)]
 		public void MultipleSelect11(string context)
 		{
 			var dt = DateTime.Now;

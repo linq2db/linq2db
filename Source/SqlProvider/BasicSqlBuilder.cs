@@ -63,9 +63,9 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb)
+		public void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int startIndent = 0)
 		{
-			BuildSql(commandNumber, selectQuery, sb, 0, false);
+			BuildSql(commandNumber, selectQuery, sb, startIndent, false);
 		}
 
 		protected virtual void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
@@ -2185,17 +2185,17 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (type.DataType)
 			{
-				case DataType.Double : StringBuilder.Append("Float"); return;
-				case DataType.Single : StringBuilder.Append("Real"); return;
-				case DataType.SByte  : StringBuilder.Append("TinyInt"); return;
-				case DataType.UInt16 : StringBuilder.Append("Int"); return;
-				case DataType.UInt32 : StringBuilder.Append("BigInt"); return;
-				case DataType.UInt64 : StringBuilder.Append("Decimal"); return;
-				case DataType.Byte   : StringBuilder.Append("TinyInt"); return;
+				case DataType.Double : StringBuilder.Append("Float");    return;
+				case DataType.Single : StringBuilder.Append("Real");     return;
+				case DataType.SByte  : StringBuilder.Append("TinyInt");  return;
+				case DataType.UInt16 : StringBuilder.Append("Int");      return;
+				case DataType.UInt32 : StringBuilder.Append("BigInt");   return;
+				case DataType.UInt64 : StringBuilder.Append("Decimal");  return;
+				case DataType.Byte   : StringBuilder.Append("TinyInt");  return;
 				case DataType.Int16  : StringBuilder.Append("SmallInt"); return;
-				case DataType.Int32  : StringBuilder.Append("Int"); return;
-				case DataType.Int64  : StringBuilder.Append("BigInt"); return;
-				case DataType.Boolean: StringBuilder.Append("Bit"); return;
+				case DataType.Int32  : StringBuilder.Append("Int");      return;
+				case DataType.Int64  : StringBuilder.Append("BigInt");   return;
+				case DataType.Boolean: StringBuilder.Append("Bit");      return;
 			}
 
 			StringBuilder.Append(type.DataType);

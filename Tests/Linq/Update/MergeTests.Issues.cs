@@ -1,19 +1,16 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Merge
 {
+	using Model;
+
 	[TestFixture]
 	public partial class MergeTests : TestBase
 	{
@@ -30,7 +27,7 @@ namespace Tests.Merge
 			public DateTime? datetime2DataType { get; set; }
 		}
 
-		[IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void Issue200InSource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -79,7 +76,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void Issue200InPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -128,7 +125,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void Issue200InPredicate2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -177,7 +174,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void Issue200InInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -234,7 +231,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void Issue200InUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))

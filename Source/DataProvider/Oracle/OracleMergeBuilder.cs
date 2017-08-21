@@ -134,7 +134,9 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			Command
 				.AppendLine()
-				.Append("WHEN NOT MATCHED THEN INSERT");
+				.AppendLine("WHEN NOT MATCHED THEN")
+				.Append("INSERT")
+				;
 
 			if (create != null)
 				BuildCustomInsert(create);
@@ -143,7 +145,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (predicate != null)
 			{
-				Command.Append(" WHERE ");
+				Command
+					.AppendLine("WHERE")
+					.Append("\t")
+					;
 				BuildSingleTablePredicate(predicate, SourceAlias, true);
 			}
 		}
@@ -154,7 +159,9 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			Command
 				.AppendLine()
-				.AppendLine("WHEN MATCHED THEN UPDATE");
+				.AppendLine("WHEN MATCHED THEN")
+				.AppendLine("UPDATE")
+				;
 
 			if (update != null)
 				BuildCustomUpdate(update);
@@ -163,7 +170,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (predicate != null)
 			{
-				Command.Append(" WHERE ");
+				Command
+					.AppendLine("WHERE")
+					.Append("\t")
+					;
 				BuildPredicateByTargetAndSource(predicate);
 			}
 		}

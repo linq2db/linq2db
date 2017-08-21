@@ -1,24 +1,20 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Merge
 {
+	using Model;
+
 	public partial class MergeTests
 	{
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParameters1(string context)
 		{
@@ -80,7 +76,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParameters3(string context)
 		{
@@ -141,7 +137,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void TestParameters2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -186,7 +182,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void TestParametersInListSourceProperty(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -226,7 +222,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void TestParametersInMatchCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -266,7 +262,7 @@ namespace Tests.Merge
 			return '@';
 		}
 
-		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParametersInUpdateCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -290,7 +286,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParametersInInsertCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -314,7 +310,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParametersInDeleteCondition(string context)
 		{
@@ -339,7 +335,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void TestParametersInDeleteBySourceCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -362,7 +358,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void TestParametersInUpdateBySourceCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -391,7 +387,7 @@ namespace Tests.Merge
 		}
 
 		// excluded providers use literal instead of parameter
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Informix,
 			ProviderName.SapHana)]
 		public void TestParametersInInsertCreate(string context)
@@ -429,7 +425,7 @@ namespace Tests.Merge
 		}
 
 		// excluded providers use literal instead of parameter
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
 			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Informix,
 			ProviderName.SapHana)]
 		public void TestParametersInUpdateExpression(string context)
@@ -465,7 +461,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void TestParametersInUpdateBySourceExpression(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -499,7 +495,7 @@ namespace Tests.Merge
 		}
 
 		// FB, INFORMIX: supports this parameter, but for now we disable all parameters in source for them
-		[MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
+		[Test, MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
 		public void TestParametersInSourceFilter(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -517,13 +513,13 @@ namespace Tests.Merge
 					.UpdateWhenMatched()
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
 		// FB, INFORMIX: doesn't support parameters in source select list
-		[MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
+		[Test, MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
 		public void TestParametersInSourceSelect(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -556,7 +552,7 @@ namespace Tests.Merge
 		}
 
 		// Provider optimize scalar parameters
-		[IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		[Test, IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInUpdateWithDeleteDeleteCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
