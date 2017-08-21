@@ -4,7 +4,7 @@ image:
 configuration: Release
 
 environment:
-  packageVersion: 1.9.0
+  packageVersion: 2.0.0
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
   matrix:
@@ -26,15 +26,6 @@ services:
 init:
 - cmd: git config --global core.autocrlf true
 - ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
-- ps: |
-    if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
-    {
-        $env:nugetVersion = "$env:packageVersion"
-    }
-    else
-    {
-        $env:nugetVersion = "$env:packageVersion-rc$env:appveyor_build_number"
-    }
 
 before_build:
 - ps: |

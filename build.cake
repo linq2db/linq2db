@@ -76,7 +76,7 @@ string GetCoreProviders()
 
 string GetPackageVersion()
 {
-	var e = EnvironmentVariable("nugetVersion")
+	var e = EnvironmentVariable("packageVersion")
 		?? Argument<string>("nv", null)
 		?? "2.0.0";
 
@@ -117,9 +117,10 @@ Task("Build")
 			fullPackageVersion = packageVersion + "-" + packageSuffix;
 		}
 
-		Console.WriteLine("Package  Version: {0}", packageVersion);
-		Console.WriteLine("Package  Suffix : {0}", packageSuffix);
-		Console.WriteLine("Assembly Version: {0}", assemblyVersion);
+		Console.WriteLine("Full Package  Version: {0}", fullPackageVersion);
+		Console.WriteLine("Package  Version     : {0}", packageVersion);
+		Console.WriteLine("Package  Suffix      : {0}", packageSuffix);
+		Console.WriteLine("Assembly Version     : {0}", assemblyVersion);
 
 
 		TransformConfig(nugetProject, nugetProject,
