@@ -45,7 +45,7 @@ namespace LinqToDB.SqlQuery
 			OptimizeUnions();
 			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>());
 			ResolveFields();
-			_selectQuery.SetAliases(_flags.CanCombineParameters);
+			_selectQuery.SetAliases();
 
 #if DEBUG
 			sqlText = _selectQuery.SqlText;
