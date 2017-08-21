@@ -3674,7 +3674,7 @@ namespace LinqToDB.SqlQuery
 			return aliases;
 		}
 
-		internal void SetAliases()
+		internal void SetAliases(bool canCombineParameters)
 		{
 			_aliases = null;
 
@@ -3692,9 +3692,12 @@ namespace LinqToDB.SqlQuery
 
 							if (p.IsQueryParameter)
 							{
-								if (!objs.ContainsKey(expr))
-								{
+								var containsKey = objs.ContainsKey(expr);
+								if (!containsKey)
 									objs.Add(expr, expr);
+
+								if (!containsKey || !canCombineParameters)
+								{
 									p.Name = GetAlias(p.Name, "p");
 									Parameters.Add(p);
 								}
