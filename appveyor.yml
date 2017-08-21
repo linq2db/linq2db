@@ -21,7 +21,7 @@ cache:
 services:
 - mssql2014
 - mysql
-- postgresql
+- postgresql95
 
 init:
 - cmd: git config --global core.autocrlf true
@@ -59,7 +59,7 @@ before_build:
     # PgSql
     $env:PGUSER="postgres"
     $env:PGPASSWORD="Password12!"
-    $cmd = '"C:\Program Files\PostgreSQL\9.3\bin\createdb" $dbName'
+    $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: 7z e Data\northwind.sql.zip
