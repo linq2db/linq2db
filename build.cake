@@ -4,7 +4,7 @@
 #tool "docfx.console"
 
 var target          = Argument("target", "Default");
-var configuration   = Argument<string>("configuration", "Release");
+var configuration   = GetConfiguration();
 
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBAL VARIABLES
@@ -50,6 +50,16 @@ string GetBuildConfiguration()
 	Console.WriteLine("Build Configuration: {0}", e);
 
 	return e.ToLower();
+}
+
+string GetConfiguration()
+{
+	var e = EnvironmentVariable("configuration") 
+		??  Argument<string>("configuration", "Release");
+
+	Console.WriteLine("Configuration: {0}", e);
+
+	return e;
 }
 
 string GetRegularProviders()
@@ -151,7 +161,8 @@ Task("Build")
 	else
 	{
 		MSBuild(solutionName, cfg => cfg
-			.SetConfiguration("Release")
+			.SetVerbosity(Verbosity.Minimal)
+			.SetConfiguration(configuration)
 			.UseToolVersion(MSBuildToolVersion.VS2017)
 			);
 	}
@@ -246,7 +257,10 @@ Task("Restore")
 	*/
 	//DotNetCoreRestore(solutionName, settings);
 
-	NuGetRestore(solutionName);
+	NuGetRestore(solutionName, new NuGetRestoreSettings()
+	{
+		Verbosity = NuGetVerbosity.Quiet,
+	});
 });
 
 Task("Default")

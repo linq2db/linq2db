@@ -55,7 +55,7 @@
     <Compile Include="InsertTest.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="MappingSchema.fs" />
-    <None Include="packages.config" />
+    <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -63,14 +63,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework">
-      <HintPath>..\..\Packages\NUnit.3.6.1\lib\net45\nunit.framework.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\Source\Source.csproj">
       <Name>Source (Source\Source)</Name>
       <Project>{0e4e9a56-f285-4067-adaa-392acb9caaa7}</Project>

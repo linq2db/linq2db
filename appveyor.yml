@@ -9,7 +9,7 @@ environment:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
   matrix:
     - buildConfiguration: net45
-    - buildConfiguration: netcoreapp1.1
+    - buildConfiguration: netcoreapp1.0
     - buildConfiguration: docfx
 
 
