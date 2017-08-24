@@ -81,7 +81,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana, TestProvName.Firebird3,
 			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public async Task MergeWithDeletePredicate2Async(string context)
 		{
