@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.SapHana
 			_setVarBinary = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "VarBinary");
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new SapHanaSchemaProvider();

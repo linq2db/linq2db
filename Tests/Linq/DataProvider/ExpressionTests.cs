@@ -11,7 +11,7 @@ using LinqToDB.DataProvider.SQLite;
 
 namespace Tests.DataProvider
 {
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 	using System.Configuration;
 #endif
 	[TestFixture]

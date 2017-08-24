@@ -260,7 +260,7 @@ namespace LinqToDB.SqlQuery
 					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
 					break;
 
-#if NETSTANDARD
+#if NETSTANDARD || NETSTANDARD2_0
 				case (TypeCode)2       :
 #else
 				case TypeCode.DBNull   :

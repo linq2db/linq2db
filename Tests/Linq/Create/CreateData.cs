@@ -5,7 +5,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 using LinqToDB.DataProvider.Access;
 #endif
 
@@ -236,7 +236,7 @@ namespace Tests._Create
 
 		static void AccessAction(IDbConnection connection)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			using (var conn = AccessTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"

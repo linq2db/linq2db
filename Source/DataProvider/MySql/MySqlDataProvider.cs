@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.MySql
 			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new MySqlSchemaProvider();

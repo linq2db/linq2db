@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
 			var dt = dts.AsEnumerable()
