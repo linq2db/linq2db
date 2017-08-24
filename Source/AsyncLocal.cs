@@ -22,7 +22,7 @@
 
 namespace System.Threading
 {
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 	using System.Security;
 	using System.Runtime.Remoting.Messaging;
 

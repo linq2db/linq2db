@@ -5,5 +5,8 @@
   },
   "frameworks": {
     "net45": {}
+  },
+  "dependencies": {
+    "System.Data.SQLite.Core": "1.0.105.2"
   }
 }

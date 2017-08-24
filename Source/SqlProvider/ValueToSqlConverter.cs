@@ -179,7 +179,7 @@ namespace LinqToDB.SqlProvider
 			{
 				switch (type.GetTypeCodeEx())
 				{
-#if NETSTANDARD
+#if NETSTANDARD || NETSTANDARD2_0
 					case (TypeCode)2       : stringBuilder.Append("NULL"); return true;
 #else
 					case TypeCode.DBNull   : stringBuilder.Append("NULL"); return true;

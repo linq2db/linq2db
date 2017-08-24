@@ -40,7 +40,7 @@ namespace Tests.UserTests
 		void CheckPredicate(Expression<Func<Firm, bool>> predicate)
 		{
 			using (var db = new DataConnection(ProviderName.SQLite,
-#if NETSTANDARD
+#if NETSTANDARD || NETSTANDARD2_0
 				"Data Source=:memory:;"
 #else
 				"Data Source=:memory:;Version=3;New=True;"

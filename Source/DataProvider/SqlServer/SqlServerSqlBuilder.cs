@@ -318,7 +318,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 #endif
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 		protected override string GetUdtTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).UdtTypeName;

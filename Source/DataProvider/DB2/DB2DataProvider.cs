@@ -147,7 +147,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Version == DB2Version.zOS ?

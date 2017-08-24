@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 
 			return
@@ -88,7 +88,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			var idxs = ((DbConnection)dataConnection.Connection).GetSchema("Indexes");
 
 			return
@@ -110,7 +110,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
 			return
@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 
 			return _procedures =

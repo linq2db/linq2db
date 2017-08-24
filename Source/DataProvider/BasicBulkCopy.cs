@@ -122,7 +122,7 @@ namespace LinqToDB.DataProvider
 			var senderParameter = Expression.Parameter(eventParams[0].ParameterType, eventParams[0].Name);
 			var argsParameter   = Expression.Parameter(eventParams[1].ParameterType, eventParams[1].Name);
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			var mi = MemberHelper.MethodOf(() => Delegate.CreateDelegate(typeof(string), (object) null, "", false));
 #else
 			MethodInfo mi = null;

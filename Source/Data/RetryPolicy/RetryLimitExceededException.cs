@@ -13,7 +13,7 @@ namespace LinqToDB.Data.RetryPolicy
 		public RetryLimitExceededException(Exception innerException) : base(_retryLimitExceededMessage, innerException)
 		{}
 
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
+#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD && !NETSTANDARD2_0
 		protected RetryLimitExceededException(SerializationInfo info, StreamingContext context) : base(info, context)
 		{}
 #endif

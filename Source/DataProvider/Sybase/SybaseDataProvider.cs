@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SybaseSchemaProvider();

@@ -231,7 +231,7 @@ namespace Tests.Merge
 					throw new NotImplementedException();
 				}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 				ISchemaProvider IDataProvider.GetSchemaProvider()
 				{
 					throw new NotImplementedException();

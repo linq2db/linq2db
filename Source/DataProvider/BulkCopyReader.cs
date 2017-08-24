@@ -124,18 +124,18 @@ namespace LinqToDB.DataProvider
 			get { throw new NotImplementedException(); }
 		}
 
-#endregion
+		#endregion
 
-#region Implementation of IDataReader
+		#region Implementation of IDataReader
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 		public override void Close()
 		{
 			//do nothing
 		}
 #endif
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 		public override DataTable GetSchemaTable()
 		{
 			var table = new DataTable("SchemaTable")
