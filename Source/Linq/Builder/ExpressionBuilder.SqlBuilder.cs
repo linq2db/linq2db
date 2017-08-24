@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD
+#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD || NETSTANDARD2_0
 using System.Data.SqlTypes;
 #endif
 
@@ -765,7 +765,7 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method == null && e.IsLifted)
 							return o;
 
-#if !SILVERLIGHT && !NETFX_CORE  || NETSTANDARD
+#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD || NETSTANDARD2_0
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return o;
 #endif
@@ -1418,7 +1418,7 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
+#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD && !NETSTANDARD2_0
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e);
 #endif

@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 using JetBrains.Annotations;
 
-#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD || NETSTANDARD2_0
 using System.Xml;
 #endif
 
@@ -740,7 +740,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(Guid),            DataType.Guid);
 				AddScalarType(typeof(Guid?),           DataType.Guid);
 				AddScalarType(typeof(object),          DataType.Variant);
-#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD || NETSTANDARD2_0
 				AddScalarType(typeof(XmlDocument),     DataType.Xml);
 #endif
 				AddScalarType(typeof(XDocument),       DataType.Xml);

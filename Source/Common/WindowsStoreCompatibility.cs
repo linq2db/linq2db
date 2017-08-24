@@ -11,7 +11,7 @@ namespace System
 		object Clone();
 	}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 	[ComVisible(true)]
 	[Serializable]
 	public enum TypeCode

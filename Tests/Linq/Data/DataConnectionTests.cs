@@ -9,7 +9,7 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 	using System.Configuration;
 #endif
 

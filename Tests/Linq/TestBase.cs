@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 
 using System.ServiceModel;
 using System.ServiceModel.Description;
@@ -21,7 +21,7 @@ using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 
 using LinqToDB.ServiceModel;
 
@@ -67,7 +67,7 @@ namespace Tests
 		static TestBase()
 		{
 			Console.WriteLine("Tests started in {0}...",
-#if NETSTANDARD
+#if NETSTANDARD || NETSTANDARD2_0
 				System.IO.Directory.GetCurrentDirectory()
 #else
 				Environment.CurrentDirectory
@@ -101,7 +101,7 @@ namespace Tests
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -110,12 +110,12 @@ namespace Tests
 			{ }
 #endif
 
-#if NETSTANDARD
+#if NETSTANDARD || NETSTANDARD2_0
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
 #else
 			Environment.CurrentDirectory = assemblyPath;
 #endif
-#if NETSTANDARD
+#if NETSTANDARD || NETSTANDARD2_0
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
 #else
@@ -168,7 +168,7 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-#if NETSTANDARD
+#if NETSTANDARD || NETSTANDARD2_0
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -192,14 +192,14 @@ namespace Tests
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD
+#if NETSTANDARD || NETSTANDARD2_0
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
 
 			DataConnection.TurnTraceSwitchOn();
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -228,14 +228,14 @@ namespace Tests
 			return basePath;
 		}
 
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
 		const int IP = 22654;
 		static bool _isHostOpen;
 #endif
 
 		static void OpenHost()
 		{
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
 			if (_isHostOpen)
 				return;
 
@@ -397,7 +397,7 @@ namespace Tests
 
 					}
 
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
 					if (!isIgnore && _includeLinqService)
 					{
 						var linqCaseNumber = 0;
@@ -482,7 +482,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);

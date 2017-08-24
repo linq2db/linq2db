@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD
+﻿#if !NETSTANDARD && !NETSTANDARD2_0
 using System;
 using System.ServiceModel;
 

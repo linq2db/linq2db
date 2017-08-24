@@ -273,7 +273,7 @@ namespace LinqToDB.DataProvider
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			var st = ((DbDataReader)reader).GetSchemaTable();
 			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
 #else
@@ -370,7 +370,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		public abstract bool            IsCompatibleConnection(IDbConnection connection);
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 		public abstract ISchemaProvider GetSchemaProvider     ();
 #endif
 

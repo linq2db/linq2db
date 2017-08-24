@@ -4,7 +4,7 @@
     <VersionPrefix>2.0.0</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Authors>Igor Tkachev</Authors>
-    <TargetFrameworks>net45;net40;net451;netstandard1.6</TargetFrameworks>
+    <TargetFrameworks>net45;net40;net451;netstandard1.6;netstandard2.0</TargetFrameworks>
     <PublicSign>true</PublicSign>
     <AssemblyName>linq2db</AssemblyName>
     <AssemblyOriginatorKeyFile>linq2db.snk</AssemblyOriginatorKeyFile>
@@ -87,6 +87,9 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
     <DefineConstants>$(DefineConstants);NETSTANDARD;FW4</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <DefineConstants>$(DefineConstants);NETSTANDARD2_0;FW4</DefineConstants>
+  </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
     <Compile Remove="**\*.Silverlight.cs;**\ConcurrentDictionary.cs;**\WindowsStoreCompatibility.cs;**\IDataParameter.cs;**\IDataReader.cs;**\DbType.cs;**\Binary.cs;**\AllowPartiallyTrustedCallersAttribute.cs;**\IDbDataParameter.cs;Compatibility\**\*.cs" />
     <Compile Remove="**\SerializableAttribute.cs" />
@@ -100,11 +103,14 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
     <Compile Remove="**\*.Silverlight.cs;Compatibility\System\Collections\**\*.cs;Compatibility\System\Data\*.cs;Compatibility\System\Security\**\*.cs;**\SystemDataLinqAttributeReader.cs;Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs;ServiceModel\**\*.cs;**\SapHanaOdbc*.cs;**\DataProvider\Access\*.cs;**\*SchemaProvider*.cs" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <Compile Remove="**\*.Silverlight.cs;Compatibility\System\Collections\**\*.cs;Compatibility\System\Data\*.cs;Compatibility\System\Security\**\*.cs;**\SystemDataLinqAttributeReader.cs;Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs;ServiceModel\**\*.cs;**\SapHanaOdbc*.cs;**\DataProvider\Access\*.cs;**\*SchemaProvider*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'netstandard1.6'">
+    <PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="1.1.0" />
-    <PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
@@ -113,7 +119,7 @@
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
     <PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.3.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
     <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>

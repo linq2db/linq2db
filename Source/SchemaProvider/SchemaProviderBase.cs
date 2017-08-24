@@ -415,7 +415,7 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			return
 			(
 				from r in resultTable.AsEnumerable()
@@ -467,7 +467,7 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()

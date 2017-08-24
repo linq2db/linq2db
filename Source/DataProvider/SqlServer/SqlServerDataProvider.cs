@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return typeof(SqlConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() : new SqlServerSchemaProvider();
@@ -205,7 +205,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						string s;
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
 							if (parameter is SqlParameter)
-#if NETSTANDARD
+#if NETSTANDARD || NETSTANDARD2_0
 								((SqlParameter)parameter).TypeName = s;
 #else
 								((SqlParameter)parameter).UdtTypeName = s;

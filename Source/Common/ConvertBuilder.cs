@@ -24,7 +24,7 @@ namespace LinqToDB.Common
 			try
 			{
 				return Convert.ChangeType(value, conversionType
-#if !NETFX_CORE && !NETSTANDARD
+#if !NETFX_CORE && !NETSTANDARD && !NETSTANDARD2_0
 					, Thread.CurrentThread.CurrentCulture
 #endif
 					);
@@ -168,7 +168,7 @@ namespace LinqToDB.Common
 				{
 					var val = values.GetValue(i);
 					var lv  = (long)Convert.ChangeType(val, typeof(long)
-#if !NETFX_CORE && !NETSTANDARD
+#if !NETFX_CORE && !NETSTANDARD && !NETSTANDARD2_0
 						, Thread.CurrentThread.CurrentCulture
 #endif
 						);

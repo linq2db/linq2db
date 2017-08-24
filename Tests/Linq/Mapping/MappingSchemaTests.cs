@@ -88,7 +88,7 @@ namespace Tests.Mapping
 
 			Convert<DateTime,string>.Lambda = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			ms1.SetConverter<DateTime,string>(d => d.ToString("M\\/d\\/yyyy h:mm:ss tt", System.Globalization.CultureInfo.InvariantCulture));
 			ms2.SetConverter<DateTime,string>(d => d.ToString("dd.MM.yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
 #else
@@ -108,7 +108,7 @@ namespace Tests.Mapping
 
 			Convert<string,DateTime>.Expression = s => DateTime.Parse(s, DateTimeFormatInfo.InvariantInfo);
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			ms1.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("en-US", false).DateTimeFormat));
 			ms2.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("ru-RU", false).DateTimeFormat));
 #else
@@ -189,7 +189,7 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETSTANDARD2_0
 			var ci = (CultureInfo)new CultureInfo("ru-RU", false).Clone();
 #else
 			var ci = (CultureInfo)new CultureInfo("ru-RU").Clone();
