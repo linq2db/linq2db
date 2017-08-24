@@ -110,12 +110,12 @@ namespace Tests
 			{ }
 #endif
 
-#if NETSTANDARD || NETSTANDARD2_0
+#if NETSTANDARD
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
 #else
 			Environment.CurrentDirectory = assemblyPath;
 #endif
-#if NETSTANDARD || NETSTANDARD2_0
+#if NETSTANDARD
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
 #else
@@ -168,7 +168,7 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-#if NETSTANDARD || NETSTANDARD2_0
+#if NETSTANDARD
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -192,7 +192,7 @@ namespace Tests
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD || NETSTANDARD2_0
+#if NETSTANDARD
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
