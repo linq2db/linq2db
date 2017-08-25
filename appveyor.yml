@@ -20,6 +20,7 @@ version: $(packageVersion).{build}
 
 cache:
 - packages -> **\packages.config
+- tools
 
 services:
 - mssql2014

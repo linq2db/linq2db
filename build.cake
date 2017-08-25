@@ -3,6 +3,8 @@
 #addin "Cake.Git"
 #addin "Cake.AppVeyor"
 #tool "docfx.console"
+#tool "nuget:?package=NUnit.ConsoleRunner"
+
 
 var buildConfiguration  = GetBuildConfiguration();
 var target              = GetTarget();
@@ -30,6 +32,8 @@ var coreProviders       = GetCoreProviders();
 var accessToken         = GetAccessToken();
 var docFxCheckout       = "./linq2db.github.io";
 var docFxSite           = "./Doc/_site";
+
+var testRunner          = GetTestRunner();
 
 bool IsRelease()
 {
@@ -108,6 +112,17 @@ string GetPackageVersion()
 
 }
 
+string GetTestRunner()
+{
+	var e = EnvironmentVariable("testRunner")
+		?? Argument<string>("testRunner", null)
+		?? "NUnit";
+
+	Console.WriteLine("Test runner: {0}", e);
+
+	return e;
+
+}
 string GetAccessToken()
 {
 	var e = EnvironmentVariable("access_token")
@@ -226,24 +241,26 @@ Task("Build")
 
 });
 
-Task("DocFx")
+Task("DocFxBuild")
 	.IsDependentOn("Clean")
 	.Does(() =>
 {
-
 	DocFxBuild("./Doc/docfx.json");
+});
 
+Task("DocFxPublish")
+	.IsDependentOn("Clean")
+	.IsDependentOn("DocFxBuild")
+	.WithCriteria(PublishDocFx())
+	.Does(() =>
+{
 	GitClone("https://github.com/linq2db/linq2db.github.io.git", "linq2db.github.io");
 	CopyDirectory(docFxCheckout+"/.git", docFxSite+"/.git");
 	GitAddAll(docFxSite);
 	GitCommit(docFxSite, "DocFx", "docfx@linq2db.com", "CI DocFx update");
 
-	if(PublishDocFx())
-	{
-		GitPush(docFxSite, "ili", accessToken);
-	}
+	GitPush(docFxSite, "ili", accessToken);
 });
-
 
 Task("RunTests")
 	.IsDependentOn("Restore")
@@ -266,7 +283,9 @@ Task("RunTests")
 		CopyFile("./Tests/Linq/" + coreProviders, "./Tests/Linq/UserDataProviders.Core.txt");
 	}
 
-	var projects = new [] { File("./Tests/Linq/Linq.csproj").Path };
+	var projects = testRunner == "NUnit"
+		? new [] { File("./Tests/Linq/Bin/Release/" + buildConfiguration + "/linq2db.Tests.dll").Path }
+		: new [] { File("./Tests/Linq/Linq.csproj").Path };
 	
 	var testFilter = GetTestFilter();
 	Console.WriteLine("Filter: {0}", testFilter);
@@ -282,11 +301,24 @@ Task("RunTests")
 
 	var testResults = "TestResult.xml";
 
+	var nunitSettings = new NUnit3Settings 
+	{
+		Configuration = configuration,
+		X86 = true,
+		Results = testResults,
+		//Framework = buildConfiguration,
+		Where = testFilter
+	};
+
+
 	foreach(var project in projects)
 	{
 		Console.WriteLine(project.FullPath);
 
-		DotNetCoreTest(project.FullPath, settings);
+		if (testRunner == "NUnit")
+			NUnit3(project.FullPath, nunitSettings);
+		else
+			DotNetCoreTest(project.FullPath, settings);
 
 		if (FileExists(testResults))
 		{
@@ -371,6 +403,10 @@ Task("Restore")
 		Verbosity = NuGetVerbosity.Quiet,
 	});
 });
+
+Task("DocFx")
+  .IsDependentOn("DocFxBuild")
+  .IsDependentOn("DocFxPublish");
 
 Task("Default")
   .IsDependentOn("Build")
