@@ -1,16 +1,17 @@
 #addin "MagicChunks"
 #addin "Cake.DocFx"
 #addin "Cake.Git"
+#addin "Cake.AppVeyor"
 #tool "docfx.console"
 
-var target          = Argument("target", "Default");
-var configuration   = GetConfiguration();
+var buildConfiguration  = GetBuildConfiguration();
+var target              = GetTarget();
+var configuration       = GetConfiguration();
 
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBAL VARIABLES
 ///////////////////////////////////////////////////////////////////////////////
 var isAppVeyorBuild     = AppVeyor.IsRunningOnAppVeyor;
-var buildConfiguration  = GetBuildConfiguration();
 
 var packPath            = Directory("./Source/Source.csproj");
 var buildArtifacts      = Directory("./artifacts/packages");
@@ -50,6 +51,17 @@ string GetBuildConfiguration()
 	Console.WriteLine("Build Configuration: {0}", e);
 
 	return e.ToLower();
+}
+
+string GetTarget()
+{
+	if (buildConfiguration == "docfx")
+	{
+		Console.WriteLine("Setting Target to DocFx because of buildConfiguration");
+		return "DocFx";
+	}
+
+	return Argument("target", "Default");
 }
 
 string GetConfiguration()
@@ -145,64 +157,93 @@ string GetTestFilter()
 	return EnvironmentVariable("testfilter");
 }
 
-Task("Build")
+void UploadTestResults(FilePath file)
+{
+	if (isAppVeyorBuild)
+	{
+		Console.WriteLine("Uploading test results to AppVeyor");
+		AppVeyor.UploadTestResults(file, AppVeyorTestResultsType.NUnit3);
+	}
+}
+
+void UploadArtifact(FilePath file)
+{
+	if (isAppVeyorBuild)
+	{
+		Console.WriteLine("Uploading file to AppVeyor");
+		var settings = new AppVeyorUploadArtifactsSettings()
+		{
+			DeploymentName = file.GetFilename().ToString(),
+			ArtifactType = AppVeyorUploadArtifactType.Auto
+		};
+
+		AppVeyor.UploadArtifact(file, settings);
+	}
+}
+
+Task("PatchPackage")
 	.IsDependentOn("Clean")
 	.IsDependentOn("Restore")
+	.WithCriteria(PatchPackage())
 	.Does(() =>
 {
+	var assemblyVersion = packageVersion + ".0";
 
-	// Patch Version for CI builds
-	if (PatchPackage())
+	if (!IsRelease())
 	{
-		var assemblyVersion = packageVersion + ".0";
+		packageSuffix      = "rc" + RcVersion();
+		fullPackageVersion = packageVersion + "-" + packageSuffix;
+	}
 
-		if (!IsRelease())
-		{
-			packageSuffix      = "rc" + RcVersion();
-			fullPackageVersion = packageVersion + "-" + packageSuffix;
-		}
-
-		Console.WriteLine("Full Package  Version: {0}", fullPackageVersion);
-		Console.WriteLine("Package  Version     : {0}", packageVersion);
-		Console.WriteLine("Package  Suffix      : {0}", packageSuffix);
-		Console.WriteLine("Assembly Version     : {0}", assemblyVersion);
+	Console.WriteLine("Full Package  Version: {0}", fullPackageVersion);
+	Console.WriteLine("Package  Version     : {0}", packageVersion);
+	Console.WriteLine("Package  Suffix      : {0}", packageSuffix);
+	Console.WriteLine("Assembly Version     : {0}", assemblyVersion);
 
 
-		TransformConfig(nugetProject, nugetProject,
+	TransformConfig(nugetProject, nugetProject,
 		new TransformationCollection {
 			{ "Project/PropertyGroup/Version",         fullPackageVersion },
 			{ "Project/PropertyGroup/VersionPrefix",   packageVersion },
 			{ "Project/PropertyGroup/VersionSuffix",   packageSuffix },
 			{ "Project/PropertyGroup/AssemblyVersion", assemblyVersion },
 			{ "Project/PropertyGroup/FileVersion",     assemblyVersion },
-		 });
+	 });
+});
 
-	}
 
-	if (buildConfiguration == "docfx")
-	{
-		DocFxBuild("./Doc/docfx.json");
-
-		GitClone("https://github.com/linq2db/linq2db.github.io.git", "linq2db.github.io");
-		CopyDirectory(docFxCheckout+"/.git", docFxSite+"/.git");
-		GitAddAll(docFxSite);
-		GitCommit(docFxSite, "DocFx", "docfx@linq2db.com", "CI DocFx update");
-
-		if(PublishDocFx())
-		{
-			GitPush(docFxSite, "ili", accessToken);
-		}
-	}
-	else
-	{
-		MSBuild(solutionName, cfg => cfg
+Task("Build")
+	.IsDependentOn("Clean")
+	.IsDependentOn("Restore")
+	.IsDependentOn("PatchPackage")
+	.Does(() =>
+{
+	MSBuild(solutionName, cfg => cfg
 			.SetVerbosity(Verbosity.Minimal)
 			.SetConfiguration(configuration)
 			.UseToolVersion(MSBuildToolVersion.VS2017)
 			);
-	}
 
 });
+
+Task("DocFx")
+	.IsDependentOn("Clean")
+	.Does(() =>
+{
+
+	DocFxBuild("./Doc/docfx.json");
+
+	GitClone("https://github.com/linq2db/linq2db.github.io.git", "linq2db.github.io");
+	CopyDirectory(docFxCheckout+"/.git", docFxSite+"/.git");
+	GitAddAll(docFxSite);
+	GitCommit(docFxSite, "DocFx", "docfx@linq2db.com", "CI DocFx update");
+
+	if(PublishDocFx())
+	{
+		GitPush(docFxSite, "ili", accessToken);
+	}
+});
+
 
 Task("RunTests")
 	.IsDependentOn("Restore")
@@ -230,21 +271,46 @@ Task("RunTests")
 	var testFilter = GetTestFilter();
 	Console.WriteLine("Filter: {0}", testFilter);
 
+	var settings = new DotNetCoreTestSettings
+	{
+		// ArgumentCustomization = args => args.Append("--result=TestResult.xml"),
+		Configuration = configuration,
+		NoBuild = true, 
+		Framework = buildConfiguration,
+		Filter = testFilter
+	};
+
+	var testResults = "TestResult.xml";
+
 	foreach(var project in projects)
 	{
-		var settings = new DotNetCoreTestSettings
-		{
-			Configuration = configuration,
-			NoBuild = true, 
-			Framework = buildConfiguration,
-			Filter = testFilter
-
-		};
-
 		Console.WriteLine(project.FullPath);
 
 		DotNetCoreTest(project.FullPath, settings);
+
+		if (FileExists(testResults))
+		{
+			UploadTestResults(testResults);
+			DeleteFile(testResults);
+		}
+		else 
+			Console.WriteLine("No test results (expected at {0})", testResults);
 	}
+})
+.OnError(ex => 
+{
+	Console.WriteLine("Tests failed: {0}", ex.Message);
+	var fileName = "TestResult.xml";
+
+	if (FileExists(fileName))
+	{
+		Console.WriteLine("Test results exists: {0}", fileName);
+		UploadTestResults(fileName);
+	}
+	else 
+		Console.WriteLine("No test results (expected at {0})", fileName);
+	
+	throw ex;
 });
 
 Task("Pack")
