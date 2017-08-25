@@ -7,6 +7,8 @@ environment:
   packageVersion: 2.0.0
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
+  regularProviders: AppveyorDataProviders.txt
+  coreProviders: AppveyorDataProviders.Core.txt
   matrix:
     - buildConfiguration: net45
     - buildConfiguration: netcoreapp1.0
@@ -26,6 +28,8 @@ services:
 init:
 - cmd: git config --global core.autocrlf true
 - ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
+
+test: off
 
 before_build:
 - ps: |

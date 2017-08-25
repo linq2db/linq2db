@@ -110,6 +110,32 @@ bool PatchPackage()
 	return isAppVeyorBuild || Argument<string>("patch", null) != null;
 }
 
+bool SkipTests()
+{
+	return buildConfiguration == "docfx" || Argument<string>("skiptests", null) != null;
+}
+
+bool PublishDocFx()
+{
+	var publish = accessToken != null;
+	if (isAppVeyorBuild)
+		publish &= AppVeyor.Environment.Repository.Branch.ToLower() == "release";
+
+	return publish;
+}
+
+string RcVersion()
+{
+	var arg = Argument<string>("patch", null);
+	if (arg != null)
+		return arg;
+
+	if (isAppVeyorBuild)
+		return AppVeyor.Environment.Build.Number.ToString();
+
+	return "0";
+}
+
 Task("Build")
 	.IsDependentOn("Clean")
 	.IsDependentOn("Restore")
@@ -123,7 +149,7 @@ Task("Build")
 
 		if (!IsRelease())
 		{
-			packageSuffix      = "rc" + AppVeyor.Environment.Build.Number.ToString();
+			packageSuffix      = "rc" + RcVersion();
 			fullPackageVersion = packageVersion + "-" + packageSuffix;
 		}
 
@@ -153,7 +179,7 @@ Task("Build")
 		GitAddAll(docFxSite);
 		GitCommit(docFxSite, "DocFx", "docfx@linq2db.com", "CI DocFx update");
 
-		if(accessToken != null)
+		if(PublishDocFx())
 		{
 			GitPush(docFxSite, "ili", accessToken);
 		}
@@ -174,8 +200,11 @@ Task("RunTests")
 	.IsDependentOn("Clean")
 	.Does(() =>
 {
-	if(buildConfiguration == "docfx")
+	if(SkipTests())
+	{
+		Console.WriteLine("Tests are skipped due to configuration");
 		return;
+	}
 
 	if (!string.IsNullOrEmpty(regularProviders))
 	{

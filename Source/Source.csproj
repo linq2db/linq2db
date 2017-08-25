@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
     <VersionPrefix>2.0.0</VersionPrefix>
-    <VersionSuffix>rc0</VersionSuffix>
+    <VersionSuffix></VersionSuffix>
     <Authors>Igor Tkachev</Authors>
     <TargetFrameworks>net45;net40;net451;netstandard1.6</TargetFrameworks>
     <PublicSign>true</PublicSign>
@@ -26,7 +26,7 @@
     <RepositoryType>Git</RepositoryType>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.0.0-rc0</Version>
+    <Version>2.0.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
