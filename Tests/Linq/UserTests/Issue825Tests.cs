@@ -62,6 +62,7 @@ namespace Tests.UserTests
 				var childId = 32;
 
 				var old = Configuration.Linq.AllowMultipleQuery;
+				//Configuration.Linq.OptimizeJoins = false;
 
 				try
 				{
