@@ -9,6 +9,7 @@ environment:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
   regularProviders: AppveyorDataProviders.txt
   coreProviders: AppveyorDataProviders.Core.txt
+  testfilter: TestCategory != FreeText
   matrix:
     - buildConfiguration: net45
     - buildConfiguration: netcoreapp1.0

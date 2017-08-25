@@ -136,6 +136,15 @@ string RcVersion()
 	return "0";
 }
 
+string GetTestFilter()
+{
+	var arg = Argument<string>("testfilter", null);
+	if (arg != null)
+		return arg; 
+
+	return EnvironmentVariable("testfilter");
+}
+
 Task("Build")
 	.IsDependentOn("Clean")
 	.IsDependentOn("Restore")
@@ -216,7 +225,10 @@ Task("RunTests")
 		CopyFile("./Tests/Linq/" + coreProviders, "./Tests/Linq/UserDataProviders.Core.txt");
 	}
 
-	var projects = new [] {File("./Tests/Linq/Linq.csproj").Path};
+	var projects = new [] { File("./Tests/Linq/Linq.csproj").Path };
+	
+	var testFilter = GetTestFilter();
+	Console.WriteLine("Filter: {0}", testFilter);
 
 	foreach(var project in projects)
 	{
@@ -224,7 +236,9 @@ Task("RunTests")
 		{
 			Configuration = configuration,
 			NoBuild = true, 
-			Framework = buildConfiguration
+			Framework = buildConfiguration,
+			Filter = testFilter
+
 		};
 
 		Console.WriteLine(project.FullPath);
