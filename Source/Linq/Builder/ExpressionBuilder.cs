@@ -329,7 +329,7 @@ namespace LinqToDB.Linq.Builder
 									items.Add(item);
 							}
 
-							if (items.Count > 2)
+							if (items.Count > 3)
 							{
 								// having N items will lead to NxM recursive calls in expression visitors and
 								// will result in stack overflow on relatively small numbers (~1000 items).
