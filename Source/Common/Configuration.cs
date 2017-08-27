@@ -24,7 +24,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// If <c>true</c> - data providers will try to use standard ADO.NET interfaces instead of provider-specific functionality when possible. This option could be usefull if you need to intercept
-		/// database calls using tools such as <see cref="https://github.com/MiniProfiler/dotnet">MiniProfiler</see>.
+		/// database calls using tools such as <a href="https://github.com/MiniProfiler/dotnet">MiniProfiler</a>.
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public static bool AvoidSpecificDataProviderAPI;
@@ -78,7 +78,7 @@ namespace LinqToDB.Common
 			public static bool TraceMapperExpression;
 
 			/// <summary>
-			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy()"/> or <see cref="System.Linq.Queryable.OrderByDescending()"/> calls:
+			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, System.Linq.Expressions.Expression{Func{TSource, TKey}})"/> calls:
 			/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
 			/// - if <c>false</c> - OrdredBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
 			/// Default value: <c>false</c>.
@@ -120,24 +120,15 @@ namespace LinqToDB.Common
 			/// Default value: <c>false</c>.
 			/// </summary>
 			/// <remarks>
-			/// https://github.com/linq2db/linq2db/issues/365
+			/// <a href="https://github.com/linq2db/linq2db/issues/365">More details</a>.
 			/// </remarks>
 			public static bool GuardGrouping;
 
 			/// <summary>
-			/// Experimental feature.
 			/// Used to optimize huge logical operations with large number of operands like expr1.and.axpr2...and.exprN into to one <see cref="LinqToDB.Expressions.BinaryAggregateExpression"/>.
 			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
 			/// Default value: <c>false</c>.
-			/// <remarks>
-			/// </remarks>
 			/// </summary>
-			/// <remarks>
-			/// Switched off in 1.8.2 due to instability (<seealso cref="https://github.com/linq2db/linq2db/issues/708"/>).
-			/// See: 
-			/// https://github.com/linq2db/linq2db/issues/447
-			/// https://github.com/linq2db/linq2db/pull/563
-			/// </remarks>
 			public static bool UseBinaryAggregateExpression;
 
 			/// <summary>
@@ -153,7 +144,7 @@ namespace LinqToDB.Common
 			/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
 			/// to call <see cref="LinqToDB.Linq.Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
 			/// <para />
-			/// See <see cref="https://github.com/linq2db/linq2db/issues/256"/> for more details.
+			/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 			/// </summary>
 			public static bool DisableQueryCache;
 		}

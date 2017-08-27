@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	/// <remarks>
 	/// You cannot configure inheritance mapping using this attribute for discriminator types, not supported by .NET
-	/// attributes. See <see cref="https://github.com/dotnet/csharplang/blob/master/spec/attributes.md#attribute-parameter-types"/>
+	/// attributes. See <a href="https://github.com/dotnet/csharplang/blob/master/spec/attributes.md#attribute-parameter-types">document</a>
 	/// for a list of supported types.
 	/// </remarks>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple=true)]

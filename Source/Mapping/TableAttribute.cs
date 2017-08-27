@@ -42,7 +42,7 @@ namespace LinqToDB.Mapping
 		public string Name                      { get; set; }
 
 		/// <summary>
-		/// Gets or sets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.
+		/// Gets or sets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
 		public string Schema                    { get; set; }
 

@@ -213,7 +213,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="predicate">Operation execution condition over source record.</param>
+		/// <param name="searchCondition">Operation execution condition over source record.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatchedAnd<TTarget>(
 			this IMergeableSource<TTarget, TTarget> merge,
@@ -731,6 +731,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
+		/// <param name="token">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
 		public async static Task<int> MergeAsync<TTarget, TSource>(
 			this IMergeable<TTarget, TSource> merge,

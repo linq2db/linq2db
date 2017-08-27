@@ -2259,7 +2259,7 @@ namespace LinqToDB
 		/// <param name="target">Dropped table.</param>
 		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently catched and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <see cref="https://github.com/linq2db/linq2db/issues/798"/>.
+		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
 		/// Default value: <c>true</c>.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static int Drop<T>([NotNull] this ITable<T> target, bool throwExceptionIfNotExists = true)
@@ -2298,7 +2298,7 @@ namespace LinqToDB
 		/// <param name="target">Dropped table.</param>
 		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently catched and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <see cref="https://github.com/linq2db/linq2db/issues/798"/>.
+		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
 		/// Default value: <c>true</c>.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
@@ -2576,7 +2576,7 @@ namespace LinqToDB
 		/// In general you don't need to use this method as linq2db is able to propely identify current context for
 		/// <see cref="Queryable.Where{TSource}(IQueryable{TSource}, Expression{Func{TSource, bool}})"/> method and generate
 		/// HAVING clause.
-		/// <see cref="https://github.com/linq2db/linq2db/issues/133"/> for more details.
+		/// <a href="https://github.com/linq2db/linq2db/issues/133">More details</a>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query to filter.</param>
