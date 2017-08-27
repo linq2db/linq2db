@@ -7,7 +7,7 @@ namespace LinqToDB.Mapping
 	// We should detect loops or disalow aliases to aliases.
 	/// <summary>
 	/// Specifies that current field or property is just an alias to another property or field.
-	/// Currently this attrivbute has several issues:
+	/// Currently this attribute has several issues:
 	/// - you can apply it to class or interface - such attribute will be ignored by linq2db;
 	/// - it is possible to define attribute without setting  <see cref="MemberName"/> value;
 	/// - you can define alias to another alias property or field and potentially create loop.
