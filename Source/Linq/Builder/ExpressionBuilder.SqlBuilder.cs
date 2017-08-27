@@ -2021,6 +2021,40 @@ namespace LinqToDB.Linq.Builder
 				dataTypeAccessorExpression = Expression.PropertyOrField(body, "DataType");
 			}
 
+			// see #820
+			accessorExpression = accessorExpression.Transform(e =>
+			{
+				switch (e.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+						var ma = (MemberExpression) e;
+
+						if (ma.Member.IsNullableValueMember())
+						{
+							return Expression.Condition(
+								Expression.Equal(ma.Expression, Expression.Constant(null, ma.Expression.Type)),
+								Expression.Default(e.Type),
+								e);
+						}
+
+						return e;
+					case ExpressionType.Convert:
+						var ce = (UnaryExpression) e;
+						if (ce.Operand.Type.IsNullable() && !ce.Type.IsNullable())
+						{
+							return Expression.Condition(
+								Expression.Equal(ce.Operand, Expression.Constant(null, ce.Operand.Type)),
+								Expression.Default(e.Type),
+								e);
+						}
+						return e;
+					default:
+						return e;
+				}
+
+			});
+ 
+
 			var mapper = Expression.Lambda<Func<Expression,object[],object>>(
 				Expression.Convert(accessorExpression, typeof(object)),
 				new [] { expressionParam, parametersParam });
