@@ -393,5 +393,35 @@ namespace Tests.Linq
 				.Select(t => new { value = (int)t.Gender })
 				.ToList();
 		}
+
+		[Table("Child")]
+		interface IChild
+		{
+			[Column]
+			int ChildID { get; set; }
+		}
+
+		[Test, DataContextSource]
+		public void TestInterfaceMapping1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Count();
+
+				Assert.AreEqual(1, results);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void TestInterfaceMapping2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Select(_ => new { _.ChildID }).ToList();
+
+				Assert.AreEqual(1, results.Count);
+				Assert.AreEqual(32, results[0].ChildID);
+			}
+		}
 	}
 }

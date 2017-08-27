@@ -397,6 +397,10 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
+			for (var i = 0; i < expr1.Arguments.Count; i++)
+				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					return false;
+
 			if (info.QueryableAccessorDic.Count > 0)
 			{
 				QueryableAccessor qa;
@@ -404,10 +408,6 @@ namespace LinqToDB.Expressions
 				if (info.QueryableAccessorDic.TryGetValue(expr1, out qa))
 					return qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
 			}
-
-			for (var i = 0; i < expr1.Arguments.Count; i++)
-				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
-					return false;
 
 			return true;
 		}

@@ -6,7 +6,7 @@ namespace LinqToDB.Linq
 	/// <summary>
 	/// Provides a scope, in which LINQ queries will not be added to a LINQ query cache. This could be used to tell
 	/// linq2db to not cache queries that operate with big parametes.
-	/// More details could be found here <see cref="https://github.com/linq2db/linq2db/issues/256" />.
+	/// More details could be found <a href="https://github.com/linq2db/linq2db/issues/256">here</a>.
 	/// Take into account that this class only disables adding of new query, created in its scope, to a cache.
 	/// If query already present in cache - linq2db will use cached query.
 	/// </summary>
