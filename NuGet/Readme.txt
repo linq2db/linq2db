@@ -23,7 +23,7 @@ LINQ to DB 1.9.0  Release Notes
 - fix: regression in queries generation in 1.8.3 (#825)
 - fix: Take/Skip/Distinct promoted to main query from joined subquery (#829)
 - fix: wrong SQL generated for Contains subqueries with Take/Skip (#329)
-- fix: fixed various issues with BunaryAggregateExpression option enabled (#812)
+- fix: fixed various issues with BinaryAggregateExpression option enabled (#812)
 - fix: better support for Nullable<T> parameters in LINQ queries (#820)
 - fix: use of function with IQueryable<T> result type in LINQ query could fail (#822)
 - fix: use of retry policy fails for SAP HANA and DB for iSeries, if connection string contains credentials (#772)
