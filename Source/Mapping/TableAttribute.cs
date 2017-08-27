@@ -37,7 +37,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Gets or sets name of table or view in database.
-		/// When not specified, name of class on interface will be used.
+		/// When not specified, name of class or interface will be used.
 		/// </summary>
 		public string Name                      { get; set; }
 
