@@ -1988,6 +1988,7 @@ namespace LinqToDB.SqlQuery
 
 			/// <summary>
 			/// Adds column if it is not added yet.
+			/// </summary>
 			/// <returns>Returns index of column in Columns list.</returns>
 			int AddOrFindColumn(Column col)
 			{

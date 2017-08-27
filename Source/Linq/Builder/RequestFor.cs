@@ -24,9 +24,9 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		GroupJoin,
 
-		/// <summary>
-		/// Checks the sequence if the expression is a field or single value expression.
-		/// </summary>
+		//// <summary>
+		//// Checks the sequence if the expression is a field or single value expression.
+		//// </summary>
 		//Scalar,
 
 		/// <summary>

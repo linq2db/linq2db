@@ -72,9 +72,13 @@ namespace LinqToDB.DataProvider
 		/// as WHEN NOT MATCHED BY SOURCE match clause, which is supported only by SQL Server.
 		/// </summary>
 		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="dataConnection">Database connection.</param>
 		/// <param name="deletePredicate">Optional DELETE operation condition.</param>
 		/// <param name="delete">Should MERGE command include DELETE operation or not.</param>
 		/// <param name="source">Source data.</param>
+		/// <param name="tableName">Optional target table name.</param>
+		/// <param name="databaseName">Optional target table's database name.</param>
+		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>True if command built and false if source is empty and command execution not required.</returns>
 		protected virtual bool BuildCommand<T>(
 			DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
@@ -315,6 +319,7 @@ namespace LinqToDB.DataProvider
 		/// Generates USING source statement with direct VALUES.
 		/// </summary>
 		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="dataConnection">Database connection.</param>
 		/// <param name="source">Source data collection.</param>
 		/// <returns>Returns true on success an false if source is empty.</returns>
 		protected virtual bool BuildUsing<T>(DataConnection dataConnection, IEnumerable<T> source)
@@ -395,6 +400,7 @@ namespace LinqToDB.DataProvider
 		/// that doesn't support VALUES in source.
 		/// </summary>
 		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="dataConnection">Database connection.</param>
 		/// <param name="source">Source data collection.</param>
 		/// <param name="top">TOP 1 clause equivalent for current database engine.</param>
 		/// <param name="fromDummyTable">Database engine-specific dummy table for FROM statement with at least one record.</param>
