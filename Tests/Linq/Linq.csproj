@@ -21,13 +21,13 @@
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
   </PropertyGroup>
 
-	<ItemGroup>
-		<None Include="App.config" />
-	</ItemGroup>
+  <ItemGroup>
+	<None Include="App.config" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\Model\Model.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+	<ProjectReference Include="..\Model\Model.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" Condition=" '$(TargetFramework)' != 'net40' " />
@@ -119,7 +119,7 @@
     </None>
   </ItemGroup>
 
-	<ItemGroup>
+  <ItemGroup>
     <None Include="..\..\Data\*">
       <Link>Database/%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -130,77 +130,77 @@
     </None>
   </ItemGroup>
 
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
-		<DefineConstants>$(DefineConstants);FW4;NOASYNC;NOIMMUTABLE;NPGSQL226;NOFSHARP</DefineConstants>
-	</PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
+	<DefineConstants>$(DefineConstants);FW4;NOASYNC;NOIMMUTABLE;NPGSQL226;NOFSHARP</DefineConstants>
+  </PropertyGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
-		<Compile Remove="**\VisualBasicTests.cs;**\FSharpTests.cs;**\AsyncTests.cs;**\ParserTests.cs;**\DB2Tests.cs;**\InformixTests.cs" />
-		<None Update="..\..\Data\**\*">
-			<Link>Database/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net40\x64\**\*">
-			<Link>x64/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net40\x86\**\*">
-			<Link>x86/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
+	<Compile Remove="**\VisualBasicTests.cs;**\FSharpTests.cs;**\AsyncTests.cs;**\ParserTests.cs;**\DB2Tests.cs;**\InformixTests.cs" />
+	<None Update="..\..\Data\**\*">
+	  <Link>Database/%(FileName)%(Extension)</Link>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+	<None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net40\x64\**\*">
+	  <Link>x64/%(FileName)%(Extension)</Link>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+	<None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net40\x86\**\*">
+	  <Link>x86/%(FileName)%(Extension)</Link>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+  </ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-		<Compile Remove="**\VisualBasicTests.cs;**\FSharpTests.cs;**\ParserTests.cs;**\DB2Tests.cs;**\InformixTests.cs" />
-		<None Update="..\..\Data\**\*">
-			<Link>Database/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\x64\**\*">
-			<Link>x64/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\x86\**\*">
-			<Link>x86/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+	<Compile Remove="**\VisualBasicTests.cs;**\FSharpTests.cs;**\ParserTests.cs;**\DB2Tests.cs;**\InformixTests.cs" />
+	<None Update="..\..\Data\**\*">
+	  <Link>Database/%(FileName)%(Extension)</Link>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+	<None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\x64\**\*">
+	  <Link>x64/%(FileName)%(Extension)</Link>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+	<None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\x86\**\*">
+	  <Link>x86/%(FileName)%(Extension)</Link>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+  </ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="4.10.0" />
-		<PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
-		<PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
-		<PackageReference Include="Microsoft.SqlServer.Types" Version="11.0.2" />
-		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
-		<PackageReference Include="MySql.Data" Version="6.9.8" />
-		<PackageReference Include="Npgsql" Version="3.1.8" />
-		<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
-		<PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.24160419" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.101.0" />
-		<PackageReference Include="xunit" Version="1.9.1" />
-		<PackageReference Include="xunit.extensions" Version="1.9.1" />
-		<PackageReference Include="NUnit.Runners" Version="3.6.0" />
-		<Reference Include="Microsoft.CSharp" />
-		<Reference Include="System" />
-		<Reference Include="System.Configuration" />
-		<Reference Include="System.Core" />
-		<Reference Include="System.Data.DataSetExtensions" />
-		<Reference Include="System.Data.Linq" />
-		<Reference Include="System.Data.Services" />
-		<Reference Include="System.ServiceModel" />
-		<Reference Include="System.Web.Services" />
-		<Reference Include="System.Xml.Linq" />
-		<Reference Include="System.Data" />
-		<Reference Include="System.Xml" />
-		<Reference Include="System.Runtime.Serialization" />
-		<Reference Include="System.Windows.Forms" />
-		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
-		<Reference Include="System.Threading.Tasks"></Reference>
-	</ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+	<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="4.10.0" />
+	<PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
+	<PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
+	<PackageReference Include="Microsoft.SqlServer.Types" Version="11.0.2" />
+	<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
+	<PackageReference Include="MySql.Data" Version="6.9.8" />
+	<PackageReference Include="Npgsql" Version="3.1.8" />
+	<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
+	<PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.24160419" />
+	<PackageReference Include="System.Data.SQLite.Core" Version="1.0.101.0" />
+	<PackageReference Include="xunit" Version="1.9.1" />
+	<PackageReference Include="xunit.extensions" Version="1.9.1" />
+	<PackageReference Include="NUnit.Runners" Version="3.6.0" />
+	<Reference Include="Microsoft.CSharp" />
+	<Reference Include="System" />
+	<Reference Include="System.Configuration" />
+	<Reference Include="System.Core" />
+	<Reference Include="System.Data.DataSetExtensions" />
+	<Reference Include="System.Data.Linq" />
+	<Reference Include="System.Data.Services" />
+	<Reference Include="System.ServiceModel" />
+	<Reference Include="System.Web.Services" />
+	<Reference Include="System.Xml.Linq" />
+	<Reference Include="System.Data" />
+	<Reference Include="System.Xml" />
+	<Reference Include="System.Runtime.Serialization" />
+	<Reference Include="System.Windows.Forms" />
+	<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
+	<Reference Include="System.Threading.Tasks" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-	</ItemGroup>
+  <ItemGroup>
+	<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="..\..\Data\Northwind.sqlite">
