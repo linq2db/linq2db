@@ -245,7 +245,10 @@ Task("DocFxBuild")
 	.IsDependentOn("Clean")
 	.Does(() =>
 {
+	DocFxMetadata("./Doc/docfx.json");
 	DocFxBuild("./Doc/docfx.json");
+
+	CopyFile("./Doc/_site/images/icon.ico", "./Doc/_site/favicon.ico");
 });
 
 Task("DocFxPublish")
