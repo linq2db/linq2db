@@ -38,7 +38,6 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string       Configuration       { get; set; }
 
-		// TODO: V2 - add support of string[]?
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on this side of association.
 		/// Those keys will be used for join predicate generation and must be compatible with <see cref="OtherKey"/> keys.
@@ -46,7 +45,6 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string       ThisKey             { get; set; }
 
-		// TODO: V2 - add support of string[]?
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on another side of association.
 		/// Those keys will be used for join predicate generation and must be compatible with <see cref="ThisKey"/> keys.
