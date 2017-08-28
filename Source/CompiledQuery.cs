@@ -227,7 +227,7 @@ namespace LinqToDB
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
 		/// <param name="query">The query expression to be compiled.</param>
-		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TDC">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TResult> Compile<TDC,TResult>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TDC,TResult>> query)
@@ -244,7 +244,7 @@ namespace LinqToDB
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
 		/// <param name="query">The query expression to be compiled.</param>
-		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TDC">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TArg1">Type of parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		public static Func<TDC,TArg1,TResult> Compile<TDC,TArg1,TResult>(
@@ -262,7 +262,7 @@ namespace LinqToDB
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
 		/// <param name="query">The query expression to be compiled.</param>
-		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TDC">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
@@ -281,7 +281,7 @@ namespace LinqToDB
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
 		/// <param name="query">The query expression to be compiled.</param>
-		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TDC">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
@@ -301,7 +301,7 @@ namespace LinqToDB
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
 		/// <param name="query">The query expression to be compiled.</param>
-		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TDC">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
@@ -322,7 +322,7 @@ namespace LinqToDB
 		/// A generic delegate that represents the compiled query.
 		/// </returns>
 		/// <param name="query">The query expression to be compiled.</param>
-		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
+		/// <typeparam name="TDC">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>

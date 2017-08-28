@@ -48,7 +48,7 @@ namespace LinqToDB
 		/// Start new transaction with specified isolation level.
 		/// If underlying connection already has transaction, it will be rolled back.
 		/// </summary>
-		/// <param name="isolationLevel">Transaction isolation level.</param>
+		/// <param name="level">Transaction isolation level.</param>
 		public void BeginTransaction(IsolationLevel level)
 		{
 			var db = DataContext.GetDataConnection();

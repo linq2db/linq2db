@@ -1410,8 +1410,8 @@ namespace LinqToDB.Linq.Builder
 		#region Helpers
 
 		/// <summary>
-		/// Gets Expression.Equal if <see cref="left"/> and <see cref="right"/> expression types are not same
-		/// <see cref="right"/> would be converted to <see cref="left"/>
+		/// Gets Expression.Equal if <paramref name="left"/> and <paramref name="right"/> expression types are not same
+		/// <paramref name="right"/> would be converted to <paramref name="left"/>
 		/// </summary>
 		/// <param name="mappringSchema"></param>
 		/// <param name="left"></param>
