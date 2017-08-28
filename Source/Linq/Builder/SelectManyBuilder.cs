@@ -25,7 +25,10 @@ namespace LinqToDB.Linq.Builder
 			var collectionSelector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
-			if (!sequence.SelectQuery.GroupBy.IsEmpty)
+			if (!sequence.SelectQuery.GroupBy.IsEmpty         ||
+				sequence.SelectQuery.Select.TakeValue != null ||
+				sequence.SelectQuery.Select.SkipValue != null ||
+				sequence.SelectQuery.Select .IsDistinct)
 			{
 				sequence = new SubQueryContext(sequence);
 			}

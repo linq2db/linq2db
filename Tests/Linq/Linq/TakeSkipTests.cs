@@ -449,5 +449,24 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
+
+		[Test, DataContextSource(/*ProviderName.Access*/)]
+		public void TakeSkipJoin(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 =    Types.Concat(   Types).Take(15);
+				var q2 = db.Types.Concat(db.Types).Take(15);
+
+				AreEqual(
+					from e in q1
+					from p in q1.Where(_ => _.ID == e.ID).DefaultIfEmpty()
+					select new {e.ID, p.SmallIntValue},
+					from e in q2
+					from p in q2.Where(_ => _.ID == e.ID).DefaultIfEmpty()
+					select new { e.ID, p.SmallIntValue }
+					);
+			}
+		}
 	}
 }
