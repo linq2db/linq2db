@@ -514,22 +514,7 @@ namespace LinqToDB.SqlProvider
 
 			AppendIndent().Append("USING (SELECT ");
 
-			if (!SqlProviderFlags.CanCombineParameters)
-			{
-				SelectQuery.Parameters.Clear();
-
-				for (var i = 0; i < keys.Count; i++)
-					ExtractParameters(keys[i].Expression);
-
-				foreach (var expr in SelectQuery.Update.Items)
-					ExtractParameters(expr.Expression);
-
-				foreach (var expr in SelectQuery.Insert.Items)
-					ExtractParameters(expr.Expression);
-
-				if (SelectQuery.Parameters.Count > 0)
-					SelectQuery.IsParameterDependent = true;
-			}
+			ExtractMergeParametersIfCannotCombine(keys);
 
 			for (var i = 0; i < keys.Count; i++)
 			{
@@ -590,6 +575,26 @@ namespace LinqToDB.SqlProvider
 
 			while (EndLine.Contains(StringBuilder[StringBuilder.Length - 1]))
 				StringBuilder.Length--;
+		}
+
+		protected void ExtractMergeParametersIfCannotCombine(List<SelectQuery.SetExpression> keys)
+		{
+			if (!SqlProviderFlags.CanCombineParameters)
+			{
+				SelectQuery.Parameters.Clear();
+
+				for (var i = 0; i < keys.Count; i++)
+					ExtractParameters(keys[i].Expression);
+
+				foreach (var expr in SelectQuery.Update.Items)
+					ExtractParameters(expr.Expression);
+
+				foreach (var expr in SelectQuery.Insert.Items)
+					ExtractParameters(expr.Expression);
+
+				if (SelectQuery.Parameters.Count > 0)
+					SelectQuery.IsParameterDependent = true;
+			}
 		}
 
 		private void ExtractParameters(ISqlExpression expression)
