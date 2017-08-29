@@ -370,7 +370,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		public abstract bool            IsCompatibleConnection(IDbConnection connection);
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD
 		public abstract ISchemaProvider GetSchemaProvider     ();
 #endif
 

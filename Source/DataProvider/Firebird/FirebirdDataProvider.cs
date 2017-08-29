@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new FirebirdSchemaProvider();

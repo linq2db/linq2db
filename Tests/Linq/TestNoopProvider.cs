@@ -858,7 +858,7 @@ namespace Tests
 			return new TestNoopSqlBuilder();
 		}
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			throw new NotImplementedException();

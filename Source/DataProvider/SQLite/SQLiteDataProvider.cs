@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SQLiteSchemaProvider();

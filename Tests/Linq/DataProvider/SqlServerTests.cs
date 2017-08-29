@@ -21,6 +21,10 @@ using Microsoft.SqlServer.Types;
 using SqlServerTypes;
 #endif
 
+#if NETSTANDARD2_0
+using SqlDecimal = System.Data.SqlTypes.SqlDecimal;
+#endif
+
 using NUnit.Framework;
 
 namespace Tests.DataProvider

@@ -104,23 +104,43 @@
     <Compile Remove="**\*.Silverlight.cs;Compatibility\System\Collections\**\*.cs;Compatibility\System\Data\*.cs;Compatibility\System\Security\**\*.cs;**\SystemDataLinqAttributeReader.cs;Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs;ServiceModel\**\*.cs;**\SapHanaOdbc*.cs;**\DataProvider\Access\*.cs;**\*SchemaProvider*.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <Compile Remove="**\*.Silverlight.cs;Compatibility\System\Collections\**\*.cs;Compatibility\System\Data\*.cs;Compatibility\System\Security\**\*.cs;**\SystemDataLinqAttributeReader.cs;Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs;ServiceModel\**\*.cs;**\SapHanaOdbc*.cs;**\DataProvider\Access\*.cs;**\*SchemaProvider*.cs" />
+    <Compile Remove="**\*.Silverlight.cs;Compatibility\System\Collections\**\*.cs;Compatibility\System\Data\*.cs;Compatibility\System\Security\**\*.cs;**\SystemDataLinqAttributeReader.cs;Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs;ServiceModel\**\*.cs;**\SapHanaOdbc*.cs;**\DataProvider\Access\*.cs" />
+	<Compile Include="Compatibility\System\Data\DataSetExtensionsForNetStandard20.cs" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'netstandard1.6'">
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+	<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+	<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
+	<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.0" />
+	<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
+	<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+	<PackageReference Include="System.Data.Common" Version="4.3.0" />
+	<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+	<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+	<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
+	<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+	<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+	<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+	<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
+	<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+  </ItemGroup>
+  
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-    <PackageReference Include="System.Data.Common" Version="4.3.0" />
+    <!--<PackageReference Include="System.Data.Common" Version="4.3.0" />-->
+	<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
     <PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
     <PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
     <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+	<PackageReference Include="Microsoft.NETCore.Platforms" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Data\RetryPolicy\RetryingDbCommand.cs">

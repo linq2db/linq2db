@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider
 		/// <returns>Returns disposable scope object. Cannot be null.</returns>
 		IDisposable        ExecuteScope          ();
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD
 		ISchemaProvider    GetSchemaProvider     ();
 #endif
 

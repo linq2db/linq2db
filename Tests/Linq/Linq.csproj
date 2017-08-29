@@ -36,7 +36,28 @@
 	<PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' Or '$(TargetFramework)' == 'netcoreapp1.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+	<!--<PackageReference Include="System.Data.Common" Version="4.3.0" />-->
+	<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+	<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+	<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+	<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+	<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
+	<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+	<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
+	<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
+	<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+	<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+	<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
+	<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.0" />
+	<PackageReference Include="Microsoft.Data.SQLite" Version="2.0.0" />
+	<PackageReference Include="MySql.Data" Version="7.0.6-IR31" />
+	<PackageReference Include="Npgsql" Version="3.2.1" />
+	<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
+	<PackageReference Include="xunit.core" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
 	<PackageReference Include="System.Data.Common" Version="4.3.0" />
 	<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
 	<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
@@ -57,7 +78,7 @@
 	<PackageReference Include="xunit.core" Version="2.2.0" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
 	<PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
 	<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="4.10.0" />
 	<PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
@@ -108,7 +129,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-	<Compile Remove="**\AccessTests.cs;**\DB2Tests.cs;**\SybaseTests.cs;**\SapHanaTests.cs;**\MiniProfilerTests.cs;**\FirebirdTests.cs;**\InformixTests.cs;**\DataServiceTests.cs;**\AttributeReaderTests.cs;**\XmlReaderTests.cs;**\VisualBasicTests.cs;**\OracleTests.cs;**\SqlServerTypesTests.cs;**\PartialTrust*.cs;**\FSharpTests.cs;**\SchemaProviderTests.cs" />
+	<Compile Remove="**\AccessTests.cs;**\DB2Tests.cs;**\SybaseTests.cs;**\SapHanaTests.cs;**\MiniProfilerTests.cs;**\FirebirdTests.cs;**\InformixTests.cs;**\DataServiceTests.cs;**\AttributeReaderTests.cs;**\XmlReaderTests.cs;**\VisualBasicTests.cs;**\OracleTests.cs;**\SqlServerTypesTests.cs;**\PartialTrust*.cs;**\FSharpTests.cs" />
 	<None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net451\x64\**\*">
 	  <Link>x64/%(FileName)%(Extension)</Link>
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
