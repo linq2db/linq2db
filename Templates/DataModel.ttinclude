@@ -20,19 +20,20 @@ string   NamespaceName
 	set { Model.Namespace.Name = value; }
 }
 
-string   DatabaseName             = null;
-string   DataContextName          = null;
-string   BaseDataContextClass     = null;
-string   BaseEntityClass          = null;
-string   OneToManyAssociationType = "IEnumerable<{0}>";
+string   DatabaseName                  = null;
+string   DataContextName               = null;
+string   BaseDataContextClass          = null;
+string   BaseEntityClass               = null;
+string   OneToManyAssociationType      = "IEnumerable<{0}>";
 
-bool     GenerateDatabaseName     = false;
-bool     GenerateConstructors     = true;
-string   DefaultConfiguration     = null;
-bool     GenerateAssociations     = true;
-bool     GenerateBackReferences   = true;
-bool     ReplaceSimilarTables     = true;
-bool     IncludeDefaultSchema     = true;
+bool     GenerateDatabaseName          = false;
+bool     GenerateConstructors          = true;
+string   DefaultConfiguration          = null;
+bool     GenerateAssociations          = true;
+bool     GenerateBackReferences        = true;
+bool     GenerateAssociationExtensions = false;
+bool     ReplaceSimilarTables          = true;
+bool     IncludeDefaultSchema          = true;
 
 Class    DataContextObject;
 
@@ -42,6 +43,34 @@ bool PluralizeDataContextPropertyNames   = true;
 bool SingularizeDataContextPropertyNames = false;
 
 bool NormalizeNames                      = true;
+
+private Func<string, bool, string> _toValidName;
+Func<string, bool, string> ToValidName
+{
+	get { return _toValidName ?? ToValidNameDefault; }
+	set { _toValidName = value; }
+}
+
+private Func<string, bool, string> _convertToCompilabl;
+Func<string, bool, string> ConvertToCompilable 
+{
+	get { return _convertToCompilabl ?? ConvertToCompilableDefault; }
+	set { _convertToCompilabl = value; }
+}
+
+private Func<ForeignKey, string> _getAssociationExtensionPluralName;
+Func<ForeignKey, string> GetAssociationExtensionPluralName
+{
+	get { return _getAssociationExtensionPluralName ?? GetAssociationExtensionPluralNameDefault; }
+	set { _getAssociationExtensionPluralName = value; }
+}
+
+private Func<ForeignKey, string> _getAssociationExtensionSingularName;
+Func<ForeignKey, string> GetAssociationExtensionSinglularName
+{
+	get { return _getAssociationExtensionSingularName ?? GetAssociationExtensionSinglularNameDefault; }
+	set { _getAssociationExtensionSingularName = value; }
+}
 
 LinqToDB.SchemaProvider.GetSchemaOptions GetSchemaOptions =
 	new LinqToDB.SchemaProvider.GetSchemaOptions();
@@ -65,7 +94,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 		DatabaseName = db.Database;
 
 	if (DataContextName == null)
-		DataContextObject.Name = DataContextName = (ToValidName(db.Database) + "DB");
+		DataContextObject.Name = DataContextName = (ToValidName(db.Database, true) + "DB");
 
 	DataContextObject.Comment.Add("/ <summary>");
 	DataContextObject.Comment.Add("/ Database       : " + db.Database);
@@ -178,7 +207,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			{
 				Schema          = (p.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(p.SchemaName)? null : p.SchemaName,
 				ProcedureName   = p.ProcedureName,
-				Name            = ToValidName(p.MemberName),
+				Name            = ToValidName(p.MemberName, true),
 				IsFunction      = p.IsFunction,
 				IsTableFunction = p.IsTableFunction,
 				IsDefaultSchema = p.IsDefaultSchema,
@@ -188,7 +217,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 					{
 						TypeName = ToValidName(
 							PluralizeClassNames   ? ToPlural  (p.ResultTable.TypeName) :
-							SingularizeClassNames ? ToSingular(p.ResultTable.TypeName) : p.ResultTable.TypeName),
+							SingularizeClassNames ? ToSingular(p.ResultTable.TypeName) : p.ResultTable.TypeName, true),
 						Columns  = ToDictionary(
 							p.ResultTable.Columns,
 							c => c.ColumnName,
@@ -354,15 +383,15 @@ void LoadMetadata(DataConnection dataConnection)
 		if (keyWords.Contains(t.DataContextPropertyName))
 			t.DataContextPropertyName = "@" + t.DataContextPropertyName;
 
-		t.TypeName                = ConvertToCompilable(t.TypeName);
-		t.DataContextPropertyName = ConvertToCompilable(t.DataContextPropertyName);
+		t.TypeName                = ConvertToCompilable(t.TypeName,                true);
+		t.DataContextPropertyName = ConvertToCompilable(t.DataContextPropertyName, true);
 
 		foreach (var col in t.Columns.Values)
 		{
 			if (keyWords.Contains(col.MemberName))
 				col.MemberName = "@" + col.MemberName;
 
-			col.MemberName = ConvertToCompilable(col.MemberName);
+			col.MemberName = ConvertToCompilable(col.MemberName, true);
 
 			if (col.MemberName == t.TypeName)
 				col.MemberName += "_Column";
@@ -395,7 +424,7 @@ void LoadMetadata(DataConnection dataConnection)
 	AfterLoadMetadata();
 }
 
-string ConvertToCompilable(string name, bool mayRemoveUnderscore = true)
+string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
 {
 	var query =
 		from c in name
@@ -680,8 +709,9 @@ public class Parameter
 	public string   DataType      { get; set; }
 }
 
-int _counter = 0;
-string ToValidName(string name, bool mayRemoveUnderscore = true)
+private int _counter = 0;
+
+string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 {
 	if (NormalizeNames && mayRemoveUnderscore && name.Contains("_"))
 	{
@@ -707,12 +737,22 @@ string ToValidName(string name, bool mayRemoveUnderscore = true)
 	return name;
 }
 
-string SplitAndJoin(string value, string join, params char[] split)
+static string SplitAndJoin(string value, string join, params char[] split)
 {
 	var ss = value.Split(split, StringSplitOptions.RemoveEmptyEntries)
 		.Select(s => char.ToUpper(s[0]) + s.Substring(1));
 
 	return string.Join(join, ss.ToArray());
+}
+
+private string GetAssociationExtensionSinglularNameDefault(ForeignKey key)
+{
+	return ToSingular(key.Name);
+}
+
+private string GetAssociationExtensionPluralNameDefault(ForeignKey key)
+{
+	return ToPlural(ToSingular(key.Name));
 }
 
 #>

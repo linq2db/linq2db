@@ -45,24 +45,26 @@ There are few main steps in this file:
 Use the following initialization **before** you call the `LoadMetadata()` method.
 
 ```c#
-NamespaceName            = "DataModels";       // Namespace of the generated classes.
+NamespaceName                 = "DataModels";       // Namespace of the generated classes.
 
-DataContextName          = null;               // DataContext class name. If null - database name + "DB".
-BaseDataContextClass     = null;               // Base DataContext class name. If null - LinqToDB.Data.DataConnection.
-GenerateConstructors     = true;               // Enforce generating DataContext constructors.
-DefaultConfiguration     = null;               // Defines default configuration for default DataContext constructor.
+DataContextName               = null;               // DataContext class name. If null - database name + "DB".
+BaseDataContextClass          = null;               // Base DataContext class name. If null - LinqToDB.Data.DataConnection.
+GenerateConstructors          = true;               // Enforce generating DataContext constructors.
+DefaultConfiguration          = null;               // Defines default configuration for default DataContext constructor.
 
-BaseEntityClass          = null;               // Base Entity class name. If null - none.
-DatabaseName             = null;               // Table database name - [Table(Database="DatabaseName")].
-GenerateDatabaseName     = false;              // Always generate table database name, even though DatabaseName is null.
-IncludeDefaultSchema     = true;               // Default schema name is generated - [Table(Database="Northwind", Schema="dbo", Name="Customers")]
-OneToManyAssociationType = "IEnumerable<{0}>"; // One To Many association type. Change it to "List<{0}>" if needed.
-GenerateAssociations     = true;               // Enforce generating associations.
-GenerateBackReferences   = true;               // Enforce generating backreference associations.
+BaseEntityClass               = null;               // Base Entity class name. If null - none.
+DatabaseName                  = null;               // Table database name - [Table(Database="DatabaseName")].
+GenerateDatabaseName          = false;              // Always generate table database name, even though DatabaseName is null.
+IncludeDefaultSchema          = true;               // Default schema name is generated - [Table(Database="Northwind", Schema="dbo", Name="Customers")]
 
-ReplaceSimilarTables     = true;               // Replaces stored procedure result class names with similar to existing table class names.
-GenerateFindExtensions   = true;               // Generates find extension methods based on PKs information.
-IsCompactColumns         = true;               // If true, column compact view.
+OneToManyAssociationType      = "IEnumerable<{0}>"; // One To Many association type (for members only). Change it to "List<{0}>" if needed.
+GenerateAssociations          = true;               // Enforce generating associations as type members.
+GenerateBackReferences        = true;               // Enforce generating backreference associations (affects both members and extensions).
+GenerateAssociationExtensions = false;              // Enforce generating associations as extension methods. NB: this option does not affect GenerateAssociations.
+
+ReplaceSimilarTables          = true;               // Replaces stored procedure result class names with similar to existing table class names.
+GenerateFindExtensions        = true;               // Generates find extension methods based on PKs information.
+IsCompactColumns              = true;               // If true, column compact view.
 
 PluralizeClassNames                 = false;   // If true, pluralizes table class names.
 SingularizeClassNames               = true;    // If true, singularizes table class names.
@@ -86,6 +88,13 @@ GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines o
 
 GetSchemaOptions.ExcludedCatalogs = new[] { "TestUser", "SYSSTAT" }; // Defines excluded catalogs.
 GetSchemaOptions.IncludedCatalogs = new[] { "TestUser", "SYS" };     // Defines only included catalogs.
+
+Func<string, bool, string> ToValidName         = ToValidNameDefault;          // Defines function to convert names to valid (My_Table to MyTable) 
+Func<string, bool, string> ConvertToCompilable = ConvertToCompilableDefault;  // Converts name to c# compatible. By default removes uncompatible symbols and converts result with ToValidName
+
+Func<ForeignKey, string> GetAssociationExtensionSinglularName = GetAssociationExtensionSinglularNameDefault; // Gets singular method extension method name for association 
+Func<ForeignKey, string> GetAssociationExtensionPluralName    = GetAssociationExtensionPluralNameDefault;    // Gets plural method extension method name for association 
+
 ```
 
 ## Provider specific configurations

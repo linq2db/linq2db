@@ -1,6 +1,7 @@
 <#@ assembly name="System.Data"        #>
 <#@ import namespace="System.Data"     #>
 <#@ import namespace="LinqToDB.Data"   #>
+<#@ import namespace="System.Text" #>
 <#@ include file="DataModel.ttinclude" #>
 <#
 	if (BaseDataContextClass == null)
@@ -143,12 +144,14 @@ void GenerateTypesFromMetadata()
 		}
 	}
 
+	var associationExtensions = new MemberGroup() {Region = "Associations"};
+
 	foreach (var t in Tables.Values.OrderBy(tbl => tbl.IsProviderSpecific).ThenBy(tbl => tbl.TypeName))
 	{
-		Action<Class> addType = tp => Model.Types.Add(tp);
-		var props             = defProps;
-		var aliases           = defAliases;
-		var tableExtensions   = defTableExtensions;
+		Action<Class> addType     = tp => Model.Types.Add(tp);
+		var props                 = defProps;
+		var aliases               = defAliases;
+		var tableExtensions       = defTableExtensions;
 
 		if (t.IsView && !GenerateViews){
 			continue;
@@ -399,7 +402,7 @@ void GenerateTypesFromMetadata()
 		if (columnAliases.Members.Count > 0)
 			t.Members.Add(columnAliases);
 
-		if (GenerateAssociations)
+		if (GenerateAssociations || GenerateAssociationExtensions)
 		{
 			var keys = t.ForeignKeys.Values.ToList();
 
@@ -408,7 +411,8 @@ void GenerateTypesFromMetadata()
 
 			if (keys.Count > 0)
 			{
-				var associations = new MemberGroup { Region = "Associations" };
+				var associations          = new MemberGroup { Region = "Associations" };
+				var extensionAssociations = new MemberGroup { Region = t.Name + " Associations"};
 
 				foreach (var key in keys.OrderBy(k => k.MemberName))
 				{
@@ -452,9 +456,72 @@ void GenerateTypesFromMetadata()
 					SetPropertyValue(key, "IsEditable",  true);
 
 					associations.Members.Add(key);
+
+					var extension = new Method(string.Format("IQueryable<{0}>", key.OtherTable.TypePrefix + key.OtherTable.TypeName), GetAssociationExtensionPluralName(key));
+					extension.Parameters.Add(string.Format("this {0} obj", t.TypeName));
+					extension.Parameters.Add("IDataContext db");
+					extension.Attributes.Add(aa);
+					extension.IsStatic = true;
+
+					extension.Comment.Add("/ <summary>");
+					extension.Comment.Add("/ " + key.KeyName);
+					extension.Comment.Add("/ </summary>");
+
+
+					var sb = new StringBuilder();
+					sb
+						.Append("return db.GetTable<")
+						.Append(key.OtherTable.TypePrefix + key.OtherTable.TypeName)
+						.Append(">().Where(c => ");
+					for (var i = 0; i < key.OtherColumns.Count; i++)
+					{
+						sb.Append("c.")
+							.Append(key.OtherColumns[i].MemberName)
+							.Append(" == obj.")
+							.Append(key.ThisColumns[i].MemberName)
+							.Append(" && ");
+					}
+					sb.Length -= 4;
+					sb.Append(");");
+
+
+					extension.Body.Add(sb.ToString());
+
+					extensionAssociations.Members.Add(extension);
+
+					if (key.AssociationType != AssociationType.OneToMany)
+					{
+						extension.Name = GetAssociationExtensionPluralName(key);
+
+						var single = new Method(key.OtherTable.TypePrefix + key.OtherTable.TypeName, GetAssociationExtensionSinglularName(key));
+						single.Parameters.Add(string.Format("this {0} obj", t.TypeName));
+						single.Parameters.Add("IDataContext db");
+						single.Attributes.Add(aa);
+						single.IsStatic = true;
+
+						single.Comment.Add("/ <summary>");
+						single.Comment.Add("/ " + key.KeyName);
+						single.Comment.Add("/ </summary>");
+
+						sb.Length -= 1;
+
+						if (key.CanBeNull)
+							sb.Append(".FirstOrDefault();");
+						else 
+							sb.Append(".First();");
+
+						single.Body.Add(sb.ToString());
+
+						extensionAssociations.Members.Add(single);
+					}
+
+
 				}
 
-				t.Members.Add(associations);
+				if (GenerateAssociations)
+					t.Members.Add(associations);
+				if (GenerateAssociationExtensions)
+					associationExtensions.Members.Add(extensionAssociations);
 			}
 		}
 
@@ -519,7 +586,11 @@ void GenerateTypesFromMetadata()
 
 			Model.Types.Add(aClass);
 		}
+
 	}
+
+	if (associationExtensions.Members.Count > 0)
+		defTableExtensions.Members.Add(associationExtensions);
 
 	if (defAliases.Members.Count > 0)
 		DataContextObject.Members.Add(defAliases);
@@ -805,4 +876,5 @@ string NormalizeStringName(string name)
 {
 	return @"@""" + name.Replace(@"""", @"""""") + @"""";
 }
+
 #>
