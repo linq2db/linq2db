@@ -60,7 +60,7 @@ IncludeDefaultSchema          = true;               // Default schema name is ge
 OneToManyAssociationType      = "IEnumerable<{0}>"; // One To Many association type (for members only). Change it to "List<{0}>" if needed.
 GenerateAssociations          = true;               // Enforce generating associations as type members.
 GenerateBackReferences        = true;               // Enforce generating backreference associations (affects both members and extensions).
-GenerateAssociationExtensions = false;              // Enforce generating associations as extension methods. NB: this option does not affect GenerateAssociations.
+GenerateAssociationExtensions = false;              // Enforce generating associations as extension methods. NB: this option does not affect GenerateAssociations. This will require linq2db 1.9.0 and above
 
 ReplaceSimilarTables          = true;               // Replaces stored procedure result class names with similar to existing table class names.
 GenerateFindExtensions        = true;               // Generates find extension methods based on PKs information.
