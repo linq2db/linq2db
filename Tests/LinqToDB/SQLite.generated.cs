@@ -15,7 +15,7 @@ namespace SQLiteDataContext
 	/// <summary>
 	/// Database       : TestData
 	/// Data Source    : TestData
-	/// Server Version : 3.9.2
+	/// Server Version : 3.14.2
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
@@ -47,29 +47,29 @@ namespace SQLiteDataContext
 	[Table("AllTypes")]
 	public partial class AllType
 	{
-		[PrimaryKey, Identity] public long      ID                       { get; set; } // integer
-		[Column,     Nullable] public long?     bigintDataType           { get; set; } // bigint
-		[Column,     Nullable] public decimal?  numericDataType          { get; set; } // numeric
-		[Column,     Nullable] public bool?     bitDataType              { get; set; } // bit
-		[Column,     Nullable] public short?    smallintDataType         { get; set; } // smallint
-		[Column,     Nullable] public decimal?  decimalDataType          { get; set; } // decimal
-		[Column,     Nullable] public int?      intDataType              { get; set; } // int
-		[Column,     Nullable] public byte?     tinyintDataType          { get; set; } // tinyint
-		[Column,     Nullable] public decimal?  moneyDataType            { get; set; } // money
-		[Column,     Nullable] public double?   floatDataType            { get; set; } // float
-		[Column,     Nullable] public double?   realDataType             { get; set; } // real
-		[Column,     Nullable] public DateTime? datetimeDataType         { get; set; } // datetime
-		[Column,     Nullable] public char?     charDataType             { get; set; } // char(1)
-		[Column,     Nullable] public string    varcharDataType          { get; set; } // varchar(20)
-		[Column,     Nullable] public string    textDataType             { get; set; } // text(max)
-		[Column,     Nullable] public string    ncharDataType            { get; set; } // char(20)
-		[Column,     Nullable] public string    nvarcharDataType         { get; set; } // nvarchar(20)
-		[Column,     Nullable] public string    ntextDataType            { get; set; } // ntext(max)
-		[Column,     Nullable] public byte[]    binaryDataType           { get; set; } // binary
-		[Column,     Nullable] public byte[]    varbinaryDataType        { get; set; } // varbinary
-		[Column,     Nullable] public byte[]    imageDataType            { get; set; } // image
-		[Column,     Nullable] public Guid?     uniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column,     Nullable] public object    objectDataType           { get; set; } // object
+		[Column(),                            PrimaryKey, Identity] public long      ID                       { get; set; } // integer
+		[Column(@"bigintDataType"),           Nullable            ] public long?     BigintDataType           { get; set; } // bigint
+		[Column(@"numericDataType"),          Nullable            ] public decimal?  NumericDataType          { get; set; } // numeric
+		[Column(@"bitDataType"),              Nullable            ] public bool?     BitDataType              { get; set; } // bit
+		[Column(@"smallintDataType"),         Nullable            ] public short?    SmallintDataType         { get; set; } // smallint
+		[Column(@"decimalDataType"),          Nullable            ] public decimal?  DecimalDataType          { get; set; } // decimal
+		[Column(@"intDataType"),              Nullable            ] public int?      IntDataType              { get; set; } // int
+		[Column(@"tinyintDataType"),          Nullable            ] public byte?     TinyintDataType          { get; set; } // tinyint
+		[Column(@"moneyDataType"),            Nullable            ] public decimal?  MoneyDataType            { get; set; } // money
+		[Column(@"floatDataType"),            Nullable            ] public double?   FloatDataType            { get; set; } // float
+		[Column(@"realDataType"),             Nullable            ] public double?   RealDataType             { get; set; } // real
+		[Column(@"datetimeDataType"),         Nullable            ] public DateTime? DatetimeDataType         { get; set; } // datetime
+		[Column(@"charDataType"),             Nullable            ] public char?     CharDataType             { get; set; } // char(1)
+		[Column(@"varcharDataType"),          Nullable            ] public string    VarcharDataType          { get; set; } // varchar(20)
+		[Column(@"textDataType"),             Nullable            ] public string    TextDataType             { get; set; } // text(max)
+		[Column(@"ncharDataType"),            Nullable            ] public string    NcharDataType            { get; set; } // char(20)
+		[Column(@"nvarcharDataType"),         Nullable            ] public string    NvarcharDataType         { get; set; } // nvarchar(20)
+		[Column(@"ntextDataType"),            Nullable            ] public string    NtextDataType            { get; set; } // ntext(max)
+		[Column(@"binaryDataType"),           Nullable            ] public byte[]    BinaryDataType           { get; set; } // binary
+		[Column(@"varbinaryDataType"),        Nullable            ] public byte[]    VarbinaryDataType        { get; set; } // varbinary
+		[Column(@"imageDataType"),            Nullable            ] public byte[]    ImageDataType            { get; set; } // image
+		[Column(@"uniqueidentifierDataType"), Nullable            ] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
+		[Column(@"objectDataType"),           Nullable            ] public object    ObjectDataType           { get; set; } // object
 	}
 
 	[Table("Child")]
@@ -90,8 +90,8 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor00")]
-		public Person FK_00 { get; set; }
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
+		public Person Person { get; set; }
 
 		#endregion
 	}
@@ -154,7 +154,7 @@ namespace SQLiteDataContext
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
-		public Doctor Doctor00 { get; set; }
+		public Doctor Doctor { get; set; }
 
 		#endregion
 	}
@@ -196,5 +196,53 @@ namespace SQLiteDataContext
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
+
+		#region Associations
+
+		#region Doctor Associations
+
+		/// <summary>
+		/// FK_Doctor_0_0
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
+		public static IQueryable<Person> People(this Doctor obj, IDataContext db)
+		{
+			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
+		}
+
+		/// <summary>
+		/// FK_Doctor_0_0
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=Relationship.OneToOne, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor")]
+		public static Person Person(this Doctor obj, IDataContext db)
+		{
+			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).First();
+		}
+
+		#endregion
+
+		#region Person Associations
+
+		/// <summary>
+		/// FK_Doctor_0_0_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public static IQueryable<Doctor> Doctors(this Person obj, IDataContext db)
+		{
+			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID);
+		}
+
+		/// <summary>
+		/// FK_Doctor_0_0_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=Relationship.OneToOne, IsBackReference=true)]
+		public static Doctor Doctor(this Person obj, IDataContext db)
+		{
+			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
+		}
+
+		#endregion
+
+		#endregion
 	}
 }
