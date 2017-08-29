@@ -372,7 +372,7 @@ void LoadMetadata(DataConnection dataConnection)
 		"null",     "object",   "operator", "out",     "override",  "params",   "private",    "protected", "public",  "readonly",
 		"ref",      "return",   "sbyte",    "sealed",  "short",     "sizeof",   "stackalloc", "static",    "struct",  "switch",
 		"this",     "throw",    "true",     "try",     "typeof",    "uint",     "ulong",      "unchecked", "unsafe",  "ushort",
-		"using",    "virtual",  "volatile", "void",    "while"
+		"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string"
 	};
 
 	foreach (var t in Tables.Values)
