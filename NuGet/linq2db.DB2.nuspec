@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.DB2</id>
-		<version>1.8.3</version>
+		<version>1.9.0</version>
 		<title>LINQ to IBM DB2</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -19,7 +19,7 @@
 		</summary>
 		<tags>linq linq2db DB2 LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db.t4models" version="1.8.3"/>
+			<dependency id="linq2db.t4models" version="1.9.0"/>
 		</dependencies>
 	</metadata>
 	<files>
