@@ -1,11 +1,14 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
 <#@ output extension=".generated.cs"                              #>
 <#@ include file="..\..\Templates\LinqToDB.SqlCe.ttinclude"       #>
-<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
 <#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" #>
-<#@ assembly name="$(SolutionDir)\packages\linq2db.1.7.5\lib\net40\linq2db.dll"   #>
+<#@ assembly name="$(SolutionDir)\packages\linq2db.1.9.0\lib\net40\linq2db.dll"   #>
+<#@ include file="..\..\Templates\Humanizer.ttinclude" #>
+<#@ assembly name="$(SolutionDir)\packages\Humanizer.Core.2.2.0\lib\netstandard1.0\Humanizer.dll"   #>
 <#
 	NamespaceName = "SqlCeDataContext";
+
+	GenerateAssociationExtensions = true;
 
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
 	LoadSqlCeMetadata(solutionsPath + @"\Data\", "TestData.sdf");

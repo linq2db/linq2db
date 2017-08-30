@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.PostgreSQL</id>
-		<version>1.8.3</version>
+		<version>1.9.0</version>
 		<title>LINQ to PostgreSQL</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -18,16 +18,17 @@
 		</summary>
 		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db.t4models" version="1.8.3"/>
+			<dependency id="linq2db.t4models" version="1.9.0"/>
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\packages\Npgsql.2.2.6\lib\net40\Npgsql.dll"        target="tools" />
-		<file src="..\packages\Npgsql.2.2.6\lib\net40\Mono.Security.dll" target="tools" />
-		<file src="LinqToDB.PostgreSQL.Tools.ttinclude"                  target="content\LinqToDB.Templates" />
-		<file src="CopyMe.PostgreSQL.tt.txt"                             target="content\LinqToDB.Templates" />
+		<file src="..\packages\System.Threading.Tasks.Extensions.4.3.0\lib\portable-net45+win8+wp8+wpa81\System.Threading.Tasks.Extensions.dll"
+		                                                          target="tools" />
+		<file src="..\packages\Npgsql.3.2.5\lib\net45\Npgsql.dll" target="tools" />
+		<file src="LinqToDB.PostgreSQL.Tools.ttinclude"           target="content\LinqToDB.Templates" />
+		<file src="CopyMe.PostgreSQL.tt.txt"                      target="content\LinqToDB.Templates" />
 
-		<file src="init.ps1"                                             target="tools" />
-		<file src="CopyMe.PostgreSQL.Core.tt.txt"                        target="tools" />
+		<file src="init.ps1"                                      target="tools" />
+		<file src="CopyMe.PostgreSQL.Core.tt.txt"                 target="tools" />
 	</files>
 </package>

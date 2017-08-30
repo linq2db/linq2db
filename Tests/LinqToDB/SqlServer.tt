@@ -3,8 +3,9 @@
 <#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude"                                                           #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude"                                                         #>
 <#@ include file="..\..\Templates\ObsoleteAttributes.ttinclude"                                                           #>
+<#@ include file="SqlServer.ttinclude"                                                                                    #>
 <#@ assembly name="$(SolutionDir)\packages\Microsoft.SqlServer.Types.14.0.314.76\lib\net40\Microsoft.SqlServer.Types.dll" #>
-<#@ assembly name="$(SolutionDir)\packages\linq2db.1.8.2\lib\net40\linq2db.dll"                                           #>
+<#@ assembly name="$(SolutionDir)\packages\linq2db.1.8.3\lib\net40\linq2db.dll"                                           #>
 <#
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
@@ -30,7 +31,7 @@
 
 	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword");
 
-	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
+	Tables["Order Details"].Columns["OrderID"]. MemberName = "ID";
 
 	GetTable("Categories").   AliasPropertyName = "CATEG";
 	GetTable("Categories").   AliasTypeName     = "CATEG";
@@ -43,6 +44,8 @@
 	DataContextObject = null;
 
 	DatabaseName = null;//"TestData";
+
+	//GenerateConstructors = false;
 
 	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
 	GenerateModel();

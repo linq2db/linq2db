@@ -114,7 +114,8 @@ static Action<GeneratedTextTransformation>        WriteEndNamespace   =  tt    =
 public partial class Namespace : ITree
 {
 	public string         Name;
-	public List<TypeBase> Types = new List<TypeBase>();
+	public List<TypeBase> Types  = new List<TypeBase>();
+	public List<string>   Usings = new List<string>();
 
 	public virtual void Render(GeneratedTextTransformation tt)
 	{
@@ -123,6 +124,8 @@ public partial class Namespace : ITree
 			WriteBeginNamespace(tt, Name);
 			tt.PushIndent("\t");
 		}
+
+		tt.RenderUsings(Usings);
 
 		foreach (var t in Types)
 		{

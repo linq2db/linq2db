@@ -49,7 +49,7 @@ namespace ToolsGenerator
 			CreateProviderFile (nugetDir, "SapHana",                  "Sap.Data.Hana.v4.5.dll");
 			CreateProviderFile (nugetDir, "DB2",                      "IBM.Data.DB2.dll");
 			CreateProviderFile (nugetDir, "Informix",                 "IBM.Data.Informix.dll");
-			CreateProviderFile (nugetDir, "PostgreSQL",               "Npgsql.dll", "Mono.Security.dll");
+			CreateProviderFile (nugetDir, "PostgreSQL",               "Npgsql.dll", "System.Threading.Tasks.Extensions.dll");
 
 			CreateProviderFile(nugetDir, "SqlCe",
 				@"<#@ assembly name=""$(SolutionDir).tools\System.Data.SqlServerCe.dll"" #>");

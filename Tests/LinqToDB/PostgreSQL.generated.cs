@@ -16,16 +16,16 @@ namespace PostreSQLDataContext
 {
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : DBHost
+	/// Data Source    : tcp://DBHost:5432
 	/// Server Version : 9.2.1
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<_testsamename>      _testsamename        { get { return this.GetTable<_testsamename>(); } }
-		public ITable<alltype>            alltypes             { get { return this.GetTable<alltype>(); } }
+		public ITable<Alltype>            Alltypes             { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>              Children             { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>             Doctors              { get { return this.GetTable<Doctor>(); } }
-		public ITable<entity>             entities             { get { return this.GetTable<entity>(); } }
+		public ITable<Entity>             Entities             { get { return this.GetTable<Entity>(); } }
 		public ITable<GrandChild>         GrandChildren        { get { return this.GetTable<GrandChild>(); } }
 		public ITable<LinqDataType>       LinqDataTypes        { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>             Parents              { get { return this.GetTable<Parent>(); } }
@@ -35,9 +35,9 @@ namespace PostreSQLDataContext
 		public ITable<SequenceTest2>      SequenceTest2        { get { return this.GetTable<SequenceTest2>(); } }
 		public ITable<SequenceTest3>      SequenceTest3        { get { return this.GetTable<SequenceTest3>(); } }
 		public ITable<TestIdentity>       TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<testsamename>       testsamenames        { get { return this.GetTable<testsamename>(); } }
+		public ITable<Testsamename>       Testsamenames        { get { return this.GetTable<Testsamename>(); } }
 		public ITable<TestSchemaIdentity> TestSchemaIdentities { get { return this.GetTable<TestSchemaIdentity>(); } }
-		public ITable<testserialidentity> testserialidentities { get { return this.GetTable<testserialidentity>(); } }
+		public ITable<Testserialidentity> Testserialidentities { get { return this.GetTable<Testserialidentity>(); } }
 		public ITable<TestTable2>         TestTable2           { get { return this.GetTable<TestTable2>(); } }
 		public ITable<TestTable3>         TestTable3           { get { return this.GetTable<TestTable3>(); } }
 
@@ -58,44 +58,44 @@ namespace PostreSQLDataContext
 	[Table(Schema="public", Name="testsamename")]
 	public partial class _testsamename
 	{
-		[PrimaryKey, Identity] public int id { get; set; } // integer
+		[Column(@"id"), PrimaryKey, Identity] public int Id { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="alltypes")]
-	public partial class alltype
+	public partial class Alltype
 	{
-		[PrimaryKey, Identity] public int             id                  { get; set; } // integer
-		[Column,     Nullable] public long?           bigintdatatype      { get; set; } // bigint
-		[Column,     Nullable] public decimal?        numericdatatype     { get; set; } // numeric
-		[Column,     Nullable] public short?          smallintdatatype    { get; set; } // smallint
-		[Column,     Nullable] public int?            intdatatype         { get; set; } // integer
-		[Column,     Nullable] public decimal?        moneydatatype       { get; set; } // money
-		[Column,     Nullable] public double?         doubledatatype      { get; set; } // double precision
-		[Column,     Nullable] public float?          realdatatype        { get; set; } // real
-		[Column,     Nullable] public DateTime?       timestampdatatype   { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public DateTimeOffset? timestamptzdatatype { get; set; } // timestamp (6) with time zone
-		[Column,     Nullable] public DateTime?       datedatatype        { get; set; } // date
-		[Column,     Nullable] public object          timedatatype        { get; set; } // time without time zone
-		[Column,     Nullable] public object          timetzdatatype      { get; set; } // time with time zone
-		[Column,     Nullable] public object          intervaldatatype    { get; set; } // interval
-		[Column,     Nullable] public char?           chardatatype        { get; set; } // character(1)
-		[Column,     Nullable] public string          varchardatatype     { get; set; } // character varying(20)
-		[Column,     Nullable] public string          textdatatype        { get; set; } // text
-		[Column,     Nullable] public byte[]          binarydatatype      { get; set; } // bytea
-		[Column,     Nullable] public Guid?           uuiddatatype        { get; set; } // uuid
-		[Column,     Nullable] public BitArray        bitdatatype         { get; set; } // bit(3)
-		[Column,     Nullable] public bool?           booleandatatype     { get; set; } // boolean
-		[Column,     Nullable] public object          colordatatype       { get; set; } // USER-DEFINED
-		[Column,     Nullable] public object          pointdatatype       { get; set; } // point
-		[Column,     Nullable] public object          lsegdatatype        { get; set; } // lseg
-		[Column,     Nullable] public object          boxdatatype         { get; set; } // box
-		[Column,     Nullable] public object          pathdatatype        { get; set; } // path
-		[Column,     Nullable] public object          polygondatatype     { get; set; } // polygon
-		[Column,     Nullable] public object          circledatatype      { get; set; } // circle
-		[Column,     Nullable] public object          inetdatatype        { get; set; } // inet
-		[Column,     Nullable] public object          macaddrdatatype     { get; set; } // macaddr
-		[Column,     Nullable] public string          xmldatatype         { get; set; } // xml
-		[Column,     Nullable] public object          varbitdatatype      { get; set; } // bit varying
+		[Column(@"id"),                  PrimaryKey, Identity] public int             Id                  { get; set; } // integer
+		[Column(@"bigintdatatype"),      Nullable            ] public long?           Bigintdatatype      { get; set; } // bigint
+		[Column(@"numericdatatype"),     Nullable            ] public decimal?        Numericdatatype     { get; set; } // numeric
+		[Column(@"smallintdatatype"),    Nullable            ] public short?          Smallintdatatype    { get; set; } // smallint
+		[Column(@"intdatatype"),         Nullable            ] public int?            Intdatatype         { get; set; } // integer
+		[Column(@"moneydatatype"),       Nullable            ] public decimal?        Moneydatatype       { get; set; } // money
+		[Column(@"doubledatatype"),      Nullable            ] public double?         Doubledatatype      { get; set; } // double precision
+		[Column(@"realdatatype"),        Nullable            ] public float?          Realdatatype        { get; set; } // real
+		[Column(@"timestampdatatype"),   Nullable            ] public DateTime?       Timestampdatatype   { get; set; } // timestamp (6) without time zone
+		[Column(@"timestamptzdatatype"), Nullable            ] public DateTimeOffset? Timestamptzdatatype { get; set; } // timestamp (6) with time zone
+		[Column(@"datedatatype"),        Nullable            ] public DateTime?       Datedatatype        { get; set; } // date
+		[Column(@"timedatatype"),        Nullable            ] public object          Timedatatype        { get; set; } // time without time zone
+		[Column(@"timetzdatatype"),      Nullable            ] public object          Timetzdatatype      { get; set; } // time with time zone
+		[Column(@"intervaldatatype"),    Nullable            ] public object          Intervaldatatype    { get; set; } // interval
+		[Column(@"chardatatype"),        Nullable            ] public char?           Chardatatype        { get; set; } // character(1)
+		[Column(@"varchardatatype"),     Nullable            ] public string          Varchardatatype     { get; set; } // character varying(20)
+		[Column(@"textdatatype"),        Nullable            ] public string          Textdatatype        { get; set; } // text
+		[Column(@"binarydatatype"),      Nullable            ] public byte[]          Binarydatatype      { get; set; } // bytea
+		[Column(@"uuiddatatype"),        Nullable            ] public Guid?           Uuiddatatype        { get; set; } // uuid
+		[Column(@"bitdatatype"),         Nullable            ] public BitArray        Bitdatatype         { get; set; } // bit(3)
+		[Column(@"booleandatatype"),     Nullable            ] public bool?           Booleandatatype     { get; set; } // boolean
+		[Column(@"colordatatype"),       Nullable            ] public object          Colordatatype       { get; set; } // USER-DEFINED
+		[Column(@"pointdatatype"),       Nullable            ] public object          Pointdatatype       { get; set; } // point
+		[Column(@"lsegdatatype"),        Nullable            ] public object          Lsegdatatype        { get; set; } // lseg
+		[Column(@"boxdatatype"),         Nullable            ] public object          Boxdatatype         { get; set; } // box
+		[Column(@"pathdatatype"),        Nullable            ] public object          Pathdatatype        { get; set; } // path
+		[Column(@"polygondatatype"),     Nullable            ] public object          Polygondatatype     { get; set; } // polygon
+		[Column(@"circledatatype"),      Nullable            ] public object          Circledatatype      { get; set; } // circle
+		[Column(@"inetdatatype"),        Nullable            ] public object          Inetdatatype        { get; set; } // inet
+		[Column(@"macaddrdatatype"),     Nullable            ] public object          Macaddrdatatype     { get; set; } // macaddr
+		[Column(@"xmldatatype"),         Nullable            ] public string          Xmldatatype         { get; set; } // xml
+		[Column(@"varbitdatatype"),      Nullable            ] public object          Varbitdatatype      { get; set; } // bit varying
 	}
 
 	[Table(Schema="public", Name="Child")]
@@ -123,9 +123,9 @@ namespace PostreSQLDataContext
 	}
 
 	[Table(Schema="public", Name="entity")]
-	public partial class entity
+	public partial class Entity
 	{
-		[Column, NotNull] public string the_name { get; set; } // character varying(255)
+		[Column(@"the_name"), NotNull] public string TheName { get; set; } // character varying(255)
 	}
 
 	[Table(Schema="public", Name="GrandChild")]
@@ -229,9 +229,9 @@ namespace PostreSQLDataContext
 	}
 
 	[Table(Schema="test_schema", Name="testsamename")]
-	public partial class testsamename
+	public partial class Testsamename
 	{
-		[PrimaryKey, Identity] public int id { get; set; } // integer
+		[Column(@"id"), PrimaryKey, Identity] public int Id { get; set; } // integer
 	}
 
 	[Table(Schema="test_schema", Name="TestSchemaIdentity")]
@@ -241,7 +241,7 @@ namespace PostreSQLDataContext
 	}
 
 	[Table(Schema="test_schema", Name="testserialidentity")]
-	public partial class testserialidentity
+	public partial class Testserialidentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
@@ -264,16 +264,16 @@ namespace PostreSQLDataContext
 
 	public static partial class TableExtensions
 	{
-		public static _testsamename Find(this ITable<_testsamename> table, int id)
+		public static _testsamename Find(this ITable<_testsamename> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t.id == id);
+				t.Id == Id);
 		}
 
-		public static alltype Find(this ITable<alltype> table, int id)
+		public static Alltype Find(this ITable<Alltype> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t.id == id);
+				t.Id == Id);
 		}
 
 		public static Person Find(this ITable<Person> table, int PersonID)
@@ -306,10 +306,10 @@ namespace PostreSQLDataContext
 				t.ID == ID);
 		}
 
-		public static testsamename Find(this ITable<testsamename> table, int id)
+		public static Testsamename Find(this ITable<Testsamename> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t.id == id);
+				t.Id == Id);
 		}
 
 		public static TestSchemaIdentity Find(this ITable<TestSchemaIdentity> table, int ID)
@@ -318,7 +318,7 @@ namespace PostreSQLDataContext
 				t.ID == ID);
 		}
 
-		public static testserialidentity Find(this ITable<testserialidentity> table, int ID)
+		public static Testserialidentity Find(this ITable<Testserialidentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

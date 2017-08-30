@@ -3,8 +3,7 @@
 		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
 		var afterGenerateLinqToDBModel  = AfterGenerateLinqToDBModel;
 
-		var obsoleteAttr   = new Attribute("Obsolete");
-		var obsoleteTables = new List<Tuple<string, string>>();
+		var obsoleteTables = new List<Tuple<string,string,string>>();
 
 		BeforeGenerateLinqToDBModel = () =>
 		{
@@ -12,19 +11,40 @@
 
 			foreach (var table in Tables.Values)
 			{
-				if (table.Description.Contains("[Obsolete]"))
+				var idx = table.Description.IndexOf("[Obsolete");
+
+				if (idx >= 0)
 				{
-					obsoleteTables.Add(Tuple.Create(table.Schema, table.Name));
-					table.Attributes.Add(obsoleteAttr);
-					table.Description = table.Description.Replace("[Obsolete]", "").Trim();
+					var idx2 = table.Description.IndexOf(']', idx);
+
+					if (idx2 > idx)
+					{
+						var text = table.Description.Substring(idx + 1, idx2 - idx - 1);
+						var attr = new Attribute(text);
+						var info = Tuple.Create(table.Schema, table.Name, text);
+
+						if (obsoleteTables.All(a => a != info))
+							obsoleteTables.Add(info);
+						table.Attributes.Add(attr);
+						table.Description = table.Description.Substring(0, idx) + table.Description.Substring(idx2 + 1);
+					}
 				}
 
 				foreach (var c in table.Columns.Values)
 				{
-					if (c.Description.Contains("[Obsolete]"))
+					idx = c.Description.IndexOf("[Obsolete");
+
+					if (idx >= 0)
 					{
-						c.Attributes.Add(obsoleteAttr);
-						c.Description = c.Description.Replace("[Obsolete]", "").Trim();
+						var idx2 = c.Description.IndexOf(']', idx);
+
+						if (idx2 > idx)
+						{
+							var attr = new Attribute(c.Description.Substring(idx + 1, idx2 - idx - 1));
+
+							c.Attributes.Add(attr);
+							c.Description = c.Description.Substring(0, idx) + c.Description.Substring(idx2 + 1);
+						}
 					}
 				}
 			}
@@ -34,8 +54,10 @@
 		{
 			foreach (var tableInfo in obsoleteTables)
 			{
-				string schema = tableInfo.Item1;
-				string name   = tableInfo.Item2;
+				var schema       = tableInfo.Item1;
+				var name         = tableInfo.Item2;
+				var text         = tableInfo.Item3;
+				var obsoleteAttr = new Attribute(text);
 
 				foreach (var cm in GetTreeNodes(Model)
 					.OfType<MemberBase>()
@@ -53,7 +75,8 @@
 							var table = (Table)parent;
 
 							if (schema == table.Schema)
-								cm.Attributes.Add(obsoleteAttr);
+								if (cm.Attributes.All(a => a.Name != text))
+									cm.Attributes.Add(obsoleteAttr);
 						}
 						else if (parent is Class)
 						{
@@ -64,7 +87,8 @@
 							bool isExtensionMethod             = cls.Parent is Namespace || cls.Name == "TableExtensions";
 
 							if (classIsForDefaultSchema || parentClassIncludesSchemaName || isExtensionMethod)
-								cm.Attributes.Add(obsoleteAttr);
+								if (cm.Attributes.All(a => a.Name != text))
+									cm.Attributes.Add(obsoleteAttr);
 						}
 					}
 				}

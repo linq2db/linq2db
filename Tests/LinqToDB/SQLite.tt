@@ -3,9 +3,11 @@
 <#@ include file="..\..\Templates\LinqToDB.SQLite.ttinclude"                      #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude"                 #>
 <#@ assembly name="$(SolutionDir)Tests\LinqToDB\bin\Debug\System.Data.SQLite.dll" #>
-<#@ assembly name="$(SolutionDir)\packages\linq2db.1.7.5\lib\net40\linq2db.dll"   #>
+<#@ assembly name="$(SolutionDir)\packages\linq2db.1.9.0\lib\net40\linq2db.dll"   #>
 <#
 	NamespaceName = "SQLiteDataContext";
+
+	GenerateAssociationExtensions = true;
 
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
 	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");
