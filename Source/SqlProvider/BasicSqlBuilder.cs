@@ -514,37 +514,11 @@ namespace LinqToDB.SqlProvider
 
 			AppendIndent().Append("USING (SELECT ");
 
-			var insertIdx = 0;
+			ExtractMergeParametersIfCannotCombine(keys);
+
 			for (var i = 0; i < keys.Count; i++)
 			{
-				var keyExpression = keys[i].Expression;
-
-				if (!SqlProviderFlags.CanCombineParameters)
-				{
-					keyExpression = new QueryVisitor().Convert(keyExpression, e =>
-					{
-						switch (e.ElementType)
-						{
-							case QueryElementType.SqlParameter:
-								{
-									var p = (SqlParameter)e;
-
-									if (p.IsQueryParameter)
-									{
-										var clonedParameter = (SqlParameter)p.Clone(new Dictionary<ICloneableElement, ICloneableElement>(), _ => true);
-										SelectQuery.Parameters.Insert(insertIdx++, clonedParameter);
-										return clonedParameter;
-									}
-								}
-
-								break;
-						}
-
-						return e;
-					});
-				}
-
-				BuildExpression(keyExpression, false, false);
+				BuildExpression(keys[i].Expression, false, false);
 				StringBuilder.Append(" AS ");
 				BuildExpression(keys[i].Column, false, false);
 
@@ -601,6 +575,45 @@ namespace LinqToDB.SqlProvider
 
 			while (EndLine.Contains(StringBuilder[StringBuilder.Length - 1]))
 				StringBuilder.Length--;
+		}
+
+		protected void ExtractMergeParametersIfCannotCombine(List<SelectQuery.SetExpression> keys)
+		{
+			if (!SqlProviderFlags.CanCombineParameters)
+			{
+				SelectQuery.Parameters.Clear();
+
+				for (var i = 0; i < keys.Count; i++)
+					ExtractParameters(keys[i].Expression);
+
+				foreach (var expr in SelectQuery.Update.Items)
+					ExtractParameters(expr.Expression);
+
+				foreach (var expr in SelectQuery.Insert.Items)
+					ExtractParameters(expr.Expression);
+
+				if (SelectQuery.Parameters.Count > 0)
+					SelectQuery.IsParameterDependent = true;
+			}
+		}
+
+		private void ExtractParameters(ISqlExpression expression)
+		{
+			new QueryVisitor().Visit(expression, e =>
+			{
+				switch (e.ElementType)
+				{
+					case QueryElementType.SqlParameter:
+						{
+							var p = (SqlParameter)e;
+
+							if (p.IsQueryParameter)
+								SelectQuery.Parameters.Add(p);
+						}
+
+						break;
+				}
+			});
 		}
 
 		protected static readonly char[] EndLine = { ' ', '\r', '\n' };
