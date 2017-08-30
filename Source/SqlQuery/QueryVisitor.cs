@@ -973,7 +973,7 @@ namespace LinqToDB.SqlQuery
 						var parms = Convert(func.Parameters, action);
 
 						if (parms != null && !ReferenceEquals(parms, func.Parameters))
-							newElement = new SqlFunction(func.SystemType, func.Name, func.Precedence, parms);
+							newElement = new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
 
 						break;
 					}
@@ -1411,8 +1411,10 @@ namespace LinqToDB.SqlQuery
 							if (!_visitedElements.TryGetValue(q.ParentSelect, out parent))
 							{
 								doConvert = true;
-								parent    = q.ParentSelect;
+								parent    = q.ParentSelect; // TODO why not ConvertInternal(q.ParentSelect, action)??
 							}
+							else 
+								doConvert = !ReferenceEquals(q.ParentSelect, parent);
 						}
 
 						if (!doConvert)
@@ -1457,15 +1459,14 @@ namespace LinqToDB.SqlQuery
 
 						foreach (var p in q.Parameters)
 						{
-							IQueryElement e;
+							// ConvertInternal checks for _visitedElements so we would not 
+							// visit one element twice
+							IQueryElement e = ConvertInternal(p, action);
 
-							if (_visitedElements.TryGetValue(p, out e))
-							{
-								if (e == null)
-									ps.Add(p);
-								else if (e is SqlParameter)
-									ps.Add((SqlParameter)e);
-							}
+							if (e == null)
+								ps.Add(p);
+							else if (e is SqlParameter)
+								ps.Add((SqlParameter)e);
 						}
 
 						nq.Init(ic, uc, dc, sc, fc, wc, gc, hc, oc, us,

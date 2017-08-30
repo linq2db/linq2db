@@ -197,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = BuildExpression(null, 0);
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				query.SetQuery(mapper);
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
 			public override Expression BuildExpression(Expression expression, int level)
@@ -251,7 +251,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (level == 0 || level == 1)
 					{
-						var levelExpression = expression.GetLevelExpression(1);
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
 
 						if (ReferenceEquals(expression, levelExpression) && !IsExpression(expression, 1, RequestFor.Object).Result)
 						{
@@ -332,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (expression != null && (level == 0 || level == 1) && expression.NodeType == ExpressionType.MemberAccess)
 							{
-								var levelExpression = expression.GetLevelExpression(1);
+								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
 
 								if (expression == levelExpression)
 								{

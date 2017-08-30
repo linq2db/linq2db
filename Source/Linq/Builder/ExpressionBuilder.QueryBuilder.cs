@@ -9,11 +9,8 @@ using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-
 	using LinqToDB.Expressions;
 	using Extensions;
-
 	using Mapping;
 
 	partial class ExpressionBuilder
@@ -213,6 +210,15 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								break;
+							}
+
+							if (ce.IsAssociation(MappingSchema))
+							{
+								var ctx = GetContext(context, ce);
+								if (ctx == null)
+									throw new InvalidOperationException();
+
+								return new TransformInfo(ctx.BuildExpression(ce, 0));
 							}
 
 							if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(ce)) && IsSubQuery(context, ce))
@@ -438,17 +444,17 @@ namespace LinqToDB.Linq.Builder
 			return variable;
 		}
 
-		public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> BuildMapper<T>(Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>> BuildMapper<T>(Expression expr)
 		{
 			var type = typeof(T);
 
 			if (expr.Type != type)
 				expr = Expression.Convert(expr, type);
 
-			var mapper = Expression.Lambda<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>(
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>>(
 				BuildBlock(expr), new []
 				{
-					ContextParam,
+					QueryRunnerParam,
 					DataContextParam,
 					DataReaderParam,
 					ExpressionParam,
@@ -510,7 +516,7 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _whereMethodInfo =
 			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
 
-		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappringSchema, Expression expression, HashSet<ParameterExpression> parameters)
+		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
@@ -530,7 +536,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.MemberAccess :
 						{
-							var root = e.GetRootObject();
+							var root = e.GetRootObject(mappingSchema);
 
 							if (root != null &&
 								root.NodeType == ExpressionType.Parameter &&
@@ -565,7 +571,7 @@ namespace LinqToDB.Linq.Builder
 											var ma1 = Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo);
 											var ma2 = Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo);
 
-											var ee = Equal(mappringSchema, ma1, ma2);
+											var ee = Equal(mappingSchema, ma1, ma2);
 
 											ex = ex == null ? ee : Expression.AndAlso(ex, ee);
 										}
@@ -607,7 +613,7 @@ namespace LinqToDB.Linq.Builder
 			//
 			expression = expression.Transform(e =>
 			{
-				var root = e.GetRootObject();
+				var root = e.GetRootObject(MappingSchema);
 
 				if (root != null &&
 					root.NodeType == ExpressionType.Parameter &&

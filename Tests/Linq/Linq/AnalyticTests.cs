@@ -9,7 +9,7 @@
 	public class AnalyticTests : TestBase
 	{
 		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, 
-			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
+			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
 		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -48,7 +48,7 @@
 		}
 
 		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			 ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93)]
+			 ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
 		public void TestSubqueryOptimization(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -109,6 +109,33 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleNative)]
+		public void TestAvg(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						Average         = g.Average(a => a.ChildID),
+						AverageNone     = g.Average(a => a.ChildID, Sql.AggregateModifier.None),
+						AverageAll      = g.Average(a => a.ChildID, Sql.AggregateModifier.All),
+						AverageDistinct = g.Average(a => a.ChildID, Sql.AggregateModifier.Distinct)
+					};
+
+				var res = qg.ToArray();
+				Assert.IsNotEmpty(res);
+
+				db.Child.Average(c => c.ParentID);
+				db.Child.Average(c => c.ParentID, Sql.AggregateModifier.All);
+				db.Child.Average(c => c.ParentID, Sql.AggregateModifier.Distinct);
 			}
 		}
 
@@ -215,6 +242,21 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						Corr = g.Corr(c => c.ParentID, c => c.ChildID),
+					};
+
+				var resg = qg.ToArray();
+				Assert.IsNotEmpty(resg);
+
+				db.Child.Corr(c => c.ParentID, c => c.ChildID);
 			}
 		}
 
@@ -247,6 +289,35 @@
 			}
 		}
 
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
+		public void TestCount(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						Count         = g.Count(),
+						CountMember   = g.CountExt(a => a.ChildID),
+						CountNone     = g.CountExt(a => a.ChildID, Sql.AggregateModifier.None),
+						CountAll      = g.CountExt(a => a.ChildID, Sql.AggregateModifier.All),
+						CountDistinct = g.CountExt(a => a.ChildID, Sql.AggregateModifier.Distinct)
+					};
+
+				var res = qg.ToArray();
+				Assert.IsNotEmpty(res);
+
+				db.Child.Count();
+				db.Child.CountExt(c => c.ParentID);
+				db.Child.CountExt(c => c.ParentID, Sql.AggregateModifier.All);
+				db.Child.CountExt(c => c.ParentID, Sql.AggregateModifier.Distinct);
+			}
+		}
+
 		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void TestCovarPopOracle(string context)
 		{
@@ -265,6 +336,21 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						CovarPop = g.CovarPop(c => c.ParentID, c => c.ChildID),
+					};
+
+				var resg = qg.ToArray();
+				Assert.IsNotEmpty(resg);
+
+				db.Child.CovarPop(c => c.ParentID, c => c.ChildID);
 			}
 		}
 
@@ -286,6 +372,21 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						CovarSamp = g.CovarSamp(c => c.ParentID, c => c.ChildID),
+					};
+
+				var resg = qg.ToArray();
+				Assert.IsNotEmpty(resg);
+
+				db.Child.CovarSamp(c => c.ParentID, c => c.ChildID);
 			}
 		}
 
@@ -483,6 +584,32 @@
 			}
 		}
 
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle)]
+		public void TestMax(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						Max         = g.Max(a => a.ChildID),
+						MaxNone     = g.Max(a => a.ChildID, Sql.AggregateModifier.None),
+						MaxAll      = g.Max(a => a.ChildID, Sql.AggregateModifier.All),
+						MaxDistinct = g.Max(a => a.ChildID, Sql.AggregateModifier.Distinct)
+					};
+
+				var res = qg.ToArray();
+				Assert.IsNotEmpty(res);
+
+				db.Child.Max(c => c.ParentID);
+				db.Child.Max(c => c.ParentID, Sql.AggregateModifier.All);
+				db.Child.Max(c => c.ParentID, Sql.AggregateModifier.Distinct);
+			}
+		}
 
 		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void TestMedianOracle(string context)
@@ -499,6 +626,21 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						Median = g.Median(c => c.ParentID),
+					};
+
+				var resg = qg.ToArray();
+				Assert.IsNotEmpty(resg);
+
+				db.Child.Median(c => c.ParentID);
 			}
 		}
 
@@ -527,6 +669,33 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged)]
+		public void TestMin(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						Min         = g.Min(a => a.ChildID),
+						MinNone     = g.Min(a => a.ChildID, Sql.AggregateModifier.None),
+						MinAll      = g.Min(a => a.ChildID, Sql.AggregateModifier.All),
+						MinDistinct = g.Min(a => a.ChildID, Sql.AggregateModifier.Distinct)
+					};
+
+				var res = qg.ToArray();
+				Assert.IsNotEmpty(res);
+
+				db.Child.Min(c => c.ParentID);
+				db.Child.Min(c => c.ParentID, Sql.AggregateModifier.All);
+				db.Child.Min(c => c.ParentID, Sql.AggregateModifier.Distinct);
 			}
 		}
 
@@ -773,20 +942,33 @@
 
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+			}
+		}
 
-				//TODO: support of aggreagate functions
-//				var qg =
-//					from p in db.Parent
-//					join c in db.Child on p.ParentID equals c.ParentID
-//					group c by p.ParentID
-//					into g
-//					select new
-//					{
-//						StdDev = g.StdDev(a => a.ChildID)
-//					};
-//
-//				var res2 = qg.ToArray();
-//				Assert.IsNotEmpty(res2);
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		public void TestStdDev(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						StdDev         = g.StdDev(a => a.ChildID),
+						StdDevNone     = g.StdDev(a => a.ChildID, Sql.AggregateModifier.None),
+						StdDevAll      = g.StdDev(a => a.ChildID, Sql.AggregateModifier.All),
+						StdDevDistinct = g.StdDev(a => a.ChildID, Sql.AggregateModifier.Distinct)
+					};
+
+				var res = qg.ToArray();
+				Assert.IsNotEmpty(res);
+
+				db.Child.StdDev(c => c.ParentID);
+				db.Child.StdDev(c => c.ParentID, Sql.AggregateModifier.All);
+				db.Child.StdDev(c => c.ParentID, Sql.AggregateModifier.Distinct);
 			}
 		}
 
@@ -807,6 +989,21 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						StdDevPop = g.StdDevPop(c => c.ParentID),
+					};
+
+				var resg = qg.ToArray();
+				Assert.IsNotEmpty(resg);
+
+				db.Child.StdDevPop(c => c.ParentID);
 			}
 		}
 
@@ -827,6 +1024,21 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						StdDevSamp = g.StdDevSamp(c => c.ParentID),
+					};
+
+				var resg = qg.ToArray();
+				Assert.IsNotEmpty(resg);
+
+				db.Child.StdDevSamp(c => c.ParentID);
 			}
 		}
 
@@ -877,6 +1089,21 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						VarPop = g.VarPop(c => c.ParentID),
+					};
+
+				var resg = qg.ToArray();
+				Assert.IsNotEmpty(resg);
+
+				db.Child.VarPop(c => c.ParentID);
 			}
 		}
 
@@ -897,6 +1124,21 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						VarSamp = g.VarSamp(c => c.ParentID),
+					};
+
+				var resg = qg.ToArray();
+				Assert.IsNotEmpty(resg);
+
+				db.Child.VarSamp(c => c.ParentID);
 			}
 		}
 
@@ -925,6 +1167,26 @@
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
+
+				var qg =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					group c by p.ParentID
+					into g
+					select new
+					{
+						Variance         = g.Variance(a => a.ChildID),
+						VarianceNone     = g.Variance(a => a.ChildID, Sql.AggregateModifier.None),
+						VarianceAll      = g.Variance(a => a.ChildID, Sql.AggregateModifier.All),
+						VarianceDistinct = g.Variance(a => a.ChildID, Sql.AggregateModifier.Distinct)
+					};
+
+				var resg = qg.ToArray();
+				Assert.IsNotEmpty(resg);
+
+				db.Child.Variance(c => c.ParentID);
+				db.Child.Variance(c => c.ParentID, Sql.AggregateModifier.All);
+				db.Child.Variance(c => c.ParentID, Sql.AggregateModifier.Distinct);
 			}
 		}
 

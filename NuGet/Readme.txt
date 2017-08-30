@@ -1,3 +1,42 @@
+LINQ to DB 1.9.0  Release Notes
+---------------------------------
+- breaking change: [MySql] access to a table using fully-qualified name using schema/owner is not supported anymore. You should update your code to use database name for it (#681)
+
+- feature: async support (#758)
+- feature: SQL MERGE support with new Merge API (#686)
+- feature: LINQ query cache management (#645)
+- feature: associations could be defined using extension methods (#786)
+- feature: overrides, typed by resulting type, added for InsertWithIdentity (#774)
+- feature: added possibility to provide predicate expression for associations (#753)
+- feature: custom aggregate functions support (#73, #353, #679, #699, #775)
+
+- documentation: initial job on API documentation
+- documentation: Added XML documentation to major public API and XML documentation file included to nuget package
+- documentation: documentation published on github.io: https://linq2db.github.io
+- documentation: new Merge API articles added: https://github.com/linq2db/linq2db/wiki/Merge-API
+
+- improvement: performance improvements for multi-threaded environments (#278)
+- improvement: [PostgreSQL] DateTimeOffset type mapped to TimeStampTZ by default (#794)
+- improvement: [PostgreSQL] Guid type mapped to uuid by default (#804)
+- improvement: tables support in extensions (#773, #777)
+
+- fix: regression in queries generation in 1.8.3 (#825)
+- fix: Take/Skip/Distinct promoted to main query from joined subquery (#829)
+- fix: wrong SQL generated for Contains subqueries with Take/Skip (#329)
+- fix: fixed various issues with BinaryAggregateExpression option enabled (#812)
+- fix: better support for Nullable<T> parameters in LINQ queries (#820)
+- fix: use of function with IQueryable<T> result type in LINQ query could fail (#822)
+- fix: use of retry policy fails for SAP HANA and DB for iSeries, if connection string contains credentials (#772)
+- fix: call to Count after GroupBy executed on client (#781)
+- fix: better support for SQL literals (#200, #668, #686)
+- fix: [Informix] support for cultures with non-dot decimal separator (#145)
+- fix: DbConnection.ExecuteReader ignores commandBehavior parameter (#801)
+- fix: [Firebird, Oracle, MySql, Informix, SAP HANA, DB2] fully-qualified table name generation fixes for various providers (#778)
+- fix: [SQLite] schema generation fails when foreign key targets table (#784)
+- fix: [SQL Server] Set SkipOnInsert and SkipOnUpdate flags for computed columns in schema provider (#793)
+
+All changes: https://github.com/linq2db/linq2db/milestone/5
+
 LINQ to DB 1.8.3  Release Notes
 ---------------------------------
 [!] Fixed problems with Configuration.Linq.UseBinaryAggregateExpression (#708, #716)

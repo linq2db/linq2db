@@ -1,12 +1,17 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.8.3
+  packageVersion: 1.9.0
+  op_build_user: "ili"
+  op_build_user_email: "docfx@linq2db.com"
+  access_token:
+    secure: bjKC2PPZY9DQHz5k4uCmqS7Gf8+nfhVvJ1vWFFx/93VTRFnc1poo+isF8jsQjtFb
   matrix:
     - buildConfiguration: dotNet
       solutionName: linq2db.4.5.sln
     - buildConfiguration: dotNetCore
       solutionName: linq2db.core.sln
+    - buildConfiguration: docfx
 
 
 version: $(packageVersion).{build}
@@ -51,28 +56,72 @@ before_build:
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2012SP1 -i "northwind.sql" > nul
 
 build_script:
-  - msbuild %solutionName%  /property:Configuration=Release
+  - ps: |
+      if ($env:buildConfiguration -eq "docfx" -and ($env:APPVEYOR_REPO_BRANCH -eq "release" -or $env:APPVEYOR_REPO_BRANCH -eq "docfx"))
+      {
+        Write-Host Building docfx with config $env:buildConfiguration in $env:APPVEYOR_REPO_BRANCH
+        choco install docfx
+        cd ./doc
+        docfx docfx.json
+        
+        cd ..
+        
+        if ($env:APPVEYOR_PULL_REQUEST_NUMBER -ne "")
+        {
+          return;
+        }
+          
+        git config --global core.autocrlf true
+        git config --global credential.helper store
+        Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+        git config --global user.email $env:op_build_user_email
+        git config --global user.name $env:op_build_user
+        
+        
+        git clone https://github.com/linq2db/linq2db.github.io.git -b master linq2db.github.io -q
+        
+        Copy-Item linq2db.github.io/.git ./doc/_site -recurse
+        
+        cd ./doc/_site
+        
+        git add -A 2>&1
+        git commit -m "CI docfx update" -q
+        
+        git push "https://ili:$($env:access_token)@github.com/linq2db/linq2db.github.io.git" master -q
+      }
+      elseif ($env:buildConfiguration -ne "docfx") 
+      {
+        Write-Host Building solution $env:solutionName with config $env:buildConfiguration in $env:APPVEYOR_REPO_BRANCH
+        & msbuild $env:solutionName /property:Configuration=Release
+      }
+      else
+      {
+        Write-Host Nothing to do with config $env:buildConfiguration in $env:APPVEYOR_REPO_BRANCH
+      }
 
 
 after_build:
 - ps: |
-    if ($env:buildConfiguration -eq "dotNetCore")
+    if ($env:buildConfiguration -ne "docfx")
     {
-        if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
-        {
-           dotnet pack --no-build Source/project.json -c=Release
-        }
-        else
-        {
-           dotnet pack --no-build Source/project.json --version-suffix="rc$env:APPVEYOR_BUILD_NUMBER" -c=Release
-        }
-    }
-    else
-    {
-       cd Source
-       .\Compile.bat
-       cd ..
-       nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
+       if ($env:buildConfiguration -eq "dotNetCore")
+       {
+           if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
+           {
+              dotnet pack --no-build Source/project.json -c=Release
+           }
+           else
+           {
+              dotnet pack --no-build Source/project.json --version-suffix="rc$env:APPVEYOR_BUILD_NUMBER" -c=Release
+           }
+       }
+       else
+       {
+          cd Source
+          .\Compile.bat
+          cd ..
+          nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
+       }
     }
 
 artifacts:
@@ -80,29 +129,35 @@ artifacts:
 
 test_script:
 - ps: |
-    if ($env:buildConfiguration -eq "dotNetCore")
+    if ($env:buildConfiguration -ne "docfx")
     {
-        dotnet test tests\linq -c Release -f netcoreapp1.0 --where "cat != FreeText"
-        $test1res = $LASTEXITCODE 
-        # upload results to AppVeyor
-        $wc = New-Object 'System.Net.WebClient'
-        $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
-        Push-AppveyorArtifact (Resolve-Path .\TestResult.xml)
-        # try nunit3 
-        # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net40\win7-x64\linq2db.Tests.dll) --x86
-        # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net45\win7-x64\linq2db.Tests.dll) --x86
-        IF ($test1res -ne 0) { exit -1 }
-    }
-    else
-    {
-        nunit3-console .\Tests\Linq\bin\Release\linq2db.Tests.dll --result="TestResult.xml;format=AppVeyor" --x86 --where "cat != FreeText"
+      if ($env:buildConfiguration -eq "dotNetCore")
+      {
+          dotnet test tests\linq -c Release -f netcoreapp1.0 --where "cat != FreeText"
+          $test1res = $LASTEXITCODE 
+          # upload results to AppVeyor
+          $wc = New-Object 'System.Net.WebClient'
+          $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
+          Push-AppveyorArtifact (Resolve-Path .\TestResult.xml)
+          # try nunit3 
+          # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net40\win7-x64\linq2db.Tests.dll) --x86
+          # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net45\win7-x64\linq2db.Tests.dll) --x86
+          IF ($test1res -ne 0) { exit -1 }
+      }
+      else
+      {
+          nunit3-console .\Tests\Linq\bin\Release\linq2db.Tests.dll --result="TestResult.xml;format=AppVeyor" --x86 --where "cat != FreeText"
+      }
     }
 
 before_test:
 - ps: |
+    if ($env:buildConfiguration -ne "docfx")
+    {
       Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
-      cd $env:appveyor_build_folder
-      . ".\Av-InitDatabases.ps1"
+       cd $env:appveyor_build_folder
+       . ".\Av-InitDatabases.ps1"
+    }
 
 after_test:
 - ps: Pop-Location

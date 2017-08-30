@@ -9,6 +9,7 @@ namespace Tests.Linq
 	using LinqToDB.SqlQuery;
 
 	using Model;
+	using System.Linq.Expressions;
 
 	[TestFixture]
 	public class JoinOptimizeTests : TestBase
@@ -16,7 +17,8 @@ namespace Tests.Linq
 		SelectQuery GetSelectQuery<T>(IQueryable<T> query)
 		{
 			var eq = (IExpressionQuery)query;
-			var info = Query<T>.GetQuery(eq.DataContext, eq.Expression);
+			var expression = eq.Expression;
+			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
 			return info.Queries.Single().SelectQuery;
 		}
 

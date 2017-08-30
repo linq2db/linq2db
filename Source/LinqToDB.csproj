@@ -72,16 +72,36 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="AsyncExtensions.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AsyncExtensions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsyncLocal.cs" />
     <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Configuration\IConnectionStringSettings.cs" />
     <Compile Include="Configuration\IDataProviderSettings.cs" />
     <Compile Include="Configuration\ILinqToDBSettings.cs" />
     <Compile Include="Configuration\IProxy.cs" />
     <Compile Include="Configuration\NamedValue.cs" />
+    <Compile Include="DataContext.QueryRunner.cs" />
+    <Compile Include="DataProvider\BasicMergeBuilder.cs" />
+    <Compile Include="DataProvider\DB2\DB2MergeBuilder.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdMergeBuilder.cs" />
+    <Compile Include="DataProvider\Informix\InformixCultureFixRegion.cs" />
+    <Compile Include="DataProvider\Informix\InformixMergeBuilder.cs" />
+    <Compile Include="DataProvider\Oracle\OracleMergeBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaMergeBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
+    <Compile Include="DataProvider\UnsupportedMergeBuilder.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerMergeBuilder.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseMergeBuilder.cs" />
+    <Compile Include="Data\Merge.cs" />
+    <Compile Include="Data\MergeDefinition.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerRetryPolicy.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerTransientErrorDetector.cs" />
+    <Compile Include="Data\DataConnection.QueryRunner.cs" />
     <Compile Include="Data\RetryPolicy\DefaultRetryPolicyFactory.cs" />
     <Compile Include="Data\RetryPolicy\IRetryPolicy.cs" />
     <Compile Include="Data\RetryPolicy\RetryingDbCommand.cs">
@@ -93,6 +113,7 @@
     <Compile Include="Data\RetryPolicy\RetryLimitExceededException.cs" />
     <Compile Include="Data\RetryPolicy\RetryPolicyBase.cs" />
     <Compile Include="Data\TraceInfoStep.cs" />
+    <Compile Include="IDataContextEx.cs" />
     <Compile Include="KeepConnectionAliveScope.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
@@ -196,7 +217,21 @@
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
+    <Compile Include="Linq\IDataReaderAsync.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Linq\IQueryProviderAsync.cs" />
+    <Compile Include="Linq\IQueryRunner.cs" />
+    <Compile Include="Linq\QueryRunner.DropTable.cs" />
+    <Compile Include="Linq\QueryRunner.Delete.cs" />
+    <Compile Include="Linq\QueryRunner.InsertWithIdentity.cs" />
+    <Compile Include="Linq\QueryRunner.InsertOrReplace.cs" />
+    <Compile Include="Linq\QueryRunner.CreateTable.cs" />
+    <Compile Include="Linq\QueryRunner.Update.cs" />
+    <Compile Include="Linq\QueryRunner.Insert.cs" />
+    <Compile Include="Linq\QueryRunner.cs" />
+    <Compile Include="Linq\QueryRunnerBase.cs" />
+    <Compile Include="Linq\MethodHelper.cs" />
+    <Compile Include="Linq\NoLinqCache.cs" />
     <Compile Include="Mapping\Relationship.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Expressions\IGenericInfoProvider.cs" />
@@ -301,7 +336,6 @@
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
-    <Compile Include="Expressions\BinaryAggregateExpression.cs" />
     <Compile Include="Extensions\MappingExtensions.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
@@ -331,7 +365,9 @@
     <Compile Include="Mapping\PrimaryKeyAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ServiceModel\ILinqClient.cs" />
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
+    <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
     <Compile Include="SqlProvider\BasicSqlOptimizer.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
     <Compile Include="SqlProvider\JoinOptimizer.cs" />
@@ -403,7 +439,6 @@
     <Compile Include="Linq\MemberInfoComparer.cs" />
     <Compile Include="ExpressionMethodAttribute.cs" />
     <Compile Include="Linq\Query.cs" />
-    <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
@@ -411,7 +446,6 @@
     <Compile Include="SqlQuery\QueryHelper.cs" />
     <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
-    <Compile Include="SqlQuery\SqlFlags.cs" />
     <Compile Include="Sql\Sql.Analytic.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
@@ -473,7 +507,7 @@
     <Compile Include="Extensions\ReflectionExtensions.cs" />
     <Compile Include="ServiceModel\DataService.cs" />
     <Compile Include="ServiceModel\ILinqService.cs" />
-    <Compile Include="ServiceModel\ILinqSoapService.cs" />
+    <Compile Include="ServiceModel\ILinqSoapClient.cs" />
     <Compile Include="ServiceModel\LinqService.cs" />
     <Compile Include="ServiceModel\LinqServiceClient.cs" />
     <Compile Include="ServiceModel\LinqServiceQuery.cs" />
@@ -507,6 +541,15 @@
     <None Include="Compile.bat" />
     <None Include="linq2db.snk" />
     <None Include="LinqToDB.project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AsyncExtensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

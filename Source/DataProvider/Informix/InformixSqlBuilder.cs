@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Common;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Globalization;
 
 	class InformixSqlBuilder : BasicSqlBuilder
 	{
@@ -98,12 +99,27 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime  : StringBuilder.Append("datetime year to second");   break;
-				case DataType.DateTime2 : StringBuilder.Append("datetime year to fraction"); break;
+				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      break;
+				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   break;
+				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   break;
+				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); break;
+				case DataType.Time       :
+					StringBuilder.Append("INTERVAL HOUR TO FRACTION");
+					StringBuilder.AppendFormat("({0})", (type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
+					break;
+				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      break;
 				case DataType.SByte      :
-				case DataType.Byte       : StringBuilder.Append("SmallInt");                 break;
-				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");            break;
-				default                  : base.BuildDataType(type, createDbType);           break;
+				case DataType.Byte       : StringBuilder.Append("SmallInt");                  break;
+				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)");             break;
+				case DataType.Decimal    :
+					StringBuilder.Append("Decimal");
+					if (type.Precision != null && type.Scale != null)
+						StringBuilder.AppendFormat(
+							"({0}, {1})",
+							type.Precision.Value.ToString(CultureInfo.InvariantCulture),
+							type.Scale.Value.ToString(CultureInfo.InvariantCulture));
+					break;
+				default                  : base.BuildDataType(type, createDbType);            break;
 			}
 		}
 
@@ -160,6 +176,20 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
+
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			// TODO: FQN could also contain server name, but we don't have such API for now
+			// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
+			if (database != null)
+				sb.Append(database).Append(":");
+
+			if (owner != null)
+				sb.Append(owner).Append(".");
+
+			return sb.Append(table);
+		}
+
 
 #if !SILVERLIGHT
 

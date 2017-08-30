@@ -9,8 +9,13 @@ namespace LinqToDB.Common
 {
 	using Expressions;
 	using Extensions;
+	using JetBrains.Annotations;
 	using Mapping;
 
+	/// <summary>
+	/// Type conversion manager.
+	/// </summary>
+	[PublicAPI]
 	public static class Converter
 	{
 		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ConcurrentDictionary<object,LambdaExpression>();
@@ -66,11 +71,23 @@ namespace LinqToDB.Common
 			throw new InvalidCastException("Invalid cast from System.String to System.Bool");
 		}
 
+		/// <summary>
+		/// Sets custom converter from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
+		/// </summary>
+		/// <typeparam name="TFrom">Source conversion type.</typeparam>
+		/// <typeparam name="TTo">Target conversion type.</typeparam>
+		/// <param name="expr">Converter expression.</param>
 		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)
 		{
 			_expressions[new { from = typeof(TFrom), to = typeof(TTo) }] = expr;
 		}
 
+		/// <summary>
+		/// Tries to get converter from <paramref name="from"/> to <paramref name="to"/> type.
+		/// </summary>
+		/// <param name="from">Source conversion type.</param>
+		/// <param name="to">Target conversion type.</param>
+		/// <returns>Conversion expression or null, of converter not found.</returns>
 		internal static LambdaExpression GetConverter(Type from, Type to)
 		{
 			LambdaExpression l;
@@ -80,6 +97,13 @@ namespace LinqToDB.Common
 
 		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ConcurrentDictionary<object,Func<object,object>>();
 
+		/// <summary>
+		/// Converts value to <paramref name="conversionType"/> type.
+		/// </summary>
+		/// <param name="value">Value to convert.</param>
+		/// <param name="conversionType">Target conversion type.</param>
+		/// <param name="mappingSchema">Optional mapping schema.</param>
+		/// <returns>Converted value.</returns>
 		public static object ChangeType(object value, Type conversionType, MappingSchema mappingSchema = null)
 		{
 			if (value == null || value is DBNull)
@@ -132,6 +156,13 @@ namespace LinqToDB.Common
 			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ConcurrentDictionary<Type,Func<object,T>>();
 		}
 
+		/// <summary>
+		/// Converts value to <typeparamref name="T"/> type.
+		/// </summary>
+		/// <typeparam name="T">Target conversion type.</typeparam>
+		/// <param name="value">Value to convert.</param>
+		/// <param name="mappingSchema">Optional mapping schema.</param>
+		/// <returns>Converted value.</returns>
 		public static T ChangeTypeTo<T>(object value, MappingSchema mappingSchema = null)
 		{
 			if (value == null || value is DBNull)
@@ -171,6 +202,14 @@ namespace LinqToDB.Common
 			return l(value);
 		}
 
+		/// <summary>
+		/// Returns true, if expression value is <see cref="DefaultValueExpression"/> or
+		/// <code>
+		/// DefaultValue&lt;T&gt;.Value
+		/// </code>
+		/// </summary>
+		/// <param name="expr">Expression to inspect.</param>
+		/// <returns><c>true</c>, if expression represents default value.</returns>
 		internal static bool IsDefaultValuePlaceHolder(Expression expr)
 		{
 			var me = expr as MemberExpression;
@@ -184,6 +223,12 @@ namespace LinqToDB.Common
 			return expr is DefaultValueExpression;
 		}
 
+		/// <summary>
+		/// Returns type, to which provided enumeration values should be mapped.
+		/// </summary>
+		/// <param name="mappingSchema">Current mapping schema</param>
+		/// <param name="enumType">Enumeration type.</param>
+		/// <returns>Underlying mapping type.</returns>
 		public static Type GetDefaultMappingFromEnumType(MappingSchema mappingSchema, Type enumType)
 		{
 			return ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, enumType);

@@ -48,6 +48,13 @@ namespace LinqToDB.Linq.Builder
 						if (attr != null)
 							return action(5, null);
 
+						if (mc.IsAssociation(builder.MappingSchema))
+						{
+							var ctx = builder.GetContext(buildInfo.Parent, expression);
+							if (ctx != null)
+								return action(4, ctx);
+						}
+
 						break;
 					}
 
@@ -567,12 +574,14 @@ namespace LinqToDB.Linq.Builder
 
 					Expression testExpr;
 
+					var isNullExpr = Expression.Call(
+						ExpressionBuilder.DataReaderParam,
+						ReflectionHelper.DataReader.IsDBNull,
+						Expression.Constant(dindex));
+
 					if (mapping.m.Code == null)
 					{
-						testExpr = Expression.Call(
-							ExpressionBuilder.DataReaderParam,
-							ReflectionHelper.DataReader.IsDBNull,
-							Expression.Constant(dindex));
+						testExpr = isNullExpr;
 					}
 					else
 					{
@@ -582,6 +591,14 @@ namespace LinqToDB.Linq.Builder
 							Builder.MappingSchema,
 							Builder.BuildSql(codeType, dindex),
 							Expression.Constant(mapping.m.Code));
+
+						if (mapping.m.Discriminator.CanBeNull)
+						{
+							testExpr =
+								Expression.AndAlso(
+									Expression.Not(isNullExpr),
+									testExpr);
+						}
 					}
 
 					expr = Expression.Condition(
@@ -598,7 +615,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = BuildQuery(typeof(T), this, null);
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				query.SetQuery(mapper);
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
 			#endregion
@@ -777,7 +794,7 @@ namespace LinqToDB.Linq.Builder
 							var isTable =
 								table       != null &&
 								table.Field == null &&
-								(expression == null || expression.GetLevelExpression(table.Level) == expression);
+								(expression == null || expression.GetLevelExpression(Builder.MappingSchema, table.Level) == expression);
 
 							return new IsExpressionResult(isTable, isTable ? table.Table : null);
 						}
@@ -787,7 +804,7 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null)
 								return IsExpressionResult.False;
 
-							var levelExpression = expression.GetLevelExpression(level);
+							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 							switch (levelExpression.NodeType)
 							{
@@ -811,7 +828,7 @@ namespace LinqToDB.Linq.Builder
 									table       != null &&
 									table.Table is AssociatedTableContext &&
 									table.Field == null &&
-									(expression == null || expression.GetLevelExpression(table.Level) == expression);
+									(expression == null || expression.GetLevelExpression(Builder.MappingSchema, table.Level) == expression);
 
 								return new IsExpressionResult(isat, isat ? table.Table : null);
 							}
@@ -867,7 +884,7 @@ namespace LinqToDB.Linq.Builder
 					Expression expr  = null;
 					var        param = Expression.Parameter(typeof(T), "c");
 
-					foreach (var cond in (association).ParentAssociationJoin.Condition.Conditions)
+					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
 					{
 						SelectQuery.Predicate.ExprExpr p;
 
@@ -908,6 +925,14 @@ namespace LinqToDB.Linq.Builder
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
 
+					if (association.ExpressionPredicate != null)
+					{
+						var l  = association.ExpressionPredicate;
+						var ex = l.Body.Transform(e => e == l.Parameters[0] ? parent : e == l.Parameters[1] ? param : e);
+
+						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
+					}
+
 					var predicate = Expression.Lambda<Func<T,bool>>(expr, param);
 
 					return expression.Where(predicate).Expression;
@@ -931,23 +956,25 @@ namespace LinqToDB.Linq.Builder
 					return this;
 				}
 
-				if (EntityDescriptor.Associations.Count > 0)
+//				if (EntityDescriptor.Associations.Count > 0)
 				{
-					var levelExpression = expression.GetLevelExpression(level);
 
 					if (buildInfo != null && buildInfo.IsSubQuery)
 					{
-						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess)
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
 						{
 							var tableLevel  = GetAssociation(expression, level);
 							var association = (AssociatedTableContext)tableLevel.Table;
 
 							if (association.IsList)
 							{
-								var ma     = (MemberExpression)buildInfo.Expression;
+								var ma     = expression.NodeType == ExpressionType.MemberAccess 
+												? ((MemberExpression)buildInfo.Expression).Expression 
+												: buildInfo.Expression.GetRootObject(Builder.MappingSchema);
 								var atype  = typeof(AssociationHelper<>).MakeGenericType(association.ObjectType);
 								var helper = (IAssociationHelper)Activator.CreateInstance(atype);
-								var expr   = helper.GetExpression(ma.Expression, association);
+								var expr   = helper.GetExpression(ma, association);
 
 								buildInfo.IsAssociationBuilt = true;
 
@@ -1082,7 +1109,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var levelExpression = expression.GetLevelExpression(level);
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -1156,7 +1183,7 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
+								if (InheritanceMapping != null && InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
 									foreach (var mapping in InheritanceMapping)
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
@@ -1195,7 +1222,7 @@ namespace LinqToDB.Linq.Builder
 				if (expression == null)
 					return new TableLevel { Table = this };
 
-				var levelExpression = expression.GetLevelExpression(level);
+				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 				TableLevel result = null;
 
@@ -1209,9 +1236,11 @@ namespace LinqToDB.Linq.Builder
 							if (field != null || (level == 0 && levelExpression == expression))
 								return new TableLevel { Table = this, Field = field, Level = level };
 
+							goto case ExpressionType.Call;
+						}
+					case ExpressionType.Call         :
 							result = GetAssociation(expression, level);
 							break;
-						}
 				}
 
 				if (throwExceptionForNull && result == null)
@@ -1223,7 +1252,7 @@ namespace LinqToDB.Linq.Builder
 			TableLevel GetAssociation(Expression expression, int level)
 			{
 				var objectMapper    = EntityDescriptor;
-				var levelExpression = expression.GetLevelExpression(level);
+				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 				var inheritance     =
 					(
 						from m in InheritanceMapping
@@ -1232,44 +1261,64 @@ namespace LinqToDB.Linq.Builder
 						select om
 					).ToList();
 
-				if (objectMapper.Associations.Count > 0 || inheritance.Count > 0)
-				{
-					if (levelExpression.NodeType == ExpressionType.MemberAccess)
-					{
-						var memberExpression = (MemberExpression)levelExpression;
+				AssociatedTableContext tableAssociation = null;
 						var isNew = false;
 
-						AssociatedTableContext tableAssociation;
+				if (expression.NodeType == ExpressionType.Call)
+				{
+					var mc = (MethodCallExpression) expression;
+					var aa = Builder.MappingSchema.GetAttribute<AssociationAttribute>(mc.Method.DeclaringType, mc.Method, a => a.Configuration);
 
-						if (!_associations.TryGetValue(memberExpression.Member, out tableAssociation))
-						{
-							var q =
-								from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
-								where a.MemberInfo.EqualsTo(memberExpression.Member)
-								select new AssociatedTableContext(Builder, this, a) { Parent = Parent };
+					if (aa != null)
+						tableAssociation = new AssociatedTableContext(
+								Builder,
+								this,
+								new AssociationDescriptor(
+									EntityDescriptor.ObjectType,
+									mc.Method,
+									aa.GetThisKeys(),
+									aa.GetOtherKeys(),
+									aa.ExpressionPredicate,
+									aa.Storage,
+									aa.CanBeNull))
+							{ Parent = Parent };
 
-							tableAssociation = q.FirstOrDefault();
+					isNew = true;
+				}
 
-							isNew = true;
+				if (tableAssociation == null && levelExpression.NodeType == ExpressionType.MemberAccess && objectMapper.Associations.Count > 0 || inheritance.Count > 0)
+				{
 
-							_associations.Add(memberExpression.Member, tableAssociation);
-						}
+					var memberExpression = (MemberExpression)levelExpression;
 
-						if (tableAssociation != null)
-						{
-							if (levelExpression == expression)
-								return new TableLevel { Table = tableAssociation, Level = level, IsNew = isNew };
+					if (!_associations.TryGetValue(memberExpression.Member, out tableAssociation))
+					{
+						var q =
+							from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
+							where a.MemberInfo.EqualsTo(memberExpression.Member)
+							select new AssociatedTableContext(Builder, this, a) { Parent = Parent };
 
-							var al = tableAssociation.GetAssociation(expression, level + 1);
+						tableAssociation = q.FirstOrDefault();
 
-							if (al != null)
-								return al;
+						isNew = true;
 
-							var field = tableAssociation.GetField(expression, level + 1, false);
-
-							return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1, IsNew = isNew };
-						}
+						_associations.Add(memberExpression.Member, tableAssociation);
 					}
+				}
+
+				if (tableAssociation != null)
+				{
+					if (levelExpression == expression)
+						return new TableLevel { Table = tableAssociation, Level = level, IsNew = isNew };
+
+					var al = tableAssociation.GetAssociation(expression, level + 1);
+
+					if (al != null)
+						return al;
+
+					var field = tableAssociation.GetField(expression, level + 1, false);
+
+					return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1, IsNew = isNew };
 				}
 
 				return null;
@@ -1288,6 +1337,8 @@ namespace LinqToDB.Linq.Builder
 			public readonly SelectQuery.JoinedTable  ParentAssociationJoin;
 			public readonly AssociationDescriptor    Association;
 			public readonly bool                     IsList;
+			public          int                      RegularConditionCount;
+			public          LambdaExpression         ExpressionPredicate;
 
 			public override IBuildContext Parent
 			{
@@ -1341,6 +1392,17 @@ namespace LinqToDB.Linq.Builder
 					predicate = builder.Convert(parent, predicate);
 
 					join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
+				}
+
+				RegularConditionCount = join.JoinedTable.Condition.Conditions.Count;
+				ExpressionPredicate   = Association.GetPredicate();
+
+				if (ExpressionPredicate != null)
+				{
+					Builder.BuildSearchCondition(
+						new ExpressionContext(null, new IBuildContext[] { parent, this }, ExpressionPredicate), 
+						ExpressionPredicate.Body,
+						join.JoinedTable.Condition.Conditions);
 				}
 
 				Init();
@@ -1478,7 +1540,7 @@ namespace LinqToDB.Linq.Builder
 					expression = Expression.Call(
 						null,
 						MemberHelper.MethodOf(() => ExecuteSubQuery(null, null, null)),
-							ExpressionBuilder.ContextParam,
+							ExpressionBuilder.QueryRunnerParam,
 							Expression.Convert(parentObject, typeof(object)),
 							Expression.Constant(queryReader));
 
@@ -1505,11 +1567,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				static IEnumerable<T> ExecuteSubQuery(
-					QueryContext                             queryContext,
+					IQueryRunner                             queryRunner,
 					object                                   parentObject,
 					Func<IDataContext,object,IEnumerable<T>> queryReader)
 				{
-					using (var db = queryContext.DataContext.Clone(true))
+					using (var db = queryRunner.DataContext.Clone(true))
 						foreach (var item in queryReader(db, parentObject))
 							yield return item;
 				}

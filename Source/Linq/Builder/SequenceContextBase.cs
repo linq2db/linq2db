@@ -7,17 +7,22 @@ namespace LinqToDB.Linq.Builder
 
 	abstract class SequenceContextBase : IBuildContext
 	{
-		protected SequenceContextBase(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)
+		protected SequenceContextBase(IBuildContext parent, IBuildContext[] sequences, LambdaExpression lambda)
 		{
 			Parent      = parent;
-			Sequence    = sequence;
-			Builder     = sequence.Builder;
+			Sequences   = sequences;
+			Builder     = sequences[0].Builder;
 			Lambda      = lambda;
-			SelectQuery = sequence.SelectQuery;
+			SelectQuery = sequences[0].SelectQuery;
 
 			Sequence.Parent = this;
 
 			Builder.Contexts.Add(this);
+		}
+
+		protected SequenceContextBase(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)
+			: this(parent, new[] { sequence }, lambda)
+		{
 		}
 
 #if DEBUG
@@ -25,19 +30,21 @@ namespace LinqToDB.Linq.Builder
 #endif
 
 		public IBuildContext     Parent      { get; set; }
-		public IBuildContext     Sequence    { get; set; }
+		public IBuildContext[]   Sequences   { get; set; }
 		public ExpressionBuilder Builder     { get; set; }
 		public LambdaExpression  Lambda      { get; set; }
 		public SelectQuery       SelectQuery { get; set; }
 
 		Expression IBuildContext.Expression { get { return Lambda; } }
 
+		public  IBuildContext Sequence      { get { return Sequences[0]; } }
+
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
 			var expr   = BuildExpression(null, 0);
 			var mapper = Builder.BuildMapper<T>(expr);
 
-			query.SetQuery(mapper);
+			QueryRunner.SetRunQuery(query, mapper);
 		}
 
 		public abstract Expression         BuildExpression(Expression expression, int level);

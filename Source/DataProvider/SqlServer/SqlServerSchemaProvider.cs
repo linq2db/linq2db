@@ -112,8 +112,12 @@ namespace LinqToDB.DataProvider.SqlServer
 					NUMERIC_SCALE                                         as Scale,
 					''                                                    as [Description],
 					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
-					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnUpdate
+					CASE WHEN c.DATA_TYPE = 'timestamp' 
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						THEN 1 ELSE 0 END as SkipOnInsert,
+					CASE WHEN c.DATA_TYPE = 'timestamp' 
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						THEN 1 ELSE 0 END as SkipOnUpdate
 				FROM
 					INFORMATION_SCHEMA.COLUMNS c"
 				: @"
@@ -128,8 +132,12 @@ namespace LinqToDB.DataProvider.SqlServer
 					NUMERIC_SCALE                                         as Scale,
 					ISNULL(CONVERT(varchar(8000), x.Value), '')           as [Description],
 					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
-					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnUpdate
+					CASE WHEN c.DATA_TYPE = 'timestamp' 
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						THEN 1 ELSE 0 END as SkipOnInsert,
+					CASE WHEN c.DATA_TYPE = 'timestamp' 
+						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1
+						THEN 1 ELSE 0 END as SkipOnUpdate
 				FROM
 					INFORMATION_SCHEMA.COLUMNS c
 					LEFT JOIN

@@ -48,7 +48,7 @@ namespace LinqToDB.Reflection
 					_members.Add(memberInfo);
 			}
 
-			// Add explicit iterface implementation properties support
+			// Add explicit interface implementation properties support
 			// Or maybe we should support all private fields/properties?
 			//
 			var interfaceMethods = type.GetInterfacesEx().SelectMany(ti => type.GetInterfaceMapEx(ti).TargetMethods).ToList();

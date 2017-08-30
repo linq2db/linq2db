@@ -11,12 +11,26 @@ namespace LinqToDB
 	using Mapping;
 	using SqlProvider;
 
-	public class DataContext : IDataContext
+	/// <summary>
+	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
+	/// </summary>
+	public partial class DataContext : IDataContextEx
 	{
+		/// <summary>
+		/// Creates data context using default database configuration.
+		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
+		/// </summary>
 		public DataContext() : this(DataConnection.DefaultConfiguration)
 		{
 		}
 
+		/// <summary>
+		/// Creates data context using specific database configuration.
+		/// </summary>
+		/// <param name="configurationString">Connection configuration name.
+		/// In case of <c>null</c> value, context will use default configuration.
+		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
+		/// </param>
 		public DataContext(string configurationString)
 		{
 			DataProvider        = DataConnection.GetDataProvider(configurationString);
@@ -25,6 +39,11 @@ namespace LinqToDB
 			MappingSchema       = DataProvider.MappingSchema;
 		}
 
+		/// <summary>
+		/// Creates data context using specific data provider implementation and connection string.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation.</param>
+		/// <param name="connectionString">Database connection string.</param>
 		public DataContext([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
 		{
 			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
@@ -36,15 +55,41 @@ namespace LinqToDB
 			MappingSchema    = DataProvider.MappingSchema;
 		}
 
+		/// <summary>
+		/// Gets initial value for database connection configuration name.
+		/// </summary>
 		public string        ConfigurationString { get; private set; }
+		/// <summary>
+		/// Gets initial value for database connection string.
+		/// </summary>
 		public string        ConnectionString    { get; private set; }
+		/// <summary>
+		/// Gets database provider implementation.
+		/// </summary>
 		public IDataProvider DataProvider        { get; private set; }
+		/// <summary>
+		/// Gets or sets context identifier. Uses provider's name by default.
+		/// </summary>
 		public string        ContextID           { get; set;         }
+		/// <summary>
+		/// Gets or sets mapping schema. Uses provider's mapping schema by default.
+		/// </summary>
 		public MappingSchema MappingSchema       { get; set;         }
+		/// <summary>
+		/// Gets or sets option to force inline parameter values as literals into command text. If parameter inlining not supported
+		/// for specific value type, it will be used as parameter.
+		/// </summary>
 		public bool          InlineParameters    { get; set;         }
+		/// <summary>
+		/// Contains text of last command, sent to database using current context.
+		/// </summary>
 		public string        LastQuery           { get; set;         }
 
 		private bool _keepConnectionAlive;
+		/// <summary>
+		/// Gets or sets option to dispose underlying connection after use.
+		/// Default value: <c>false</c>.
+		/// </summary>
 		public  bool  KeepConnectionAlive
 		{
 			get { return _keepConnectionAlive; }
@@ -58,7 +103,11 @@ namespace LinqToDB
 		}
 
 		private bool? _isMarsEnabled;
-		public  bool   IsMarsEnabled
+		/// <summary>
+		/// Gets or sets status of Multiple Active Result Sets (MARS) feature. This feature available only for
+		/// SQL Azure and SQL Server 2005+.
+		/// </summary>
+		public bool   IsMarsEnabled
 		{
 			get
 			{
@@ -75,7 +124,10 @@ namespace LinqToDB
 		}
 
 		private List<string> _queryHints;
-		public  List<string>  QueryHints
+		/// <summary>
+		/// Gets list of query hints (writable collection), that will be used for all queries, executed through current context.
+		/// </summary>
+		public List<string>  QueryHints
 		{
 			get
 			{
@@ -87,7 +139,10 @@ namespace LinqToDB
 		}
 
 		private List<string> _nextQueryHints;
-		public  List<string>  NextQueryHints
+		/// <summary>
+		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current context.
+		/// </summary>
+		public List<string>  NextQueryHints
 		{
 			get
 			{
@@ -98,12 +153,26 @@ namespace LinqToDB
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets flag to close context after query execution or leave it open.
+		/// </summary>
 		public bool CloseAfterUse { get; set; }
 
+		/// <summary>
+		/// Counts number of locks, put on underlying connection. Connection will not be released while counter is not zero.
+		/// </summary>
 		internal int LockDbManagerCounter;
 
+		/// <summary>
+		/// Underlying active database connection.
+		/// </summary>
 		DataConnection _dataConnection;
 
+		/// <summary>
+		/// Returns associated database connection <see cref="DataConnection"/> or create new connection, if connection
+		/// doesn't exists.
+		/// </summary>
+		/// <returns>Data connection.</returns>
 		internal DataConnection GetDataConnection()
 		{
 			if (_dataConnection == null)
@@ -128,6 +197,11 @@ namespace LinqToDB
 			return _dataConnection;
 		}
 
+		/// <summary>
+		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
+		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
+		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
+		/// </summary>
 		internal void ReleaseQuery()
 		{
 			if (_dataConnection != null)
@@ -170,53 +244,15 @@ namespace LinqToDB
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
 
-		object IDataContext.SetQuery(IQueryContext queryContext)
-		{
-			var ctx = GetDataConnection() as IDataContext;
-			return ctx.SetQuery(queryContext);
-		}
-
-		int IDataContext.ExecuteNonQuery(object query)
-		{
-			var ctx = GetDataConnection() as IDataContext;
-			return ctx.ExecuteNonQuery(query);
-		}
-
-		object IDataContext.ExecuteScalar(object query)
-		{
-			var ctx = GetDataConnection() as IDataContext;
-			return ctx.ExecuteScalar(query);
-		}
-
-		IDataReader IDataContext.ExecuteReader(object query)
-		{
-			var ctx = GetDataConnection() as IDataContext;
-			return ctx.ExecuteReader(query);
-		}
-
-		void IDataContext.ReleaseQuery(object query)
-		{
-			ReleaseQuery();
-		}
-
 		SqlProviderFlags IDataContext.SqlProviderFlags
 		{
 			get { return DataProvider.SqlProviderFlags; }
 		}
 
-		string IDataContext.GetSqlText(object query)
-		{
-			if (_dataConnection != null)
-				return ((IDataContext)_dataConnection).GetSqlText(query);
-
-			var ctx = GetDataConnection() as IDataContext;
-			var str = ctx.GetSqlText(query);
-
-			ReleaseQuery();
-
-			return str;
-		}
-
+		/// <summary>
+		/// Noop constructor for context cloning.
+		/// </summary>
+		/// <param name="n">Unused.</param>
 		DataContext(int n) {}
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
@@ -243,6 +279,10 @@ namespace LinqToDB
 			return dc;
 		}
 
+		/// <summary>
+		/// Event, triggered before underlying connection closed on context disposal or closing.
+		/// Not fired, if context doesn't have active connection (bug?).
+		/// </summary>
 		public event EventHandler OnClosing;
 
 		void IDisposable.Dispose()
@@ -250,6 +290,9 @@ namespace LinqToDB
 			Close();
 		}
 
+		/// <summary>
+		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// </summary>
 		void Close()
 		{
 			if (_dataConnection != null)
@@ -270,6 +313,12 @@ namespace LinqToDB
 			Close();
 		}
 
+		/// <summary>
+		/// Starts new transaction for current context with specified isolation level.
+		/// If connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="level">Transaction isolation level.</param>
+		/// <returns>Database transaction object.</returns>
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
 			var dct = new DataContextTransaction(this);
@@ -279,6 +328,12 @@ namespace LinqToDB
 			return dct;
 		}
 
+		/// <summary>
+		/// Starts new transaction for current context with default isolation level.
+		/// If connection already has transaction, it will be rolled back.
+		/// </summary>
+		/// <param name="autoCommitOnDispose">Not supported, see <a href="https://github.com/linq2db/linq2db/issues/104">issue</a>.</param>
+		/// <returns>Database transaction object.</returns>
 		public virtual DataContextTransaction BeginTransaction(bool autoCommitOnDispose = true)
 		{
 			var dct = new DataContextTransaction(this);

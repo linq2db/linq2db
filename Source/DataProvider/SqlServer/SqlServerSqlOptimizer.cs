@@ -57,6 +57,7 @@ namespace LinqToDB.DataProvider.SqlServer
 										return new SqlFunction(
 											func.SystemType,
 											func.Name,
+											false,
 											func.Precedence,
 											func.Parameters[0],
 											new SqlFunction(func.SystemType, "Floor", func.Parameters[1]));
@@ -103,7 +104,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 
 						if (func.Parameters.Length == 2 && func.Parameters[0] is SqlDataType && func.Parameters[0] == SqlDataType.DateTime)
-							return new SqlFunction(func.SystemType, func.Name, func.Precedence, func.Parameters[0], func.Parameters[1], new SqlValue(120));
+							return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, func.Parameters[0], func.Parameters[1], new SqlValue(120));
 					}
 
 					break;

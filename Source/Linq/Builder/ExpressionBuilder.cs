@@ -13,6 +13,9 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Expressions;
+#if !SILVERLIGHT
+	using DataProvider;
+#endif
 
 	partial class ExpressionBuilder
 	{
@@ -57,6 +60,9 @@ namespace LinqToDB.Linq.Builder
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),
+#if !SILVERLIGHT && !NETFX_CORE
+			new MergeContextParser         (),
+#endif
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -97,9 +103,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			_query               = query;
 
-			if (Configuration.Linq.UseBinaryAggregateExpression)
-				expression = AggregateExpression(expression);
-
 			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
 			CompiledParameters   = compiledParameters;
@@ -130,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 		public readonly ParameterExpression[] CompiledParameters;
 		public readonly List<IBuildContext>   Contexts = new List<IBuildContext>();
 
-		public static readonly ParameterExpression ContextParam     = Expression.Parameter(typeof(QueryContext), "context");
+		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
 		public        readonly ParameterExpression DataReaderLocal;
@@ -296,7 +299,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertParameters
 
-		Expression AggregateExpression(Expression expression)
+		internal static Expression AggregateExpression(Expression expression)
 		{
 			return expression.Transform(expr =>
 			{
@@ -326,9 +329,32 @@ namespace LinqToDB.Linq.Builder
 									items.Add(item);
 							}
 
-							if (items.Count > 2)
+							if (items.Count > 3)
 							{
-								return new BinaryAggregateExpression(expr.NodeType, expr.Type, items.ToArray());
+								// having N items will lead to NxM recursive calls in expression visitors and
+								// will result in stack overflow on relatively small numbers (~1000 items).
+								// To fix it we will rebalance condition tree here which will result in 
+								// LOG2(N)*M recursive calls, or 10*M calls for 1000 items.
+								//
+								// E.g. we have condition A OR B OR C OR D OR E
+								// as an expression tree it represented as tree with depth 5
+								//   OR
+								// A    OR
+								//    B    OR
+								//       C    OR
+								//          D    E
+								// for rebalanced tree it will have depth 4
+								//                  OR
+								//        OR
+								//   OR        OR        OR
+								// A    B    C    D    E    F
+								// Not much on small numbers, but huge improvement on bigger numbers
+								while (items.Count != 1)
+								{
+									items = CompactTree(items, expr.NodeType);
+								}
+
+								return items[0];
 							}
 							break;
 						}
@@ -336,6 +362,27 @@ namespace LinqToDB.Linq.Builder
 
 				return expr;
 			});
+		}
+
+		private static List<Expression> CompactTree(List<Expression> items, ExpressionType nodeType)
+		{
+			var result = new List<Expression>();
+
+			// traverse list from left to right to preserve calculation order
+			for (var i = 0; i < items.Count; i += 2)
+			{
+				if (i + 1 == items.Count)
+				{
+					// last non-paired item
+					result.Add(items[i]);
+				}
+				else
+				{
+					result.Add(Expression.MakeBinary(nodeType, items[i], items[i + 1]));
+				}
+			}
+
+			return result;
 		}
 
 		Expression ConvertParameters(Expression expression)
@@ -692,7 +739,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var arg = call.Arguments[0];
 
-						if (call.IsQueryable(AggregationBuilder.MethodNames))
+						if (call.IsAggregate(MappingSchema))
 						{
 							while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression)arg).Method.Name == "Select")
 								arg = ((MethodCallExpression)arg).Arguments[0];
@@ -1404,8 +1451,8 @@ namespace LinqToDB.Linq.Builder
 		#region Helpers
 
 		/// <summary>
-		/// Gets Expression.Equal if <see cref="left"/> and <see cref="right"/> expression types are not same
-		/// <see cref="right"/> would be converted to <see cref="left"/>
+		/// Gets Expression.Equal if <paramref name="left"/> and <paramref name="right"/> expression types are not same
+		/// <paramref name="right"/> would be converted to <paramref name="left"/>
 		/// </summary>
 		/// <param name="mappringSchema"></param>
 		/// <param name="left"></param>
