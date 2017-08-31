@@ -702,6 +702,18 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void ExtensionTest3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+				   Child.Select(_ => new { p = _.Parent   }).Select(_ => _.p.ParentID),
+				db.Child.Select(_ => new { p = _.Parent() }).Select(_ => _.p.ParentID));
+
+			}
+		}
+
+		[Test, DataContextSource]
 		public void QuerableExtensionTest1(string context)
 		{
 			using (var db = GetDataContext(context))

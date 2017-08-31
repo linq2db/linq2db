@@ -1264,9 +1264,9 @@ namespace LinqToDB.Linq.Builder
 				AssociatedTableContext tableAssociation = null;
 						var isNew = false;
 
-				if (expression.NodeType == ExpressionType.Call)
+				if (levelExpression.NodeType == ExpressionType.Call)
 				{
-					var mc = (MethodCallExpression) expression;
+					var mc = (MethodCallExpression) levelExpression;
 					var aa = Builder.MappingSchema.GetAttribute<AssociationAttribute>(mc.Method.DeclaringType, mc.Method, a => a.Configuration);
 
 					if (aa != null)
