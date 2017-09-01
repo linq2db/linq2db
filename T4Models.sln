@@ -22,6 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{
 		Templates\LinqToDB.SqlServer.ttinclude = Templates\LinqToDB.SqlServer.ttinclude
 		Templates\LinqToDB.Sybase.ttinclude = Templates\LinqToDB.Sybase.ttinclude
 		Templates\LinqToDB.ttinclude = Templates\LinqToDB.ttinclude
+		Templates\MultipleFiles.ttinclude = Templates\MultipleFiles.ttinclude
 		Templates\NotifyPropertyChanged.ttinclude = Templates\NotifyPropertyChanged.ttinclude
 		Templates\ObsoleteAttributes.ttinclude = Templates\ObsoleteAttributes.ttinclude
 		Templates\PluralizationService.ttinclude = Templates\PluralizationService.ttinclude
