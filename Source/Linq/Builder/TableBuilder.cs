@@ -971,7 +971,10 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ma     = expression.NodeType == ExpressionType.MemberAccess 
 												? ((MemberExpression)buildInfo.Expression).Expression 
+												: expression.NodeType == ExpressionType.Call 
+												? ((MethodCallExpression)buildInfo.Expression).Arguments[0]
 												: buildInfo.Expression.GetRootObject(Builder.MappingSchema);
+
 								var atype  = typeof(AssociationHelper<>).MakeGenericType(association.ObjectType);
 								var helper = (IAssociationHelper)Activator.CreateInstance(atype);
 								var expr   = helper.GetExpression(ma, association);
