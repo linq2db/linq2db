@@ -1,0 +1,28 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.Informix.InformixTools.ResolveInformix(
+		typeof(IBM.Data.Informix.IfxConnection).Assembly);
+#><#+
+LinqToDB.Data.DataConnection GetInformixConnection(string connectionString)
+{
+	var conn = new IBM.Data.Informix.IfxConnection(connectionString);
+	return LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(conn);
+}
+
+LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, string server, string database, string uid, string password)
+{
+	return GetInformixConnection(string.Format("Host={0};Service={1};Server={2};Protocol=onsoctcp;Database={3};UID={4};PWD={5}", host, port, server, database, uid, password));
+}
+
+void LoadInformixMetadata(string connectionString)
+{
+	var dataConnection = GetInformixConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadInformixMetadata(string host, string port, string server, string database, string uid, string password)
+{
+	var dataConnection = GetInformixConnection(host, port, server, database, uid, password);
+	LoadMetadata(dataConnection);
+}
+#>

@@ -1,0 +1,109 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#@ import namespace="LinqToDB.DataProvider.SapHana"   #>
+<#
+	LinqToDB.DataProvider.SapHana.SapHanaTools.ResolveSapHana(
+		typeof(Sap.Data.Hana.HanaConnection).Assembly);
+
+	Model.Usings.Add("LinqToDB.DataProvider.SapHana");
+	Model.Usings.Add("System.Reflection");
+
+	GenerateProviderSpecificTable = t =>
+	{
+		var method = new Method(
+			String.Format("ITable<{0}>", t.TypeName),
+			t.DataContextPropertyName,
+			t.Parameters.Select(p => p.ParameterType + " " + p.ParameterName),
+			new []
+			{
+				String.Concat("return GetTable<",t.TypeName,">(this, (MethodInfo) MethodBase.GetCurrentMethod(),"),
+				String.Join(",", t.Parameters.Select(p => p.ParameterName)),
+				");"
+			});
+
+		method.Attributes.Add(new Attribute("CalculationViewInputParametersExpression", new string[] {}));
+		return method;
+	};
+
+	LoadProviderSpecificTable = t =>
+	{
+		var v = t as ViewWithParametersTableSchema;
+		return new Table
+			{
+				Schema                  = (t.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(t.SchemaName)? null : t.SchemaName,
+				BaseClass               = BaseEntityClass,
+				TableName               = t.TableName,
+				TypeName                =
+				PluralizeClassNames   ? ToPlural  (t.TypeName) :
+				SingularizeClassNames ? ToSingular(t.TypeName) : t.TypeName,
+				DataContextPropertyName =
+				PluralizeDataContextPropertyNames   ? ToPlural  (t.TypeName) :
+				SingularizeDataContextPropertyNames ? ToSingular(t.TypeName) : t.TypeName,
+				IsView                  = t.IsView,
+				IsProviderSpecific      = true,
+				Description             = t.Description,
+				Columns                 = t.Columns.ToDictionary(
+				c => c.ColumnName,
+				c => new Column
+				{
+					ColumnName      = c.ColumnName,
+					ColumnType      = c.ColumnType,
+					IsNullable      = c.IsNullable,
+					IsIdentity      = c.IsIdentity,
+					IsPrimaryKey    = c.IsPrimaryKey,
+					PrimaryKeyOrder = c.PrimaryKeyOrder,
+					MemberName      = CheckType(c.SystemType, c.MemberName),
+					Type            = c.MemberType,
+					SkipOnInsert    = c.SkipOnInsert,
+					SkipOnUpdate    = c.SkipOnUpdate,
+					Description     = c.Description,
+				}),
+				Parameters = v.Parameters.Select(pr => new Parameter
+				{
+					SchemaName    = pr.SchemaName,
+					SchemaType    = pr.SchemaType,
+					IsIn          = pr.IsIn,
+					IsOut         = pr.IsOut,
+					IsResult      = pr.IsResult,
+					Size          = pr.Size,
+					ParameterName = pr.ParameterName,
+					ParameterType = pr.ParameterType,
+					SystemType    = pr.SystemType,
+					DataType      = pr.DataType.ToString(),
+				})
+				.ToList()
+			};
+	};
+#>
+<#+
+	public partial class Table
+	{
+		public List<Parameter> Parameters;
+	}
+
+	LinqToDB.Data.DataConnection GetSapHanaConnection(string connectionString)
+	{
+		return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString);
+	}
+
+	LinqToDB.Data.DataConnection GetSapHanaConnection(string server, string schema, string uid, string password)
+	{
+		return GetSapHanaConnection(string.Format("Server={0};Current Schema={1};UserID={2};Password={3};", server, schema, uid, password));
+	}
+
+	void LoadSapHanaMetadata(DataConnection dataConnection)
+	{
+		LoadMetadata(dataConnection);
+	}
+
+	void LoadSapHanaMetadata(string connectionString)
+	{
+		var dataConnection = GetSapHanaConnection(connectionString);
+		LoadMetadata(dataConnection);
+	}
+
+	void LoadSapHanaMetadata(string server, string schema, string uid, string password)
+	{
+		var dataConnection = GetSapHanaConnection(server, schema, uid, password);
+		LoadMetadata(dataConnection);
+	}
+#>

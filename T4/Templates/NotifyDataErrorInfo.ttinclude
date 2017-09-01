@@ -1,0 +1,133 @@
+<#
+  {
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			beforeGenerateModel();
+			NotifyDataErrorInfoImpl();
+		};
+	}
+#>
+<#+
+void NotifyDataErrorInfoImpl()
+{
+	foreach (var prop in  GetTreeNodes(Model).OfType<Property>().Where(p => p.CustomValidation).ToList())
+	{
+		ITree p = prop.Parent;
+		
+		while (!(p is Class) && p != null)
+			p = p.Parent;
+		
+		if (p != null)
+		{
+			var cl = (Class)p;
+			
+			if (!cl.Interfaces.Contains("INotifyDataErrorInfo"))
+			{
+				if (!Model.Usings.Contains("System.ComponentModel")) Model.Usings.Add("System.ComponentModel");
+				if (!Model.Usings.Contains("System.Collections"))    Model.Usings.Add("System.Collections");
+				if (!Model.Usings.Contains("System.Linq"))           Model.Usings.Add("System.Linq");
+
+				cl.Interfaces.Add("INotifyDataErrorInfo");
+
+				cl.Members.Add(new MemberGroup
+				{
+					Region  = "INotifyDataErrorInfo support",
+					Members =
+					{
+						new Event("EventHandler<DataErrorsChangedEventArgs>", "ErrorsChanged")
+						{
+							IsVirtual  = true,
+							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+						},
+						new Field("Dictionary<string,List<string>>", "_validationErrors")
+						{
+							InitValue      = "new Dictionary<string,List<string>>()",
+							AccessModifier = AccessModifier.Private,
+							IsReadonly     = true,
+							Attributes     = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+						},
+						new Method("void", "AddError",
+							new[]
+							{
+								"string propertyName",
+								"string error"
+							},
+							new[]
+							{
+								"List<string> errors;",
+								"",
+								"if (!_validationErrors.TryGetValue(propertyName, out errors))",
+								"{",
+									"\t_validationErrors[propertyName] = new List<string> { error };",
+								"}",
+								"else if (!errors.Contains(error))",
+								"{",
+									"\terrors.Add(error);",
+								"}",
+								"else",
+									"\treturn;",
+								"",
+								"OnErrorsChanged(propertyName);",
+							})
+						{
+							AccessModifier = AccessModifier.Public
+						},
+						new Method("void", "RemoveError",
+							new[]
+							{
+								"string propertyName",
+							},
+							new[]
+							{
+								"List<string> errors;",
+								"",
+								"if (_validationErrors.TryGetValue(propertyName, out errors) && errors.Count > 0)",
+								"{",
+									"\t_validationErrors.Clear();",
+									"\tOnErrorsChanged(propertyName);",
+								"}",
+							})
+						{
+							AccessModifier = AccessModifier.Public
+						},
+						new Method("void", "OnErrorsChanged",
+							new[]
+							{
+								"string propertyName",
+							},
+							new[]
+							{
+								"if (ErrorsChanged != null)",
+								"{",
+									"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
+										"\t\tErrorsChanged(this, new DataErrorsChangedEventArgs(propertyName));",
+									"\telse",
+										"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
+											"\t\t\t() => ErrorsChanged(this, new DataErrorsChangedEventArgs(propertyName)));",
+								"}",
+							})
+						{
+							AccessModifier = AccessModifier.Protected
+						},
+						new Method("IEnumerable", "GetErrors",
+							new[]
+							{
+								"string propertyName",
+							},
+							new[]
+							{
+								"List<string> errors;",
+								"return propertyName != null && _validationErrors.TryGetValue(propertyName, out errors) ? errors : null;",
+							})
+						{
+							AccessModifier = AccessModifier.Public
+						},
+						new Property("bool", "HasErrors").InitGetter("_validationErrors.Values.Any(e => e.Count > 0)")
+					}
+				});
+			}
+		}
+	}
+}
+#>

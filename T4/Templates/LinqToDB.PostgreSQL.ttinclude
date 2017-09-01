@@ -1,0 +1,57 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ResolvePostgreSQL(
+		typeof(Npgsql.NpgsqlConnection).Assembly);
+
+	{
+		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
+		BeforeGenerateLinqToDBModel = () =>
+		{
+			beforeGenerateLinqToDBModel();
+			SetCaseSensitiveNames();
+		};
+	}
+#>
+<#+
+bool GenerateCaseSensitiveNames = false; // Defines whether to generate case sensitive or insensitive names 
+
+void SetCaseSensitiveNames()
+{
+	if (GenerateCaseSensitiveNames)
+	{
+		foreach (var t in Tables.Values)
+		{
+			if (t.TableName.Any(char.IsUpper))
+				t.TableName = "\\\"" + t.TableName + "\\\"";
+
+			foreach (var c in t.Columns.Values)
+			{
+				if (c.ColumnName.Any(char.IsUpper))
+					c.ColumnName = "\\\"" + c.ColumnName + "\\\"";
+			}
+		}
+	}
+}
+
+LinqToDB.Data.DataConnection GetPostgreSQLConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetPostgreSQLConnection(string server, string port, string database, string uid, string password)
+{
+	return GetPostgreSQLConnection(string.Format(@"Server={0};Port={1};Database={2};User Id={3};Password={4};Pooling=true;MinPoolSize=10;MaxPoolSize=100;", server, port, database, uid, password));
+}
+
+void LoadPostgreSQLMetadata(string connectionString)
+{
+	var dataConnection = GetPostgreSQLConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadPostgreSQLMetadata(string server, string port, string database, string uid, string password)
+{
+	var dataConnection = GetPostgreSQLConnection(server, port, database, uid, password);
+	LoadMetadata(dataConnection);
+}
+#>

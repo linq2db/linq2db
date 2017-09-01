@@ -1,0 +1,82 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(
+		typeof(Sybase.Data.AseClient.AseConnection).Assembly);
+
+	{
+		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
+		BeforeGenerateLinqToDBModel = () =>
+		{
+			beforeGenerateLinqToDBModel();
+			GenerateSybaseTypes();
+		};
+	}
+#><#+
+bool GenerateSybaseSystemTables = false; // Defines whether to generate Sybase sysobjects tables or not
+
+void GenerateSybaseTypes()
+{
+	if (GenerateSybaseSystemTables)
+	{
+		Tables.Add("sysobjects", new Table
+		{
+			Name                    = "sysobjects",
+			TableName               = "sysobjects",
+			TypeName                = "SysObject",
+			DataContextPropertyName = "SysObjects",
+			BaseClass               = BaseEntityClass,
+			Columns                 = new Dictionary<string,Column>()
+			{
+				{ "name",      new Column { Name = "name",      ColumnName = "name",      ColumnType = "varchar",  Type = "string",   DbType = DbType.AnsiString,  /*Length = 255*/             }},
+				{ "id",        new Column { Name = "id",        ColumnName = "id",        ColumnType = "int",      Type = "int",      DbType = DbType.Int32,                                    }},
+				{ "uid",       new Column { Name = "uid",       ColumnName = "uid",       ColumnType = "int",      Type = "int",      DbType = DbType.Int32,                                    }},
+				{ "type",      new Column { Name = "type",      ColumnName = "type",      ColumnType = "char",     Type = "string",   DbType = DbType.AnsiStringFixedLength, /*Length = 2,*/    }},
+				{ "userstat",  new Column { Name = "userstat",  ColumnName = "userstat",  ColumnType = "smallint", Type = "short",    DbType = DbType.Int16,                                    }},
+				{ "sysstat",   new Column { Name = "sysstat",   ColumnName = "sysstat",   ColumnType = "smallint", Type = "short",    DbType = DbType.Int16,                                    }},
+				{ "indexdel",  new Column { Name = "indexdel",  ColumnName = "indexdel",  ColumnType = "smallint", Type = "short",    DbType = DbType.Int16,                                    }},
+				{ "schemacnt", new Column { Name = "schemacnt", ColumnName = "schemacnt", ColumnType = "smallint", Type = "short",    DbType = DbType.Int16,                                    }},
+				{ "sysstat2",  new Column { Name = "sysstat2",  ColumnName = "sysstat2",  ColumnType = "int",      Type = "int",      DbType = DbType.Int32,                                    }},
+				{ "crdate",    new Column { Name = "crdate",    ColumnName = "crdate",    ColumnType = "datetime", Type = "DateTime", DbType = DbType.DateTime                                  }},
+				{ "expdate",   new Column { Name = "expdate",   ColumnName = "expdate",   ColumnType = "datetime", Type = "DateTime", DbType = DbType.DateTime                                  }},
+				{ "deltrig",   new Column { Name = "deltrig",   ColumnName = "deltrig",   ColumnType = "int",      Type = "int",      DbType = DbType.Int32,                                    }},
+				{ "instrig",   new Column { Name = "instrig",   ColumnName = "instrig",   ColumnType = "int",      Type = "int",      DbType = DbType.Int32,                                    }},
+				{ "updtrig",   new Column { Name = "updtrig",   ColumnName = "updtrig",   ColumnType = "int",      Type = "int",      DbType = DbType.Int32,                                    }},
+				{ "seltrig",   new Column { Name = "seltrig",   ColumnName = "seltrig",   ColumnType = "int",      Type = "int",      DbType = DbType.Int32,                                    }},
+				{ "ckfirst",   new Column { Name = "ckfirst",   ColumnName = "ckfirst",   ColumnType = "int",      Type = "int",      DbType = DbType.Int32,                                    }},
+				{ "cache",     new Column { Name = "cache",     ColumnName = "cache",     ColumnType = "smallint", Type = "short",    DbType = DbType.Int16                                     }},
+				{ "audflags",  new Column { Name = "audflags",  ColumnName = "audflags",  ColumnType = "int",      Type = "int",      DbType = DbType.Int32,  IsNullable = true                 }},
+				{ "objspare",  new Column { Name = "objspare",  ColumnName = "objspare",  ColumnType = "int",      Type = "int",      DbType = DbType.Int32,                                    }},
+				{ "versionts", new Column { Name = "versionts", ColumnName = "versionts", ColumnType = "binary",   Type = "byte[]",   DbType = DbType.Binary, IsNullable = true, /*Length = 6*/ }},
+				{ "loginame",  new Column { Name = "loginame",  ColumnName = "loginame",  ColumnType = "varchar",  Type = "string",   DbType = DbType.AnsiString,  /*Length = 30*/              }},
+			}
+		});
+	}
+}
+
+LinqToDB.Data.DataConnection GetSybaseConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.Sybase.SybaseTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetSybaseConnection(string server, string database)
+{
+	return GetSybaseConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database));
+}
+
+LinqToDB.Data.DataConnection GetSybaseConnection(string server, string port, string database, string uid, string password)
+{
+	return GetSybaseConnection(string.Format("Data Source={0};Port={1};Database={2};Uid={3};Password={4};Charset=utf8;", server, port, database, uid, password));
+}
+
+void LoadSybaseMetadata(string connectionString)
+{
+	var dataConnection = GetSybaseConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadSybaseMetadata(string server, string port, string database, string uid, string password)
+{
+	var dataConnection = GetSybaseConnection(server, port, database, uid, password);
+	LoadMetadata(dataConnection);
+}
+#>
