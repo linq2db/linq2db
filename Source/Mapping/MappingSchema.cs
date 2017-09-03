@@ -373,7 +373,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns conversion delegate for conversion from <paramref name="from"/> type to <paramref name="to"/> type.
+		/// Returns conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
 		/// </summary>
 		/// <typeparam name="TFrom">Source type.</typeparam>
 		/// <typeparam name="TTo">Target type.</typeparam>
