@@ -34,6 +34,7 @@ var docFxCheckout       = "./linq2db.github.io";
 var docFxSite           = "./Doc/_site";
 
 var testRunner          = GetTestRunner();
+var testLogger          = GetTestLogger();
 
 bool IsRelease()
 {
@@ -123,6 +124,19 @@ string GetTestRunner()
 	return e;
 
 }
+
+string GetTestLogger()
+{
+	var e = EnvironmentVariable("testLogger")
+		?? Argument<string>("testLogger", null);
+
+
+	Console.WriteLine("Test logger: {0}", e);
+
+	return e;
+
+}
+
 string GetAccessToken()
 {
 	var e = EnvironmentVariable("access_token")
@@ -299,7 +313,8 @@ Task("RunTests")
 		Configuration = configuration,
 		NoBuild = true, 
 		Framework = buildConfiguration,
-		Filter = testFilter
+		Filter = testFilter,
+		Logger = testLogger
 	};
 
 	var testResults = "TestResult.xml";

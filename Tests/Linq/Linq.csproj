@@ -30,9 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
+		<PackageReference Include="Appveyor.TestLogger" Version="1.1.0-post-rtm" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" Condition=" '$(TargetFramework)' != 'net40' " />
 		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="NUnit" Version="3.7.1" />
+		<PackageReference Include="NUnit" Version="3.8.1" />
 		<PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
 	</ItemGroup>
 
