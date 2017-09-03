@@ -186,13 +186,46 @@ string GetTestFilter()
 	return EnvironmentVariable("testfilter");
 }
 
-void UploadTestResults(FilePath file)
+void UploadTestResults(FilePath file, AppVeyorTestResultsType type)
 {
+	Console.WriteLine("Uplaoding test result: {0}", file.FullPath);
+
 	if (isAppVeyorBuild)
 	{
 		Console.WriteLine("Uploading test results to AppVeyor");
-		AppVeyor.UploadTestResults(file, AppVeyorTestResultsType.NUnit3);
+
+		AppVeyor.UploadTestResults(file, type);
 	}
+	else
+	{
+		Console.WriteLine("Nowhere to upload");
+	}
+}
+
+void UploadTestResults()
+{
+	var rootDir = new System.IO.DirectoryInfo("./");
+
+	Console.WriteLine("Looking for NUnit");
+	var testResults = "TestResult.xml";
+
+	if (FileExists(testResults))
+	{
+		UploadTestResults(testResults, AppVeyorTestResultsType.NUnit3);
+		DeleteFile(testResults);
+	}
+	else 
+		Console.WriteLine("No test results (expected at {0})", testResults);
+
+
+	Console.WriteLine("Looking for TRX");
+
+	foreach(var f in rootDir.GetFiles("*.trx", SearchOption.AllDirectories))
+	{
+		UploadTestResults(f.FullName, AppVeyorTestResultsType.MSTest);
+		DeleteFile(f.FullName);
+	}
+
 }
 
 void UploadArtifact(FilePath file)
@@ -338,13 +371,7 @@ Task("RunTests")
 		else
 			DotNetCoreTest(project.FullPath, settings);
 
-		if (FileExists(testResults))
-		{
-			UploadTestResults(testResults);
-			DeleteFile(testResults);
-		}
-		else 
-			Console.WriteLine("No test results (expected at {0})", testResults);
+		UploadTestResults();
 	}
 })
 .OnError(ex => 
@@ -352,13 +379,7 @@ Task("RunTests")
 	Console.WriteLine("Tests failed: {0}", ex.Message);
 	var fileName = "TestResult.xml";
 
-	if (FileExists(fileName))
-	{
-		Console.WriteLine("Test results exists: {0}", fileName);
-		UploadTestResults(fileName);
-	}
-	else 
-		Console.WriteLine("No test results (expected at {0})", fileName);
+	UploadTestResults();
 	
 	throw ex;
 });
