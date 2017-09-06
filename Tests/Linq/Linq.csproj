@@ -30,11 +30,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" Condition=" '$(TargetFramework)' != 'net40' " />
-	<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-	<PackageReference Include="NUnit" Version="3.7.1" />
-	<PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
-  </ItemGroup>
+		<PackageReference Include="Appveyor.TestLogger" Version="1.1.0-post-rtm" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" Condition=" '$(TargetFramework)' != 'net40' " />
+		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+		<PackageReference Include="NUnit" Version="3.8.1" />
+		<PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
+	</ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 	<!--<PackageReference Include="System.Data.Common" Version="4.3.0" />-->
@@ -188,35 +189,49 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-	<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="4.10.0" />
-	<PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
-	<PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
-	<PackageReference Include="Microsoft.SqlServer.Types" Version="11.0.2" />
-	<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
-	<PackageReference Include="MySql.Data" Version="6.9.8" />
-	<PackageReference Include="Npgsql" Version="3.1.8" />
-	<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
-	<PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.24160419" />
-	<PackageReference Include="System.Data.SQLite.Core" Version="1.0.101.0" />
-	<PackageReference Include="xunit" Version="1.9.1" />
-	<PackageReference Include="xunit.extensions" Version="1.9.1" />
-	<PackageReference Include="NUnit.Runners" Version="3.6.0" />
-	<Reference Include="Microsoft.CSharp" />
-	<Reference Include="System" />
-	<Reference Include="System.Configuration" />
-	<Reference Include="System.Core" />
-	<Reference Include="System.Data.DataSetExtensions" />
-	<Reference Include="System.Data.Linq" />
-	<Reference Include="System.Data.Services" />
-	<Reference Include="System.ServiceModel" />
-	<Reference Include="System.Web.Services" />
-	<Reference Include="System.Xml.Linq" />
-	<Reference Include="System.Data" />
-	<Reference Include="System.Xml" />
-	<Reference Include="System.Runtime.Serialization" />
-	<Reference Include="System.Windows.Forms" />
-	<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
-	<Reference Include="System.Threading.Tasks" />
+    <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="4.10.0" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
+    <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
+    <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
+    <PackageReference Include="MiniProfiler" Version="3.2.0.157" />
+    <PackageReference Include="MySql.Data" Version="6.9.8" />
+    <PackageReference Include="Npgsql" Version="3.1.8" />
+    <PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.24160419" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.101.0" />
+    <PackageReference Include="xunit" Version="1.9.1" />
+    <PackageReference Include="xunit.extensions" Version="1.9.1" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Data.Services" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Windows.Forms" />
+		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
+		<Reference Include="System.Threading.Tasks"></Reference>
+	</ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="IBM.Data.DB2">
+      <HintPath>..\..\..\linq2db.2.git\Redist\IBM\IBM.Data.DB2.dll</HintPath>
+    </Reference>
+    <Reference Include="IBM.Data.Informix">
+      <HintPath>..\..\..\linq2db.2.git\Redist\IBM\IBM.Data.Informix.dll</HintPath>
+    </Reference>
+    <Reference Include="Sap.Data.Hana.v4.5">
+      <HintPath>..\..\..\linq2db.2.git\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
+    </Reference>
+    <Reference Include="Sybase.AdoNet45.AseClient">
+      <HintPath>..\..\..\linq2db.2.git\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

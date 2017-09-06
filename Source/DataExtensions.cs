@@ -32,6 +32,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Data connection context.</param>
 		/// <returns>Queryable source.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
@@ -49,6 +50,7 @@ namespace LinqToDB
 		/// <param name="parameters">Parameters for <paramref name="methodInfo"/> method.</param>
 		/// <returns>Queryable source.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> GetTable<T>(
 			this IDataContext dataContext,
 			object instance,

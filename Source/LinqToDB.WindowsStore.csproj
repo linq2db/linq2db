@@ -20,17 +20,21 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug.WindowsStore\</OutputPath>
+    <DocumentationFile>bin\Debug.WindowsStore\linq2db.WindowsStore.XML</DocumentationFile>
     <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINSTORE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release.WindowsStore\</OutputPath>
+    <DocumentationFile>bin\Release.WindowsStore\linq2db.WindowsStore.XML</DocumentationFile>
     <DefineConstants>TRACE;NETFX_CORE;WINSTORE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
@@ -163,7 +167,6 @@
     <Compile Include="ExpressionMethodAttribute.cs" />
     <Compile Include="Expressions\ChangeTypeExpression.cs" />
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
-    <Compile Include="Expressions\BinaryAggregateExpression.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\GetItemExpression.cs" />

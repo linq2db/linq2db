@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>linq2db.Firebird</id>
+		<version>1.9.0</version>
+		<title>LINQ to Firebird</title>
+		<authors>Igor Tkachev</authors>
+		<owners />
+		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
+		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
+		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>
+			LINQ to Firebird is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+		</description>
+		<summary>
+			This package includes a T4 template to generate data models for Firebird database and references to the linq2db and FirebirdSql.Data.FirebirdClient nugets.
+		</summary>
+		<tags>linq linq2db Firebird LinqToDB ORM database DB SQL</tags>
+		<dependencies>
+			<dependency id="linq2db.t4models" version="1.9.0"/>
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="..\packages\FirebirdSql.Data.FirebirdClient.5.6.0\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll" target="tools" />
+		<file src="LinqToDB.Firebird.Tools.ttinclude"                                                                      target="content\LinqToDB.Templates" />
+		<file src="CopyMe.Firebird.tt.txt"                                                                                 target="content\LinqToDB.Templates" />
+
+		<file src="init.ps1"                                                                                               target="tools" />
+		<file src="CopyMe.Firebird.Core.tt.txt"                                                                            target="tools" />
+	</files>
+</package>

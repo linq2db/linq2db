@@ -2429,32 +2429,6 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Extension :
 					{
-						var e = expression as BinaryAggregateExpression;
-						if (e != null)
-						{
-							if (e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse)
-							{
-								var orCondition = new SelectQuery.SearchCondition();
-
-								for (var i = 0; i < e.Expressions.Length; i++)
-								{
-									var expr = e.Expressions[i];
-									BuildSearchCondition(context, expr, orCondition.Conditions);
-									if (i < e.Expressions.Length - 1)
-										orCondition.Conditions[orCondition.Conditions.Count - 1].IsOr = true;
-								}
-
-								conditions.Add(new SelectQuery.Condition(false, orCondition));
-							}
-							else
-							{
-								foreach (var expr in e.Expressions)
-								{
-									BuildSearchCondition(context, expr, conditions);
-								}
-							}
-						}
-
 						break;
 					}
 

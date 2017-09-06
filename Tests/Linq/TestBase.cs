@@ -358,6 +358,10 @@ namespace Tests
 					.Union(method.GetCustomAttributes<IgnoreAttribute>(true))
 					.ToList();
 
+				var maxTime = method.GetCustomAttributes<MaxTimeAttribute>(true).FirstOrDefault();
+
+				explic.Add(maxTime ?? new MaxTimeAttribute(10000));
+
 				var builder = new NUnitTestCaseBuilder();
 
 				TestMethod test = null;
