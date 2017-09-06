@@ -89,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = Builder.BuildSql(typeof(bool), 0);
 				var mapper = Builder.BuildMapper<object>(expr);
 
-				query.SetElementQuery(mapper.Compile());
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
 			public override Expression BuildExpression(Expression expression, int level)

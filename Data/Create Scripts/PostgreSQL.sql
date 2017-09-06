@@ -441,3 +441,67 @@ CREATE TABLE TestSameName
 	ID serial NOT NULL PRIMARY KEY
 )
 GO
+
+DROP TABLE IF EXISTS "TestMerge1"
+GO
+
+DROP TABLE IF EXISTS "TestMerge2"
+GO
+
+CREATE TABLE "TestMerge1"
+(
+	"Id"		INTEGER	PRIMARY KEY,
+	"Field1"	INTEGER	NULL,
+	"Field2"	INTEGER	NULL,
+	"Field3"	INTEGER	NULL,
+	"Field4"	INTEGER	NULL,
+	"Field5"	INTEGER	NULL,
+
+	"FieldInt64"      BIGINT                   NULL,
+	"FieldBoolean"    BOOLEAN                  NULL,
+	"FieldString"     VARCHAR(20)              NULL,
+	"FieldNString"    VARCHAR(20)              NULL,
+	"FieldChar"       CHAR(1)                  NULL,
+	"FieldNChar"      CHAR(1)                  NULL,
+	"FieldFloat"      FLOAT(24)                NULL,
+	"FieldDouble"     FLOAT(53)                NULL,
+	"FieldDateTime"   TIMESTAMP                NULL,
+	"FieldDateTime2"  TIMESTAMP WITH TIME ZONE NULL,
+	"FieldBinary"     BYTEA                    NULL,
+	"FieldGuid"       UUID                     NULL,
+	"FieldDecimal"    DECIMAL(24, 10)          NULL,
+	"FieldDate"       DATE                     NULL,
+	"FieldTime"       TIME(7)                  NULL,
+	"FieldEnumString" VARCHAR(20)              NULL,
+	"FieldEnumNumber" INT                      NULL
+)
+GO
+
+CREATE TABLE "TestMerge2"
+(
+	"Id"		INTEGER	PRIMARY KEY,
+	"Field1"	INTEGER	NULL,
+	"Field2"	INTEGER	NULL,
+	"Field3"	INTEGER	NULL,
+	"Field4"	INTEGER	NULL,
+	"Field5"	INTEGER	NULL,
+
+	"FieldInt64"      BIGINT                   NULL,
+	"FieldBoolean"    BOOLEAN                  NULL,
+	"FieldString"     VARCHAR(20)              NULL,
+	"FieldNString"    VARCHAR(20)              NULL,
+	"FieldChar"       CHAR(1)                  NULL,
+	"FieldNChar"      CHAR(1)                  NULL,
+	"FieldFloat"      FLOAT(24)                NULL,
+	"FieldDouble"     FLOAT(53)                NULL,
+	"FieldDateTime"   TIMESTAMP                NULL,
+	"FieldDateTime2"  TIMESTAMP WITH TIME ZONE NULL,
+	"FieldBinary"     BYTEA                    NULL,
+	"FieldGuid"       UUID                     NULL,
+	"FieldDecimal"    DECIMAL(24, 10)          NULL,
+	"FieldDate"       DATE                     NULL,
+	"FieldTime"       TIME(7)                  NULL,
+	"FieldEnumString" VARCHAR(20)              NULL,
+	"FieldEnumNumber" INT                      NULL
+)
+GO

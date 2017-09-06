@@ -194,7 +194,7 @@ namespace Tests.Data
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<TwoValues, DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
+			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
 
 			using (var conn = new DataConnection().AddMappingSchema(ms))
 			{

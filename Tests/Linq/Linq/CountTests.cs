@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -23,12 +23,30 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public async Task Count1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					         Parent.Count(),
+					await db.Parent.CountAsync());
+		}
+
+		[Test, DataContextSource]
 		public void Count2(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
 					   Parent.Count(p => p.ParentID > 2),
 					db.Parent.Count(p => p.ParentID > 2));
+		}
+
+		[Test, DataContextSource]
+		public async Task Count2Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					         Parent.Count     (p => p.ParentID > 2),
+					await db.Parent.CountAsync(p => p.ParentID > 2));
 		}
 
 		[Test, DataContextSource]
@@ -520,6 +538,15 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					   Parent.Max(p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
 					db.Parent.Max(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
+		}
+
+		[Test, DataContextSource]
+		public async Task SubQueryMax1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					         Parent.Max     (p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
+					await db.Parent.MaxAsync(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
 		}
 
 		[Test, DataContextSource]

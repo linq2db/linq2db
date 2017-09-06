@@ -5,6 +5,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+
+#if !SL4
+using System.Threading.Tasks;
+#endif
 
 using JetBrains.Annotations;
 
@@ -27,8 +32,8 @@ namespace LinqToDB.Linq
 		[NotNull] public Expression   Expression  { get; set; }
 		[NotNull] public IDataContext DataContext { get; set; }
 
-		internal  Query<T> Info;
-		internal  object[] Parameters;
+		internal Query<T> Info;
+		internal object[] Parameters;
 
 		#endregion
 
@@ -38,6 +43,8 @@ namespace LinqToDB.Linq
 		private string _sqlTextHolder;
 
 // ReSharper disable InconsistentNaming
+		// This property is helpful in Debug Mode.
+		//
 		[UsedImplicitly]
 		private string _sqlText { get { return SqlText; }}
 // ReSharper restore InconsistentNaming
@@ -50,8 +57,10 @@ namespace LinqToDB.Linq
 
 				if (_sqlTextHolder == null || hasQueryHints)
 				{
-					var info    = GetQuery(Expression, true);
-					var sqlText = info.GetSqlText(DataContext, Expression, Parameters, 0);
+					var expression = Expression;
+					var info       = GetQuery(ref expression, true);
+					Expression     = expression;
+					var sqlText    = QueryRunner.GetSqlText(info, DataContext, Expression, Parameters, 0);
 
 					if (hasQueryHints)
 						return sqlText;
@@ -67,18 +76,47 @@ namespace LinqToDB.Linq
 
 		#region Execute
 
-		Query<T> GetQuery(Expression expression, bool cache)
+		Query<T> GetQuery(ref Expression expression, bool cache)
 		{
 			if (cache && Info != null)
 				return Info;
 
-			var info = Query<T>.GetQuery(DataContext, expression);
+			var info = Query<T>.GetQuery(DataContext, ref expression);
 
 			if (cache)
 				Info = info;
 
 			return info;
 		}
+
+#if !SL4 && !NOASYNC
+
+		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
+		{
+			var value = await GetQuery(ref expression, false).GetElementAsync(
+				(IDataContextEx)DataContext, expression, Parameters, token);
+
+			return (TResult)value;
+		}
+
+		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
+		{
+			var expression = Expression;
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+			
+			return query
+				.GetForEachAsync((IDataContextEx)DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken);
+		}
+
+		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
+		{
+			var expression = Expression;
+			return GetQuery(ref expression, true)
+				.GetForEachAsync((IDataContextEx)DataContext, expression, Parameters, func, cancellationToken);
+		}
+
+#endif
 
 		#endregion
 
@@ -130,12 +168,12 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			return (TResult)GetQuery(expression, false).GetElement(null, DataContext, expression, Parameters);
+			return (TResult)GetQuery(ref expression, false).GetElement((IDataContextEx)DataContext, expression, Parameters);
 		}
 
 		object IQueryProvider.Execute(Expression expression)
 		{
-			return GetQuery(expression, false).GetElement(null, DataContext, expression, Parameters);
+			return GetQuery(ref expression, false).GetElement((IDataContextEx)DataContext, expression, Parameters);
 		}
 
 		#endregion
@@ -144,12 +182,20 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			return GetQuery(Expression, true).GetIEnumerable(null, DataContext, Expression, Parameters).GetEnumerator();
+			var expression = Expression;
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+			
+			return query.GetIEnumerable((IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return GetQuery(Expression, true).GetIEnumerable(null, DataContext, Expression, Parameters).GetEnumerator();
+			var expression = Expression;
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+			
+			return query.GetIEnumerable((IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
 		}
 
 		#endregion

@@ -1,12 +1,12 @@
 {
   "name": "linq2db.Core",
-  "version": "1.8.4-*",
+  "version": "1.9.1-*",
   "authors": [ "Igor Tkachev" ],
   "description": "LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.",
 
   "packOptions": {
     "licenseUrl": "https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt",
-    "projectUrl": "https://github.com/linq2db/linq2db",
+    "projectUrl": "http://linq2db.com",
     "iconUrl": "http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320",
 
     "requireLicenseAcceptance": false,

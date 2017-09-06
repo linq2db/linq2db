@@ -1,14 +1,10 @@
-﻿using LinqToDB;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Data.Linq;
-using System.Globalization;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -35,11 +31,11 @@ namespace Tests.Linq
 
 			[Column("ncharDataType")]
 			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
-			[Column("CHAR20DATATYPE",  Configuration = ProviderName.DB2)]
-			[Column("char20datatype",  Configuration = ProviderName.PostgreSQL)]
-			[Column("char20DataType",  Configuration = ProviderName.MySql)]
-			[Column("char20DataType",  Configuration = TestProvName.MySql57)]
-			[Column("char20DataType",  Configuration = TestProvName.MariaDB)]
+			[Column("CHAR20DATATYPE" , Configuration = ProviderName.DB2)]
+			[Column("char20datatype" , Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType" , Configuration = ProviderName.MySql)]
+			[Column("char20DataType" , Configuration = TestProvName.MySql57)]
+			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string NString;
 
@@ -65,13 +61,13 @@ namespace Tests.Linq
 			[Column(Configuration = TestProvName.MariaDB,    IsColumn = false)]
 			public char? Char;
 
-			[Column("ncharDataType")]
-			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
-			[Column("CHAR20DATATYPE",  Configuration = ProviderName.DB2)]
-			[Column("char20datatype",  Configuration = ProviderName.PostgreSQL)]
-			[Column("char20DataType",  Configuration = ProviderName.MySql)]
-			[Column("char20DataType",  Configuration = TestProvName.MySql57)]
-			[Column("char20DataType",  Configuration = TestProvName.MariaDB)]
+			[Column("ncharDataType"  , DataType = DataType.NChar)]
+			[Column("nchar20DataType", DataType = DataType.NChar, Configuration = ProviderName.SapHana)]
+			[Column("CHAR20DATATYPE" , DataType = DataType.NChar, Configuration = ProviderName.DB2)]
+			[Column("char20datatype" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql57)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
 
@@ -83,31 +79,32 @@ namespace Tests.Linq
 		// unicode test cases not used for String
 		private static StringTestTable[] StringTestData = new[]
 		{
-			new StringTestTable() { String = "test01",      NString = "test"        },
-			new StringTestTable() { String = "test02  ",    NString = "test  "      },
-			new StringTestTable() { String = "test03\x09 ", NString = "test\x09 "   },
-			new StringTestTable() { String = "test04\x0A ", NString = "test\x0A "   },
-			new StringTestTable() { String = "test05\x0B ", NString = "test\x0B "   },
-			new StringTestTable() { String = "test06\x0C ", NString = "test\x0C "   },
-			new StringTestTable() { String = "test07\x0D ", NString = "test\x0D "   },
-			new StringTestTable() { String = "test08\xA0 ", NString = "test\xA0 "   },
-			new StringTestTable() { String = "test09     ", NString = "test\u2000 " },
-			new StringTestTable() { String = "test10     ", NString = "test\u2001 " },
-			new StringTestTable() { String = "test11     ", NString = "test\u2002 " },
-			new StringTestTable() { String = "test12     ", NString = "test\u2003 " },
-			new StringTestTable() { String = "test14     ", NString = "test\u2004 " },
-			new StringTestTable() { String = "test15     ", NString = "test\u2005 " },
-			new StringTestTable() { String = "test16     ", NString = "test\u2006 " },
-			new StringTestTable() { String = "test17     ", NString = "test\u2007 " },
-			new StringTestTable() { String = "test18     ", NString = "test\u2008 " },
-			new StringTestTable() { String = "test19     ", NString = "test\u2009 " },
-			new StringTestTable() { String = "test20     ", NString = "test\u200A " },
-			new StringTestTable() { String = "test21     ", NString = "test\u3000 " },
-			new StringTestTable() { String = "test22\0   ", NString = "test\0 "     },
+			new StringTestTable() { String = "test01",      NString = "test01"        },
+			new StringTestTable() { String = "test02  ",    NString = "test02  "      },
+			new StringTestTable() { String = "test03\x09 ", NString = "test03\x09 "   },
+			new StringTestTable() { String = "test04\x0A ", NString = "test04\x0A "   },
+			new StringTestTable() { String = "test05\x0B ", NString = "test05\x0B "   },
+			new StringTestTable() { String = "test06\x0C ", NString = "test06\x0C "   },
+			new StringTestTable() { String = "test07\x0D ", NString = "test07\x0D "   },
+			new StringTestTable() { String = "test08\xA0 ", NString = "test08\xA0 "   },
+			new StringTestTable() { String = "test09     ", NString = "test09\u2000 " },
+			new StringTestTable() { String = "test10     ", NString = "test10\u2001 " },
+			new StringTestTable() { String = "test11     ", NString = "test11\u2002 " },
+			new StringTestTable() { String = "test12     ", NString = "test12\u2003 " },
+			new StringTestTable() { String = "test13     ", NString = "test13\u2004 " },
+			new StringTestTable() { String = "test14     ", NString = "test14\u2005 " },
+			new StringTestTable() { String = "test15     ", NString = "test15\u2006 " },
+			new StringTestTable() { String = "test16     ", NString = "test16\u2007 " },
+			new StringTestTable() { String = "test17     ", NString = "test17\u2008 " },
+			new StringTestTable() { String = "test18     ", NString = "test18\u2009 " },
+			new StringTestTable() { String = "test19     ", NString = "test19\u200A " },
+			new StringTestTable() { String = "test20     ", NString = "test20\u3000 " },
+			new StringTestTable() { String = "test21\0   ", NString = "test21\0 "     },
 			new StringTestTable()
 		};
 
-		[DataContextSource(false)]
+		// TODO: MySql57 disabled due to encoding issues on CI
+		[DataContextSource(false, TestProvName.MySql57)]
 		public void StringTrimming(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -125,8 +122,10 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							query = query.Value(_ => _.String, record.String);
 
-						if (context == ProviderName.Firebird
-							|| context == ProviderName.Firebird + ".LinqService")
+						if (   context == ProviderName.Firebird
+							|| context == ProviderName.Firebird + ".LinqService"
+							|| context == TestProvName.Firebird3
+							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
 
 						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
@@ -144,8 +143,18 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
 
-						if (context != ProviderName.Firebird
-							&& context == ProviderName.Firebird + ".LinqService")
+						if (   context == ProviderName.Sybase
+							|| context == ProviderName.Sybase + ".LinqService")
+							// this kind of replacement is allowed in unicode, but dunno why it is done for sybase
+							Assert.AreEqual(
+								testData[i].NString?.TrimEnd(' ')
+									.Replace('\u2000', '\u2002')
+									.Replace('\u2001', '\u2003'),
+								records[i].NString);
+						else if (context != ProviderName.Firebird
+							  && context != ProviderName.Firebird + ".LinqService"
+							  && context != TestProvName.Firebird3
+							  && context != TestProvName.Firebird3 + ".LinqService")
 							Assert.AreEqual(testData[i].NString?.TrimEnd(' '), records[i].NString);
 					}
 
@@ -171,12 +180,14 @@ namespace Tests.Linq
 				return CharTestData.Where(_ => _.NChar != '\0').ToArray();
 
 			// I wonder why
-			if (context == ProviderName.Firebird
-				|| context == ProviderName.Firebird + ".LinqService")
+			if (   context == ProviderName.Firebird
+				|| context == ProviderName.Firebird + ".LinqService"
+				|| context == TestProvName.Firebird3
+				|| context == TestProvName.Firebird3 + ".LinqService")
 				return CharTestData.Where(_ => _.NChar != '\xA0').ToArray();
 
 			// also strange
-			if (context == ProviderName.Informix
+			if (   context == ProviderName.Informix
 				|| context == ProviderName.Informix + ".LinqService")
 				return CharTestData.Where(_ => _.NChar != '\0' && (_.NChar ?? 0) < byte.MaxValue).ToArray();
 
@@ -201,12 +212,14 @@ namespace Tests.Linq
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")).ToArray();
 
 			// I wonder why
-			if (context == ProviderName.Firebird
-				|| context == ProviderName.Firebird + ".LinqService")
+			if (   context == ProviderName.Firebird
+				|| context == ProviderName.Firebird + ".LinqService"
+				|| context == TestProvName.Firebird3
+				|| context == TestProvName.Firebird3 + ".LinqService")
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\xA0")).ToArray();
 
 			// also strange
-			if (context == ProviderName.Informix
+			if (   context == ProviderName.Informix
 				|| context == ProviderName.Informix + ".LinqService")
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")
 					&& !(_.NString ?? string.Empty).Any(c => (int)c > byte.MaxValue)).ToArray();
@@ -239,7 +252,8 @@ namespace Tests.Linq
 			new CharTestTable()
 		};
 
-		[DataContextSource(false)]
+		// TODO: MySql57 disabled due to encoding issues on CI
+		[DataContextSource(false, TestProvName.MySql57)]
 		public void CharTrimming(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -256,8 +270,10 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							query = query.Value(_ => _.Char, record.Char);
 
-						if (context == ProviderName.Firebird
-							|| context == ProviderName.Firebird + ".LinqService")
+						if (   context == ProviderName.Firebird
+							|| context == ProviderName.Firebird + ".LinqService"
+							|| context == TestProvName.Firebird3
+							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
 
 						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
@@ -292,11 +308,27 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							Assert.AreEqual(testData[i].Char, records[i].Char);
 
-						if (context != ProviderName.Firebird
-							&& context == ProviderName.Firebird + ".LinqService")
+						if (   context == ProviderName.Sybase
+							|| context == ProviderName.Sybase + ".LinqService")
+							// this kind of replacement is allowed in unicode, but dunno why it is done for sybase
+							Assert.AreEqual(
+								testData[i].NChar == '\u2000' || testData[i].NChar == '\u2001'
+									? (char)(testData[i].NChar + 2) : testData[i].NChar,
+								records[i].NChar);
+						else if (context == ProviderName.MySql
+							  || context == ProviderName.MySql + ".LinqService"
+							  || context == TestProvName.MySql57
+							  || context == TestProvName.MySql57 + ".LinqService"
+							  || context == TestProvName.MariaDB
+							  || context == TestProvName.MariaDB + ".LinqService")
+							// for some reason mysql doesn't insert space
+							Assert.AreEqual(testData[i].NChar == ' ' ? '\0' : testData[i].NChar, records[i].NChar);
+						else if (context != ProviderName.Firebird
+							  && context != ProviderName.Firebird + ".LinqService"
+							  && context != TestProvName.Firebird3
+							  && context != TestProvName.Firebird3 + ".LinqService")
 							Assert.AreEqual(testData[i].NChar, records[i].NChar);
 					}
-
 				}
 				finally
 				{

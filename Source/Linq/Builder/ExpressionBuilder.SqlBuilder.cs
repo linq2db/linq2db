@@ -912,7 +912,7 @@ namespace LinqToDB.Linq.Builder
 							if (attr.InlineParameters)
 								DataContext.InlineParameters = true;
 
-							var sqlExpression = attr.GetExpression(MappingSchema, e, _ => ConvertToSql(context, _));
+							var sqlExpression = attr.GetExpression(MappingSchema, context.SelectQuery, e, _ => ConvertToSql(context, _));
 							if (sqlExpression != null)
 								return Convert(context, sqlExpression);
 
@@ -2021,6 +2021,40 @@ namespace LinqToDB.Linq.Builder
 				dataTypeAccessorExpression = Expression.PropertyOrField(body, "DataType");
 			}
 
+			// see #820
+			accessorExpression = accessorExpression.Transform(e =>
+			{
+				switch (e.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+						var ma = (MemberExpression) e;
+
+						if (ma.Member.IsNullableValueMember())
+						{
+							return Expression.Condition(
+								Expression.Equal(ma.Expression, Expression.Constant(null, ma.Expression.Type)),
+								Expression.Default(e.Type),
+								e);
+						}
+
+						return e;
+					case ExpressionType.Convert:
+						var ce = (UnaryExpression) e;
+						if (ce.Operand.Type.IsNullable() && !ce.Type.IsNullable())
+						{
+							return Expression.Condition(
+								Expression.Equal(ce.Operand, Expression.Constant(null, ce.Operand.Type)),
+								Expression.Default(e.Type),
+								e);
+						}
+						return e;
+					default:
+						return e;
+				}
+
+			});
+ 
+
 			var mapper = Expression.Lambda<Func<Expression,object[],object>>(
 				Expression.Convert(accessorExpression, typeof(object)),
 				new [] { expressionParam, parametersParam });
@@ -2395,32 +2429,6 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Extension :
 					{
-						var e = expression as BinaryAggregateExpression;
-						if (e != null)
-						{
-							if (e.AggregateType == ExpressionType.Or || e.AggregateType == ExpressionType.OrElse)
-							{
-								var orCondition = new SelectQuery.SearchCondition();
-
-								for (var i = 0; i < e.Expressions.Length; i++)
-								{
-									var expr = e.Expressions[i];
-									BuildSearchCondition(context, expr, orCondition.Conditions);
-									if (i < e.Expressions.Length - 1)
-										orCondition.Conditions[orCondition.Conditions.Count - 1].IsOr = true;
-								}
-
-								conditions.Add(new SelectQuery.Condition(false, orCondition));
-							}
-							else
-							{
-								foreach (var expr in e.Expressions)
-								{
-									BuildSearchCondition(context, expr, conditions);
-								}
-							}
-						}
-
 						break;
 					}
 

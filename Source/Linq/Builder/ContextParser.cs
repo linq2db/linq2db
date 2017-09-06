@@ -42,13 +42,14 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				query.DoNotChache = true;
-				query.SetNonQueryQuery();
+				query.DoNotCache = true;
+
+				QueryRunner.SetNonQueryQuery(query);
 
 				SqlOptimizer  = query.SqlOptimizer;
-				SetParameters = () => query.SetParameters(Builder.Expression, null, 0);
+				SetParameters = () => QueryRunner.SetParameters(query, Builder.DataContext, query.Expression, null, 0);
 
-				query.GetElement = (ctx,db,expr,ps) => this;
+				query.GetElement = (db, expr, ps) => this;
 			}
 		}
 	}

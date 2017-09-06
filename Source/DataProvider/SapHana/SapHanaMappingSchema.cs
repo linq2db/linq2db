@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
 	using Mapping;
 	using SqlQuery;
@@ -17,11 +15,14 @@ namespace LinqToDB.DataProvider.SapHana
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
 			SetValueToSqlConverter(typeof(string), (sb, dt, v) => ConvertStringToSql(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(char),   (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
+			// char works with values in 0..255 range
+			// this is fine as long as we use it only for \0 character
 			stringBuilder
 				.Append("char(")
 				.Append(value)
@@ -29,9 +30,19 @@ namespace LinqToDB.DataProvider.SapHana
 				;
 		}
 
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("x'");
+
+			foreach (var b in value)
+				stringBuilder.Append(b.ToString("X2"));
+
+			stringBuilder.Append("'");
+		}
+
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", "'", AppendConversion, value);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)

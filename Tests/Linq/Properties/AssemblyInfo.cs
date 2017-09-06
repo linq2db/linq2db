@@ -1,22 +1,13 @@
 ﻿using System;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("UnitTests.Linq")]
 [assembly: AssemblyProduct("UnitTests.Linq")]
-[assembly: AssemblyCopyright("\xA9 2002-2016 www.LinqToDB.net")]
+[assembly: AssemblyCopyright("\xA9 2002-2017 www.LinqToDB.net")]
 [assembly: AssemblyCulture("")]
-
-// Setting ComVisible to false makes the types in this assembly not visible 
-// to COM components.  If you need to access a type in this assembly from 
-// COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("c70ce8cf-7383-4dd5-87fc-d3bb40eaeccb")]
 
 // Version information for an assembly consists of the following four values:
 //

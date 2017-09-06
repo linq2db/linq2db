@@ -186,7 +186,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 #endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -198,6 +198,15 @@ namespace LinqToDB.DataProvider.Sybase
 				source);
 		}
 
-#endregion
+		#endregion
+
+		#region Merge
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection,
+			IMergeable<TTarget,TSource> merge)
+		{
+			return new SybaseMergeBuilder<TTarget, TSource>(connection, merge);
+		}
+		#endregion
 	}
 }

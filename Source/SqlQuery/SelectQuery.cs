@@ -1988,6 +1988,7 @@ namespace LinqToDB.SqlQuery
 
 			/// <summary>
 			/// Adds column if it is not added yet.
+			/// </summary>
 			/// <returns>Returns index of column in Columns list.</returns>
 			int AddOrFindColumn(Column col)
 			{
@@ -3696,9 +3697,8 @@ namespace LinqToDB.SqlQuery
 								{
 									objs.Add(expr, expr);
 									p.Name = GetAlias(p.Name, "p");
+									Parameters.Add(p);
 								}
-
-								Parameters.Add(p);
 							}
 							else
 								IsParameterDependent = true;

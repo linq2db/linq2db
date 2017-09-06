@@ -337,14 +337,8 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Extension:
 					{
-						var aggregate = expr as BinaryAggregateExpression;
-						if (aggregate != null)
-							Visit(aggregate.Expressions, func);
-						else
-						{
-							if (expr.CanReduce)
-								Visit(expr.Reduce(), func);
-						}
+						if (expr.CanReduce)
+							Visit(expr.Reduce(), func);
 
 						break;
 					}
@@ -626,14 +620,9 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Extension:
 					{
-						var aggregate = expr as BinaryAggregateExpression;
-						if (aggregate != null)
-							Visit(aggregate.Expressions, func);
-						else
-						{
-							if (expr.CanReduce)
-								Visit(expr.Reduce(), func);
-						}
+						if (expr.CanReduce)
+							Visit(expr.Reduce(), func);
+
 						break;
 					}
 			}
@@ -918,14 +907,9 @@ namespace LinqToDB.Expressions
 					}
 
 				case ExpressionType.Extension:
-					var aggregate = expr as BinaryAggregateExpression;
-					if (aggregate != null)
-						return Find(aggregate.Expressions, func);
-					else
-					{
-						if (expr.CanReduce)
-							return Find(expr.Reduce(), func);
-					}
+					if (expr.CanReduce)
+						return Find(expr.Reduce(), func);
+
 					break;
 			}
 
@@ -1161,16 +1145,6 @@ namespace LinqToDB.Expressions
 
 		static Expression TransformXE(Expression expr, Func<Expression,Expression> func)
 		{
-			var e = expr as BinaryAggregateExpression;
-
-			if (e != null)
-			{
-				var a = Transform(e.Expressions, func);
-
-				if (!ReferenceEquals(e.Expressions, a))
-					return e.Update(a.ToArray());
-			}
-
 			return expr;
 		}
 
@@ -1698,15 +1672,6 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Extension:
 				{
-					var aggregate = expr as BinaryAggregateExpression;
-					if (aggregate != null)
-					{
-						var a = Transform2(aggregate.Expressions, func);
-						if (!ReferenceEquals(aggregate.Expressions, a))
-						{
-							return aggregate.Update(a.ToArray());
-						}
-					}
 					return expr;
 				}
 			}

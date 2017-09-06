@@ -458,7 +458,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.Char(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.PostgreSQL)]
+		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL)]
 		public void ToDefaultChar(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -476,7 +476,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.VarChar(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.PostgreSQL)]
+		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL)]
 		public void ToDefaultVarChar(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -494,7 +494,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.NChar(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.PostgreSQL)]
+		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, TestProvName.Firebird3, ProviderName.PostgreSQL)]
 		public void ToDefaultNChar(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -512,7 +512,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.NVarChar(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.PostgreSQL)]
+		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL)]
 		public void ToDefaultNVarChar(string context)
 		{
 			using (var db = GetDataContext(context))

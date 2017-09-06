@@ -286,6 +286,14 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			if (database != null)
+				sb.Append(database).Append(".");
+
+			return sb.Append(table);
+		}
+
 #if !SILVERLIGHT
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

@@ -397,6 +397,10 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
+			for (var i = 0; i < expr1.Arguments.Count; i++)
+				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+					return false;
+
 			if (info.QueryableAccessorDic.Count > 0)
 			{
 				QueryableAccessor qa;
@@ -404,10 +408,6 @@ namespace LinqToDB.Expressions
 				if (info.QueryableAccessorDic.TryGetValue(expr1, out qa))
 					return qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
 			}
-
-			for (var i = 0; i < expr1.Arguments.Count; i++)
-				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
-					return false;
 
 			return true;
 		}
@@ -796,7 +796,7 @@ namespace LinqToDB.Expressions
 						if (e.Object != null)
 							return GetRootObject(e.Object, mapping);
 
-						if (e.Arguments != null && e.Arguments.Count > 0 && (e.IsQueryable() || e.IsAggregate(mapping)))
+						if (e.Arguments != null && e.Arguments.Count > 0 && (e.IsQueryable() || e.IsAggregate(mapping) || e.IsAssociation(mapping)))
 							return GetRootObject(e.Arguments[0], mapping);
 
 						break;
@@ -894,6 +894,11 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
+		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
+		{
+			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType, method.Method) != null;
+		}
+
 		static Expression FindLevel(Expression expression, MappingSchema mapping, int level, ref int current)
 		{
 			switch (expression.NodeType)
@@ -903,7 +908,7 @@ namespace LinqToDB.Expressions
 						var call = (MethodCallExpression)expression;
 						var expr = call.Object;
 
-						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping)) && call.Arguments.Count > 0)
+						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping) || call.IsAssociation(mapping)) && call.Arguments.Count > 0)
 							expr = call.Arguments[0];
 
 						if (expr != null)

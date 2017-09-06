@@ -1,0 +1,20 @@
+- name: Contributing
+  href: contrib.md
+- name: Databases
+  href: databases.md
+- name: Packages and frameworks
+  href: supportedfw.md
+- name: Help the project
+  href: How-can-i-help.md
+- name: FAQ
+  href: FAQ.md
+- name: Managing Data Connection
+  href: Managing-data-connection.md
+- name: Creating Generic CRUD Class
+  href: Creating-Generic-CRUD-Class.md
+- name: Joins
+  href: Join-Operators.md
+- name: Window Functions (Analytic Functions)
+  href: Window-Functions-(Analytic-Functions).md
+- name: Videos
+  href: video.md

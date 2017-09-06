@@ -103,44 +103,14 @@ namespace Tests.Samples
 				_context.Dispose();
 			}
 
-			public int ExecuteNonQuery(object query)
-			{
-				return _context.ExecuteNonQuery(query);
-			}
-
-			public IDataReader ExecuteReader(object query)
-			{
-				return _context.ExecuteReader(query);
-			}
-
-			public object ExecuteScalar(object query)
-			{
-				return _context.ExecuteScalar(query);
-			}
-
 			public Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 			{
 				return _context.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
 			}
 
-			public string GetSqlText(object query)
-			{
-				return _context.GetSqlText(query);
-			}
-
 			public bool? IsDBNullAllowed(IDataReader reader, int idx)
 			{
 				return _context.IsDBNullAllowed(reader, idx);
-			}
-
-			public void ReleaseQuery(object query)
-			{
-				_context.ReleaseQuery(query);
-			}
-
-			public object SetQuery(IQueryContext queryContext)
-			{
-				return _context.SetQuery(queryContext);
 			}
 		}
 
@@ -150,7 +120,7 @@ namespace Tests.Samples
 			public string Name;
 		}
 
-		[Test]
+//		[Test]
 		public void Sample()
 		{
 			using (var db = new TestDataConnection())

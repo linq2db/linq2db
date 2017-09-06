@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
 #if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;
@@ -64,9 +63,9 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb)
+		public void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int startIndent = 0)
 		{
-			BuildSql(commandNumber, selectQuery, sb, 0, false);
+			BuildSql(commandNumber, selectQuery, sb, startIndent, false);
 		}
 
 		protected virtual void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
@@ -357,6 +356,13 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		internal virtual void BuildUpdateSetHelper(SelectQuery qry, StringBuilder sb)
+		{
+			SelectQuery = qry;
+			StringBuilder = sb;
+			BuildUpdateSet();
+		}
+
 		protected virtual void BuildUpdateSet()
 		{
 			AppendIndent()
@@ -403,6 +409,13 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOutputSubclause()
 		{
+		}
+
+		internal virtual void BuildInsertClauseHelper(SelectQuery qry, StringBuilder sb)
+		{
+			SelectQuery = qry;
+			StringBuilder = sb;
+			BuildInsertClause(null, false);
 		}
 
 		protected virtual void BuildInsertClause(string insertText, bool appendTableName)
@@ -501,6 +514,8 @@ namespace LinqToDB.SqlProvider
 
 			AppendIndent().Append("USING (SELECT ");
 
+			ExtractMergeParametersIfCannotCombine(keys);
+
 			for (var i = 0; i < keys.Count; i++)
 			{
 				BuildExpression(keys[i].Expression, false, false);
@@ -560,6 +575,45 @@ namespace LinqToDB.SqlProvider
 
 			while (EndLine.Contains(StringBuilder[StringBuilder.Length - 1]))
 				StringBuilder.Length--;
+		}
+
+		protected void ExtractMergeParametersIfCannotCombine(List<SelectQuery.SetExpression> keys)
+		{
+			if (!SqlProviderFlags.CanCombineParameters)
+			{
+				SelectQuery.Parameters.Clear();
+
+				for (var i = 0; i < keys.Count; i++)
+					ExtractParameters(keys[i].Expression);
+
+				foreach (var expr in SelectQuery.Update.Items)
+					ExtractParameters(expr.Expression);
+
+				foreach (var expr in SelectQuery.Insert.Items)
+					ExtractParameters(expr.Expression);
+
+				if (SelectQuery.Parameters.Count > 0)
+					SelectQuery.IsParameterDependent = true;
+			}
+		}
+
+		private void ExtractParameters(ISqlExpression expression)
+		{
+			new QueryVisitor().Visit(expression, e =>
+			{
+				switch (e.ElementType)
+				{
+					case QueryElementType.SqlParameter:
+						{
+							var p = (SqlParameter)e;
+
+							if (p.IsQueryParameter)
+								SelectQuery.Parameters.Add(p);
+						}
+
+						break;
+				}
+			});
 		}
 
 		protected static readonly char[] EndLine = { ' ', '\r', '\n' };
@@ -896,6 +950,12 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().AppendLine(")");
 
 			BuildEndCreateTableStatement(SelectQuery.CreateTable);
+		}
+
+		internal void BuildTypeName(StringBuilder sb, SqlDataType type)
+		{
+			StringBuilder = sb;
+			BuildDataType(type, true);
 		}
 
 		protected virtual void BuildCreateTableFieldType(SqlField field)
@@ -1326,6 +1386,12 @@ namespace LinqToDB.SqlProvider
 		#region Builders
 
 		#region BuildSearchCondition
+		internal virtual void BuildSearchCondition(SelectQuery qry, SelectQuery.SearchCondition condition, StringBuilder sb)
+		{
+			SelectQuery = qry;
+			StringBuilder = sb;
+			BuildWhereSearchCondition(condition);
+		}
 
 		protected virtual void BuildWhereSearchCondition(SelectQuery.SearchCondition condition)
 		{
@@ -1994,6 +2060,16 @@ namespace LinqToDB.SqlProvider
 					BuildSearchCondition(expr.Precedence, (SelectQuery.SearchCondition)expr);
 					break;
 
+				case QueryElementType.SqlTable:
+				case QueryElementType.TableSource:
+					{
+						var table = (ISqlTableSource) expr;
+						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(table, null, true);
+						StringBuilder.Append(tableAlias);
+					}
+
+					break;
+
 				default:
 					throw new InvalidOperationException();
 			}
@@ -2150,17 +2226,17 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (type.DataType)
 			{
-				case DataType.Double : StringBuilder.Append("Float"); return;
-				case DataType.Single : StringBuilder.Append("Real"); return;
-				case DataType.SByte  : StringBuilder.Append("TinyInt"); return;
-				case DataType.UInt16 : StringBuilder.Append("Int"); return;
-				case DataType.UInt32 : StringBuilder.Append("BigInt"); return;
-				case DataType.UInt64 : StringBuilder.Append("Decimal"); return;
-				case DataType.Byte   : StringBuilder.Append("TinyInt"); return;
+				case DataType.Double : StringBuilder.Append("Float");    return;
+				case DataType.Single : StringBuilder.Append("Real");     return;
+				case DataType.SByte  : StringBuilder.Append("TinyInt");  return;
+				case DataType.UInt16 : StringBuilder.Append("Int");      return;
+				case DataType.UInt32 : StringBuilder.Append("BigInt");   return;
+				case DataType.UInt64 : StringBuilder.Append("Decimal");  return;
+				case DataType.Byte   : StringBuilder.Append("TinyInt");  return;
 				case DataType.Int16  : StringBuilder.Append("SmallInt"); return;
-				case DataType.Int32  : StringBuilder.Append("Int"); return;
-				case DataType.Int64  : StringBuilder.Append("BigInt"); return;
-				case DataType.Boolean: StringBuilder.Append("Bit"); return;
+				case DataType.Int32  : StringBuilder.Append("Int");      return;
+				case DataType.Int64  : StringBuilder.Append("BigInt");   return;
+				case DataType.Boolean: StringBuilder.Append("Bit");      return;
 			}
 
 			StringBuilder.Append(type.DataType);
