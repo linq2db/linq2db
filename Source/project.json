@@ -164,6 +164,7 @@
           "exclude": [
             "**/*.Silverlight.cs",
             "Compatibility/System/Collections/**/*.cs",
+            "Compatibility/SerializableAttribute.cs",
             "Compatibility/System/Data/*.cs",
             "Compatibility/System/Security/**/*.cs",
             "**/SystemDataLinqAttributeReader.cs",
@@ -190,7 +191,7 @@
         "System.Dynamic.Runtime": "4.3.0",
         "System.Linq.Queryable": "4.3.0",
         "System.Runtime.Loader": "4.3.0",
-        "System.Runtime.Serialization.Primitives": "4.3.0",
+        "System.Runtime.Serialization.Formatters": "4.3.0",
         "System.Threading.Thread": "4.3.0",
         "System.Xml.XmlDocument": "4.3.0",
         "System.Data.SqlClient": "4.3.0",
