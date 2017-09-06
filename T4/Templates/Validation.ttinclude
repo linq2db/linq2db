@@ -1,0 +1,175 @@
+<#
+	{
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			beforeGenerateModel();
+			ValidationImpl();
+		};
+	}
+#>
+<#+
+void ValidationImpl()
+{
+	foreach (Class cl in GetTreeNodes(Model).OfType<Class>())
+	{
+		var validationGroup = new MemberGroup
+		{
+			Region = "Validation",
+		};
+
+		var props = GetTreeNodes(cl).OfType<Property>().Where(p => p.CustomValidation).ToList();
+
+		if (props.Count > 0)
+		{
+			if (!Model.Usings.Contains("System.Collections.Generic"))
+				Model.Usings.Add("System.Collections.Generic");
+
+			var isValid      = new Method("bool", "IsValid", new[] { cl.Name + " obj" }) { IsStatic = true };
+			var validator    = new Class("CustomValidator", isValid) { IsStatic = true, };
+			var partialGroup = new MemberGroup { IsCompact = true };
+			
+			validationGroup.Members.Add(new Field("int", "_isValidCounter") { Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } } });
+			validationGroup.Members.Add(validator);
+			validationGroup.Members.Add(partialGroup);
+
+			isValid.Body.Add("try");
+			isValid.Body.Add("{");
+			isValid.Body.Add("\tobj._isValidCounter++;");
+			isValid.Body.Add("");
+
+			var ret = "\treturn ";
+
+			for (var i = 0; i < props.Count; i++)
+			{
+				var p = props[i];
+
+				var name  = p.Name.Trim();
+				var mname = "Validate" + name;
+
+				cl.Attributes.Add(
+					new Attribute("CustomValidation",
+						"typeof(" + cl.Name + ".CustomValidator)",
+						"\"" + mname + "\"")
+						{
+							IsSeparated = true
+						});
+
+				isValid.Body.Add(
+					"\tvar flag" + i + " = ValidationResult.Success == " + mname + "(obj, obj." + name + ");");
+
+				ret += (i == 0 ? "" : " || ") + "flag" + i;
+
+				var validate = new Method("ValidationResult", mname,
+					new[] { cl.Name + " obj", p.Type.Trim() + " value" }) { IsStatic = true };
+
+				validate.Body.Add("var list = new List<ValidationResult>();");
+				validate.Body.Add("");
+				validate.Body.Add("Validator.TryValidateProperty(");
+				validate.Body.Add("\tvalue,");
+				validate.Body.Add("\tnew ValidationContext(obj, null, null) { MemberName = NameOf" + name + " }, list);");
+				validate.Body.Add("");
+				validate.Body.Add("obj." + mname + "(value, list);");
+				validate.Body.Add("");
+				validate.Body.Add("if (list.Count > 0)");
+				validate.Body.Add("{");
+				validate.Body.Add("\tforeach (var result in list)");
+				validate.Body.Add("\t\tforeach (var name in result.MemberNames)");
+				validate.Body.Add("\t\t\tobj.AddError(name, result.ErrorMessage);");
+				validate.Body.Add("");
+				validate.Body.Add("\treturn list[0];");
+				validate.Body.Add("}");
+				validate.Body.Add("");
+				validate.Body.Add("obj.RemoveError(NameOf" + name + ");");
+				validate.Body.Add("");
+				validate.Body.Add("return ValidationResult.Success;");
+
+				validator.Members.Add(validate);
+
+				partialGroup.Members.Add(new Method(
+					"void",
+					mname,
+					new[]
+					{
+						p.Type.Trim() + " value",
+						"List<ValidationResult> validationResults",
+					})
+					{
+						AccessModifier = AccessModifier.Partial,
+					});
+			}
+
+			isValid.Body.Add("");
+			isValid.Body.Add(ret + ";");
+			isValid.Body.Add("}");
+			isValid.Body.Add("finally");
+			isValid.Body.Add("{");
+			isValid.Body.Add("\tobj._isValidCounter--;");
+			isValid.Body.Add("}");
+		}
+
+		props = GetTreeNodes(cl).OfType<Property>().Where(p => p.ValidateProperty && p.HasSetter).ToList();
+
+		if (props.Count > 0)
+		{
+			foreach (var p in props)
+			{
+				if (p.SetBody.Count > 0)
+					p.SetBody.Insert(0, "");
+
+				p.SetBody.Insert(0, "if (_validationLockCounter == 0)");
+				p.SetBody.Insert(1, "{");
+
+				if (p.CustomValidation)
+				{
+					p.SetBody.Insert(2, "\tvar validationResult = CustomValidator.Validate" + p.Name.Trim() + "(this, value);");
+					p.SetBody.Insert(3, "\tif (validationResult != ValidationResult.Success)");
+					p.SetBody.Insert(4, "\t\tthrow new ValidationException(validationResult, null, null);");
+					p.SetBody.Insert(5, "}");
+				}
+				else
+				{
+					p.SetBody.Insert(2, "\tValidator.ValidateProperty(");
+					p.SetBody.Insert(3, "\t\tvalue,");
+					p.SetBody.Insert(4, string.Format("\t\tnew ValidationContext(this, null, null) {{ MemberName = NameOf{0} }});", p.Name.Trim()));
+					p.SetBody.Insert(5, "}");
+				}
+			}
+
+			validationGroup.Members.Add(new Field("int", "_validationLockCounter")
+			{
+				AccessModifier = AccessModifier.Private,
+				InitValue      = "0",
+				Attributes     = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+			});
+
+			validationGroup.Members.Add(new Method ("void", "LockValidation",   null, new[] { "_validationLockCounter++;" }));
+			validationGroup.Members.Add(new Method ("void", "UnlockValidation", null, new[] { "_validationLockCounter--;" }));
+		}
+
+		if (validationGroup.Members.Count > 0)
+		{
+			if (!Model.Usings.Contains("System.ComponentModel.DataAnnotations"))
+				Model.Usings.Add("System.ComponentModel.DataAnnotations");
+
+			cl.Members.Add(validationGroup);
+			cl.SetTree();
+		}
+	}
+}
+
+partial class Property
+{
+	public bool CustomValidation;
+	public bool ValidateProperty;
+
+	public bool Validate
+	{
+		set
+		{
+			CustomValidation = value;
+			ValidateProperty = value;
+		}
+	}
+}
+#>

@@ -34,6 +34,7 @@ namespace LinqToDB
 		/// <param name="name">Name of table.</param>
 		/// <returns>Table-like query source with new name.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> TableName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
@@ -65,6 +66,7 @@ namespace LinqToDB
 		/// <param name="name">Name of database.</param>
 		/// <returns>Table-like query source with new database name.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> DatabaseName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
@@ -95,6 +97,7 @@ namespace LinqToDB
 		/// <param name="name">Name of owner/schema.</param>
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
@@ -125,6 +128,7 @@ namespace LinqToDB
 		/// <param name="name">Name of owner/schema.</param>
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
@@ -159,6 +163,7 @@ namespace LinqToDB
 		/// </param>
 		/// <returns>Table-like query source with new table source expression.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> WithTableExpression<T>([NotNull] this ITable<T> table, [NotNull] string expression)
 		{
 			if (expression == null) throw new ArgumentNullException("expression");
@@ -186,6 +191,7 @@ namespace LinqToDB
 		/// <param name="args">SQL text, added to WITH({0}) after table name in generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> With<T>([NotNull] this ITable<T> table, [NotNull] string args)
 		{
 			if (args == null) throw new ArgumentNullException("args");
@@ -233,6 +239,7 @@ namespace LinqToDB
 		/// <param name="selector">Association selection expression.</param>
 		/// <returns>Table-like query source.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> LoadWith<T>(
 			[NotNull]                this ITable<T> table,
 			[NotNull, InstantHandle] Expression<Func<T,object>> selector)
@@ -258,6 +265,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="selector">Value selection expression.</param>
 		/// <returns>Requested value.</returns>
+		[Pure]
 		public static T Select<T>(
 			[NotNull]                this IDataContext   dataContext,
 			[NotNull, InstantHandle] Expression<Func<T>> selector)
@@ -283,6 +291,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="selector">Value selection expression.</param>
 		/// <returns>Requested value.</returns>
+		[Pure]
 		public static async Task<T> SelectAsync<T>(
 			[NotNull]                this IDataContext   dataContext,
 			[NotNull, InstantHandle] Expression<Func<T>> selector)
@@ -732,6 +741,7 @@ namespace LinqToDB
 		/// <param name="source">Source <see cref="IQueryable{T}"/> query.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IUpdatable<T> AsUpdatable<T>([NotNull] this IQueryable<T> source)
 		{
 			if (source  == null) throw new ArgumentNullException("source");
@@ -758,6 +768,7 @@ namespace LinqToDB
 		/// <param name="update">Updated field setter expression. Uses updated record as parameter.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IQueryable<T>     source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
@@ -789,6 +800,7 @@ namespace LinqToDB
 		/// <param name="update">Updated field setter expression. Uses updated record as parameter.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IUpdatable<T>    source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
@@ -822,6 +834,7 @@ namespace LinqToDB
 		/// <param name="update">Updated field setter expression.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IQueryable<T>     source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
@@ -853,6 +866,7 @@ namespace LinqToDB
 		/// <param name="update">Updated field setter expression.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IUpdatable<T>    source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
@@ -885,6 +899,7 @@ namespace LinqToDB
 		/// <param name="value">Value, assigned to updated field.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IQueryable<T>     source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
@@ -914,6 +929,7 @@ namespace LinqToDB
 		/// <param name="value">Value, assigned to updated field.</param>
 		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IUpdatable<T>    source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
@@ -1165,6 +1181,7 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <returns>Insertable source query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IValueInsertable<T> Into<T>(this IDataContext dataContext, [NotNull] ITable<T> target)
 		{
 			if (target == null) throw new ArgumentNullException("target");
@@ -1193,6 +1210,7 @@ namespace LinqToDB
 		/// <param name="value">Setter field value expression.</param>
 		/// <returns>Insert query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IValueInsertable<T> Value<T,TV>(
 			[NotNull]                this ITable<T>         source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> field,
@@ -1226,6 +1244,7 @@ namespace LinqToDB
 		/// <param name="value">Setter field value.</param>
 		/// <returns>Insert query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IValueInsertable<T> Value<T,TV>(
 			[NotNull]                this ITable<T>         source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> field,
@@ -1258,6 +1277,7 @@ namespace LinqToDB
 		/// <param name="value">Setter field value expression.</param>
 		/// <returns>Insert query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IValueInsertable<T> Value<T,TV>(
 			[NotNull]                this IValueInsertable<T> source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>>   field,
@@ -1291,6 +1311,7 @@ namespace LinqToDB
 		/// <param name="value">Setter field value.</param>
 		/// <returns>Insert query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IValueInsertable<T> Value<T,TV>(
 			[NotNull]                this IValueInsertable<T> source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>>   field,
@@ -1764,6 +1785,7 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <returns>Insertable source query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(
 			[NotNull] this IQueryable<TSource> source,
 			[NotNull] ITable<TTarget>          target)
@@ -1793,6 +1815,7 @@ namespace LinqToDB
 		/// <param name="value">Setter field value expression. Accepts source record as parameter.</param>
 		/// <returns>Insert query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ISelectInsertable<TSource,TTarget> Value<TSource,TTarget,TValue>(
 			[NotNull]                this ISelectInsertable<TSource,TTarget> source,
 			[NotNull, InstantHandle] Expression<Func<TTarget,TValue>>        field,
@@ -1827,6 +1850,7 @@ namespace LinqToDB
 		/// <param name="value">Setter field value expression.</param>
 		/// <returns>Insert query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ISelectInsertable<TSource,TTarget> Value<TSource,TTarget,TValue>(
 			[NotNull]                this ISelectInsertable<TSource,TTarget> source,
 			[NotNull, InstantHandle] Expression<Func<TTarget,TValue>>        field,
@@ -1861,6 +1885,7 @@ namespace LinqToDB
 		/// <param name="value">Setter field value.</param>
 		/// <returns>Insert query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ISelectInsertable<TSource,TTarget> Value<TSource,TTarget,TValue>(
 			[NotNull]                this ISelectInsertable<TSource,TTarget> source,
 			[NotNull, InstantHandle] Expression<Func<TTarget,TValue>>        field,
@@ -2356,6 +2381,7 @@ namespace LinqToDB
 		/// <param name="count">Expression that defines number of records to select.</param>
 		/// <returns>Query with limit applied.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    count)
@@ -2382,6 +2408,7 @@ namespace LinqToDB
 		/// <param name="hints"><see cref="TakeHints"/> hints for SQL TAKE clause.</param>
 		/// <returns>Query with limit applied.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    count,
@@ -2409,6 +2436,7 @@ namespace LinqToDB
 		/// <param name="hints"><see cref="TakeHints"/> hints for SQL TAKE clause.</param>
 		/// <returns>Query with limit applied.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull]                int                      count,
@@ -2433,6 +2461,7 @@ namespace LinqToDB
 		/// <param name="count">Expression that defines number of records to skip.</param>
 		/// <returns>Query without skipped records.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IQueryable<TSource> Skip<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    count)
@@ -2458,6 +2487,7 @@ namespace LinqToDB
 		/// <param name="index">Expression that defines index of record to select.</param>
 		/// <exception cref="InvalidOperationException">Source query doesn't have record with specified index.</exception>
 		/// <returns>Record at specified position.</returns>
+		[Pure]
 		public static TSource ElementAt<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    index)
@@ -2484,6 +2514,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <exception cref="InvalidOperationException">Source query doesn't have record with specified index.</exception>
 		/// <returns>Record at specified position.</returns>
+		[Pure]
 		public static async Task<TSource> ElementAtAsync<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    index,
@@ -2517,6 +2548,7 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="index">Expression that defines index of record to select.</param>
 		/// <returns>Record at specified position or default value, if source query doesn't have record with such index.</returns>
+		[Pure]
 		public static TSource ElementAtOrDefault<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    index)
@@ -2541,6 +2573,7 @@ namespace LinqToDB
 		/// <param name="index">Expression that defines index of record to select.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Record at specified position or default value, if source query doesn't have record with such index.</returns>
+		[Pure]
 		public static async Task<TSource> ElementAtOrDefaultAsync<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    index,
@@ -2583,6 +2616,7 @@ namespace LinqToDB
 		/// <param name="predicate">Filtering expression.</param>
 		/// <returns>Filtered query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IQueryable<TSource> Having<TSource>(
 			[NotNull]                this IQueryable<TSource>       source,
 			[NotNull, InstantHandle] Expression<Func<TSource,bool>> predicate)
@@ -2613,6 +2647,7 @@ namespace LinqToDB
 		/// <param name="keySelector">Sort expression selector.</param>
 		/// <returns>Sorted query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IOrderedQueryable<TSource> ThenOrBy<TSource, TKey>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<TSource, TKey>> keySelector)
@@ -2639,6 +2674,7 @@ namespace LinqToDB
 		/// <param name="keySelector">Sort expression selector.</param>
 		/// <returns>Sorted query.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static IOrderedQueryable<TSource> ThenOrByDescending<TSource, TKey>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<TSource, TKey>> keySelector)

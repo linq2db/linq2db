@@ -1,0 +1,130 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	{
+		var afterGenerateLinqToDBModel = AfterGenerateLinqToDBModel;
+		AfterGenerateLinqToDBModel = () =>
+		{
+			afterGenerateLinqToDBModel();
+			DoGenerateSqlServerFreeText();
+		};
+	}
+#>
+<#+
+bool GenerateSqlServerFreeText = true; // Defines whether to generate extensions for Free Text search, or not
+
+void DoGenerateSqlServerFreeText()
+{
+	if (!GenerateSqlServerFreeText)
+		return;
+
+	Model.Usings.Add("System.Collections.Generic");
+	Model.Usings.Add("System.Linq.Expressions");
+	Model.Usings.Add("System.Reflection");
+	Model.Usings.Add("LinqToDB");
+	Model.Usings.Add("LinqToDB.DataProvider.SqlServer");
+	Model.Usings.Add("LinqToDB.Extensions");
+
+	DataContextObject.Members.Add(
+		new MemberGroup
+		{
+			Region  = "FreeTextTable",
+			Members =
+			{
+				new Class("FreeTextKey<T>",
+					new MemberGroup
+					{
+						IsCompact = true,
+						Members   =
+						{
+							new Field("T",   "Key"),
+							new Field("int", "Rank")
+						}
+					})
+				{
+					IsPartial = false
+				},
+
+				new Field("MethodInfo", "_freeTextTableMethod1")
+				{
+					AccessModifier = AccessModifier.Private,
+					IsStatic       = true,
+					InitValue      = "typeof(" + DataContextObject.Name + ").GetMethod(\"FreeTextTable\", new Type[] { typeof(string), typeof(string) })"
+				},
+
+				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
+					new[] { "string field", "string text" },
+					new[]
+					{
+						"return this.GetTable<FreeTextKey<TKey>>(",
+						"	this,",
+						"	_freeTextTableMethod1,",
+						"	field,",
+						"	text);",
+					})
+				{
+					Attributes = { new Attribute("FreeTextTableExpression") }
+				},
+
+				new Field("MethodInfo", "_freeTextTableMethod2")
+				{
+					AccessModifier = AccessModifier.Private,
+					IsStatic       = true,
+					InitValue      =                                                                                                                                                      Environment.NewLine +
+					"	typeof(" + DataContextObject.Name + ").GetMethods()"                                                                                                            + Environment.NewLine +
+					"		.Where(m => m.Name == \"FreeTextTable\" &&  m.IsGenericMethod && m.GetParameters().Length == 2)"                                                            + Environment.NewLine +
+					"		.Where(m => m.GetParameters()[0].ParameterType.IsGenericTypeEx() && m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(Expression<>))" + Environment.NewLine +
+					"		.Where(m => m.GetParameters()[1].ParameterType == typeof(string))"                                                                                          + Environment.NewLine +
+					"		.Single()"
+				},
+
+				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
+					new[] { "Expression<Func<TTable,string>> fieldSelector", "string text" },
+					new[]
+					{
+						"return this.GetTable<FreeTextKey<TKey>>(",
+						"	this,",
+						"	_freeTextTableMethod2,",
+						"	fieldSelector,",
+						"	text);",
+					})
+				{
+					Attributes = { new Attribute("FreeTextTableExpression") }
+				},
+			}
+		}
+	);
+}
+
+LinqToDB.Data.DataConnection GetSqlServerConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database)
+{
+	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database));
+}
+
+LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database, string user, string password)
+{
+	return GetSqlServerConnection(string.Format("Server={0};Database={1};User Id={2};Password={3};", server, database, user, password));
+}
+
+void LoadSqlServerMetadata(string connectionString)
+{
+	var dataConnection = GetSqlServerConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadSqlServerMetadata(string server, string database)
+{
+	var dataConnection = GetSqlServerConnection(server, database);
+	LoadMetadata(dataConnection);
+}
+
+void LoadSqlServerMetadata(string server, string database, string user, string password)
+{
+	var dataConnection = GetSqlServerConnection(server, database, user, password);
+	LoadMetadata(dataConnection);
+}
+#>
