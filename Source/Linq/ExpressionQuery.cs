@@ -57,8 +57,10 @@ namespace LinqToDB.Linq
 
 				if (_sqlTextHolder == null || hasQueryHints)
 				{
-					var info    = GetQuery(Expression, true);
-					var sqlText = QueryRunner.GetSqlText(info, DataContext, Expression, Parameters, 0);
+					var expression = Expression;
+					var info       = GetQuery(ref expression, true);
+					Expression     = expression;
+					var sqlText    = QueryRunner.GetSqlText(info, DataContext, Expression, Parameters, 0);
 
 					if (hasQueryHints)
 						return sqlText;
@@ -74,12 +76,12 @@ namespace LinqToDB.Linq
 
 		#region Execute
 
-		Query<T> GetQuery(Expression expression, bool cache)
+		Query<T> GetQuery(ref Expression expression, bool cache)
 		{
 			if (cache && Info != null)
 				return Info;
 
-			var info = Query<T>.GetQuery(DataContext, expression);
+			var info = Query<T>.GetQuery(DataContext, ref expression);
 
 			if (cache)
 				Info = info;
@@ -91,7 +93,7 @@ namespace LinqToDB.Linq
 
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 		{
-			var value = await GetQuery(expression, false).GetElementAsync(
+			var value = await GetQuery(ref expression, false).GetElementAsync(
 				(IDataContextEx)DataContext, expression, Parameters, token);
 
 			return (TResult)value;
@@ -99,14 +101,19 @@ namespace LinqToDB.Linq
 
 		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
 		{
-			return GetQuery(Expression, true)
+			var expression = Expression;
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+			
+			return query
 				.GetForEachAsync((IDataContextEx)DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken);
 		}
 
 		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
-			return GetQuery(Expression, true)
-				.GetForEachAsync((IDataContextEx)DataContext, Expression, Parameters, func, cancellationToken);
+			var expression = Expression;
+			return GetQuery(ref expression, true)
+				.GetForEachAsync((IDataContextEx)DataContext, expression, Parameters, func, cancellationToken);
 		}
 
 #endif
@@ -161,12 +168,12 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			return (TResult)GetQuery(expression, false).GetElement((IDataContextEx)DataContext, expression, Parameters);
+			return (TResult)GetQuery(ref expression, false).GetElement((IDataContextEx)DataContext, expression, Parameters);
 		}
 
 		object IQueryProvider.Execute(Expression expression)
 		{
-			return GetQuery(expression, false).GetElement((IDataContextEx)DataContext, expression, Parameters);
+			return GetQuery(ref expression, false).GetElement((IDataContextEx)DataContext, expression, Parameters);
 		}
 
 		#endregion
@@ -175,12 +182,20 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			return GetQuery(Expression, true).GetIEnumerable((IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
+			var expression = Expression;
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+			
+			return query.GetIEnumerable((IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return GetQuery(Expression, true).GetIEnumerable((IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
+			var expression = Expression;
+			var query      = GetQuery(ref expression, true);
+			Expression     = expression;
+			
+			return query.GetIEnumerable((IDataContextEx)DataContext, Expression, Parameters).GetEnumerator();
 		}
 
 		#endregion

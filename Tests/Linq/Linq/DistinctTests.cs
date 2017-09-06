@@ -129,5 +129,25 @@ namespace Tests.Linq
 					   Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch),
 					db.Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch));
 		}
+
+		[Test, DataContextSource]
+		public void DistinctJoin(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 = Types;
+				var q2 = db.Types.Select(_ => new LinqDataTypes() {ID = _.ID, SmallIntValue = _.SmallIntValue }).Distinct();
+
+				AreEqual(
+					from e in q1
+					from p in q1.Where(_ => _.ID == e.ID).DefaultIfEmpty()
+					select new { e.ID, p.SmallIntValue },
+					from e in q2
+					from p in q2.Where(_ => _.ID == e.ID).DefaultIfEmpty()
+					select new { e.ID, p.SmallIntValue }
+					);
+			}
+		}
+
 	}
 }

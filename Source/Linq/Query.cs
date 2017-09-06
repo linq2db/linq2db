@@ -194,8 +194,11 @@ namespace LinqToDB.Linq
 				}
 		}
 
-		public static Query<T> GetQuery(IDataContext dataContext, Expression expr)
+		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
+			if (Configuration.Linq.UseBinaryAggregateExpression)
+				expr = ExpressionBuilder.AggregateExpression(expr);
+
 			if (Configuration.Linq.DisableQueryCache)
 				return CreateQuery(dataContext, expr);
 

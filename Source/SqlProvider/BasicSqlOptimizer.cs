@@ -251,6 +251,9 @@ namespace LinqToDB.SqlProvider
 						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, checkTable) == null)
 							continue;
 
+						// Join should not have ParentSelect, while SubQuery has
+						subQuery.ParentSelect = null;
+
 						var join = SelectQuery.LeftJoin(subQuery);
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);

@@ -409,6 +409,7 @@
     <Compile Include="UserTests\Issue564Tests.cs" />
     <Compile Include="UserTests\Issue681Tests.cs" />
     <Compile Include="UserTests\Issue820Tests.cs" />
+    <Compile Include="UserTests\Issue825Tests.cs" />
     <Compile Include="UserTests\Issue822Tests.cs" />
     <Compile Include="UserTests\Issue781Tests.cs" />
     <Compile Include="UserTests\Issue737Tests.cs" />
