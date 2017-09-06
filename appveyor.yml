@@ -11,7 +11,7 @@ environment:
   coreProviders: AppveyorDataProviders.Core.txt
   testfilter: TestCategory != FreeText
   testRunner: dotnet
-  testLogger: C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll
+  testLogger: 'C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll'
   matrix:
     - buildConfiguration: net45
     - buildConfiguration: netcoreapp1.0
