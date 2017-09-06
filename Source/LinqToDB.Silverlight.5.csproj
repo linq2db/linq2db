@@ -29,21 +29,25 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>Bin\Debug.Silverlight.5\</OutputPath>
+    <DocumentationFile>bin\Debug.Silverlight.5\linq2db.Silverlight.XML</DocumentationFile>
     <DefineConstants>TRACE;DEBUG;SILVERLIGHT;NOASYNC</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>Bin\Release.Silverlight.5\</OutputPath>
+    <DocumentationFile>bin\Release.Silverlight.5\linq2db.Silverlight.XML</DocumentationFile>
     <DefineConstants>TRACE;SILVERLIGHT;NOASYNC</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
