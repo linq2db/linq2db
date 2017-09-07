@@ -55,7 +55,7 @@ namespace LinqToDB.Mapping
 			return keys == null ? Array<string>.Empty : keys.Replace(" ", "").Split(',');
 		}
 
-		public LambdaExpression GetPredicate()
+		public LambdaExpression GetPredicate(Type parentType, Type objectType)
 		{
 			if (string.IsNullOrEmpty(ExpressionPredicate))
 				return null;
@@ -109,7 +109,18 @@ namespace LinqToDB.Mapping
 
 			var lambda = predicate as LambdaExpression;
 			if (lambda == null || lambda.Parameters.Count != 2)
-				throw new LinqToDBException("Invalid predicate expression");
+				throw new LinqToDBException(string.Format(
+					"Invalid predicate expression in {0}.{1}. Expected: Expression<Func<{2}, {3}, bool>>", type.Name,
+					ExpressionPredicate, parentType.Name, objectType.Name));
+
+			if (lambda.Parameters[0].Type != parentType)
+				throw new LinqToDBException(string.Format("First parameter of expression predicate should be '{0}'", parentType.Name));
+
+			if (lambda.Parameters[1].Type != objectType)
+				throw new LinqToDBException(string.Format("Second parameter of expression predicate should be '{0}'", objectType.Name));
+
+			if (lambda.ReturnType != typeof(bool))
+				throw new LinqToDBException("Result type of expression predicate should be 'bool'");
 
 			return lambda;
 		}

@@ -1255,7 +1255,7 @@ namespace LinqToDB.Linq.Builder
 				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 				var inheritance     =
 					(
-						from m in InheritanceMapping
+						from m in objectMapper.InheritanceMapping
 						let om = Builder.MappingSchema.GetEntityDescriptor(m.Type)
 						where om.Associations.Count > 0
 						select om
@@ -1395,7 +1395,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				RegularConditionCount = join.JoinedTable.Condition.Conditions.Count;
-				ExpressionPredicate   = Association.GetPredicate();
+				ExpressionPredicate   = Association.GetPredicate(parent.ObjectType, ObjectType);
 
 				if (ExpressionPredicate != null)
 				{
