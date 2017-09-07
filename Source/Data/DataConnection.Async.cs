@@ -19,10 +19,8 @@ namespace LinqToDB.Data
 			{
 				_connection = DataProvider.CreateConnection(ConnectionString);
 
-#if !SILVERLIGHT && !WINSTORE
-					if (RetryPolicy != null)
-						_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
-#endif
+				if (RetryPolicy != null)
+					_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
 			}
 
 			if (_connection.State == ConnectionState.Closed)

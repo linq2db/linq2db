@@ -220,14 +220,10 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.Append(")");
 		}
 
-#if !SILVERLIGHT
-
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.AseDbType.ToString();
 		}
-
-#endif
 	}
 }

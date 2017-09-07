@@ -346,7 +346,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string matchExpression, string pattern)
 		{
-#if SILVERLIGHT || NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null &&
@@ -357,7 +357,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string matchExpression, string pattern, char? escapeCharacter)
 		{
-#if SILVERLIGHT || NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&
@@ -943,21 +943,13 @@ namespace LinqToDB
 		[Sql.Function]
 		public static Decimal? RoundToEven(Decimal? value)
 		{
-#if SILVERLIGHT
-			return value == null ? null : (Decimal?)Math.Round(value.Value);
-#else
 			return value == null ? null : (Decimal?)Math.Round(value.Value, MidpointRounding.ToEven);
-#endif
 		}
 
 		[Sql.Function]
 		public static Double? RoundToEven(Double? value)
 		{
-#if SILVERLIGHT
-			return value == null ? null : (Double?) Math.Round(value.Value);
-#else
 			return value == null ? null : (Double?) Math.Round(value.Value, MidpointRounding.ToEven);
-#endif
 		}
 
 		[Sql.Function] public static Decimal? Round(Decimal? value) { return Round(value, 0); }
@@ -966,41 +958,25 @@ namespace LinqToDB
 		[Sql.Function]
 		public static Decimal? Round(Decimal? value, int? precision)
 		{
-#if SILVERLIGHT
-			throw new NotImplementedException();
-#else
 			return value == null || precision == null? null : (Decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
-#endif
 		}
 
 		[Sql.Function]
 		public static Double? Round(Double? value, int? precision)
 		{
-#if SILVERLIGHT
-			throw new NotImplementedException();
-#else
 			return value == null || precision == null? null : (Double?) Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
-#endif
 		}
 
 		[Sql.Function]
 		public static Decimal? RoundToEven(Decimal? value, int? precision)
 		{
-#if SILVERLIGHT
-			return value == null || precision == null? null : (Decimal?)Math.Round(value.Value, precision.Value);
-#else
 			return value == null || precision == null? null : (Decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
-#endif
 		}
 
 		[Sql.Function]
 		public static Double? RoundToEven(Double?  value, int? precision)
 		{
-#if SILVERLIGHT
-			return value == null || precision == null? null : (Double?) Math.Round(value.Value, precision.Value);
-#else
 			return value == null || precision == null? null : (Double?) Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
-#endif
 		}
 
 		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(Decimal? value) { return value == null ? null : (int?)Math.Sign(value.Value); }
@@ -1031,11 +1007,7 @@ namespace LinqToDB
 		[Sql.Function]
 		public static Decimal? Truncate(Decimal? value)
 		{
-#if SILVERLIGHT
-			throw new NotImplementedException();
-#else
 			return value == null ? null : (Decimal?)decimal.Truncate(value.Value);
-#endif
 		}
 
 		[Sql.Expression(PN.SqlServer,  "Round({0}, 0, 1)")]
@@ -1050,11 +1022,7 @@ namespace LinqToDB
 		[Sql.Function]
 		public static Double? Truncate(Double? value)
 		{
-#if SILVERLIGHT
-			throw new NotImplementedException();
-#else
 			return value == null ? null : (Double?) Math.Truncate(value.Value);
-#endif
 		}
 
 		#endregion

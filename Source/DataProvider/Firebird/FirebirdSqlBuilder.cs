@@ -302,14 +302,10 @@ namespace LinqToDB.DataProvider.Firebird
 			return sb.Append(table);
 		}
 
-#if !SILVERLIGHT
-
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.FbDbType.ToString();
 		}
-
-#endif
 	}
 }

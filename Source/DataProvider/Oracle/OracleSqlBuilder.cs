@@ -377,14 +377,10 @@ namespace LinqToDB.DataProvider.Oracle
 			return sb.Append(table);
 		}
 
-#if !SILVERLIGHT
-
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.OracleDbType.ToString();
 		}
-
-#endif
 	}
 }

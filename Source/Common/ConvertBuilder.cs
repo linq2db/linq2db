@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-
-#if !SILVERLIGHT && !NETFX_CORE
-using System.Data.SqlTypes;
-#endif
 
 namespace LinqToDB.Common
 {
@@ -24,7 +21,7 @@ namespace LinqToDB.Common
 			try
 			{
 				return Convert.ChangeType(value, conversionType
-#if !NETFX_CORE && !NETSTANDARD
+#if !NETSTANDARD1_6
 					, Thread.CurrentThread.CurrentCulture
 #endif
 					);
@@ -120,7 +117,6 @@ namespace LinqToDB.Common
 					return Expression.Convert(p, to, mi);
 				}
 
-#if !SILVERLIGHT && !NETFX_CORE
 				mi = to.GetMethodEx("Parse", typeof(SqlString));
 
 				if (mi != null)
@@ -128,7 +124,6 @@ namespace LinqToDB.Common
 					p = GetCtor(from, typeof(SqlString), p);
 					return Expression.Convert(p, to, mi);
 				}
-#endif
 
 				return null;
 			}

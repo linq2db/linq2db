@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Data;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
-
-#if !SILVERLIGHT && !NETFX_CORE
-using System.Data.SqlTypes;
-#endif
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -219,8 +216,6 @@ namespace LinqToDB.DataProvider.DB2
 			return base.BuildTableName(sb, database, owner, table);
 		}
 
-#if !SILVERLIGHT && !NETFX_CORE
-
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal)
@@ -232,7 +227,5 @@ namespace LinqToDB.DataProvider.DB2
 			dynamic p = parameter;
 			return p.DB2Type.ToString();
 		}
-
-#endif
 	}
 }

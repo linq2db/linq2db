@@ -65,12 +65,10 @@ namespace LinqToDB.Linq
 					if (_isFaulted)
 						throw;
 
-#if !SILVERLIGHT && !NETFX_CORE
 					if (DataConnection.TraceSwitch.TraceInfo)
 						DataConnection.WriteTraceLine(
 							"Mapper has switched to slow mode. Mapping exception: " + ex.Message,
 							DataConnection.TraceSwitch.DisplayName);
-#endif
 
 					_isFaulted = true;
 
@@ -85,12 +83,10 @@ namespace LinqToDB.Linq
 					if (_isFaulted)
 						throw;
 
-#if !SILVERLIGHT && !NETFX_CORE
 					if (DataConnection.TraceSwitch.TraceInfo)
 						DataConnection.WriteTraceLine(
 							"Mapper has switched to slow mode. Mapping exception: " + ex.Message,
 							DataConnection.TraceSwitch.DisplayName);
-#endif
 
 					_isFaulted = true;
 

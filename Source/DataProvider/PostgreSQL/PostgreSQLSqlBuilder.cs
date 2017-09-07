@@ -210,14 +210,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildTableName(sb, database, owner, table);
 		}
 
-#if !SILVERLIGHT
-
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.NpgsqlDbType.ToString();
 		}
-
-#endif
 	}
 }

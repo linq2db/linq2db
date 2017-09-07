@@ -6,7 +6,7 @@ namespace LinqToDB.Linq
 	public static class MethodHelper
 	{
 
-#if (FW4 || SILVERLIGHT) && !NETSTANDARD
+#if !NETSTANDARD
 		public static MethodInfo GetMethodInfo(this Delegate del)
 		{
 			if ((object) del == null)

@@ -17,9 +17,7 @@ namespace LinqToDB.Data
 	using Expressions;
 	using JetBrains.Annotations;
 	using Mapping;
-#if !SILVERLIGHT && !WINSTORE
 	using RetryPolicy;
-#endif
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines. Could be initialized using connection string name or connection string,
@@ -76,11 +74,7 @@ namespace LinqToDB.Data
 			DataProvider     = ci.DataProvider;
 			ConnectionString = ci.ConnectionString;
 			_mappingSchema   = DataProvider.MappingSchema;
-
-
-#if !SILVERLIGHT && !WINSTORE
-			RetryPolicy = Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null;
-#endif
+			RetryPolicy      = Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null;
 		}
 
 		/// <summary>
@@ -107,12 +101,10 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] string providerName,
 			[JetBrains.Annotations.NotNull] string connectionString)
 		{
-			if (providerName     == null) throw new ArgumentNullException("providerName");
-			if (connectionString == null) throw new ArgumentNullException("connectionString");
+			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
+			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-			IDataProvider dataProvider;
-
-			if (!_dataProviders.TryGetValue(providerName, out dataProvider))
+			if (!_dataProviders.TryGetValue(providerName, out IDataProvider dataProvider))
 				throw new LinqToDBException("DataProvider '{0}' not found.".Args(providerName));
 
 			InitConfig();
@@ -250,12 +242,10 @@ namespace LinqToDB.Data
 		/// Database connection string.
 		/// </summary>
 		public string        ConnectionString    { get; private set; }
-#if !SILVERLIGHT && !WINSTORE
 		/// <summary>
 		/// Retry policy for current connection.
 		/// </summary>
 		public IRetryPolicy  RetryPolicy         { get; set; }
-#endif
 
 		static readonly ConcurrentDictionary<string,int> _configurationIDs;
 		static int _maxID;
@@ -799,10 +789,8 @@ namespace LinqToDB.Data
 				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
 
-#if !SILVERLIGHT && !WINSTORE
 					if (RetryPolicy != null)
 						_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
-#endif
 				}
 
 				if (_connection.State == ConnectionState.Closed)

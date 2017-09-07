@@ -309,14 +309,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildDataType(type, createDbType);
 		}
 
-#if !NETFX_CORE && !SILVERLIGHT
-
-#if !MONO
 		protected override string GetTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).TypeName;
 		}
-#endif
 
 #if !NETSTANDARD
 		protected override string GetUdtTypeName(IDbDataParameter parameter)
@@ -328,7 +324,5 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).SqlDbType.ToString();
 		}
-
-#endif
 	}
 }

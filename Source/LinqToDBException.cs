@@ -64,7 +64,7 @@ namespace LinqToDB
 		{
 		}
 
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
+#if !NETSTANDARD1_6
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqToDBException"/> class
@@ -80,10 +80,6 @@ namespace LinqToDB
 		{
 		}
 
-#endif
-
-#if SILVERLIGHT
-		public string HelpLink { get; set; }
 #endif
 	}
 }

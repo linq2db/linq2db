@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-
-#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD
-using System.Data.SqlTypes;
-#endif
 
 using LinqToDB.Data;
 
@@ -765,10 +762,8 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method == null && e.IsLifted)
 							return o;
 
-#if !SILVERLIGHT && !NETFX_CORE  || NETSTANDARD
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return o;
-#endif
 
 						var t = e.Operand.Type;
 						var s = SqlDataType.GetDataType(t);
@@ -1418,7 +1413,7 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
+#if !NETSTANDARD1_6
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e);
 #endif
@@ -1476,12 +1471,10 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Convert:
 					{
-#if !SILVERLIGHT && !NETFX_CORE
 						var e = (UnaryExpression)expression;
 
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return ConvertPredicate(context, e.Operand);
-#endif
 
 						return ConvertPredicate(context, AddEqualTrue(expression));
 					}

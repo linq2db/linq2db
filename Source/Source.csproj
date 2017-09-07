@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net45;net40;net451;netstandard1.6</TargetFrameworks>
+		<TargetFrameworks>netstandard1.6;net40;net45;net451</TargetFrameworks>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<VersionPrefix>2.0.0</VersionPrefix>
 		<VersionSuffix></VersionSuffix>
@@ -27,13 +27,22 @@
 		<AssemblyVersion>2.0.0.0</AssemblyVersion>
 		<FileVersion>2.0.0.0</FileVersion>
 		<Version>2.0.0</Version>
+		<RootNamespace>LinqToDB</RootNamespace>
 	</PropertyGroup>
+	
 	<ItemGroup>
 		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
 		<EmbeddedResource Include="**\*.txt" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
 	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
-		<PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
+
+	<ItemGroup>
+		<Compile Remove="Compatibility\**\*.cs" />
+	</ItemGroup>
+
+
+	<!-- .NET Framework -->
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System" />
 		<Reference Include="System.Configuration" />
@@ -47,59 +56,21 @@
 		<Reference Include="System.Data" />
 		<Reference Include="System.Xml" />
 		<Reference Include="System.Runtime.Serialization" />
+
+		<Compile Remove="Metadata\SystemComponentModelDataAnnotationsSchemaAttributeReader.cs" />
 	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-		<Reference Include="Microsoft.CSharp" />
-		<Reference Include="System" />
-		<Reference Include="System.Configuration" />
-		<Reference Include="System.Core" />
-		<Reference Include="System.Data.DataSetExtensions" />
-		<Reference Include="System.Data.Linq" />
-		<Reference Include="System.Data.Services" />
-		<Reference Include="System.ServiceModel" />
-		<Reference Include="System.Web.Services" />
-		<Reference Include="System.Xml.Linq" />
-		<Reference Include="System.Data" />
-		<Reference Include="System.Xml" />
-		<Reference Include="System.Runtime.Serialization" />
-	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">
-		<Reference Include="Microsoft.CSharp" />
-		<Reference Include="System" />
-		<Reference Include="System.Configuration" />
-		<Reference Include="System.Core" />
-		<Reference Include="System.Data.DataSetExtensions" />
-		<Reference Include="System.Data.Linq" />
-		<Reference Include="System.Data.Services" />
-		<Reference Include="System.ServiceModel" />
-		<Reference Include="System.Web.Services" />
-		<Reference Include="System.Xml.Linq" />
-		<Reference Include="System.Data" />
-		<Reference Include="System.Xml" />
-		<Reference Include="System.Runtime.Serialization" />
-	</ItemGroup>
+
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
-		<DefineConstants>$(DefineConstants);FW4;NOASYNC</DefineConstants>
+		<DefineConstants>$(DefineConstants);NOASYNC</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451'">
-		<DefineConstants>$(DefineConstants);FW4</DefineConstants>
-	</PropertyGroup>
+
+
+	<!-- .NET Standard -->
+
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-		<DefineConstants>$(DefineConstants);NETSTANDARD;FW4</DefineConstants>
+		<DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
 	</PropertyGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
-		<Compile Remove="**\*.Silverlight.cs;**\ConcurrentDictionary.cs;**\WindowsStoreCompatibility.cs;**\IDataParameter.cs;**\IDataReader.cs;**\DbType.cs;**\Binary.cs;**\AllowPartiallyTrustedCallersAttribute.cs;**\IDbDataParameter.cs;Compatibility\**\*.cs" />
-		<Compile Remove="**\SerializableAttribute.cs" />
-	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-		<Compile Remove="**\*.Silverlight.cs;**\SerializableAttribute.cs;**\ConcurrentDictionary.cs;**\WindowsStoreCompatibility.cs;**\IDataParameter.cs;**\IDataReader.cs;**\DbType.cs;**\Binary.cs;**\AllowPartiallyTrustedCallersAttribute.cs;**\IDbDataParameter.cs;Compatibility\**\*.cs" />
-	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">
-		<Compile Remove="**\*.Silverlight.cs;**\SerializableAttribute.cs;**\ConcurrentDictionary.cs;**\WindowsStoreCompatibility.cs;**\IDataParameter.cs;**\IDataReader.cs;**\DbType.cs;**\Binary.cs;**\AllowPartiallyTrustedCallersAttribute.cs;**\IDbDataParameter.cs;Compatibility\**\*.cs" />
-	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-		<Compile Remove="**\*.Silverlight.cs;Compatibility\System\Collections\**\*.cs;Compatibility\System\Data\*.cs;Compatibility\System\Security\**\*.cs;**\SystemDataLinqAttributeReader.cs;Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs;ServiceModel\**\*.cs;**\SapHanaOdbc*.cs;**\DataProvider\Access\*.cs;**\*SchemaProvider*.cs" />
-	</ItemGroup>
+
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
@@ -115,18 +86,25 @@
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.3.0" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+		
+		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
+		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
+		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
+		<Compile Remove="ServiceModel\**\*.cs;" />
+		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
+		<Compile Remove="**\*SchemaProvider*.cs" />
+		<Compile Include="Compatibility\System\ICloneable.cs;Compatibility\System\Data\Linq\Binary.cs;Compatibility\System\SerializableAttribute.cs" />
 	</ItemGroup>
-	<ItemGroup>
-		<Compile Update="Data\RetryPolicy\RetryingDbCommand.cs">
-			<SubType>Component</SubType>
-		</Compile>
-		<Compile Update="Data\RetryPolicy\RetryingDbConnection.cs">
-			<SubType>Component</SubType>
-		</Compile>
-	</ItemGroup>
+
+
+	<!-- .NET 4.0 support -->
 
 	<ItemGroup Condition="'$(TargetFramework)' != 'net40'">
 		<None Remove="App.config" />
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+		<PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
 	</ItemGroup>
 
 	<Import Project="..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets') AND '$(TargetFramework)' == 'net40'" />

@@ -34,11 +34,8 @@ namespace LinqToDB.DataProvider
 
 		public AssemblyResolver([NotNull] Assembly assembly, [NotNull] string resolveName)
 		{
-			if (assembly    == null) throw new ArgumentNullException("assembly");
-			if (resolveName == null) throw new ArgumentNullException("resolveName");
-
-			_assembly    = assembly;
-			_resolveName = resolveName;
+			_assembly    = assembly    ?? throw new ArgumentNullException(nameof(assembly));
+			_resolveName = resolveName ?? throw new ArgumentNullException(nameof(resolveName));
 
 			SetResolver();
 		}
@@ -48,7 +45,7 @@ namespace LinqToDB.DataProvider
 		{
 			ResolveEventHandler resolver = Resolver;
 
-#if FW4
+#if NET40
 			var l = Expression.Lambda<Action>(Expression.Call(
 				Expression.Constant(AppDomain.CurrentDomain),
 				typeof(AppDomain).GetEvent("AssemblyResolve").GetAddMethod(),

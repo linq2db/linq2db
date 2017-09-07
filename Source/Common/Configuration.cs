@@ -5,9 +5,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Common
 {
 	using Data;
-#if !SILVERLIGHT && !WINSTORE
 	using Data.RetryPolicy;
-#endif
 
 	/// <summary>
 	/// Contains global linq2db settings.
@@ -172,7 +170,6 @@ namespace LinqToDB.Common
 			public static bool ThrowUnresolvedTypeException;
 		}
 
-#if !SILVERLIGHT && !WINSTORE
 		/// <summary>
 		/// Retry policy global settings.
 		/// </summary>
@@ -227,6 +224,5 @@ namespace LinqToDB.Common
 			/// </summary>
 			public static TimeSpan DefaultCoefficient = TimeSpan.FromSeconds(1);
 		}
-#endif
 	}
 }

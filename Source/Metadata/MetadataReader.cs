@@ -10,21 +10,17 @@ namespace LinqToDB.Metadata
 	{
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
+#if NETSTANDARD1_6
+			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
+#else
 			, new SystemDataLinqAttributeReader()
 			, new SystemDataSqlServerAttributeReader()
-#endif
-#if NETSTANDARD
-			, new SystemDataSqlServerAttributeReader()
-			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
 #endif
 		);
 
 		public MetadataReader([NotNull] params IMetadataReader[] readers)
 		{
-			if (readers == null) throw new ArgumentNullException("readers");
-
-			_readers = readers;
+			_readers = readers ?? throw new ArgumentNullException(nameof(readers));
 		}
 
 		readonly IMetadataReader[] _readers;

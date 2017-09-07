@@ -77,9 +77,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.And:
 				case ExpressionType.AndAlso:
 				case ExpressionType.ArrayIndex:
-#if FW4 || SILVERLIGHT
 				case ExpressionType.Assign:
-#endif
 				case ExpressionType.Coalesce:
 				case ExpressionType.Divide:
 				case ExpressionType.Equal:
@@ -158,12 +156,8 @@ namespace LinqToDB.Expressions
 							((TypeBinaryExpression)expr1).Expression.EqualsTo(((TypeBinaryExpression)expr2).Expression, info);
 					}
 
-#if FW4 || SILVERLIGHT
-
 				case ExpressionType.Block:
 					return EqualsToX((BlockExpression)expr1, (BlockExpression)expr2, info);
-
-#endif
 			}
 
 			throw new InvalidOperationException();
@@ -465,9 +459,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.And:
 				case ExpressionType.AndAlso:
 				case ExpressionType.ArrayIndex:
-#if FW4 || SILVERLIGHT
 				case ExpressionType.Assign:
-#endif
 				case ExpressionType.Coalesce:
 				case ExpressionType.Divide:
 				case ExpressionType.Equal:
@@ -661,8 +653,6 @@ namespace LinqToDB.Expressions
 						func);
 					break;
 
-#if FW4 || SILVERLIGHT
-
 				case ExpressionType.Block:
 					{
 						path = ConvertTo(path, typeof(BlockExpression));
@@ -673,8 +663,6 @@ namespace LinqToDB.Expressions
 
 						break;
 					}
-
-#endif
 
 				case ExpressionType.Constant:
 					{

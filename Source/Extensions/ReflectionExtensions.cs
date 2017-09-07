@@ -528,7 +528,6 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
-#if NETSTANDARD || FW4
 		public static PropertyInfo[] GetPropertiesEx(this Type type, BindingFlags flags)
 		{
 #if NETSTANDARD
@@ -537,7 +536,6 @@ namespace LinqToDB.Extensions
 			return type.GetProperties(flags);
 #endif
 		}
-#endif
 
 		public static PropertyInfo[] GetNonPublicPropertiesEx(this Type type)
 		{
@@ -924,11 +922,7 @@ namespace LinqToDB.Extensions
 
 			var type = list.GetType();
 
-			if (list is IList
-#if !SILVERLIGHT && !NETFX_CORE
-				|| list is ITypedList || list is IListSource
-#endif
-				)
+			if (list is IList || list is ITypedList || list is IListSource)
 			{
 				PropertyInfo last = null;
 
@@ -978,12 +972,9 @@ namespace LinqToDB.Extensions
 					return elementTypes[0];
 			}
 
-			if (typeof(IList).IsSameOrParentOf(listType)
-#if !SILVERLIGHT && !NETFX_CORE
-				|| typeof(ITypedList). IsSameOrParentOf(listType)
-				|| typeof(IListSource).IsSameOrParentOf(listType)
-#endif
-				)
+			if (typeof(IList).      IsSameOrParentOf(listType) ||
+				typeof(ITypedList). IsSameOrParentOf(listType) ||
+				typeof(IListSource).IsSameOrParentOf(listType))
 			{
 				var elementType = listType.GetElementType();
 
@@ -1060,9 +1051,7 @@ namespace LinqToDB.Extensions
 				|| type == typeof(Binary)
 				|| type == typeof(Stream)
 				|| type == typeof(XmlReader)
-#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
 				|| type == typeof(XmlDocument)
-#endif
 				;
 		}
 
@@ -1262,8 +1251,6 @@ namespace LinqToDB.Extensions
 			if (_castDic.ContainsKey(toType) && _castDic[toType].Contains(fromType))
 				return true;
 
-#if !SILVERLIGHT && !NETFX_CORE
-
 			var tc = TypeDescriptor.GetConverter(fromType);
 
 			if (toType.IsAssignableFrom(fromType))
@@ -1276,7 +1263,6 @@ namespace LinqToDB.Extensions
 
 			if (tc.CanConvertFrom(fromType))
 				return true;
-#endif
 
 			if (fromType.GetMethodsEx()
 				.Any(m => m.IsStatic && m.IsPublic && m.ReturnType == toType && (m.Name == "op_Implicit" || m.Name == "op_Explicit")))

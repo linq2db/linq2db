@@ -9,13 +9,11 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+	using DataProvider;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Expressions;
-#if !SILVERLIGHT
-	using DataProvider;
-#endif
 
 	partial class ExpressionBuilder
 	{
@@ -60,9 +58,7 @@ namespace LinqToDB.Linq.Builder
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),
-#if !SILVERLIGHT && !NETFX_CORE
 			new MergeContextParser         (),
-#endif
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -82,16 +78,10 @@ namespace LinqToDB.Linq.Builder
 
 		public readonly List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
 
-#if FW4 || SILVERLIGHT || NETFX_CORE
-
 		public readonly List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
 		public readonly List<Expression>           BlockExpressions     = new List<Expression>();
-		         public bool                       IsBlockDisable;
-		         public int                        VarIndex;
-
-#else
-		         public bool                       IsBlockDisable = true;
-#endif
+		public          bool                       IsBlockDisable;
+		public          int                        VarIndex;
 
 		readonly HashSet<Expression> _visitedExpressions;
 

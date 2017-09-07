@@ -5,15 +5,15 @@ namespace LinqToDB.Data.RetryPolicy
 {
 	public class RetryLimitExceededException : LinqToDBException
 	{
-		private const string _retryLimitExceededMessage = "Retry limit exceeded";
+		const string RetryLimitExceededMessage = "Retry limit exceeded";
 
-		public RetryLimitExceededException() : base(_retryLimitExceededMessage)
+		public RetryLimitExceededException() : base(RetryLimitExceededMessage)
 		{}
 
-		public RetryLimitExceededException(Exception innerException) : base(_retryLimitExceededMessage, innerException)
+		public RetryLimitExceededException(Exception innerException) : base(RetryLimitExceededMessage, innerException)
 		{}
 
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
+#if !NETSTANDARD1_6
 		protected RetryLimitExceededException(SerializationInfo info, StreamingContext context) : base(info, context)
 		{}
 #endif

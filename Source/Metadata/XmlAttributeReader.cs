@@ -15,7 +15,7 @@ namespace LinqToDB.Metadata
 	{
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
-#if !NETFX_CORE && !NETSTANDARD
+#if !NETSTANDARD1_6
 		public XmlAttributeReader(string xmlFile)
 			: this(xmlFile, Assembly.GetCallingAssembly())
 		{
@@ -31,7 +31,7 @@ namespace LinqToDB.Metadata
 
 			try
 			{
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
+#if !NETSTANDARD1_6
 				if (File.Exists(xmlFile))
 				{
 					streamReader = File.OpenText(xmlFile);

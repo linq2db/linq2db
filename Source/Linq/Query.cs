@@ -133,9 +133,7 @@ namespace LinqToDB.Linq
 		public Query(IDataContext dataContext, Expression expression)
 			: base(dataContext, expression)
 		{
-#if !SILVERLIGHT && !WINSTORE
-			DoNotCache     = NoLinqCache.IsNoCache;
-#endif
+			DoNotCache = NoLinqCache.IsNoCache;
 		}
 
 		public override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
@@ -233,12 +231,11 @@ namespace LinqToDB.Linq
 						if (Configuration.Linq.GenerateExpressionTest)
 						{
 							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
-#if !SILVERLIGHT && !NETFX_CORE
+
 							if (DataConnection.TraceSwitch.TraceInfo)
 								DataConnection.WriteTraceLine(
 									"Expression test code generated: '" + testFile + "'.", 
 									DataConnection.TraceSwitch.DisplayName);
-#endif
 						}
 
 						query = new Query<T>(dataContext, expr);
@@ -251,11 +248,9 @@ namespace LinqToDB.Linq
 						{
 							if (!Configuration.Linq.GenerateExpressionTest)
 							{
-#if !SILVERLIGHT && !NETFX_CORE
 								DataConnection.WriteTraceLine(
 									"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
 									DataConnection.TraceSwitch.DisplayName);
-#endif
 							}
 
 							throw;
