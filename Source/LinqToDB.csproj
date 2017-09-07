@@ -519,6 +519,7 @@
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
     <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
+    <Compile Include="Sql\Sql.DateTime.cs" />
     <Compile Include="TakeHints.cs" />
   </ItemGroup>
   <ItemGroup>

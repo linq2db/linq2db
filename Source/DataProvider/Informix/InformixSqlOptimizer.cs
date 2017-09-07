@@ -117,29 +117,6 @@ namespace LinqToDB.DataProvider.Informix
 
 							return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, par1, par0);
 						}
-
-					case "Quarter"  : return Inc(Div(Dec(new SqlFunction(func.SystemType, "Month", func.Parameters)), 3));
-					case "WeekDay"  : return Inc(new SqlFunction(func.SystemType, "weekDay", func.Parameters));
-					case "DayOfYear":
-						return
-							Inc(Sub<int>(
-								new SqlFunction(null, "Mdy",
-									new SqlFunction(null, "Month", func.Parameters),
-									new SqlFunction(null, "Day",   func.Parameters),
-									new SqlFunction(null, "Year",  func.Parameters)),
-								new SqlFunction(null, "Mdy",
-									new SqlValue(1),
-									new SqlValue(1),
-									new SqlFunction(null, "Year", func.Parameters))));
-					case "Week"     :
-						return
-							new SqlExpression(
-								func.SystemType,
-								"((Extend({0}, year to day) - (Mdy(12, 31 - WeekDay(Mdy(1, 1, year({0}))), Year({0}) - 1) + Interval(1) day to day)) / 7 + Interval(1) day to day)::char(10)::int",
-								func.Parameters);
-					case "Hour"     :
-					case "Minute"   :
-					case "Second"   : return new SqlExpression(func.SystemType, string.Format("({{0}}::datetime {0} to {0})::char(3)::int", func.Name), func.Parameters);
 				}
 			}
 

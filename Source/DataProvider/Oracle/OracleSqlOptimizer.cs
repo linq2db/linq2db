@@ -106,17 +106,6 @@ namespace LinqToDB.DataProvider.Oracle
 						return func.Parameters.Length == 2?
 							new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0]):
 							new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0], func.Parameters[2]);
-					case "AddYear"        : return new SqlFunction(func.SystemType, "Add_Months", func.Parameters[0], Mul(func.Parameters[1], 12));
-					case "AddQuarter"     : return new SqlFunction(func.SystemType, "Add_Months", func.Parameters[0], Mul(func.Parameters[1],  3));
-					case "AddMonth"       : return new SqlFunction(func.SystemType, "Add_Months", func.Parameters[0],     func.Parameters[1]);
-					case "AddDayOfYear"   :
-					case "AddWeekDay"     :
-					case "AddDay"         : return Add<DateTime>(func.Parameters[0],     func.Parameters[1]);
-					case "AddWeek"        : return Add<DateTime>(func.Parameters[0], Mul(func.Parameters[1], 7));
-					case "AddHour"        : return Add<DateTime>(func.Parameters[0], Div(func.Parameters[1],                  24));
-					case "AddMinute"      : return Add<DateTime>(func.Parameters[0], Div(func.Parameters[1],             60 * 24));
-					case "AddSecond"      : return Add<DateTime>(func.Parameters[0], Div(func.Parameters[1],        60 * 60 * 24));
-					case "AddMillisecond" : return Add<DateTime>(func.Parameters[0], Div(func.Parameters[1], 1000 * 60 * 60 * 24));
 					case "Avg"            : 
 						return new SqlFunction(
 							func.SystemType,

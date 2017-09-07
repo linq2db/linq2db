@@ -95,6 +95,39 @@ namespace Tests.UserTests
 			[Column]public MyInt ParentID;
 		}
 
+
+		public interface IEntityWithId<TKey>
+		{
+			TKey Id { get; }
+		}
+
+		[Table("Person", IsColumnAttributeRequired = false)]
+		class PersonEntity : IEntityWithId<int>
+		{
+			[Column]
+			public int PersonId;
+
+			[Column("PersonId")]
+			public int Id { get; set; }
+		}
+
+		IQueryable<T> GetById<T, TKey>(IDataContext db, TKey id)
+			where T: class, IEntityWithId<TKey> 
+//			where TKey : IEquatable<TKey>
+		{
+			return db.GetTable<T>().Where(r => r.Id.Equals(id));
+		}
+
+		[Test, DataContextSource]
+		public void ZzzTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var zz = GetById<PersonEntity>(db, 5);
+				var str = zz.ToString();
+			}
+		}
+
 		[Test, DataContextSource]
 		public void Test1(string context)
 		{

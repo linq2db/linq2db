@@ -83,23 +83,6 @@ namespace LinqToDB.DataProvider.MySql
 						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 				}
 			}
-			else if (expr is SqlExpression)
-			{
-				var e = (SqlExpression)expr;
-
-				if (e.Expr.StartsWith("Extract(DayOfYear"))
-					return new SqlFunction(e.SystemType, "DayOfYear", e.Parameters);
-
-				if (e.Expr.StartsWith("Extract(WeekDay"))
-					return Inc(
-						new SqlFunction(e.SystemType,
-							"WeekDay",
-							new SqlFunction(
-								null,
-								"Date_Add",
-								e.Parameters[0],
-								new SqlExpression(null, "interval 1 day"))));
-			}
 
 			return expr;
 		}
