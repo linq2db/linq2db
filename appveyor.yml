@@ -14,7 +14,7 @@ environment:
   testLogger: trx
   matrix:
     - buildConfiguration: net45
-        testRunner: NUnit
+      testRunner: NUnit
     - buildConfiguration: netcoreapp1.0
     - buildConfiguration: docfx
 
