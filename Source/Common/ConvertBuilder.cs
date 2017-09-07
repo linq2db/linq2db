@@ -163,7 +163,7 @@ namespace LinqToDB.Common
 				{
 					var val = values.GetValue(i);
 					var lv  = (long)Convert.ChangeType(val, typeof(long)
-#if !NETFX_CORE && !NETSTANDARD
+#if !NETSTANDARD1_6
 						, Thread.CurrentThread.CurrentCulture
 #endif
 						);

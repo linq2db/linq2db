@@ -44,8 +44,6 @@ namespace LinqToDB.Common
 			return string.IsNullOrEmpty(str);
 		}
 
-#if !NETFX_CORE
-
 		/// <summary>
 		/// Returns path to original directory with provided assembly.
 		/// </summary>
@@ -88,7 +86,5 @@ namespace LinqToDB.Common
 				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
 			}
 		}
-
-#endif
 	}
 }

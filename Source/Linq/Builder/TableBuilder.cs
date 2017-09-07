@@ -1019,14 +1019,9 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null)
 					return;
 
-#if NETFX_CORE
-				if (alias.Contains("<"))
-#else
 				if (alias.Contains('<'))
-#endif
-
-				if (SqlTable.Alias == null)
-					SqlTable.Alias = alias;
+					if (SqlTable.Alias == null)
+						SqlTable.Alias = alias;
 			}
 
 			#endregion

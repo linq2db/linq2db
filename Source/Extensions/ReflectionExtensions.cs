@@ -15,116 +15,20 @@ namespace LinqToDB.Extensions
 {
 	public static class ReflectionExtensions
 	{
-		#region NETFX_CORE specific
-
-#if NETFX_CORE
-		private static IEnumerable<ConstructorInfo> GetAllConstructors(this TypeInfo typeInfo)
-		{
-			return GetAll(typeInfo, ti => ti.DeclaredConstructors);
-		}
-
-		private static IEnumerable<EventInfo> GetAllEvents(this TypeInfo typeInfo)
-		{
-			return GetAll(typeInfo, ti => ti.DeclaredEvents);
-		}
-
-		private static IEnumerable<FieldInfo> GetAllFields(this TypeInfo typeInfo)
-		{
-			return GetAll(typeInfo, ti => ti.DeclaredFields);
-		}
-
-		private static IEnumerable<MemberInfo> GetAllMembers(this TypeInfo typeInfo)
-		{
-			return GetAll(typeInfo, ti => ti.DeclaredMembers);
-		}
-
-		private static IEnumerable<MethodInfo> GetAllMethods(this TypeInfo typeInfo)
-		{
-			return GetAll(typeInfo, ti => ti.DeclaredMethods);
-		}
-
-		private static IEnumerable<TypeInfo> GetAllNestedTypes(this TypeInfo typeInfo)
-		{
-			return GetAll(typeInfo, ti => ti.DeclaredNestedTypes);
-		}
-
-		private static IEnumerable<PropertyInfo> GetAllProperties(this TypeInfo typeInfo)
-		{
-			return GetAll(typeInfo, ti => ti.DeclaredProperties);
-		}
-
-		private static IEnumerable<T> GetAll<T>(TypeInfo typeInfo, Func<TypeInfo, IEnumerable<T>> accessor)
-			where T : MemberInfo
-		{
-			var distinct = new HashSet<T>();
-			var distinctProperty = new HashSet<string>();
-			
-			while (typeInfo != null)
-			{
-				foreach (var t in accessor(typeInfo))
-				{
-					var m = t as MethodInfo;
-					if (m != null && m.IsVirtual)
-					{
-						var b = m.GetRuntimeBaseDefinition();
-						if (b != m && !distinct.Contains(b as T))
-							distinct.Add(b as T);
-					}
-
-					if (distinct.Contains(t))
-						continue;
-					
-					distinct.Add(t);
-
-					var p = t as PropertyInfo;
-					if (p != null)
-					{
-						if (distinctProperty.Contains(p.Name))
-							continue;
-
-						distinctProperty.Add(p.Name);
-					}
-
-
-
-
-					yield return t;
-				}
-
-				var baseType = typeInfo.BaseType;
-
-				typeInfo = baseType != null
-					? baseType.GetTypeInfo()
-					: null;
-			}
-		}
-#endif
-
-		#endregion
-
 		#region Type extensions
 
 		public static bool IsGenericTypeEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsGenericType;
 #else
 			return type.IsGenericType;
 #endif
 		}
 
-//		public static Type GetGenericTypeDefinitionEx(this Type type)
-//		{
-//#if NETFX_CORE
-//			return type.GetTypeInfo().GetGenericTypeDefinition();
-//#else
-//			return type.GetGenericTypeDefinition();
-//#endif
-//		}
-
 		public static bool IsValueTypeEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsValueType;
 #else
 			return type.IsValueType;
@@ -133,7 +37,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsAbstractEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsAbstract;
 #else
 			return type.IsAbstract;
@@ -142,7 +46,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsPublicEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsPublic;
 #else
 			return type.IsPublic;
@@ -151,7 +55,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsClassEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsClass;
 #else
 			return type.IsClass;
@@ -160,7 +64,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsEnumEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsEnum;
 #else
 			return type.IsEnum;
@@ -169,7 +73,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsPrimitiveEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsPrimitive;
 #else
 			return type.IsPrimitive;
@@ -178,7 +82,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsInterfaceEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsInterface;
 #else
 			return type.IsInterface;
@@ -187,7 +91,7 @@ namespace LinqToDB.Extensions
 
 		public static Type BaseTypeEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().BaseType;
 #else
 			return type.BaseType;
@@ -196,16 +100,12 @@ namespace LinqToDB.Extensions
 
 		public static Type[] GetInterfacesEx(this Type type)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().ImplementedInterfaces.ToArray();
-#else
 			return type.GetInterfaces();
-#endif
 		}
 
 		public static object[] GetCustomAttributesEx(this Type type, Type attributeType, bool inherit)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().GetCustomAttributes(attributeType, inherit).Cast<object>().ToArray();
 #else
 			return type.GetCustomAttributes(attributeType, inherit);
@@ -214,51 +114,12 @@ namespace LinqToDB.Extensions
 
 		public static MemberInfo[] GetPublicInstanceMembersEx(this Type type)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().GetAllMembers().Where(m =>
-			{
-				var fieldInfo = m as FieldInfo;
-
-				if (fieldInfo != null)
-					return fieldInfo.IsPublic && !fieldInfo.IsStatic;
-
-				var propertyInfo = m as PropertyInfo;
-
-				if (propertyInfo != null)
-					return propertyInfo.CanRead && propertyInfo.GetMethod.IsPublic && !propertyInfo.GetMethod.IsStatic;
-
-				return false;
-			}).ToArray();
-#else
 			return type.GetMembers(BindingFlags.Instance | BindingFlags.Public);
-#endif
 		}
 
 		public static MemberInfo[] GetStaticMembersEx(this Type type, string name)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().GetAllMembers().Where(m =>
-			{
-				var fieldInfo = m as FieldInfo;
-
-				if (fieldInfo != null)
-					return fieldInfo.IsStatic && fieldInfo.Name == name;
-
-				var propertyInfo = m as PropertyInfo;
-
-				if (propertyInfo != null)
-					return propertyInfo.CanRead && propertyInfo.GetMethod.IsStatic && propertyInfo.Name == name;
-
-				var methodInfo = m as MethodInfo;
-
-				if (methodInfo != null)
-					return methodInfo.IsStatic && methodInfo.Name == name;
-
-				return false;
-			}).ToArray();
-#else
 			return type.GetMember(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-#endif
 		}
 
 		/// <summary>
@@ -285,7 +146,7 @@ namespace LinqToDB.Extensions
 
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			// https://github.com/dotnet/corefx/issues/12921
 			return type.GetMethodsEx().FirstOrDefault(mi =>
 			{
@@ -316,20 +177,11 @@ namespace LinqToDB.Extensions
 
 		public static MethodInfo GetMethodEx(this Type type, string name)
 		{
-#if NETFX_CORE
-			var all = type.GetRuntimeMethods().Where(_ => _.Name == name).ToArray();
-			if (all.Length == 0)
-				return null;
-			if (all.Length > 1)
-				throw new AmbiguousMatchException(string.Format("{0} defines {1} methods with name {2}", type.FullName, all.Length, name));
-			return all[0];
-#else
 			return type.GetMethod(name);
-#endif
 		}
 		public static ConstructorInfo GetDefaultConstructorEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(p => p.GetParameters().Length == 0);
 #else
 			return type.GetConstructor(
@@ -342,114 +194,52 @@ namespace LinqToDB.Extensions
 
 		public static TypeCode GetTypeCodeEx(this Type type)
 		{
-#if NETFX_CORE && !NETSTANDARD
-			if (type == null)
-				return TypeCode.Empty;
-
-			if (type.IsPrimitiveEx())
-			{
-				if (type == typeof(bool))    return TypeCode.Boolean;
-				if (type == typeof(char))    return TypeCode.Char;
-				if (type == typeof(sbyte))   return TypeCode.SByte;
-				if (type == typeof(byte))    return TypeCode.Byte;
-				if (type == typeof(short))   return TypeCode.Int16;
-				if (type == typeof(ushort))  return TypeCode.UInt16;
-				if (type == typeof(int))     return TypeCode.Int32;
-				if (type == typeof(uint))    return TypeCode.UInt32;
-				if (type == typeof(long))    return TypeCode.Int64;
-				if (type == typeof(ulong))   return TypeCode.UInt64;
-				if (type == typeof(float))   return TypeCode.Single;
-				if (type == typeof(double))  return TypeCode.Double;
-				if (type == typeof(decimal)) return TypeCode.Decimal;
-			}
-
-			if (type == typeof(DBNull))   return TypeCode.DBNull;
-
-			if (type == typeof(DateTime)) return TypeCode.DateTime;
-			if (type == typeof(String))   return TypeCode.String;
-
-			var underlyingSystemType = type.ToUnderlying();
-
-			if (type != underlyingSystemType && underlyingSystemType != null)
-				return underlyingSystemType.GetTypeCodeEx();
-
-			return TypeCode.Object;
-#else
-
-#if NETSTANDARD
-			if (type == typeof(DBNull))   return (TypeCode)2;
+#if NETSTANDARD1_6
+			if (type == typeof(DBNull))
+				return (TypeCode)2;
 #endif
 
 			return Type.GetTypeCode(type);
-#endif
 		}
 
 		public static bool IsAssignableFromEx(this Type type, Type c)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().IsAssignableFrom(c.GetTypeInfo());
-#else
 			return type.IsAssignableFrom(c);
-#endif
 		}
 
 		public static FieldInfo[] GetFieldsEx(this Type type)
 		{
-#if NETFX_CORE
-			return type.GetRuntimeFields().ToArray();
-#else
 			return type.GetFields();
-#endif
 		}
 
 		public static Type[] GetGenericArgumentsEx(this Type type)
 		{
-#if NETFX_CORE && !NETSTANDARD
-			return type.GetTypeInfo().GenericTypeArguments;
-#else
 			return type.GetGenericArguments();
-#endif
 		}
 
 		public static MethodInfo GetGetMethodEx(this PropertyInfo propertyInfo, bool nonPublic)
 		{
-#if NETFX_CORE
-			return propertyInfo.GetMethod;
-#else
 			return propertyInfo.GetGetMethod(nonPublic);
-#endif
 		}
 
 		public static MethodInfo GetGetMethodEx(this PropertyInfo propertyInfo)
 		{
-#if NETFX_CORE
-			return propertyInfo.GetMethod;
-#else
 			return propertyInfo.GetGetMethod();
-#endif
 		}
 
 		public static MethodInfo GetSetMethodEx(this PropertyInfo propertyInfo, bool nonPublic)
 		{
-#if NETFX_CORE
-			return propertyInfo.SetMethod;
-#else
 			return propertyInfo.GetSetMethod(nonPublic);
-#endif
 		}
 
 		public static MethodInfo GetSetMethodEx(this PropertyInfo propertyInfo)
 		{
-#if NETFX_CORE
-			return propertyInfo.SetMethod;
-#else
 			return propertyInfo.GetSetMethod();
-#endif
 		}
 
 		public static object[] GetCustomAttributesEx(this Type type, bool inherit)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().GetCustomAttributes(inherit).Cast<object>().ToArray();
 #else
 			return type.GetCustomAttributes(inherit);
@@ -458,7 +248,7 @@ namespace LinqToDB.Extensions
 
 		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().GetRuntimeInterfaceMap(interfaceType);
 #else
 			return type.GetInterfaceMap(interfaceType);
@@ -467,34 +257,22 @@ namespace LinqToDB.Extensions
 
 		public static bool IsPropertyEx(this MemberInfo memberInfo)
 		{
-#if NETFX_CORE
-			return memberInfo is PropertyInfo;
-#else
 			return memberInfo.MemberType == MemberTypes.Property;
-#endif
 		}
 
 		public static bool IsFieldEx(this MemberInfo memberInfo)
 		{
-#if NETFX_CORE
-			return memberInfo is FieldInfo;
-#else
 			return memberInfo.MemberType == MemberTypes.Field;
-#endif
 		}
 
 		public static bool IsMethodEx(this MemberInfo memberInfo)
 		{
-#if NETFX_CORE
-			return memberInfo is MethodInfo;
-#else
 			return memberInfo.MemberType == MemberTypes.Method;
-#endif
 		}
 
 		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, Type attributeType, bool inherit)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return memberInfo.GetCustomAttributes(attributeType, inherit).Cast<object>().ToArray();
 #else
 			return memberInfo.GetCustomAttributes(attributeType, inherit);
@@ -503,7 +281,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsSubclassOfEx(this Type type, Type c)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsSubclassOf(c);
 #else
 			return type.IsSubclassOf(c);
@@ -512,7 +290,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsGenericTypeDefinitionEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().IsGenericTypeDefinition;
 #else
 			return type.IsGenericTypeDefinition;
@@ -521,43 +299,27 @@ namespace LinqToDB.Extensions
 
 		public static PropertyInfo[] GetPropertiesEx(this Type type)
 		{
-#if NETFX_CORE
-			return type.GetRuntimeProperties().Where(p => p.GetMethod != null).ToArray();
-#else
 			return type.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
-#endif
 		}
 
 		public static PropertyInfo[] GetPropertiesEx(this Type type, BindingFlags flags)
 		{
-#if NETSTANDARD
 			return type.GetProperties(flags);
-#else
-			return type.GetProperties(flags);
-#endif
 		}
 
 		public static PropertyInfo[] GetNonPublicPropertiesEx(this Type type)
 		{
-#if NETFX_CORE
-			return type.GetRuntimeProperties().Where(p => p.GetMethod != null && !p.GetMethod.IsPublic && !p.GetMethod.IsStatic).ToArray();
-#else
 			return type.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance);
-#endif
 		}
 
 		public static MethodInfo[] GetMethodsEx(this Type type)
 		{
-#if NETFX_CORE
-			return type.GetRuntimeMethods().ToArray();
-#else
 			return type.GetMethods();
-#endif
 		}
 
 		public static Assembly AssemblyEx(this Type type)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return type.GetTypeInfo().Assembly;
 #else
 			return type.Assembly;
@@ -566,52 +328,27 @@ namespace LinqToDB.Extensions
 
 		public static ConstructorInfo[] GetConstructorsEx(this Type type)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().DeclaredConstructors.Where(c => c.IsPublic).ToArray();
-#else
 			return type.GetConstructors();
-#endif
 		}
 
 		public static ConstructorInfo GetConstructorEx(this Type type, Type[] parameterTypes)
 		{
-#if NETFX_CORE
-			return
-			(
-				from ctor in type.GetTypeInfo().DeclaredConstructors
-				let   ps = ctor.GetParameters()
-				where
-					ps.Length == parameterTypes.Length &&
-					parameterTypes.Zip(ps, (t,p) => p.ParameterType == t).All(v => v)
-				select ctor
-			)
-			.FirstOrDefault();
-#else
 			return type.GetConstructor(parameterTypes);
-#endif
 		}
 
 		public static PropertyInfo GetPropertyEx(this Type type, string propertyName)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().GetAllProperties().FirstOrDefault(property => property.Name == propertyName);
-#else
 			return type.GetProperty(propertyName);
-#endif
 		}
 
 		public static FieldInfo GetFieldEx(this Type type, string propertyName)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().GetAllFields().FirstOrDefault(field => field.Name == propertyName);
-#else
 			return type.GetField(propertyName);
-#endif
 		}
 
 		public static Type ReflectedTypeEx(this MemberInfo memberInfo)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return memberInfo.DeclaringType;
 #else
 			return memberInfo.ReflectedType;
@@ -620,25 +357,17 @@ namespace LinqToDB.Extensions
 
 		public static MemberInfo[] GetInstanceMemberEx(this Type type, string name)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().GetAllMembers().Where(m => m.Name == name).ToArray();
-#else
 			return type.GetMember(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-#endif
 		}
 
 		public static MemberInfo[] GetPublicMemberEx(this Type type, string name)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().GetAllMembers().Where(m => m.Name == name).ToArray();
-#else
 			return type.GetMember(name);
-#endif
 		}
 
 		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, bool inherit)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return memberInfo.GetCustomAttributes(inherit).Cast<object>().ToArray();
 #else
 			return memberInfo.GetCustomAttributes(inherit);
@@ -647,7 +376,7 @@ namespace LinqToDB.Extensions
 
 		public static object[] GetCustomAttributesEx(this ParameterInfo parameterInfo, bool inherit)
 		{
-#if NETFX_CORE || NETSTANDARD
+#if NETSTANDARD1_6
 			return parameterInfo.GetCustomAttributes(inherit).Cast<object>().ToArray();
 #else
 			return parameterInfo.GetCustomAttributes(inherit);
@@ -1160,14 +889,10 @@ namespace LinqToDB.Extensions
 
 		public static EventInfo GetEventEx(this Type type, string eventName)
 		{
-#if NETFX_CORE
-			return type.GetTypeInfo().GetAllEvents().FirstOrDefault(_ => _.Name == eventName);
-#else
 			return type.GetEvent(eventName);
-#endif
 		}
 		
-#endregion
+		#endregion
 
 		#region MethodInfo extensions
 
@@ -1196,12 +921,6 @@ namespace LinqToDB.Extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
-#if NETFX_CORE
-			if (memberInfo is PropertyInfo)    return ((PropertyInfo)memberInfo).PropertyType;
-			if (memberInfo is FieldInfo)       return ((FieldInfo)   memberInfo).FieldType;
-			if (memberInfo is MethodInfo)      return ((MethodInfo)  memberInfo).ReturnType;
-			if (memberInfo is ConstructorInfo) return                memberInfo. DeclaringType;
-#else
 			switch (memberInfo.MemberType)
 			{
 				case MemberTypes.Property    : return ((PropertyInfo)memberInfo).PropertyType;
@@ -1209,7 +928,6 @@ namespace LinqToDB.Extensions
 				case MemberTypes.Method      : return ((MethodInfo)  memberInfo).ReturnType;
 				case MemberTypes.Constructor : return                memberInfo. DeclaringType;
 			}
-#endif
 
 			throw new InvalidOperationException();
 		}

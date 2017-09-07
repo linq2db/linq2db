@@ -191,11 +191,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 						if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
 							name.StartsWith("_") ||
-							name
-#if NETFX_CORE
-								.ToCharArray()
-#endif
-								.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+							name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return '"' + name + '"';
 					}
 
