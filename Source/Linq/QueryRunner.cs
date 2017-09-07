@@ -6,18 +6,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-using LinqToDB.Mapping;
-#if !SL4
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Linq
 {
 	using Builder;
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	static partial class QueryRunner

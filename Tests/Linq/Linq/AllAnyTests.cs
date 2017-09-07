@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-
-#if !SL4
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 
@@ -227,7 +224,7 @@ namespace Tests.Linq
 
 		}
 
-#if !SL4 && !NOASYNC
+#if !NOASYNC
 
 		[Test, DataContextSource]
 		public async Task All4Async(string context)

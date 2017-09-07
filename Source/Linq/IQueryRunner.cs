@@ -2,10 +2,7 @@
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
-
-#if !SL4
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Linq
 {

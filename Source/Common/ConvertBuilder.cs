@@ -146,14 +146,6 @@ namespace LinqToDB.Common
 		{
 			if (from == typeof(string) && to.IsEnumEx())
 			{
-#if SL4
-				return
-					Expression.Call(
-						MemberHelper.MethodOf(() => Enum.Parse(to, "", true)),
-						Expression.Constant(to),
-						p,
-						Expression.Constant(true));
-#else
 				var values = Enum.GetValues(to);
 				var names  = Enum.GetNames (to);
 
@@ -196,7 +188,6 @@ namespace LinqToDB.Common
 					cases.ToArray());
 
 				return expr;
-#endif
 			}
 
 			return null;

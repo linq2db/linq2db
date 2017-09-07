@@ -4,10 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-
-#if !SL4
 using System.Threading.Tasks;
-#endif
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -24,9 +21,7 @@ namespace LinqToDB.Linq
 	abstract class Query
 	{
 		public Func<IDataContextEx,Expression,object[],object> GetElement;
-#if !SL4
 		public Func<IDataContextEx,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
-#endif
 
 		#region Init
 
@@ -152,9 +147,7 @@ namespace LinqToDB.Linq
 		public          bool            DoNotCache;
 
 		public Func<IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
-#if !SL4
 		public Func<IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
-#endif
 
 		#endregion
 

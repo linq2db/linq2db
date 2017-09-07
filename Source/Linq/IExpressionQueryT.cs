@@ -4,11 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
 {
-	public interface IExpressionQuery<
-#if !SL4
-		out
-#endif
-		T> : IOrderedQueryable<T>, IQueryProviderAsync, IExpressionQuery
+	public interface IExpressionQuery<out T> : IOrderedQueryable<T>, IQueryProviderAsync, IExpressionQuery
 	{
 		new Expression Expression { get; set; }
 	}

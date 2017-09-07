@@ -6,10 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-
-#if !SL4
 using System.Threading.Tasks;
-#endif
 
 using JetBrains.Annotations;
 
@@ -89,7 +86,7 @@ namespace LinqToDB.Linq
 			return info;
 		}
 
-#if !SL4 && !NOASYNC
+#if !NOASYNC
 
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 		{
