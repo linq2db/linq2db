@@ -359,8 +359,12 @@ namespace Tests
 					.ToList();
 
 				var maxTime = method.GetCustomAttributes<MaxTimeAttribute>(true).FirstOrDefault();
-
 				explic.Add(maxTime ?? new MaxTimeAttribute(10000));
+
+#if !NETSTANDARD
+				var timeout = method.GetCustomAttributes<TimeoutAttribute>(true).FirstOrDefault();
+				explic.Add(timeout ?? new TimeoutAttribute(10000));
+#endif
 
 				var builder = new NUnitTestCaseBuilder();
 

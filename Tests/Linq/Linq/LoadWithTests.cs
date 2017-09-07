@@ -209,6 +209,9 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.Access)]
+#if !NETSTANDARD
+		[Timeout(15000)]
+#endif
 		public void LoadWith10(string context)
 		{
 			using (new AllowMultipleQuery())

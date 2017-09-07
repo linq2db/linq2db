@@ -121,6 +121,8 @@ namespace Tests.UserTests
 			var value = RunTest(db, test, calls);
 
 			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			GC.Collect();
 
 			Assert.False(value.IsAlive);
 		}
