@@ -427,7 +427,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new OracleSchemaProvider(Name);

@@ -12,7 +12,7 @@ namespace LinqToDB.Linq
 	/// </summary>
 	public class NoLinqCache : IDisposable
 	{
-		private static readonly AsyncLocal<bool> _value = new AsyncLocal<bool>();
+		static readonly AsyncLocal<bool> _value = new AsyncLocal<bool>();
 
 		/// <summary>
 		/// Creates disposable no-cache scope.
@@ -22,7 +22,7 @@ namespace LinqToDB.Linq
 			return new NoLinqCache();
 		}
 
-		private NoLinqCache()
+		NoLinqCache()
 		{
 			_value.Value = true;
 		}
@@ -32,12 +32,6 @@ namespace LinqToDB.Linq
 			_value.Value = false;
 		}
 
-		internal static bool IsNoCache
-		{
-			get
-			{
-				return _value.Value;
-			}
-		}
+		internal static bool IsNoCache => _value.Value;
 	}
 }

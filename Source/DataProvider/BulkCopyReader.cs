@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider
 			public int                Size          { get; set; }
 		}
 
-#region Implementation of IDataRecord
+		#region Implementation of IDataRecord
 
 		public override string GetName(int i)
 		{
@@ -124,18 +124,18 @@ namespace LinqToDB.DataProvider
 			get { throw new NotImplementedException(); }
 		}
 
-#endregion
+		#endregion
 
-#region Implementation of IDataReader
+		#region Implementation of IDataReader
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override void Close()
 		{
 			//do nothing
 		}
 #endif
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override DataTable GetSchemaTable()
 		{
 			var table = new DataTable("SchemaTable")
@@ -208,42 +208,27 @@ namespace LinqToDB.DataProvider
 			return b;
 		}
 
-		public override int Depth
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public override int Depth           => throw new NotImplementedException();
 
-		public override bool IsClosed
-		{
-			get { return false; }
-		}
+		public override bool IsClosed       => false;
 
-		public override int RecordsAffected
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public override int RecordsAffected => throw new NotImplementedException();
 
-#endregion
+		#endregion
 
-#region Implementation of IDisposable
+		#region Implementation of IDisposable
 
 		//public void Dispose()
 		//{
 		//}
 
-#endregion
+		#endregion
 
 		public override IEnumerator GetEnumerator()
 		{
 			throw new NotImplementedException();
 		}
 
-		public override bool HasRows
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public override bool HasRows => throw new NotImplementedException();
 	}
 }

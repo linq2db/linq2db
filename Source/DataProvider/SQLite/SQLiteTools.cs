@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static class SQLiteTools
 	{
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public static string AssemblyName   = "System.Data.SQLite";
 		public static string ConnectionName = "SQLiteConnection";
 		public static string DataReaderName = "SQLiteDataReader";
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static SQLiteTools()
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 			try
 			{
 				var path = typeof(SQLiteTools).AssemblyEx().GetPath();
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void ResolveSQLite(string path)
 		{
 			new AssemblyResolver(path, AssemblyName);
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 			new AssemblyResolver(path, "Mono.Data.Sqlite");
 #endif
 		}
@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void ResolveSQLite(Assembly assembly)
 		{
 			new AssemblyResolver(assembly, AssemblyName);
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 			new AssemblyResolver(assembly, "Mono.Data.Sqlite");
 #endif
 		}

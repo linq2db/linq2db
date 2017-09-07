@@ -58,6 +58,7 @@
 		<Reference Include="System.Runtime.Serialization" />
 
 		<Compile Remove="Metadata\SystemComponentModelDataAnnotationsSchemaAttributeReader.cs" />
+		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
 	</ItemGroup>
 
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
@@ -66,10 +67,6 @@
 
 
 	<!-- .NET Standard -->
-
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-		<DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
-	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />

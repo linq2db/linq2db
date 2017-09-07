@@ -91,7 +91,7 @@ namespace LinqToDB.Data.RetryPolicy
 			get { return _connection; }
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override DataTable GetSchema()
 		{
 			return _connection.GetSchema();

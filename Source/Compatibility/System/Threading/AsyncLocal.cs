@@ -22,7 +22,6 @@
 
 namespace System.Threading
 {
-#if !NETSTANDARD
 	using System.Security;
 	using System.Runtime.Remoting.Messaging;
 
@@ -32,7 +31,7 @@ namespace System.Threading
 
 		public T Value
 		{
-		   [SecuritySafeCritical]
+			[SecuritySafeCritical]
 			get
 			{
 				var wrapper = (AsyncScopeWrapper)CallContext.LogicalGetData(this.key);
@@ -61,5 +60,4 @@ namespace System.Threading
 			}
 		}
 	}
-#endif
 }

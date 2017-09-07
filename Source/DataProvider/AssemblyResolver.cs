@@ -5,7 +5,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using LinqToDB.Common;
 
-#if NETSTANDARD
+#if NETSTANDARD1_6
 using System.Runtime.Loader;
 using System.Linq;
 #endif
@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider
 			SetResolver();
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		void SetResolver()
 		{
 			ResolveEventHandler resolver = Resolver;

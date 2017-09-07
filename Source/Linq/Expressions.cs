@@ -592,10 +592,8 @@ namespace LinqToDB.Linq
 
 			{ M(() => Convert.ToDecimal((Boolean)true)), N(() => L<Boolean, Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((Byte)    0)  ), N(() => L<Byte,    Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
-#if !NETSTANDARD
 			{ M(() => Convert.ToDecimal((Char)   '0') ), N(() => L<Char,    Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal(DateTime.Now) ), N(() => L<DateTime,Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
-#endif
 			{ M(() => Convert.ToDecimal((Decimal) 0)  ), N(() => L<Decimal, Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((Double)  0)  ), N(() => L<Double,  Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((Int16)   0)  ), N(() => L<Int16,   Decimal>(p0 => Sql.ConvertTo<Decimal>.From(p0))) },

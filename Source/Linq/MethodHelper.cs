@@ -6,7 +6,7 @@ namespace LinqToDB.Linq
 	public static class MethodHelper
 	{
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public static MethodInfo GetMethodInfo(this Delegate del)
 		{
 			if ((object) del == null)
