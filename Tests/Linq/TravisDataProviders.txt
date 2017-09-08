@@ -1,4 +1,6 @@
-﻿--Access
+﻿--TraceLevel = Error
+
+--Access
 --SqlCe
 --SQLite
 --NorthwindSqlite

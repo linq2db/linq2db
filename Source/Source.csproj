@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net40;net45;net451;netstandard1.6</TargetFrameworks>
+		<TargetFrameworks>net45;netstandard1.6;net40;net451</TargetFrameworks>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<VersionPrefix>2.0.0</VersionPrefix>
 		<VersionSuffix></VersionSuffix>
@@ -79,6 +79,9 @@
 		<DefineConstants>$(DefineConstants);NOASYNC</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup>
+	  <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+	</PropertyGroup>
 
 	<!-- .NET 4.0 specific -->
 
@@ -96,6 +99,11 @@
 		<Error Condition="!Exists('..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
 		<Error Condition="Exists('..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
 	</Target>
+
+
+	<PropertyGroup>
+	  <NoWarn>1701;1702;1705;1591</NoWarn>
+	</PropertyGroup>
 
 
 	<!-- .NET Standard -->

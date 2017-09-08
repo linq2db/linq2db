@@ -766,6 +766,7 @@ namespace LinqToDB.Extensions
 		/// Gets a value indicating whether a type can be used as a db primitive.
 		/// </summary>
 		/// <param name="type">A <see cref="System.Type"/> instance. </param>
+		/// <param name="checkArrayElementType">True if needed to check element type for arrays</param>
 		/// <returns> True, if the type parameter is a primitive type; otherwise, False.</returns>
 		/// <remarks><see cref="System.String"/>. <see cref="Stream"/>. 
 		/// <see cref="XmlReader"/>. <see cref="XmlDocument"/>. are specially handled by the library
