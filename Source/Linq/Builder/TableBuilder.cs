@@ -1399,9 +1399,11 @@ namespace LinqToDB.Linq.Builder
 
 				if (ExpressionPredicate != null)
 				{
+					var expr = Builder.ConvertExpression(ExpressionPredicate.Body.Unwrap());
+					
 					Builder.BuildSearchCondition(
-						new ExpressionContext(null, new IBuildContext[] { parent, this }, ExpressionPredicate), 
-						ExpressionPredicate.Body,
+						new ExpressionContext(null, new IBuildContext[] { parent, this }, ExpressionPredicate),
+						expr,
 						join.JoinedTable.Condition.Conditions);
 				}
 
