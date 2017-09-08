@@ -59,7 +59,7 @@ script:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv Tests/Linq/TravisDataProviders.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.txt Tests/Linq/UserDataProviders.txt; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
-  - ./build.sh
+  - ./build.sh --verbosity diagnostic
 #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then psql -c 'create database testdata;' -U postgres; fi  
 #  - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
 #  - mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll --where "cat != WindowsOnly"
