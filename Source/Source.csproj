@@ -65,6 +65,14 @@
 		<DefineConstants>$(DefineConstants);NOASYNC</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup>
+	  <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup>
+	  <NoWarn>1701;1702;1705;1591</NoWarn>
+	</PropertyGroup>
+
 
 	<!-- .NET Standard -->
 

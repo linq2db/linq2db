@@ -122,12 +122,14 @@ namespace LinqToDB.Common
 			/// </remarks>
 			public static bool GuardGrouping;
 
+#pragma warning disable 1574
 			/// <summary>
 			/// Used to optimize huge logical operations with large number of operands like expr1.and.axpr2...and.exprN into balanced tree.
 			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool UseBinaryAggregateExpression;
+#pragma warning restore 1574
 
 			/// <summary>
 			/// Used to disable LINQ expressions caching for queries.
