@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netstandard1.6;net40;net45;net451</TargetFrameworks>
+		<TargetFrameworks>net45;netstandard1.6;net40;net451</TargetFrameworks>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<VersionPrefix>2.0.0</VersionPrefix>
 		<VersionSuffix></VersionSuffix>

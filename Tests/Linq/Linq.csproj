@@ -62,7 +62,7 @@
     <PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
     <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="4.10.0" />
     <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
-    <PackageReference Include="Microsoft.SqlServer.Types" Version="11.0.2" />
+    <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
     <PackageReference Include="MiniProfiler" Version="3.2.0.157" />
     <PackageReference Include="MySql.Data" Version="6.9.8" />
     <PackageReference Include="Npgsql" Version="2.2.6" />
@@ -133,7 +133,6 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <Compile Remove="**\VisualBasicTests.cs;**\FSharpTests.cs;**\ParserTests.cs;**\DB2Tests.cs;**\InformixTests.cs" />
     <None Update="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\x64\**\*">
       <Link>x64/%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -146,7 +145,7 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
     <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="4.10.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.3.1" />
     <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
     <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
     <PackageReference Include="MiniProfiler" Version="3.2.0.157" />
@@ -172,21 +171,22 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
+		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<Reference Include="System.Threading.Tasks"></Reference>
 	</ItemGroup>
 
   <ItemGroup>
     <Reference Include="IBM.Data.DB2">
-      <HintPath>..\..\..\linq2db.2.git\Redist\IBM\IBM.Data.DB2.dll</HintPath>
+      <HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
     </Reference>
     <Reference Include="IBM.Data.Informix">
-      <HintPath>..\..\..\linq2db.2.git\Redist\IBM\IBM.Data.Informix.dll</HintPath>
+      <HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
     </Reference>
     <Reference Include="Sap.Data.Hana.v4.5">
-      <HintPath>..\..\..\linq2db.2.git\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
+      <HintPath>..\..\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
     </Reference>
     <Reference Include="Sybase.AdoNet45.AseClient">
-      <HintPath>..\..\..\linq2db.2.git\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
+      <HintPath>..\..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
     </Reference>
   </ItemGroup>
 

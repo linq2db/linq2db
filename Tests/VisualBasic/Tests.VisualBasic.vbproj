@@ -149,16 +149,6 @@
     <Compile Include="CompilerServices.vb" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Source\LinqToDB.csproj">
-      <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
-      <Name>LinqToDB</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Model\Tests.Model.csproj">
-      <Project>{D527524F-EC92-465E-9CAE-86278121675A}</Project>
-      <Name>Tests.Model</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="My Project\" />
   </ItemGroup>
   <ItemGroup>
@@ -180,6 +170,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.Tests.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Source\Source.csproj">
+      <Project>{0e4e9a56-f285-4067-adaa-392acb9caaa7}</Project>
+      <Name>Source</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Model\Model.csproj">
+      <Project>{ef534f71-a4e6-4019-8835-43bee792c70a}</Project>
+      <Name>Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
