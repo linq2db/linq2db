@@ -15,13 +15,13 @@ addons:
 
 dotnet: 1.0.4
 
-#dotnet: 1.0.0-preview2-1-003177
 env:
-  - regularProviders: TravisDataProviders.txt
-  - coreProviders: TravisDataProviders.Core.txt
-  - testfilter: TestCategory != FreeText & TestCategory != Explicit & TestCategory != WindowsOnly
-  - testRunner: dotnet
-  - testLogger: trx
+  global:
+    - regularProviders=TravisDataProviders.txt
+    - coreProviders=TravisDataProviders.Core.txt
+    - testfilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != WindowsOnly"
+    - testRunner=dotnet
+    - buildConfiguration=netcoreapp1.0
 
 
 mono:  
