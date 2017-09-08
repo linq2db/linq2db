@@ -1,7 +1,7 @@
 #addin "MagicChunks"
 #addin "Cake.DocFx"
 #addin "Cake.Git"
-#addin "Cake.AppVeyor"
+//#addin "Cake.AppVeyor"
 #tool "docfx.console"
 #tool "nuget:?package=NUnit.ConsoleRunner"
 
