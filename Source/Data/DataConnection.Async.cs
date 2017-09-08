@@ -25,7 +25,11 @@ namespace LinqToDB.Data
 
 			if (_connection.State == ConnectionState.Closed)
 			{
-				await ((DbConnection)_connection).OpenAsync(cancellationToken);
+				if (_connection is RetryingDbConnection)
+					await ((RetryingDbConnection)_connection).OpenAsync(cancellationToken);
+				else
+					await ((DbConnection)_connection).OpenAsync(cancellationToken);
+
 				_closeConnection = true;
 			}
 

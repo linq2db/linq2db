@@ -45,29 +45,15 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public override string ConnectionString
 		{
-			get { return _connection.ConnectionString;  }
-			set { _connection.ConnectionString = value; }
+			get => _connection.ConnectionString;
+			set => _connection.ConnectionString = value;
 		}
 
-		public override string Database
-		{
-			get { return _connection.Database; }
-		}
+		public override string          Database      => _connection.Database;
 
-		public override ConnectionState State
-		{
-			get { return _connection.State; }
-		}
-
-		public override string DataSource
-		{
-			get { return _connection.DataSource; }
-		}
-
-		public override string ServerVersion
-		{
-			get { return _connection.ServerVersion; }
-		}
+		public override ConnectionState State         => _connection.State;
+		public override string          DataSource    => _connection.DataSource;
+		public override string          ServerVersion => _connection.ServerVersion;
 
 		protected override DbCommand CreateDbCommand()
 		{
@@ -75,9 +61,9 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 
 #if !NOASYNC
-		public override Task OpenAsync(CancellationToken cancellationToken)
+		public override async Task OpenAsync(CancellationToken cancellationToken)
 		{
-			return _policy.ExecuteAsync(ct => _connection.OpenAsync(ct), cancellationToken);
+			await _policy.ExecuteAsync(async ct => await _connection.OpenAsync(ct), cancellationToken);
 		}
 #endif
 
@@ -86,10 +72,7 @@ namespace LinqToDB.Data.RetryPolicy
 			((IDisposable)_connection).Dispose();
 		}
 
-		public DbConnection UnderlyingObject
-		{
-			get { return _connection; }
-		}
+		public DbConnection UnderlyingObject => _connection;
 
 #if !NETSTANDARD1_6
 		public override DataTable GetSchema()
@@ -114,15 +97,12 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 #endif
 
-		public override int ConnectionTimeout
-		{
-			get { return _connection.ConnectionTimeout; }
-		}
+		public override int ConnectionTimeout => _connection.ConnectionTimeout;
 
 		public override event StateChangeEventHandler StateChange
 		{
-			add    { _connection.StateChange += value; }
-			remove { _connection.StateChange -= value; }
+			add    => _connection.StateChange += value;
+			remove => _connection.StateChange -= value;
 		}
 
 		public object Clone()

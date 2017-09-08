@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netstandard1.6;net40;net45;net451</TargetFrameworks>
+		<TargetFrameworks>net40;net45;net451;netstandard1.6</TargetFrameworks>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<VersionPrefix>2.0.0</VersionPrefix>
 		<VersionSuffix></VersionSuffix>
@@ -66,6 +66,24 @@
 	</PropertyGroup>
 
 
+	<!-- .NET 4.0 specific -->
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'net40'">
+		<None Remove="App.config" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+		<PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
+	</ItemGroup>
+
+	<Import Project="..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets') AND '$(TargetFramework)' == 'net40'" />
+
+	<Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == '' AND '$(TargetFramework)' == 'net40'">
+		<Error Condition="!Exists('..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
+		<Error Condition="Exists('..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
+	</Target>
+
+
 	<!-- .NET Standard -->
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
@@ -92,23 +110,4 @@
 		<Compile Remove="**\*SchemaProvider*.cs" />
 		<Compile Include="Compatibility\System\ICloneable.cs;Compatibility\System\Data\Linq\Binary.cs;Compatibility\System\SerializableAttribute.cs" />
 	</ItemGroup>
-
-
-	<!-- .NET 4.0 support -->
-
-	<ItemGroup Condition="'$(TargetFramework)' != 'net40'">
-		<None Remove="App.config" />
-	</ItemGroup>
-	
-	<ItemGroup Condition="'$(TargetFramework)' == 'net40'">
-		<PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
-	</ItemGroup>
-
-	<Import Project="..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets') AND '$(TargetFramework)' == 'net40'" />
-
-	<Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == '' AND '$(TargetFramework)' == 'net40'">
-		<Error Condition="!Exists('..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
-		<Error Condition="Exists('..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
-	</Target>
-
 </Project>
