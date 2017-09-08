@@ -370,9 +370,9 @@ namespace Tests.DataProvider
 
 		[Test, IncludeDataContextSource(ProviderName.Access)]
 		[Explicit("Long running test. Run explicitly.")]
-#if !NETSTANDARD
-		[Timeout(60000)]
-#endif
+//#if !NETSTANDARD
+//		[Timeout(60000)]
+//#endif
 		public void DataConnectionTest(string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);

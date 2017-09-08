@@ -76,7 +76,6 @@ namespace Tests
 
 			var traceCount = 0;
 
-			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
 				 if (traceCount < 10000)
@@ -159,6 +158,19 @@ namespace Tests
 					})
 					.ToDictionary(i => i.Name);
 
+			var logLevel = File.ReadAllLines(providerListFile)
+				.Select(s => s.Trim())
+				.Where(s => s.Length > 0 && s.StartsWith("--") && s.ToLower().Contains("tracelevel"))
+				.Select(s => s.Split(new []{'='}, StringSplitOptions.RemoveEmptyEntries)[1].Trim())
+				.FirstOrDefault();
+
+			var traceLevel = TraceLevel.Info;
+			if (!string.IsNullOrEmpty(logLevel))
+				if (!Enum.TryParse(logLevel, true, out traceLevel))
+					traceLevel = TraceLevel.Info;
+
+			DataConnection.TurnTraceSwitchOn(traceLevel);
+
 			//var map = new ExeConfigurationFileMap();
 			//map.ExeConfigFilename = Path.Combine(
 			//	Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Substring("file:///".Length)),
@@ -196,8 +208,6 @@ namespace Tests
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
-
-			DataConnection.TurnTraceSwitchOn();
 
 #if !NETSTANDARD
 			LinqService.TypeResolver = str =>
@@ -361,10 +371,10 @@ namespace Tests
 				var maxTime = method.GetCustomAttributes<MaxTimeAttribute>(true).FirstOrDefault();
 				explic.Add(maxTime ?? new MaxTimeAttribute(10000));
 
-#if !NETSTANDARD
-				var timeout = method.GetCustomAttributes<TimeoutAttribute>(true).FirstOrDefault();
-				explic.Add(timeout ?? new TimeoutAttribute(10000));
-#endif
+//#if !NETSTANDARD
+//				var timeout = method.GetCustomAttributes<TimeoutAttribute>(true).FirstOrDefault();
+//				explic.Add(timeout ?? new TimeoutAttribute(10000));
+//#endif
 
 				var builder = new NUnitTestCaseBuilder();
 
@@ -1220,14 +1230,17 @@ namespace Tests
 
 	public class DisableLogging : IDisposable
 	{
+		private TraceSwitch _traceSwitch;
+
 		public DisableLogging()
 		{
+			_traceSwitch = DataConnection.TraceSwitch;
 			DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
 		}
 
 		public void Dispose()
 		{
-			DataConnection.TurnTraceSwitchOn();
+			DataConnection.TraceSwitch = _traceSwitch;
 		}
 	}
 

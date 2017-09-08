@@ -9,7 +9,7 @@ environment:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
   regularProviders: AppveyorDataProviders.txt
   coreProviders: AppveyorDataProviders.Core.txt
-  testfilter: TestCategory != FreeText
+  testfilter: TestCategory != FreeText & TestCategory != Explicit
   testRunner: dotnet
   testLogger: trx
   matrix:
