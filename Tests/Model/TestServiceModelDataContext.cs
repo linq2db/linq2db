@@ -1,5 +1,4 @@
-﻿#if !NETSTANDARD
-using System;
+﻿using System;
 using System.ServiceModel;
 
 using LinqToDB;
@@ -55,4 +54,3 @@ namespace Tests.Model
 		}
 	}
 }
-#endif

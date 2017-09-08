@@ -29,14 +29,28 @@
 		<Version>2.0.0</Version>
 		<RootNamespace>LinqToDB</RootNamespace>
 	</PropertyGroup>
-	
-	<ItemGroup>
-		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
-		<EmbeddedResource Include="**\*.txt" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
-	</ItemGroup>
+
 
 	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+		
+		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
+		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+		
 		<Compile Remove="Compatibility\**\*.cs" />
+		
+		<Compile Update="AsyncExtensions.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AsyncExtensions.tt</DependentUpon>
+		</Compile>
+
+		<None Update="AsyncExtensions.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
+		</None>
 	</ItemGroup>
 
 

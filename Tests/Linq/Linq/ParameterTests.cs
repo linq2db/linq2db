@@ -6,7 +6,7 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-#if !NOFSHARP
+#if !NETSTANDARD1_6
 using Tests.FSharp.Models;
 #else
 using Tests.Model;
