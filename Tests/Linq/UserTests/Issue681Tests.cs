@@ -6,7 +6,7 @@ using System;
 using System.Linq;
 using Tests.Model;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 using System.ServiceModel;
 #endif
 
@@ -59,7 +59,7 @@ namespace Tests.UserTests
 				if (   context == ProviderName.SapHana
 					|| context == ProviderName.DB2)
 					Assert.Throws<LinqToDBException>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 				else if (context == ProviderName.SapHana + ".LinqService"
 					||   context == ProviderName.DB2     + ".LinqService")
 					Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());

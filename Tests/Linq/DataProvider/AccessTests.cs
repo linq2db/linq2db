@@ -370,7 +370,7 @@ namespace Tests.DataProvider
 
 		[Test, IncludeDataContextSource(ProviderName.Access)]
 		[Explicit("Long running test. Run explicitly.")]
-//#if !NETSTANDARD
+//#if !NETSTANDARD1_6
 //		[Timeout(60000)]
 //#endif
 		public void DataConnectionTest(string context)

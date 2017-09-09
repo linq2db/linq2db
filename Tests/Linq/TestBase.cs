@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 
 using System.ServiceModel;
 using System.ServiceModel.Description;
@@ -21,7 +21,7 @@ using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 
 using LinqToDB.ServiceModel;
 
@@ -67,7 +67,7 @@ namespace Tests
 		static TestBase()
 		{
 			Console.WriteLine("Tests started in {0}...",
-#if NETSTANDARD
+#if NETSTANDARD1_6
 				System.IO.Directory.GetCurrentDirectory()
 #else
 				Environment.CurrentDirectory
@@ -100,7 +100,7 @@ namespace Tests
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD1_6 && !MONO
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -109,12 +109,12 @@ namespace Tests
 			{ }
 #endif
 
-#if NETSTANDARD
+#if NETSTANDARD1_6
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
 #else
 			Environment.CurrentDirectory = assemblyPath;
 #endif
-#if NETSTANDARD
+#if NETSTANDARD1_6
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
 #else
@@ -180,7 +180,7 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-#if NETSTANDARD
+#if NETSTANDARD1_6
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -204,12 +204,12 @@ namespace Tests
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD
+#if NETSTANDARD1_6
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -238,14 +238,14 @@ namespace Tests
 			return basePath;
 		}
 
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD1_6 && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
 #endif
 
 		static void OpenHost()
 		{
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD1_6 && !MONO
 			if (_isHostOpen)
 				return;
 
@@ -371,7 +371,7 @@ namespace Tests
 				var maxTime = method.GetCustomAttributes<MaxTimeAttribute>(true).FirstOrDefault();
 				explic.Add(maxTime ?? new MaxTimeAttribute(10000));
 
-//#if !NETSTANDARD
+//#if !NETSTANDARD1_6
 //				var timeout = method.GetCustomAttributes<TimeoutAttribute>(true).FirstOrDefault();
 //				explic.Add(timeout ?? new TimeoutAttribute(10000));
 //#endif
@@ -415,7 +415,7 @@ namespace Tests
 
 					}
 
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD1_6 && !MONO
 					if (!isIgnore && _includeLinqService)
 					{
 						var linqCaseNumber = 0;
@@ -500,7 +500,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD1_6 && !MONO
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);

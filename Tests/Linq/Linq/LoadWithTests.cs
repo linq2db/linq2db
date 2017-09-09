@@ -209,7 +209,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.Access)]
-//#if !NETSTANDARD
+//#if !NETSTANDARD1_6
 //		[Timeout(15000)]
 //#endif
 		public void LoadWith10(string context)

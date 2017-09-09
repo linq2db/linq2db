@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 using System.Windows.Forms;
 #endif
 
@@ -455,7 +455,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		[Test, DataContextSource]
 		public void ConstractClass(string context)
 		{

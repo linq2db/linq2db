@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net452;netstandard1.6</TargetFrameworks>
+		<TargetFrameworks>net452;netcoreapp1.0</TargetFrameworks>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<VersionPrefix>1.0.0.0</VersionPrefix>
 		<Authors>Igor Tkachev</Authors>
@@ -125,11 +125,11 @@
 
 	<!-- .NET Standard -->
 
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-		<DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
+		<DefineConstants>$(DefineConstants);NETSTANDARD1_6</DefineConstants>
 	</PropertyGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="1.1.0" />
