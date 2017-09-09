@@ -5,41 +5,38 @@
 #tool "nuget:?package=NUnit.ConsoleRunner"
 
 
-var buildConfiguration  = GetBuildConfiguration();
-var target              = GetTarget();
-var configuration       = GetConfiguration();
+string GetSolutionName()
+{
+	return "./linq2db.core.sln";
+}
 
-///////////////////////////////////////////////////////////////////////////////
-// GLOBAL VARIABLES
-///////////////////////////////////////////////////////////////////////////////
-var isAppVeyorBuild     = EnvironmentVariable("APPVEYOR") != null;
+string GetNugetProject()
+{
+	return "./Source/Source.csproj";
+}
 
-var packPath            = Directory("./Source/Source.csproj");
-var buildArtifacts      = Directory("./artifacts/packages");
+ConvertableDirectoryPath GetPackPath()
+{
+	return Directory("./Source/Source.csproj");
+}
 
-var solutionName        = "./linq2db.core.sln";
-var nugetProject        = "./Source/Source.csproj";
+ConvertableDirectoryPath GetBuildArtifacts()
+{
+	return Directory("./artifacts/packages");
+}
 
-var packageSuffix       = "";
-var packageVersion      = GetPackageVersion();
-var fullPackageVersion  = "";
 
-var regularProviders    = GetRegularProviders();
-var coreProviders       = GetCoreProviders();
-
-var accessToken         = GetAccessToken();
-var docFxCheckout       = "./linq2db.github.io";
-var docFxSite           = "./Doc/_site";
-
-var testRunner          = GetTestRunner();
-var testLogger          = GetTestLogger();
+bool IsAppVeyorBuild()
+{
+	return EnvironmentVariable("APPVEYOR") != null;
+}
 
 bool IsRelease()
 {
 	if(Argument<string>("Release", null) != null)
 		return true;
 
-	if (isAppVeyorBuild)
+	if (IsAppVeyorBuild())
 		return AppVeyor.Environment.Repository.Branch.ToLower() == "release";
 
 	return false;
@@ -58,7 +55,7 @@ string GetBuildConfiguration()
 
 string GetTarget()
 {
-	if (buildConfiguration == "docfx")
+	if (GetBuildConfiguration() == "docfx")
 	{
 		Console.WriteLine("Setting Target to DocFx because of buildConfiguration");
 		return "DocFx";
@@ -146,18 +143,18 @@ string GetAccessToken()
 
 bool PatchPackage()
 {
-	return isAppVeyorBuild || Argument<string>("patch", null) != null;
+	return IsAppVeyorBuild() || Argument<string>("patch", null) != null;
 }
 
 bool SkipTests()
 {
-	return buildConfiguration == "docfx" || Argument<string>("skiptests", null) != null;
+	return GetBuildConfiguration() == "docfx" || Argument<string>("skiptests", null) != null;
 }
 
 bool PublishDocFx()
 {
-	var publish = accessToken != null;
-	if (isAppVeyorBuild)
+	var publish = GetAccessToken() != null;
+	if (IsAppVeyorBuild())
 		publish &= AppVeyor.Environment.Repository.Branch.ToLower() == "release";
 
 	return publish;
@@ -169,7 +166,7 @@ string RcVersion()
 	if (arg != null)
 		return arg;
 
-	if (isAppVeyorBuild)
+	if (IsAppVeyorBuild())
 		return AppVeyor.Environment.Build.Number.ToString();
 
 	return "0";
@@ -188,7 +185,7 @@ void UploadTestResults(FilePath file, AppVeyorTestResultsType type)
 {
 	Console.WriteLine("Uplaoding test result: {0}", file.FullPath);
 
-	if (isAppVeyorBuild)
+	if (IsAppVeyorBuild())
 	{
 		Console.WriteLine("Uploading test results to AppVeyor");
 
@@ -228,7 +225,7 @@ void UploadTestResults()
 
 void UploadArtifact(FilePath file)
 {
-	if (isAppVeyorBuild)
+	if (IsAppVeyorBuild())
 	{
 		Console.WriteLine("Uploading file to AppVeyor");
 		var settings = new AppVeyorUploadArtifactsSettings()
@@ -241,17 +238,36 @@ void UploadArtifact(FilePath file)
 	}
 }
 
+string GetPackageSuffix()
+{
+	if (!IsRelease())
+		return "rc" + RcVersion();
+
+	return "";
+}
+
+string GetDocFxCheckout()
+{
+	return "./linq2db.github.io";
+}
+
+string GetDocFxSite()
+{
+	return "./Doc/_site";
+}
 Task("PatchPackage")
 	.IsDependentOn("Clean")
 	.IsDependentOn("Restore")
 	.WithCriteria(PatchPackage())
 	.Does(() =>
 {
-	var assemblyVersion = packageVersion + ".0";
+	var packageVersion      = GetPackageVersion();
+	var assemblyVersion     = packageVersion + ".0";
+	var fullPackageVersion  = "";
+	var packageSuffix       = GetPackageSuffix();
 
 	if (!IsRelease())
 	{
-		packageSuffix      = "rc" + RcVersion();
 		fullPackageVersion = packageVersion + "-" + packageSuffix;
 	}
 
@@ -261,7 +277,7 @@ Task("PatchPackage")
 	Console.WriteLine("Assembly Version     : {0}", assemblyVersion);
 
 
-	TransformConfig(nugetProject, nugetProject,
+	TransformConfig(GetNugetProject(), GetNugetProject(),
 		new TransformationCollection {
 			{ "Project/PropertyGroup/Version",         fullPackageVersion },
 			{ "Project/PropertyGroup/VersionPrefix",   packageVersion },
@@ -278,9 +294,9 @@ Task("Build")
 	.IsDependentOn("PatchPackage")
 	.Does(() =>
 {
-	MSBuild(solutionName, cfg => cfg
+	MSBuild(GetSolutionName(), cfg => cfg
 			.SetVerbosity(Verbosity.Minimal)
-			.SetConfiguration(configuration)
+			.SetConfiguration(GetConfiguration())
 			.UseToolVersion(MSBuildToolVersion.VS2017)
 			);
 
@@ -302,6 +318,10 @@ Task("DocFxPublish")
 	.WithCriteria(PublishDocFx())
 	.Does(() =>
 {
+	var accessToken         = GetAccessToken();
+	var docFxCheckout       = GetDocFxCheckout();
+	var docFxSite           = GetDocFxSite();
+
 	GitClone("https://github.com/linq2db/linq2db.github.io.git", "linq2db.github.io");
 	CopyDirectory(docFxCheckout+"/.git", docFxSite+"/.git");
 	GitAddAll(docFxSite);
@@ -321,6 +341,11 @@ Task("RunTests")
 		return;
 	}
 
+	var testRunner          = GetTestRunner();
+	var testLogger          = GetTestLogger();
+	var regularProviders    = GetRegularProviders();
+	var coreProviders       = GetCoreProviders();
+
 	if (!string.IsNullOrEmpty(regularProviders))
 	{
 		CopyFile("./Tests/Linq/" + regularProviders, "./Tests/Linq/UserDataProviders.txt");
@@ -332,7 +357,7 @@ Task("RunTests")
 	}
 
 	var projects = testRunner == "NUnit"
-		? new [] { File("./Tests/Linq/Bin/Release/" + buildConfiguration + "/linq2db.Tests.dll").Path }
+		? new [] { File("./Tests/Linq/Bin/Release/" + GetBuildConfiguration() + "/linq2db.Tests.dll").Path }
 		: new [] { File("./Tests/Linq/Linq.csproj").Path };
 	
 	var testFilter = GetTestFilter();
@@ -341,9 +366,9 @@ Task("RunTests")
 	var settings = new DotNetCoreTestSettings
 	{
 		// ArgumentCustomization = args => args.Append("--result=TestResult.xml"),
-		Configuration = configuration,
+		Configuration = GetConfiguration(),
 		NoBuild = true, 
-		Framework = buildConfiguration,
+		Framework = GetBuildConfiguration(),
 		Filter = testFilter,
 		Logger = testLogger
 	};
@@ -352,10 +377,10 @@ Task("RunTests")
 
 	var nunitSettings = new NUnit3Settings 
 	{
-		Configuration = configuration,
+		Configuration = GetConfiguration(),
 		X86 = true,
 		Results = testResults,
-		//Framework = buildConfiguration,
+		//Framework = GetBuildConfiguration(),
 		Where = testFilter
 	};
 
@@ -369,15 +394,14 @@ Task("RunTests")
 		else
 			DotNetCoreTest(project.FullPath, settings);
 
-		UploadTestResults();
+		//UploadTestResults();
 	}
 })
 .OnError(ex => 
 {
 	Console.WriteLine("Tests failed: {0}", ex.Message);
-	var fileName = "TestResult.xml";
 
-	UploadTestResults();
+	//UploadTestResults();
 	
 	throw ex;
 });
@@ -387,15 +411,15 @@ Task("Pack")
 	.IsDependentOn("Clean")
 	.Does(() =>
 {
-	if(buildConfiguration == "docfx")
+	if(GetBuildConfiguration() == "docfx")
 		return;
 
 	var settings = new DotNetCorePackSettings
 	{
-		Configuration = configuration,
-		OutputDirectory = buildArtifacts,
+		Configuration = GetConfiguration(),
+		OutputDirectory = GetBuildArtifacts(),
 		NoBuild = true,
-		VersionSuffix = packageSuffix
+		VersionSuffix = GetPackageSuffix()
 	};
 
 /*	
@@ -409,19 +433,19 @@ Task("Pack")
 		};
 */
 
-	DotNetCorePack(packPath, settings);
+	DotNetCorePack(GetPackPath(), settings);
 });
 
 Task("Clean")
 	.Does(() =>
 {
-	CleanDirectories(new DirectoryPath[] { buildArtifacts });
+	CleanDirectories(new DirectoryPath[] { GetBuildArtifacts() });
 
-	if(DirectoryExists(docFxCheckout))
-		DeleteDirectory(docFxCheckout, true);
+	if(DirectoryExists(GetDocFxCheckout()))
+		DeleteDirectory(GetDocFxCheckout(), true);
 
-	if(DirectoryExists(docFxSite))
-		DeleteDirectory(docFxSite, true);
+	if(DirectoryExists(GetDocFxSite()))
+		DeleteDirectory(GetDocFxSite(), true);
 
 });
 
@@ -435,7 +459,7 @@ Task("Restore")
 	*/
 	//DotNetCoreRestore(solutionName, settings);
 
-	NuGetRestore(solutionName, new NuGetRestoreSettings()
+	NuGetRestore(GetSolutionName(), new NuGetRestoreSettings()
 	{
 		Verbosity = NuGetVerbosity.Quiet,
 	});
@@ -444,7 +468,7 @@ Task("Restore")
 Task("Addins")
 	.Does(()=>
 {
-	if(isAppVeyorBuild)
+	if(IsAppVeyorBuild())
 	{
 		Information("AppVeyor addin loading");
 		CakeExecuteScript("./av.cake");
@@ -462,4 +486,4 @@ Task("Default")
   .IsDependentOn("RunTests")
   .IsDependentOn("Pack");
 
-RunTarget(target);
+RunTarget(GetTarget());
