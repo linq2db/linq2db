@@ -437,6 +437,7 @@ Task("RunTests")
 Task("Pack")
 	.IsDependentOn("Restore")
 	.IsDependentOn("Clean")
+	.WithCriteria(IsAppVeyorBuild())
 	.Does(() =>
 {
 	if(GetBuildConfiguration() == "docfx")
@@ -449,17 +450,6 @@ Task("Pack")
 		NoBuild = true,
 		VersionSuffix = GetPackageSuffix()
 	};
-
-/*	
-	if (!string.IsNullOrEmpty(packageVersion))
-		settings.ArgumentCustomization = b => 
-		{
-			Console.WriteLine("Package  Version: {0}", packageVersion);
-
-			b.Append(" /p:VersionSuffix=" + "rc10");
-			return b;
-		};
-*/
 
 	DotNetCorePack(GetPackPath(), settings);
 });
@@ -480,14 +470,7 @@ Task("Clean")
 
 Task("Restore")
 	.Does(() =>
-{/*
-	var settings = new DotNetCoreRestoreSettings
-	{
-		//Sources = new [] { "https://api.nuget.org/v3/index.json" }
-	};
-	*/
-	//DotNetCoreRestore(solutionName, settings);
-
+{
 	NuGetRestore(GetSolutionName(), new NuGetRestoreSettings()
 	{
 		Verbosity = NuGetVerbosity.Quiet,
