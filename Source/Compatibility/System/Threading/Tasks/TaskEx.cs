@@ -19,5 +19,10 @@ namespace System.Threading.Tasks
 		{
 			return Task.Run(function, cancellationToken);
 		}
+
+		public static Task Delay(TimeSpan delay, CancellationToken cancellationToken)
+		{
+			return Task.Delay(delay, cancellationToken);
+		}
 	}
 }

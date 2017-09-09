@@ -204,11 +204,7 @@ namespace LinqToDB.Data.RetryPolicy
 					OnRetry();
 				}
 
-#if NET40
-				Thread.Sleep(delay.Value);
-#else
-				await Task.Delay(delay.Value, cancellationToken);
-#endif
+				await TaskEx.Delay(delay.Value, cancellationToken);
 			}
 		}
 
