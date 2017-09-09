@@ -1,7 +1,6 @@
 #addin "MagicChunks"
 #addin "Cake.DocFx"
 #addin "Cake.Git"
-#addin "Cake.AppVeyor"
 #tool "docfx.console"
 #tool "nuget:?package=NUnit.ConsoleRunner"
 
@@ -13,7 +12,7 @@ var configuration       = GetConfiguration();
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBAL VARIABLES
 ///////////////////////////////////////////////////////////////////////////////
-var isAppVeyorBuild     = AppVeyor.IsRunningOnAppVeyor;
+var isAppVeyorBuild     = EnvironmentVariable("APPVEYOR") != null;
 
 var packPath            = Directory("./Source/Source.csproj");
 var buildArtifacts      = Directory("./artifacts/packages");
@@ -443,11 +442,23 @@ Task("Restore")
 	});
 });
 
+Task("Addins")
+	.Does(()=>
+{
+	if(isAppVeyorBuild)
+	{
+		Information("AppVeyor addin loading");
+		CakeExecuteScript("./av.cake");
+	}
+});
+
 Task("DocFx")
+  .IsDependentOn("Addins")
   .IsDependentOn("DocFxBuild")
   .IsDependentOn("DocFxPublish");
 
 Task("Default")
+  .IsDependentOn("Addins")
   .IsDependentOn("Build")
   .IsDependentOn("RunTests")
   .IsDependentOn("Pack");
