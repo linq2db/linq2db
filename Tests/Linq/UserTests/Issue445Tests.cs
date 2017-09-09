@@ -17,7 +17,7 @@ namespace Tests.UserTests
 		class IssueContextSourceAttribute : IncludeDataContextSourceAttribute
 		{
 			public IssueContextSourceAttribute(bool includeLinqService = true)
-				: base(includeLinqService, ProviderName.SQLite, ProviderName.SqlServer2008, ProviderName.SqlServer2012, TestProvName.SQLiteMs)
+				: base(includeLinqService, ProviderName.SQLite, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2012, TestProvName.SQLiteMs)
 			{ }
 		}
 
@@ -49,6 +49,27 @@ namespace Tests.UserTests
 			{
 				var dc = new DataContext(context);
 				AreEqual(Person.Where(_ => _.ID == 1), dc.GetTable<Person>().Where(_ => _.ID == 1));
+			}
+		}
+
+		[Test, IssueContextSourceAttribute(false)]
+		public void ConnectionClosed2Async(string context)
+		{
+			for   (var i = 0; i < 1000; i++)
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>().Where(_ => _.ID == 1).ToArrayAsync().Result);
+			}
+
+		}
+
+		[Test, IssueContextSourceAttribute(false)]
+		public void ConnectionClosed3Async(string context)
+		{
+			for (var i = 0; i < 1000; i++)
+			{
+				var dc = new DataContext(context);
+				AreEqual(Person.Where(_ => _.ID == 1), dc.GetTable<Person>().Where(_ => _.ID == 1).ToArrayAsync().Result);
 			}
 		}
 
