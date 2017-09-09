@@ -224,8 +224,6 @@ namespace Tests.Linq
 
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task All4Async(string context)
 		{
@@ -234,8 +232,6 @@ namespace Tests.Linq
 					         Child.All     (c => c.ParentID > 3),
 					await db.Child.AllAsync(c => c.ParentID > 3));
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void All5(string context)

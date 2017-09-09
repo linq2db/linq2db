@@ -80,13 +80,10 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Action<TSource> action,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
 
 			var query = source as ExpressionQuery<TSource>;
 			if (query != null)
 				return query.GetForEachAsync(action, token);
-
-#endif
 
 			return GetActionTask(() =>
 			{
@@ -113,13 +110,9 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Func<TSource,bool> func,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var query = source as ExpressionQuery<TSource>;
 			if (query != null)
 				return query.GetForEachUntilAsync(func, token);
-
-#endif
 
 			return GetActionTask(() =>
 			{
@@ -131,8 +124,6 @@ namespace LinqToDB
 		}
 
 		#endregion
-
-#if !NOASYNC
 
 		#region ToListAsync
 
@@ -302,7 +293,5 @@ namespace LinqToDB
 		}
 
 		#endregion
-
-#endif
 	}
 }

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-#if !NOASYNC
 	using RetryPolicy;
 
 	public partial class DataConnection
@@ -213,6 +212,4 @@ namespace LinqToDB.Data
 			}
 		}
 	}
-
-#endif
 }

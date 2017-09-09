@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -77,8 +74,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana, TestProvName.Firebird3,
@@ -90,8 +85,6 @@ namespace Tests.xUpdate
 				await db.MergeAsync(db.Types2, t => t.ID > 5);
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,

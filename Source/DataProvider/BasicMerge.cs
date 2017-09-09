@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.DataProvider
 {
@@ -48,8 +45,6 @@ namespace LinqToDB.DataProvider
 			return Execute(dataConnection);
 		}
 
-#if !NOASYNC
-
 		public virtual async Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName,
 			CancellationToken token)
@@ -60,8 +55,6 @@ namespace LinqToDB.DataProvider
 
 			return await ExecuteAsync(dataConnection, token);
 		}
-
-#endif
 
 		/// <summary>
 		/// Builds MERGE INTO command text.
@@ -484,15 +477,11 @@ namespace LinqToDB.DataProvider
 			return dataConnection.Execute(cmd, Parameters.ToArray());
 		}
 
-#if !NOASYNC
-
 		protected virtual Task<int> ExecuteAsync(DataConnection dataConnection, CancellationToken token)
 		{
 			var cmd = StringBuilder.AppendLine().ToString();
 
 			return new CommandInfo(dataConnection, cmd, Parameters.ToArray()).ExecuteAsync(token);
 		}
-
-#endif
 	}
 }

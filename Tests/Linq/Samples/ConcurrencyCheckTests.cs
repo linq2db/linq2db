@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -230,8 +227,6 @@ namespace Tests.Samples
 			Assert.AreEqual(1, db.Delete(obj1001));
 		}
 
-#if !NOASYNC
-
 		[Test, Parallelizable(ParallelScope.None)]
 		public async Task InsertAndDeleteTestAsync()
 		{
@@ -254,8 +249,6 @@ namespace Tests.Samples
 			Assert.AreEqual(0, await db.DeleteAsync(obj2000));
 			Assert.AreEqual(1, await db.DeleteAsync(obj2001));
 		}
-
-#endif
 
 		[Test]
 		public void CheckInsertOrUpdate()

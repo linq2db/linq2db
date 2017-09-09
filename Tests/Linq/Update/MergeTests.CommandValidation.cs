@@ -268,7 +268,6 @@ namespace Tests.Merge
 					throw new NotImplementedException();
 				}
 
-#if !NOASYNC
 				Task<int> IDataProvider.MergeAsync<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName, CancellationToken token)
 				{
 					throw new NotImplementedException();
@@ -278,7 +277,6 @@ namespace Tests.Merge
 				{
 					throw new NotImplementedException();
 				}
-#endif
 
 				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 				{

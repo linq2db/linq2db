@@ -5,10 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.ServiceModel
 {
@@ -301,8 +298,6 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-#if !NOASYNC
-
 		public async Task CommitBatchAsync()
 		{
 			if (_batchCounter == 0)
@@ -327,7 +322,6 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-#endif
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
 			ThrowOnDisposed();

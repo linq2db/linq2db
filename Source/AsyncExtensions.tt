@@ -107,8 +107,6 @@ namespace LinqToDB
 			this IQueryable<<#= info.SParam #>> source<#= param #>,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -120,8 +118,6 @@ namespace LinqToDB
 						arguments: new Expression[<#= exprCount #>] { source.Expression<#= paramExpr #> }) as Expression,
 					token);
 			}
-
-#endif
 
 			return GetTask(<#= info.Lambda #>, token);
 		}

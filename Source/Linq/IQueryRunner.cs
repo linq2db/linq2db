@@ -24,7 +24,6 @@ namespace LinqToDB.Linq
 		/// <returns>Data reader with query results.</returns>
 		IDataReader           ExecuteReader  ();
 
-#if !NOASYNC
 		/// <summary>
 		/// Executes query asynchronously and returns number of affected records.
 		/// </summary>
@@ -43,7 +42,6 @@ namespace LinqToDB.Linq
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Data reader with query results.</returns>
 		Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken);
-#endif
 
 		/// <summary>
 		/// Returns SQL text for query.

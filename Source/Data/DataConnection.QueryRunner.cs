@@ -431,8 +431,6 @@ namespace LinqToDB.Data
 
 			#endregion
 
-#if !NOASYNC
-
 			class DataReaderAsync : IDataReaderAsync
 			{
 				public DataReaderAsync(DataConnection dataConnection, Func<int> skipAction, Func<int> takeAction)
@@ -570,8 +568,6 @@ namespace LinqToDB.Data
 
 				return await _dataConnection.ExecuteScalarAsync(cancellationToken);
 			}
-
-#endif
 		}
 	}
 }

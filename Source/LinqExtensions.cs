@@ -2,11 +2,8 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 using JetBrains.Annotations;
 
@@ -281,8 +278,6 @@ namespace LinqToDB
 			throw new InvalidOperationException();
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Loads scalar value or record from database without explicit table source asynchronously.
 		/// Could be usefull for function calls, querying of database variables or properties, subqueries, execution of code on server side.
@@ -317,8 +312,6 @@ namespace LinqToDB
 			throw new InvalidOperationException();
 		}
 
-#endif
-
 		#endregion
 
 		#region Delete
@@ -342,8 +335,6 @@ namespace LinqToDB
 					new[] { source.Expression }));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Executes delete operation asynchronously, using source query as filter for records, that should be deleted.
 		/// </summary>
@@ -365,10 +356,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _deleteMethodInfo2 = MemberHelper.MethodOf(() => Delete<int>(null, null)).GetGenericMethodDefinition();
 
@@ -392,8 +381,6 @@ namespace LinqToDB
 					_deleteMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(predicate) }));
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Executes delete operation asynchronously, using source query as initial filter for records, that should be deleted, and predicate expression as additional filter.
@@ -421,10 +408,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		#endregion
 
@@ -457,8 +442,6 @@ namespace LinqToDB
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Executes update-from-source operation asynchronously against target table.
 		/// </summary>
@@ -489,10 +472,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		internal static readonly MethodInfo _updateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
 
@@ -514,8 +495,6 @@ namespace LinqToDB
 					_updateMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(setter) }));
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Executes update operation asynchronously using source query as record filter.
@@ -543,10 +522,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _updateMethodInfo3 = MemberHelper.MethodOf(() => Update<int>(null, null, null)).GetGenericMethodDefinition();
 
@@ -573,8 +550,6 @@ namespace LinqToDB
 					_updateMethodInfo3.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(predicate), Expression.Quote(setter) }));
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Executes update operation asynchronously using source query as record filter with additional filter expression.
@@ -605,10 +580,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _updateMethodInfo4 = MemberHelper.MethodOf(() => Update<int>(null)).GetGenericMethodDefinition();
 
@@ -630,8 +603,6 @@ namespace LinqToDB
 					_updateMethodInfo4.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression }));
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Executes update operation asynchronously for already configured update query.
@@ -656,10 +627,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => q.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => q.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _updateMethodInfo5 = MemberHelper.MethodOf(() => Update<int,int>(null, (Expression<Func<int,int>>)null, null)).GetGenericMethodDefinition();
 
@@ -688,8 +657,6 @@ namespace LinqToDB
 					_updateMethodInfo5.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { source.Expression, Expression.Quote(target), Expression.Quote(setter) }));
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Executes update-from-source operation asynchronously against target table.
@@ -722,10 +689,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		class Updatable<T> : IUpdatable<T>
 		{
@@ -949,7 +914,7 @@ namespace LinqToDB
 			return new Updatable<T> { Query = query };
 		}
 
-		#endregion
+#endregion
 
 		#region Insert
 
@@ -977,8 +942,6 @@ namespace LinqToDB
 					_insertMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression, Expression.Quote(setter) }));
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Inserts single record into target table asynchronously.
@@ -1008,10 +971,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null,null)).GetGenericMethodDefinition();
 
@@ -1080,8 +1041,6 @@ namespace LinqToDB
 			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(InsertWithIdentity(target, setter));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Inserts single record into target table asynchronously and returns identity value of inserted record.
 		/// </summary>
@@ -1110,7 +1069,7 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<object>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<object>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<object>(expr), token);
 		}
 
 		/// <summary>
@@ -1160,9 +1119,6 @@ namespace LinqToDB
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(await InsertWithIdentityAsync(target, setter, token));
 		}
-
-
-#endif
 
 		#region ValueInsertable
 
@@ -1352,8 +1308,6 @@ namespace LinqToDB
 					new[] { query.Expression }));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Executes insert query asynchronously.
 		/// </summary>
@@ -1377,10 +1331,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => queryable.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => queryable.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo2 = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null)).GetGenericMethodDefinition();
 
@@ -1436,8 +1388,6 @@ namespace LinqToDB
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(InsertWithIdentity(source));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Executes insert query asynchronously and returns identity value of inserted record.
 		/// </summary>
@@ -1462,7 +1412,7 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<object>(expr, token);
 
-			return await Task.Run(() => queryable.Provider.Execute<object>(expr), token);
+			return await TaskEx.Run(() => queryable.Provider.Execute<object>(expr), token);
 		}
 
 		/// <summary>
@@ -1507,8 +1457,6 @@ namespace LinqToDB
 				await InsertWithIdentityAsync(source, token));
 		}
 
-#endif
-
 		#endregion
 
 		#region SelectInsertable
@@ -1542,8 +1490,6 @@ namespace LinqToDB
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Inserts records from source query into target table asynchronously.
 		/// </summary>
@@ -1575,10 +1521,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo3 =
 			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null,null,null)).GetGenericMethodDefinition();
@@ -1666,8 +1610,6 @@ namespace LinqToDB
 				InsertWithIdentity(source, target, setter));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Inserts records from source query into target table asynchronously and returns identity value of last inserted record.
 		/// </summary>
@@ -1700,7 +1642,7 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<object>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<object>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<object>(expr), token);
 		}
 
 		/// <summary>
@@ -1765,8 +1707,6 @@ namespace LinqToDB
 			return ((ExpressionQuery<TSource>)source).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
 				await InsertWithIdentityAsync(source, target, setter, token));
 		}
-
-#endif
 
 		class SelectInsertable<T,TT> : ISelectInsertable<T,TT>
 		{
@@ -1928,8 +1868,6 @@ namespace LinqToDB
 					new[] { query.Expression }));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Executes configured insert query asynchronously.
 		/// </summary>
@@ -1955,10 +1893,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => queryable.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => queryable.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo4 =
 			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null)).GetGenericMethodDefinition();
@@ -2022,8 +1958,6 @@ namespace LinqToDB
 				InsertWithIdentity(source));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Executes configured insert query asynchronously and returns identity value of last inserted record.
 		/// </summary>
@@ -2049,7 +1983,7 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<object>(expr, token);
 
-			return await Task.Run(() => queryable.Provider.Execute<object>(expr), token);
+			return await TaskEx.Run(() => queryable.Provider.Execute<object>(expr), token);
 		}
 
 		/// <summary>
@@ -2097,8 +2031,6 @@ namespace LinqToDB
 				await InsertWithIdentityAsync(source, token));
 		}
 
-#endif
-
 		#endregion
 
 		#endregion
@@ -2137,8 +2069,6 @@ namespace LinqToDB
 					new[] { query.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) }));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Asynchronously inserts new record into target table or updates existing record if record with the same primary key value already exists in target table.
 		/// </summary>
@@ -2173,10 +2103,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _insertOrUpdateMethodInfo2 =
 			MemberHelper.MethodOf(() => InsertOrUpdate<int>(null,null,null,null)).GetGenericMethodDefinition();
@@ -2219,8 +2147,6 @@ namespace LinqToDB
 						Expression.Quote(keySelector)
 					}));
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Asynchronously inserts new record into target table or updates existing record if record with the same key value already exists in target table.
@@ -2266,10 +2192,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 		}
-
-#endif
 
 		#endregion
 
@@ -2314,8 +2238,6 @@ namespace LinqToDB
 			return 0;
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Drops database table asynchronously.
 		/// </summary>
@@ -2348,7 +2270,7 @@ namespace LinqToDB
 				if (query != null)
 					return await query.ExecuteAsync<int>(expr, token);
 
-				return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+				return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 			}
 
 			try
@@ -2356,7 +2278,7 @@ namespace LinqToDB
 				if (query != null)
 					return await query.ExecuteAsync<int>(expr, token);
 
-				return await Task.Run(() => source.Provider.Execute<int>(expr), token);
+				return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
 			}
 			catch
 			{
@@ -2364,8 +2286,6 @@ namespace LinqToDB
 
 			return 0;
 		}
-
-#endif
 
 		#endregion
 
@@ -2438,9 +2358,9 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
-			[NotNull]                this IQueryable<TSource> source,
-			[NotNull]                int                      count,
-			[NotNull]                TakeHints                hints)
+			[NotNull] this IQueryable<TSource> source,
+			[NotNull] int                      count,
+			[NotNull] TakeHints                hints)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
@@ -2502,8 +2422,6 @@ namespace LinqToDB
 					new[] { source.Expression, Expression.Quote(index) }));
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Selects record at specified position from source query asynchronously.
 		/// If query doesn't return enough records, <see cref="InvalidOperationException"/> will be thrown.
@@ -2534,10 +2452,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<TSource>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<TSource>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<TSource>(expr), token);
 		}
-
-#endif
 
 		static readonly MethodInfo _elementAtOrDefaultMethodInfo = MemberHelper.MethodOf(() => ElementAtOrDefault<int>(null,null)).GetGenericMethodDefinition();
 
@@ -2562,8 +2478,6 @@ namespace LinqToDB
 					_elementAtOrDefaultMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
 					new[] { source.Expression, Expression.Quote(index) }));
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Selects record at specified position from source query asynchronously.
@@ -2593,10 +2507,8 @@ namespace LinqToDB
 			if (query != null)
 				return await query.ExecuteAsync<TSource>(expr, token);
 
-			return await Task.Run(() => source.Provider.Execute<TSource>(expr), token);
+			return await TaskEx.Run(() => source.Provider.Execute<TSource>(expr), token);
 		}
-
-#endif
 
 		#endregion
 

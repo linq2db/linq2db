@@ -115,8 +115,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).First();
 
-#if !NOASYNC
-
 				query.GetElementAsync = async (db, expr, ps, token) =>
 				{
 					var count = 0;
@@ -127,15 +125,11 @@ namespace LinqToDB.Linq.Builder
 
 					return count > 0 ? obj : Array<T>.Empty.First();
 				};
-
-#endif
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
 			{
 				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).FirstOrDefault();
-
-#if !NOASYNC
 
 				query.GetElementAsync = async (db, expr, ps, token) =>
 				{
@@ -146,15 +140,11 @@ namespace LinqToDB.Linq.Builder
 
 					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
 				};
-
-#endif
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
 			{
 				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).Single();
-
-#if !NOASYNC
 
 				query.GetElementAsync = async (db, expr, ps, token) =>
 				{
@@ -172,15 +162,11 @@ namespace LinqToDB.Linq.Builder
 
 					return count == 1 ? obj : new T[count].Single();
 				};
-
-#endif
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
 			{
 				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).SingleOrDefault();
-
-#if !NOASYNC
 
 				query.GetElementAsync = async (db, expr, ps, token) =>
 				{
@@ -198,8 +184,6 @@ namespace LinqToDB.Linq.Builder
 
 					return count == 1 ? obj : new T[count].SingleOrDefault();
 				};
-
-#endif
 			}
 
 			static object SequenceException()

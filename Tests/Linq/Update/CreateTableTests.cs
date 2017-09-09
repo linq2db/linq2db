@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -46,8 +43,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource(ProviderName.OracleNative)]
 		public async Task CreateTable1Async(string context)
 		{
@@ -69,8 +64,6 @@ namespace Tests.xUpdate
 				await db.DropTableAsync<TestTable>();
 			}
 		}
-
-#endif
 
 		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
 		public void CreateLocalTempTable1(string context)
@@ -120,8 +113,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
 		public async Task CreateLocalTempTable1Async(string context)
 		{
@@ -169,8 +160,6 @@ namespace Tests.xUpdate
 				await table.DropAsync();
 			}
 		}
-
-#endif
 
 		enum FieldType1
 		{

@@ -9,8 +9,6 @@ namespace LinqToDB.Data
 {
 	using Linq;
 
-#if !NOASYNC
-
 	public class DataReaderAsync : IDisposable
 	{
 		public   CommandInfo       CommandInfo       { get; set; }
@@ -167,6 +165,4 @@ namespace LinqToDB.Data
 
 		#endregion
 	}
-
-#endif
 }

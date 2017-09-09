@@ -9,12 +9,14 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Data
 {
 	using Common;
 	using Expressions;
 	using Extensions;
-	using JetBrains.Annotations;
+	using Mapping;
 
 	/// <summary>
 	/// Provides database connection command abstraction.
@@ -35,13 +37,13 @@ namespace LinqToDB.Data
 		/// </summary>
 		public DataParameter[] Parameters;
 		/// <summary>
-		/// Type of command. See <see cref="CommandType"/> for all supported types.
-		/// Default value: <see cref="CommandType.Text"/>.
+		/// Type of command. See <see cref="System.Data.CommandType"/> for all supported types.
+		/// Default value: <see cref="System.Data.CommandType.Text"/>.
 		/// </summary>
 		public CommandType     CommandType = CommandType.Text;
 		/// <summary>
-		/// Command behavior flags. See <see cref="CommandBehavior"/> for more details.
-		/// Default value: <see cref="CommandBehavior.Default"/>.
+		/// Command behavior flags. See <see cref="System.Data.CommandBehavior"/> for more details.
+		/// Default value: <see cref="System.Data.CommandBehavior.Default"/>.
 		/// </summary>
 		public CommandBehavior CommandBehavior;
 
@@ -115,7 +117,7 @@ namespace LinqToDB.Data
 		#region Query with object reader
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values, mapped using provided mapping function.
+		/// Executes command using <see cref="StoredProcedure"/> command type and returns results as collection of values, mapped using provided mapping function.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
@@ -147,8 +149,6 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Query with object reader async
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values, mapped using provided mapping function.
@@ -232,14 +232,12 @@ namespace LinqToDB.Data
 					action(objectReader(rd));
 		}
 
-#endif
-
 		#endregion
 
 		#region Query
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// Executes command using <see cref="StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <returns>Returns collection of query result records.</returns>
@@ -296,8 +294,6 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Query async
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values.
@@ -402,8 +398,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-#endif
-
 		#endregion
 
 		#region Query with template
@@ -419,7 +413,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns results as collection of values of specified type.
+		/// Executes command using <see cref="StoredProcedure"/> command type and returns results as collection of values of specified type.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
@@ -433,7 +427,7 @@ namespace LinqToDB.Data
 
 		#region Execute
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns number of affected records.
+		/// Executes command using <see cref="StoredProcedure"/> command type and returns number of affected records.
 		/// </summary>
 		/// <returns>Number of records, affected by command execution.</returns>
 		public int ExecuteProc()
@@ -467,10 +461,8 @@ namespace LinqToDB.Data
 
 		#region Execute async
 
-#if !NOASYNC
-
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
+		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public Task<int> ExecuteProcAsync()
@@ -480,7 +472,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns number of affected records.
+		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns number of affected records.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -514,14 +506,12 @@ namespace LinqToDB.Data
 			return await DataConnection.ExecuteNonQueryAsync(cancellationToken);
 		}
 
-#endif
-
 		#endregion
 
 		#region Execute scalar
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns single value.
+		/// Executes command using <see cref="StoredProcedure"/> command type and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Resulting value.</returns>
@@ -576,10 +566,8 @@ namespace LinqToDB.Data
 
 		#region Execute scalar async
 
-#if !NOASYNC
-
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Task with resulting value.</returns>
@@ -589,7 +577,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -619,14 +607,12 @@ namespace LinqToDB.Data
 			return default(T);
 		}
 
-#endif
-
 		#endregion
 
 		#region ExecuteReader
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type and returns data reader instance.
+		/// Executes command using <see cref="StoredProcedure"/> command type and returns data reader instance.
 		/// </summary>
 		/// <returns>Data reader object.</returns>
 		public DataReader ExecuteReaderProc()
@@ -701,8 +687,6 @@ namespace LinqToDB.Data
 
 		#region ExecuteReader async
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Executes command asynchronously and returns data reader instance.
 		/// </summary>
@@ -774,8 +758,6 @@ namespace LinqToDB.Data
 
 			return default(T);
 		}
-
-#endif
 
 		#endregion
 

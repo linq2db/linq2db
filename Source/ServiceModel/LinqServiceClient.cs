@@ -1,10 +1,7 @@
 ﻿using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.ServiceModel
 {
@@ -46,8 +43,6 @@ namespace LinqToDB.ServiceModel
 			return Channel.ExecuteBatch(configuration, queryData);
 		}
 
-#if !NOASYNC
-
 		public Task<LinqServiceInfo> GetInfoAsync(string configuration)
 		{
 			return Channel.GetInfoAsync(configuration);
@@ -72,8 +67,6 @@ namespace LinqToDB.ServiceModel
 		{
 			return Channel.ExecuteBatchAsync(configuration, queryData);
 		}
-
-#endif
 
 		#endregion
 

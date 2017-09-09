@@ -4,10 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -54,8 +51,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-#if !NOASYNC
-
 		public override async Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName, CancellationToken token)
 		{
@@ -96,8 +91,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return ret;
 		}
-
-#endif
 
 		protected override bool BuildCommand<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)

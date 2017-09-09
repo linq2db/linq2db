@@ -382,8 +382,6 @@ namespace LinqToDB
 				return _queryRunner.ExecuteReader();
 			}
 
-#if !NOASYNC
-
 			public Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				return _queryRunner.ExecuteScalarAsync(cancellationToken);
@@ -398,8 +396,6 @@ namespace LinqToDB
 			{
 				return _queryRunner.ExecuteNonQueryAsync(cancellationToken);
 			}
-
-#endif
 
 			public string GetSqlText()
 			{
@@ -431,6 +427,5 @@ namespace LinqToDB
 				set { _queryRunner.QueryNumber = value; }
 			}
 		}
-
 	}
 }

@@ -2,14 +2,13 @@
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
-using LinqToDB.Configuration;
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Data.RetryPolicy
 {
+	using Configuration;
+
 	class RetryingDbConnection : DbConnection, IProxy<DbConnection>, IDisposable, ICloneable
 	{
 		readonly DataConnection _dataConnection;
@@ -60,12 +59,14 @@ namespace LinqToDB.Data.RetryPolicy
 			return new RetryingDbCommand(_connection.CreateCommand(), _policy);
 		}
 
-#if !NOASYNC
-		public override async Task OpenAsync(CancellationToken cancellationToken)
+		public
+#if !NET40
+			override
+#endif
+			async Task OpenAsync(CancellationToken cancellationToken)
 		{
 			await _policy.ExecuteAsync(async ct => await _connection.OpenAsync(ct), cancellationToken);
 		}
-#endif
 
 		void IDisposable.Dispose()
 		{

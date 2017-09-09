@@ -16,8 +16,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -30,8 +28,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.First, token);
 		}
 
@@ -43,8 +39,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -57,8 +51,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.First(predicate), token);
 		}
 
@@ -70,8 +62,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -84,8 +74,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.FirstOrDefault, token);
 		}
 
@@ -97,8 +85,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -111,8 +97,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.FirstOrDefault(predicate), token);
 		}
 
@@ -124,8 +108,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -138,8 +120,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Single, token);
 		}
 
@@ -151,8 +131,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -165,8 +143,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Single(predicate), token);
 		}
 
@@ -178,8 +154,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -192,8 +166,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.SingleOrDefault, token);
 		}
 
@@ -205,8 +177,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -219,8 +189,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.SingleOrDefault(predicate), token);
 		}
 
@@ -232,8 +200,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, TSource item,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -246,8 +212,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Contains(item), token);
 		}
 
@@ -259,8 +223,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -273,8 +235,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Any, token);
 		}
 
@@ -286,8 +246,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -300,8 +258,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Any(predicate), token);
 		}
 
@@ -313,8 +269,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -327,8 +281,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.All(predicate), token);
 		}
 
@@ -340,8 +292,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -354,8 +304,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Count, token);
 		}
 
@@ -367,8 +315,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -381,8 +327,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Count(predicate), token);
 		}
 
@@ -394,8 +338,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -408,8 +350,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.LongCount, token);
 		}
 
@@ -421,8 +361,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,bool>> predicate,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -435,8 +373,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.LongCount(predicate), token);
 		}
 
@@ -448,8 +384,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -462,8 +396,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Min, token);
 		}
 
@@ -475,8 +407,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,TResult>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -489,8 +419,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Min(selector), token);
 		}
 
@@ -502,8 +430,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -516,8 +442,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Max, token);
 		}
 
@@ -529,8 +453,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,TResult>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -543,8 +465,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Max(selector), token);
 		}
 
@@ -556,8 +476,6 @@ namespace LinqToDB
 			this IQueryable<int> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -570,8 +488,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -583,8 +499,6 @@ namespace LinqToDB
 			this IQueryable<int?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -597,8 +511,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -610,8 +522,6 @@ namespace LinqToDB
 			this IQueryable<long> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -624,8 +534,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -637,8 +545,6 @@ namespace LinqToDB
 			this IQueryable<long?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -651,8 +557,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -664,8 +568,6 @@ namespace LinqToDB
 			this IQueryable<float> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -678,8 +580,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -691,8 +591,6 @@ namespace LinqToDB
 			this IQueryable<float?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -705,8 +603,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -718,8 +614,6 @@ namespace LinqToDB
 			this IQueryable<double> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -732,8 +626,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -745,8 +637,6 @@ namespace LinqToDB
 			this IQueryable<double?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -759,8 +649,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -772,8 +660,6 @@ namespace LinqToDB
 			this IQueryable<decimal> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -786,8 +672,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -799,8 +683,6 @@ namespace LinqToDB
 			this IQueryable<decimal?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -813,8 +695,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Sum, token);
 		}
 
@@ -826,8 +706,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,int>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -840,8 +718,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -853,8 +729,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,int?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -867,8 +741,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -880,8 +752,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,long>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -894,8 +764,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -907,8 +775,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,long?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -921,8 +787,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -934,8 +798,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,float>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -948,8 +810,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -961,8 +821,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,float?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -975,8 +833,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -988,8 +844,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,double>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1002,8 +856,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -1015,8 +867,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,double?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1029,8 +879,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -1042,8 +890,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1056,8 +902,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -1069,8 +913,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1083,8 +925,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -1096,8 +936,6 @@ namespace LinqToDB
 			this IQueryable<int> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1110,8 +948,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1123,8 +959,6 @@ namespace LinqToDB
 			this IQueryable<int?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1137,8 +971,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1150,8 +982,6 @@ namespace LinqToDB
 			this IQueryable<long> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1164,8 +994,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1177,8 +1005,6 @@ namespace LinqToDB
 			this IQueryable<long?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1191,8 +1017,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1204,8 +1028,6 @@ namespace LinqToDB
 			this IQueryable<float> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1218,8 +1040,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1231,8 +1051,6 @@ namespace LinqToDB
 			this IQueryable<float?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1245,8 +1063,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1258,8 +1074,6 @@ namespace LinqToDB
 			this IQueryable<double> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1272,8 +1086,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1285,8 +1097,6 @@ namespace LinqToDB
 			this IQueryable<double?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1299,8 +1109,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1312,8 +1120,6 @@ namespace LinqToDB
 			this IQueryable<decimal> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1326,8 +1132,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1339,8 +1143,6 @@ namespace LinqToDB
 			this IQueryable<decimal?> source,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1353,8 +1155,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(source.Average, token);
 		}
 
@@ -1366,8 +1166,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,int>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1380,8 +1178,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1393,8 +1189,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,int?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1407,8 +1201,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1420,8 +1212,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,long>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1434,8 +1224,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1447,8 +1235,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,long?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1461,8 +1247,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1474,8 +1258,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,float>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1488,8 +1270,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1501,8 +1281,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,float?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1515,8 +1293,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1528,8 +1304,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,double>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1542,8 +1316,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1555,8 +1327,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,double?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1569,8 +1339,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1582,8 +1350,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1596,8 +1362,6 @@ namespace LinqToDB
 					token);
 			}
 
-#endif
-
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1609,8 +1373,6 @@ namespace LinqToDB
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal?>> selector,
 			CancellationToken token = default(CancellationToken))
 		{
-#if !NOASYNC
-
 			var provider = source.Provider as IQueryProviderAsync;
 
 			if (provider != null)
@@ -1622,8 +1384,6 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
-
-#endif
 
 			return GetTask(() => source.Average(selector), token);
 		}

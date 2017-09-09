@@ -2,11 +2,8 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Linq
 {
@@ -83,8 +80,6 @@ namespace LinqToDB.Linq
 				return ei == null ? 0 : (int)ei.GetElement((IDataContextEx)dataContext, Expression.Constant(obj), null);
 			}
 
-#if !NOASYNC
-
 			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
 			{
 				if (Equals(default(T), obj))
@@ -97,8 +92,6 @@ namespace LinqToDB.Linq
 
 				return (int)result;
 			}
-
-#endif
 		}
 	}
 }

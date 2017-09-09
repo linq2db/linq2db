@@ -5,11 +5,8 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -578,7 +575,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
 		OracleBulkCopy _bulkCopy;
 
@@ -636,9 +633,9 @@ namespace LinqToDB.DataProvider.Oracle
 				sourceList ?? source);
 		}
 
-#endregion
+		#endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -649,8 +646,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#if !NOASYNC
-
 		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName, CancellationToken token)
 		{
@@ -660,8 +655,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
 		}
 
-#endif
-
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection, 
 			IMergeable<TTarget, TSource> merge)
@@ -669,6 +662,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
-#endregion
+		#endregion
 	}
 }

@@ -86,8 +86,6 @@ namespace LinqToDB.Linq
 			return info;
 		}
 
-#if !NOASYNC
-
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 		{
 			var value = await GetQuery(ref expression, false).GetElementAsync(
@@ -112,8 +110,6 @@ namespace LinqToDB.Linq
 			return GetQuery(ref expression, true)
 				.GetForEachAsync((IDataContextEx)DataContext, expression, Parameters, func, cancellationToken);
 		}
-
-#endif
 
 		#endregion
 

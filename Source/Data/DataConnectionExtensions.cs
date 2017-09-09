@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 using JetBrains.Annotations;
 
@@ -324,8 +321,6 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).Execute();
 		}
 
-#if !NOASYNC
-
 		public static Task<int> ExecuteAsync(this DataConnection connection, string sql, CancellationToken token = default(CancellationToken))
 		{
 			return new CommandInfo(connection, sql).ExecuteAsync(token);
@@ -360,8 +355,6 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).ExecuteAsync(token);
 		}
-
-#endif
 
 		#endregion
 
@@ -877,8 +870,6 @@ namespace LinqToDB.Data
 				schemaName   ?? tbl.SchemaName);
 		}
 
-#if !NOASYNC
-
 		public static Task<int> MergeAsync<T>(this DataConnection dataConnection, IQueryable<T> source, Expression<Func<T,bool>> predicate,
 			string tableName = null, string databaseName = null, string schemaName = null,
 			CancellationToken token = default(CancellationToken))
@@ -991,8 +982,6 @@ namespace LinqToDB.Data
 				schemaName   ?? tbl.SchemaName,
 				token);
 		}
-
-#endif
 
 		#endregion
 	}

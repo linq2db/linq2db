@@ -206,12 +206,10 @@ namespace Tests.Merge
 				throw new NotImplementedException();
 			}
 
-#if !NOASYNC
 			Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 			{
 				throw new NotImplementedException();
 			}
-#endif
 
 			IEnumerator IEnumerable.GetEnumerator()
 			{
