@@ -321,10 +321,11 @@ Task("Build")
 				.UseToolVersion(MSBuildToolVersion.VS2017)
 				);
 	else 
-		DotNetCoreBuild(GetSolutionName(), 
+		DotNetCoreBuild("./Tests/Linq/Linq.csproj", 
 			new DotNetCoreBuildSettings
 			{
 				Configuration = GetConfiguration(),
+				Framework = GetBuildConfiguration()
 			});
 
 });
