@@ -19,7 +19,6 @@ var buildArtifacts      = Directory("./artifacts/packages");
 
 var solutionName        = "./linq2db.core.sln";
 var nugetProject        = "./Source/Source.csproj";
-var argRelease          = Argument<string>("Release", null);
 
 var packageSuffix       = "";
 var packageVersion      = GetPackageVersion();
@@ -37,7 +36,7 @@ var testLogger          = GetTestLogger();
 
 bool IsRelease()
 {
-	if(argRelease != null)
+	if(Argument<string>("Release", null) != null)
 		return true;
 
 	if (isAppVeyorBuild)
