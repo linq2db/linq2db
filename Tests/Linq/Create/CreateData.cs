@@ -232,7 +232,7 @@ namespace Tests._Create
 
 		static void AccessAction(IDbConnection connection)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 			using (var conn = AccessTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"

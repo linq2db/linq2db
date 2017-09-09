@@ -401,7 +401,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		[Test, MySqlDataContext(false)]
 		public void SchemaProviderTest(string context)
 		{

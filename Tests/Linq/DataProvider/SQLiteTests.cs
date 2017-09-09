@@ -484,7 +484,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 
 		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
 		public void Issue784Test(string context)

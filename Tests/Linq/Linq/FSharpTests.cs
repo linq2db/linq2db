@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !TRAVIS
+using System;
 
 using NUnit.Framework;
 
@@ -88,3 +89,4 @@ namespace Tests.Linq
 		}
 	}
 }
+#endif

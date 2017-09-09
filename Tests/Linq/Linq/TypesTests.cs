@@ -505,7 +505,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		[Test, DataContextSource(
 			ProviderName.Informix
 			)]
