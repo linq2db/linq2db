@@ -410,13 +410,9 @@ namespace LinqToDB.DataProvider.Access
 			return sb.Append(table);
 		}
 
-#if !NETFX_CORE && !SILVERLIGHT
-
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.OleDb.OleDbParameter)parameter).OleDbType.ToString();
 		}
-
-#endif
 	}
 }

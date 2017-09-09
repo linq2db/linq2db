@@ -484,11 +484,7 @@ namespace LinqToDB.ServiceModel
 					if (str == "System.Data.Linq.Binary")
 						return typeof(System.Data.Linq.Binary);
 
-#if !SILVERLIGHT && !NETFX_CORE
-
 					type = LinqService.TypeResolver(str);
-
-#endif
 
 					if (type == null)
 					{

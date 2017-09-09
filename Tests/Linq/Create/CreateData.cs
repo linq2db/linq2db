@@ -5,7 +5,8 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-#if !NETSTANDARD
+
+#if !NETSTANDARD1_6
 using LinqToDB.DataProvider.Access;
 #endif
 
@@ -90,12 +91,7 @@ namespace Tests._Create
 
 				Console.WriteLine("\nBulkCopy LinqDataTypes\n");
 
-				var options = new BulkCopyOptions
-				{
-#if MONO
-					BulkCopyType = BulkCopyType.MultipleRows
-#endif
-				};
+				var options = new BulkCopyOptions();
 
 				db.BulkCopy(
 					options,
