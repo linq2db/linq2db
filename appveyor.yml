@@ -73,6 +73,7 @@ build_script:
 
 artifacts:
 - path: \**\linq2db*.nupkg
+- path: **\*.trx
 
 deploy:
 - provider: NuGet
