@@ -16,10 +16,17 @@
 		<GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
 		<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
 		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+		<Configurations>Debug;Release;Travis</Configurations>
 		<!--
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		-->
 	</PropertyGroup>
+
+	<!-- BEGIN: Do not delete or change this ItemGroup, it is temporary hack to build on travis -->
+	<ItemGroup Condition=" '$(Configuration)' != 'Travis' ">
+		<ProjectReference Include="..\VisualBasic\VisualBasic.vbproj" Condition="'$(Configuration)' != 'Travis'" />
+	</ItemGroup>
+	<!-- END: Do not delete or change this ItemGroup, it is temporary hack to build on travis -->
 
 	<ItemGroup>
 		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
@@ -34,7 +41,6 @@
 		</None>
 
 		<ProjectReference Include="..\Model\Model.csproj" />
-		<ProjectReference Include="..\VisualBasic\VisualBasic.vbproj" />
 		<ProjectReference Include="..\..\Source\Source.csproj" />
 
 		<PackageReference Include="System.Collections.Immutable" Version="1.3.1" />

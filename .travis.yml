@@ -22,6 +22,8 @@ env:
     - testfilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != WindowsOnly"
     - testRunner=dotnet
     - buildConfiguration=netcoreapp1.0
+    - configuration=Travis
+    - builder=dotnet
 
 
 mono:  

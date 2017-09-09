@@ -4,7 +4,6 @@
 #tool "docfx.console"
 #tool "nuget:?package=NUnit.ConsoleRunner"
 
-
 string GetSolutionName()
 {
 	return "./linq2db.core.sln";
@@ -207,7 +206,7 @@ void UploadTestResults()
 	if (FileExists(testResults))
 	{
 		UploadTestResults(testResults, AppVeyorTestResultsType.NUnit3);
-		DeleteFile(testResults);
+		//DeleteFile(testResults);
 	}
 	else 
 		Console.WriteLine("No test results (expected at {0})", testResults);
@@ -218,7 +217,7 @@ void UploadTestResults()
 	foreach(var f in rootDir.GetFiles("*.trx", SearchOption.AllDirectories))
 	{
 		UploadTestResults(f.FullName, AppVeyorTestResultsType.MSTest);
-		DeleteFile(f.FullName);
+		//DeleteFile(f.FullName);
 	}
 
 }
@@ -238,6 +237,15 @@ void UploadArtifact(FilePath file)
 	}
 }
 
+string GetBuilder()
+{
+	return 
+		EnvironmentVariable("builder")    ??
+		Argument<string>("builder", null) ?? 
+		"MSBuild";
+
+}
+
 string GetPackageSuffix()
 {
 	if (!IsRelease())
@@ -255,6 +263,7 @@ string GetDocFxSite()
 {
 	return "./Doc/_site";
 }
+
 Task("PatchPackage")
 	.IsDependentOn("Clean")
 	.IsDependentOn("Restore")
@@ -287,6 +296,15 @@ Task("PatchPackage")
 	 });
 });
 
+Task("PatchTests")
+	.WithCriteria(() => GetConfiguration() == "Travis")
+	.Does(() =>
+{
+	TransformConfig("./Tests/Linq/Linq.csproj", "./Tests/Linq/Linq.csproj",
+		new TransformationCollection {
+			{ "Project/ItemGroup[@Condition=' '$(Configuration)' != 'Travis' ']", "" },
+	 });
+});
 
 Task("Build")
 	.IsDependentOn("Clean")
@@ -294,11 +312,20 @@ Task("Build")
 	.IsDependentOn("PatchPackage")
 	.Does(() =>
 {
-	MSBuild(GetSolutionName(), cfg => cfg
-			.SetVerbosity(Verbosity.Minimal)
-			.SetConfiguration(GetConfiguration())
-			.UseToolVersion(MSBuildToolVersion.VS2017)
-			);
+	var builder = GetBuilder();
+
+	if (builder == "MSBuild")
+		MSBuild(GetSolutionName(), cfg => cfg
+				.SetVerbosity(Verbosity.Minimal)
+				.SetConfiguration(GetConfiguration())
+				.UseToolVersion(MSBuildToolVersion.VS2017)
+				);
+	else 
+		DotNetCoreBuild(GetSolutionName(), 
+			new DotNetCoreBuildSettings
+			{
+				Configuration = GetConfiguration(),
+			});
 
 });
 
@@ -394,14 +421,14 @@ Task("RunTests")
 		else
 			DotNetCoreTest(project.FullPath, settings);
 
-		//UploadTestResults();
+		UploadTestResults();
 	}
 })
 .OnError(ex => 
 {
 	Console.WriteLine("Tests failed: {0}", ex.Message);
 
-	//UploadTestResults();
+	UploadTestResults();
 	
 	throw ex;
 });
@@ -437,6 +464,7 @@ Task("Pack")
 });
 
 Task("Clean")
+	.IsDependentOn("PatchTests")
 	.Does(() =>
 {
 	CleanDirectories(new DirectoryPath[] { GetBuildArtifacts() });

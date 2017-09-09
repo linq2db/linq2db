@@ -7,6 +7,7 @@
 		<AssemblyOriginatorKeyFile>linq2db.Tests.snk</AssemblyOriginatorKeyFile>
 		<SignAssembly>true</SignAssembly>
 		<PackageId>Model</PackageId>
+		<Configurations>Debug;Release;Travis</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

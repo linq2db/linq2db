@@ -28,6 +28,7 @@
 		<FileVersion>2.0.0.0</FileVersion>
 		<Version>2.0.0</Version>
 		<RootNamespace>LinqToDB</RootNamespace>
+		<Configurations>Debug;Release;Travis</Configurations>
 	</PropertyGroup>
 
 
