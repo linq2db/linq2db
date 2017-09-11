@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 
 using LinqToDB.Common;
 
@@ -210,12 +209,12 @@ namespace LinqToDB.Linq.Builder
 									case ExpressionType.Parameter  :
 										{
 											var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
-										
+
 											if (ReferenceEquals(memberExpression, parameter))
 												return sequence.BuildExpression(expression, level + 1);
 
 											break;
-										
+
 										}
 
 									case ExpressionType.New        :
@@ -492,7 +491,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					switch (flags)
 					{
-						case ConvertFlags.Field : 
+						case ConvertFlags.Field :
 						case ConvertFlags.Key   :
 						case ConvertFlags.All   :
 							{
@@ -725,7 +724,7 @@ namespace LinqToDB.Linq.Builder
 											(MemberExpression)levelExpression,
 											level,
 											(n,ctx,ex,l,ex1) => n == 0 ?
-												new IsExpressionResult(requestFlag == RequestFor.Expression, ex1) : 
+												new IsExpressionResult(requestFlag == RequestFor.Expression, ex1) :
 												ctx.IsExpression(ex, l, requestFlag));
 									}
 

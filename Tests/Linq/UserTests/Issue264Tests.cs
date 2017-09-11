@@ -14,7 +14,7 @@ namespace Tests.UserTests
 	public class Issue264Tests : TestBase
 	{
 		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void Test(string context)
+		public void Test1(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -27,7 +27,14 @@ namespace Tests.UserTests
 					.Count();
 
 				Assert.AreEqual(expectedCount, actualCount);
+			}
+		}
 
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void Test2(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
 				var actual = db.GetTable<LinqDataTypes>()
 					.GroupBy(_ => new { month = ByMonth(_.DateTimeValue), year = ByYear(_.DateTimeValue) })
 					.Select(_ => _.Key).ToList();
