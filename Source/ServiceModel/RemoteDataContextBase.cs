@@ -17,7 +17,7 @@ namespace LinqToDB.ServiceModel
 	using Mapping;
 	using SqlProvider;
 
-	public abstract partial class RemoteDataContextBase : IDataContextEx
+	public abstract partial class RemoteDataContextBase : IDataContext
 	{
 		public string Configuration { get; set; }
 

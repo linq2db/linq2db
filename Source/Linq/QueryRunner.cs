@@ -246,12 +246,12 @@ namespace LinqToDB.Linq
 #region SetRunQuery
 
 		static Tuple<
-			Func<Query,IDataContextEx,Mapper<T>,Expression,object[],int,IEnumerable<T>>,
+			Func<Query,IDataContext,Mapper<T>,Expression,object[],int,IEnumerable<T>>,
 			Func<Expression,object[],int>,
 			Func<Expression,object[],int>>
 			GetExecuteQuery<T>(
 				Query query,
-				Func<Query,IDataContextEx,Mapper<T>,Expression,object[],int,IEnumerable<T>> queryFunc)
+				Func<Query,IDataContext,Mapper<T>,Expression,object[],int,IEnumerable<T>> queryFunc)
 		{
 			FinalizeQuery(query);
 
@@ -312,12 +312,12 @@ namespace LinqToDB.Linq
 		}
 
 		static IEnumerable<T> ExecuteQuery<T>(
-			Query          query,
-			IDataContextEx dataContext,
-			Mapper<T>      mapper,
-			Expression     expression,
-			object[]       ps,
-			int            queryNumber)
+			Query        query,
+			IDataContext dataContext,
+			Mapper<T>    mapper,
+			Expression   expression,
+			object[]     ps,
+			int          queryNumber)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps))
 			try
@@ -343,7 +343,7 @@ namespace LinqToDB.Linq
 
 		static async Task ExecuteQueryAsync<T>(
 			Query                         query,
-			IDataContextEx                dataContext,
+			IDataContext                  dataContext,
 			Mapper<T>                     mapper,
 			Expression                    expression,
 			object[]                      ps,
@@ -500,7 +500,7 @@ namespace LinqToDB.Linq
 
 		static T ExecuteElement<T>(
 			Query          query,
-			IDataContextEx dataContext,
+			IDataContext   dataContext,
 			Mapper<T>      mapper,
 			Expression     expression,
 			object[]       ps)
@@ -532,7 +532,7 @@ namespace LinqToDB.Linq
 
 		static async Task<T> ExecuteElementAsync<T>(
 			Query             query,
-			IDataContextEx    dataContext,
+			IDataContext      dataContext,
 			Mapper<object>    mapper,
 			Expression        expression,
 			object[]          ps,
@@ -596,7 +596,7 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		static object ScalarQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		static object ScalarQuery(Query query, IDataContext dataContext, Expression expr, object[] parameters)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 				return runner.ExecuteScalar();
@@ -606,7 +606,7 @@ namespace LinqToDB.Linq
 
 		static async Task<object> ScalarQueryAsync(
 			Query             query,
-			IDataContextEx    dataContext,
+			IDataContext      dataContext,
 			Expression        expression,
 			object[]          ps,
 			CancellationToken cancellationToken)
@@ -637,7 +637,7 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		static int NonQueryQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		static int NonQueryQuery(Query query, IDataContext dataContext, Expression expr, object[] parameters)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 				return runner.ExecuteNonQuery();
@@ -647,7 +647,7 @@ namespace LinqToDB.Linq
 
 		static async Task<object> NonQueryQueryAsync(
 			Query             query,
-			IDataContextEx    dataContext,
+			IDataContext      dataContext,
 			Expression        expression,
 			object[]          ps,
 			CancellationToken cancellationToken)
@@ -678,7 +678,7 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		static int NonQueryQuery2(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		static int NonQueryQuery2(Query query, IDataContext dataContext, Expression expr, object[] parameters)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
@@ -697,7 +697,7 @@ namespace LinqToDB.Linq
 
 		static async Task<object> NonQueryQuery2Async(
 			Query             query,
-			IDataContextEx    dataContext,
+			IDataContext      dataContext,
 			Expression        expr,
 			object[]          parameters,
 			CancellationToken cancellationToken)
@@ -737,7 +737,7 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		static int QueryQuery2(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
+		static int QueryQuery2(Query query, IDataContext dataContext, Expression expr, object[] parameters)
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 			{
@@ -756,7 +756,7 @@ namespace LinqToDB.Linq
 
 		static async Task<object> QueryQuery2Async(
 			Query             query,
-			IDataContextEx    dataContext,
+			IDataContext      dataContext,
 			Expression        expr,
 			object[]          parameters,
 			CancellationToken cancellationToken)
@@ -782,7 +782,7 @@ namespace LinqToDB.Linq
 
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object[] parameters, int idx)
 		{
-			var runner = ((IDataContextEx)dataContext).GetQueryRunner(query, 0, expr, parameters);
+			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters);
 			return runner.GetSqlText();
 		}
 

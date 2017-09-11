@@ -86,7 +86,7 @@ namespace LinqToDB.Linq
 
 		public T Execute(object[] parameters)
 		{
-			var db    = (IDataContextEx)parameters[0];
+			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db);
 
 			return (T)query.GetElement(db, _expression, parameters);

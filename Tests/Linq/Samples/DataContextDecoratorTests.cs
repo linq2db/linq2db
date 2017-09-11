@@ -103,6 +103,11 @@ namespace Tests.Samples
 				_context.Dispose();
 			}
 
+			public IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+			{
+				return _context.GetQueryRunner(query, queryNumber, expression, parameters);
+			}
+
 			public Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 			{
 				return _context.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);

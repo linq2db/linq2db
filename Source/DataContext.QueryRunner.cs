@@ -11,9 +11,9 @@ namespace LinqToDB
 
 	public partial class DataContext
 	{
-		IQueryRunner IDataContextEx.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
 		{
-			return new QueryRunner(this, ((IDataContextEx)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters));
+			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters));
 		}
 
 		class QueryRunner : IQueryRunner
@@ -72,9 +72,9 @@ namespace LinqToDB
 				return _queryRunner.GetSqlText();
 			}
 
-			public    IDataContextEx DataContext  { get { return _queryRunner.DataContext;  } set { _queryRunner.DataContext  = value; } }
-			public    Expression     Expression   { get { return _queryRunner.Expression;   } set { _queryRunner.Expression   = value; } }
-			public    object[]       Parameters   { get { return _queryRunner.Parameters;   } set { _queryRunner.Parameters   = value; } }
+			public    IDataContext DataContext  { get { return _queryRunner.DataContext;  } set { _queryRunner.DataContext  = value; } }
+			public    Expression   Expression   { get { return _queryRunner.Expression;   } set { _queryRunner.Expression   = value; } }
+			public    object[]     Parameters   { get { return _queryRunner.Parameters;   } set { _queryRunner.Parameters   = value; } }
 
 			public Func<int> SkipAction { get { return _queryRunner.SkipAction; } set { _queryRunner.SkipAction = value; } }
 			public Func<int> TakeAction { get { return _queryRunner.TakeAction; } set { _queryRunner.TakeAction = value; } }
