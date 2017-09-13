@@ -1061,7 +1061,7 @@ namespace LinqToDB.Linq.Builder
 							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
 								result = IsQueryMember(e.Arguments[0]);
 						}
-						else if (e.IsAggregate(MappingSchema))
+						else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))
 						{
 							result = true;
 						}

@@ -1,7 +1,7 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.9.0
+  packageVersion: 1.9.1
   op_build_user: "ili"
   op_build_user_email: "docfx@linq2db.com"
   access_token:
