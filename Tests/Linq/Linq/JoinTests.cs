@@ -1098,7 +1098,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlJoinSimple(
-			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB)]
+			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB, TestProvName.SQLiteMs, TestProvName.MySql57)]
 			string context,
 			[Values(SqlJoinType.Inner,
 					SqlJoinType.Left,
@@ -1124,7 +1124,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlJoinSubQuery(
-			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB)]
+			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB, TestProvName.SQLiteMs, TestProvName.MySql57)]
 			string context,
 			[Values(SqlJoinType.Inner,
 				SqlJoinType.Left,
@@ -1149,7 +1149,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlNullWhereJoin(
-			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB)]
+			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB, TestProvName.SQLiteMs, TestProvName.MySql57)]
 			string context,
 			[Values(SqlJoinType.Inner,
 				SqlJoinType.Left,
