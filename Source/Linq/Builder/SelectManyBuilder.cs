@@ -114,18 +114,47 @@ namespace LinqToDB.Linq.Builder
 //					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 //				}
 
-				var table = (TableBuilder.TableContext)collection;
+				var table = (TableBuilder.TableContext) collection;
+				SelectQuery.FromClause.Join join;
+				var joinType = table.JoinType;
 
-				var isApplyJoin = collection.SelectQuery.Select.HasModifier ||
-				                  table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
+				if (joinType == SelectQuery.JoinType.Auto)
+				{
+					var isApplyJoin = collection.SelectQuery.Select.HasModifier ||
+					                  table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
 
-				var join = isApplyJoin
-					? (leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql))
-					: (leftJoin ? SelectQuery.LeftJoin  (sql) : SelectQuery.InnerJoin(sql));
+					joinType = isApplyJoin
+						? (leftJoin ? SelectQuery.JoinType.OuterApply : SelectQuery.JoinType.CrossApply)
+						: (leftJoin ? SelectQuery.JoinType.Left : SelectQuery.JoinType.Inner);
+				}
+
+				switch (joinType)
+				{
+					case SelectQuery.JoinType.Inner:
+						join = SelectQuery.InnerJoin(sql);
+						break;
+					case SelectQuery.JoinType.Left:
+						join = SelectQuery.LeftJoin(sql);
+						break;
+					case SelectQuery.JoinType.CrossApply:
+						join = SelectQuery.CrossApply(sql);
+						break;
+					case SelectQuery.JoinType.OuterApply:
+						join = SelectQuery.OuterApply(sql);
+						break;
+					case SelectQuery.JoinType.Right:
+						join = SelectQuery.RightJoin(sql);
+						break;
+					case SelectQuery.JoinType.Full:
+						join = SelectQuery.FullJoin(sql);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
 
 				join.JoinedTable.CanConvertApply = false;
 
-				if (!isApplyJoin)
+				if (!(joinType == SelectQuery.JoinType.CrossApply || joinType == SelectQuery.JoinType.OuterApply))
 				{
 					join.JoinedTable.Condition.Conditions.AddRange(sql.Where.SearchCondition.Conditions);
 					sql.Where.SearchCondition.Conditions.Clear();
