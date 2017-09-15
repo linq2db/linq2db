@@ -387,7 +387,7 @@ namespace LinqToDB.Linq.Builder
 									var table = FindTable(ma, 1, false, true);
 									table.Table.LoadWith = loadWithItem.NextLoadWith;
 								}
-								yield return BuildExpression(ma, 1);
+								yield return BuildExpression(ma, 1, false);
 							}
 						}
 						else
@@ -605,7 +605,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region BuildExpression
 
-			public Expression BuildExpression(Expression expression, int level)
+			public Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				return BuildExpression(expression, level, null);
 			}

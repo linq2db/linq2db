@@ -97,15 +97,15 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(null, 0);
+				var expr   = BuildExpression(null, 0, false);
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				query.SetQuery(mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
-				var expr = base.BuildExpression(expression, level);
+				var expr = base.BuildExpression(expression, level, enforceServerSide);
 				var type = _methodCall.Method.GetGenericArguments()[0];
 
 				if (expr.Type != type)

@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 				query.SetElementQuery(mapper.Compile());
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
 				if (Parent != null)

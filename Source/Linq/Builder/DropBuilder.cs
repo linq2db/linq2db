@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 				query.SetNonQueryQuery();
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}

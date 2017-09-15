@@ -4,8 +4,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System.Linq;
-
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -196,17 +194,17 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				if (expression == null)
-					return Collection.BuildExpression(expression, level);
+					return Collection.BuildExpression(expression, level, enforceServerSide);
 
 				var root = expression.GetRootObject(Builder.MappingSchema);
 
 				if (root == Lambda.Parameters[0])
-					return base.BuildExpression(expression, level);
+					return base.BuildExpression(expression, level, enforceServerSide);
 
-				return Collection.BuildExpression(expression, level);
+				return Collection.BuildExpression(expression, level, enforceServerSide);
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)

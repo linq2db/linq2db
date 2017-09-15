@@ -48,6 +48,23 @@ namespace Tests.UserTests
 		}
 
 		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void Test3(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var actual = db.GetTable<LinqDataTypes>()
+					.GroupBy(_ => ByMonth(_.DateTimeValue))
+					.Select(_ => _.Key).ToList();
+
+				var expected = Types
+					.GroupBy(_ => ByMonth(_.DateTimeValue))
+					.Select(_ => _.Key).ToList();
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void TestWorkaround(string context)
 		{
 			using (var db = new DataConnection(context))

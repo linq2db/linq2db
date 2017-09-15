@@ -778,7 +778,7 @@ namespace Tests.Linq
 					select t;
 
 				var ctx = q.GetMyContext();
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				Assert.AreEqual(1, ctx.SelectQuery.Select.Columns.Count);
 			}
@@ -798,7 +798,7 @@ namespace Tests.Linq
 					select t;
 
 				var ctx = q.GetMyContext();
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				Assert.AreEqual(2, ctx.SelectQuery.Select.Columns.Count);
 			}
@@ -820,7 +820,7 @@ namespace Tests.Linq
 					select p;
 
 				var ctx = q.GetMyContext();
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				Assert.AreEqual(2, ctx.SelectQuery.Select.Columns.Count);
 			}
@@ -843,7 +843,7 @@ namespace Tests.Linq
 					select p;
 
 				var ctx = q.GetMyContext();
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				Assert.AreEqual(1, ctx.SelectQuery.Select.Columns.Count);
 			}
@@ -880,7 +880,7 @@ namespace Tests.Linq
 
 				var ctx = q.GetMyContext();
 
-				ctx.BuildExpression(null, 0);
+				ctx.BuildExpression(null, 0, false);
 
 				var sql = db.GetSqlText(ctx.SelectQuery);
 

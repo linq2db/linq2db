@@ -270,10 +270,10 @@ namespace Tests.xUpdate
 			ProviderName.Firebird,
 			ProviderName.Informix,
 			ProviderName.MySql,
-			TestProvName.MariaDB, 
+			TestProvName.MariaDB,
 			TestProvName.MySql57,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
+			ProviderName.SQLite,
 			TestProvName.SQLiteMs,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
@@ -303,7 +303,7 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-	
+
 		string ContainsJoin1Impl(TestDataConnection db, int[] arr)
 		{
 			var id = 1000;
