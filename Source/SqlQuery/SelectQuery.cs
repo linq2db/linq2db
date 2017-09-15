@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -226,7 +225,7 @@ namespace LinqToDB.SqlQuery
 				return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
 
 				//var found =
-				//	
+				//
 				//	|| new QueryVisitor().Find(other, e =>
 				//		{
 				//			switch(e.ElementType)
@@ -259,7 +258,7 @@ namespace LinqToDB.SqlQuery
 #endif
 			}
 
-#region ISqlExpression Members
+			#region ISqlExpression Members
 
 			public bool CanBeNull
 			{
@@ -305,9 +304,9 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-#endregion
+			#endregion
 
-#region IEquatable<ISqlExpression> Members
+			#region IEquatable<ISqlExpression> Members
 
 			bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
 			{
@@ -317,9 +316,9 @@ namespace LinqToDB.SqlQuery
 				return other is Column && Equals((Column)other);
 			}
 
-#endregion
+			#endregion
 
-#region ISqlExpressionWalkable Members
+			#region ISqlExpressionWalkable Members
 
 			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
@@ -329,9 +328,9 @@ namespace LinqToDB.SqlQuery
 				return func(this);
 			}
 
-#endregion
+			#endregion
 
-#region IQueryElement Members
+			#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.Column; } }
 
@@ -353,8 +352,7 @@ namespace LinqToDB.SqlQuery
 
 				if (Expression is SelectQuery)
 				{
-					sb
-						.Append("(\n\t\t");
+					sb.Append("(\n\t\t");
 					var len = sb.Length;
 					Expression.ToString(sb, dic).Replace("\n", "\n\t\t", len, sb.Length - len);
 					sb.Append("\n\t)");
@@ -369,7 +367,7 @@ namespace LinqToDB.SqlQuery
 				return sb;
 			}
 
-#endregion
+			#endregion
 		}
 
 #endregion
@@ -658,7 +656,7 @@ namespace LinqToDB.SqlQuery
 				if (!objectTree.TryGetValue(this, out clone))
 					objectTree.Add(this, clone = new JoinedTable(
 						JoinType,
-						(TableSource)Table.Clone(objectTree, doClone), 
+						(TableSource)Table.Clone(objectTree, doClone),
 						IsWeak,
 						(SearchCondition)Condition.Clone(objectTree, doClone)));
 
@@ -1581,7 +1579,7 @@ namespace LinqToDB.SqlQuery
 
 				public class Op_ : IConditionExpr<T2>
 				{
-					internal Op_(Expr_ expr, Predicate.Operator op) 
+					internal Op_(Expr_ expr, Predicate.Operator op)
 					{
 						_expr = expr;
 						_op   = op;
@@ -2025,7 +2023,7 @@ namespace LinqToDB.SqlQuery
 							{
 								if (SelectQuery.Unions.Any(u => u.SelectQuery == query))
 								{
-								
+
 								}
 							}
 
@@ -3363,7 +3361,7 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.ExprExprPredicate :
 							{
 								var ee = (Predicate.ExprExpr)e;
-								
+
 								if (ee.Operator == Predicate.Operator.Equal || ee.Operator == Predicate.Operator.NotEqual)
 								{
 									object value1;

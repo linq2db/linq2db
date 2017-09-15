@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -93,6 +94,8 @@ namespace LinqToDB.Linq.Builder
 			var element = new SelectContext (buildInfo.Parent, elementSelector, sequence/*, key*/);
 			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element);
 
+			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
+
 			return groupBy;
 		}
 
@@ -111,6 +114,41 @@ namespace LinqToDB.Linq.Builder
 			public KeyContext(IBuildContext parent, LambdaExpression lambda, params IBuildContext[] sequences)
 				: base(parent, lambda, sequences)
 			{
+			}
+
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			{
+				return base.BuildExpression(expression, level, true);
+			}
+
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			{
+				base.BuildQuery(query, queryParameter);
+			}
+
+			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			{
+				return base.ConvertToSql(expression, level, flags);
+			}
+
+			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
+			{
+				return base.ConvertToIndex(expression, level, flags);
+			}
+
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				return base.ConvertToParentIndex(index, context);
+			}
+
+			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+			{
+				return base.IsExpression(expression, level, requestFlag);
+			}
+
+			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
+			{
+				return base.GetContext(expression, level, buildInfo);
 			}
 		}
 
@@ -207,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (Configuration.Linq.GuardGrouping)
 					{
-						if (context._element.Lambda.Parameters.Count == 1                   && 
+						if (context._element.Lambda.Parameters.Count == 1                   &&
 							context._element.Body == context._element.Lambda.Parameters[0])
 						{
 							var ex = new LinqToDBException(
@@ -268,7 +306,7 @@ namespace LinqToDB.Linq.Builder
 						paramArray);
 
 					var itemReader      = CompiledQuery.Compile(lambda);
-					var keyExpr         = context._key.BuildExpression(null, 0);
+					var keyExpr         = context._key.BuildExpression(null, 0, false);
 					var dataReaderLocal = context.Builder.DataReaderLocal;
 
 					if (!Configuration.AvoidSpecificDataProviderAPI && keyExpr.Find(e => e == dataReaderLocal) != null)
@@ -343,7 +381,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				if (expression == null)
 					return BuildGrouping();
@@ -363,8 +401,8 @@ namespace LinqToDB.Linq.Builder
 							Builder.IsBlockDisable = true;
 
 							var r = ReferenceEquals(levelExpression, expression) ?
-								_key.BuildExpression(null,       0) :
-								_key.BuildExpression(expression, level + 1);
+								_key.BuildExpression(null,       0, enforceServerSide) :
+								_key.BuildExpression(expression, level + 1, enforceServerSide);
 
 							Builder.IsBlockDisable = isBlockDisable;
 

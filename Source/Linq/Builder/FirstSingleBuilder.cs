@@ -218,7 +218,7 @@ namespace LinqToDB.Linq.Builder
 				return _checkNullIndex;
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				if (expression == null || level == 0)
 				{
@@ -228,7 +228,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						CreateJoin();
 
-						var expr = Sequence.BuildExpression(expression, expression == null ? level : level + 1);
+						var expr = Sequence.BuildExpression(expression, expression == null ? level : level + 1, enforceServerSide);
 
 						Expression defaultValue;
 
@@ -255,7 +255,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 					{
 						if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
-							return Builder.BuildMultipleQuery(Parent, _methodCall);
+							return Builder.BuildMultipleQuery(Parent, _methodCall, enforceServerSide);
 
 						return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
 					}

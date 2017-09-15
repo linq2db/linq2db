@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 		internal Query<T> Build<T>()
 		{
 			var sequence = BuildSequence(new BuildInfo((IBuildContext)null, Expression, new SelectQuery()));
-			
+
 			if (_reorder)
 				lock (_sync)
 				{

@@ -22,26 +22,47 @@ namespace LinqToDB.Mapping
 	using SqlProvider;
 	using SqlQuery;
 
+	/// <summary>
+	/// Mapping schema.
+	/// </summary>
 	[PublicAPI]
 	public class MappingSchema
 	{
 		#region Init
 
+		/// <summary>
+		/// Creates mapping schema instance.
+		/// </summary>
 		public MappingSchema()
 			: this(null, (MappingSchema[])null)
 		{
 		}
 
+		/// <summary>
+		/// Creates mapping schema, derived from other mapping schemas.
+		/// </summary>
+		/// <param name="schemas">Base mapping schemas.</param>
 		public MappingSchema(params MappingSchema[] schemas)
 			: this(null, schemas)
 		{
 		}
 
+		/// <summary>
+		/// Creates mapping schema for specified configuration name.
+		/// </summary>
+		/// <param name="configuration">Mapping schema configuration name.
+		/// <see cref="ProviderName"/> for standard names.</param>
 		public MappingSchema(string configuration/* ??? */)
 			: this(configuration, null)
 		{
 		}
 
+		/// <summary>
+		/// Creates mapping schema with specified configuration name and base mapping schemas.
+		/// </summary>
+		/// <param name="configuration">Mapping schema configuration name.
+		/// <see cref="ProviderName"/> for standard names.</param>
+		/// <param name="schemas">Base mapping schemas.</param>
 		public MappingSchema(string configuration, params MappingSchema[] schemas)
 		{
 			var schemaInfo = new MappingSchemaInfo(configuration);
@@ -96,8 +117,20 @@ namespace LinqToDB.Mapping
 
 		#region ValueToSqlConverter
 
+		/// <summary>
+		/// Gets value to SQL (usually literal) converter.
+		/// </summary>
 		public ValueToSqlConverter ValueToSqlConverter { get; private set; }
 
+		/// <summary>
+		/// Sets value to SQL converter action for specific value type.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <param name="converter">Converter action. Action accepts three parameters:
+		/// - SQL string builder to write generated value SQL to;
+		/// - value SQL type descriptor;
+		/// - value.
+		/// </param>
 		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, converter);
@@ -109,6 +142,12 @@ namespace LinqToDB.Mapping
 
 		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
 
+		/// <summary>
+		/// Returns default value for specified type.
+		/// Default value is a value, used instead of <c>NULL</c> value, read from database.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <returns>Returns default value for type.</returns>
 		public object GetDefaultValue(Type type)
 		{
 			foreach (var info in Schemas)
@@ -142,6 +181,12 @@ namespace LinqToDB.Mapping
 			return DefaultValue.GetValue(type, this);
 		}
 
+		/// <summary>
+		/// Sets default value for specific type.
+		/// Default value is a value, used instead of <c>NULL</c> value, read from database.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <param name="value">Default value.</param>
 		public void SetDefaultValue(Type type, object value)
 		{
 			Schemas[0].SetDefaultValue(type, value);
@@ -151,6 +196,11 @@ namespace LinqToDB.Mapping
 
 		#region CanBeNull
 
+		/// <summary>
+		/// Returns <c>true</c>, if value of specified type could contain <c>null</c>.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <returns>Returns <c>true</c> if specified type supports <c>null</c> values.</returns>
 		public bool GetCanBeNull(Type type)
 		{
 			foreach (var info in Schemas)
@@ -184,6 +234,11 @@ namespace LinqToDB.Mapping
 			return type.IsClassEx() || type.IsNullable();
 		}
 
+		/// <summary>
+		/// Sets <c>null</c> value support flag for specified type.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <param name="value">If <c>true</c>, specified type value could contain <c>null</c>.</param>
 		public void SetCanBeNull(Type type, bool value)
 		{
 			Schemas[0].SetCanBeNull(type, value);
@@ -193,16 +248,31 @@ namespace LinqToDB.Mapping
 
 		#region GenericConvertProvider
 
+		/// <summary>
+		/// Initialize generic conversions for specific type parameter.
+		/// </summary>
+		/// <typeparam name="T">Generic type parameter, for which converters should be initialized.</typeparam>
 		public void InitGenericConvertProvider<T>()
 		{
 			InitGenericConvertProvider(typeof(T));
 		}
 
+		/// <summary>
+		/// Initialize generic conversions for specific type parameters.
+		/// </summary>
+		/// <param name="types">Generic type parameters.</param>
+		/// <returns>Returns <c>true</c> if new generic type conversions could have added to mapping schema.</returns>
 		public bool InitGenericConvertProvider(params Type[] types)
 		{
 			return Schemas.Aggregate(false, (cur, info) => cur || info.InitGenericConvertProvider(types, this));
 		}
 
+		/// <summary>
+		/// Adds generic type conversions provider.
+		/// Type converter must implement <see cref="IGenericInfoProvider"/> interface.
+		/// <see cref="IGenericInfoProvider"/> for more details and examples.
+		/// </summary>
+		/// <param name="type">Generic type conversions provider.</param>
 		public void SetGenericConvertProvider(Type type)
 		{
 			if (!type.IsGenericTypeDefinitionEx())
@@ -218,22 +288,46 @@ namespace LinqToDB.Mapping
 
 		#region Convert
 
+		/// <summary>
+		/// Converts value to specified type.
+		/// </summary>
+		/// <typeparam name="T">Target type.</typeparam>
+		/// <param name="value">Value to convert.</param>
+		/// <returns>Converted value.</returns>
 		public T ChangeTypeTo<T>(object value)
 		{
 			return Converter.ChangeTypeTo<T>(value, this);
 		}
 
+		/// <summary>
+		/// Converts value to specified type.
+		/// </summary>
+		/// <param name="value">Value to convert.</param>
+		/// <param name="conversionType">Target type.</param>
+		/// <returns>Converted value.</returns>
 		public object ChangeType(object value, Type conversionType)
 		{
 			return Converter.ChangeType(value, conversionType, this);
 		}
 
+		/// <summary>
+		/// Converts enum value to database value.
+		/// </summary>
+		/// <param name="value">Enum value.</param>
+		/// <returns>Database value.</returns>
 		public object EnumToValue(Enum value)
 		{
 			var toType = ConvertBuilder.GetDefaultMappingFromEnumType(this, value.GetType());
 			return Converter.ChangeType(value, toType, this);
 		}
 
+		/// <summary>
+		/// Returns custom value conversion expression from <paramref name="from"/> type to <paramref name="to"/> type if it
+		/// is defined in mapping schema, or <c>null</c> otherwise.
+		/// </summary>
+		/// <param name="from">Source type.</param>
+		/// <param name="to">Target type.</param>
+		/// <returns>Conversion expression or <c>null</c>, if conversion is not defined.</returns>
 		public virtual LambdaExpression TryGetConvertExpression(Type @from, Type to)
 		{
 			return null;
@@ -244,17 +338,43 @@ namespace LinqToDB.Mapping
 			get { return Schemas[0].Converters; }
 		}
 
+		/// <summary>
+		/// Returns conversion expression from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
+		/// </summary>
+		/// <typeparam name="TFrom">Source type.</typeparam>
+		/// <typeparam name="TTo">Target type.</typeparam>
+		/// <param name="checkNull">If <c>true</c>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
+		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
+		/// </param>
+		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
+		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
 		public Expression<Func<TFrom,TTo>> GetConvertExpression<TFrom,TTo>(bool checkNull = true, bool createDefault = true)
 		{
 			return (Expression<Func<TFrom, TTo>>)GetConvertExpression(typeof(TFrom), typeof(TTo), checkNull, createDefault);
 		}
 
+		/// <summary>
+		/// Returns conversion expression from <paramref name="from"/> type to <paramref name="to"/> type.
+		/// </summary>
+		/// <param name="from">Source type.</param>
+		/// <param name="to">Target type.</param>
+		/// <param name="checkNull">If <c>true</c>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
+		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
+		/// </param>
+		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
+		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
 		public LambdaExpression GetConvertExpression(Type from, Type to, bool checkNull = true, bool createDefault = true)
 		{
 			var li = GetConverter(from, to, createDefault);
 			return li == null ? null : (LambdaExpression)ReduceDefaultValue(checkNull ? li.CheckNullLambda : li.Lambda);
 		}
 
+		/// <summary>
+		/// Returns conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
+		/// </summary>
+		/// <typeparam name="TFrom">Source type.</typeparam>
+		/// <typeparam name="TTo">Target type.</typeparam>
+		/// <returns>Conversion delegate.</returns>
 		public Func<TFrom,TTo> GetConverter<TFrom,TTo>()
 		{
 			var li = GetConverter(typeof(TFrom), typeof(TTo), true);
@@ -272,6 +392,17 @@ namespace LinqToDB.Mapping
 			return (Func<TFrom,TTo>)li.Delegate;
 		}
 
+		/// <summary>
+		/// Specify conversion expression for conversion from <paramref name="fromType"/> type to <paramref name="toType"/> type.
+		/// </summary>
+		/// <param name="fromType">Source type.</param>
+		/// <param name="toType">Target type.</param>
+		/// <param name="expr">Conversion expression.</param>
+		/// <param name="addNullCheck">If <c>true</c>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
+		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
+		/// default value provider.
+		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
+		/// </param>
 		public void SetConvertExpression(
 			[JetBrains.Annotations.NotNull] Type fromType,
 			[JetBrains.Annotations.NotNull] Type toType,
@@ -289,6 +420,17 @@ namespace LinqToDB.Mapping
 			Schemas[0].SetConvertInfo(fromType, toType, new ConvertInfo.LambdaInfo(ex, expr, null, false));
 		}
 
+		/// <summary>
+		/// Specify conversion expression for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
+		/// </summary>
+		/// <typeparam name="TFrom">Source type.</typeparam>
+		/// <typeparam name="TTo">Target type.</typeparam>
+		/// <param name="expr">Conversion expression.</param>
+		/// <param name="addNullCheck">If <c>true</c>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
+		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
+		/// default value provider.
+		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
+		/// </param>
 		public void SetConvertExpression<TFrom,TTo>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr,
 			bool addNullCheck = true)
@@ -302,6 +444,13 @@ namespace LinqToDB.Mapping
 			Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, expr, null, false));
 		}
 
+		/// <summary>
+		/// Specify conversion expression for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
+		/// </summary>
+		/// <typeparam name="TFrom">Source type.</typeparam>
+		/// <typeparam name="TTo">Target type.</typeparam>
+		/// <param name="checkNullExpr"><c>null</c> values conversion expression.</param>
+		/// <param name="expr">Conversion expression.</param>
 		public void SetConvertExpression<TFrom,TTo>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> checkNullExpr,
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr)
@@ -311,6 +460,12 @@ namespace LinqToDB.Mapping
 			Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(checkNullExpr, expr, null, false));
 		}
 
+		/// <summary>
+		/// Specify conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
+		/// </summary>
+		/// <typeparam name="TFrom">Source type.</typeparam>
+		/// <typeparam name="TTo">Target type.</typeparam>
+		/// <param name="func">Conversion delegate.</param>
 		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func)
 		{
 			if (func == null) throw new ArgumentNullException("func");
@@ -464,6 +619,13 @@ namespace LinqToDB.Mapping
 					e);
 		}
 
+		/// <summary>
+		/// Set conversion expressions for conversion from and to <c>string</c> for basic types
+		/// (<c>byte</c>, <c>sbyte</c>, <c>short</c>, <c>ushort</c>, <c>int</c>, <c>uint</c>, <c>long</c>, <c>ulong</c>
+		/// , <c>float</c>, <c>double</c>, <c>decimal</c>, <c>DateTime</c>, <c>DateTimeOffset</c>)
+		/// using provided culture format providers.
+		/// </summary>
+		/// <param name="info">Culture with format providers for conversions.</param>
 		public void SetCultureInfo(CultureInfo info)
 		{
 			SetConvertExpression((SByte     v) =>           v.      ToString(info.NumberFormat));
@@ -553,6 +715,16 @@ namespace LinqToDB.Mapping
 			_metadataReaders = list.ToArray();
 		}
 
+		/// <summary>
+		/// Gets or sets metadata attributes provider for current schema.
+		/// Metadata providers, shipped with LINQ to DB:
+		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
+		/// - <see cref="AttributeReader"/> - .NET attributes provider;
+		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
+		/// - <see cref="SystemDataLinqAttributeReader"/> - metadata provider that converts <see cref="System.Data.Linq.Mapping"/> attributes to LINQ to DB mapping attributes;
+		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts <see cref="Microsoft.SqlServer.Server"/> attributes to LINQ to DB mapping attributes;
+		/// - <see cref="XmlAttributeReader"/> - XML-based mappings metadata provider.
+		/// </summary>
 		public IMetadataReader MetadataReader
 		{
 			get { return Schemas[0].MetadataReader; }
@@ -566,6 +738,10 @@ namespace LinqToDB.Mapping
 			}
 		}
 
+		/// <summary>
+		/// Adds additional metadata attributes provider to current schema.
+		/// </summary>
+		/// <param name="reader">Metadata attributes provider.</param>
 		public void AddMetadataReader(IMetadataReader reader)
 		{
 			lock (_metadataReadersSyncRoot)
@@ -589,6 +765,13 @@ namespace LinqToDB.Mapping
 			}
 		}
 
+		/// <summary>
+		/// Gets attributes of specified type, associated with specified type.
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Attributes owner type.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
@@ -600,6 +783,14 @@ namespace LinqToDB.Mapping
 			return q.ToArray();
 		}
 
+		/// <summary>
+		/// Gets attributes of specified type, associated with specified type member.
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Member's owner type.</param>
+		/// <param name="memberInfo">Attributes owner member.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
@@ -611,6 +802,13 @@ namespace LinqToDB.Mapping
 			return q.ToArray();
 		}
 
+		/// <summary>
+		/// Gets attribute of specified type, associated with specified type.
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Attribute owner type.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
+		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T GetAttribute<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
@@ -618,6 +816,14 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
+		/// <summary>
+		/// Gets attribute of specified type, associated with specified type member.
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Member's owner type.</param>
+		/// <param name="memberInfo">Attribute owner member.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
+		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T GetAttribute<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
@@ -625,6 +831,15 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
+		/// <summary>
+		/// Gets attributes of specified type, associated with specified type.
+		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Attributes owner type.</param>
+		/// <param name="configGetter">Attribute configuration name provider.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
@@ -639,6 +854,16 @@ namespace LinqToDB.Mapping
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
 
+		/// <summary>
+		/// Gets attributes of specified type, associated with specified type member.
+		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Member's owner type.</param>
+		/// <param name="memberInfo">Attributes owner member.</param>
+		/// <param name="configGetter">Attribute configuration name provider.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
@@ -653,13 +878,32 @@ namespace LinqToDB.Mapping
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
 
+		/// <summary>
+		/// Gets attribute of specified type, associated with specified type.
+		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Attribute owner type.</param>
+		/// <param name="configGetter">Attribute configuration name provider.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
+		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T GetAttribute<T>(Type type, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
 			var attrs = GetAttributes(type, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
-		
+
+		/// <summary>
+		/// Gets attribute of specified type, associated with specified type member.
+		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Member's owner type.</param>
+		/// <param name="memberInfo">Attribute owner member.</param>
+		/// <param name="configGetter">Attribute configuration name provider.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
+		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
@@ -667,6 +911,10 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
+		/// <summary>
+		/// Gets fluent mapping builder for current schema.
+		/// </summary>
+		/// <returns>Fluent mapping builder.</returns>
 		public FluentMappingBuilder GetFluentMappingBuilder()
 		{
 			return new FluentMappingBuilder(this);
@@ -677,12 +925,19 @@ namespace LinqToDB.Mapping
 		#region Configuration
 
 		private string _configurationID;
+		// TODO: V2 - make internal
+		/// <summary>
+		/// Unique schema configuration identifier. For internal use only.
+		/// </summary>
 		public  string  ConfigurationID
 		{
 			get { return _configurationID ?? (_configurationID = string.Join(".", ConfigurationList)); }
 		}
 
 		private string[] _configurationList;
+		/// <summary>
+		/// Gets configurations, associated with current mapping schema.
+		/// </summary>
 		public  string[]  ConfigurationList
 		{
 			get
@@ -714,6 +969,9 @@ namespace LinqToDB.Mapping
 			ValueToSqlConverter = new ValueToSqlConverter();
 		}
 
+		/// <summary>
+		/// Default mapping schema, used by LINQ to DB, when more specific mapping schema not provided.
+		/// </summary>
 		public static MappingSchema Default = new DefaultMappingSchema();
 
 		class DefaultMappingSchema : MappingSchema
@@ -772,6 +1030,11 @@ namespace LinqToDB.Mapping
 
 		#region Scalar Types
 
+		/// <summary>
+		/// Returns <c>true</c>, if provided type mapped to scalar database type in current schema.
+		/// </summary>
+		/// <param name="type">Type to check.</param>
+		/// <returns><c>true</c>, if type mapped to scalar database type.</returns>
 		public bool IsScalarType(Type type)
 		{
 			foreach (var info in Schemas)
@@ -801,11 +1064,22 @@ namespace LinqToDB.Mapping
 			return ret;
 		}
 
+		/// <summary>
+		/// Configure how provided type should be handled during mapping to database - as scalar value or composite type.
+		/// </summary>
+		/// <param name="type">Type to configure.</param>
+		/// <param name="isScalarType"><c>true</c>, if provided type should be mapped to scalar database value.</param>
 		public void SetScalarType(Type type, bool isScalarType = true)
 		{
 			Schemas[0].SetScalarType(type, isScalarType);
 		}
 
+		/// <summary>
+		/// Configure provided type mapping to scalar database type.
+		/// </summary>
+		/// <param name="type">Type to configure.</param>
+		/// <param name="defaultValue">Default value. See <see cref="SetDefaultValue(Type, object)"/> for more details.</param>
+		/// <param name="dataType">Optional scalar data type.</param>
 		public void AddScalarType(Type type, object defaultValue, DataType dataType = DataType.Undefined)
 		{
 			SetScalarType  (type);
@@ -815,6 +1089,13 @@ namespace LinqToDB.Mapping
 				SetDataType(type, dataType);
 		}
 
+		/// <summary>
+		/// Configure provided type mapping to scalar database type.
+		/// </summary>
+		/// <param name="type">Type to configure.</param>
+		/// <param name="defaultValue">Default value. See <see cref="SetDefaultValue(Type, object)"/> for more details.</param>
+		/// <param name="canBeNull">Set <c>null</c> value support flag. See <see cref="SetCanBeNull(Type, bool)"/> for more details.</param>
+		/// <param name="dataType">Optional scalar data type.</param>
 		public void AddScalarType(Type type, object defaultValue, bool canBeNull, DataType dataType = DataType.Undefined)
 		{
 			SetScalarType  (type);
@@ -825,6 +1106,11 @@ namespace LinqToDB.Mapping
 				SetDataType(type, dataType);
 		}
 
+		/// <summary>
+		/// Configure provided type mapping to scalar database type.
+		/// </summary>
+		/// <param name="type">Type to configure.</param>
+		/// <param name="dataType">Optional scalar data type.</param>
 		public void AddScalarType(Type type, DataType dataType = DataType.Undefined)
 		{
 			SetScalarType(type);
@@ -837,6 +1123,11 @@ namespace LinqToDB.Mapping
 
 		#region DataTypes
 
+		/// <summary>
+		/// Returns database type mapping information for specified type.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <returns>Database type information.</returns>
 		public SqlDataType GetDataType(Type type)
 		{
 			foreach (var info in Schemas)
@@ -849,16 +1140,33 @@ namespace LinqToDB.Mapping
 			return SqlDataType.Undefined;
 		}
 
+		/// <summary>
+		/// Associate specified type with LINQ to DB data type.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <param name="dataType">LINQ to DB data type.</param>
 		public void SetDataType(Type type, DataType dataType)
 		{
 			Schemas[0].SetDataType(type, dataType);
 		}
 
+		/// <summary>
+		/// Associate specified type with database data type.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <param name="dataType">Database data type.</param>
 		public void SetDataType(Type type, SqlDataType dataType)
 		{
 			Schemas[0].SetDataType(type, dataType);
 		}
 
+		/// <summary>
+		/// Returns scalar database type mapping information for provided type.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <param name="canBeNull">Returns <c>true</c>, if <paramref name="type"/> type is enum with mapping to <c>null</c> value.
+		/// Initial parameter value, passed to this method is not used.</param>
+		/// <returns>Scalar database type information.</returns>
 		public SqlDataType GetUnderlyingDataType(Type type, ref bool canBeNull)
 		{
 			int? length = null;
@@ -941,6 +1249,11 @@ namespace LinqToDB.Mapping
 
 		ConcurrentDictionary<Type,MapValue[]> _mapValues;
 
+		/// <summary>
+		/// Returns enum type mapping information or <c>null</c> for non-enum types.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <returns>Mapping values for enum type and <c>null</c> for non-enum types.</returns>
 		public virtual MapValue[] GetMapValues([JetBrains.Annotations.NotNull] Type type)
 		{
 			if (type == null) throw new ArgumentNullException("type");
@@ -978,6 +1291,10 @@ namespace LinqToDB.Mapping
 
 		#region Options
 
+		/// <summary>
+		/// Gets or sets column name comparison rules for comparison of column names in mapping with column name,
+		/// returned by provider's data reader.
+		/// </summary>
 		public StringComparison ColumnComparisonOption
 		{
 			get
@@ -1001,17 +1318,23 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
+		/// <summary>
+		/// Returns mapped entity descriptor.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <returns>Mapping descriptor.</returns>
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
 			return Schemas[0].GetEntityDescriptor(this, type);
 		}
 
+		// TODO: V2 - do we need it??
 		/// <summary>
-		///     Enumerate types for cached <see cref="EntityDescriptor" />s
+		/// Returns types for cached <see cref="EntityDescriptor" />s.
 		/// </summary>
-		/// <seealso cref="GetEntityDescriptor" />
+		/// <seealso cref="GetEntityDescriptor(Type)" />
 		/// <returns>
-		///     <see cref="Array{Type}" />
+		/// Mapping types.
 		/// </returns>
 		public Type[] GetEntites()
 		{
@@ -1027,6 +1350,12 @@ namespace LinqToDB.Mapping
 
 		#region Enum
 
+		/// <summary>
+		/// Returns type, to which provided enumeration type is mapped or <c>null</c>, if type is not configured.
+		/// See <see cref="SetDefaultFromEnumType(Type, Type)"/>.
+		/// </summary>
+		/// <param name="enumType">Enumeration type.</param>
+		/// <returns>Mapped type or <c>null</c>.</returns>
 		public Type GetDefaultFromEnumType(Type enumType)
 		{
 			foreach (var info in Schemas)
@@ -1038,6 +1367,11 @@ namespace LinqToDB.Mapping
 			return null;
 		}
 
+		/// <summary>
+		/// Sets type, to which provided enumeration type should be mapped.
+		/// </summary>
+		/// <param name="enumType">Enumeration type.</param>
+		/// <param name="defaultFromType">Mapped type.</param>
 		public void SetDefaultFromEnumType(Type enumType, Type defaultFromType)
 		{
 			Schemas[0].SetDefaultFromEnumType(enumType, defaultFromType);

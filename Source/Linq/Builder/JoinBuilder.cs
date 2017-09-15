@@ -314,7 +314,7 @@ namespace LinqToDB.Linq.Builder
 					var outerParam = Expression.Parameter(context._outerKeyLambda.Body.Type, "o");
 					var outerKey   = context._outerKeyLambda.GetBody(context.Lambda.Parameters[0]);
 
-					outerKey = context.Builder.BuildExpression(context, outerKey);
+					outerKey = context.Builder.BuildExpression(context, outerKey, false);
 
 					// Convert inner condition.
 					//
@@ -401,7 +401,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				if (ReferenceEquals(expression, Lambda.Parameters[1]))
 				{
@@ -454,11 +454,11 @@ namespace LinqToDB.Linq.Builder
 
 						expr = call.Transform(e => e == replaceExpression ? expr : e);
 
-						return Builder.BuildExpression(this, expr);
+						return Builder.BuildExpression(this, expr, enforceServerSide);
 					}
 				}
 
-				return base.BuildExpression(expression, level);
+				return base.BuildExpression(expression, level, enforceServerSide);
 			}
 		}
 

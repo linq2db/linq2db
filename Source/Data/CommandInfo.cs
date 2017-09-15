@@ -567,7 +567,7 @@ namespace LinqToDB.Data
 		#region Execute scalar async
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns single value.
+		/// Executes command asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Task with resulting value.</returns>
@@ -578,6 +578,29 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns single value.
+		/// </summary>
+		/// <typeparam name="T">Resulting value type.</typeparam>
+		/// <returns>Task with resulting value.</returns>
+		public Task<T> ExecuteProcAsync<T>()
+		{
+			CommandType = CommandType.StoredProcedure;
+			return ExecuteAsync<T>(CancellationToken.None);
+		}
+
+		/// <summary>
+		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns single value.
+		/// </summary>
+		/// <typeparam name="T">Resulting value type.</typeparam>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with resulting value.</returns>
+		public Task<T> ExecuteProcAsync<T>(CancellationToken cancellationToken)
+		{
+			CommandType = CommandType.StoredProcedure;
+			return ExecuteAsync<T>(cancellationToken);
+		}
+
+		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
