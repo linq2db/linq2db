@@ -204,7 +204,7 @@ namespace LinqToDB.Linq
 
 				if (!Members[""].TryGetValue(mi, out expr))
 				{
-					if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType.FullName == "Microsoft.VisualBasic.CompilerServices.Operators")
+					if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType.FullName.StartsWith("Microsoft.VisualBasic.CompilerServices."))
 					{
 						lock (_memberSync)
 						{
@@ -508,10 +508,10 @@ namespace LinqToDB.Linq
 
 			{ M(() => Convert.ToBoolean((Boolean)true)), N(() => L<Boolean, Boolean>((Boolean  p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 			{ M(() => Convert.ToBoolean((Byte)    0)  ), N(() => L<Byte,    Boolean>((Byte     p0) => Sql.ConvertTo<Boolean>.From(p0))) },
-			// here and above: NETSTANDARD1_6 do not have some overloads, so all af them are treated as method with Object parameter 
+			// here and above: NETSTANDARD1_6 do not have some overloads, so all af them are treated as method with Object parameter
 			// so if we do not exclude them we'll receive runtime exception like:
 			// An item with the same key has already been added. Key: Boolean ToBoolean(System.Object)
-#if !NETSTANDARD1_6 
+#if !NETSTANDARD1_6
 			{ M(() => Convert.ToBoolean((Char)   '0') ), N(() => L<Char,    Boolean>((Char     p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 			{ M(() => Convert.ToBoolean(DateTime.Now) ), N(() => L<DateTime,Boolean>((DateTime p0) => Sql.ConvertTo<Boolean>.From(p0))) },
 #endif
