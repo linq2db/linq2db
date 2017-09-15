@@ -715,6 +715,7 @@ namespace LinqToDB.Mapping
 			_metadataReaders = list.ToArray();
 		}
 
+#if !NETSTANDARD1_6
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
@@ -725,6 +726,16 @@ namespace LinqToDB.Mapping
 		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts <see cref="Microsoft.SqlServer.Server"/> attributes to LINQ to DB mapping attributes;
 		/// - <see cref="XmlAttributeReader"/> - XML-based mappings metadata provider.
 		/// </summary>
+#else
+		/// <summary>
+		/// Gets or sets metadata attributes provider for current schema.
+		/// Metadata providers, shipped with LINQ to DB:
+		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
+		/// - <see cref="AttributeReader"/> - .NET attributes provider;
+		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
+		/// - <see cref="XmlAttributeReader"/> - XML-based mappings metadata provider.
+		/// </summary>
+#endif
 		public IMetadataReader MetadataReader
 		{
 			get { return Schemas[0].MetadataReader; }
