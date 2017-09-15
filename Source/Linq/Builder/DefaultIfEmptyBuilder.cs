@@ -49,9 +49,9 @@ namespace LinqToDB.Linq.Builder
 
 			private readonly Expression _defaultValue;
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
-				var expr = Sequence.BuildExpression(expression, level);
+				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
 
 				if (expression == null)
 				{

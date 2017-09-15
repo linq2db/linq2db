@@ -189,7 +189,7 @@ namespace LinqToDB.SqlProvider
 
 						subQuery.Select.Columns.RemoveAt(0);
 
-						query.Select.Columns[i].Expression = 
+						query.Select.Columns[i].Expression =
 							new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[0]);
 					}
 					else
@@ -262,7 +262,7 @@ namespace LinqToDB.SqlProvider
 
 						var isCount      = false;
 						var isAggregated = false;
-						
+
 						if (subQuery.Select.Columns.Count == 1)
 						{
 							var subCol = subQuery.Select.Columns[0];
@@ -271,7 +271,7 @@ namespace LinqToDB.SqlProvider
 							{
 								switch (((SqlFunction)subCol.Expression).Name)
 								{
-									case "Count"   : isCount = true; break;
+									case "Count" : isCount = true; break;
 								}
 
 								isAggregated = ((SqlFunction) subCol.Expression).IsAggregate;
@@ -830,7 +830,7 @@ namespace LinqToDB.SqlProvider
 							}
 						}
 
-						
+
 						if (expr.Operator == SelectQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
 						{
 							var value = Equals(((SqlValue)expr.Expr1).Value, ((SqlValue)expr.Expr2).Value);
@@ -1195,8 +1195,8 @@ namespace LinqToDB.SqlProvider
 
 		protected SelectQuery GetAlternativeDelete(SelectQuery selectQuery)
 		{
-			if (selectQuery.IsDelete && 
-				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) && 
+			if (selectQuery.IsDelete &&
+				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) &&
 				selectQuery.From.Tables[0].Source is SqlTable)
 			{
 				var sql = new SelectQuery { QueryType = QueryType.Delete, IsParameterDependent = selectQuery.IsParameterDependent };

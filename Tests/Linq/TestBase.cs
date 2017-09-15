@@ -25,7 +25,7 @@ using LinqToDB.Mapping;
 
 using LinqToDB.ServiceModel;
 
-#endif 
+#endif
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -117,7 +117,7 @@ namespace Tests
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
 #endif
-			
+
 			var providerListFile =
 				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
 
@@ -835,7 +835,7 @@ namespace Tests
 				return _inheritanceChild;
 			}
 		}
-		
+
 		#endregion
 
 #region Northwind
@@ -1113,7 +1113,7 @@ namespace Tests
 
 			if (exceptResult != 0 || exceptExpected != 0)
 				for (var i = 0; i < resultList.Count; i++)
-				{ 
+				{
 					Debug.  WriteLine   ("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendFormat("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendLine  ();

@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 		IBuildContext      Parent      { get; set; }
 
 		void               BuildQuery<T>       (Query<T> query, ParameterExpression queryParameter);
-		Expression         BuildExpression     (Expression expression, int level);
+		Expression         BuildExpression     (Expression expression, int level, bool enforceServerSide);
 		SqlInfo[]          ConvertToSql        (Expression expression, int level, ConvertFlags flags);
 		SqlInfo[]          ConvertToIndex      (Expression expression, int level, ConvertFlags flags);
 		IsExpressionResult IsExpression        (Expression expression, int level, RequestFor requestFlag);

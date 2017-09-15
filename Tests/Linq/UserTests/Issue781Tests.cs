@@ -49,7 +49,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Sybase)]
 		public void TestHavingCount(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -69,7 +69,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Sybase)]
 		public void TestHavingLongCount(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -129,7 +129,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Sybase)]
 		public void TestHavingCountWithSelect(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -151,7 +151,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Sybase)]
 		public void TestHavingLongCountWithSelect(string context)
 		{
 			using (var db = new DataConnection(context))
