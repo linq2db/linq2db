@@ -14,7 +14,6 @@ namespace Tests.UserTests
 	public class Issue264Tests : TestBase
 	{
 		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		[Ignore("Need fix")]
 		public void Test(string context)
 		{
 			using (var db = new DataConnection(context))

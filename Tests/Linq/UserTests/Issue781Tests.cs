@@ -49,13 +49,13 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(false)]
 		public void TestHavingCount(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Count();
 
@@ -69,13 +69,13 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(false)]
 		public void TestHavingLongCount(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient.Diagnosis)
 					.Having(_ => _.Key != null)
 					.LongCount();
 
@@ -129,13 +129,13 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(false)]
 		public void TestHavingCountWithSelect(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.Count();
@@ -151,13 +151,13 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.Access, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(false)]
 		public void TestHavingLongCountWithSelect(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
 				var actual = db.GetTable<Person>()
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.LongCount();
