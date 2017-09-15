@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 using JetBrains.Annotations;
-using LinqToDB.Common;
 
 #pragma warning disable 472 // The result of the expression is always the same since a value of this type is never equal to 'null'
 
@@ -238,7 +238,7 @@ namespace Tests.Linq
 			{
 				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in dd.Employee where employee.ReportsToEmployee != null select employee, 
+					from employee in dd.Employee where employee.ReportsToEmployee != null select employee,
 					from employee in db.Employee where employee.ReportsToEmployee != null select employee);
 			}
 		}
@@ -673,7 +673,6 @@ namespace Tests.Linq
 				AreEqual(
 				   Parent.SelectMany(_ => _.Children),
 				db.Parent.SelectMany(_ => AssociationExtension.Children(_)));
-
 			}
 		}
 
@@ -685,7 +684,6 @@ namespace Tests.Linq
 				AreEqual(
 				   Child.Select(_ => _.Parent),
 				db.Child.Select(_ => _.Parent()));
-
 			}
 		}
 
@@ -769,7 +767,7 @@ namespace Tests.Linq
 			}
 		}
 	}
-	
+
 	public static class AssociationExtension
 	{
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
@@ -777,6 +775,7 @@ namespace Tests.Linq
 		{
 			throw new InvalidOperationException("Used only as Association helper");
 		}
+
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public static IQueryable<Child> QuerableChildren(this Parent parent, IDataContext db)
 		{
@@ -788,6 +787,7 @@ namespace Tests.Linq
 		{
 			throw new InvalidOperationException("Used only as Association helper");
 		}
+
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public static IQueryable<Parent> QuerableParent(this Child child, IDataContext db)
 		{
