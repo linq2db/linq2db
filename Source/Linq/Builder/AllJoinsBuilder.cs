@@ -1,53 +1,77 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
 	class AllJoinsBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3;
+			return
+				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3 ||
+				methodCall.IsQueryable("InnerJoin", "LeftJoin", "RightJoin", "FullJoin");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
+			SelectQuery.JoinType joinType;
+			var conditionIndex = 1;
+
+			switch (methodCall.Method.Name)
+			{
+				case "InnerJoin" : joinType = SelectQuery.JoinType.Inner; break;
+				case "LeftJoin"  : joinType = SelectQuery.JoinType.Left;  break;
+				case "RightJoin" : joinType = SelectQuery.JoinType.Right; break;
+				case "FullJoin"  : joinType = SelectQuery.JoinType.Full;  break;
+				default:
+					conditionIndex = 2;
+
+					SqlJoinType? joinValue = null;
+
+					if (methodCall.Arguments[1].NodeType == ExpressionType.Constant)
+					{
+						var c = (ConstantExpression)methodCall.Arguments[1];
+
+						if (c.Value is SqlJoinType)
+							joinValue = (SqlJoinType)c.Value;
+					}
+
+					if (joinValue == null)
+					{
+						joinValue = Expression.Lambda<Func<SqlJoinType>>(methodCall.Arguments[1]).Compile()();
+					}
+
+					switch (joinValue)
+					{
+						case SqlJoinType.Inner : joinType = SelectQuery.JoinType.Inner; break;
+						case SqlJoinType.Left  : joinType = SelectQuery.JoinType.Left;  break;
+						case SqlJoinType.Right : joinType = SelectQuery.JoinType.Right; break;
+						case SqlJoinType.Full  : joinType = SelectQuery.JoinType.Full;  break;
+						default                : throw new ArgumentOutOfRangeException();
+					}
+
+					break;
+			}
+
 			var tableContext = sequence as TableBuilder.TableContext;
+
 			if (tableContext != null)
 			{
-				var joinValue = Expression.Lambda<Func<SqlJoinType>>(methodCall.Arguments[1]).Compile()();
-				SelectQuery.JoinType joinType;
-				switch (joinValue)
-				{
-					case SqlJoinType.Inner:
-						joinType = SelectQuery.JoinType.Inner;
-						break;
-					case SqlJoinType.Left:
-						joinType = SelectQuery.JoinType.Left;
-						break;
-					case SqlJoinType.Right:
-						joinType = SelectQuery.JoinType.Right;
-						break;
-					case SqlJoinType.Full:
-						joinType = SelectQuery.JoinType.Full;
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
 				tableContext.JoinType = joinType;
 			}
 
-			if (methodCall.Arguments[2] != null)
+			if (methodCall.Arguments[conditionIndex] != null)
 			{
-				var condition = (LambdaExpression) methodCall.Arguments[2].Unwrap();
+				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
 
 				if (sequence.SelectQuery.Select.IsDistinct ||
-				    sequence.SelectQuery.Select.TakeValue != null ||
-				    sequence.SelectQuery.Select.SkipValue != null)
+					sequence.SelectQuery.Select.TakeValue != null ||
+					sequence.SelectQuery.Select.SkipValue != null)
 					sequence = new SubQueryContext(sequence);
 
 				var result = builder.BuildWhere(buildInfo.Parent, sequence, condition, false, false);
@@ -55,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 				result.SetAlias(condition.Parameters[0].Name);
 				return result;
 			}
-			
+
 			return tableContext;
 		}
 

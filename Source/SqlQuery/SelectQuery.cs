@@ -2,15 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
 	using LinqToDB.Extensions;
+	using Mapping;
 	using Reflection;
 
 	[DebuggerDisplay("SQL = {SqlText}")]
@@ -226,7 +225,7 @@ namespace LinqToDB.SqlQuery
 				return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
 
 				//var found =
-				//	
+				//
 				//	|| new QueryVisitor().Find(other, e =>
 				//		{
 				//			switch(e.ElementType)
@@ -374,7 +373,7 @@ namespace LinqToDB.SqlQuery
 
 #endregion
 
-#region TableSource
+		#region TableSource
 
 		public class TableSource : ISqlTableSource
 		{
@@ -608,7 +607,7 @@ namespace LinqToDB.SqlQuery
 #endregion
 		}
 
-#endregion
+		#endregion
 
 #region TableJoin
 
@@ -660,7 +659,7 @@ namespace LinqToDB.SqlQuery
 				if (!objectTree.TryGetValue(this, out clone))
 					objectTree.Add(this, clone = new JoinedTable(
 						JoinType,
-						(TableSource)Table.Clone(objectTree, doClone), 
+						(TableSource)Table.Clone(objectTree, doClone),
 						IsWeak,
 						(SearchCondition)Condition.Clone(objectTree, doClone)));
 
@@ -1583,7 +1582,7 @@ namespace LinqToDB.SqlQuery
 
 				public class Op_ : IConditionExpr<T2>
 				{
-					internal Op_(Expr_ expr, Predicate.Operator op) 
+					internal Op_(Expr_ expr, Predicate.Operator op)
 					{
 						_expr = expr;
 						_op   = op;
@@ -2027,7 +2026,7 @@ namespace LinqToDB.SqlQuery
 							{
 								if (SelectQuery.Unions.Any(u => u.SelectQuery == query))
 								{
-								
+
 								}
 							}
 
@@ -3369,7 +3368,7 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.ExprExprPredicate :
 							{
 								var ee = (Predicate.ExprExpr)e;
-								
+
 								if (ee.Operator == Predicate.Operator.Equal || ee.Operator == Predicate.Operator.NotEqual)
 								{
 									object value1;

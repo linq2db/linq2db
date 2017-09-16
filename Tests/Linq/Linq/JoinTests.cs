@@ -4,6 +4,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -23,7 +24,7 @@ namespace Tests.Linq
 			Func<TFirst, TSecond, TResult> resultSelector,
 			SqlJoinType joinType)
 		{
-			if (first == null) throw new ArgumentNullException("first");
+			if (first  == null) throw new ArgumentNullException("first");
 			if (second == null) throw new ArgumentNullException("second");
 
 			switch (joinType)
@@ -262,7 +263,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
 						join c in db.Child on p.ParentID equals c.ParentID into lj
 					where p.ParentID == 1
@@ -826,7 +827,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in 
+						join ch in
 							from c in Child
 							where c.ParentID > 0
 							select new { c.ParentID, c.ChildID }
@@ -835,7 +836,7 @@ namespace Tests.Linq
 					select p
 					,
 					from p in db.Parent
-						join ch in 
+						join ch in
 							from c in db.Child
 							where c.ParentID > 0
 							select new { c.ParentID, c.ChildID }
@@ -919,7 +920,7 @@ namespace Tests.Linq
 			// Reproduces the problem described here: http://rsdn.ru/forum/prj.rfd/4221837.flat.aspx
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p1 in db.Person
 					join p2 in db.Person on p1.ID equals p2.ID into g
 					from p2 in g.DefaultIfEmpty() // yes I know the join will always succeed and it'll never be null, but just for test's sake :)
@@ -1030,7 +1031,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p1 in    Parent
-					join p2 in    Parent 
+					join p2 in    Parent
 						on     new { a = new { p1.ParentID, p1.Value1 } }
 						equals new { a = new { p2.ParentID, p2.Value1 } }
 					select p2
@@ -1104,9 +1105,8 @@ namespace Tests.Linq
 					SqlJoinType.Left,
 					SqlJoinType.Right,
 					SqlJoinType.Full)] SqlJoinType joinType)
-
 		{
-			using (new DisableQueryCache())
+			//using (new DisableQueryCache())
 			using (var db = GetDataContext(context))
 			{
 				var expected = from p in Parent
@@ -1116,6 +1116,44 @@ namespace Tests.Linq
 				var actual = from p in db.Parent
 					from c in db.Child.Join(joinType, r => p.ParentID == r.ParentID)
 					select new {ParentID = (int?) p.ParentID, ChildID = (int?) c.ChildID};
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void SqlJoinSimple3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					from p in Parent.SqlJoinInternal(Child, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c}, SqlJoinType.Left)
+					select new { p.p?.ParentID, p.c?.ChildID };
+
+				var actual =
+					from p in db.Parent
+					from c in db.Child.Join(SqlJoinType.Left, r => p.ParentID == r.ParentID)
+					select new {ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID};
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void SqlJoinSimple2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					from p in Parent.SqlJoinInternal(Child, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c}, SqlJoinType.Left)
+					select new { p.p?.ParentID, p.c?.ChildID };
+
+				var actual =
+					from p in db.Parent
+					from c in db.Child.LeftJoin(r => p.ParentID == r.ParentID)
+					select new {ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID};
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
@@ -1162,7 +1200,7 @@ namespace Tests.Linq
 				var expected = Parent.SqlJoinInternal(Parent, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1,
 					(p1, p2) => p2, joinType);
 
-				var actual = 
+				var actual =
 					from p1 in db.Parent
 					from p2 in db.Parent.Join(joinType, p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
 					select p2;
