@@ -104,7 +104,8 @@ namespace LinqToDB.DataProvider.Informix
 				SELECT
 					tabid         as TableID,
 					tabname       as TableName,
-					1             as IsDefaultSchema,
+					0             as IsDefaultSchema,
+					trim(owner)   as SchemaName,
 					tabtype = 'V' as IsView
 				FROM
 					systables
