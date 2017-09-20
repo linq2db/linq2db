@@ -147,8 +147,6 @@ namespace LinqToDB.Linq.Builder
 			public EntityDescriptor EntityDescriptor;
 			public SqlTable         SqlTable;
 
-			public SelectQuery.JoinType JoinType { get; set; }
-
 			#endregion
 
 			#region Init

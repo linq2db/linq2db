@@ -1106,7 +1106,7 @@ namespace Tests.Linq
 					SqlJoinType.Right,
 					SqlJoinType.Full)] SqlJoinType joinType)
 		{
-			//using (new DisableQueryCache())
+			using (new DisableQueryCache())
 			using (var db = GetDataContext(context))
 			{
 				var expected = from p in Parent
@@ -1203,6 +1203,31 @@ namespace Tests.Linq
 				var actual =
 					from p1 in db.Parent
 					from p2 in db.Parent.Join(joinType, p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
+					select p2;
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
+			}
+		}
+
+		[Test]
+		public void SqlNullWhereSubqueryJoin(
+			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB, TestProvName.SQLiteMs, TestProvName.MySql57)]
+			string context,
+			[Values(SqlJoinType.Inner,
+				SqlJoinType.Left,
+				SqlJoinType.Right,
+				SqlJoinType.Full)] SqlJoinType joinType)
+		{
+			using (new DisableQueryCache())
+			using (var db = GetDataContext(context))
+			{
+				var expected = Parent.Take(10).SqlJoinInternal(Parent.Take(10), (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1,
+					(p1, p2) => p2, joinType);
+
+				var actual =
+					from p1 in db.Parent.Take(10)
+					from p2 in db.Parent.Take(10).Join(joinType, p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
 					select p2;
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),

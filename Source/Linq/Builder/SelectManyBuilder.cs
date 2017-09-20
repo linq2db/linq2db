@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 
 			var collectionInfo = new BuildInfo(context, expr, new SelectQuery());
 			var collection     = builder.BuildSequence(collectionInfo);
-			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == SelectQuery.JoinType.Left;
 			var sql            = collection.SelectQuery;
 
 			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SelectQuery.From.Tables[0].GetTables());
@@ -106,6 +106,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			var joinType = collectionInfo.JoinType;
+
 			if (collection is TableBuilder.TableContext)
 			{
 //				if (collectionInfo.IsAssociationBuilt)
@@ -114,12 +116,9 @@ namespace LinqToDB.Linq.Builder
 //					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 //				}
 
-				var table = (TableBuilder.TableContext) collection;
-				SelectQuery.FromClause.Join join;
-				var joinType = table.JoinType;
-
 				if (joinType == SelectQuery.JoinType.Auto)
 				{
+					var table = (TableBuilder.TableContext)collection;
 					var isApplyJoin = collection.SelectQuery.Select.HasModifier ||
 					                  table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
 
@@ -128,30 +127,7 @@ namespace LinqToDB.Linq.Builder
 						: (leftJoin ? SelectQuery.JoinType.Left : SelectQuery.JoinType.Inner);
 				}
 
-				switch (joinType)
-				{
-					case SelectQuery.JoinType.Inner:
-						join = SelectQuery.InnerJoin(sql);
-						break;
-					case SelectQuery.JoinType.Left:
-						join = SelectQuery.LeftJoin(sql);
-						break;
-					case SelectQuery.JoinType.CrossApply:
-						join = SelectQuery.CrossApply(sql);
-						break;
-					case SelectQuery.JoinType.OuterApply:
-						join = SelectQuery.OuterApply(sql);
-						break;
-					case SelectQuery.JoinType.Right:
-						join = SelectQuery.RightJoin(sql);
-						break;
-					case SelectQuery.JoinType.Full:
-						join = SelectQuery.FullJoin(sql);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
+				var join = CreateJoin(joinType, sql);
 				join.JoinedTable.CanConvertApply = false;
 
 				if (!(joinType == SelectQuery.JoinType.CrossApply || joinType == SelectQuery.JoinType.OuterApply))
@@ -196,12 +172,27 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var join = leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql);
+				if (joinType == SelectQuery.JoinType.Auto)
+					joinType = leftJoin ? SelectQuery.JoinType.OuterApply : SelectQuery.JoinType.CrossApply;
+
+				var join = CreateJoin(joinType, sql);
+
+				if (!(joinType == SelectQuery.JoinType.CrossApply || joinType == SelectQuery.JoinType.OuterApply))
+				{
+					join.JoinedTable.Condition.Conditions.AddRange(sql.Where.SearchCondition.Conditions);
+					sql.Where.SearchCondition.Conditions.Clear();
+				}
+
 				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 			}
+		}
+
+		static SelectQuery.FromClause.Join CreateJoin(SelectQuery.JoinType joinType, SelectQuery sql)
+		{
+			return new SelectQuery.FromClause.Join(joinType, sql, null, false, null);
 		}
 
 		protected override SequenceConvertInfo Convert(

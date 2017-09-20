@@ -58,12 +58,7 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			var tableContext = sequence as TableBuilder.TableContext;
-
-			if (tableContext != null)
-			{
-				tableContext.JoinType = joinType;
-			}
+			buildInfo.JoinType = joinType;
 
 			if (methodCall.Arguments[conditionIndex] != null)
 			{
@@ -80,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			return tableContext;
+			return sequence;
 		}
 
 		// Method copied from WhereBuilder
