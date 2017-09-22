@@ -1160,10 +1160,17 @@ namespace Tests.Linq
 			}
 		}
 
+		public class AllJoinsSource : IncludeDataSources
+		{
+			public AllJoinsSource() : base(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird, ProviderName.PostgreSQL)
+			{
+			}
+		}
+
 		[Test]
 		public void SqlJoinSubQuery(
-			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB, TestProvName.SQLiteMs, TestProvName.MySql57)]
-			string context,
+			[AllJoinsSource] string context,
 			[Values(SqlJoinType.Inner,
 				SqlJoinType.Left,
 				SqlJoinType.Right,
@@ -1187,8 +1194,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlNullWhereJoin(
-			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB, TestProvName.SQLiteMs, TestProvName.MySql57)]
-			string context,
+			[AllJoinsSource] string context,
 			[Values(SqlJoinType.Inner,
 				SqlJoinType.Left,
 				SqlJoinType.Right,
@@ -1212,8 +1218,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlNullWhereSubqueryJoin(
-			[DataSources(ProviderName.Access, ProviderName.SQLite, ProviderName.MySql, ProviderName.SqlCe, TestProvName.MariaDB, TestProvName.SQLiteMs, TestProvName.MySql57)]
-			string context,
+			[AllJoinsSource] string context,
 			[Values(SqlJoinType.Inner,
 				SqlJoinType.Left,
 				SqlJoinType.Right,
