@@ -264,7 +264,7 @@ namespace LinqToDB.DataProvider
 #endif
 				return true;
 			}
-			
+
 			return false;
 		}
 

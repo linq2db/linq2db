@@ -80,7 +80,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets the number of decimal places to which <see cref="P:LinqToDB.Data.DataParameter.Value"/> is resolved.
 		/// </summary>
-		/// 
+		///
 		/// <returns>
 		/// The number of decimal places to which <see cref="P:LinqToDB.Data.DataParameter.Value"/> is resolved. The default is 0.
 		/// </returns>
@@ -91,7 +91,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets the maximum size, in bytes, of the data within the column.
 		/// </summary>
-		/// 
+		///
 		/// <returns>
 		/// The maximum size, in bytes, of the data within the column. The default value is inferred from the parameter value.
 		/// </returns>

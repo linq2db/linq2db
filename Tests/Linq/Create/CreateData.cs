@@ -6,7 +6,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using LinqToDB.DataProvider.Access;
 #endif
 
@@ -63,7 +63,7 @@ namespace Tests._Create
 
 				foreach (var command in cmds)
 				{
-					try 
+					try
 					{
 						Console.WriteLine(command);
 						db.Execute(command);
@@ -232,7 +232,7 @@ namespace Tests._Create
 
 		static void AccessAction(IDbConnection connection)
 		{
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			using (var conn = AccessTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"

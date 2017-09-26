@@ -81,8 +81,8 @@ namespace Tests.xUpdate
 				{
 					switch (context)
 					{
-						case ProviderName.SqlServer2008 : 
-						case ProviderName.SqlServer2012 : 
+						case ProviderName.SqlServer2008 :
+						case ProviderName.SqlServer2012 :
 						case ProviderName.SqlServer2014 : db.DropTable<TestTable>("#" + tableName); break;
 						default                         : db.DropTable<TestTable>(tableName);       break;
 					}
@@ -95,8 +95,8 @@ namespace Tests.xUpdate
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2008 : 
-					case ProviderName.SqlServer2012 : 
+					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
 						table = db.CreateTable<TestTable>("#" + tableName);
 						break;
@@ -129,8 +129,8 @@ namespace Tests.xUpdate
 				{
 					switch (context)
 					{
-						case ProviderName.SqlServer2008 : 
-						case ProviderName.SqlServer2012 : 
+						case ProviderName.SqlServer2008 :
+						case ProviderName.SqlServer2012 :
 						case ProviderName.SqlServer2014 : await db.DropTableAsync<TestTable>("#" + tableName); break;
 						default                         : await db.DropTableAsync<TestTable>(tableName);       break;
 					}
@@ -143,8 +143,8 @@ namespace Tests.xUpdate
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2008 : 
-					case ProviderName.SqlServer2012 : 
+					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
 						table = await db.CreateTableAsync<TestTable>("#" + tableName);
 						break;
@@ -234,7 +234,7 @@ namespace Tests.xUpdate
 			public int    bb { get; set; }
 			public string cc { get; set; }
 		}
-		
+
 		public class qq
 		{
 			public int bb { get; set; }
@@ -252,7 +252,7 @@ namespace Tests.xUpdate
 						.Property(t => t.bb).IsPrimaryKey()
 						.Property(t => t.cc)
 						.Property(t => t.dd).IsNotColumn()
-					
+
 					.Entity<qq>()
 						.HasTableName("aa")
 						.Property(t => t.bb).IsPrimaryKey()

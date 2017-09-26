@@ -7,11 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-#if !NETSTANDARD1_6
 
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.ServiceModel;
 using System.ServiceModel.Description;
-
 #endif
 
 using LinqToDB;
@@ -21,10 +20,8 @@ using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
-#if !NETSTANDARD1_6
-
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using LinqToDB.ServiceModel;
-
 #endif
 
 using NUnit.Framework;
@@ -209,7 +206,7 @@ namespace Tests
 #endif
 			}
 
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -238,14 +235,14 @@ namespace Tests
 			return basePath;
 		}
 
-#if !NETSTANDARD1_6 && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
 #endif
 
 		static void OpenHost()
 		{
-#if !NETSTANDARD1_6 && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 			if (_isHostOpen)
 				return;
 
@@ -500,7 +497,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD1_6 && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);

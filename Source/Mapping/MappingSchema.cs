@@ -715,7 +715,7 @@ namespace LinqToDB.Mapping
 			_metadataReaders = list.ToArray();
 		}
 
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:

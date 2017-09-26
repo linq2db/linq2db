@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net452;netcoreapp1.0</TargetFrameworks>
+		<TargetFrameworks>net452;netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<VersionPrefix>1.0.0.0</VersionPrefix>
 		<Authors>Igor Tkachev</Authors>
@@ -135,11 +135,19 @@
 		<DefineConstants>$(DefineConstants);NETSTANDARD1_6</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<Compile Remove="SchemaProvider\SchemaProviderTests.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="1.1.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
 		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
 		<PackageReference Include="System.Data.Common" Version="4.3.0" />
 		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
@@ -148,15 +156,14 @@
 		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
 		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.3.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-		
+
 		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
 
 		<PackageReference Include="MySql.Data" Version="7.0.6-IR31" />
 		<PackageReference Include="Npgsql" Version="3.2.1" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.0" />
-		<PackageReference Include="xunit.core" Version="2.1.0" />
 
 		<Compile Remove="DataProvider\AccessTests.cs" />
 		<Compile Remove="DataProvider\DB2Tests.cs" />
@@ -170,7 +177,6 @@
 		<Compile Remove="Metadata\AttributeReaderTests.cs" />
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
 		<Compile Remove="**\PartialTrust*.cs" />
-		<Compile Remove="SchemaProvider\SchemaProviderTests.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
 	</ItemGroup>
 </Project>
