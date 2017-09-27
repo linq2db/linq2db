@@ -22,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>6</LangVersion>
     <DocumentationFile>bin\Debug.4.5\linq2db.XML</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
