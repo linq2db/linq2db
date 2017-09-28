@@ -1,4 +1,6 @@
-﻿NorthwindSqliteMs * Data Source=Database/Northwind.sqlite     * SQLite
+﻿--TraceLevel = Error
+
+NorthwindSqliteMs * Data Source=Database/Northwind.sqlite     * SQLite
 
 !SQLiteMs         * Data Source=Database/TestData.sqlite      * SQLite
 SQLite.Data       * Data Source=Database/Data/TestData.sqlite * SQLite

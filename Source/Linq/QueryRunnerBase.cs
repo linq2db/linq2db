@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
-
-#if !SL4
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Linq
 {
@@ -36,11 +33,9 @@ namespace LinqToDB.Linq
 		public abstract object      ExecuteScalar  ();
 		public abstract IDataReader ExecuteReader  ();
 		public abstract Expression  MapperExpression { get; set; }
-#if !NOASYNC
 		public abstract Task<object>           ExecuteScalarAsync  (CancellationToken cancellationToken);
 		public abstract Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken);
 		public abstract Task<int>              ExecuteNonQueryAsync(CancellationToken cancellationToken);
-#endif
 
 		public Func<int> SkipAction  { get; set; }
 		public Func<int> TakeAction  { get; set; }

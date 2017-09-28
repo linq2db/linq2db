@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 using JetBrains.Annotations;
 
@@ -190,8 +187,6 @@ namespace LinqToDB
 			return QueryRunner.Insert<T>.Query(dataContext, obj, tableName, databaseName, schemaName);
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Inserts record asynchronously into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// </summary>
@@ -212,8 +207,6 @@ namespace LinqToDB
 			return QueryRunner.Insert<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 		}
 
-#endif
-
 		#endregion
 
 		#region InsertOrReplace
@@ -232,8 +225,6 @@ namespace LinqToDB
 			return QueryRunner.InsertOrReplace<T>.Query(dataContext, obj);
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Asynchronously inserts new record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter
 		/// or update exising record, identified by match on primary key value.
@@ -249,8 +240,6 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, token);
 		}
-
-#endif
 
 		#endregion
 
@@ -311,8 +300,6 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Asynchronously inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
@@ -384,8 +371,6 @@ namespace LinqToDB
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
 		}
 
-#endif
-
 		#endregion
 
 		#region Update
@@ -404,8 +389,6 @@ namespace LinqToDB
 			return QueryRunner.Update<T>.Query(dataContext, obj);
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Asynchronously updates record in table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Record to update identified by match on primary key value from <paramref name="obj"/> value.
@@ -421,8 +404,6 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, token);
 		}
-
-#endif
 
 		#endregion
 
@@ -442,8 +423,6 @@ namespace LinqToDB
 			return QueryRunner.Delete<T>.Query(dataContext, obj);
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Asynchronously deletes record in table, identified by <typeparamref name="T"/> mapping class.
 		/// Record to delete identified by match on primary key value from <paramref name="obj"/> value.
@@ -459,8 +438,6 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, token);
 		}
-
-#endif
 
 		#endregion
 
@@ -497,8 +474,6 @@ namespace LinqToDB
 				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable);
 		}
 
-#if !NOASYNC
-
 		/// <summary>
 		/// Asynchronously creates new table in database for mapping class <typeparamref name="T"/>.
 		/// Information about table name, columns names and types is taken from mapping class.
@@ -531,8 +506,6 @@ namespace LinqToDB
 			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
 				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable, token);
 		}
-
-#endif
 
 		#endregion
 
@@ -607,8 +580,6 @@ namespace LinqToDB
 			{
 			}
 		}
-
-#if !NOASYNC
 
 		/// <summary>
 		/// Asynchronously drops table identified by mapping class <typeparamref name="T"/>.
@@ -687,8 +658,6 @@ namespace LinqToDB
 			{
 			}
 		}
-
-#endif
 
 		#endregion
 	}

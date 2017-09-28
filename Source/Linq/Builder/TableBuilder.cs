@@ -394,7 +394,7 @@ namespace LinqToDB.Linq.Builder
 									var table = FindTable(ma, 1, false, true);
 									table.Table.LoadWith = loadWithItem.NextLoadWith;
 								}
-								yield return BuildExpression(ma, 1);
+								yield return BuildExpression(ma, 1, false);
 							}
 						}
 						else
@@ -622,7 +622,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region BuildExpression
 
-			public Expression BuildExpression(Expression expression, int level)
+			public Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				return BuildExpression(expression, level, null);
 			}
@@ -971,7 +971,10 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ma     = expression.NodeType == ExpressionType.MemberAccess 
 												? ((MemberExpression)buildInfo.Expression).Expression 
+												: expression.NodeType == ExpressionType.Call 
+												? ((MethodCallExpression)buildInfo.Expression).Arguments[0]
 												: buildInfo.Expression.GetRootObject(Builder.MappingSchema);
+
 								var atype  = typeof(AssociationHelper<>).MakeGenericType(association.ObjectType);
 								var helper = (IAssociationHelper)Activator.CreateInstance(atype);
 								var expr   = helper.GetExpression(ma, association);
@@ -1019,14 +1022,9 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null)
 					return;
 
-#if NETFX_CORE
-				if (alias.Contains("<"))
-#else
 				if (alias.Contains('<'))
-#endif
-
-				if (SqlTable.Alias == null)
-					SqlTable.Alias = alias;
+					if (SqlTable.Alias == null)
+						SqlTable.Alias = alias;
 			}
 
 			#endregion
@@ -1264,9 +1262,9 @@ namespace LinqToDB.Linq.Builder
 				AssociatedTableContext tableAssociation = null;
 						var isNew = false;
 
-				if (expression.NodeType == ExpressionType.Call)
+				if (levelExpression.NodeType == ExpressionType.Call)
 				{
-					var mc = (MethodCallExpression) expression;
+					var mc = (MethodCallExpression) levelExpression;
 					var aa = Builder.MappingSchema.GetAttribute<AssociationAttribute>(mc.Method.DeclaringType, mc.Method, a => a.Configuration);
 
 					if (aa != null)

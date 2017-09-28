@@ -6,18 +6,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-using LinqToDB.Mapping;
-#if !SL4
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Linq
 {
 	using Builder;
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	static partial class QueryRunner
@@ -65,12 +62,10 @@ namespace LinqToDB.Linq
 					if (_isFaulted)
 						throw;
 
-#if !SILVERLIGHT && !NETFX_CORE
 					if (DataConnection.TraceSwitch.TraceInfo)
 						DataConnection.WriteTraceLine(
 							"Mapper has switched to slow mode. Mapping exception: " + ex.Message,
 							DataConnection.TraceSwitch.DisplayName);
-#endif
 
 					_isFaulted = true;
 
@@ -85,12 +80,10 @@ namespace LinqToDB.Linq
 					if (_isFaulted)
 						throw;
 
-#if !SILVERLIGHT && !NETFX_CORE
 					if (DataConnection.TraceSwitch.TraceInfo)
 						DataConnection.WriteTraceLine(
 							"Mapper has switched to slow mode. Mapping exception: " + ex.Message,
 							DataConnection.TraceSwitch.DisplayName);
-#endif
 
 					_isFaulted = true;
 
@@ -241,9 +234,9 @@ namespace LinqToDB.Linq
 			return param;
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery
+		#region SetRunQuery
 
 		static Tuple<
 			Func<Query,IDataContextEx,Mapper<T>,Expression,object[],int,IEnumerable<T>>,
@@ -339,8 +332,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#if !NOASYNC
-
 		static async Task ExecuteQueryAsync<T>(
 			Query                         query,
 			IDataContextEx                dataContext,
@@ -379,8 +370,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endif
-
 		static void SetRunQuery<T>(
 			Query<T> query,
 			Expression<Func<IQueryRunner,IDataReader,T>> expression)
@@ -394,15 +383,11 @@ namespace LinqToDB.Linq
 
 			query.GetIEnumerable = (db, expr, ps) => runQuery(query, db, mapper, expr, ps, 0);
 
-#if !NOASYNC
-
 			var skipAction = executeQuery.Item2;
 			var takeAction = executeQuery.Item3;
 
 			query.GetForEachAsync = (db, expr, ps, action, token) =>
 				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, action, skipAction, takeAction, token);
-
-#endif
 		}
 
 		static readonly PropertyInfo _dataContextInfo  = MemberHelper.PropertyOf<IQueryRunner>( p => p.DataContext);
@@ -431,9 +416,9 @@ namespace LinqToDB.Linq
 					dataReaderParam);
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery / Cast, Concat, Union, OfType, ScalarSelect, Select, SequenceContext, Table
+		#region SetRunQuery / Cast, Concat, Union, OfType, ScalarSelect, Select, SequenceContext, Table
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -444,9 +429,9 @@ namespace LinqToDB.Linq
 			SetRunQuery(query, l);
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery / Select 2
+		#region SetRunQuery / Select 2
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -473,9 +458,9 @@ namespace LinqToDB.Linq
 			SetRunQuery(query, l);
 		}
 
-#endregion
+		#endregion
 
-#region SetRunQuery / Aggregation, All, Any, Contains, Count
+		#region SetRunQuery / Aggregation, All, Any, Contains, Count
 
 		public static void SetRunQuery<T>(
 			Query<T> query,
@@ -491,11 +476,8 @@ namespace LinqToDB.Linq
 			var l      = WrapMapper(expression);
 			var mapper = new Mapper<object>(l);
 
-			query.GetElement = (db, expr, ps) => ExecuteElement(query, db, mapper, expr, ps);
-
-#if !NOASYNC
+			query.GetElement      = (db, expr, ps) => ExecuteElement(query, db, mapper, expr, ps);
 			query.GetElementAsync = (db, expr, ps, token) => ExecuteElementAsync<object>(query, db, mapper, expr, ps, token);
-#endif
 		}
 
 		static T ExecuteElement<T>(
@@ -527,8 +509,6 @@ namespace LinqToDB.Linq
 				mapper.QueryRunner = null;
 			}
 		}
-
-#if !NOASYNC
 
 		static async Task<T> ExecuteElementAsync<T>(
 			Query             query,
@@ -574,11 +554,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endif
+		#endregion
 
-#endregion
-
-#region ScalarQuery
+		#region ScalarQuery
 
 		public static void SetScalarQuery(Query query)
 		{
@@ -589,11 +567,8 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement = (db, expr, ps) => ScalarQuery(query, db, expr, ps);
-
-#if !NOASYNC
+			query.GetElement      = (db, expr, ps) => ScalarQuery(query, db, expr, ps);
 			query.GetElementAsync = (db, expr, ps, token) => ScalarQueryAsync(query, db, expr, ps, token);
-#endif
 		}
 
 		static object ScalarQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
@@ -601,8 +576,6 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 				return runner.ExecuteScalar();
 		}
-
-#if !NOASYNC
 
 		static async Task<object> ScalarQueryAsync(
 			Query             query,
@@ -615,11 +588,9 @@ namespace LinqToDB.Linq
 				return await runner.ExecuteScalarAsync(cancellationToken);
 		}
 
-#endif
+		#endregion
 
-#endregion
-
-#region NonQueryQuery
+		#region NonQueryQuery
 
 		public static void SetNonQueryQuery(Query query)
 		{
@@ -630,11 +601,8 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement = (db, expr, ps) => NonQueryQuery(query, db, expr, ps);
-
-#if !NOASYNC
+			query.GetElement      = (db, expr, ps) => NonQueryQuery(query, db, expr, ps);
 			query.GetElementAsync = (db, expr, ps, token) => NonQueryQueryAsync(query, db, expr, ps, token);
-#endif
 		}
 
 		static int NonQueryQuery(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
@@ -642,8 +610,6 @@ namespace LinqToDB.Linq
 			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters))
 				return runner.ExecuteNonQuery();
 		}
-
-#if !NOASYNC
 
 		static async Task<object> NonQueryQueryAsync(
 			Query             query,
@@ -656,11 +622,9 @@ namespace LinqToDB.Linq
 				return await runner.ExecuteNonQueryAsync(cancellationToken);
 		}
 
-#endif
+		#endregion
 
-#endregion
-
-#region NonQueryQuery2
+		#region NonQueryQuery2
 
 		public static void SetNonQueryQuery2(Query query)
 		{
@@ -671,11 +635,8 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement = (db, expr, ps) => NonQueryQuery2(query, db, expr, ps);
-
-#if !NOASYNC
+			query.GetElement      = (db, expr, ps) => NonQueryQuery2(query, db, expr, ps);
 			query.GetElementAsync = (db, expr, ps, token) => NonQueryQuery2Async(query, db, expr, ps, token);
-#endif
 		}
 
 		static int NonQueryQuery2(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
@@ -692,8 +653,6 @@ namespace LinqToDB.Linq
 				return runner.ExecuteNonQuery();
 			}
 		}
-
-#if !NOASYNC
 
 		static async Task<object> NonQueryQuery2Async(
 			Query             query,
@@ -715,11 +674,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endif
+		#endregion
 
-#endregion
-
-#region QueryQuery2
+		#region QueryQuery2
 
 		public static void SetQueryQuery2(Query query)
 		{
@@ -730,11 +687,8 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement = (db, expr, ps) => QueryQuery2(query, db, expr, ps);
-
-#if !NOASYNC
+			query.GetElement      = (db, expr, ps) => QueryQuery2(query, db, expr, ps);
 			query.GetElementAsync = (db, expr, ps, token) => QueryQuery2Async(query, db, expr, ps, token);
-#endif
 		}
 
 		static int QueryQuery2(Query query, IDataContextEx dataContext, Expression expr, object[] parameters)
@@ -751,8 +705,6 @@ namespace LinqToDB.Linq
 				return runner.ExecuteNonQuery();
 			}
 		}
-
-#if !NOASYNC
 
 		static async Task<object> QueryQuery2Async(
 			Query             query,
@@ -774,11 +726,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endif
+		#endregion
 
-#endregion
-
-#region GetSqlText
+		#region GetSqlText
 
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object[] parameters, int idx)
 		{
@@ -786,6 +736,6 @@ namespace LinqToDB.Linq
 			return runner.GetSqlText();
 		}
 
-#endregion
+		#endregion
 	}
 }

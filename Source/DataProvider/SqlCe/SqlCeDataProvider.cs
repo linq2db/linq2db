@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SqlCeSchemaProvider();

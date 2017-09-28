@@ -7,11 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-#if !NETSTANDARD && !NETSTANDARD2_0
 
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.ServiceModel;
 using System.ServiceModel.Description;
-
 #endif
 
 using LinqToDB;
@@ -21,11 +20,9 @@ using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
-#if !NETSTANDARD && !NETSTANDARD2_0
-
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using LinqToDB.ServiceModel;
-
-#endif 
+#endif
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -67,7 +64,7 @@ namespace Tests
 		static TestBase()
 		{
 			Console.WriteLine("Tests started in {0}...",
-#if NETSTANDARD || NETSTANDARD2_0
+#if NETSTANDARD1_6
 				System.IO.Directory.GetCurrentDirectory()
 #else
 				Environment.CurrentDirectory
@@ -76,7 +73,6 @@ namespace Tests
 
 			var traceCount = 0;
 
-			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
 				 if (traceCount < 10000)
@@ -101,7 +97,7 @@ namespace Tests
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
-#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !MONO
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -110,19 +106,19 @@ namespace Tests
 			{ }
 #endif
 
-#if NETSTANDARD
+#if NETSTANDARD1_6
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
 #else
 			Environment.CurrentDirectory = assemblyPath;
 #endif
-#if NETSTANDARD
+#if NETSTANDARD1_6
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
 #else
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
 #endif
-			
+
 			var providerListFile =
 				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
 
@@ -159,6 +155,19 @@ namespace Tests
 					})
 					.ToDictionary(i => i.Name);
 
+			var logLevel = File.ReadAllLines(providerListFile)
+				.Select(s => s.Trim())
+				.Where(s => s.Length > 0 && s.StartsWith("--") && s.ToLower().Contains("tracelevel"))
+				.Select(s => s.Split(new []{'='}, StringSplitOptions.RemoveEmptyEntries)[1].Trim())
+				.FirstOrDefault();
+
+			var traceLevel = TraceLevel.Info;
+			if (!string.IsNullOrEmpty(logLevel))
+				if (!Enum.TryParse(logLevel, true, out traceLevel))
+					traceLevel = TraceLevel.Info;
+
+			DataConnection.TurnTraceSwitchOn(traceLevel);
+
 			//var map = new ExeConfigurationFileMap();
 			//map.ExeConfigFilename = Path.Combine(
 			//	Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Substring("file:///".Length)),
@@ -168,7 +177,7 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-#if NETSTANDARD
+#if NETSTANDARD1_6
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -192,14 +201,12 @@ namespace Tests
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD
+#if NETSTANDARD1_6
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
 
-			DataConnection.TurnTraceSwitchOn();
-
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -228,14 +235,14 @@ namespace Tests
 			return basePath;
 		}
 
-#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
 #endif
 
 		static void OpenHost()
 		{
-#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 			if (_isHostOpen)
 				return;
 
@@ -359,8 +366,12 @@ namespace Tests
 					.ToList();
 
 				var maxTime = method.GetCustomAttributes<MaxTimeAttribute>(true).FirstOrDefault();
-
 				explic.Add(maxTime ?? new MaxTimeAttribute(10000));
+
+//#if !NETSTANDARD1_6
+//				var timeout = method.GetCustomAttributes<TimeoutAttribute>(true).FirstOrDefault();
+//				explic.Add(timeout ?? new TimeoutAttribute(10000));
+//#endif
 
 				var builder = new NUnitTestCaseBuilder();
 
@@ -401,7 +412,7 @@ namespace Tests
 
 					}
 
-#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !MONO
 					if (!isIgnore && _includeLinqService)
 					{
 						var linqCaseNumber = 0;
@@ -486,7 +497,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD && !MONO && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -844,7 +855,7 @@ namespace Tests
 				return _inheritanceChild;
 			}
 		}
-		
+
 		#endregion
 
 #region Northwind
@@ -1122,7 +1133,7 @@ namespace Tests
 
 			if (exceptResult != 0 || exceptExpected != 0)
 				for (var i = 0; i < resultList.Count; i++)
-				{ 
+				{
 					Debug.  WriteLine   ("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendFormat("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendLine  ();
@@ -1216,14 +1227,17 @@ namespace Tests
 
 	public class DisableLogging : IDisposable
 	{
+		private TraceSwitch _traceSwitch;
+
 		public DisableLogging()
 		{
+			_traceSwitch = DataConnection.TraceSwitch;
 			DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
 		}
 
 		public void Dispose()
 		{
-			DataConnection.TurnTraceSwitchOn();
+			DataConnection.TraceSwitch = _traceSwitch;
 		}
 	}
 

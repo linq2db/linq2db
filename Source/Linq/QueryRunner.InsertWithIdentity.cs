@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Linq
 {
@@ -66,20 +63,16 @@ namespace LinqToDB.Linq
 				return ei.GetElement((IDataContextEx)dataContext, Expression.Constant(obj), null);
 			}
 
-#if !NOASYNC
-
-			public static Task<object> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
+			public static async Task<object> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
 			{
 				if (Equals(default(T), obj))
-					return Task.FromResult((object)0);
+					return 0;
 
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
 				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
 
-				return ei.GetElementAsync((IDataContextEx)dataContext, Expression.Constant(obj), null, token);
+				return await ei.GetElementAsync((IDataContextEx)dataContext, Expression.Constant(obj), null, token);
 			}
-
-#endif
 		}
 	}
 }

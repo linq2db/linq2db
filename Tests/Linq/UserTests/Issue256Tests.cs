@@ -78,12 +78,14 @@ namespace Tests.UserTests
 
 #if !MONO
 		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Category("Explicit")]
 		public void SimpleTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
 			Test(context, action, 1);
 		}
 
 		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Category("Explicit")]
 		public void RetryTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
 			Test(context, action, 3);
@@ -120,6 +122,8 @@ namespace Tests.UserTests
 		{
 			var value = RunTest(db, test, calls);
 
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
 			GC.Collect();
 
 			Assert.False(value.IsAlive);

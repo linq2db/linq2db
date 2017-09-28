@@ -6,11 +6,8 @@ using System.Data.Common;
 using System.Data.Linq;
 using System.IO;
 using System.Linq.Expressions;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 using System.Xml;
 using System.Xml.Linq;
@@ -267,13 +264,13 @@ namespace LinqToDB.DataProvider
 #endif
 				return true;
 			}
-			
+
 			return false;
 		}
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 			var st = ((DbDataReader)reader).GetSchemaTable();
 			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
 #else
@@ -370,7 +367,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		public abstract bool            IsCompatibleConnection(IDbConnection connection);
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public abstract ISchemaProvider GetSchemaProvider     ();
 #endif
 
@@ -412,7 +409,7 @@ namespace LinqToDB.DataProvider
 			parameter.DbType = dbType;
 		}
 
-#endregion
+		#endregion
 
 		#region Create/Drop Database
 
@@ -457,7 +454,7 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-#endregion
+		#endregion
 
 		#region BulkCopy
 
@@ -477,16 +474,12 @@ namespace LinqToDB.DataProvider
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#if !NOASYNC
-
 		public virtual Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName, CancellationToken token)
 			where T : class
 		{
 			return new BasicMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
 		}
-
-#endif
 
 		public int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 			where TTarget : class
@@ -510,8 +503,7 @@ namespace LinqToDB.DataProvider
 			return dataConnection.Execute(cmd, builder.Parameters);
 		}
 
-#if !NOASYNC
-		public Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
+		public async Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
 			where TTarget : class
 			where TSource : class
 		{
@@ -528,11 +520,10 @@ namespace LinqToDB.DataProvider
 			var cmd = builder.BuildCommand();
 
 			if (builder.NoopCommand)
-				return Task.FromResult(0);
+				return 0;
 
-			return dataConnection.ExecuteAsync(cmd, token, builder.Parameters);
+			return await dataConnection.ExecuteAsync(cmd, token, builder.Parameters);
 		}
-#endif
 
 		protected virtual BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection,
@@ -542,15 +533,6 @@ namespace LinqToDB.DataProvider
 		{
 			return new UnsupportedMergeBuilder<TTarget, TSource>(connection, merge);
 		}
-
-		#endregion
-
-		#region Async
-
-#if !NOASYNC
-
-
-#endif
 
 		#endregion
 

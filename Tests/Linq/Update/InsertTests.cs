@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -137,8 +134,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Insert2Async(string context)
 		{
@@ -164,8 +159,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void Insert3(string context)
@@ -195,8 +188,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Insert3Async(string context)
 		{
@@ -224,8 +215,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void Insert31(string context)
@@ -283,8 +272,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Insert4Async(string context)
 		{
@@ -311,8 +298,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void Insert5(string context)
@@ -728,8 +713,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertWithIdentity1Async(string context)
 		{
@@ -754,8 +737,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
 		[Test, DataContextSource]
 		public void InsertWithIdentity2(string context)
 		{
@@ -778,8 +759,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertWithIdentity2Async(string context)
 		{
@@ -801,8 +780,6 @@ namespace Tests.xUpdate
 				Assert.AreEqual(id, john.ID);
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void InsertWithIdentity3(string context)
@@ -852,8 +829,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertWithIdentity4Async(string context)
 		{
@@ -879,8 +854,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void InsertWithIdentity5(string context)
@@ -1141,8 +1114,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertOrReplace1Async(string context)
 		{
@@ -1177,8 +1148,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test]
 		public void InsertOrReplaceWithIdentity()
@@ -1247,8 +1216,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertOrUpdate3Async(string context)
 		{
@@ -1297,8 +1264,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, IncludeDataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void InsertBatch1(string context)

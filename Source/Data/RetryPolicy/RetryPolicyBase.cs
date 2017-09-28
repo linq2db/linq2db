@@ -24,35 +24,35 @@ namespace LinqToDB.Data.RetryPolicy
 		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay)
 		{
 			if (maxRetryCount < 0)
-				throw new ArgumentOutOfRangeException("maxRetryCount");
+				throw new ArgumentOutOfRangeException(nameof(maxRetryCount));
 			if (maxRetryDelay.TotalMilliseconds < 0.0)
-				throw new ArgumentOutOfRangeException("maxRetryDelay");
+				throw new ArgumentOutOfRangeException(nameof(maxRetryDelay));
 
-			MaxRetryCount = maxRetryCount;
-			MaxRetryDelay = maxRetryDelay;
+			MaxRetryCount         = maxRetryCount;
+			MaxRetryDelay         = maxRetryDelay;
 			ExceptionsEncountered = new List<Exception>();
-			Random = new Random();
+			Random                = new Random();
 		}
 
 		/// <summary>
 		/// The list of exceptions that caused the operation to be retried so far.
 		/// </summary>
-		protected virtual List<Exception> ExceptionsEncountered { get; private set; }
+		protected virtual List<Exception> ExceptionsEncountered { get; }
 
 		/// <summary>
 		/// A pseudo-random number generater that can be used to vary the delay between retries.
 		/// </summary>
-		protected virtual Random Random { get; private set; }
+		protected virtual Random Random { get; }
 
 		/// <summary>
 		/// The maximum number of retry attempts.
 		/// </summary>
-		protected virtual int MaxRetryCount { get; private set; }
+		protected virtual int MaxRetryCount { get; }
 
 		/// <summary>
 		/// The maximum delay in milliseconds between retries.
 		/// </summary>
-		protected virtual TimeSpan MaxRetryDelay { get; private set; }
+		protected virtual TimeSpan MaxRetryDelay { get; }
 
 		[ThreadStatic]
 		static volatile bool _suspended;
@@ -63,8 +63,8 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		protected static bool Suspended
 		{
-			get { return _suspended;  }
-			set { _suspended = value; }
+			get => _suspended;
+			set => _suspended = value;
 		}
 
 		/// <summary>
@@ -132,7 +132,6 @@ namespace LinqToDB.Data.RetryPolicy
 			}
 		}
 
-#if !NOASYNC
 		/// <summary>
 		///     Executes the specified asynchronous operation and returns the result.
 		/// </summary>
@@ -162,13 +161,13 @@ namespace LinqToDB.Data.RetryPolicy
 			return ExecuteImplementationAsync(operation, cancellationToken);
 		}
 
-		public Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken())
+		public async Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken())
 		{
 			if (Suspended)
-				return operation(cancellationToken);
+				await operation(cancellationToken);
 
 			OnFirstExecution();
-			return ExecuteImplementationAsync(ct => { operation(ct); return Task.FromResult(0); }, cancellationToken);
+			await ExecuteImplementationAsync(async ct => { await operation(ct); return 0; }, cancellationToken);
 		}
 
 		async Task<TResult> ExecuteImplementationAsync<TResult>(
@@ -181,6 +180,7 @@ namespace LinqToDB.Data.RetryPolicy
 				cancellationToken.ThrowIfCancellationRequested();
 
 				TimeSpan? delay;
+
 				try
 				{
 					Suspended = true;
@@ -204,11 +204,9 @@ namespace LinqToDB.Data.RetryPolicy
 					OnRetry();
 				}
 
-				await Task.Delay(delay.Value, cancellationToken);
+				await TaskEx.Delay(delay.Value, cancellationToken);
 			}
 		}
-#endif
-
 
 		/// <summary>
 		///     Method called before the first operation execution

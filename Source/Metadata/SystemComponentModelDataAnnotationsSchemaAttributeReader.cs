@@ -1,6 +1,4 @@
-﻿#if NETSTANDARD || NETSTANDARD2_0
-
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace LinqToDB.Metadata
@@ -66,8 +64,8 @@ namespace LinqToDB.Metadata
 
 					var attr = new ColumnAttribute
 					{
-						Name      = c.Name,
-						DbType    = c.TypeName 
+						Name   = c.Name,
+						DbType = c.TypeName 
 					};
 
 					return new[] { (T)(Attribute)attr };
@@ -78,5 +76,3 @@ namespace LinqToDB.Metadata
 		}
 	}
 }
-
-#endif

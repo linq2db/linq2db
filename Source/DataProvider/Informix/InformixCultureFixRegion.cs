@@ -6,13 +6,13 @@ namespace LinqToDB.DataProvider.Informix
 {
 	internal class InformixCultureFixRegion : IDisposable
 	{
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 		private readonly CultureInfo _original;
 #endif
 
 		public InformixCultureFixRegion()
 		{
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 			if (Thread.CurrentThread.CurrentCulture.NumberFormat.CurrencyDecimalSeparator != ".")
 			{
 				_original = Thread.CurrentThread.CurrentCulture;
@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		void IDisposable.Dispose()
 		{
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 			if (_original != null)
 				Thread.CurrentThread.CurrentCulture = _original;
 #endif

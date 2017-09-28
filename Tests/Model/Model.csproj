@@ -1,95 +1,58 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	<TargetFrameworks>net45;net40;netstandard1.6;netstandard2.0</TargetFrameworks>
-	<PublicSign>true</PublicSign>
-	<AssemblyName>Model</AssemblyName>
-	<AssemblyOriginatorKeyFile>linq2db.Tests.snk</AssemblyOriginatorKeyFile>
-	<SignAssembly>true</SignAssembly>
-	<PackageId>Model</PackageId>
-	<PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
-	<NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.6' ">1.6.1</NetStandardImplicitPackageVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
+		<PublicSign>true</PublicSign>
+		<AssemblyName>Model</AssemblyName>
+		<AssemblyOriginatorKeyFile>linq2db.Tests.snk</AssemblyOriginatorKeyFile>
+		<SignAssembly>true</SignAssembly>
+		<PackageId>Model</PackageId>
+		<Configurations>Debug;Release;Travis</Configurations>
+	</PropertyGroup>
 
-  <ItemGroup>
-	<ProjectReference Include="..\..\Source\Source.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\Source.csproj" />
+	</ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
-	<Reference Include="Microsoft.CSharp" />
-	<Reference Include="System" />
-	<Reference Include="System.Configuration" />
-	<Reference Include="System.Core" />
-	<Reference Include="System.Data.DataSetExtensions" />
-	<Reference Include="System.Data.Linq" />
-	<Reference Include="System.Data.Services" />
-	<Reference Include="System.ServiceModel" />
-  </ItemGroup>
 
- <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-	<PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
-	<Reference Include="Microsoft.CSharp" />
-	<Reference Include="System" />
-	<Reference Include="System.Configuration" />
-	<Reference Include="System.Core" />
-	<Reference Include="System.Data.DataSetExtensions" />
-	<Reference Include="System.Data.Linq" />
-	<Reference Include="System.Data.Services" />
-	<Reference Include="System.ServiceModel" />
-  </ItemGroup>
+	<!-- .NET Framework -->
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
-	<DefineConstants>$(DefineConstants);NOIMMUTABLE</DefineConstants>
-  </PropertyGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System" />
+		<Reference Include="System.Configuration" />
+		<Reference Include="System.Core" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="System.Data.Linq" />
+		<Reference Include="System.Data.Services" />
+		<Reference Include="System.ServiceModel" />
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-	<DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
-  </PropertyGroup>
+		<PackageReference Include="System.Collections.Immutable" Version="1.3.1" />
+	</ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-	<Compile Remove="/**/TestServiceModelDataContext.cs" />
-  </ItemGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-	<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
-  </PropertyGroup>
+	<!-- .NET Standard -->
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-	<Compile Remove="/**/TestServiceModelDataContext.cs" />
-  </ItemGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+		<DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
+	</PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-	<!--<PackageReference Include="System.Data.Common" Version="4.3.0" />-->
-	<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
-	<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-	<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-	<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
-	<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-	<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
-	<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
-	<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-	<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-	<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-	<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
-	<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.0" />
-	<PackageReference Include="System.Collections.Immutable" Version="1.3.1" />
-  </ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+		<PackageReference Include="System.Data.Common" Version="4.3.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.3.0" />
+		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
+		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
+		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="1.1.0" />
+		<PackageReference Include="System.Collections.Immutable" Version="1.3.1" />
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6'">
-	<PackageReference Include="System.Data.Common" Version="4.3.0" />
-	<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
-	<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-	<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-	<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
-	<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-	<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
-	<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
-	<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-	<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-	<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-	<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
-	<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.0" />
-	<PackageReference Include="System.Collections.Immutable" Version="1.3.1" />
-  </ItemGroup>
-
+		<Compile Remove="TestServiceModelDataContext.cs" />
+	</ItemGroup>
 </Project>

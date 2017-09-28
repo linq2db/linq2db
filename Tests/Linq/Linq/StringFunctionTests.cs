@@ -1,9 +1,11 @@
 ﻿using System;
-#if !NETSTANDARD && !NETSTANDARD2_0
+
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
 #endif
+
 using System.Linq;
 
 using LinqToDB;
@@ -237,7 +239,7 @@ namespace Tests.Linq
 					select p1,
 					from p1 in db.Person
 					from p2 in db.Person
-					where p1.ID == p2.ID && 
+					where p1.ID == p2.ID &&
 						Sql.Like(p1.FirstName, p2.FirstName.Replace("%", "~%"), '~')
 					select p1);
 		}
@@ -267,7 +269,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, DataContextSource]
 		public void Like11(string context)
 		{
@@ -287,7 +289,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
-#endif 
+#endif
 
 		[Test, DataContextSource]
 		public void Like21(string context)
@@ -637,7 +639,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.Trim() == "John" select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
@@ -649,7 +651,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.TrimStart() == "John " select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
@@ -661,7 +663,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.TrimEnd() == "  John" select pp;
 				Assert.AreEqual(1, q.ToList().First().ID);
@@ -758,7 +760,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 		[Test, DataContextSource]
 		public void CompareTo3(string context)
 		{
@@ -845,7 +847,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, true) == 0 && p.ID == 1 select p;
 #else
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, StringComparison.OrdinalIgnoreCase) == 0 && p.ID == 1 select p;

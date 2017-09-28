@@ -1,15 +1,10 @@
-﻿using LinqToDB.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.Linq.Expressions;
 using System.Security;
 using System.Threading;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -34,7 +29,6 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsInsertOrUpdateSupported    = false;
 			SqlProviderFlags.IsGroupByExpressionSupported = false;
 			SqlProviderFlags.IsCrossJoinSupported         = false;
-
 
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
@@ -149,7 +143,7 @@ namespace LinqToDB.DataProvider.Informix
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new InformixSchemaProvider();
@@ -198,7 +192,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameterType(parameter, dataType);
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -210,9 +204,9 @@ namespace LinqToDB.DataProvider.Informix
 				source);
 		}
 
-#endregion
+		#endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -223,8 +217,6 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#if !NOASYNC
-
 		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName, CancellationToken token)
 		{
@@ -234,8 +226,6 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
 		}
 
-#endif
-
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection,
 			IMergeable<TTarget, TSource> merge)
@@ -243,6 +233,6 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
-#endregion
+		#endregion
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Data.RetryPolicy
@@ -19,7 +20,6 @@ namespace LinqToDB.Data.RetryPolicy
 
 		void Execute([NotNull] Action operation);
 
-#if !NOASYNC
 		/// <summary>
 		///     Executes the specified asynchronous operation and returns the result.
 		/// </summary>
@@ -45,6 +45,5 @@ namespace LinqToDB.Data.RetryPolicy
 		Task ExecuteAsync(
 			[NotNull] Func<CancellationToken,Task> operation,
 			CancellationToken cancellationToken = default(CancellationToken));
-#endif
 	}
 }

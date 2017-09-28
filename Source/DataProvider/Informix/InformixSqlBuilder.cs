@@ -190,15 +190,10 @@ namespace LinqToDB.DataProvider.Informix
 			return sb.Append(table);
 		}
 
-
-#if !SILVERLIGHT
-
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.IfxType.ToString();
 		}
-
-#endif
 	}
 }

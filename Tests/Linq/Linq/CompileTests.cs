@@ -133,7 +133,7 @@ namespace Tests.Linq
 				Assert.AreEqual(results[i,0], results[i,1]);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
 		public void ConcurentTest2(string context)
 		{
 			var threads = new Thread[100];

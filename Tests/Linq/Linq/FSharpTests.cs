@@ -1,4 +1,4 @@
-﻿#if !NOFSHARP
+﻿#if !TRAVIS
 using System;
 
 using NUnit.Framework;

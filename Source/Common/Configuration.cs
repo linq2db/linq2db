@@ -5,9 +5,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Common
 {
 	using Data;
-#if !SILVERLIGHT && !WINSTORE
 	using Data.RetryPolicy;
-#endif
 
 	/// <summary>
 	/// Contains global linq2db settings.
@@ -124,12 +122,14 @@ namespace LinqToDB.Common
 			/// </remarks>
 			public static bool GuardGrouping;
 
+#pragma warning disable 1574
 			/// <summary>
 			/// Used to optimize huge logical operations with large number of operands like expr1.and.axpr2...and.exprN into balanced tree.
 			/// Without this option, such conditions could lead to <seealso cref="StackOverflowException"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool UseBinaryAggregateExpression;
+#pragma warning restore 1574
 
 			/// <summary>
 			/// Used to disable LINQ expressions caching for queries.
@@ -172,7 +172,6 @@ namespace LinqToDB.Common
 			public static bool ThrowUnresolvedTypeException;
 		}
 
-#if !SILVERLIGHT && !WINSTORE
 		/// <summary>
 		/// Retry policy global settings.
 		/// </summary>
@@ -227,6 +226,5 @@ namespace LinqToDB.Common
 			/// </summary>
 			public static TimeSpan DefaultCoefficient = TimeSpan.FromSeconds(1);
 		}
-#endif
 	}
 }

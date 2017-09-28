@@ -6,10 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-
-#if !SL4
 using System.Threading.Tasks;
-#endif
 
 using JetBrains.Annotations;
 
@@ -89,8 +86,6 @@ namespace LinqToDB.Linq
 			return info;
 		}
 
-#if !SL4 && !NOASYNC
-
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
 		{
 			var value = await GetQuery(ref expression, false).GetElementAsync(
@@ -115,8 +110,6 @@ namespace LinqToDB.Linq
 			return GetQuery(ref expression, true)
 				.GetForEachAsync((IDataContextEx)DataContext, expression, Parameters, func, cancellationToken);
 		}
-
-#endif
 
 		#endregion
 

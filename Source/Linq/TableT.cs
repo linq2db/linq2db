@@ -15,14 +15,6 @@ namespace LinqToDB.Linq
 			Init(dataContext, expression);
 		}
 
-#if !SILVERLIGHT
-
-		public Table()
-		{
-			Init(null, null);
-		}
-
-#endif
 		public string DatabaseName;
 		public string SchemaName;
 		public string TableName;

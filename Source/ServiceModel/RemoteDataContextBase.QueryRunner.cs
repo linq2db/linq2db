@@ -3,10 +3,7 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.ServiceModel
 {
@@ -190,8 +187,6 @@ namespace LinqToDB.ServiceModel
 				return new ServiceModelDataReader(_dataContext.MappingSchema, result);
 			}
 
-#if !NOASYNC
-
 			class DataReaderAsync : IDataReaderAsync
 			{
 				public DataReaderAsync(RemoteDataContextBase dataContext, string result, Func<int> skipAction, Func<int> takeAction)
@@ -211,19 +206,19 @@ namespace LinqToDB.ServiceModel
 				{
 					_dataContext.ThrowOnDisposed();
 
-					await Task.Run(() =>
+					await TaskEx.Run(() =>
 					{
 						var result = LinqServiceSerializer.DeserializeResult(_result);
 
 						using (var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result))
 						{
-							var skip = _skipAction == null ? 0 : _skipAction();
+							var skip = _skipAction?.Invoke() ?? 0;
 
 							while (skip-- > 0 && reader.Read())
 								if (cancellationToken.IsCancellationRequested)
 									return;
 
-							var take = _takeAction == null ? int.MaxValue : _takeAction();
+							var take = _takeAction?.Invoke() ?? int.MaxValue;
 				
 							while (take-- > 0 && reader.Read())
 								if (cancellationToken.IsCancellationRequested)
@@ -301,8 +296,6 @@ namespace LinqToDB.ServiceModel
 
 				return await _client.ExecuteNonQueryAsync(_dataContext.Configuration, data);
 			}
-
-#endif
 		}
 	}
 }

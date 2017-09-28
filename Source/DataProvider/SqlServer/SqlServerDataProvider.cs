@@ -7,11 +7,8 @@ using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -159,12 +156,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			return typeof(SqlConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() : new SqlServerSchemaProvider();
 		}
 #endif
+
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
 
 		public override object GetConnectionInfo(DataConnection dataConnection, string parameterName)
@@ -205,7 +203,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						string s;
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
 							if (parameter is SqlParameter)
-#if NETSTANDARD || NETSTANDARD2_0
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 								((SqlParameter)parameter).TypeName = s;
 #else
 								((SqlParameter)parameter).UdtTypeName = s;
@@ -253,7 +251,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-#endregion
+		#endregion
 
 		#region Udt support
 
@@ -315,30 +313,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#if !NOASYNC
-
 		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName, CancellationToken token)
 		{
 			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
 		}
 
-#endif
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
 			DataConnection connection, 
 			IMergeable<TTarget, TSource> merge)
 		{
 			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);
 		}
-
-		#endregion
-
-		#region Async
-
-#if !NOASYNC
-
-
-#endif
 
 		#endregion
 	}

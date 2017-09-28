@@ -232,7 +232,7 @@ namespace LinqToDB.Mapping
 
 		private bool? _canBeNull;
 		/// <summary>
-		/// Gets or sets whether a column can contain null values.
+		/// Gets or sets whether a column can contain <c>NULL</c> values.
 		/// </summary>
 		public  bool   CanBeNull
 		{

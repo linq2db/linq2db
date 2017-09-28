@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-
-#if !SL4
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 
@@ -227,8 +224,6 @@ namespace Tests.Linq
 
 		}
 
-#if !SL4 && !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task All4Async(string context)
 		{
@@ -237,8 +232,6 @@ namespace Tests.Linq
 					         Child.All     (c => c.ParentID > 3),
 					await db.Child.AllAsync(c => c.ParentID > 3));
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void All5(string context)

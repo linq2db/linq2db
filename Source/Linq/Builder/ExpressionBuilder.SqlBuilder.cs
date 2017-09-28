@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-
-#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD || NETSTANDARD2_0
-using System.Data.SqlTypes;
-#endif
 
 using LinqToDB.Data;
 
@@ -369,7 +366,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		class ConvertHelper<T> : IConvertHelper
-			where T : struct 
+			where T : struct
 		{
 			public Expression ConvertNull(MemberExpression expression)
 			{
@@ -644,7 +641,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap = false)
 		{
-			if (!PreferServerSide(expression))
+			if (!PreferServerSide(expression, false))
 			{
 				if (CanBeConstant(expression))
 					return BuildConstant(expression);
@@ -765,10 +762,8 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method == null && e.IsLifted)
 							return o;
 
-#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD || NETSTANDARD2_0
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return o;
-#endif
 
 						var t = e.Operand.Type;
 						var s = SqlDataType.GetDataType(t);
@@ -1061,7 +1056,7 @@ namespace LinqToDB.Linq.Builder
 							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
 								result = IsQueryMember(e.Arguments[0]);
 						}
-						else if (e.IsAggregate(MappingSchema))
+						else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))
 						{
 							result = true;
 						}
@@ -1080,7 +1075,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (l != null)
 							{
-								result = l.Body.Unwrap().Find(IsServerSideOnly) != null;
+								result = l.Body.Unwrap().Find(ex => IsServerSideOnly(ex)) != null;
 							}
 							else
 							{
@@ -1318,7 +1313,7 @@ namespace LinqToDB.Linq.Builder
 					if (!expr.Type.IsConstantable() || AsParameters.Contains(c))
 					{
 						Expression val;
-						
+
 						if (expressionAccessors.TryGetValue(expr, out val))
 						{
 							expr = Expression.Convert(val, expr.Type);
@@ -1398,7 +1393,7 @@ namespace LinqToDB.Linq.Builder
 								.MakeGenericMethod(args[1]);
 
 							var expr = Expression.Call(
-								minf, 
+								minf,
 								Expression.PropertyOrField(e.Object, "Values"),
 								e.Arguments[0]);
 
@@ -1412,13 +1407,13 @@ namespace LinqToDB.Linq.Builder
 								.MakeGenericMethod(args[0]);
 
 							var expr = Expression.Call(
-								minf, 
+								minf,
 								Expression.PropertyOrField(e.Object, "Keys"),
 								e.Arguments[0]);
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e);
 #endif
@@ -1447,8 +1442,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (MemberExpression)expression;
 
-						if (e.Member.Name == "HasValue" && 
-							e.Member.DeclaringType.IsGenericTypeEx() && 
+						if (e.Member.Name == "HasValue" &&
+							e.Member.DeclaringType.IsGenericTypeEx() &&
 							e.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>))
 						{
 							var expr = ConvertToSql(context, e.Expression);
@@ -1476,12 +1471,10 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Convert:
 					{
-#if !SILVERLIGHT && !NETFX_CORE
 						var e = (UnaryExpression)expression;
 
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return ConvertPredicate(context, e.Operand);
-#endif
 
 						return ConvertPredicate(context, AddEqualTrue(expression));
 					}
@@ -1749,7 +1742,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ctx = GetContext(context, left);
 
-					if (ctx != null && 
+					if (ctx != null &&
 						(ctx.IsExpression(left, 0, RequestFor.Object).Result ||
 						 left.NodeType == ExpressionType.Parameter && ctx.IsExpression(left, 0, RequestFor.Field).Result))
 					{
@@ -2304,7 +2297,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								cond.Conditions.Add(
 									new SelectQuery.Condition(
-										false, 
+										false,
 										Convert(context,
 											new SelectQuery.Predicate.ExprExpr(
 												getSql(m.DiscriminatorName),
@@ -2552,7 +2545,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
 
-				if (exprExpr != null && 
+				if (exprExpr != null &&
 					(
 						exprExpr.Operator == SelectQuery.Predicate.Operator.NotEqual && isNot == false ||
 						exprExpr.Operator == SelectQuery.Predicate.Operator.Equal    && isNot == true

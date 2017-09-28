@@ -455,7 +455,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
 		public void Issue695Test(string context)
 		{

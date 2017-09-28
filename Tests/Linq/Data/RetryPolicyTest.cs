@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
-
+using LinqToDB.DataProvider.SqlServer;
 using NUnit.Framework;
 
 namespace Tests.Data
@@ -98,7 +98,19 @@ namespace Tests.Data
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
 		}
 
-#if !NOASYNC
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]
+		public async Task ExecuteTestAsync(string context)
+		{
+			var ret = new Retry();
+
+			using (var db = new DataConnection(context) { RetryPolicy = new SqlServerRetryPolicy() })
+			{
+				var i = await db.ExecuteAsync("SELECT 1");
+
+				Assert.That(i, Is.EqualTo(-1));
+			}
+		}
+
 		[Test, DataContextSource(false)]
 		public void RetryPoliceTestAsync(string context)
 		{
@@ -119,6 +131,5 @@ namespace Tests.Data
 
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
 		}
-#endif
 	}
 }

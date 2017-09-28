@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Linq
 {
@@ -36,8 +33,6 @@ namespace LinqToDB.Linq
 				query.GetElement((IDataContextEx)dataContext, Expression.Constant(null), null);
 			}
 
-#if !NOASYNC
-
 			public static async Task QueryAsync(IDataContext dataContext, string tableName, string databaseName, string ownerName, CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -59,8 +54,6 @@ namespace LinqToDB.Linq
 
 				await query.GetElementAsync((IDataContextEx)dataContext, Expression.Constant(null), null, token);
 			}
-
-#endif
 		}
 	}
 }

@@ -64,7 +64,7 @@ namespace LinqToDB.Metadata
 		{
 		}
 
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MetadataException"/> class

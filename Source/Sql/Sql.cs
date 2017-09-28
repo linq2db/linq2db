@@ -318,7 +318,7 @@ namespace LinqToDB
 		#region String Functions
 
 		[Sql.Function  (                                                   PreferServerSide = true)]
-		[Sql.Function  (PN.Access,    "Len",                               PreferServerSide = true)]
+		[Sql.Function  (ProviderName.Access,    "Len",                               PreferServerSide = true)]
 		[Sql.Function  (PN.Firebird,  "Char_Length",                       PreferServerSide = true)]
 		[Sql.Function  (PN.SqlServer, "Len",                               PreferServerSide = true)]
 		[Sql.Function  (PN.SqlCe,     "Len",                               PreferServerSide = true)]
@@ -346,7 +346,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string matchExpression, string pattern)
 		{
-#if SILVERLIGHT || NETFX_CORE || NETSTANDARD || NETSTANDARD2_0
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null &&
@@ -357,7 +357,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string matchExpression, string pattern, char? escapeCharacter)
 		{
-#if SILVERLIGHT || NETFX_CORE || NETSTANDARD || NETSTANDARD2_0
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&
@@ -380,10 +380,10 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		[Sql.Function  (ProviderName.DB2,   "Locate")]
-		[Sql.Function  (ProviderName.MySql, "Locate")]
-		[Sql.Function  (PN.Firebird,        "Position")]
-		[Sql.Expression(PN.SapHana,         "Locate(Substring({1},{2} + 1),{0}) + {2}")]
+		[Sql.Function  (PN.DB2,      "Locate")]
+		[Sql.Function  (PN.MySql,    "Locate")]
+		[Sql.Function  (PN.Firebird, "Position")]
+		[Sql.Expression(PN.SapHana,  "Locate(Substring({1},{2} + 1),{0}) + {2}")]
 		public static int? CharIndex(string value, string str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
@@ -405,9 +405,9 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		[Sql.Function(ProviderName.DB2,   "Locate")]
-		[Sql.Function(ProviderName.MySql, "Locate")]
-		[Sql.Function(PN.SapHana,         "Locate")]
+		[Sql.Function(PN.DB2,     "Locate")]
+		[Sql.Function(PN.MySql,   "Locate")]
+		[Sql.Function(PN.SapHana, "Locate")]
 		public static int? CharIndex(char? value, string str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
@@ -735,7 +735,7 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Function] 
+		[Sql.Function]
 		[Sql.DatePart(PN.Oracle,     "Add{0}",                              false, 0, 2, 1)]
 		[Sql.DatePart(PN.DB2,        "{{1}} + {0}",                         Precedence.Additive, true, new[] { "{0} Year", "({0} * 3) Month", "{0} Month", "{0} Day", "{0} Day", "({0} * 7) Day", "{0} Day", "{0} Hour", "{0} Minute", "{0} Second", "({0} * 1000) Microsecond" }, 0, 1, 2)]
 		[Sql.DatePart(PN.Informix,   "{{1}} + Interval({0}",                Precedence.Additive, true, new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null }, 0, 1, 2)]
@@ -943,21 +943,13 @@ namespace LinqToDB
 		[Sql.Function]
 		public static Decimal? RoundToEven(Decimal? value)
 		{
-#if SILVERLIGHT
-			return value == null ? null : (Decimal?)Math.Round(value.Value);
-#else
 			return value == null ? null : (Decimal?)Math.Round(value.Value, MidpointRounding.ToEven);
-#endif
 		}
 
 		[Sql.Function]
 		public static Double? RoundToEven(Double? value)
 		{
-#if SILVERLIGHT
-			return value == null ? null : (Double?) Math.Round(value.Value);
-#else
 			return value == null ? null : (Double?) Math.Round(value.Value, MidpointRounding.ToEven);
-#endif
 		}
 
 		[Sql.Function] public static Decimal? Round(Decimal? value) { return Round(value, 0); }
@@ -966,41 +958,25 @@ namespace LinqToDB
 		[Sql.Function]
 		public static Decimal? Round(Decimal? value, int? precision)
 		{
-#if SILVERLIGHT
-			throw new NotImplementedException();
-#else
 			return value == null || precision == null? null : (Decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
-#endif
 		}
 
 		[Sql.Function]
 		public static Double? Round(Double? value, int? precision)
 		{
-#if SILVERLIGHT
-			throw new NotImplementedException();
-#else
 			return value == null || precision == null? null : (Double?) Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
-#endif
 		}
 
 		[Sql.Function]
 		public static Decimal? RoundToEven(Decimal? value, int? precision)
 		{
-#if SILVERLIGHT
-			return value == null || precision == null? null : (Decimal?)Math.Round(value.Value, precision.Value);
-#else
 			return value == null || precision == null? null : (Decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
-#endif
 		}
 
 		[Sql.Function]
 		public static Double? RoundToEven(Double?  value, int? precision)
 		{
-#if SILVERLIGHT
-			return value == null || precision == null? null : (Double?) Math.Round(value.Value, precision.Value);
-#else
 			return value == null || precision == null? null : (Double?) Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
-#endif
 		}
 
 		[Sql.Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(Decimal? value) { return value == null ? null : (int?)Math.Sign(value.Value); }
@@ -1031,11 +1007,7 @@ namespace LinqToDB
 		[Sql.Function]
 		public static Decimal? Truncate(Decimal? value)
 		{
-#if SILVERLIGHT
-			throw new NotImplementedException();
-#else
 			return value == null ? null : (Decimal?)decimal.Truncate(value.Value);
-#endif
 		}
 
 		[Sql.Expression(PN.SqlServer,  "Round({0}, 0, 1)")]
@@ -1050,11 +1022,7 @@ namespace LinqToDB
 		[Sql.Function]
 		public static Double? Truncate(Double? value)
 		{
-#if SILVERLIGHT
-			throw new NotImplementedException();
-#else
 			return value == null ? null : (Double?) Math.Truncate(value.Value);
-#endif
 		}
 
 		#endregion

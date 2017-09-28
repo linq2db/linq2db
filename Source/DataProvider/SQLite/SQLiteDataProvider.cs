@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return _sqlOptimizer;
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SQLiteSchemaProvider();
@@ -132,7 +132,7 @@ namespace LinqToDB.DataProvider.SQLite
 			DropFileDatabase(databaseName, ".sqlite");
 		}
 
-#if NETSTANDARD && !NETSTANDARD2_0
+#if NETSTANDARD1_6
 
 		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{

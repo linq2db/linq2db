@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-#if !NOASYNC
 	using RetryPolicy;
 
 	public partial class DataConnection
@@ -19,15 +18,17 @@ namespace LinqToDB.Data
 			{
 				_connection = DataProvider.CreateConnection(ConnectionString);
 
-#if !SILVERLIGHT && !WINSTORE
-					if (RetryPolicy != null)
-						_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
-#endif
+				if (RetryPolicy != null)
+					_connection = new RetryingDbConnection(this, (DbConnection)_connection, RetryPolicy);
 			}
 
 			if (_connection.State == ConnectionState.Closed)
 			{
-				await ((DbConnection)_connection).OpenAsync(cancellationToken);
+				if (_connection is RetryingDbConnection)
+					await ((RetryingDbConnection)_connection).OpenAsync(cancellationToken);
+				else
+					await ((DbConnection)_connection).OpenAsync(cancellationToken);
+
 				_closeConnection = true;
 			}
 
@@ -211,6 +212,4 @@ namespace LinqToDB.Data
 			}
 		}
 	}
-
-#endif
 }

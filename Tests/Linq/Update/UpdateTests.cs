@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -46,8 +43,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Update1Async(string context)
 		{
@@ -70,8 +65,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void Update2(string context)
@@ -96,8 +89,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Update2Async(string context)
 		{
@@ -120,8 +111,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource(ProviderName.Informix)]
 		public void Update3(string context)
@@ -173,8 +162,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource(ProviderName.Informix)]
 		public async Task Update4Async(string context)
 		{
@@ -201,8 +188,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource(ProviderName.Informix)]
 		public void Update5(string context)
@@ -437,8 +422,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if  !NOASYNC
-
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
 			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
@@ -455,8 +438,6 @@ namespace Tests.xUpdate
 				.UpdateAsync(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
 			}
 		}
-		
-#endif
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
@@ -510,8 +491,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task UpdateComplex1Async(string context)
 		{
@@ -547,8 +526,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void UpdateComplex2(string context)
@@ -619,8 +596,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
 		public async Task UpdateAssociation1Async(string context)
 		{
@@ -651,8 +626,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
 		public void UpdateAssociation2(string context)

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.ServiceModel;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.ServiceModel
 {
@@ -18,14 +15,10 @@ namespace LinqToDB.ServiceModel
 		[OperationContract(Action="http://tempuri.org/ILinqService/ExecuteReader",   ReplyAction="http://tempuri.org/ILinqService/ExecuteReaderResponse")]   string          ExecuteReader  (string configuration, string queryData);
 		[OperationContract(Action="http://tempuri.org/ILinqService/ExecuteBatch",    ReplyAction="http://tempuri.org/ILinqService/ExecuteBatchResponse")]    int             ExecuteBatch   (string configuration, string queryData);
 
-#if !NOASYNC
-
 		[OperationContract(Action="http://tempuri.org/ILinqService/GetInfo",         ReplyAction="http://tempuri.org/ILinqService/GetInfoResponse")]         Task<LinqServiceInfo> GetInfoAsync        (string configuration);
 		[OperationContract(Action="http://tempuri.org/ILinqService/ExecuteNonQuery", ReplyAction="http://tempuri.org/ILinqService/ExecuteNonQueryResponse")] Task<int>             ExecuteNonQueryAsync(string configuration, string queryData);
 		[OperationContract(Action="http://tempuri.org/ILinqService/ExecuteScalar",   ReplyAction="http://tempuri.org/ILinqService/ExecuteScalarResponse")]   Task<object>          ExecuteScalarAsync  (string configuration, string queryData);
 		[OperationContract(Action="http://tempuri.org/ILinqService/ExecuteReader",   ReplyAction="http://tempuri.org/ILinqService/ExecuteReaderResponse")]   Task<string>          ExecuteReaderAsync  (string configuration, string queryData);
 		[OperationContract(Action="http://tempuri.org/ILinqService/ExecuteBatch",    ReplyAction="http://tempuri.org/ILinqService/ExecuteBatchResponse")]    Task<int>             ExecuteBatchAsync   (string configuration, string queryData);
-
-#endif
 	}
 }

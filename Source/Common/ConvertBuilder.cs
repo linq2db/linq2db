@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-
-#if !SILVERLIGHT && !NETFX_CORE
-using System.Data.SqlTypes;
-#endif
 
 namespace LinqToDB.Common
 {
@@ -24,7 +21,7 @@ namespace LinqToDB.Common
 			try
 			{
 				return Convert.ChangeType(value, conversionType
-#if !NETFX_CORE && !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 					, Thread.CurrentThread.CurrentCulture
 #endif
 					);
@@ -120,7 +117,6 @@ namespace LinqToDB.Common
 					return Expression.Convert(p, to, mi);
 				}
 
-#if !SILVERLIGHT && !NETFX_CORE
 				mi = to.GetMethodEx("Parse", typeof(SqlString));
 
 				if (mi != null)
@@ -128,7 +124,6 @@ namespace LinqToDB.Common
 					p = GetCtor(from, typeof(SqlString), p);
 					return Expression.Convert(p, to, mi);
 				}
-#endif
 
 				return null;
 			}
@@ -151,14 +146,6 @@ namespace LinqToDB.Common
 		{
 			if (from == typeof(string) && to.IsEnumEx())
 			{
-#if SL4
-				return
-					Expression.Call(
-						MemberHelper.MethodOf(() => Enum.Parse(to, "", true)),
-						Expression.Constant(to),
-						p,
-						Expression.Constant(true));
-#else
 				var values = Enum.GetValues(to);
 				var names  = Enum.GetNames (to);
 
@@ -168,7 +155,7 @@ namespace LinqToDB.Common
 				{
 					var val = values.GetValue(i);
 					var lv  = (long)Convert.ChangeType(val, typeof(long)
-#if !NETFX_CORE && !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 						, Thread.CurrentThread.CurrentCulture
 #endif
 						);
@@ -201,7 +188,6 @@ namespace LinqToDB.Common
 					cases.ToArray());
 
 				return expr;
-#endif
 			}
 
 			return null;

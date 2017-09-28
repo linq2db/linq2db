@@ -11,6 +11,7 @@
 	public class Issue447Tests : TestBase
 	{
 		[Explicit("https://github.com/linq2db/linq2db/issues/447")]
+		[Category("Explicit")]
 		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
 		public void TestLinq2DbComplexQuery2(string context)
 		{

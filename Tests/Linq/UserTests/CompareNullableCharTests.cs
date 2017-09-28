@@ -28,7 +28,7 @@ namespace Tests.UserTests
 			public ITable<Table1> Table1 { get { return this.GetTable<Table1>(); } }
 		}
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 		[Test]
 #endif
 		public void Test()

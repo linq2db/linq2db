@@ -22,7 +22,6 @@ namespace Tests.Linq
 					db.Parent.Count());
 		}
 
-#if !NOASYNC
 		[Test, DataContextSource]
 		public async Task Count1Async(string context)
 		{
@@ -49,7 +48,6 @@ namespace Tests.Linq
 					         Parent.Count     (p => p.ParentID > 2),
 					await db.Parent.CountAsync(p => p.ParentID > 2));
 		}
-#endif
 
 		[Test, DataContextSource]
 		public void Count3(string context)
@@ -541,7 +539,7 @@ namespace Tests.Linq
 					   Parent.Max(p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
 					db.Parent.Max(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
 		}
-#if !NOASYNC
+
 		[Test, DataContextSource]
 		public async Task SubQueryMax1Async(string context)
 		{
@@ -550,7 +548,7 @@ namespace Tests.Linq
 					         Parent.Max     (p =>    Child.Count(c => c.Parent.ParentID == p.ParentID)),
 					await db.Parent.MaxAsync(p => db.Child.Count(c => c.Parent.ParentID == p.ParentID)));
 		}
-#endif
+
 		[Test, DataContextSource]
 		public void SubQueryMax2(string context)
 		{

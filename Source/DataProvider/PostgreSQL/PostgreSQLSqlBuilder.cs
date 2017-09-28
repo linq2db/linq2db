@@ -117,15 +117,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 						if (IsReserved(name))
 							return '"' + name + '"';
-
-						if (name
-#if NETFX_CORE
-								.ToCharArray()
-#endif
-								.Any(c => char.IsWhiteSpace(c) || (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c))))
-							return '"' + name + '"';
-
 						
+						if (name.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
+							return '"' + name + '"';
 					}
 
 					break;
@@ -210,14 +204,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildTableName(sb, database, owner, table);
 		}
 
-#if !SILVERLIGHT
-
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.NpgsqlDbType.ToString();
 		}
-
-#endif
 	}
 }

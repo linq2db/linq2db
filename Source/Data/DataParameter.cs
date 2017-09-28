@@ -80,7 +80,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets the number of decimal places to which <see cref="P:LinqToDB.Data.DataParameter.Value"/> is resolved.
 		/// </summary>
-		/// 
+		///
 		/// <returns>
 		/// The number of decimal places to which <see cref="P:LinqToDB.Data.DataParameter.Value"/> is resolved. The default is 0.
 		/// </returns>
@@ -91,7 +91,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets the maximum size, in bytes, of the data within the column.
 		/// </summary>
-		/// 
+		///
 		/// <returns>
 		/// The maximum size, in bytes, of the data within the column. The default value is inferred from the parameter value.
 		/// </returns>
@@ -149,9 +149,7 @@ namespace LinqToDB.Data
 		public static DataParameter Timestamp     (string name, byte[]         value) { return new DataParameter { DataType = DataType.Timestamp,      Name = name, Value = value, }; }
 		public static DataParameter Xml           (string name, string         value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
 		public static DataParameter Xml           (string name, XDocument      value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
-#if !SILVERLIGHT && !NETFX_CORE
 		public static DataParameter Xml           (string name, XmlDocument    value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
-#endif
 		public static DataParameter BitArray      (string name, BitArray       value) { return new DataParameter { DataType = DataType.BitArray,       Name = name, Value = value, }; }
 		public static DataParameter Variant       (string name, object         value) { return new DataParameter { DataType = DataType.Variant,        Name = name, Value = value, }; }
 		public static DataParameter VarNumeric    (string name, decimal        value) { return new DataParameter { DataType = DataType.VarNumeric,     Name = name, Value = value, }; }
@@ -183,9 +181,7 @@ namespace LinqToDB.Data
 		public static DataParameter Create        (string name, DateTime       value) { return new DataParameter { DataType = DataType.DateTime2,      Name = name, Value = value, }; }
 		public static DataParameter Create        (string name, DateTimeOffset value) { return new DataParameter { DataType = DataType.DateTimeOffset, Name = name, Value = value, }; }
 		public static DataParameter Create        (string name, XDocument      value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
-#if !SILVERLIGHT && !NETFX_CORE
 		public static DataParameter Create        (string name, XmlDocument    value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
-#endif
 		public static DataParameter Create        (string name, BitArray       value) { return new DataParameter { DataType = DataType.BitArray,       Name = name, Value = value, }; }
 		public static DataParameter Create        (string name, Dictionary<string,string> value) { return new DataParameter { DataType = DataType.Dictionary,     Name = name, Value = value, }; }
 		public static DataParameter Json          (string name, string         value) { return new DataParameter { DataType = DataType.Json,           Name = name, Value = value,}; }

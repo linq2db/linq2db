@@ -2,14 +2,13 @@
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
-using LinqToDB.Configuration;
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Data.RetryPolicy
 {
+	using Configuration;
+
 	class RetryingDbConnection : DbConnection, IProxy<DbConnection>, IDisposable, ICloneable
 	{
 		readonly DataConnection _dataConnection;
@@ -45,53 +44,38 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public override string ConnectionString
 		{
-			get { return _connection.ConnectionString;  }
-			set { _connection.ConnectionString = value; }
+			get => _connection.ConnectionString;
+			set => _connection.ConnectionString = value;
 		}
 
-		public override string Database
-		{
-			get { return _connection.Database; }
-		}
+		public override string          Database      => _connection.Database;
 
-		public override ConnectionState State
-		{
-			get { return _connection.State; }
-		}
-
-		public override string DataSource
-		{
-			get { return _connection.DataSource; }
-		}
-
-		public override string ServerVersion
-		{
-			get { return _connection.ServerVersion; }
-		}
+		public override ConnectionState State         => _connection.State;
+		public override string          DataSource    => _connection.DataSource;
+		public override string          ServerVersion => _connection.ServerVersion;
 
 		protected override DbCommand CreateDbCommand()
 		{
 			return new RetryingDbCommand(_connection.CreateCommand(), _policy);
 		}
 
-#if !NOASYNC
-		public override Task OpenAsync(CancellationToken cancellationToken)
-		{
-			return _policy.ExecuteAsync(ct => _connection.OpenAsync(ct), cancellationToken);
-		}
+		public
+#if !NET40
+			override
 #endif
+			async Task OpenAsync(CancellationToken cancellationToken)
+		{
+			await _policy.ExecuteAsync(async ct => await _connection.OpenAsync(ct), cancellationToken);
+		}
 
 		void IDisposable.Dispose()
 		{
 			((IDisposable)_connection).Dispose();
 		}
 
-		public DbConnection UnderlyingObject
-		{
-			get { return _connection; }
-		}
+		public DbConnection UnderlyingObject => _connection;
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 		public override DataTable GetSchema()
 		{
 			return _connection.GetSchema();
@@ -114,15 +98,12 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 #endif
 
-		public override int ConnectionTimeout
-		{
-			get { return _connection.ConnectionTimeout; }
-		}
+		public override int ConnectionTimeout => _connection.ConnectionTimeout;
 
 		public override event StateChangeEventHandler StateChange
 		{
-			add    { _connection.StateChange += value; }
-			remove { _connection.StateChange -= value; }
+			add    => _connection.StateChange += value;
+			remove => _connection.StateChange -= value;
 		}
 
 		public object Clone()

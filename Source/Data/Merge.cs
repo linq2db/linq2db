@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
+
 namespace LinqToDB.Data
 {
 	/// <summary>
@@ -723,7 +722,6 @@ namespace LinqToDB.Data
 		}
 		#endregion
 
-#if !NOASYNC
 		#region MergeAsync
 		/// <summary>
 		/// Executes merge command and returns total number of target records, affected by merge operations.
@@ -755,7 +753,6 @@ namespace LinqToDB.Data
 			return await dataConnection.DataProvider.MergeAsync(dataConnection, definition, token);
 		}
 		#endregion
-#endif
 	}
 
 	/// <summary>

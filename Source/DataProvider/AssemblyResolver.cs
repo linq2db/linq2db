@@ -5,7 +5,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using LinqToDB.Common;
 
-#if NETSTANDARD || NETSTANDARD2_0
+#if NETSTANDARD1_6
 using System.Runtime.Loader;
 using System.Linq;
 #endif
@@ -34,30 +34,29 @@ namespace LinqToDB.DataProvider
 
 		public AssemblyResolver([NotNull] Assembly assembly, [NotNull] string resolveName)
 		{
-			if (assembly    == null) throw new ArgumentNullException("assembly");
-			if (resolveName == null) throw new ArgumentNullException("resolveName");
-
-			_assembly    = assembly;
-			_resolveName = resolveName;
+			_assembly    = assembly    ?? throw new ArgumentNullException(nameof(assembly));
+			_resolveName = resolveName ?? throw new ArgumentNullException(nameof(resolveName));
 
 			SetResolver();
 		}
 
-#if !NETSTANDARD && !NETSTANDARD2_0
+#if !NETSTANDARD1_6
 		void SetResolver()
 		{
 			ResolveEventHandler resolver = Resolver;
 
-#if FW4
+			//#if NET40
+			// use this to avoid 
+			// System.MethodAccessException : Attempt by security transparent method 'LinqToDB.DataProvider.AssemblyResolver.SetResolver()' to access security critical method 'System.AppDomain.add_AssemblyResolve(System.ResolveEventHandler)'
 			var l = Expression.Lambda<Action>(Expression.Call(
 				Expression.Constant(AppDomain.CurrentDomain),
 				typeof(AppDomain).GetEvent("AssemblyResolve").GetAddMethod(),
 				Expression.Constant(resolver)));
 
 			l.Compile()();
-#else
-			AppDomain.CurrentDomain.AssemblyResolve += resolver;
-#endif
+//#else
+//			AppDomain.CurrentDomain.AssemblyResolve += resolver;
+//#endif
 		}
 
 

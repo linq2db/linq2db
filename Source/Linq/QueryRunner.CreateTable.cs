@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
-
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Linq
 {
@@ -49,8 +46,6 @@ namespace LinqToDB.Linq
 				return table;
 			}
 
-#if !NOASYNC
-
 			public static async Task<ITable<T>> QueryAsync(IDataContext dataContext,
 				string tableName, string databaseName, string schemaName, string statementHeader,
 				string statementFooter, DefaulNullable defaulNullable,
@@ -85,8 +80,6 @@ namespace LinqToDB.Linq
 
 				return table;
 			}
-
-#endif
 		}
 	}
 }

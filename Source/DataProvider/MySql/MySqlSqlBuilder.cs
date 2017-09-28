@@ -294,14 +294,10 @@ namespace LinqToDB.DataProvider.MySql
 			return sb.Append(table);
 		}
 
-#if !SILVERLIGHT
-
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.MySqlDbType.ToString();
 		}
-
-#endif
 	}
 }

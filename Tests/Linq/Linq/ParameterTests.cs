@@ -6,7 +6,7 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-#if !NOFSHARP
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !TRAVIS
 using Tests.FSharp.Models;
 #else
 using Tests.Model;

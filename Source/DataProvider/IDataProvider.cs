@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.DataProvider
 {
@@ -44,7 +41,7 @@ namespace LinqToDB.DataProvider
 		/// <returns>Returns disposable scope object. Cannot be null.</returns>
 		IDisposable        ExecuteScope          ();
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		ISchemaProvider    GetSchemaProvider     ();
 #endif
 
@@ -60,7 +57,6 @@ namespace LinqToDB.DataProvider
 			string                   schemaName)
 			where T : class;
 
-#if !NOASYNC
 		Task<int> MergeAsync<T>(
 			DataConnection           dataConnection,
 			Expression<Func<T,bool>> predicate,
@@ -71,17 +67,14 @@ namespace LinqToDB.DataProvider
 			string                   schemaName,
 			CancellationToken        token)
 			where T : class;
-#endif
 
 		int Merge<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 			where TTarget : class
 			where TSource : class;
 
-#if !NOASYNC
 		Task<int> MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token)
 			where TTarget : class
 			where TSource : class;
-#endif
 
 		//TimeSpan? ShouldRetryOn(Exception exception, int retryCount, TimeSpan baseDelay);
 	}

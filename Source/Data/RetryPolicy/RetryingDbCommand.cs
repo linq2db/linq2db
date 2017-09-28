@@ -1,9 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
-#if !NOASYNC
 using System.Threading;
 using System.Threading.Tasks;
-#endif
 
 namespace LinqToDB.Data.RetryPolicy
 {
@@ -97,7 +95,7 @@ namespace LinqToDB.Data.RetryPolicy
 			return _policy.Execute(() => _command.ExecuteScalar());
 		}
 
-#if !NOASYNC
+#if !NET40
 
 		protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
 		{

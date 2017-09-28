@@ -2,6 +2,7 @@
 
 namespace LinqToDB
 {
+#pragma warning disable 1574
 	/// <summary>
 	/// Default names for providers.
 	/// </summary>
@@ -120,4 +121,5 @@ namespace LinqToDB
 		/// </summary>
 		public const string SapHana       = "SapHana";
 	}
+#pragma warning restore 1574
 }
