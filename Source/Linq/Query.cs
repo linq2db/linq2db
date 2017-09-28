@@ -21,11 +21,6 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using SqlProvider;
 
-	public interface IExpressionPostprocessor
-	{
-		Expression PostprocessExpression(Expression expression);
-	}
-
 	abstract class Query
 	{
 		public Func<IDataContextEx,Expression,object[],object> GetElement;
@@ -201,8 +196,9 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
-			if (dataContext is IExpressionPostprocessor)
-				expr = ((IExpressionPostprocessor)dataContext).PostprocessExpression(expr);
+			var preprocessor = dataContext as IExpressionPreprocessor;
+			if (preprocessor != null)
+				expr = preprocessor.ProcessExpression(expr);
 
 			if (Configuration.Linq.UseBinaryAggregateExpression)
 				expr = ExpressionBuilder.AggregateExpression(expr);

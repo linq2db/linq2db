@@ -22,7 +22,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <LangVersion>6</LangVersion>
     <DocumentationFile>bin\Debug.4.5\linq2db.XML</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
@@ -228,6 +227,7 @@
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\IDataReaderAsync.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Linq\IExpressionPreprocessor.cs" />
     <Compile Include="Linq\IQueryProviderAsync.cs" />
     <Compile Include="Linq\IQueryRunner.cs" />
     <Compile Include="Linq\QueryRunner.DropTable.cs" />
