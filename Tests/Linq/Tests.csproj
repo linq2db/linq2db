@@ -267,6 +267,7 @@
     <Compile Include="Linq\GenericExtensionsTests.cs" />
     <Compile Include="Linq\InterfaceTests.cs" />
     <Compile Include="Linq\JoinOptimizeTests.cs" />
+    <Compile Include="Linq\PreprocessorTests.cs" />
     <Compile Include="Linq\SqlExtensionTests.cs" />
     <Compile Include="Linq\CharTypesTests.cs" />
     <Compile Include="Samples\DataContextDecoratorTests.cs" />

@@ -196,6 +196,10 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
+			var preprocessor = dataContext as IExpressionPreprocessor;
+			if (preprocessor != null)
+				expr = preprocessor.ProcessExpression(expr);
+
 			if (Configuration.Linq.UseBinaryAggregateExpression)
 				expr = ExpressionBuilder.AggregateExpression(expr);
 
