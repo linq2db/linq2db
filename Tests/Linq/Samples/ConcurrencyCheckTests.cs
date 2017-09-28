@@ -169,15 +169,18 @@ namespace Tests.Samples
 
 			var table = db.GetTable<TestTable>();
 
-			var row = table.First(t => t.ID == 1);
-			row.Description = "Changed desc";
+			for (int i = 0; i < 3; i++)
+			{
+				var row = table.First(t => t.ID == 1);
+				row.Description = "Changed desc " + i;
 
-			var result = db.Update(row);
+				var result = db.Update(row);
 
-			Assert.AreEqual(1, result);
+				Assert.AreEqual(1, result);
 
-			var updated = table.First(t => t.ID == 1);
-			Assert.AreEqual(row.RowVer + 1, updated.RowVer);
+				var updated = table.First(t => t.ID == 1);
+				Assert.AreEqual(row.RowVer + 1, updated.RowVer);
+			}
 		}
 
 		[Test]

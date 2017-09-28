@@ -178,7 +178,7 @@ namespace LinqToDB.Data
 					commands[i] = sb.ToString();
 				}
 
-				if (!query.SelectQuery.IsParameterDependent)
+				if (!sql.IsParameterDependent)
 					query.Context = commands;
 
 				return new PreparedQuery
@@ -359,8 +359,8 @@ namespace LinqToDB.Data
 				{
 					if (idparam != null)
 					{
-						// так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
-						// остальные провайдеры должны поддерживать такой режим
+						// This is because the firebird provider does not return any parameters via ExecuteReader
+						// the rest of the providers must support this mode
 						dataConnection.ExecuteNonQuery();
 
 						return idparam.Value;
