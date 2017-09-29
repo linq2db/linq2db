@@ -1,21 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 using LinqToDB.Configuration;
 
 namespace Tests
 {
-    public class TxtSettings : ILinqToDBSettings
+	public class TxtSettings : ILinqToDBSettings
 	{
 		class DataProviderSettings : IDataProviderSettings
 		{
 			public string                  TypeName   { get; set; }
 			public string                  Name       { get; set; }
 			public bool                    Default    { get; set; }
-			public IEnumerable<NamedValue> Attributes { get { return new NamedValue[0]; } }
-
+			public IEnumerable<NamedValue> Attributes => new NamedValue[0];
 		}
 
 		class ConnectionStringSettings : IConnectionStringSettings
@@ -26,22 +23,20 @@ namespace Tests
 			public bool   IsGlobal         { get; set; }
 		}
 
-		public IEnumerable<IDataProviderSettings>     DataProviders        { get { return _dataProviders; } }
+		public IEnumerable<IDataProviderSettings>     DataProviders => _dataProviders;
 		public string                                 DefaultConfiguration { get; set; }
 		public string                                 DefaultDataProvider  { get; set; }
-		public IEnumerable<IConnectionStringSettings> ConnectionStrings    { get { return _strings; } }
+		public IEnumerable<IConnectionStringSettings> ConnectionStrings => _strings;
 
 
-		private static TxtSettings _instance                         = new TxtSettings();
-		private        List<DataProviderSettings>     _dataProviders = new List<DataProviderSettings>();
-		private        List<ConnectionStringSettings> _strings       = new List<ConnectionStringSettings>();
+		readonly List<DataProviderSettings>     _dataProviders = new List<DataProviderSettings>();
+		readonly List<ConnectionStringSettings> _strings       = new List<ConnectionStringSettings>();
 
-		private TxtSettings()
+		TxtSettings()
 		{
-
 		}
 
-		public static TxtSettings Instance { get { return _instance; } }
+		public static TxtSettings Instance { get; } = new TxtSettings();
 
 		public void AddConnectionString(string name, string providerName, string connectionString)
 		{

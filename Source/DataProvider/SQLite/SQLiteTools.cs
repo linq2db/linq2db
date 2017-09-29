@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Common;
 	using Data;
+	using Extensions;
 
 	public static class SQLiteTools
 	{
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		public static string AssemblyName   = "System.Data.SQLite";
 		public static string ConnectionName = "SQLiteConnection";
 		public static string DataReaderName = "SQLiteDataReader";
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static SQLiteTools()
 		{
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			try
 			{
 				var path = typeof(SQLiteTools).AssemblyEx().GetPath();
@@ -46,7 +46,6 @@ namespace LinqToDB.DataProvider.SQLite
 						AssemblyName   = "Microsoft.Data.Sqlite";
 						ConnectionName = "SqliteConnection";
 						DataReaderName = "SqliteDataReader";
-						 
 					}
 				}
 			}
@@ -65,7 +64,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void ResolveSQLite(string path)
 		{
 			new AssemblyResolver(path, AssemblyName);
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			new AssemblyResolver(path, "Mono.Data.Sqlite");
 #endif
 		}
@@ -73,12 +72,12 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void ResolveSQLite(Assembly assembly)
 		{
 			new AssemblyResolver(assembly, AssemblyName);
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			new AssemblyResolver(assembly, "Mono.Data.Sqlite");
 #endif
 		}
 
-#region CreateDataConnection
+		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
@@ -95,7 +94,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return new DataConnection(_SQLiteDataProvider, transaction);
 		}
 
-#endregion
+		#endregion
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
@@ -107,14 +106,9 @@ namespace LinqToDB.DataProvider.SQLite
 			_SQLiteDataProvider.DropDatabase(databaseName);
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
-		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
-		public  static BulkCopyType  DefaultBulkCopyType
-		{
-			get { return _defaultBulkCopyType;  }
-			set { _defaultBulkCopyType = value; }
-		}
+		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection             dataConnection,

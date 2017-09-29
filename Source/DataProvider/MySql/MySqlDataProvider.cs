@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 	using SqlProvider;
@@ -57,6 +57,7 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSchemaProvider();
 		}
 #endif
+
 		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new MySqlSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
@@ -68,6 +69,13 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return _sqlOptimizer;
 		}
+
+#if NETSTANDARD2_0
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			return true;
+		}
+#endif
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
@@ -98,7 +106,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -110,6 +118,6 @@ namespace LinqToDB.DataProvider.MySql
 				source);
 		}
 
-#endregion
+		#endregion
 	}
 }

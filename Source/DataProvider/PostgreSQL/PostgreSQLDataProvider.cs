@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -107,7 +106,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetProviderField(NpgsqlInetType,       NpgsqlInetType,       "GetProviderSpecificValue");
 			SetProviderField(_npgsqlDate,          _npgsqlDate,          "GetDate");
 
-			if (_npgsqlTimeStampTZ != null) 
+			if (_npgsqlTimeStampTZ != null)
 			{
 				// SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));
 
@@ -122,7 +121,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						dataReaderParameter,
 						indexParameter);
 			}
-			
+
 			_setMoney     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Money");
 			_setVarBinary = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Bytea");
 			_setBoolean   = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Boolean");
@@ -151,7 +150,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			MappingSchema.AddScalarType(_npgsqlDate);
 			MappingSchema.AddScalarType(NpgsqlPolygonType);
 
-			if (_npgsqlTimeStampTZ != null) 
+			if (_npgsqlTimeStampTZ != null)
 			{
 				// SetConvertExpression<NpgsqlTimeStampTZ,DateTimeOffset>(
 				//     d => new DateTimeOffset(d.Year, d.Month, d.Day, d.Hours, d.Minutes, d.Seconds, d.Milliseconds,
@@ -214,7 +213,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return new PostgreSQLSchemaProvider();
 		}
-#endif 
+#endif
+
+#if NETSTANDARD2_0
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			return true;
+		}
+#endif
 
 		static Action<IDbDataParameter> _setMoney;
 		static Action<IDbDataParameter> _setVarBinary;

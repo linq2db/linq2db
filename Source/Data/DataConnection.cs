@@ -20,7 +20,8 @@ namespace LinqToDB.Data
 	using RetryPolicy;
 
 	/// <summary>
-	/// Implements persistent database connection abstraction over different database engines. Could be initialized using connection string name or connection string,
+	/// Implements persistent database connection abstraction over different database engines.
+	/// Could be initialized using connection string name or connection string,
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
@@ -174,7 +175,7 @@ namespace LinqToDB.Data
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (connection   == null) throw new ArgumentNullException("connection");
-			
+
 			InitConfig();
 
 			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(connection))
@@ -212,7 +213,7 @@ namespace LinqToDB.Data
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (transaction  == null) throw new ArgumentNullException("transaction");
-			
+
 			InitConfig();
 
 			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(transaction.Connection))
@@ -315,16 +316,11 @@ namespace LinqToDB.Data
 			set { _onTrace = value ?? OnTraceInternal; }
 		}
 
-		private Action<TraceInfo> _onTraceConnection = OnTrace;
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
 		/// </summary>
 		[JetBrains.Annotations.CanBeNull]
-		public  Action<TraceInfo>  OnTraceConnection
-		{
-			get { return _onTraceConnection;  }
-			set { _onTraceConnection = value; }
-		}
+		public  Action<TraceInfo>  OnTraceConnection { get; set; } = OnTrace;
 
 		static void OnTraceInternal(TraceInfo info)
 		{
@@ -371,7 +367,7 @@ namespace LinqToDB.Data
 					}
 
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
-					
+
 					break;
 				}
 
@@ -443,7 +439,7 @@ namespace LinqToDB.Data
 
 #endregion
 
-#region Configuration
+		#region Configuration
 
 		private static ILinqToDBSettings _defaultSettings;
 
@@ -466,7 +462,7 @@ namespace LinqToDB.Data
 		}
 
 		[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-		private static IDataProvider FindProvider(
+		static IDataProvider FindProvider(
 			string configuration,
 			IEnumerable<KeyValuePair<string,IDataProvider>> ps,
 			IDataProvider defp)
@@ -499,7 +495,7 @@ namespace LinqToDB.Data
 			LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.GetDataProvider();
 			LinqToDB.DataProvider.DB2.       DB2Tools.       GetDataProvider();
 			LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
-			LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider(); 
+			LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider();
 
 			var section = DefaultSettings;
 
@@ -537,6 +533,7 @@ namespace LinqToDB.Data
 		{
 			if (DefaultSettings == null)
 				return;
+
 			foreach (var css in DefaultSettings.ConnectionStrings)
 			{
 				_configurations[css.Name] = new ConfigurationInfo(css);
@@ -571,13 +568,15 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="providerName">Provider name, to which provider implementation will be mapped.</param>
 		/// <param name="dataProvider">Database provider implementation.</param>
-		public static void AddDataProvider([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] IDataProvider dataProvider)
+		public static void AddDataProvider(
+			[JetBrains.Annotations.NotNull] string        providerName,
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider)
 		{
-			if (providerName == null) throw new ArgumentNullException("providerName");
-			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
+			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
+			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
 
 			if (string.IsNullOrEmpty(dataProvider.Name))
-				throw new ArgumentException("dataProvider.Name cannot be empty.", "dataProvider");
+				throw new ArgumentException("dataProvider.Name cannot be empty.", nameof(dataProvider));
 
 			_dataProviders[providerName] = dataProvider;
 		}
@@ -588,7 +587,7 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation.</param>
 		public static void AddDataProvider([JetBrains.Annotations.NotNull] IDataProvider dataProvider)
 		{
-			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
+			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
 
 			AddDataProvider(dataProvider.Name, dataProvider);
 		}
@@ -607,7 +606,8 @@ namespace LinqToDB.Data
 
 		class ConfigurationInfo
 		{
-			private readonly bool _dataProviderSetted;
+			readonly bool _dataProviderSetted;
+
 			public ConfigurationInfo(string connectionString, IDataProvider dataProvider)
 			{
 				ConnectionString    = connectionString;
@@ -625,7 +625,7 @@ namespace LinqToDB.Data
 			private string _connectionString;
 			public  string ConnectionString
 			{
-				get { return _connectionString; }
+				get => _connectionString;
 				set
 				{
 					if (!_dataProviderSetted)
@@ -638,10 +638,7 @@ namespace LinqToDB.Data
 			private readonly IConnectionStringSettings _connectionStringSettings;
 
 			private IDataProvider _dataProvider;
-			public  IDataProvider  DataProvider
-			{
-				get { return _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings, ConnectionString)); }
-			}
+			public  IDataProvider  DataProvider => _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings, ConnectionString));
 
 			static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
@@ -683,17 +680,15 @@ namespace LinqToDB.Data
 
 		static ConfigurationInfo GetConfigurationInfo(string configurationString)
 		{
-			ConfigurationInfo ci;
-
 			var key = configurationString ?? DefaultConfiguration;
 
 			if (key == null)
 				throw new LinqToDBException("Configuration string is not provided.");
 
-			if (_configurations.TryGetValue(key, out ci))
+			if (_configurations.TryGetValue(key, out var ci))
 				return ci;
 
-			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
+			throw new LinqToDBException($"Configuration '{configurationString}' is not defined.");
 		}
 
 		/// <summary>
@@ -727,8 +722,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] string connectionString,
 			IDataProvider dataProvider = null)
 		{
-			if (configuration    == null) throw new ArgumentNullException("configuration");
-			if (connectionString == null) throw new ArgumentNullException("connectionString");
+			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
+			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
 			_configurations[configuration] = new ConfigurationInfo(
 				connectionString,
@@ -744,8 +739,8 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] string configuration,
 			[JetBrains.Annotations.NotNull] string connectionString)
 		{
-			if (configuration    == null) throw new ArgumentNullException("configuration");
-			if (connectionString == null) throw new ArgumentNullException("connectionString");
+			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
+			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
 			InitConfig();
 
@@ -762,15 +757,13 @@ namespace LinqToDB.Data
 		{
 			InitConfig();
 
-			ConfigurationInfo ci;
-
-			if (_configurations.TryGetValue(configurationString, out ci))
+			if (_configurations.TryGetValue(configurationString, out var ci))
 				return ci.ConnectionString;
 
-			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
+			throw new LinqToDBException($"Configuration '{configurationString}' is not defined.");
 		}
 
-#endregion
+		#endregion
 
 #region Connection
 
@@ -794,7 +787,7 @@ namespace LinqToDB.Data
 				}
 
 				if (_connection.State == ConnectionState.Closed)
-				{ 
+				{
 					_connection.Open();
 					_closeConnection = true;
 				}
@@ -1092,7 +1085,7 @@ namespace LinqToDB.Data
 		/// Gets current transaction, associated with connection.
 		/// </summary>
 		public IDbTransaction Transaction { get; private set; }
-		
+
 		/// <summary>
 		/// Starts new transaction for current connection with default isolation level. If connection already has transaction, it will be rolled back.
 		/// </summary>
@@ -1262,7 +1255,7 @@ namespace LinqToDB.Data
 
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
-		
+
 #endregion
 
 #region System.IDisposable Members

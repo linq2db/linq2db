@@ -162,7 +162,6 @@
 		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
 
 		<PackageReference Include="MySql.Data" Version="7.0.6-IR31" />
-		<PackageReference Include="Npgsql" Version="3.2.1" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.0" />
 
 		<Compile Remove="DataProvider\AccessTests.cs" />

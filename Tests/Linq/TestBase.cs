@@ -111,7 +111,7 @@ namespace Tests
 #else
 			Environment.CurrentDirectory = assemblyPath;
 #endif
-#if NETSTANDARD1_6
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
 #else
@@ -153,6 +153,7 @@ namespace Tests
 							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim(), IsDefault = isDefault };
 						}
 					})
+					.Where(up => up != null && _providers.Any(p => up.Name == p))
 					.ToDictionary(i => i.Name);
 
 			var logLevel = File.ReadAllLines(providerListFile)
@@ -177,7 +178,7 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-#if NETSTANDARD1_6
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
@@ -201,7 +202,7 @@ namespace Tests
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD1_6
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
@@ -283,25 +284,27 @@ namespace Tests
 
 		static readonly List<string> _providers = new List<string>
 		{
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Informix,
+			TestProvName.MariaDB,
+			ProviderName.Sybase,
+			ProviderName.SapHana,
+			ProviderName.OracleNative,
+			ProviderName.OracleManaged,
+			ProviderName.SqlCe,
+			ProviderName.SQLite,
+#endif
+			ProviderName.Firebird,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
-			ProviderName.SqlCe,
-			ProviderName.SQLite,
-			ProviderName.Access,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
-			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
-			ProviderName.Sybase,
-			ProviderName.SapHana,
 			TestProvName.SqlAzure,
-			TestProvName.MariaDB,
 			TestProvName.MySql57,
 			TestProvName.SQLiteMs,
 			TestProvName.Firebird3
@@ -412,7 +415,7 @@ namespace Tests
 
 					}
 
-#if !NETSTANDARD1_6 && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 					if (!isIgnore && _includeLinqService)
 					{
 						var linqCaseNumber = 0;
@@ -635,7 +638,7 @@ namespace Tests
 			}
 		}
 
-		#region Parent/Child Model
+#region Parent/Child Model
 
 		private          List<Parent> _parent;
 		protected IEnumerable<Parent>  Parent
@@ -822,7 +825,7 @@ namespace Tests
 
 #endregion
 
-		#region Inheritance Parent/Child Model
+#region Inheritance Parent/Child Model
 
 		private   List<InheritanceParentBase> _inheritanceParent;
 		protected List<InheritanceParentBase>  InheritanceParent
@@ -856,7 +859,7 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
 #region Northwind
 
@@ -1056,7 +1059,7 @@ namespace Tests
 				}
 			}
 		}
-		#endregion
+#endregion
 
 		[Sql.Function("VERSION", ServerSideOnly = true)]
 		private static string MySqlVersion()
