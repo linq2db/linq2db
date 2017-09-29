@@ -921,7 +921,7 @@ namespace LinqToDB.Linq.Builder
 //						}
 
 						var ex = ExpressionBuilder.Equal(association.Builder.MappingSchema, e1, e2);
-							
+
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
 
@@ -969,8 +969,8 @@ namespace LinqToDB.Linq.Builder
 
 							if (association.IsList)
 							{
-								var ma     = expression.NodeType == ExpressionType.MemberAccess 
-												? ((MemberExpression)buildInfo.Expression).Expression 
+								var ma     = expression.NodeType == ExpressionType.MemberAccess
+												? ((MemberExpression)buildInfo.Expression).Expression
 												: buildInfo.Expression.GetRootObject(Builder.MappingSchema);
 								var atype  = typeof(AssociationHelper<>).MakeGenericType(association.ObjectType);
 								var helper = (IAssociationHelper)Activator.CreateInstance(atype);
@@ -1400,7 +1400,7 @@ namespace LinqToDB.Linq.Builder
 				if (ExpressionPredicate != null)
 				{
 					var expr = Builder.ConvertExpression(ExpressionPredicate.Body.Unwrap());
-					
+
 					Builder.BuildSearchCondition(
 						new ExpressionContext(null, new IBuildContext[] { parent, this }, ExpressionPredicate),
 						expr,
