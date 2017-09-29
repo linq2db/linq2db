@@ -270,9 +270,31 @@ namespace LinqToDB.SqlQuery
 				if (this == other)
 					return true;
 
+				var otherColumn = other as Column;
+
+				if (otherColumn == null)
+					return false;
+
+				if (Parent != otherColumn.Parent)
+					return false;
+
+				if (Parent.HasUnion)
+					return false;
+
 				return
-					other is Column &&
-					Expression.Equals(((Column)other).Expression, comparer) &&
+					Expression.Equals(
+						otherColumn.Expression,
+						(ex1, ex2) =>
+						{
+//							var c = ex1 as Column;
+//							if (c != null && c.Parent != Parent)
+//								return false;
+//							c = ex2 as Column;
+//							if (c != null && c.Parent != Parent)
+//								return false;
+							return comparer(ex1, ex2);
+						})
+					&&
 					comparer(this, other);
 			}
 

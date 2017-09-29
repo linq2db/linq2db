@@ -167,6 +167,7 @@
     <Compile Include="Linq\Builder\DistinctBuilder.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Linq\IExpressionPreprocessor.cs" />
     <Compile Include="Linq\MethodHelper.cs" />
     <Compile Include="Linq\Builder\ExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ExpressionBuilder.QueryBuilder.cs" />

@@ -119,7 +119,7 @@ namespace LinqToDB.SqlQuery
 
 			return comparer(this, other);
 		}
-	
+
 		#endregion
 
 		#region ICloneableElement Members
@@ -159,7 +159,7 @@ namespace LinqToDB.SqlQuery
 				sb.Length = len;
 				return (object)s;
 			});
-			
+
 			return sb.AppendFormat(Expr, ss.ToArray());
 		}
 
