@@ -109,7 +109,7 @@ namespace Tests.Merge
 		[Test, MergeDataContextSource(
 			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Informix,
-			ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.SapHana, ProviderName.Firebird, ProviderName.Sybase)]
 		public void UpdateWithConditionDeleteWithConditionUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))

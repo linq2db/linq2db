@@ -33,7 +33,7 @@ namespace Tests.Merge
 
 		public class MergeDataContextSourceAttribute : DataContextSourceAttribute
 		{
-			private static string[] Unsupported = new []
+			static string[] Unsupported = new []
 			{
 				ProviderName.Access,
 				ProviderName.SqlCe,

@@ -106,7 +106,7 @@ namespace LinqToDB.SqlQuery
 					SystemType,
 					Name,
 					IsAggregate,
-					Precedence, 
+					Precedence,
 					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
 			}
 
