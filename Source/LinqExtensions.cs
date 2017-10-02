@@ -2714,14 +2714,5 @@ namespace LinqToDB
 
 		#endregion
 
-		#region Stub helpers
-
-		// TODO: move to ExpressionBuilder.QueryBuilder where it used?
-		internal static TOutput Where<TOutput,TSource,TInput>(this TInput source, Func<TSource,bool> predicate)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
 	}
 }

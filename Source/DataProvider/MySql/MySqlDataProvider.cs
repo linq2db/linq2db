@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using LinqToDB.Extensions;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -103,7 +104,26 @@ namespace LinqToDB.DataProvider.MySql
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return new MySqlBulkCopy().BulkCopy(
+            if (options.RetrieveSequence)
+            {
+                var supportedFileTypes = new[] { typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(short), typeof(ushort) };
+
+                var entityDescriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+                var columns          = entityDescriptor.Columns.Where(x => x.IsPrimaryKey).ToList();
+
+                if (columns.Count == 1 && supportedFileTypes.Contains(columns.First().MemberType))
+                {
+                    var c = columns.First();
+                    var lastId = dataConnection.Query<int>($"SELECT {c.ColumnName} FROM {entityDescriptor.TableName} ORDER BY {c.ColumnName} DESC LIMIT 1").FirstOrDefault();
+                    lastId = lastId + source.Count(); //Insert the max id first in order to prevent inserting collisions on inserting from another thread (on big batches)
+                    foreach (var item in source)
+                        c.MemberAccessor.SetValue(item, lastId--);
+                    
+                    options.KeepIdentity = true;
+                }
+            }
+
+            return new MySqlBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
 				dataConnection,
 				options,
