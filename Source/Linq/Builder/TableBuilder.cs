@@ -973,7 +973,7 @@ namespace LinqToDB.Linq.Builder
 												? ((MemberExpression)buildInfo.Expression).Expression 
 												: expression.NodeType == ExpressionType.Call 
 												? ((MethodCallExpression)buildInfo.Expression).Arguments[0]
-											: buildInfo.Expression.GetRootObject(Builder.MappingSchema);
+												: buildInfo.Expression.GetRootObject(Builder.MappingSchema);
 
 								var atype  = typeof(AssociationHelper<>).MakeGenericType(association.ObjectType);
 								var helper = (IAssociationHelper)Activator.CreateInstance(atype);
