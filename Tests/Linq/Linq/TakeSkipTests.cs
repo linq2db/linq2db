@@ -450,7 +450,7 @@ namespace Tests.Linq
 				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
-		[Test, DataContextSource(/*ProviderName.Access*/)]
+		[Test, DataContextSource(ProviderName.Sybase)]
 		public void TakeSkipJoin(string context)
 		{
 			using (var db = GetDataContext(context))

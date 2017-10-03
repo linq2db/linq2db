@@ -216,15 +216,6 @@ namespace LinqToDB.Linq.Builder
 							break;
 						}
 
-						if (ce.IsAssociation(MappingSchema))
-						{
-							var ctx = GetContext(context, ce);
-							if (ctx == null)
-								throw new InvalidOperationException();
-
-							return new TransformInfo(ctx.BuildExpression(ce, 0, enforceServerSide));
-						}
-
 						if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(ce)) && IsSubQuery(context, ce))
 						{
 							if (IsMultipleQuery(ce))
@@ -444,17 +435,17 @@ namespace LinqToDB.Linq.Builder
 			return variable;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>> BuildMapper<T>(Expression expr)
+		public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> BuildMapper<T>(Expression expr)
 		{
 			var type = typeof(T);
 
 			if (expr.Type != type)
 				expr = Expression.Convert(expr, type);
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>>(
+			var mapper = Expression.Lambda<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>(
 				BuildBlock(expr), new []
 				{
-					QueryRunnerParam,
+					ContextParam,
 					DataContextParam,
 					DataReaderParam,
 					ExpressionParam,

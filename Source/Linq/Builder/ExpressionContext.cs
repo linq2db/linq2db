@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 			SelectQuery = selectQuery;
 		}
 
-		public override Expression BuildExpression(Expression expression, int level)
+		public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 		{
 			throw new InvalidOperationException();
 		}

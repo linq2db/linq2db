@@ -166,7 +166,7 @@
           "exclude": [
             "**/*.Silverlight.cs",
             "Compatibility/System/Collections/**/*.cs",
-            "Compatibility/SerializableAttribute.cs",
+            "**/SerializableAttribute.cs",
             "Compatibility/System/Data/*.cs",
             "Compatibility/System/Security/**/*.cs",
             "**/SystemDataLinqAttributeReader.cs",
