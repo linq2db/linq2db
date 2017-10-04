@@ -921,7 +921,7 @@ namespace LinqToDB.Linq.Builder
 //						}
 
 						var ex = ExpressionBuilder.Equal(association.Builder.MappingSchema, e1, e2);
-							
+
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
 
@@ -1258,7 +1258,7 @@ namespace LinqToDB.Linq.Builder
 				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 				var inheritance     =
 					(
-						from m in InheritanceMapping
+						from m in objectMapper.InheritanceMapping
 						let om = Builder.MappingSchema.GetEntityDescriptor(m.Type)
 						where om.Associations.Count > 0
 						select om
@@ -1398,13 +1398,15 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				RegularConditionCount = join.JoinedTable.Condition.Conditions.Count;
-				ExpressionPredicate   = Association.GetPredicate();
+				ExpressionPredicate   = Association.GetPredicate(parent.ObjectType, ObjectType);
 
 				if (ExpressionPredicate != null)
 				{
+					var expr = Builder.ConvertExpression(ExpressionPredicate.Body.Unwrap());
+
 					Builder.BuildSearchCondition(
-						new ExpressionContext(null, new IBuildContext[] { parent, this }, ExpressionPredicate), 
-						ExpressionPredicate.Body,
+						new ExpressionContext(null, new IBuildContext[] { parent, this }, ExpressionPredicate),
+						expr,
 						join.JoinedTable.Condition.Conditions);
 				}
 
