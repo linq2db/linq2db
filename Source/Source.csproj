@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net40;netstandard1.6;netstandard2.0;net45;net451</TargetFrameworks>
+		<TargetFrameworks>netcoreapp2.0;net40;netstandard1.6;netstandard2.0;net45;net451</TargetFrameworks>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<VersionPrefix>2.0.0</VersionPrefix>
 		<VersionSuffix></VersionSuffix>
@@ -36,7 +36,6 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
 		<NoWarn>1701;1702;1705;1591</NoWarn>
 	</PropertyGroup>
-
 
 	<ItemGroup>
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
@@ -135,6 +134,28 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+
+		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
+		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
+		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
+		<Compile Remove="ServiceModel\**\*.cs;" />
+		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
+		<Compile Remove="**\*SchemaProvider11111*.cs" />
+		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+		<Compile Include="Compatibility\System\Data\DataTableExtensions.cs" />
+		<Compile Include="Compatibility\System\Data\DataRowExtensions.cs" />
+	</ItemGroup>
+
+
+	<!-- .NET Core -->
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp2.0|AnyCPU'">
+		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
 

@@ -179,10 +179,8 @@ namespace LinqToDB.Linq
 
 				Type[] args = null;
 
-				if (mi is MethodInfo)
+				if (mi is MethodInfo mm)
 				{
-					var mm = (MethodInfo)mi;
-
 					var isTypeGeneric   = mm.DeclaringType.IsGenericTypeEx() && !mm.DeclaringType.IsGenericTypeDefinitionEx();
 					var isMethodGeneric = mm.IsGenericMethod && !mm.IsGenericMethodDefinition;
 
@@ -223,19 +221,17 @@ namespace LinqToDB.Linq
 
 			if (expr == null && objectType != null)
 			{
-				Dictionary<TypeMember,IExpressionInfo> dic;
-
 				var key = new TypeMember(objectType, mi.Name);
 
 				foreach (var configuration in mappingSchema.ConfigurationList)
-					if (_typeMembers.TryGetValue(configuration, out dic))
+					if (_typeMembers.TryGetValue(configuration, out var dic))
 						if (dic.TryGetValue(key, out expr))
 							return expr.GetExpression(mappingSchema);
 
 				_typeMembers[""].TryGetValue(key, out expr);
 			}
 
-			return expr == null ? null : expr.GetExpression(mappingSchema);
+			return expr?.GetExpression(mappingSchema);
 		}
 
 		#endregion
