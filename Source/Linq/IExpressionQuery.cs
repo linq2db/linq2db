@@ -5,8 +5,8 @@ namespace LinqToDB.Linq
 {
 	public interface IExpressionQuery
 	{
-		Expression   Expression { get; }
-		string       SqlText    { get; }
-		IDataContext DataContext{ get; }
+		Expression   Expression  { get; }
+		string       SqlText     { get; }
+		IDataContext DataContext { get; }
 	}
 }

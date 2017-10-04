@@ -18,16 +18,16 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract class Query
+	public abstract class Query
 	{
-		public Func<IDataContextEx,Expression,object[],object> GetElement;
-		public Func<IDataContextEx,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
+		public Func<IDataContext,Expression,object[],object> GetElement;
+		public Func<IDataContext,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
 
 		#region Init
 
-		public readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
+		internal readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
 
-		public abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
+		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
 		protected Query(IDataContext dataContext, Expression expression)
 		{
@@ -44,13 +44,13 @@ namespace LinqToDB.Linq
 
 		#region Compare
 
-		public readonly string           ContextID;
-		public readonly Expression       Expression;
-		public readonly MappingSchema    MappingSchema;
-		public readonly string           ConfigurationID;
-		public readonly bool             InlineParameters;
-		public readonly ISqlOptimizer    SqlOptimizer;
-		public readonly SqlProviderFlags SqlProviderFlags;
+		internal readonly string           ContextID;
+		internal readonly Expression       Expression;
+		internal readonly MappingSchema    MappingSchema;
+		internal readonly string           ConfigurationID;
+		internal readonly bool             InlineParameters;
+		internal readonly ISqlOptimizer    SqlOptimizer;
+		internal readonly SqlProviderFlags SqlProviderFlags;
 
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
@@ -82,7 +82,7 @@ namespace LinqToDB.Linq
 			return _queryableAccessorList.Count - 1;
 		}
 
-		public Expression GetIQueryable(int n, Expression expr)
+		internal Expression GetIQueryable(int n, Expression expr)
 		{
 			return _queryableAccessorList[n].Accessor(expr).Expression;
 		}
@@ -93,7 +93,7 @@ namespace LinqToDB.Linq
 
 		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
 
-		public object GetConvertedEnum(Type valueType, object value)
+		internal object GetConvertedEnum(Type valueType, object value)
 		{
 			if (_enumConverters == null)
 				_enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
@@ -131,7 +131,7 @@ namespace LinqToDB.Linq
 			DoNotCache = NoLinqCache.IsNoCache;
 		}
 
-		public override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
+		internal override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
 		{
 			Queries.Add(new QueryInfo
 			{
@@ -146,8 +146,8 @@ namespace LinqToDB.Linq
 
 		public          bool            DoNotCache;
 
-		public Func<IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
-		public Func<IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
+		public Func<IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
+		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
 
 		#endregion
 
@@ -231,7 +231,7 @@ namespace LinqToDB.Linq
 
 							if (DataConnection.TraceSwitch.TraceInfo)
 								DataConnection.WriteTraceLine(
-									"Expression test code generated: '" + testFile + "'.", 
+									"Expression test code generated: '" + testFile + "'.",
 									DataConnection.TraceSwitch.DisplayName);
 						}
 

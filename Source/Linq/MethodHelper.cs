@@ -9,8 +9,8 @@ namespace LinqToDB.Linq
 #if !NETSTANDARD1_6
 		public static MethodInfo GetMethodInfo(this Delegate del)
 		{
-			if ((object) del == null)
-				throw new ArgumentNullException("del");
+			if ((object)del == null)
+				throw new ArgumentNullException(nameof(del));
 			return del.Method;
 		}
 #endif

@@ -60,7 +60,7 @@ namespace LinqToDB.Linq
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID};
 				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
 
-				return ei.GetElement((IDataContextEx)dataContext, Expression.Constant(obj), null);
+				return ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
 			public static async Task<object> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
@@ -71,7 +71,7 @@ namespace LinqToDB.Linq
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
 				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
 
-				return await ei.GetElementAsync((IDataContextEx)dataContext, Expression.Constant(obj), null, token);
+				return await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 			}
 		}
 	}

@@ -30,7 +30,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				query.GetElement((IDataContextEx)dataContext, Expression.Constant(null), null);
+				query.GetElement(dataContext, Expression.Constant(null), null);
 			}
 
 			public static async Task QueryAsync(IDataContext dataContext, string tableName, string databaseName, string ownerName, CancellationToken token)
@@ -52,7 +52,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				await query.GetElementAsync((IDataContextEx)dataContext, Expression.Constant(null), null, token);
+				await query.GetElementAsync(dataContext, Expression.Constant(null), null, token);
 			}
 		}
 	}

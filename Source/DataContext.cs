@@ -16,7 +16,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
-	public partial class DataContext : IDataContextEx
+	public class DataContext : IDataContext
 	{
 		/// <summary>
 		/// Creates data context using default database configuration.
@@ -345,9 +345,9 @@ namespace LinqToDB
 			return dct;
 		}
 
-		IQueryRunner IDataContextEx.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
 		{
-			return new QueryRunner(this, ((IDataContextEx)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters));
+			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters));
 		}
 
 		class QueryRunner : IQueryRunner
@@ -402,30 +402,14 @@ namespace LinqToDB
 				return _queryRunner.GetSqlText();
 			}
 
-			public IDataContextEx DataContext { get { return _queryRunner.DataContext; } set { _queryRunner.DataContext = value; } }
-			public Expression Expression { get { return _queryRunner.Expression; } set { _queryRunner.Expression = value; } }
-			public object[] Parameters { get { return _queryRunner.Parameters; } set { _queryRunner.Parameters = value; } }
-
-			public Func<int> SkipAction { get { return _queryRunner.SkipAction; } set { _queryRunner.SkipAction = value; } }
-			public Func<int> TakeAction { get { return _queryRunner.TakeAction; } set { _queryRunner.TakeAction = value; } }
-
-			public Expression MapperExpression
-			{
-				get { return _queryRunner.MapperExpression; }
-				set { _queryRunner.MapperExpression = value; }
-			}
-
-			public int RowsCount
-			{
-				get { return _queryRunner.RowsCount; }
-				set { _queryRunner.RowsCount = value; }
-			}
-
-			public int QueryNumber
-			{
-				get { return _queryRunner.QueryNumber; }
-				set { _queryRunner.QueryNumber = value; }
-			}
+			public IDataContext DataContext      { get => _queryRunner.DataContext;      set => _queryRunner.DataContext      = value; }
+			public Expression   Expression       { get => _queryRunner.Expression;       set => _queryRunner.Expression       = value; }
+			public object[]     Parameters       { get => _queryRunner.Parameters;       set => _queryRunner.Parameters       = value; }
+			public Func<int>    SkipAction       { get => _queryRunner.SkipAction;       set => _queryRunner.SkipAction       = value; }
+			public Func<int>    TakeAction       { get => _queryRunner.TakeAction;       set => _queryRunner.TakeAction       = value; }
+			public Expression   MapperExpression { get => _queryRunner.MapperExpression; set => _queryRunner.MapperExpression = value; }
+			public int          RowsCount        { get => _queryRunner.RowsCount;        set => _queryRunner.RowsCount        = value; }
+			public int          QueryNumber      { get => _queryRunner.QueryNumber;      set => _queryRunner.QueryNumber      = value; }
 		}
 	}
 }

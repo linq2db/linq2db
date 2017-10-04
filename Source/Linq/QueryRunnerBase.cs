@@ -11,7 +11,7 @@ namespace LinqToDB.Linq
 
 	abstract class QueryRunnerBase : IQueryRunner
 	{
-		protected QueryRunnerBase(Query query, int queryNumber, IDataContextEx dataContext, Expression expression, object[] parameters)
+		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, Expression expression, object[] parameters)
 		{
 			Query        = query;
 			DataContext  = dataContext;
@@ -25,14 +25,14 @@ namespace LinqToDB.Linq
 		protected List<string>      QueryHints = new List<string>();
 		protected DataParameter[]   DataParameters;
 
-		public IDataContextEx       DataContext  { get; set; }
-		public Expression           Expression   { get; set; }
-		public object[]             Parameters   { get; set; }
-
-		public abstract int         ExecuteNonQuery();
-		public abstract object      ExecuteScalar  ();
-		public abstract IDataReader ExecuteReader  ();
+		public IDataContext         DataContext      { get; set; }
+		public Expression           Expression       { get; set; }
+		public object[]             Parameters       { get; set; }
 		public abstract Expression  MapperExpression { get; set; }
+
+		public abstract int                    ExecuteNonQuery();
+		public abstract object                 ExecuteScalar  ();
+		public abstract IDataReader            ExecuteReader  ();
 		public abstract Task<object>           ExecuteScalarAsync  (CancellationToken cancellationToken);
 		public abstract Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken);
 		public abstract Task<int>              ExecuteNonQueryAsync(CancellationToken cancellationToken);
