@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	interface IQueryRunner: IDisposable
+	public interface IQueryRunner: IDisposable
 	{
 		/// <summary>
 		/// Executes query and returns number of affected records.
@@ -57,7 +57,7 @@ namespace LinqToDB.Linq
 		Func<int>      SkipAction       { get; set; }
 		Func<int>      TakeAction       { get; set; }
 		Expression     Expression       { get; set; }
-		IDataContextEx DataContext      { get; set; }
+		IDataContext   DataContext      { get; set; }
 		object[]       Parameters       { get; set; }
 		Expression     MapperExpression { get; set; }
 		int            RowsCount        { get; set; }
