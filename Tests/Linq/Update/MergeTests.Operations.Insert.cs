@@ -10,7 +10,7 @@ using LinqToDB.Data;
 using NUnit.Framework;
 
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{

@@ -15,7 +15,7 @@ using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 

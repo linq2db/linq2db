@@ -95,9 +95,11 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Loads predicate expression from <see cref="ExpressionPredicate"/> member.
 		/// </summary>
+		/// <param name="parentType">Type of object that declares association</param>
+		/// <param name="objectType">Type of object associated with expression predicate</param>
 		/// <returns><c>null</c> of association has no custom predicate expression or predicate expression, specified
 		/// by <see cref="ExpressionPredicate"/> member.</returns>
-		public LambdaExpression GetPredicate()
+		public LambdaExpression GetPredicate(Type parentType, Type objectType)
 		{
 			if (string.IsNullOrEmpty(ExpressionPredicate))
 				return null;
@@ -151,7 +153,18 @@ namespace LinqToDB.Mapping
 
 			var lambda = predicate as LambdaExpression;
 			if (lambda == null || lambda.Parameters.Count != 2)
-				throw new LinqToDBException("Invalid predicate expression");
+				throw new LinqToDBException(string.Format(
+					"Invalid predicate expression in {0}.{1}. Expected: Expression<Func<{2}, {3}, bool>>", type.Name,
+					ExpressionPredicate, parentType.Name, objectType.Name));
+
+			if (lambda.Parameters[0].Type != parentType)
+				throw new LinqToDBException(string.Format("First parameter of expression predicate should be '{0}'", parentType.Name));
+
+			if (lambda.Parameters[1].Type != objectType)
+				throw new LinqToDBException(string.Format("Second parameter of expression predicate should be '{0}'", objectType.Name));
+
+			if (lambda.ReturnType != typeof(bool))
+				throw new LinqToDBException("Result type of expression predicate should be 'bool'");
 
 			return lambda;
 		}

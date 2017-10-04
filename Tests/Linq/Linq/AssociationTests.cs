@@ -650,6 +650,24 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void TestGenericAssociation4(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Parent
+					from g in t.Children.Where(m => Math.Abs(m.ChildID) > 3)
+					orderby g.ParentID
+					select t
+					,
+					from t in db.Parent
+					from g in t.ChildrenX
+					orderby g.ParentID
+					select t);
+			}
+		}
+
+		[Test, DataContextSource]
 		public void ExtensionTest1(string context)
 		{
 			using (var db = GetDataContext(context))

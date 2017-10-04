@@ -377,7 +377,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		Expression ConvertExpression(Expression expression)
+		internal Expression ConvertExpression(Expression expression)
 		{
 			return expression.Transform(e =>
 			{
