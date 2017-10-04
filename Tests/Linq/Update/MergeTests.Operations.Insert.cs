@@ -11,7 +11,7 @@ using NUnit.Framework;
 using System.Threading.Tasks;
 #endif
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{
