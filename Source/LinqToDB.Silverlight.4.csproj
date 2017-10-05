@@ -73,7 +73,6 @@
     <Compile Include="Linq\QueryRunner.cs" />
     <Compile Include="Linq\QueryRunnerBase.cs" />
     <Compile Include="Linq\IDataReaderAsync.cs" />
-    <Compile Include="IDataContextEx.cs" />  
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
     <Compile Include="Common\ConvertBuilder.cs" />
