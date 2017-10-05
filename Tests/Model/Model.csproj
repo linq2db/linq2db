@@ -1,12 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="..\..\Build\linq2db.Default.props" />
+
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
-		<PublicSign>true</PublicSign>
 		<AssemblyName>Model</AssemblyName>
-		<AssemblyOriginatorKeyFile>linq2db.Tests.snk</AssemblyOriginatorKeyFile>
-		<SignAssembly>true</SignAssembly>
-		<PackageId>Model</PackageId>
 		<Configurations>Debug;Release;Travis</Configurations>
 	</PropertyGroup>
 

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
 		.travis.yml = .travis.yml
 		appveyor.core.yml = appveyor.core.yml
@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		build.cake = build.cake
 		build.ps1 = build.ps1
 		build.sh = build.sh
+		Build\linq2db.Default.props = Build\linq2db.Default.props
+		Build\linq2db.snk = Build\linq2db.snk
 		travisbuild.sh = travisbuild.sh
 	EndProjectSection
 EndProject
@@ -25,7 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DF8DE665
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Model", "Tests\Model\Model.csproj", "{EF534F71-A4E6-4019-8835-43BEE792C70A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Linq", "Tests\Linq\Linq.csproj", "{471EE14E-D11F-4E55-9293-7E9617573168}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Linq", "Tests\Linq\Linq.csproj", "{0A1B1E37-2615-4387-B6F5-94F004814ED0}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests.FSharp", "Tests\FSharp\Tests.FSharp.fsproj", "{56109866-4005-4852-9F9A-19A7A8D3B369}"
 EndProject
@@ -50,12 +52,12 @@ Global
 		{EF534F71-A4E6-4019-8835-43BEE792C70A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EF534F71-A4E6-4019-8835-43BEE792C70A}.Travis|Any CPU.ActiveCfg = Travis|Any CPU
 		{EF534F71-A4E6-4019-8835-43BEE792C70A}.Travis|Any CPU.Build.0 = Travis|Any CPU
-		{471EE14E-D11F-4E55-9293-7E9617573168}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{471EE14E-D11F-4E55-9293-7E9617573168}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{471EE14E-D11F-4E55-9293-7E9617573168}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{471EE14E-D11F-4E55-9293-7E9617573168}.Release|Any CPU.Build.0 = Release|Any CPU
-		{471EE14E-D11F-4E55-9293-7E9617573168}.Travis|Any CPU.ActiveCfg = Travis|Any CPU
-		{471EE14E-D11F-4E55-9293-7E9617573168}.Travis|Any CPU.Build.0 = Travis|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Travis|Any CPU.ActiveCfg = Travis|Any CPU
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0}.Travis|Any CPU.Build.0 = Travis|Any CPU
 		{56109866-4005-4852-9F9A-19A7A8D3B369}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{56109866-4005-4852-9F9A-19A7A8D3B369}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56109866-4005-4852-9F9A-19A7A8D3B369}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -73,7 +75,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{0E4E9A56-F285-4067-ADAA-392ACB9CAAA7} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{EF534F71-A4E6-4019-8835-43BEE792C70A} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
-		{471EE14E-D11F-4E55-9293-7E9617573168} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
+		{0A1B1E37-2615-4387-B6F5-94F004814ED0} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{56109866-4005-4852-9F9A-19A7A8D3B369} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{A5524EBC-8058-4B16-8D09-D992555CBFCB} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 	EndGlobalSection

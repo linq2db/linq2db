@@ -1,26 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Default.props" />
+
 	<PropertyGroup>
 		<TargetFrameworks>netcoreapp2.0;net452;netcoreapp1.0</TargetFrameworks>
-		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
-		<VersionPrefix>1.0.0.0</VersionPrefix>
-		<Authors>Igor Tkachev</Authors>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
-		<PublicSign>true</PublicSign>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<AssemblyOriginatorKeyFile>linq2db.Tests.snk</AssemblyOriginatorKeyFile>
-		<SignAssembly>true</SignAssembly>
-		<PackageId>Linq</PackageId>
-		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-		<GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
-		<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
 		<Configurations>Debug;Release;Travis</Configurations>
-		<!--
-		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
-		-->
 	</PropertyGroup>
+
 
 	<!-- BEGIN: Do not delete or change this ItemGroup, it is temporary hack to build on travis -->
 	<ItemGroup Condition=" '$(Configuration)' != 'Travis' ">
@@ -47,7 +34,7 @@
 		<PackageReference Include="Appveyor.TestLogger" Version="1.1.0-post-rtm" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" Condition=" '$(TargetFramework)' != 'net40' " />
 		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="NUnit" Version="3.7.1" />
+		<PackageReference Include="NUnit" Version="3.8.1" />
 		<PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.11.0" />
 		<PackageReference Include="Npgsql" Version="3.2.1" />

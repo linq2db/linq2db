@@ -1,0 +1,34 @@
+﻿<Project>
+	<PropertyGroup>
+		<VersionPrefix>2.0.0</VersionPrefix>
+		<VersionSuffix>beta1</VersionSuffix>
+
+		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
+		<Authors>Igor Tkachev</Authors>
+		<Company>linq2db.net</Company>
+		<Copyright>© 2002-2017 linq2db.net</Copyright>
+		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<AppDesignerFolder>Properties</AppDesignerFolder>
+		<LangVersion>latest</LangVersion>
+		<WarningLevel>4</WarningLevel>
+		<ErrorReport>prompt</ErrorReport>
+		<NoWarn>1701;1702;1705;1591</NoWarn>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile Condition="Exists('..\Build\linq2db.snk')">..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile Condition="Exists('..\..\Build\linq2db.snk')">..\..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
+		<DelaySign>False</DelaySign>
+
+		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+		<GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+		<GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+		<GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
+		<GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
+		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
+	</PropertyGroup>
+</Project>
