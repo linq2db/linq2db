@@ -225,6 +225,7 @@
     <Compile Include="Linq\Builder\IsExpressionResult.cs" />
     <Compile Include="Linq\Builder\JoinBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
+    <Compile Include="Linq\Builder\AllJoinsBuilder.cs" />
     <Compile Include="Linq\Builder\MethodCallBuilder.cs" />
     <Compile Include="Linq\Builder\OfTypeBuilder.cs" />
     <Compile Include="Linq\Builder\OrderByBuilder.cs" />
@@ -370,6 +371,7 @@
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
     <Compile Include="TakeHints.cs" />
+    <Compile Include="SqlJoinType.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.snk" />

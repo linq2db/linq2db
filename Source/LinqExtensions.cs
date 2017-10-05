@@ -2723,5 +2723,63 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		#region SqlJoin
+
+		[Pure]
+		[LinqTunnel]
+		internal static IQueryable<TSource> Join<TSource>(
+			this IQueryable<TSource>        source,
+			SqlJoinType                     joinType,
+			Expression<Func<TSource, bool>> predicate)
+		{
+			//TODO: make public after solving caching issues
+
+			if (source == null) throw new ArgumentNullException("source");
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(Join, source, joinType, predicate),
+					new[] {source.Expression, Expression.Constant(joinType), predicate != null ? Expression.Quote(predicate) : null}));
+		}
+
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> InnerJoin<TSource>(
+			this IQueryable<TSource>        source,
+			Expression<Func<TSource, bool>> predicate)
+		{
+			return Join(source, SqlJoinType.Inner, predicate);
+		}
+
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> LeftJoin<TSource>(
+			this IQueryable<TSource>        source,
+			Expression<Func<TSource, bool>> predicate)
+		{
+			return Join(source, SqlJoinType.Left, predicate);
+		}
+
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> RightJoin<TSource>(
+			this IQueryable<TSource>        source,
+			Expression<Func<TSource, bool>> predicate)
+		{
+			return Join(source, SqlJoinType.Right, predicate);
+		}
+
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> FullJoin<TSource>(
+			this IQueryable<TSource>        source,
+			Expression<Func<TSource, bool>> predicate)
+		{
+			return Join(source, SqlJoinType.Full, predicate);
+		}
+
+		#endregion
 	}
 }
