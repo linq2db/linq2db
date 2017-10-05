@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Common;
 	using SqlQuery;
 
 	static partial class QueryRunner
@@ -31,7 +30,7 @@ namespace LinqToDB.Linq
 				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 
 				if (keys.Count == 0)
-					throw new LinqException("Table '{0}' does not have primary key.".Args(sqlTable.Name));
+					throw new LinqException($"Table '{sqlTable.Name}' does not have primary key.");
 
 				foreach (var field in keys)
 				{

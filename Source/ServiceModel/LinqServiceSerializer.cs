@@ -332,8 +332,8 @@ namespace LinqToDB.ServiceModel
 			protected Type ReadType()
 			{
 				var idx = ReadInt();
-				object type;
-				if (!Dic.TryGetValue(idx, out type))
+
+				if (!Dic.TryGetValue(idx, out var type))
 				{
 					Pos++;
 					var typecode = ReadInt();
@@ -345,17 +345,17 @@ namespace LinqToDB.ServiceModel
 						case TypeArrayIndex: type = GetArrayType(Read<Type>()); break;
 
 						default:
-							throw new SerializationException("TypeIndex or TypeArrayIndex ({0} or {1}) expected, but was {2}".Args(TypeIndex, TypeArrayIndex, typecode));
+							throw new SerializationException(
+								$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}");
 					}
 
-					
 					Dic.Add(idx, type);
 
 					NextLine();
 
 					var idx2 = ReadInt();
 					if (idx2 != idx)
-						throw new SerializationException("Wrong type reading, expected index is {0} but was {1}".Args(idx, idx2));
+						throw new SerializationException($"Wrong type reading, expected index is {idx} but was {idx2}");
 				}
 
 				return (Type) type;
@@ -489,12 +489,13 @@ namespace LinqToDB.ServiceModel
 					if (type == null)
 					{
 						if (Configuration.LinqService.ThrowUnresolvedTypeException)
-							throw new LinqToDBException("Type '{0}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.".Args(str));
+							throw new LinqToDBException(
+								$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
 						UnresolvedTypes.Add(str);
 
 						Debug.WriteLine(
-							"Type '{0}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.".Args(str),
+							$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
 							"LinqServiceSerializer");
 					}
 				}
@@ -1442,7 +1443,7 @@ namespace LinqToDB.ServiceModel
 								groupBy,
 								having,
 								orderBy,
-								unions == null ? null : unions.ToList(),
+								unions?.ToList(),
 								null,
 								createTable,
 								parameterDependent,
@@ -1453,8 +1454,7 @@ namespace LinqToDB.ServiceModel
 							if (parentSql != 0)
 								_actions.Add(() =>
 								{
-									SelectQuery selectQuery;
-									if (_queries.TryGetValue(parentSql, out selectQuery))
+									if (_queries.TryGetValue(parentSql, out var selectQuery))
 										query.ParentSelect = selectQuery;
 								});
 
@@ -1473,7 +1473,7 @@ namespace LinqToDB.ServiceModel
 
 							var col = new SelectQuery.Column(null, expression, alias);
 
-							_actions.Add(() => { col.Parent = _queries[sid]; return; });
+							_actions.Add(() => { col.Parent = _queries[sid]; });
 
 							obj = col;
 

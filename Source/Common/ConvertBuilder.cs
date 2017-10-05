@@ -249,8 +249,7 @@ namespace LinqToDB.Common
 							Expression.Call(
 								_throwLinqToDBConvertException,
 								Expression.Constant(
-									"Mapping ambiguity. MapValue({0}) attribute is defined for both '{1}.{2}' and '{1}.{3}'."
-										.Args(ambiguityMapping.Key, to.FullName, enums[0].value, enums[1].value))),
+									$"Mapping ambiguity. MapValue({ambiguityMapping.Key}) attribute is defined for both '{to.FullName}.{enums[0].value}' and '{to.FullName}.{enums[1].value}'.")),
 								to);
 					}
 
@@ -279,8 +278,7 @@ namespace LinqToDB.Common
 						Expression.Call(
 							_throwLinqToDBConvertException,
 							Expression.Constant(
-								"Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute."
-									.Args(to.FullName, field.OrigValue, from.FullName))),
+								$"Inconsistent mapping. '{to.FullName}.{field.OrigValue}' does not have MapValue(<{from.FullName}>) attribute.")),
 							to);
 				}
 			}
@@ -349,8 +347,7 @@ namespace LinqToDB.Common
 							Expression.Call(
 								_throwLinqToDBConvertException,
 								Expression.Constant(
-									"Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute."
-										.Args(from.FullName, field.Field.Name, to.FullName))),
+									$"Inconsistent mapping. '{@from.FullName}.{field.Field.Name}' does not have MapValue(<{to.FullName}>) attribute.")),
 								to);
 					}
 				}
@@ -407,7 +404,7 @@ namespace LinqToDB.Common
 								Expression.Call(
 									_throwLinqToDBConvertException,
 									Expression.Constant(
-										"Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.".Args(
+										string.Format("Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
 											from.FullName, fromAttrs[0].Field.Name,
 											to.FullName,
 											prev.To.Field.Name,
@@ -428,7 +425,7 @@ namespace LinqToDB.Common
 							expression,
 							Expression.Convert(
 								Expression.Call(_defaultConverter,
-									Expression.Convert(expression, typeof(object)), 
+									Expression.Convert(expression, typeof(object)),
 									Expression.Constant(to)),
 								to),
 							cases.ToArray());
@@ -619,7 +616,7 @@ namespace LinqToDB.Common
 			}
 
 			if (defaultType == null)
-				defaultType = 
+				defaultType =
 					   mappingSchema.GetDefaultFromEnumType(enumType)
 					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
 					?? Enum.GetUnderlyingType(type);

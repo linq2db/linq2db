@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
@@ -120,8 +119,8 @@ namespace LinqToDB.Linq.Builder
 				_methodName = methodCall.Method.Name;
 			}
 
-			readonly string _methodName;
-			readonly Type   _returnType;
+			readonly string    _methodName;
+			readonly Type      _returnType;
 			private  SqlInfo[] _index;
 
 			public int            FieldIndex;
@@ -131,8 +130,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (reader.IsDBNull(0))
 					throw new InvalidOperationException(
-						"Function {0} returns non-nullable value, but result is NULL. Use nullable version of the function instead."
-						.Args(context));
+						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
 				return 0;
 			}
 

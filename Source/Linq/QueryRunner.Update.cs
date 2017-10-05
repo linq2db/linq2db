@@ -37,10 +37,9 @@ namespace LinqToDB.Linq
 						return null;
 
 					throw new LinqException(
-						(keys.Count == sqlTable.Fields.Count ?
-							"There are no fields to update in the type '{0}'. No PK is defined or all fields are keys." :
-							"There are no fields to update in the type '{0}'.")
-						.Args(sqlTable.Name));
+						keys.Count == sqlTable.Fields.Count ?
+							$"There are no fields to update in the type '{sqlTable.Name}'. No PK is defined or all fields are keys." :
+							$"There are no fields to update in the type '{sqlTable.Name}'.");
 				}
 
 				foreach (var field in fields)
@@ -71,7 +70,7 @@ namespace LinqToDB.Linq
 
 			public static int Query(IDataContext dataContext, T obj)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default, obj))
 					return 0;
 
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
@@ -82,7 +81,7 @@ namespace LinqToDB.Linq
 
 			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default, obj))
 					return 0;
 
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };

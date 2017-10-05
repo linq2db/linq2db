@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					schemaName   ?? table.SchemaName,
 					tableName    ?? table.TableName).ToString();
 
-				dataConnection.Execute("SET IDENTITY_INSERT {0} ON".Args(tblName));
+				dataConnection.Execute($"SET IDENTITY_INSERT {tblName} ON");
 			}
 
 			try
@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			finally
 			{
 				if (hasIdentity)
-					dataConnection.Execute("SET IDENTITY_INSERT {0} OFF".Args(tblName));
+					dataConnection.Execute($"SET IDENTITY_INSERT {tblName} OFF");
 			}
 		}
 
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					schemaName   ?? table.SchemaName,
 					tableName    ?? table.TableName).ToString();
 
-				await dataConnection.ExecuteAsync("SET IDENTITY_INSERT {0} ON".Args(tblName), token);
+				await dataConnection.ExecuteAsync($"SET IDENTITY_INSERT {tblName} ON", token);
 			}
 
 			Exception ex = null;
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (hasIdentity)
-				await dataConnection.ExecuteAsync("SET IDENTITY_INSERT {0} OFF".Args(tblName), token);
+				await dataConnection.ExecuteAsync($"SET IDENTITY_INSERT {tblName} OFF", token);
 
 			if (ex != null)
 				throw ex;

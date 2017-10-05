@@ -81,12 +81,12 @@ namespace LinqToDB.Reflection
 
 		static T ThrowException()
 		{
-			throw new LinqToDBException("The '{0}' type must have default or init constructor.".Args(typeof(T).FullName));
+			throw new LinqToDBException($"The '{typeof(T).FullName}' type must have default or init constructor.");
 		}
 
 		static T ThrowAbstractException()
 		{
-			throw new LinqToDBException("Cant create an instance of abstract class '{0}'.".Args(typeof(T).FullName));
+			throw new LinqToDBException($"Cant create an instance of abstract class '{typeof(T).FullName}'.");
 		}
 
 		static readonly List<MemberInfo> _members = new List<MemberInfo>();

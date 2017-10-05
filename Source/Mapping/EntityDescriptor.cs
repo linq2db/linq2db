@@ -180,7 +180,7 @@ namespace LinqToDB.Mapping
 		void SetColumn(ColumnAttribute attr, MappingSchema mappingSchema)
 		{
 			if (attr.MemberName == null)
-				throw new LinqToDBException("The Column attribute of the '{0}' type must have MemberName.".Args(TypeAccessor.Type));
+				throw new LinqToDBException($"The Column attribute of the '{TypeAccessor.Type}' type must have MemberName.");
 
 			if (attr.MemberName.IndexOf('.') < 0)
 			{
@@ -213,15 +213,9 @@ namespace LinqToDB.Mapping
 		{
 			get
 			{
-				ColumnDescriptor cd;
-
-				if (!_columnNames.TryGetValue(memberName, out cd))
-				{
-					string alias;
-
-					if (Aliases != null && Aliases.TryGetValue(memberName, out alias) && memberName != alias)
+				if (!_columnNames.TryGetValue(memberName, out var cd))
+					if (Aliases != null && Aliases.TryGetValue(memberName, out var alias) && memberName != alias)
 						return this[alias];
-				}
 
 				return cd;
 			}
@@ -262,7 +256,7 @@ namespace LinqToDB.Mapping
 							mapping.Discriminator = column;
 					}
 
-					mapping.Discriminator = mapping.Discriminator ?? this.Columns.FirstOrDefault(x => x.IsDiscriminator);
+					mapping.Discriminator = mapping.Discriminator ?? Columns.FirstOrDefault(x => x.IsDiscriminator);
 
 					result.Add(mapping);
 				}

@@ -386,14 +386,11 @@ namespace LinqToDB.DataProvider.Oracle
 			get { return Name == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess"; }
 		}
 
-		public    override string ConnectionNamespace { get { return AssemblyName + ".Client"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(AssemblyName, "Client.OracleConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(AssemblyName, "Client.OracleDataReader"); } }
+		public    override string ConnectionNamespace => $"{AssemblyName}.Client";
+		protected override string ConnectionTypeName  => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
+		protected override string DataReaderTypeName  => $"{AssemblyName}.Client.OracleDataReader, {AssemblyName}";
 
-		public bool IsXmlTypeSupported
-		{
-			get { return _oracleXmlType != null; }
-		}
+		public             bool   IsXmlTypeSupported  => _oracleXmlType != null;
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{

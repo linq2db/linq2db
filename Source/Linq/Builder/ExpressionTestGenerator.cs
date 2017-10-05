@@ -524,14 +524,14 @@ namespace LinqToDB.Linq.Builder
 				var attrs = c.GetCustomAttributesData();
 #endif
 				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + EncryptName(p.Name, "p")).ToArray();
-				return @"{0}
+				return string.Format(@"{0}
 		public {1}({2})
 		{{
 			throw new NotImplementedException();
-		}}".Args(
-					attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
-					name,
-					ps.Length == 0 ? "" : ps.Aggregate((s,t) => s + ", " + t));
+		}}",
+				attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
+				name,
+				ps.Length == 0 ? "" : ps.Aggregate((s,t) => s + ", " + t));
 			}).ToList();
 
 			if (ctors.Count == 1 && ctors[0].IndexOf("()") >= 0)
@@ -544,8 +544,8 @@ namespace LinqToDB.Linq.Builder
 #else
 				var attrs = f.GetCustomAttributesData();
 #endif
-				return @"{0}
-		public {1} {2};".Args(
+				return string.Format(@"{0}
+		public {1} {2};",
 					attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 					GetTypeName(f.FieldType),
 					EncryptName(isUserName, f.Name, "P"));
@@ -722,7 +722,7 @@ namespace {0}
 
 				if (type.GetGenericTypeDefinition() == typeof(Nullable<>))
 				{
-					name = "{0}?".Args(GetTypeName(args[0]));
+					name = $"{GetTypeName(args[0])}?";
 				}
 				else
 				{

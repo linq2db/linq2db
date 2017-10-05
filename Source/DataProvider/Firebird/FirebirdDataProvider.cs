@@ -45,9 +45,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static Action<IDbDataParameter> _setTimeStamp;
 
-		public    override string ConnectionNamespace { get { return "FirebirdSql.Data.FirebirdClient"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "FbConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "FbDataReader"); } }
+		public    override string ConnectionNamespace => "FirebirdSql.Data.FirebirdClient";
+		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.FbConnection, {ConnectionNamespace}";
+		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.FbDataReader, {ConnectionNamespace}";
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{

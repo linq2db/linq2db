@@ -66,7 +66,7 @@ namespace LinqToDB.Data
 			ThrowOnDisposed();
 
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
-				return new DataConnection(DataProvider, _connection) { _mappingSchema = _mappingSchema, Transaction = Transaction };
+				return new DataConnection(DataProvider, _connection) { MappingSchema = MappingSchema, Transaction = Transaction };
 
 			return (DataConnection)Clone();
 		}

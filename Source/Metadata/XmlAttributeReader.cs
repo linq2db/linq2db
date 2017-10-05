@@ -57,21 +57,20 @@ namespace LinqToDB.Metadata
 				}
 
 				if (stream == null)
-					throw new MetadataException("Could not find file '{0}'.".Args(xmlFile));
+					throw new MetadataException($"Could not find file '{xmlFile}'.");
 				else
 					using (stream)
 						_types = LoadStream(stream, xmlFile);
 			}
 			finally
 			{
-				if (streamReader != null)
-					streamReader.Dispose();
+				streamReader?.Dispose();
 			}
 		}
 
 		public XmlAttributeReader([NotNull] Stream xmlDocStream)
 		{
-			if (xmlDocStream == null) throw new ArgumentNullException("xmlDocStream");
+			if (xmlDocStream == null) throw new ArgumentNullException(nameof(xmlDocStream));
 
 			_types = LoadStream(xmlDocStream, "");
 		}
@@ -120,7 +119,7 @@ namespace LinqToDB.Metadata
 				var aname = t.Attribute("Name");
 
 				if (aname == null)
-					throw new MetadataException("'{0}': Element 'Type' has to have 'Name' attribute.".Args(fileName));
+					throw new MetadataException($"'{fileName}': Element 'Type' has to have 'Name' attribute.");
 
 				var tname = aname.Value;
 
@@ -129,9 +128,7 @@ namespace LinqToDB.Metadata
 					var maname = m.Attribute("Name");
 
 					if (maname == null)
-						throw new MetadataException(string.Format(
-							"'{0}': Element <Type Name='{1}'><Member /> has to have 'Name' attribute.",
-							fileName, tname));
+						throw new MetadataException($"'{fileName}': Element <Type Name='{tname}'><Member /> has to have 'Name' attribute.");
 
 					var mname = maname.Value;
 

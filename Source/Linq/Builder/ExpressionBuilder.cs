@@ -437,7 +437,7 @@ namespace LinqToDB.Linq.Builder
 											return DataContextParam;
 										}
 
-										throw new LinqToDBException("Can't convert {0} to expression.".Args(wpi));
+										throw new LinqToDBException($"Can't convert {wpi} to expression.");
 									}
 
 									return wpi;
@@ -622,7 +622,7 @@ namespace LinqToDB.Linq.Builder
 					var method = (MethodInfo)mi;
 					var args   = method.GetGenericArguments();
 					var names  = args.Select(t => (object)t.Name).ToArray();
-					var name   = attr.MethodName.Args(names);
+					var name   = string.Format(attr.MethodName, names);
 
 					expr = Expression.Call(
 						mi.DeclaringType,

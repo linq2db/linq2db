@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 		#region Init
 
 #if DEBUG
-		public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
+		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 
 		public MethodCallExpression MethodCall;
 #endif
@@ -1162,7 +1162,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new LinqToDBException("'{0}' cannot be converted to SQL.".Args(sourceExpression));
+				throw new LinqToDBException($"'{sourceExpression}' cannot be converted to SQL.");
 			}
 
 			return memberExpression;

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -36,9 +36,9 @@ namespace LinqToDB.DataProvider.SQLite
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace { get { return SQLiteTools.AssemblyName; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(SQLiteTools.AssemblyName, SQLiteTools.ConnectionName); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(SQLiteTools.AssemblyName, SQLiteTools.DataReaderName); } }
+		public    override string ConnectionNamespace => SQLiteTools.AssemblyName;
+		protected override string ConnectionTypeName  => $"{SQLiteTools.AssemblyName}.{SQLiteTools.ConnectionName}, {SQLiteTools.AssemblyName}";
+		protected override string DataReaderTypeName  => $"{SQLiteTools.AssemblyName}.{SQLiteTools.DataReaderName}, {SQLiteTools.AssemblyName}";
 
 		protected override string NormalizeTypeName(string typeName)
 		{
@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
 		{
-			if (databaseName == null) throw new ArgumentNullException("databaseName");
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			CreateFileDatabase(
 				databaseName, deleteIfExists, ".sqlite",
@@ -127,7 +127,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
 		{
-			if (databaseName == null) throw new ArgumentNullException("databaseName");
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DropFileDatabase(databaseName, ".sqlite");
 		}
@@ -146,14 +146,12 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 
 			if (reader.IsDBNull(idx))
-				goto DEFAULT; 
+				goto DEFAULT;
 
 			if (fieldType == null)
 			{
-				throw new LinqToDBException("Can't create '{0}' type or '{1}' specific type for {2}.".Args(
-					typeName,
-					providerType,
-					((DbDataReader)reader).GetName(idx)));
+				var name = ((DbDataReader)reader).GetName(idx);
+				throw new LinqToDBException($"Can't create '{typeName}' type or '{providerType}' specific type for {name}.");
 			}
 
 #if DEBUG1
@@ -178,9 +176,7 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 #endif
 
-			Expression expr;
-
-			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
@@ -192,8 +188,10 @@ namespace LinqToDB.DataProvider.SQLite
 			    FindExpression(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
 			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
-DEFAULT:
-			var getValueMethodInfo = LinqToDB.Expressions.MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
+
+		DEFAULT:
+
+			var getValueMethodInfo = Expressions.MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
 				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
 				fieldType);

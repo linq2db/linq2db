@@ -21,11 +21,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public   object    Value      { get; internal set; }
-		public   Type      SystemType { get; private set; }
+		public   Type      SystemType { get; }
 
 		// TODO refactor this to make DataType required parameter for SqlValue
 		/// <summary>
-		/// This implementation is hack to fix <a href="https://github.com/linq2db/linq2db/issues/271">issue 271</a> 
+		/// This implementation is hack to fix <a href="https://github.com/linq2db/linq2db/issues/271">issue 271</a>
 		/// <a href="https://github.com/linq2db/linq2db/pull/608">PR</a>.
 		/// </summary>
 		internal DataType? DataType   { get; set; }
@@ -114,7 +114,7 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			return 
+			return
 				Value == null ?
 					sb.Append("NULL") :
 				Value is string ?

@@ -38,9 +38,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace { get { return "System.Data.SqlServerCe"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SqlCeConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SqlCeDataReader"); } }
+		public    override string ConnectionNamespace => "System.Data.SqlServerCe";
+		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.SqlCeConnection, {ConnectionNamespace}";
+		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.SqlCeDataReader, {ConnectionNamespace}";
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{

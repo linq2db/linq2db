@@ -18,7 +18,7 @@ namespace LinqToDB.Common
 		/// <param name="format">Format string.</param>
 		/// <param name="args">Format parameters.</param>
 		/// <returns>String, generated from <paramref name="format"/> format string using <paramref name="args"/> parameters.</returns>
-		[StringFormatMethod("format")]
+		[Obsolete("Use either string interpolation or CodeJam.FormatWith instead."), StringFormatMethod("format")]
 		public static string Args(this string format, params object[] args)
 		{
 			return string.Format(format, args);
@@ -74,7 +74,7 @@ namespace LinqToDB.Common
 			try
 			{
 				var uri = new Uri(Uri.EscapeUriString(uriString));
-				var path = 
+				var path =
 					  Uri.UnescapeDataString(uri.AbsolutePath)
 					+ Uri.UnescapeDataString(uri.Query)
 					+ Uri.UnescapeDataString(uri.Fragment);

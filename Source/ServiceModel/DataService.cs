@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.ServiceModel
 {
-	using Common;
 	using Extensions;
 	using Linq;
 	using Mapping;
@@ -33,9 +32,7 @@ namespace LinqToDB.ServiceModel
 		{
 			lock (_cache)
 			{
-				Tuple<T,MetadataInfo> data;
-
-				if (!_cache.TryGetValue(mappingSchema, out data))
+				if (!_cache.TryGetValue(mappingSchema, out var data))
 					data = Tuple.Create(default(T), new MetadataInfo(mappingSchema));
 
 				_metadata = new MetadataProvider(data.Item2);
@@ -121,9 +118,7 @@ namespace LinqToDB.ServiceModel
 
 				list.Sort((x,y) =>
 				{
-					Type baseType;
-
-					if (baseTypes.TryGetValue(x.Type, out baseType))
+					if (baseTypes.TryGetValue(x.Type, out var baseType))
 						if (y.Type == baseType)
 							return 1;
 
@@ -136,8 +131,7 @@ namespace LinqToDB.ServiceModel
 
 				foreach (var item in list)
 				{
-					Type baseType;
-					baseTypes.TryGetValue(item.Type, out baseType);
+					baseTypes.TryGetValue(item.Type, out var baseType);
 
 					var type = GetTypeInfo(item.Type, baseType, item.Table, item.Mapper);
 					var set  = new ResourceSet(item.Name, type.Type);
@@ -165,9 +159,7 @@ namespace LinqToDB.ServiceModel
 
 			TypeInfo GetTypeInfo(Type type, Type baseType, SqlTable table, EntityDescriptor mapper)
 			{
-				TypeInfo typeInfo;
-
-				if (!TypeDic.TryGetValue(type, out typeInfo))
+				if (!TypeDic.TryGetValue(type, out var typeInfo))
 				{
 					var baseInfo = baseType != null ? TypeDic[baseType] : null;
 
@@ -176,7 +168,7 @@ namespace LinqToDB.ServiceModel
 						Type   = new ResourceType(
 							type,
 							ResourceTypeKind.EntityType,
-							baseInfo != null ? baseInfo.Type : null,
+							baseInfo?.Type,
 							type.Namespace,
 							type.Name,
 							type.IsAbstract),
@@ -259,11 +251,11 @@ namespace LinqToDB.ServiceModel
 				return false;
 			}
 
-			public string                        ContainerNamespace { get { return typeof(T).Namespace; } }
-			public string                        ContainerName      { get { return typeof(T).Name;      } }
-			public IEnumerable<ResourceSet>      ResourceSets       { get { return _data.Sets.Values;   } }
-			public IEnumerable<ResourceType>     Types              { get { return _data.Types.Values;  } }
-			public IEnumerable<ServiceOperation> ServiceOperations  { get { return Enumerable.Empty<ServiceOperation>(); } }
+			public string                        ContainerNamespace => typeof(T).Namespace;
+			public string                        ContainerName      => typeof(T).Name;
+			public IEnumerable<ResourceSet>      ResourceSets       => _data.Sets.Values;
+			public IEnumerable<ResourceType>     Types              => _data.Types.Values;
+			public IEnumerable<ServiceOperation> ServiceOperations  => Enumerable.Empty<ServiceOperation>();
 		}
 
 		#endregion
@@ -329,7 +321,7 @@ namespace LinqToDB.ServiceModel
 			}
 
 			public object CurrentDataSource         { get; set; }
-			public bool   IsNullPropagationRequired { get { return true; } }
+			public bool   IsNullPropagationRequired => true;
 		}
 
 		#endregion
@@ -388,16 +380,14 @@ namespace LinqToDB.ServiceModel
 
 			public object CreateResource(string containerName, string fullTypeName)
 			{
-				ResourceType type;
-
-				if (_metadata.TryResolveResourceType(fullTypeName, out type)) 
+				if (_metadata.TryResolveResourceType(fullTypeName, out var type))
 				{
 					var resource = _data.CreateInstance(type.InstanceType);
 					_actions.Add(new ResourceAction.Create { Resource = resource });
-					return resource; 
+					return resource;
 				}
 
-				throw new Exception("Type '{0}' not found".Args(fullTypeName));
+				throw new Exception($"Type '{fullTypeName}' not found");
 			}
 
 			public void DeleteResource(object targetResource)

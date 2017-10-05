@@ -24,9 +24,9 @@ namespace LinqToDB.DataProvider.MySql
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace { get { return "MySql.Data.MySqlClient"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, MySql.Data".Args(ConnectionNamespace, "MySqlConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, MySql.Data".Args(ConnectionNamespace, "MySqlDataReader"); } }
+		public    override string ConnectionNamespace => "MySql.Data.MySqlClient";
+		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.MySqlConnection, MySql.Data";
+		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.MySqlDataReader, MySql.Data";
 
 		Type _mySqlDecimalType;
 		Type _mySqlDateTimeType;

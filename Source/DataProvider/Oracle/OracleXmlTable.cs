@@ -136,7 +136,7 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 
 				var columns = ed.Columns
-					.Select((c,i) => "{0} {1} path 'c{2}'".Args(
+					.Select((c,i) => string.Format("{0} {1} path 'c{2}'",
 						c.ColumnName,
 						string.IsNullOrEmpty(c.DbType) ?
 							GetDataTypeText(
@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider.Oracle
 					.Aggregate((s1,s2) => s1 + ", " +  s2);
 
 				table.SqlTableType   = SqlTableType.Expression;
-				table.Name           = "XmlTable('/t/r' PASSING XmlType({2}) COLUMNS " + columns + ") {1}";
+				table.Name           = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns}) {{1}}";
 				table.TableArguments = new[] { arg };
 			}
 		}

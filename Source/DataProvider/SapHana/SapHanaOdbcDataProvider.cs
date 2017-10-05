@@ -7,7 +7,6 @@ using System.Linq;
 namespace LinqToDB.DataProvider.SapHana
 {
 	using Configuration;
-	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;
@@ -25,11 +24,11 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			//supported flags
 			SqlProviderFlags.IsCountSubQuerySupported = true;
-			
+
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
-			//mark this as supported, it's better to throw exception 
+			//mark this as supported, it's better to throw exception
 			//then replace with left join, in which case returns incorrect data
 			SqlProviderFlags.IsSubQueryColumnSupported = true;
 			SqlProviderFlags.IsTakeSupported           = true;
@@ -44,8 +43,8 @@ namespace LinqToDB.DataProvider.SapHana
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
 
-		public override string ConnectionNamespace { get { return typeof(OdbcConnection).Namespace; } }
-		public override Type   DataReaderType      { get { return typeof(OdbcDataReader); } }
+		public override string ConnectionNamespace => typeof(OdbcConnection).Namespace;
+		public override Type   DataReaderType      => typeof(OdbcDataReader);
 
 		public override bool IsCompatibleConnection(IDbConnection connection)
 		{
@@ -66,7 +65,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (commandType == CommandType.StoredProcedure)
 			{
-				commandText = "{{ CALL {0} ({1}) }}".Args(commandText, string.Join(",", parameters.Select(x => "?")));
+				commandText = $"{{ CALL {commandText} ({string.Join(",", parameters.Select(x => "?"))}) }}";
 				commandType = CommandType.Text;
 			}
 
@@ -75,7 +74,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SapHanaOdbcSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);            
+			return new SapHanaOdbcSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

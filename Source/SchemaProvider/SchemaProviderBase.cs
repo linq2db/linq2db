@@ -4,13 +4,12 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.SchemaProvider
 {
 	using Common;
 	using Data;
-	using SqlProvider;
+	using Extensions;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
@@ -522,7 +521,7 @@ namespace LinqToDB.SchemaProvider
 					}
 
 					if (paramValues.All(v => v != null))
-						dbType = format.Args(paramValues);
+						dbType = string.Format(format, paramValues);
 				}
 			}
 

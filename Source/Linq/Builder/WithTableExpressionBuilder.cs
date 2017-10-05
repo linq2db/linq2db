@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -25,8 +24,8 @@ namespace LinqToDB.Linq.Builder
 
 			switch (methodCall.Method.Name)
 			{
-				case "With"                : table.SqlTable.Name = "{{0}} {{1}} WITH ({0})".Args(value); break;
-				case "WithTableExpression" : table.SqlTable.Name = value;                                break;
+				case "With"                : table.SqlTable.Name = $"{{0}} {{1}} WITH ({value})"; break;
+				case "WithTableExpression" : table.SqlTable.Name = value;                         break;
 			}
 
 			return sequence;

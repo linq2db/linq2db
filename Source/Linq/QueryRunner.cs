@@ -40,11 +40,8 @@ namespace LinqToDB.Linq
 			{
 				if (_mapper == null)
 				{
-					_mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(e =>
-					{
-						var ex = e as ConvertFromDataReaderExpression;
-						return ex != null ? ex.Reduce(dataReader) : e;
-					});
+					_mapperExpression = (Expression<Func<IQueryRunner,IDataReader,T>>)_expression.Transform(
+						e => e is ConvertFromDataReaderExpression ex ? ex.Reduce(dataReader) : e);
 
 					var qr = QueryRunner;
 					if (qr != null)
@@ -64,7 +61,7 @@ namespace LinqToDB.Linq
 
 					if (DataConnection.TraceSwitch.TraceInfo)
 						DataConnection.WriteTraceLine(
-							"Mapper has switched to slow mode. Mapping exception: " + ex.Message,
+							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
 							DataConnection.TraceSwitch.DisplayName);
 
 					_isFaulted = true;
@@ -82,7 +79,7 @@ namespace LinqToDB.Linq
 
 					if (DataConnection.TraceSwitch.TraceInfo)
 						DataConnection.WriteTraceLine(
-							"Mapper has switched to slow mode. Mapping exception: " + ex.Message,
+							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
 							DataConnection.TraceSwitch.DisplayName);
 
 					_isFaulted = true;
@@ -282,15 +279,14 @@ namespace LinqToDB.Linq
 			{
 				var q = queryFunc;
 
-				var value = select.TakeValue as SqlValue;
-				if (value != null)
+				if (select.TakeValue is SqlValue value)
 				{
-					var n = (int)((IValueContainer)select.TakeValue).Value;
+					var n = (int)((IValueContainer)value).Value;
 
 					if (n > 0)
 					{
 						queryFunc = (qq, db, mapper, expr, ps, qn) => q(qq, db, mapper, expr, ps, qn).Take(n);
-						take  = (expr, ps) => n;
+						take      = (expr, ps) => n;
 					}
 				}
 				else if (select.TakeValue is SqlParameter)
@@ -390,10 +386,10 @@ namespace LinqToDB.Linq
 				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, action, skipAction, takeAction, token);
 		}
 
-		static readonly PropertyInfo _dataContextInfo  = MemberHelper.PropertyOf<IQueryRunner>( p => p.DataContext);
-		static readonly PropertyInfo _expressionInfo   = MemberHelper.PropertyOf<IQueryRunner>( p => p.Expression);
-		static readonly PropertyInfo _parametersnfo    = MemberHelper.PropertyOf<IQueryRunner>( p => p.Parameters);
-		static readonly PropertyInfo _rowsCountnfo     = MemberHelper.PropertyOf<IQueryRunner>( p => p.RowsCount);
+		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>( p => p.DataContext);
+		static readonly PropertyInfo _expressionInfo  = MemberHelper.PropertyOf<IQueryRunner>( p => p.Expression);
+		static readonly PropertyInfo _parametersnfo   = MemberHelper.PropertyOf<IQueryRunner>( p => p.Parameters);
+		static readonly PropertyInfo _rowsCountnfo    = MemberHelper.PropertyOf<IQueryRunner>( p => p.RowsCount);
 
 		static Expression<Func<IQueryRunner,IDataReader,T>> WrapMapper<T>(
 			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>> expression)

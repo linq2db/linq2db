@@ -3,14 +3,13 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-
 using Microsoft.SqlServer.Server;
 
 namespace LinqToDB.Metadata
 {
 	using Common;
+	using Extensions;
+	using Mapping;
 
 	public class SystemDataSqlServerAttributeReader : IMetadataReader
 	{
@@ -29,9 +28,7 @@ namespace LinqToDB.Metadata
 		{
 			if (typeof(T) == typeof(Sql.ExpressionAttribute) && (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx()))
 			{
-				object attrs;
-
-				if (!_cache.TryGetValue(memberInfo, out attrs))
+				if (!_cache.TryGetValue(memberInfo, out var attrs))
 				{
 					if (memberInfo.IsMethodEx())
 					{
@@ -44,14 +41,14 @@ namespace LinqToDB.Metadata
 
 							var ex = mi.IsStatic
 								?
-								"{0}::{1}({2})".Args(
+								string.Format("{0}::{1}({2})",
 									memberInfo.DeclaringType.Name.ToLower().StartsWith("sql")
 										? memberInfo.DeclaringType.Name.Substring(3)
 										: memberInfo.DeclaringType.Name,
 									ma[0].Name ?? memberInfo.Name,
 									string.Join(", ", ps.Select((_,i) => '{' + i.ToString() + '}').ToArray()))
 								:
-								"{{0}}.{0}({1})".Args(
+								string.Format("{{0}}.{0}({1})",
 									ma[0].Name ?? memberInfo.Name,
 									string.Join(", ", ps.Select((_,i) => '{' + (i + 1).ToString() + '}').ToArray()));
 
@@ -73,7 +70,7 @@ namespace LinqToDB.Metadata
 
 							if (ma.Length > 0)
 							{
-								var ex = "{{0}}.{0}".Args(ma[0].Name ?? memberInfo.Name);
+								var ex = $"{{0}}.{ma[0].Name ?? memberInfo.Name}";
 
 								attrs = new [] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true, ExpectExpression = true } };
 							}

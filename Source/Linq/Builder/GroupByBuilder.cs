@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					throw new NotSupportedException("Explicit construction of entity type '{0}' in group by is not allowed.".Args(body.Type));
+					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in group by is not allowed.");
 			}
 
 			return (methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap().NodeType == ExpressionType.Lambda);
@@ -255,6 +255,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								HelpLink = "https://github.com/linq2db/linq2db/issues/365"
 							};
+
 							throw ex;
 						}
 					}

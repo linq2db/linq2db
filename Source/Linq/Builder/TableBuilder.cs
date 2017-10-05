@@ -7,7 +7,6 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
@@ -132,11 +131,11 @@ namespace LinqToDB.Linq.Builder
 			#region Properties
 
 #if DEBUG
-			public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
+			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 #endif
 
-			public ExpressionBuilder  Builder     { get; private set; }
-			public Expression         Expression  { get; private set; }
+			public ExpressionBuilder  Builder     { get; }
+			public Expression         Expression  { get; }
 			public SelectQuery        SelectQuery { get; set; }
 			public List<MemberInfo[]> LoadWith    { get; set; }
 
@@ -156,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 				Builder          = builder;
 				Parent           = buildInfo.Parent;
 				Expression       = buildInfo.Expression;
-				SelectQuery         = buildInfo.SelectQuery;
+				SelectQuery      = buildInfo.SelectQuery;
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
@@ -265,7 +264,7 @@ namespace LinqToDB.Linq.Builder
 
 					var ex = BuildExpression(ma, 1, parentObject);
 					var ax = Expression.Assign(
-						attr != null && attr.Storage != null ?
+						attr?.Storage != null ?
 							Expression.PropertyOrField (parentObject, attr.Storage) :
 							Expression.MakeMemberAccess(parentObject, member.MemberInfo),
 						ex);
@@ -473,8 +472,7 @@ namespace LinqToDB.Linq.Builder
 					from p in ctor.GetParameters().Select((p,i) => new { p, i })
 					join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
 					from e in j.DefaultIfEmpty()
-					select
-						(e == null ? null : e.e) ?? Expression.Constant(Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+					select e?.e ?? Expression.Constant(Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
 				).ToList();
 
 				var expr = Expression.New(ctor, parms);
@@ -635,10 +633,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (table == null)
 				{
-					if (expression is MemberExpression)
+					if (expression is MemberExpression memberExpression)
 					{
-						var memberExpression = (MemberExpression)expression;
-
 						if (EntityDescriptor != null &&
 							EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 						{
@@ -732,14 +728,11 @@ namespace LinqToDB.Linq.Builder
 
 			protected SqlInfo GetIndex(SqlInfo expr)
 			{
-				SqlInfo n;
-
-				if (_indexes.TryGetValue(expr.Sql, out n))
+				if (_indexes.TryGetValue(expr.Sql, out var n))
 					return n;
 
-				if (expr.Sql is SqlField)
+				if (expr.Sql is SqlField field)
 				{
-					var field = (SqlField)expr.Sql;
 					expr.Index = SelectQuery.Select.Add(field, field.Alias);
 				}
 				else
@@ -784,7 +777,7 @@ namespace LinqToDB.Linq.Builder
 					case RequestFor.Field      :
 						{
 							var table = FindTable(expression, level, false, false);
-							return new IsExpressionResult(table != null && table.Field != null);
+							return new IsExpressionResult(table?.Field != null);
 						}
 
 					case RequestFor.Table       :
@@ -825,8 +818,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var table = FindTable(expression, level, false, false);
 								var isat  =
-									table       != null &&
-									table.Table is AssociatedTableContext &&
+									table?.Table is AssociatedTableContext &&
 									table.Field == null &&
 									(expression == null || expression.GetLevelExpression(Builder.MappingSchema, table.Level) == expression);
 
@@ -888,9 +880,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						SelectQuery.Predicate.ExprExpr p;
 
-						if (cond.Predicate is SelectQuery.SearchCondition)
+						if (cond.Predicate is SelectQuery.SearchCondition condition)
 						{
-							p = ((SelectQuery.SearchCondition)cond.Predicate).Conditions
+							p = condition.Conditions
 								.Select(c => c.Predicate)
 								.OfType<SelectQuery.Predicate.ExprExpr>()
 								.First();
@@ -969,9 +961,9 @@ namespace LinqToDB.Linq.Builder
 
 							if (association.IsList)
 							{
-								var ma     = expression.NodeType == ExpressionType.MemberAccess 
-												? ((MemberExpression)buildInfo.Expression).Expression 
-												: expression.NodeType == ExpressionType.Call 
+								var ma     = expression.NodeType == ExpressionType.MemberAccess
+												? ((MemberExpression)buildInfo.Expression).Expression
+												: expression.NodeType == ExpressionType.Call
 												? ((MethodCallExpression)buildInfo.Expression).Arguments[0]
 												: buildInfo.Expression.GetRootObject(Builder.MappingSchema);
 
@@ -1242,7 +1234,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (throwExceptionForNull && result == null)
-					throw new LinqException("Expression '{0}' ({1}) is not a table.".Args(expression, levelExpression));
+					throw new LinqException($"Expression '{expression}' ({levelExpression}) is not a table.");
 
 				return result;
 			}
@@ -1373,13 +1365,10 @@ namespace LinqToDB.Linq.Builder
 
 				for (var i = 0; i < association.ThisKey.Length; i++)
 				{
-					SqlField field1;
-					SqlField field2;
-
-					if (!parent.SqlTable.Fields.TryGetValue(association.ThisKey[i], out field1))
+					if (!parent.SqlTable.Fields.TryGetValue(association.ThisKey[i], out var field1))
 						throw new LinqException("Association key '{0}' not found for type '{1}.", association.ThisKey[i], parent.ObjectType);
 
-					if (!SqlTable.Fields.TryGetValue(association.OtherKey[i], out field2))
+					if (!SqlTable.Fields.TryGetValue(association.OtherKey[i], out var field2))
 						throw new LinqException("Association key '{0}' not found for type '{1}.", association.OtherKey[i], ObjectType);
 
 //					join.Field(field1).Equal.Field(field2);
@@ -1562,8 +1551,7 @@ namespace LinqToDB.Linq.Builder
 					if (l != null)
 						return l.GetBody(expression);
 
-					throw new LinqToDBException("Expected constructor '{0}(IEnumerable<{1}>)'".Args(
-						memberType.Name, tableContext.ObjectType));
+					throw new LinqToDBException($"Expected constructor '{memberType.Name}(IEnumerable<{tableContext.ObjectType}>)'");
 				}
 
 				static IEnumerable<T> ExecuteSubQuery(

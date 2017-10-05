@@ -43,9 +43,9 @@ namespace LinqToDB.DataProvider.Sybase
 			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace { get { return SybaseTools.AssemblyName; } }
-		protected override string ConnectionTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "Sybase.Data.AseClient.AseConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "Sybase.Data.AseClient.AseDataReader"); } }
+		public    override string ConnectionNamespace => SybaseTools.AssemblyName;
+		protected override string ConnectionTypeName  => $"Sybase.Data.AseClient.AseConnection, {ConnectionNamespace}";
+		protected override string DataReaderTypeName  => $"Sybase.Data.AseClient.AseDataReader, {ConnectionNamespace}";
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
 		{
@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			switch (dataType)
 			{
-				case DataType.SByte      : 
+				case DataType.SByte      :
 					dataType = DataType.Int16;
 					if (value is sbyte)
 						value = (short)(sbyte)value;
@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.Time          : _setTime         (parameter);               break;
 				case DataType.SmallDateTime : _setSmallDateTime(parameter);               break;
 				case DataType.Timestamp     : _setTimestamp    (parameter);               break;
-				case DataType.DateTime2     : 
+				case DataType.DateTime2     :
 					base.SetParameterType(parameter, dataType);
 
 					if (_isUnsupported(parameter))

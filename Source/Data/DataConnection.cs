@@ -74,7 +74,7 @@ namespace LinqToDB.Data
 
 			DataProvider     = ci.DataProvider;
 			ConnectionString = ci.ConnectionString;
-			_mappingSchema   = DataProvider.MappingSchema;
+			MappingSchema    = DataProvider.MappingSchema;
 			RetryPolicy      = Configuration.RetryPolicy.Factory != null ? Configuration.RetryPolicy.Factory(this) : null;
 		}
 
@@ -105,14 +105,14 @@ namespace LinqToDB.Data
 			if (providerName     == null) throw new ArgumentNullException(nameof(providerName));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-			if (!_dataProviders.TryGetValue(providerName, out IDataProvider dataProvider))
-				throw new LinqToDBException("DataProvider '{0}' not found.".Args(providerName));
+			if (!_dataProviders.TryGetValue(providerName, out var dataProvider))
+				throw new LinqToDBException($"DataProvider '{providerName}' not found.");
 
 			InitConfig();
 
 			DataProvider     = dataProvider;
 			ConnectionString = connectionString;
-			_mappingSchema   = DataProvider.MappingSchema;
+			MappingSchema    = DataProvider.MappingSchema;
 		}
 
 		/// <summary>
@@ -139,14 +139,11 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] string connectionString)
 		{
-			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
-			if (connectionString == null) throw new ArgumentNullException("connectionString");
-
 			InitConfig();
 
-			DataProvider     = dataProvider;
-			_mappingSchema   = DataProvider.MappingSchema;
-			ConnectionString = connectionString;
+			DataProvider     = dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider));
+			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+			MappingSchema    = DataProvider.MappingSchema;
 		}
 
 		/// <summary>
@@ -173,18 +170,18 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection)
 		{
-			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
-			if (connection   == null) throw new ArgumentNullException("connection");
+			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			if (connection   == null) throw new ArgumentNullException(nameof(connection));
 
 			InitConfig();
 
 			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(connection))
 				throw new LinqToDBException(
-					"DataProvider '{0}' and connection '{1}' are not compatible.".Args(dataProvider, connection));
+					$"DataProvider '{dataProvider}' and connection '{connection}' are not compatible.");
 
-			DataProvider   = dataProvider;
-			_mappingSchema = DataProvider.MappingSchema;
-			_connection    = connection;
+			DataProvider  = dataProvider;
+			MappingSchema = DataProvider.MappingSchema;
+			_connection   = connection;
 		}
 
 		/// <summary>
@@ -194,9 +191,9 @@ namespace LinqToDB.Data
 		/// <param name="transaction">Existing database transaction to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDataProvider  dataProvider,
 			[JetBrains.Annotations.NotNull] IDbTransaction transaction,
-			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema)
+			[JetBrains.Annotations.NotNull] MappingSchema  mappingSchema)
 			: this(dataProvider, transaction)
 		{
 			AddMappingSchema(mappingSchema);
@@ -208,20 +205,20 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="transaction">Existing database transaction to use.</param>
 		public DataConnection(
-			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDataProvider  dataProvider,
 			[JetBrains.Annotations.NotNull] IDbTransaction transaction)
 		{
-			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
-			if (transaction  == null) throw new ArgumentNullException("transaction");
+			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			if (transaction  == null) throw new ArgumentNullException(nameof(transaction));
 
 			InitConfig();
 
 			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(transaction.Connection))
 				throw new LinqToDBException(
-					"DataProvider '{0}' and connection '{1}' are not compatible.".Args(dataProvider, transaction.Connection));
+					$"DataProvider '{dataProvider}' and connection '{transaction.Connection}' are not compatible.");
 
 			DataProvider      = dataProvider;
-			_mappingSchema    = DataProvider.MappingSchema;
+			MappingSchema     = DataProvider.MappingSchema;
 			_connection       = transaction.Connection;
 			Transaction       = transaction;
 			_closeTransaction = false;
@@ -312,14 +309,14 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  static Action<TraceInfo>  OnTrace
 		{
-			get { return _onTrace; }
-			set { _onTrace = value ?? OnTraceInternal; }
+			get => _onTrace;
+			set => _onTrace = value ?? OnTraceInternal;
 		}
 
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
 		/// </summary>
-		[JetBrains.Annotations.CanBeNull]
+		[CanBeNull]
 		public  Action<TraceInfo>  OnTraceConnection { get; set; } = OnTrace;
 
 		static void OnTraceInternal(TraceInfo info)
@@ -333,8 +330,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					WriteTraceLine(
 						info.RecordsAffected != null
-							? "Query Execution Time{0}: {1}. Records Affected: {2}.\r\n".Args(info.IsAsync ? " (async)" : "", info.ExecutionTime, info.RecordsAffected)
-							: "Query Execution Time{0}: {1}\r\n".                        Args(info.IsAsync ? " (async)" : "", info.ExecutionTime),
+							? $"Query Execution Time{(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
+							: $"Query Execution Time{(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
 						TraceSwitch.DisplayName);
 					break;
 
@@ -348,8 +345,8 @@ namespace LinqToDB.Data
 						{
 							sb
 								.AppendLine()
-								.AppendLine("Exception: {0}".Args(ex.GetType()))
-								.AppendLine("Message  : {0}".Args(ex.Message))
+								.AppendLine($"Exception: {ex.GetType()}")
+								.AppendLine($"Message  : {ex.Message}")
 								.AppendLine(ex.StackTrace)
 								;
 						}
@@ -387,10 +384,10 @@ namespace LinqToDB.Data
 				{
 					var sb = new StringBuilder();
 
-					sb.Append("Total Execution Time{0}: {1}.".Args(info.IsAsync ? " (async)" : "", info.ExecutionTime));
+					sb.Append($"Total Execution Time{(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
-						sb.Append(" Rows Count: {0}.".Args(info.RecordsAffected));
+						sb.Append($" Rows Count: {info.RecordsAffected}.");
 
 					sb.AppendLine();
 
@@ -437,7 +434,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
-#endregion
+		#endregion
 
 		#region Configuration
 
@@ -765,7 +762,7 @@ namespace LinqToDB.Data
 
 		#endregion
 
-#region Connection
+		#region Connection
 
 		bool          _closeConnection;
 		bool          _closeTransaction;
@@ -810,8 +807,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void Close()
 		{
-			if (OnClosing != null)
-				OnClosing(this, EventArgs.Empty);
+			OnClosing?.Invoke(this, EventArgs.Empty);
 
 			DisposeCommand();
 
@@ -827,13 +823,12 @@ namespace LinqToDB.Data
 				_connection = null;
 			}
 
-			if (OnClosed != null)
-				OnClosed(this, EventArgs.Empty);
+			OnClosed?.Invoke(this, EventArgs.Empty);
 		}
 
-#endregion
+		#endregion
 
-#region Command
+		#region Command
 
 		/// <summary>
 		/// Contains text of last command, sent to database using current connection.
@@ -859,8 +854,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  int   CommandTimeout
 		{
-			get { return _commandTimeout ?? 0; }
-			set { _commandTimeout = value;     }
+			get => _commandTimeout ?? 0;
+			set => _commandTimeout = value;
 		}
 
 		private IDbCommand _command;
@@ -869,8 +864,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  IDbCommand  Command
 		{
-			get { return _command ?? (_command = CreateCommand()); }
-			set { _command = value; }
+			get => _command ?? (_command = CreateCommand());
+			set => _command = value;
 		}
 
 		/// <summary>
@@ -1078,9 +1073,9 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-#endregion
+		#endregion
 
-#region Transaction
+		#region Transaction
 		/// <summary>
 		/// Gets current transaction, associated with connection.
 		/// </summary>
@@ -1177,19 +1172,14 @@ namespace LinqToDB.Data
 			}
 		}
 
-#endregion
+		#endregion
 
-#region MappingSchema
-
-		private MappingSchema _mappingSchema;
+		#region MappingSchema
 
 		/// <summary>
 		/// Gets maping schema, used for current connection.
 		/// </summary>
-		public  MappingSchema  MappingSchema
-		{
-			get { return _mappingSchema; }
-		}
+		public  MappingSchema  MappingSchema { get; private set; }
 
 		/// <summary>
 		/// Gets or sets option to force inline parameter values as literals into command text. If parameter inlining not supported
@@ -1201,19 +1191,13 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used for all queries, executed through current connection.
 		/// </summary>
-		public  List<string>  QueryHints
-		{
-			get { return _queryHints ?? (_queryHints = new List<string>()); }
-		}
+		public  List<string>  QueryHints => _queryHints ?? (_queryHints = new List<string>());
 
 		private List<string> _nextQueryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
-		public  List<string>  NextQueryHints
-		{
-			get { return _nextQueryHints ?? (_nextQueryHints = new List<string>()); }
-		}
+		public  List<string>  NextQueryHints => _nextQueryHints ?? (_nextQueryHints = new List<string>());
 
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
@@ -1222,15 +1206,15 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			_mappingSchema = new MappingSchema(mappingSchema, _mappingSchema);
+			MappingSchema = new MappingSchema(mappingSchema, MappingSchema);
 			_id            = null;
 
 			return this;
 		}
 
-#endregion
+		#endregion
 
-#region ICloneable Members
+		#region ICloneable Members
 
 		DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection, MappingSchema mappingSchema)
 		{
@@ -1238,7 +1222,7 @@ namespace LinqToDB.Data
 			DataProvider        = dataProvider;
 			ConnectionString    = connectionString;
 			_connection         = connection;
-			_mappingSchema      = mappingSchema;
+			MappingSchema       = mappingSchema;
 			_closeConnection    = true;
 		}
 
@@ -1256,9 +1240,9 @@ namespace LinqToDB.Data
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
 
-#endregion
+		#endregion
 
-#region System.IDisposable Members
+		#region System.IDisposable Members
 
 		protected bool Disposed { get; private set; }
 
@@ -1277,7 +1261,7 @@ namespace LinqToDB.Data
 			Close();
 		}
 
-#endregion
+		#endregion
 
 		internal CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
 		{

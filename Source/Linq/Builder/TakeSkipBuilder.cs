@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
@@ -74,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 			var sql = sequence.SelectQuery;
 
 			if (hints != null && !builder.DataContext.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
-				throw new LinqException("TakeHints are {0} not supported by current database".Args(hints));
+				throw new LinqException($"TakeHints are {hints} not supported by current database");
 
 			if (hints != null && sql.Select.SkipValue != null)
 				throw new LinqException("Take with hints could not be applied with Skip");

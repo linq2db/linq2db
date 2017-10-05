@@ -6,17 +6,16 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using LinqToDB.Common;
+
+using JetBrains.Annotations;
+
 using LinqToDB.Mapping;
+
+using NotNull = JetBrains.Annotations.NotNullAttribute;
 
 namespace LinqToDB
 {
-	using Expressions;
-
 	using Extensions;
-
-	using JetBrains.Annotations;
-
 	using SqlQuery;
 
 	[AttributeUsage(AttributeTargets.Parameter)]
@@ -121,16 +120,9 @@ namespace LinqToDB
 	{
 		public interface ISqlExtension
 		{
-			
 		}
 
-		public static ISqlExtension Ext
-		{
-			get
-			{
-				return null;
-			}
-		}
+		public static ISqlExtension Ext => null;
 
 		public interface IExtensionCallBuilder
 		{
@@ -159,20 +151,18 @@ namespace LinqToDB
 
 		public class SqlExtension
 		{
-			public Dictionary<string, List<SqlExtensionParam>> NamedParameters
-			{
-				get { return _namedParameters; }
-			}
+			public Dictionary<string,List<SqlExtensionParam>> NamedParameters => _namedParameters;
 
-			readonly Dictionary<string, List<SqlExtensionParam>> _namedParameters;
+			readonly Dictionary<string,List<SqlExtensionParam>> _namedParameters;
 			public int ChainPrecedence { get; set; }
 
-			public SqlExtension(Type systemType, string expr, int precedence, int chainPrecedence, bool isAggregate, params SqlExtensionParam[] parameters)
+			public SqlExtension(
+				Type systemType, string expr, int precedence, int chainPrecedence, bool isAggregate, params SqlExtensionParam[] parameters)
 			{
-				if (parameters == null) throw new ArgumentNullException("parameters");
+				if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 				foreach (var value in parameters)
-					if (value == null) throw new ArgumentNullException("parameters");
+					if (value == null) throw new ArgumentNullException(nameof(parameters));
 
 				SystemType       = systemType;
 				Expr             = expr;
@@ -186,7 +176,7 @@ namespace LinqToDB
 				: this(null, expr, SqlQuery.Precedence.Unknown, 0, false, parameters)
 			{
 			}
-			 
+
 			public Type   SystemType  { get; set; }
 			public string Expr        { get; set; }
 			public int    Precedence  { get; set; }
@@ -199,21 +189,21 @@ namespace LinqToDB
 
 			public SqlExtensionParam AddParameter(SqlExtensionParam param)
 			{
-				List<SqlExtensionParam> list;
 				var key = param.Name ?? string.Empty;
-				if (!_namedParameters.TryGetValue(key, out list))
+
+				if (!_namedParameters.TryGetValue(key, out var list))
 				{
 					list = new List<SqlExtensionParam>();
 					_namedParameters.Add(key, list);
 				}
+
 				list.Add(param);
 				return param;
 			}
 
 			public IEnumerable<SqlExtensionParam> GetParametersByName(string name)
 			{
-				List<SqlExtensionParam> list;
-				if (_namedParameters.TryGetValue(name, out list))
+				if (_namedParameters.TryGetValue(name, out var list))
 					return list;
 				return Enumerable.Empty<SqlExtensionParam>();
 			}
@@ -257,50 +247,43 @@ namespace LinqToDB
 				public ExtensionBuilder(
 					string                     configuration,
 					[NotNull]   MappingSchema  mapping,
-					[NotNull]	SelectQuery    query, 
-					[NotNull]   SqlExtension   extension, 
+					[NotNull]	SelectQuery    query,
+					[NotNull]   SqlExtension   extension,
 					[NotNull]   ConvertHelper  convertHeper,
 					[NotNull]   MemberInfo     member,
 					[NotNull]   Expression[]   arguments)
 				{
-					if (mapping      == null) throw new ArgumentNullException("mapping");
-					if (query        == null) throw new ArgumentNullException("query");
-					if (extension    == null) throw new ArgumentNullException("extension");
-					if (convertHeper == null) throw new ArgumentNullException("convertHeper");
-					if (arguments    == null) throw new ArgumentNullException("arguments");
-
-					Mapping       = mapping;
-					Query         = query;
+					Mapping       = mapping      ?? throw new ArgumentNullException(nameof(mapping));
+					Query         = query        ?? throw new ArgumentNullException(nameof(query));
 					Configuration = configuration;
-					Extension     = extension;
-					_convert      = convertHeper;
+					Extension     = extension    ?? throw new ArgumentNullException(nameof(extension));
+					_convert      = convertHeper ?? throw new ArgumentNullException(nameof(convertHeper));
 					Member        = member;
 					Method        = member as MethodInfo;
-					Arguments     = arguments;
+					Arguments     = arguments    ?? throw new ArgumentNullException(nameof(arguments));
 				}
 
-				public MethodInfo Method               { get; private set; }
+				public MethodInfo   Method    { get; }
+				public Expression[] Arguments { get; }
 
 				public ISqlExpression ConvertExpression(Expression expr)
 				{
 					return _convert.Convert(expr);
 				}
 
-				public Expression[]   Arguments        { get; private set; }
-
 				#region ISqExtensionBuilder Members
 
-				public string         Configuration    { get; private set; }
-				public MappingSchema  Mapping          { get; private set; }
-				public SelectQuery    Query            { get; private set; }
-				public MemberInfo     Member           { get; private set; }
-				public SqlExtension   Extension        { get; private set; }
-				public ISqlExpression ResultExpression { get;         set; }
+				public string         Configuration    { get; }
+				public MappingSchema  Mapping          { get; }
+				public SelectQuery    Query            { get; }
+				public MemberInfo     Member           { get; }
+				public SqlExtension   Extension        { get; }
+				public ISqlExpression ResultExpression { get; set; }
 
 				public string Expression
 				{
-					get { return Extension.Expr;  }
-					set { Extension.Expr = value; }
+					get => Extension.Expr;
+					set => Extension.Expr = value;
 				}
 
 				public T GetValue<T>(int index)
@@ -360,7 +343,7 @@ namespace LinqToDB
 
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
 				{
-					return Extension.AddParameter(name, expr);;
+					return Extension.AddParameter(name, expr);
 				}
 
 				#endregion
@@ -458,8 +441,8 @@ namespace LinqToDB
 
 			public static string ResolveExpressionValues([NotNull] string expression, [NotNull] Func<string, string, string> valueProvider)
 			{
-				if (expression == null) throw new ArgumentNullException("expression");
-				if (valueProvider == null) throw new ArgumentNullException("valueProvider");
+				if (expression    == null) throw new ArgumentNullException(nameof(expression));
+				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
 
 				const string pattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
 
@@ -538,8 +521,7 @@ namespace LinqToDB
 
 						if (names.Length > 0)
 						{
-							var arrayInit = arg as NewArrayExpression;
-							var sqlExpressions = arrayInit != null
+							var sqlExpressions = arg is NewArrayExpression arrayInit
 								? arrayInit.Expressions.Select(convertHelper.Convert).ToArray()
 								: new[] {convertHelper.Convert(arg)};
 
@@ -558,11 +540,11 @@ namespace LinqToDB
 				{
 					var callBuilder = _builders.GetOrAdd(BuilderType, t =>
 						{
-							var res = Activator.CreateInstance(BuilderType) as IExtensionCallBuilder;
-							if (res == null)
-								throw new ArgumentException(
-									"Type '{0}' does not implement {1} interface.".Args(BuilderType, typeof(IExtensionCallBuilder).Name));
-							return res;
+							if (Activator.CreateInstance(BuilderType) is IExtensionCallBuilder res)
+								return res;
+
+							throw new ArgumentException(
+								$"Type '{BuilderType}' does not implement {nameof(IExtensionCallBuilder)} interface.");
 						}
 					);
 
@@ -589,8 +571,7 @@ namespace LinqToDB
 
 				public ConvertHelper([NotNull] Func<Expression, ISqlExpression> converter)
 				{
-					if (converter == null) throw new ArgumentNullException("converter");
-					_converter = converter;
+					_converter = converter ?? throw new ArgumentNullException(nameof(converter));
 				}
 
 				public ISqlExpression Convert(Expression exp)
@@ -617,8 +598,7 @@ namespace LinqToDB
 					string result = null;
 					foreach (var p in found)
 					{
-						string paramValue;
-						if (resolvedParams.TryGetValue(p, out paramValue))
+						if (resolvedParams.TryGetValue(p, out var paramValue))
 						{
 							result = paramValue;
 						}

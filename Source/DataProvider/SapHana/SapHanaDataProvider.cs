@@ -22,11 +22,11 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			//supported flags
 			SqlProviderFlags.IsCountSubQuerySupported = true;
-			
+
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
-			//mark this as supported, it's better to throw exception 
+			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
 			SqlProviderFlags.IsSubQueryColumnSupported = true;
 
@@ -42,30 +42,14 @@ namespace LinqToDB.DataProvider.SapHana
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
 
-		public override string ConnectionNamespace { get { return "Sap.Data.Hana"; } }
-
-		protected override string ConnectionTypeName
-		{
-			get
-			{
-				return "{0}.{1}, {2}".Args(ConnectionNamespace, "HanaConnection", SapHanaTools.AssemblyName);
-			}
-		}
-
-		protected override string DataReaderTypeName
-		{
-			get
-			{
-				return "{0}.{1}, {2}".Args(ConnectionNamespace, "HanaDataReader", SapHanaTools.AssemblyName);
-			}
-		}
+		public    override string ConnectionNamespace => "Sap.Data.Hana";
+		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.HanaConnection, {SapHanaTools.AssemblyName}";
+		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.HanaDataReader, {SapHanaTools.AssemblyName}";
 
 		static Action<IDbDataParameter> _setText;
 		static Action<IDbDataParameter> _setNText;
 		static Action<IDbDataParameter> _setBlob;
 		static Action<IDbDataParameter> _setVarBinary;
-
-
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -161,7 +145,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection, 
+			DataConnection connection,
 			IMergeable<TTarget, TSource> merge)
 		{
 			return new SapHanaMergeBuilder<TTarget, TSource>(connection, merge);
