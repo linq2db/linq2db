@@ -2728,11 +2728,13 @@ namespace LinqToDB
 
 		[Pure]
 		[LinqTunnel]
-		public static IQueryable<TSource> Join<TSource>(
+		internal static IQueryable<TSource> Join<TSource>(
 			this IQueryable<TSource>        source,
 			SqlJoinType                     joinType,
 			Expression<Func<TSource, bool>> predicate)
 		{
+			//TODO: make public after solving caching issues
+
 			if (source == null) throw new ArgumentNullException("source");
 
 			return source.Provider.CreateQuery<TSource>(
