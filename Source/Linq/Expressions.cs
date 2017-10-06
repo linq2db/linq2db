@@ -167,53 +167,61 @@ namespace LinqToDB.Linq
 				_checkUserNamespace = false;
 			}
 
+#if DEBUG1
+#if NET45
+			var targetFramework = "net45";
+#elif NETCOREAPP2_0
+			var targetFramework = "netcoreapp2.0";
+#elif NETSTANDARD1_6
+			var targetFramework = "netstandard1.6";
+#elif NETSTANDARD2_0
+			var targetFramework = "netstandard2.0";
+#endif
+#endif
+
 			IExpressionInfo expr;
 
-			{
-				Dictionary<MemberInfo,IExpressionInfo> dic;
+			foreach (var configuration in mappingSchema.ConfigurationList)
+				if (Members.TryGetValue(configuration, out var dic))
+					if (dic.TryGetValue(mi, out expr))
+						return expr.GetExpression(mappingSchema);
 
+			Type[] args = null;
+
+			if (mi is MethodInfo mm)
+			{
+				var isTypeGeneric   = mm.DeclaringType.IsGenericTypeEx() && !mm.DeclaringType.IsGenericTypeDefinitionEx();
+				var isMethodGeneric = mm.IsGenericMethod && !mm.IsGenericMethodDefinition;
+
+				if (isTypeGeneric || isMethodGeneric)
+				{
+					var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArgumentsEx() : Array<Type>.Empty;
+					var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()                 : Array<Type>.Empty;
+
+					args = typeGenericArgs.SequenceEqual(methodGenericArgs) ?
+						typeGenericArgs : typeGenericArgs.Concat(methodGenericArgs).ToArray();
+				}
+			}
+
+			if (args != null && InitGenericConvertProvider(args, mappingSchema))
 				foreach (var configuration in mappingSchema.ConfigurationList)
-					if (Members.TryGetValue(configuration, out dic))
+					if (Members.TryGetValue(configuration, out var dic))
 						if (dic.TryGetValue(mi, out expr))
 							return expr.GetExpression(mappingSchema);
 
-				Type[] args = null;
-
-				if (mi is MethodInfo mm)
+			if (!Members[""].TryGetValue(mi, out expr))
+			{
+				if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType.FullName.StartsWith("Microsoft.VisualBasic.CompilerServices."))
 				{
-					var isTypeGeneric   = mm.DeclaringType.IsGenericTypeEx() && !mm.DeclaringType.IsGenericTypeDefinitionEx();
-					var isMethodGeneric = mm.IsGenericMethod && !mm.IsGenericMethodDefinition;
-
-					if (isTypeGeneric || isMethodGeneric)
+					lock (_memberSync)
 					{
-						var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArgumentsEx() : Array<Type>.Empty;
-						var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()                 : Array<Type>.Empty;
-
-						args = typeGenericArgs.SequenceEqual(methodGenericArgs) ?
-							typeGenericArgs : typeGenericArgs.Concat(methodGenericArgs).ToArray();
-					}
-				}
-
-				if (args != null && InitGenericConvertProvider(args, mappingSchema))
-					foreach (var configuration in mappingSchema.ConfigurationList)
-						if (Members.TryGetValue(configuration, out dic))
-							if (dic.TryGetValue(mi, out expr))
-								return expr.GetExpression(mappingSchema);
-
-				if (!Members[""].TryGetValue(mi, out expr))
-				{
-					if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType.FullName.StartsWith("Microsoft.VisualBasic.CompilerServices."))
-					{
-						lock (_memberSync)
+						if (!Members[""].TryGetValue(mi, out expr))
 						{
-							if (!Members[""].TryGetValue(mi, out expr))
-							{
-								expr = new LazyExpressionInfo();
+							expr = new LazyExpressionInfo();
 
-								((LazyExpressionInfo)expr).SetExpression(L<String,String,Boolean,Int32>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
+							((LazyExpressionInfo)expr).SetExpression(L<String,String,Boolean,Int32>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
 
-								Members[""].Add(mi, expr);
-							}
+							Members[""].Add(mi, expr);
 						}
 					}
 				}
@@ -385,8 +393,13 @@ namespace LinqToDB.Linq
 			{ M(() => "".Replace    ("","")   ), N(() => L<String,String,String,String>    ((String obj,String p0,String p1)          => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Replace    (' ',' ') ), N(() => L<String,Char,Char,String>        ((String obj,Char   p0,Char   p1)          => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Trim     (obj))) },
+#if NETSTANDARD2_0
+			{ M(() => "".TrimEnd    ()        ), N(() => L<String,String>                  ((String obj)                              =>     TrimRight(obj))) },
+			{ M(() => "".TrimStart  ()        ), N(() => L<String,String>                  ((String obj)                              =>     TrimLeft (obj))) },
+#else
 			{ M(() => "".TrimEnd    ()        ), N(() => L<String,Char[],String>           ((String obj,Char[] ch)                    =>     TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<String,Char[],String>           ((String obj,Char[] ch)                    =>     TrimLeft (obj, ch))) },
+#endif
 			{ M(() => "".ToLower    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Upper(obj))) },
 			{ M(() => "".CompareTo  ("")      ), N(() => L<String,String,Int32>            ((String obj,String p0)                    => ConvertToCaseCompareTo(obj, p0).Value)) },
@@ -968,7 +981,7 @@ namespace LinqToDB.Linq
 		{
 			SetGenericInfoProvider(typeof(GenericInfoProvider<>));
 
-			return new Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>
+			var members = new Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>
 			{
 				{ "", _commonMembers },
 
@@ -1311,9 +1324,51 @@ namespace LinqToDB.Linq
 
 				#endregion
 			};
+
+#if DEBUG
+
+			foreach (var membersValue in members.Values)
+			{
+				foreach (var member in membersValue)
+				{
+					int pCount;
+
+					if (member.Key is MethodInfo method)
+					{
+						pCount = method.GetParameters().Length;
+
+						if (!method.IsStatic)
+							pCount++;
+					}
+					else if (member.Key is ConstructorInfo ctor)
+					{
+						pCount = ctor.GetParameters().Length;
+					}
+					else if (member.Key is PropertyInfo prop)
+					{
+						pCount = prop.GetGetMethod()?.IsStatic == true ? 0 : 1;
+					}
+					else if (member.Key is FieldInfo field)
+					{
+						pCount = field.IsStatic ? 0 : 1;
+					}
+					else
+						throw new InvalidOperationException($"Unknown member {member.Key}");
+
+					var lambda = member.Value.GetExpression(MappingSchema.Default);
+
+					if (pCount != lambda.Parameters.Count)
+						throw new InvalidOperationException(
+							$"Invalid number of parameters for '{member.Key}' and '{lambda}'.");
+				}
+			}
+
+#endif
+
+			return members;
 		}
 
-#endregion
+		#endregion
 
 		class TypeMember
 		{
@@ -1417,16 +1472,16 @@ namespace LinqToDB.Linq
 
 		[CLSCompliant(false)]
 		[Sql.Function("RTrim", 0)]
-		public static string TrimRight(string str, char[] trimChars)
+		public static string TrimRight(string str, params char[] trimChars)
 		{
-			return str == null ? null : str.TrimEnd(trimChars);
+			return str?.TrimEnd(trimChars);
 		}
 
 		[CLSCompliant(false)]
 		[Sql.Function("LTrim", 0)]
-		public static string TrimLeft(string str, char[] trimChars)
+		public static string TrimLeft(string str, params char[] trimChars)
 		{
-			return str == null ? null : str.TrimStart(trimChars);
+			return str?.TrimStart(trimChars);
 		}
 
 		#endregion
@@ -1562,6 +1617,6 @@ namespace LinqToDB.Linq
 
 		#endregion
 
-#endregion
+		#endregion
 	}
 }

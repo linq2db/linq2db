@@ -245,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (Configuration.Linq.GuardGrouping)
 					{
-						if (context._element.Lambda.Parameters.Count == 1                   &&
+						if (context._element.Lambda.Parameters.Count == 1 &&
 							context._element.Body == context._element.Lambda.Parameters[0])
 						{
 							var ex = new LinqToDBException(

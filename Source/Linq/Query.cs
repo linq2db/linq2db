@@ -68,9 +68,7 @@ namespace LinqToDB.Linq
 
 		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
 		{
-			QueryableAccessor e;
-
-			if (_queryableAccessorDic.TryGetValue(expr, out e))
+			if (_queryableAccessorDic.TryGetValue(expr, out var e))
 				return _queryableAccessorList.IndexOf(e);
 
 			e = new QueryableAccessor { Accessor = qe.Compile() };
@@ -98,9 +96,7 @@ namespace LinqToDB.Linq
 			if (_enumConverters == null)
 				_enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
 
-			Func<object, object> converter;
-
-			if (!_enumConverters.TryGetValue(valueType, out converter))
+			if (!_enumConverters.TryGetValue(valueType, out var converter))
 			{
 				var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
 				var convExpr  = MappingSchema.GetConvertExpression(valueType, toType);
@@ -153,7 +149,7 @@ namespace LinqToDB.Linq
 
 		#region GetInfo
 
-		static          List<Query<T>> _orderedCache = new List<Query<T>>(CacheSize);
+		static readonly List<Query<T>> _orderedCache = new List<Query<T>>(CacheSize);
 
 		/// <summary>
 		/// LINQ query cache version. Changed when query added or removed from cache.
@@ -187,8 +183,7 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
-			var preprocessor = dataContext as IExpressionPreprocessor;
-			if (preprocessor != null)
+			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
 			if (Configuration.Linq.UseBinaryAggregateExpression)
@@ -222,36 +217,35 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		private static Query<T> CreateQuery(IDataContext dataContext, Expression expr)
-					{
-			Query<T> query;
-						if (Configuration.Linq.GenerateExpressionTest)
-						{
-							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
+		static Query<T> CreateQuery(IDataContext dataContext, Expression expr)
+		{
+			if (Configuration.Linq.GenerateExpressionTest)
+			{
+				var testFile = new ExpressionTestGenerator().GenerateSource(expr);
 
-							if (DataConnection.TraceSwitch.TraceInfo)
-								DataConnection.WriteTraceLine(
-									"Expression test code generated: '" + testFile + "'.",
-									DataConnection.TraceSwitch.DisplayName);
-						}
+				if (DataConnection.TraceSwitch.TraceInfo)
+					DataConnection.WriteTraceLine(
+						$"Expression test code generated: \'{testFile}\'.",
+						DataConnection.TraceSwitch.DisplayName);
+			}
 
-						query = new Query<T>(dataContext, expr);
+			var query = new Query<T>(dataContext, expr);
 
-						try
-						{
-							query = new ExpressionBuilder(query, dataContext, expr, null).Build<T>();
-						}
-						catch (Exception)
-						{
-							if (!Configuration.Linq.GenerateExpressionTest)
-							{
-								DataConnection.WriteTraceLine(
-									"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
-									DataConnection.TraceSwitch.DisplayName);
-							}
+			try
+			{
+				query = new ExpressionBuilder(query, dataContext, expr, null).Build<T>();
+			}
+			catch (Exception)
+			{
+				if (!Configuration.Linq.GenerateExpressionTest)
+				{
+					DataConnection.WriteTraceLine(
+						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
+						DataConnection.TraceSwitch.DisplayName);
+				}
 
-							throw;
-						}
+				throw;
+			}
 
 			return query;
 		}

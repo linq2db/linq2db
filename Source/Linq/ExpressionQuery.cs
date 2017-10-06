@@ -99,7 +99,7 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
-			
+
 			return query
 				.GetForEachAsync(DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken);
 		}
@@ -178,7 +178,7 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
-			
+
 			return query.GetIEnumerable(DataContext, Expression, Parameters).GetEnumerator();
 		}
 
@@ -187,7 +187,7 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
-			
+
 			return query.GetIEnumerable(DataContext, Expression, Parameters).GetEnumerator();
 		}
 
