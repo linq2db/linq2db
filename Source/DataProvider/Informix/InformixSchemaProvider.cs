@@ -102,10 +102,11 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return dataConnection.Query<TableInfo>(@"
 				SELECT
-					tabid         as TableID,
-					tabname       as TableName,
-					1             as IsDefaultSchema,
-					tabtype = 'V' as IsView
+					tabid              as TableID,
+					tabname            as TableName,
+					owner = 'informix' as IsDefaultSchema,
+					trim(owner)        as SchemaName,
+					tabtype = 'V'      as IsView
 				FROM
 					systables
 				WHERE
