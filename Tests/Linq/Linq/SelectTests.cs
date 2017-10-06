@@ -533,14 +533,14 @@ namespace Tests.Linq
 		{
 			public class Factory : IObjectFactory
 			{
-#region IObjectFactory Members
+				#region IObjectFactory Members
 
 				public object CreateInstance(TypeAccessor typeAccessor)
 				{
 					return typeAccessor.CreateInstance();
 				}
 
-#endregion
+				#endregion
 			}
 
 			public int    PersonID;

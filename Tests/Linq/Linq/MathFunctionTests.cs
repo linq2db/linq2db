@@ -177,8 +177,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in    Types select Math.Max(p.MoneyValue, 5) where t != 0 select t,
-					from t in from p in db.Types select Math.Max(p.MoneyValue, 5) where t != 0 select t);
+					from t in from p in    Types select Math.Max(p.MoneyValue, 5.1m) where t != 0 select t,
+					from t in from p in db.Types select Math.Max(p.MoneyValue, 5.1m) where t != 0 select t);
 		}
 
 		[Test, DataContextSource]

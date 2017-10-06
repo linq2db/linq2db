@@ -1143,7 +1143,7 @@ namespace Tests
 					message.AppendLine  ();
 				}
 
-			Assert.AreEqual(0, exceptExpected, "Expect Expected" + Environment.NewLine + message.ToString());
+			Assert.AreEqual(0, exceptExpected, "Expected Was" + Environment.NewLine + message.ToString());
 			Assert.AreEqual(0, exceptResult,   "Expect Result"   + Environment.NewLine + message.ToString());
 		}
 
