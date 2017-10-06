@@ -5,7 +5,19 @@
 		<TargetFrameworks>netcoreapp2.0;net452;netcoreapp1.0</TargetFrameworks>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<Configurations>Debug;Release;Travis</Configurations>
+		<Configurations>Debug;Release;Travis;NET.45;CORE.1;CORE.2</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
+		<TargetFrameworks>net452</TargetFrameworks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.1' ">
+		<TargetFrameworks>netcoreapp1.0</TargetFrameworks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.2' ">
+		<TargetFrameworks>netcoreapp2.0</TargetFrameworks>
 	</PropertyGroup>
 
 

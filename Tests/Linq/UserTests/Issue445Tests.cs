@@ -79,7 +79,7 @@ namespace Tests.UserTests
 				return db.GetTable<Person>().Where(_ => _.ID == 1);
 		}
 
-		[Test, IssueContextSourceAttribute]
+		[Test, IssueContextSource]
 		public void ObjectDisposedException1(string context)
 		{
 			Assert.Throws<ObjectDisposedException>(() =>

@@ -76,10 +76,10 @@ namespace Tests.DataProvider
 
 		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 		{
-			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
+			Assert.That(connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 1"),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
 
-			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
+			object actualValue   = connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 2");
 			object expectedValue = value;
 
 			if (convertToString)
@@ -1677,7 +1677,6 @@ namespace Tests.DataProvider
 				{
 					db.DropTable<ClobEntity>();
 				}
-				
 			}
 		}
 
@@ -1723,7 +1722,7 @@ namespace Tests.DataProvider
 					var now = new DateTimeOffset(2000, 1, 1, 10, 11, 12, TimeSpan.FromHours(5));
 					db.CreateTable<DateTimeOffsetTable>();
 					db.Insert(new DateTimeOffsetTable() {DateTimeOffsetValue = now});
-					Assert.AreEqual(now, db.GetTable<DateTimeOffsetTable>().Select(_ => _.DateTimeOffsetValue).Single()); 
+					Assert.AreEqual(now, db.GetTable<DateTimeOffsetTable>().Select(_ => _.DateTimeOffsetValue).Single());
 				}
 				finally
 				{
@@ -1810,7 +1809,6 @@ namespace Tests.DataProvider
 			[Column,             Nullable] public byte[]  GUIDDATATYPE   { get; set; } // RAW(16)
 		}
 
-
 		[Test, OracleDataContext]
 		public void Issue539(string context)
 		{
@@ -1859,7 +1857,7 @@ namespace Tests.DataProvider
 			using (var db = new TestDataConnection(context))
 			{
 				db.AddMappingSchema(ms);
-				
+
 				var currentUser = db.Execute<string>("SELECT user FROM dual");
 				db.Execute("GRANT CREATE ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT CREATE ANY SEQUENCE TO " + currentUser);
@@ -1871,7 +1869,7 @@ namespace Tests.DataProvider
 				{
 
 					var tableSpace = db.Execute<string>("SELECT default_tablespace FROM sys.dba_users WHERE username = 'ISSUE723SCHEMA'");
-					db.Execute("ALTER USER Issue723Schema quota unlimited on {0}".Args(tableSpace));
+					db.Execute($"ALTER USER Issue723Schema quota unlimited on {tableSpace}");
 
 					db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
 					Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
@@ -2016,7 +2014,7 @@ namespace Tests.DataProvider
 			{
 				var value = v as MyDate;
 				if (value == null) sb.Append("NULL");
-				else               sb.AppendFormat("DATE '{0}-{1}-{2}'", value.Year, value.Month, value.Day);
+				else               sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
 			});
 
 			// Converts object property value to SQL.
@@ -2025,7 +2023,7 @@ namespace Tests.DataProvider
 			{
 				var value = (OracleTimeStampTZ)v;
 				if (value.IsNull) sb.Append("NULL");
-				else              sb.AppendFormat("DATE '{0}-{1}-{2}'", value.Year, value.Month, value.Day);
+				else              sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
 			});
 
 			// Maps OracleTimeStampTZ to MyDate and the other way around.

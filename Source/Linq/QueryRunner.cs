@@ -64,13 +64,15 @@ namespace LinqToDB.Linq
 							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
 							DataConnection.TraceSwitch.DisplayName);
 
-					_isFaulted = true;
-
 					var qr = QueryRunner;
 					if (qr != null)
 						qr.MapperExpression = _mapperExpression;
 
-					return (_mapper = _expression.Compile())(queryRunner, dataReader);
+					_mapper = _expression.Compile();
+
+					_isFaulted = true;
+
+					return _mapper(queryRunner, dataReader);
 				}
 				catch (InvalidCastException ex)
 				{
@@ -82,13 +84,15 @@ namespace LinqToDB.Linq
 							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
 							DataConnection.TraceSwitch.DisplayName);
 
-					_isFaulted = true;
-
 					var qr = QueryRunner;
 					if (qr != null)
 						qr.MapperExpression = _mapperExpression;
 
-					return (_mapper = _expression.Compile())(queryRunner, dataReader);
+					_mapper = _expression.Compile();
+
+					_isFaulted = true;
+
+					return _mapper(queryRunner, dataReader);
 				}
 			}
 		}

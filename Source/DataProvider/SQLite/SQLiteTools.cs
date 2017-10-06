@@ -96,6 +96,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#endregion
 
+#if NETSTANDARD1_6
+
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
 			_SQLiteDataProvider.CreateDatabase(databaseName, deleteIfExists);
@@ -105,6 +107,8 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			_SQLiteDataProvider.DropDatabase(databaseName);
 		}
+
+#endif
 
 		#region BulkCopy
 
@@ -125,6 +129,6 @@ namespace LinqToDB.DataProvider.SQLite
 				}, source);
 		}
 
-		#endregion
+#endregion
 	}
 }

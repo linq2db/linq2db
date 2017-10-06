@@ -102,6 +102,8 @@ namespace LinqToDB.DataProvider.SQLite
 			base.SetParameterType(parameter, dataType);
 		}
 
+#if NETSTANDARD1_6
+
 		static Action<string> _createDatabase;
 
 		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
@@ -131,8 +133,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 			DropFileDatabase(databaseName, ".sqlite");
 		}
-
-#if NETSTANDARD1_6
 
 		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{

@@ -165,8 +165,11 @@ namespace Tests.DataProvider
 				TestNumeric(conn, byte.MaxValue,     DataType.Byte);
 				TestNumeric(conn, ushort.MaxValue,   DataType.UInt16);
 				TestNumeric(conn, uint.MaxValue,     DataType.UInt32);
+
+#if NETSTANDARD1_6
 				if (context != TestProvName.SQLiteMs)
 					TestNumeric(conn, ulong.MaxValue,    DataType.UInt64,     "bigint bit decimal int money numeric smallint tinyint float real");
+#endif
 
 				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
 				TestNumeric(conn,  3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
@@ -232,8 +235,9 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 
+#if NETSTANDARD1_6
 				if (context != TestProvName.SQLiteMs)
-				{ 
+				{
 					Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char> ("SELECT Cast(@p as char)",    DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
@@ -241,6 +245,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 				}
+#endif
 
 				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
@@ -381,7 +386,7 @@ namespace Tests.DataProvider
 		}
 
 		/// <summary>
-		/// Ensure we can pass data as Json parameter type and get 
+		/// Ensure we can pass data as Json parameter type and get
 		/// same value back out equivalent in value
 		/// </summary>
 		[Test, IncludeDataContextSource(ProviderName.SQLite)]
@@ -434,6 +439,8 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
+#if NETSTANDARD1_6
+
 		[Test, IncludeDataContextSource(ProviderName.SQLite), Parallelizable(ParallelScope.None)]
 		public void CreateDatabase(string context)
 		{
@@ -457,6 +464,8 @@ namespace Tests.DataProvider
 			SQLiteTools.DropDatabase   ("TestDatabase");
 			Assert.IsFalse(File.Exists ("TestDatabase.sqlite"));
 		}
+
+#endif
 
 		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
 		public void BulkCopyLinqTypes(string context)

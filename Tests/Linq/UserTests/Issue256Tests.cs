@@ -76,7 +76,7 @@ namespace Tests.UserTests
 			}
 		}
 
-#if !MONO
+#if !MONO && !NETSTANDARD1_6
 		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
 		[Category("Explicit")]
 		public void SimpleTest(string context, Action<ITestDataContext, byte[], int> action)
