@@ -223,6 +223,7 @@
     <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
+    <Compile Include="Linq\Builder\AllJoinsBuilder.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\IDataReaderAsync.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
@@ -376,6 +377,7 @@
     <Compile Include="ServiceModel\ILinqClient.cs" />
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
+    <Compile Include="SqlJoinType.cs" />
     <Compile Include="SqlProvider\BasicSqlOptimizer.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
     <Compile Include="SqlProvider\JoinOptimizer.cs" />

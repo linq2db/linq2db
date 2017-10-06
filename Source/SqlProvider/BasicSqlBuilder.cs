@@ -1162,7 +1162,9 @@ namespace LinqToDB.SqlProvider
 				case SelectQuery.JoinType.Left      : StringBuilder.Append("LEFT JOIN ");   return true;
 				case SelectQuery.JoinType.CrossApply: StringBuilder.Append("CROSS APPLY "); return false;
 				case SelectQuery.JoinType.OuterApply: StringBuilder.Append("OUTER APPLY "); return false;
-				default                             : throw new InvalidOperationException();
+				case SelectQuery.JoinType.Right     : StringBuilder.Append("RIGHT JOIN ");  return true;
+				case SelectQuery.JoinType.Full      : StringBuilder.Append("FULL JOIN ");   return true;
+				default: throw new InvalidOperationException();
 			}
 		}
 

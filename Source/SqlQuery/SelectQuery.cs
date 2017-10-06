@@ -5,11 +5,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
 	using LinqToDB.Extensions;
+	using Mapping;
 	using Reflection;
 
 	[DebuggerDisplay("SQL = {SqlText}")]
@@ -394,7 +394,7 @@ namespace LinqToDB.SqlQuery
 
 #endregion
 
-#region TableSource
+		#region TableSource
 
 		public class TableSource : ISqlTableSource
 		{
@@ -628,7 +628,7 @@ namespace LinqToDB.SqlQuery
 #endregion
 		}
 
-#endregion
+		#endregion
 
 #region TableJoin
 
@@ -638,7 +638,9 @@ namespace LinqToDB.SqlQuery
 			Inner,
 			Left,
 			CrossApply,
-			OuterApply
+			OuterApply,
+			Right,
+			Full
 		}
 
 		public class JoinedTable : IQueryElement, ISqlExpressionWalkable, ICloneableElement
@@ -2945,6 +2947,10 @@ namespace LinqToDB.SqlQuery
 		public static FromClause.Join InnerJoin    (ISqlTableSource table, string alias, params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Inner,      table, alias, false, joins); }
 		public static FromClause.Join LeftJoin     (ISqlTableSource table,               params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Left,       table, null,  false, joins); }
 		public static FromClause.Join LeftJoin     (ISqlTableSource table, string alias, params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Left,       table, alias, false, joins); }
+		public static FromClause.Join RightJoin    (ISqlTableSource table,               params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Right,      table, null,  false, joins); }
+		public static FromClause.Join RightJoin    (ISqlTableSource table, string alias, params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Right,      table, alias, false, joins); }
+		public static FromClause.Join FullJoin     (ISqlTableSource table,               params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Full,       table, null,  false, joins); }
+		public static FromClause.Join FullJoin     (ISqlTableSource table, string alias, params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Full,       table, alias, false, joins); }
 		public static FromClause.Join Join         (ISqlTableSource table,               params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Auto,       table, null,  false, joins); }
 		public static FromClause.Join Join         (ISqlTableSource table, string alias, params FromClause.Join[] joins) { return new FromClause.Join(JoinType.Auto,       table, alias, false, joins); }
 		public static FromClause.Join CrossApply   (ISqlTableSource table,               params FromClause.Join[] joins) { return new FromClause.Join(JoinType.CrossApply, table, null,  false, joins); }
