@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Linq.Builder;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Expressions
 {
-	using Linq;
 	using LinqToDB.Extensions;
+	using Linq;
+	using Linq.Builder;
+	using Mapping;
 
 	static class InternalExtensions
 	{
@@ -410,45 +410,81 @@ namespace LinqToDB.Expressions
 
 		#region Path
 
+		class PathInfo
+		{
+			public PathInfo(
+				HashSet<Expression>           visited,
+				Action<Expression,Expression> func)
+			{
+				Visited = visited;
+				Func    = func;
+			}
+
+			public HashSet<Expression>           Visited;
+			public Action<Expression,Expression> Func;
+		}
+
 		static Expression ConvertTo(Expression expr, Type type)
 		{
 			return Expression.Convert(expr, type);
 		}
 
-		static void Path<T>(IEnumerable<T> source, HashSet<Expression> visited, Expression path, MethodInfo property, Action<T, Expression> func)
+		static void Path<T>(IEnumerable<T> source, Expression path, MethodInfo property, Action<T,Expression> func)
 			where T : class
 		{
+#if DEBUG
+			_callCounter4++;
+#endif
 			var prop = Expression.Property(path, property);
 			var i    = 0;
 			foreach (var item in source)
 				func(item, Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, new Expression[] { Expression.Constant(i++) }));
 		}
 
-		static void Path<T>(IEnumerable<T> source, HashSet<Expression> visited, Expression path, MethodInfo property, Action<Expression, Expression> func)
+		static void Path<T>(PathInfo info, IEnumerable<T> source, Expression path, MethodInfo property)
 			where T : Expression
 		{
+#if DEBUG
+			_callCounter3++;
+#endif
 			var prop = Expression.Property(path, property);
 			var i    = 0;
 			foreach (var item in source)
-				Path(item, visited, Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, new Expression[] { Expression.Constant(i++) }), func);
+				Path(info, item, Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, Expression.Constant(i++)));
 		}
 
-		static void Path(Expression expr, HashSet<Expression> visited, Expression path, MethodInfo property, Action<Expression, Expression> func)
+		static void Path(PathInfo info, Expression expr, Expression path, MethodInfo property)
 		{
-			Path(expr, visited, Expression.Property(path, property), func);
+#if DEBUG
+			_callCounter2++;
+#endif
+			Path(info, expr, Expression.Property(path, property));
 		}
 
 		public static void Path(this Expression expr, Expression path, Action<Expression, Expression> func)
 		{
-			Path(expr, new HashSet<Expression>(), path, func);
+#if DEBUG
+			_callCounter1 = 0;
+			_callCounter2 = 0;
+			_callCounter3 = 0;
+			_callCounter4 = 0;
+#endif
+			Path(new PathInfo(new HashSet<Expression>(), func), expr, path);
 		}
 
-		static void Path(
-			this Expression expr,
-			HashSet<Expression> visited,
-			Expression path,
-			Action<Expression, Expression> func)
+#if DEBUG
+		static int _callCounter1;
+		static int _callCounter2;
+		static int _callCounter3;
+		static int _callCounter4;
+#endif
+
+		static void Path(PathInfo info, Expression expr, Expression path)
 		{
+#if DEBUG
+			_callCounter1++;
+#endif
+
 			if (expr == null)
 				return;
 
@@ -481,11 +517,10 @@ namespace LinqToDB.Expressions
 				case ExpressionType.SubtractChecked:
 					{
 						path = ConvertTo(path, typeof(BinaryExpression));
-						var e = (BinaryExpression)expr;
 
-						Path(e.Conversion, visited, path, ReflectionHelper.Binary.Conversion, func);
-						Path(e.Left, visited, path, ReflectionHelper.Binary.Left, func);
-						Path(e.Right, visited, path, ReflectionHelper.Binary.Right, func);
+						Path(info, ((BinaryExpression)expr).Conversion, Expression.Property(path, ReflectionHelper.Binary.Conversion));
+						Path(info, ((BinaryExpression)expr).Left,       Expression.Property(path, ReflectionHelper.Binary.Left));
+						Path(info, ((BinaryExpression)expr).Right,      Expression.Property(path, ReflectionHelper.Binary.Right));
 
 						break;
 					}
@@ -500,20 +535,18 @@ namespace LinqToDB.Expressions
 				case ExpressionType.TypeAs:
 				case ExpressionType.UnaryPlus:
 					Path(
+						info,
 						((UnaryExpression)expr).Operand,
-						visited,
 						path = ConvertTo(path, typeof(UnaryExpression)),
-						ReflectionHelper.Unary.Operand,
-						func);
+						ReflectionHelper.Unary.Operand);
 					break;
 
 				case ExpressionType.Call:
 					{
 						path = ConvertTo(path, typeof(MethodCallExpression));
-						var e = (MethodCallExpression)expr;
 
-						Path(e.Object, visited, path, ReflectionHelper.MethodCall.Object, func);
-						Path(e.Arguments, visited, path, ReflectionHelper.MethodCall.Arguments, func);
+						Path(info, ((MethodCallExpression)expr).Object,    path, ReflectionHelper.MethodCall.Object);
+						Path(info, ((MethodCallExpression)expr).Arguments, path, ReflectionHelper.MethodCall.Arguments);
 
 						break;
 					}
@@ -521,11 +554,10 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Conditional:
 					{
 						path = ConvertTo(path, typeof(ConditionalExpression));
-						var e = (ConditionalExpression)expr;
 
-						Path(e.Test, visited, path, ReflectionHelper.Conditional.Test, func);
-						Path(e.IfTrue, visited, path, ReflectionHelper.Conditional.IfTrue, func);
-						Path(e.IfFalse, visited, path, ReflectionHelper.Conditional.IfFalse, func);
+						Path(info, ((ConditionalExpression)expr).Test,    path, ReflectionHelper.Conditional.Test);
+						Path(info, ((ConditionalExpression)expr).IfTrue,  path, ReflectionHelper.Conditional.IfTrue);
+						Path(info, ((ConditionalExpression)expr).IfFalse, path, ReflectionHelper.Conditional.IfFalse);
 
 						break;
 					}
@@ -533,10 +565,9 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Invoke:
 					{
 						path = ConvertTo(path, typeof(InvocationExpression));
-						var e = (InvocationExpression)expr;
 
-						Path(e.Expression, visited, path, ReflectionHelper.Invocation.Expression, func);
-						Path(e.Arguments, visited, path, ReflectionHelper.Invocation.Arguments, func);
+						Path(info, ((InvocationExpression)expr).Expression, path, ReflectionHelper.Invocation.Expression);
+						Path(info, ((InvocationExpression)expr).Arguments,  path, ReflectionHelper.Invocation.Arguments);
 
 						break;
 					}
@@ -544,10 +575,9 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Lambda:
 					{
 						path = ConvertTo(path, typeof(LambdaExpression));
-						var e = (LambdaExpression)expr;
 
-						Path(e.Body, visited, path, ReflectionHelper.LambdaExpr.Body, func);
-						Path(e.Parameters, visited, path, ReflectionHelper.LambdaExpr.Parameters, func);
+						Path(info, ((LambdaExpression)expr).Body,       path, ReflectionHelper.LambdaExpr.Body);
+						Path(info, ((LambdaExpression)expr).Parameters, path, ReflectionHelper.LambdaExpr.Parameters);
 
 						break;
 					}
@@ -555,111 +585,100 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ListInit:
 					{
 						path = ConvertTo(path, typeof(ListInitExpression));
-						var e = (ListInitExpression)expr;
 
-						Path(e.NewExpression, visited, path, ReflectionHelper.ListInit.NewExpression, func);
-						Path(e.Initializers, visited, path, ReflectionHelper.ListInit.Initializers,
-							(ex, p) => Path(ex.Arguments, visited, p, ReflectionHelper.ElementInit.Arguments, func));
+						Path(info, ((ListInitExpression)expr).NewExpression, path, ReflectionHelper.ListInit.NewExpression);
+						Path(      ((ListInitExpression)expr).Initializers,  path, ReflectionHelper.ListInit.Initializers,
+							(ex, p) => Path(info, ex.Arguments, p, ReflectionHelper.ElementInit.Arguments));
 
 						break;
 					}
 
 				case ExpressionType.MemberAccess:
 					Path(
+						info,
 						((MemberExpression)expr).Expression,
-						visited,
 						path = ConvertTo(path, typeof(MemberExpression)),
-						ReflectionHelper.Member.Expression,
-						func);
+						ReflectionHelper.Member.Expression);
 					break;
 
 				case ExpressionType.MemberInit:
 					{
-						Action<MemberBinding, Expression> modify = null; modify = (b, pinf) =>
+						void Modify(MemberBinding b, Expression pinf)
 						{
 							switch (b.BindingType)
 							{
 								case MemberBindingType.Assignment:
 									Path(
+										info,
 										((MemberAssignment)b).Expression,
-										visited,
 										ConvertTo(pinf, typeof(MemberAssignment)),
-										ReflectionHelper.MemberAssignmentBind.Expression,
-										func);
+										ReflectionHelper.MemberAssignmentBind.Expression);
 									break;
 
 								case MemberBindingType.ListBinding:
 									Path(
 										((MemberListBinding)b).Initializers,
-										visited,
 										ConvertTo(pinf, typeof(MemberListBinding)),
 										ReflectionHelper.MemberListBind.Initializers,
-										(p, psi) => Path(p.Arguments, visited, psi, ReflectionHelper.ElementInit.Arguments, func));
+										(p, psi) => Path(info, p.Arguments, psi, ReflectionHelper.ElementInit.Arguments));
 									break;
 
 								case MemberBindingType.MemberBinding:
 									Path(
 										((MemberMemberBinding)b).Bindings,
-										visited,
 										ConvertTo(pinf, typeof(MemberMemberBinding)),
 										ReflectionHelper.MemberMemberBind.Bindings,
-										modify);
+										Modify);
 									break;
 							}
-						};
+						}
 
 						path = ConvertTo(path, typeof(MemberInitExpression));
-						var e = (MemberInitExpression)expr;
 
-						Path(e.NewExpression, visited, path, ReflectionHelper.MemberInit.NewExpression, func);
-						Path(e.Bindings, visited, path, ReflectionHelper.MemberInit.Bindings, modify);
+						Path(info, ((MemberInitExpression)expr).NewExpression, path, ReflectionHelper.MemberInit.NewExpression);
+						Path(      ((MemberInitExpression)expr).Bindings,      path, ReflectionHelper.MemberInit.Bindings,      Modify);
 
 						break;
 					}
 
 				case ExpressionType.New:
 					Path(
+						info,
 						((NewExpression)expr).Arguments,
-						visited,
 						path = ConvertTo(path, typeof(NewExpression)),
-						ReflectionHelper.New.Arguments,
-						func);
+						ReflectionHelper.New.Arguments);
 					break;
 
 				case ExpressionType.NewArrayBounds:
 					Path(
+						info,
 						((NewArrayExpression)expr).Expressions,
-						visited,
 						path = ConvertTo(path, typeof(NewArrayExpression)),
-						ReflectionHelper.NewArray.Expressions,
-						func);
+						ReflectionHelper.NewArray.Expressions);
 					break;
 
 				case ExpressionType.NewArrayInit:
 					Path(
+						info,
 						((NewArrayExpression)expr).Expressions,
-						visited,
 						path = ConvertTo(path, typeof(NewArrayExpression)),
-						ReflectionHelper.NewArray.Expressions,
-						func);
+						ReflectionHelper.NewArray.Expressions);
 					break;
 
 				case ExpressionType.TypeIs:
 					Path(
+						info,
 						((TypeBinaryExpression)expr).Expression,
-						visited,
 						path = ConvertTo(path, typeof(TypeBinaryExpression)),
-						ReflectionHelper.TypeBinary.Expression,
-						func);
+						ReflectionHelper.TypeBinary.Expression);
 					break;
 
 				case ExpressionType.Block:
 					{
 						path = ConvertTo(path, typeof(BlockExpression));
-						var e = (BlockExpression)expr;
 
-						Path(e.Expressions, visited, path, ReflectionHelper.Block.Expressions, func);
-						Path(e.Variables, visited, path, ReflectionHelper.Block.Variables, func); // ?
+						Path(info,((BlockExpression)expr).Expressions, path, ReflectionHelper.Block.Expressions);
+						Path(info,((BlockExpression)expr).Variables,   path, ReflectionHelper.Block.Variables); // ?
 
 						break;
 					}
@@ -667,16 +686,14 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant:
 					{
 						path = ConvertTo(path, typeof(ConstantExpression));
-						var e = (ConstantExpression)expr;
-						var iq = e.Value as IQueryable;
 
-						if (iq != null && !visited.Contains(iq.Expression))
+						if (((ConstantExpression)expr).Value is IQueryable iq && !info.Visited.Contains(iq.Expression))
 						{
-							visited.Add(iq.Expression);
+							info.Visited.Add(iq.Expression);
 
 							Expression p = Expression.Property(path, ReflectionHelper.Constant.Value);
 							p = ConvertTo(p, typeof(IQueryable));
-							Path(iq.Expression, visited, p, ReflectionHelper.QueryableInt.Expression, func);
+							Path(info, iq.Expression, p, ReflectionHelper.QueryableInt.Expression);
 						}
 
 						break;
@@ -689,13 +706,13 @@ namespace LinqToDB.Expressions
 						if (expr.CanReduce)
 						{
 							expr = expr.Reduce();
-							Path(expr, visited, path, func);
+							Path(info, expr, path);
 						}
 						break;
 					}
 			}
 
-			func(expr, path);
+			info.Func(expr, path);
 		}
 
 		#endregion
