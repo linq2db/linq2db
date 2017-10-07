@@ -40,7 +40,7 @@ namespace LinqToDB.Data
 
 			public override Expression  MapperExpression
 			{
-				get { return _mapperExpression; }
+				get => _mapperExpression;
 				set
 				{
 					_mapperExpression = value;

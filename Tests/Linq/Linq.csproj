@@ -10,14 +10,26 @@
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
 		<TargetFrameworks>net452</TargetFrameworks>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.1' ">
 		<TargetFrameworks>netcoreapp1.0</TargetFrameworks>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.2' ">
 		<TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
 	</PropertyGroup>
 
 

@@ -74,9 +74,11 @@ namespace Tests
 
 			var traceCount = 0;
 
+			Configuration.Linq.TraceMapperExpression = false;
+
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
-				 if (traceCount < 10000)
+				if (traceCount < 10000)
 				{
 					Console.WriteLine("{0}: {1}", s2, s1);
 					Debug.WriteLine(s1, s2);
@@ -320,7 +322,7 @@ namespace Tests
 				_providerNames      = providers;
 			}
 
-			public ParallelScope ParallelScope { get; set; } = ParallelScope.Children;
+			public ParallelScope ParallelScope { get; set; } = ParallelScope.None;// ParallelScope.Children;
 			public int           Order         { get; set; }
 
 			readonly bool     _includeLinqService;
@@ -517,6 +519,7 @@ namespace Tests
 				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 #endif
 			}
+
 			Debug.WriteLine(configuration, "Provider ");
 
 			var res = new TestDataConnection(configuration);
@@ -639,7 +642,7 @@ namespace Tests
 			}
 		}
 
-#region Parent/Child Model
+		#region Parent/Child Model
 
 		private          List<Parent> _parent;
 		protected IEnumerable<Parent>  Parent
@@ -824,9 +827,9 @@ namespace Tests
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Inheritance Parent/Child Model
+		#region Inheritance Parent/Child Model
 
 		private   List<InheritanceParentBase> _inheritanceParent;
 		protected List<InheritanceParentBase>  InheritanceParent
@@ -860,9 +863,9 @@ namespace Tests
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Northwind
+		#region Northwind
 
 		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
@@ -1060,7 +1063,8 @@ namespace Tests
 				}
 			}
 		}
-#endregion
+
+		#endregion
 
 		[Sql.Function("VERSION", ServerSideOnly = true)]
 		private static string MySqlVersion()
@@ -1125,7 +1129,7 @@ namespace Tests
 			var resultList   = result.  Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
 
-			Assert.AreNotEqual(0, expectedList.Count);
+			Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
 			var exceptExpectedList = resultList.  Except(expectedList).ToList();
@@ -1191,6 +1195,41 @@ namespace Tests
 					ss[i] = ss[i].Substring(1);
 
 			Assert.AreEqual(string.Join("\n", ss), result.Trim('\r', '\n'));
+		}
+
+		protected List<LinqDataTypes> GetTypes(string context)
+		{
+			return DataCache<LinqDataTypes>.Get(context);
+		}
+	}
+
+	static class DataCache<T>
+		where T : class
+	{
+		static readonly Dictionary<string,List<T>> _dic = new Dictionary<string, List<T>>();
+		public static List<T> Get(string context)
+		{
+			lock (_dic)
+			{
+				context = context.Replace(".LinqService", "");
+
+				if (!_dic.TryGetValue(context, out var list))
+				{
+					using (new DisableLogging())
+					using (var db = new DataConnection(context))
+					{
+						list = db.GetTable<T>().ToList();
+						_dic.Add(context, list);
+					}
+				}
+
+				return list;
+			}
+		}
+
+		public static void Clear()
+		{
+			_dic.Clear();
 		}
 	}
 

@@ -444,7 +444,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q1 =    Types.Concat(   Types).Take(15);
+				var types = db.Types.ToList();
+
+				var q1 =    types.Concat(   types).Take(15);
 				var q2 = db.Types.Concat(db.Types).Take(15);
 
 				AreEqual(

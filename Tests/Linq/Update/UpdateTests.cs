@@ -356,9 +356,9 @@ namespace Tests.xUpdate
 			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
-			TestProvName.MariaDB, 
+			TestProvName.MariaDB,
 			TestProvName.MySql57,
-			ProviderName.SQLite, 
+			ProviderName.SQLite,
 			TestProvName.SQLiteMs,
 			ProviderName.Access,
 			ProviderName.SapHana)]
@@ -852,7 +852,7 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
+			ProviderName.SQLite,
 			TestProvName.SQLiteMs,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
@@ -893,7 +893,7 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
+			ProviderName.SQLite,
 			TestProvName.SQLiteMs,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
@@ -942,7 +942,7 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
+			ProviderName.SQLite,
 			TestProvName.SQLiteMs,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
@@ -995,7 +995,7 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
+			ProviderName.SQLite,
 			TestProvName.SQLiteMs,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
@@ -1111,16 +1111,18 @@ namespace Tests.xUpdate
 
 					db.Insert(new LinqDataTypes2()
 					{
-						ID = id,
+						ID         = id,
 						MoneyValue = value1,
-						IntValue = value3
+						IntValue   = value3
 					});
 
 					db.GetTable<LinqDataTypes2>()
-						.Update(_ => new LinqDataTypes2()
-						{
-							SmallIntValue = (short)(_.MoneyValue / (value2 / _.IntValue))
-						});
+						.Update(
+							_ => _.ID == id,
+							_ => new LinqDataTypes2
+							{
+								SmallIntValue = (short)(_.MoneyValue / (value2 / _.IntValue))
+							});
 
 					var dbResult = db.GetTable<LinqDataTypes2>()
 						.Where(_ => _.ID == id)

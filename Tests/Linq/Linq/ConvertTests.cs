@@ -557,8 +557,16 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from t in    Types where Sql.Convert(Sql.Bit, t.MoneyValue) select t select t,
-					from t in from t in db.Types where Sql.Convert(Sql.Bit, t.MoneyValue) select t select t);
+					from t in
+						from t in GetTypes(context)
+						where Sql.Convert(Sql.Bit, t.MoneyValue)
+						select t
+					select t,
+					from t in
+						from t in db.Types
+						where Sql.Convert(Sql.Bit, t.MoneyValue)
+						select t
+					select t);
 		}
 
 		[Test, DataContextSource]
@@ -566,8 +574,17 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from t in    Types where !Sql.Convert(Sql.Bit, t.MoneyValue - 4.5m) select t select t,
-					from t in from t in db.Types where !Sql.Convert(Sql.Bit, t.MoneyValue - 4.5m) select t select t);
+					from t in
+						from t in GetTypes(context)
+						where !Sql.Convert(Sql.Bit, t.MoneyValue - 4.5m)
+						select t
+					select t
+					,
+					from t in
+						from t in db.Types
+						where !Sql.Convert(Sql.Bit, t.MoneyValue - 4.5m)
+						select t
+					select t);
 		}
 
 		[Test, DataContextSource]
