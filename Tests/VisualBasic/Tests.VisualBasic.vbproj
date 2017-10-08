@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\Source.csproj" />
-		<ProjectReference Include="..\Model\Model.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 	</ItemGroup>
 </Project>

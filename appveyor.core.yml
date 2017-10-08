@@ -27,7 +27,7 @@ before_build:
 - cmd: dotnet restore 
 
 build:
-  project: linq2db.core.sln
+  project: linq2db.sln
   verbosity: minimal
 
 after_build:
