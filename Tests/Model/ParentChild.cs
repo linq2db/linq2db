@@ -75,6 +75,12 @@ namespace Tests.Model
 		[Association(ThisKey = "ParentID", OtherKey = "ID")]
 		public LinqDataTypes Types;
 
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID", ExpressionPredicate = "ChildrenPredicate", CanBeNull = true)]
+		public List<Child> ChildrenX { get; set; }
+
+		static Expression<Func<Parent, Child, bool>> ChildrenPredicate =>
+			(t, m) => Math.Abs(m.ChildID) > 3;
+
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID", ExpressionPredicate = "GrandChildrenPredicate" , CanBeNull = true)]
 		public List<GrandChild> GrandChildrenX { get; set; }
 

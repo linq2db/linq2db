@@ -57,13 +57,13 @@ namespace LinqToDB.Linq.Builder
 
 			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(null, 0);
+				var expr   = BuildExpression(null, 0, false);
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public Expression BuildExpression(Expression expression, int level)
+			public Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				if (expression == null)
 					expression = ((LambdaExpression)Expression).Body.Unwrap();
@@ -73,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.New:
 					case ExpressionType.MemberInit:
 						{
-							var expr = Builder.BuildExpression(this, expression);
+							var expr = Builder.BuildExpression(this, expression, enforceServerSide);
 
 							if (SelectQuery.Select.Columns.Count == 0)
 								SelectQuery.Select.Expr(new SqlValue(1));

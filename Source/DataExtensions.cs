@@ -32,6 +32,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Data connection context.</param>
 		/// <returns>Queryable source.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
@@ -49,6 +50,7 @@ namespace LinqToDB
 		/// <param name="parameters">Parameters for <paramref name="methodInfo"/> method.</param>
 		/// <returns>Queryable source.</returns>
 		[LinqTunnel]
+		[Pure]
 		public static ITable<T> GetTable<T>(
 			this IDataContext dataContext,
 			object instance,
@@ -172,14 +174,14 @@ namespace LinqToDB
 		#region Insert
 
 		/// <summary>
-		/// Inserts record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <paramref name="T"/> mapping.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Insert<T>([NotNull] this IDataContext dataContext, T obj,
 			string tableName = null, string databaseName = null, string schemaName = null)
@@ -191,14 +193,14 @@ namespace LinqToDB
 #if !NOASYNC
 
 		/// <summary>
-		/// Inserts record asynchronously into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Inserts record asynchronously into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <paramref name="T"/> mapping.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> InsertAsync<T>(
@@ -217,7 +219,7 @@ namespace LinqToDB
 		#region InsertOrReplace
 
 		/// <summary>
-		/// Inserts new record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter
+		/// Inserts new record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter
 		/// or update exising record, identified by match on primary key value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -233,7 +235,7 @@ namespace LinqToDB
 #if !NOASYNC
 
 		/// <summary>
-		/// Asynchronously inserts new record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter
+		/// Asynchronously inserts new record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter
 		/// or update exising record, identified by match on primary key value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -255,7 +257,7 @@ namespace LinqToDB
 		#region InsertWithIdentity
 
 		/// <summary>
-		/// Inserts record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Returns identity value for inserted record.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -269,7 +271,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Inserts record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Returns identity value for inserted record as <see cref="int"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -283,7 +285,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Inserts record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Returns identity value for inserted record as <see cref="long"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -297,7 +299,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Inserts record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Returns identity value for inserted record as <see cref="decimal"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -313,7 +315,7 @@ namespace LinqToDB
 #if !NOASYNC
 
 		/// <summary>
-		/// Asynchronously inserts record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Asynchronously inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Returns identity value for inserted record.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -329,7 +331,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Asynchronously inserts record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Asynchronously inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Returns identity value for inserted record as <see cref="int"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -347,7 +349,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Asynchronously inserts record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Asynchronously inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Returns identity value for inserted record as <see cref="long"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -365,7 +367,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Asynchronously inserts record into table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Asynchronously inserts record into table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Returns identity value for inserted record as <see cref="decimal"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -389,7 +391,7 @@ namespace LinqToDB
 		#region Update
 
 		/// <summary>
-		/// Updates record in table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Updates record in table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Record to update identified by match on primary key value from <paramref name="obj"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -405,7 +407,7 @@ namespace LinqToDB
 #if !NOASYNC
 
 		/// <summary>
-		/// Asynchronously updates record in table, identified by <paramref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
+		/// Asynchronously updates record in table, identified by <typeparamref name="T"/> mapping class, using values from <paramref name="obj"/> parameter.
 		/// Record to update identified by match on primary key value from <paramref name="obj"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -427,7 +429,7 @@ namespace LinqToDB
 		#region Delete
 
 		/// <summary>
-		/// Deletes record in table, identified by <paramref name="T"/> mapping class.
+		/// Deletes record in table, identified by <typeparamref name="T"/> mapping class.
 		/// Record to delete identified by match on primary key value from <paramref name="obj"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -443,7 +445,7 @@ namespace LinqToDB
 #if !NOASYNC
 
 		/// <summary>
-		/// Asynchronously deletes record in table, identified by <paramref name="T"/> mapping class.
+		/// Asynchronously deletes record in table, identified by <typeparamref name="T"/> mapping class.
 		/// Record to delete identified by match on primary key value from <paramref name="obj"/> value.
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
@@ -470,9 +472,9 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <paramref name="T"/> mapping.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
 		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="defaulNullable">Defines how columns nullability flag should be generated:
@@ -503,9 +505,9 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <paramref name="T"/> mapping.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
 		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="defaulNullable">Defines how columns nullability flag should be generated:
@@ -541,12 +543,12 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <paramref name="T"/> mapping.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently catched and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <see cref="https://github.com/linq2db/linq2db/issues/798"/>.
+		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
 		/// Default value: <c>true</c>.</param>
 		public static void DropTable<T>(
 			[NotNull] this IDataContext dataContext,
@@ -575,12 +577,12 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="table">Dropped table.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <paramref name="T"/> mapping.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently catched and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <see cref="https://github.com/linq2db/linq2db/issues/798"/>.
+		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
 		/// Default value: <c>true</c>.</param>
 		public static void DropTable<T>(
 			[NotNull] this ITable<T> table,
@@ -613,12 +615,12 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <paramref name="T"/> mapping.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently catched and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <see cref="https://github.com/linq2db/linq2db/issues/798"/>.
+		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
 		/// Default value: <c>true</c>.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
@@ -650,12 +652,12 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="table">Dropped table.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <paramref name="T"/> mapping.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently catched and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <see cref="https://github.com/linq2db/linq2db/issues/798"/>.
+		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
 		/// Default value: <c>true</c>.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>

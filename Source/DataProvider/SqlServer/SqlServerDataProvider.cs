@@ -249,6 +249,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Time          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Time;          break;
 				case DataType.SmallDateTime : ((SqlParameter)parameter).SqlDbType = SqlDbType.SmallDateTime; break;
 				case DataType.Timestamp     : ((SqlParameter)parameter).SqlDbType = SqlDbType.Timestamp;     break;
+				case DataType.Xml           : ((SqlParameter)parameter).SqlDbType = SqlDbType.Xml;           break;
 				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
 		}

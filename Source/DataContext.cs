@@ -14,7 +14,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
-	public partial class DataContext : IDataContextEx
+	public partial class DataContext : IDataContext
 	{
 		/// <summary>
 		/// Creates data context using default database configuration.
@@ -317,7 +317,7 @@ namespace LinqToDB
 		/// Starts new transaction for current context with specified isolation level.
 		/// If connection already has transaction, it will be rolled back.
 		/// </summary>
-		/// <param name="isolationLevel">Transaction isolation level.</param>
+		/// <param name="level">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
@@ -332,7 +332,7 @@ namespace LinqToDB
 		/// Starts new transaction for current context with default isolation level.
 		/// If connection already has transaction, it will be rolled back.
 		/// </summary>
-		/// <param name="autoCommitOnDispose">Not supported, see <see cref="https://github.com/linq2db/linq2db/issues/104"/>.</param>
+		/// <param name="autoCommitOnDispose">Not supported, see <a href="https://github.com/linq2db/linq2db/issues/104">issue</a>.</param>
 		/// <returns>Database transaction object.</returns>
 		public virtual DataContextTransaction BeginTransaction(bool autoCommitOnDispose = true)
 		{

@@ -18,10 +18,12 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug.4.5\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FW4;OVERRIDETOSTRING1</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FW4;OVERRIDETOSTRING1;TRACK_BUILD1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\Debug.4.5\linq2db.XML</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +33,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\Release.4.5\linq2db.XML</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -45,6 +49,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\ReleaseMono\linq2db.XML</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugMono|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -55,6 +61,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\DebugMono\linq2db.XML</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -113,7 +121,6 @@
     <Compile Include="Data\RetryPolicy\RetryLimitExceededException.cs" />
     <Compile Include="Data\RetryPolicy\RetryPolicyBase.cs" />
     <Compile Include="Data\TraceInfoStep.cs" />
-    <Compile Include="IDataContextEx.cs" />
     <Compile Include="KeepConnectionAliveScope.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
@@ -216,9 +223,11 @@
     <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
+    <Compile Include="Linq\Builder\AllJoinsBuilder.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\IDataReaderAsync.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Linq\IExpressionPreprocessor.cs" />
     <Compile Include="Linq\IQueryProviderAsync.cs" />
     <Compile Include="Linq\IQueryRunner.cs" />
     <Compile Include="Linq\QueryRunner.DropTable.cs" />
@@ -336,7 +345,6 @@
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
-    <Compile Include="Expressions\BinaryAggregateExpression.cs" />
     <Compile Include="Extensions\MappingExtensions.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
@@ -369,6 +377,7 @@
     <Compile Include="ServiceModel\ILinqClient.cs" />
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
+    <Compile Include="SqlJoinType.cs" />
     <Compile Include="SqlProvider\BasicSqlOptimizer.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
     <Compile Include="SqlProvider\JoinOptimizer.cs" />

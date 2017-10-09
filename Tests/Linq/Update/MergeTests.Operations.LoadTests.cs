@@ -7,48 +7,42 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
 	public partial class MergeTests
 	{
-		[Test, IncludeDataContextSource(false, ProviderName.Sybase)]
-		public void SybaseBigSource(string context)
-		{
-			// ASE: you may need to increace memory procedure cache sizes like that:
-			// exec sp_configure 'max memory', NEW_MEMORY_SIZE
-			// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
-			RunTest(context, 1000);
-		}
-
-		[Test, IncludeDataContextSource(false, ProviderName.Firebird)]
-		public void FirebirdBigSource(string context)
-		{
-			// hard limit around 100 records
-			// also big queries could kill connection with server
-			RunTest(context, 100);
-		}
-
-		[Test, IncludeDataContextSource(false, TestProvName.Firebird3)]
-		public void Firebird3BigSource(string context)
-		{
-			// hard limit around 250 records
-			RunTest(context, 250);
-		}
-
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged, ProviderName.Oracle, ProviderName.OracleNative)]
-		public void OracleBigSource(string context)
-		{
-			// big query makes Oracle to heavy eat memory
-			// this will affect other servers
-			RunTest(context, 100);
-		}
-
-		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleManaged, ProviderName.Oracle, ProviderName.OracleNative)]
+		[Test, MergeDataContextSource]
 		public void BigSource(string context)
 		{
-			RunTest(context, 1000);
+			var batchSize = 2500;
+
+			switch (context)
+			{
+				// ASE: you may need to increase memory procedure cache sizes like that:
+				// exec sp_configure 'max memory', NEW_MEMORY_SIZE
+				// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
+				case ProviderName.Sybase       : batchSize = 500; break;
+
+				// hard limit around 100 records
+				// also big queries could kill connection with server
+				case ProviderName.Firebird     : batchSize = 100; break;
+
+				// hard limit around 250 records
+				case TestProvName.Firebird3    : batchSize = 250; break;
+
+				// takes too long
+				case ProviderName.Informix     : batchSize = 500; break;
+
+				// big query makes Oracle to heavy eat memory
+				// this will affect other servers
+				case ProviderName.OracleManaged:
+				case ProviderName.Oracle       :
+				case ProviderName.OracleNative : batchSize = 100; break;
+			}
+
+			RunTest(context, batchSize);
 		}
 
 		private void RunTest(string context, int size)
@@ -93,7 +87,7 @@ namespace Tests.Merge
 		{
 			for (var i = 0; i < size; i++)
 			{
-				yield return new TestMapping1()
+				yield return new TestMapping1
 				{
 					Id = i + 5,
 					Field1 = i + 6,

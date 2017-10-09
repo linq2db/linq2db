@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -9,6 +8,7 @@ namespace Tests.Linq
 	using LinqToDB.SqlQuery;
 
 	using Model;
+	using System.Linq.Expressions;
 
 	[TestFixture]
 	public class JoinOptimizeTests : TestBase
@@ -16,7 +16,8 @@ namespace Tests.Linq
 		SelectQuery GetSelectQuery<T>(IQueryable<T> query)
 		{
 			var eq = (IExpressionQuery)query;
-			var info = Query<T>.GetQuery(eq.DataContext, eq.Expression);
+			var expression = eq.Expression;
+			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
 			return info.Queries.Single().SelectQuery;
 		}
 
@@ -281,6 +282,32 @@ namespace Tests.Linq
 		}
 
 		[Test, NorthwindDataContext]
+		public void InnerJoinSubquery(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q1 = from od in db.OrderDetail
+					join o1 in db.Order on od.OrderID equals o1.OrderID
+					join o2 in db.Order on od.OrderID equals o2.OrderID
+					orderby od.OrderID
+					select new
+					{
+						od.OrderID,
+						o1.OrderDate,
+						OrderID1 = o1.OrderID,
+						OrderID2 = o2.OrderID,
+					};
+
+				var q2 = from e in q1.Take(10)
+					join o1 in db.Order on e.OrderID equals o1.OrderID
+					select e;
+
+				var ts = GeTableSource(q2);
+				Assert.AreEqual(1, ((SelectQuery)ts.Source).From.Tables.Single().Joins.Count);
+			}
+		}
+
+		[Test, NorthwindDataContext]
 		public void InnerJoinMixKeys(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -437,7 +464,7 @@ namespace Tests.Linq
 		}
 
 		[Test, NorthwindDataContext]
-		public void LeftJoin3(string context)
+		public void LeftJoinProjection(string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -469,6 +496,56 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, NorthwindDataContext]
+		public void LeftJoinProjectionSubquery(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q1 = from od in db.OrderDetail
+					from o1 in db.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
+					from o2 in db.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
+					orderby od.OrderID
+					select new
+					{
+						od.OrderID,
+						o1.OrderDate,
+						OrderID1 = o1.OrderID,
+						OrderID2 = o2.OrderID,
+					};
+
+				var q = from od in q1.Take(10)
+					from o1 in db.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
+					from o2 in db.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
+					orderby od.OrderID
+					select new
+					{
+						od.OrderID,
+						od.OrderDate,
+						OrderID1 = o1.OrderID,
+						OrderID2 = o2.OrderID,
+					};
+
+				Assert.AreEqual(1, GeTableSource(q).Joins.Count, "Join not optimized");
+
+				var ts = GeTableSource(q);
+				Assert.AreEqual(1, ((SelectQuery)ts.Source).From.Tables.Single().Joins.Count, "Join should be optimized");
+
+#pragma warning disable CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
+				var qw = q.Where(v => v.OrderID1 != null);
+#pragma warning restore CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
+				var str = qw.ToString();
+				Assert.AreEqual(2, GeTableSource(qw).Joins.Count, "If LEFT join is used in where condition - it can not be optimized");
+
+				var proj1 = q.Select(v => v.OrderID1);
+				Assert.AreEqual(1, GeTableSource(proj1).Joins.Count);
+
+				var proj2 = qw.Select(v => v.OrderID1);
+				Assert.AreEqual(1, GeTableSource(proj2).Joins.Count);
+
+				var proj3 = q.Select(v => v.OrderID);
+				Assert.AreEqual(0, GeTableSource(proj3).Joins.Count, "All joins should be optimized");
+			}
+		}
 
 		[Test, NorthwindDataContext]
 		public void SelftJoinFail(string context)

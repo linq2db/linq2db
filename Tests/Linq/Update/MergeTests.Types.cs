@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
@@ -659,7 +659,7 @@ namespace Tests.Merge
 			Assert.AreEqual(expected, actual);
 		}
 
-		[Test, MergeDataContextSource]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.Sybase)]
 		public void TestTypesInsertByMerge(string context)
 		{
 			using (var db = new TestDataConnection(context))

@@ -8,14 +8,14 @@ namespace LinqToDB.Common
 	using Expressions;
 
 	/// <summary>
-	/// Value converter to <paramref name="TTo"/> type.
+	/// Value converter to <typeparamref name="TTo"/> type.
 	/// </summary>
 	/// <typeparam name="TTo">Target conversion type.</typeparam>
 	[PublicAPI]
 	public static class ConvertTo<TTo>
 	{
 		/// <summary>
-		/// Converts value from <paramref name="TFrom"/> to <paramref name="TTo"/> type.
+		/// Converts value from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
 		/// </summary>
 		/// <typeparam name="TFrom">Source conversion type.</typeparam>
 		/// <param name="o">Value to convert.</param>
@@ -27,7 +27,7 @@ namespace LinqToDB.Common
 	}
 
 	/// <summary>
-	/// Converters provider for value conversion from <paramref name="TFrom"/> to <paramref name="TTo"/> type.
+	/// Converters provider for value conversion from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
 	/// </summary>
 	/// <typeparam name="TFrom">Source conversion type.</typeparam>
 	/// <typeparam name="TTo">Target conversion type.</typeparam>

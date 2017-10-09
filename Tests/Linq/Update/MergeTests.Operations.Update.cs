@@ -6,7 +6,7 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-namespace Tests.Merge
+namespace Tests.xUpdate
 {
 	using Model;
 
@@ -493,7 +493,8 @@ namespace Tests.Merge
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		[Test, MergeDataContextSource(
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird, ProviderName.Sybase)]
 		public void UpdateReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))

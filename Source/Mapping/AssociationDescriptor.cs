@@ -9,8 +9,21 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Extensions;
 
+	/// <summary>
+	/// Stores association descriptor.
+	/// </summary>
 	public class AssociationDescriptor
 	{
+		/// <summary>
+		/// Creates descriptor instance.
+		/// </summary>
+		/// <param name="type">From (this) side entity mapping type.</param>
+		/// <param name="memberInfo">Association member (field, property or method).</param>
+		/// <param name="thisKey">List of names of from (this) key members.</param>
+		/// <param name="otherKey">List of names of to (other) key members.</param>
+		/// <param name="expressionPredicate">Optional predicate expresssion source property or method.</param>
+		/// <param name="storage">Optional association value storage field or property name.</param>
+		/// <param name="canBeNull">If <c>true</c>, association will generate outer join, otherwise - inner join.</param>
 		public AssociationDescriptor(
 			[JNotNull] Type       type,
 			[JNotNull] MemberInfo memberInfo,
@@ -43,19 +56,50 @@ namespace LinqToDB.Mapping
 			CanBeNull           = canBeNull;
 		}
 
+		/// <summary>
+		/// Gets or sets association member (field, property or method).
+		/// </summary>
 		public MemberInfo MemberInfo          { get; set; }
+		/// <summary>
+		/// Gets or sets list of names of from (this) key members. Could be empty, if association has predicate expression.
+		/// </summary>
 		public string[]   ThisKey             { get; set; }
+		/// <summary>
+		/// Gets or sets list of names of to (other) key members. Could be empty, if association has predicate expression.
+		/// </summary>
 		public string[]   OtherKey            { get; set; }
+		/// <summary>
+		/// Gets or sets optional predicate expresssion source property or method.
+		/// </summary>
 		public string     ExpressionPredicate { get; set; }
+		/// <summary>
+		/// Gets or sets optional association value storage field or property name. Used with LoadWith.
+		/// </summary>
 		public string     Storage             { get; set; }
+		/// <summary>
+		/// Gets or sets join type, generated for current association.
+		/// If <c>true</c>, association will generate outer join, otherwise - inner join.
+		/// </summary>
 		public bool       CanBeNull           { get; set; }
 
+		/// <summary>
+		/// Parse comma-separated list of association key column members into string array.
+		/// </summary>
+		/// <param name="keys">Comma-separated (spaces allowed) list of association key column members.</param>
+		/// <returns>Returns array with names of association key column members.</returns>
 		public static string[] ParseKeys(string keys)
 		{
 			return keys == null ? Array<string>.Empty : keys.Replace(" ", "").Split(',');
 		}
 
-		public LambdaExpression GetPredicate()
+		/// <summary>
+		/// Loads predicate expression from <see cref="ExpressionPredicate"/> member.
+		/// </summary>
+		/// <param name="parentType">Type of object that declares association</param>
+		/// <param name="objectType">Type of object associated with expression predicate</param>
+		/// <returns><c>null</c> of association has no custom predicate expression or predicate expression, specified
+		/// by <see cref="ExpressionPredicate"/> member.</returns>
+		public LambdaExpression GetPredicate(Type parentType, Type objectType)
 		{
 			if (string.IsNullOrEmpty(ExpressionPredicate))
 				return null;
@@ -109,7 +153,18 @@ namespace LinqToDB.Mapping
 
 			var lambda = predicate as LambdaExpression;
 			if (lambda == null || lambda.Parameters.Count != 2)
-				throw new LinqToDBException("Invalid predicate expression");
+				throw new LinqToDBException(string.Format(
+					"Invalid predicate expression in {0}.{1}. Expected: Expression<Func<{2}, {3}, bool>>", type.Name,
+					ExpressionPredicate, parentType.Name, objectType.Name));
+
+			if (lambda.Parameters[0].Type != parentType)
+				throw new LinqToDBException(string.Format("First parameter of expression predicate should be '{0}'", parentType.Name));
+
+			if (lambda.Parameters[1].Type != objectType)
+				throw new LinqToDBException(string.Format("Second parameter of expression predicate should be '{0}'", objectType.Name));
+
+			if (lambda.ReturnType != typeof(bool))
+				throw new LinqToDBException("Result type of expression predicate should be 'bool'");
 
 			return lambda;
 		}

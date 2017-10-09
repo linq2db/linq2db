@@ -4,7 +4,7 @@ namespace LinqToDB.Common
 {
 	/// <summary>
 	/// Option type implementation.
-	/// <seealso cref="https://en.wikipedia.org/wiki/Option_type"/>.
+	/// <a href="https://en.wikipedia.org/wiki/Option_type">Option type</a>.
 	/// </summary>
 	/// <typeparam name="T">Value type.</typeparam>
 	class Option<T>

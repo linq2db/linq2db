@@ -41,13 +41,13 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = BuildExpression(null, 0);
+			var expr   = BuildExpression(null, 0, false);
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
 		}
 
-		public abstract Expression         BuildExpression(Expression expression, int level);
+		public abstract Expression         BuildExpression(Expression expression, int level, bool enforceServerSide);
 		public abstract SqlInfo[]          ConvertToSql   (Expression expression, int level, ConvertFlags flags);
 		public abstract SqlInfo[]          ConvertToIndex (Expression expression, int level, ConvertFlags flags);
 		public abstract IsExpressionResult IsExpression   (Expression expression, int level, RequestFor requestFlag);

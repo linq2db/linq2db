@@ -9,8 +9,16 @@ namespace LinqToDB.Mapping
 	using Linq;
 	using Reflection;
 
+	/// <summary>
+	/// Stores mapping entity descriptor.
+	/// </summary>
 	public class EntityDescriptor
 	{
+		/// <summary>
+		/// Creates descriptor instance.
+		/// </summary>
+		/// <param name="mappingSchema">Mapping schema, associated with descriptor.</param>
+		/// <param name="type">Mapping class type.</param>
 		public EntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
 			TypeAccessor = TypeAccessor.GetAccessor(type);
@@ -21,16 +29,60 @@ namespace LinqToDB.Mapping
 			InitInheritanceMapping(mappingSchema);
 		}
 
+		/// <summary>
+		/// Gets mapping type accessor.
+		/// </summary>
 		public TypeAccessor                TypeAccessor              { get; private set; }
+
+		/// <summary>
+		/// Gets name of table or view in database.
+		/// </summary>
 		public string                      TableName                 { get; private set; }
+
+		/// <summary>
+		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
 		public string                      SchemaName                { get; private set; }
+
+		/// <summary>
+		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
 		public string                      DatabaseName              { get; private set; }
+
+		// TODO: V2: remove?
+		/// <summary>
+		/// Gets or sets column mapping rules for current mapping class or interface.
+		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
+		/// - <see cref="ColumnAttribute"/>;
+		/// - <see cref="PrimaryKeyAttribute"/>;
+		/// - <see cref="IdentityAttribute"/>;
+		/// - <see cref="ColumnAliasAttribute"/>.
+		/// Otherwise all supported members of scalar type will be used:
+		/// - public instance fields and properties;
+		/// - explicit interface implmentation properties.
+		/// Also see <seealso cref="Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
+		/// </summary>
 		public bool                        IsColumnAttributeRequired { get; private set; }
+
+		/// <summary>
+		/// Gets list of column descriptors for current entity.
+		/// </summary>
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
+
+		/// <summary>
+		/// Gets list of association descriptors for current entity.
+		/// </summary>
 		public List<AssociationDescriptor> Associations              { get; private set; }
+
+		/// <summary>
+		/// Gets mapping dictionary to map column aliases to target columns or aliases.
+		/// </summary>
 		public Dictionary<string,string>   Aliases                   { get; private set; }
 
 		private List<InheritanceMapping> _inheritanceMappings;
+		/// <summary>
+		/// Gets list of inheritace mapping descriptors for current entity.
+		/// </summary>
 		public  List<InheritanceMapping>  InheritanceMapping
 		{
 			get
@@ -39,6 +91,9 @@ namespace LinqToDB.Mapping
 			}
 		}
 
+		/// <summary>
+		/// Gets mapping class type.
+		/// </summary>
 		public Type ObjectType { get { return TypeAccessor.Type; } }
 
 		void Init(MappingSchema mappingSchema)
@@ -149,6 +204,11 @@ namespace LinqToDB.Mapping
 
 		readonly Dictionary<string,ColumnDescriptor> _columnNames = new Dictionary<string, ColumnDescriptor>();
 
+		/// <summary>
+		/// Gets column descriptor by member name.
+		/// </summary>
+		/// <param name="memberName">Member name.</param>
+		/// <returns>Returns column descriptor or <c>null</c>, if descriptor not found.</returns>
 		public ColumnDescriptor this[string memberName]
 		{
 			get

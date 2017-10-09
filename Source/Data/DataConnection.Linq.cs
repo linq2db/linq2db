@@ -11,7 +11,7 @@ namespace LinqToDB.Data
 	using SqlQuery;
 	using SqlProvider;
 
-	public partial class DataConnection : IDataContextEx
+	public partial class DataConnection : IDataContext
 	{
 		/// <summary>
 		/// Returns queryable source for specified mapping class for current connection, mapped to database table or view.

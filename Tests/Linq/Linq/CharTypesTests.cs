@@ -104,7 +104,7 @@ namespace Tests.Linq
 		};
 
 		// TODO: MySql57 disabled due to encoding issues on CI
-		[DataContextSource(false, TestProvName.MySql57)]
+		[DataContextSource(false, TestProvName.MySql57, ProviderName.Informix)]
 		public void StringTrimming(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -253,7 +253,7 @@ namespace Tests.Linq
 		};
 
 		// TODO: MySql57 disabled due to encoding issues on CI
-		[DataContextSource(false, TestProvName.MySql57)]
+		[DataContextSource(false, TestProvName.MySql57, ProviderName.Informix)]
 		public void CharTrimming(string context)
 		{
 			using (var db = GetDataContext(context))

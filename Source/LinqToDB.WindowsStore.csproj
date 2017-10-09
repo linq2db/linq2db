@@ -20,17 +20,21 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug.WindowsStore\</OutputPath>
+    <DocumentationFile>bin\Debug.WindowsStore\linq2db.WindowsStore.XML</DocumentationFile>
     <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINSTORE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release.WindowsStore\</OutputPath>
+    <DocumentationFile>bin\Release.WindowsStore\linq2db.WindowsStore.XML</DocumentationFile>
     <DefineConstants>TRACE;NETFX_CORE;WINSTORE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
@@ -163,7 +167,6 @@
     <Compile Include="ExpressionMethodAttribute.cs" />
     <Compile Include="Expressions\ChangeTypeExpression.cs" />
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
-    <Compile Include="Expressions\BinaryAggregateExpression.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\GetItemExpression.cs" />
@@ -174,7 +177,6 @@
     <Compile Include="Extensions\MappingExtensions.cs" />
     <Compile Include="Extensions\ReflectionExtensions.cs" />
     <Compile Include="IDataContext.cs" />
-    <Compile Include="IDataContextEx.cs" />
     <Compile Include="ServiceModel\RemoteDataContextBase.QueryRunner.cs" />
     <Compile Include="Linq\QueryRunner.cs" />
     <Compile Include="Linq\QueryRunnerBase.cs" />
@@ -223,6 +225,7 @@
     <Compile Include="Linq\Builder\IsExpressionResult.cs" />
     <Compile Include="Linq\Builder\JoinBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
+    <Compile Include="Linq\Builder\AllJoinsBuilder.cs" />
     <Compile Include="Linq\Builder\MethodCallBuilder.cs" />
     <Compile Include="Linq\Builder\OfTypeBuilder.cs" />
     <Compile Include="Linq\Builder\OrderByBuilder.cs" />
@@ -249,6 +252,7 @@
     <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Linq\Expressions.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Linq\IExpressionPreprocessor.cs" />
     <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
@@ -367,6 +371,7 @@
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
     <Compile Include="TakeHints.cs" />
+    <Compile Include="SqlJoinType.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.snk" />

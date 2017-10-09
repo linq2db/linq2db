@@ -350,14 +350,8 @@ namespace Tests.Benchmark
 
 					case ExpressionType.Extension:
 					{
-						var aggregate = expr as BinaryAggregateExpression;
-						if (aggregate != null)
-							EnqueueItems(aggregate.Expressions, queue);
-						else
-						{
-							if (expr.CanReduce)
-								queue.Enqueue(expr.Reduce());
-						}
+						if (expr.CanReduce)
+							queue.Enqueue(expr.Reduce());
 
 						break;
 					}
@@ -634,14 +628,8 @@ namespace Tests.Benchmark
 
 					case ExpressionType.Extension:
 					{
-						var aggregate = expr as BinaryAggregateExpression;
-						if (aggregate != null)
-							EnqueueItems(aggregate.Expressions, queue);
-						else
-						{
-							if (expr.CanReduce)
-								EnqueueItem(expr.Reduce(), queue);
-						}
+						if (expr.CanReduce)
+							EnqueueItem(expr.Reduce(), queue);
 
 						break;
 					}

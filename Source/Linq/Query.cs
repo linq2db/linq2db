@@ -21,18 +21,18 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract class Query
+	public abstract class Query
 	{
-		public Func<IDataContextEx,Expression,object[],object> GetElement;
+		public Func<IDataContext,Expression,object[],object> GetElement;
 #if !SL4
-		public Func<IDataContextEx,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
+		public Func<IDataContext,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
 #endif
 
 		#region Init
 
 		public readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
 
-		public abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
+		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
 		protected Query(IDataContext dataContext, Expression expression)
 		{
@@ -138,7 +138,7 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		public override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
+		internal override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
 		{
 			Queries.Add(new QueryInfo
 			{
@@ -153,9 +153,9 @@ namespace LinqToDB.Linq
 
 		public          bool            DoNotCache;
 
-		public Func<IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
+		public Func<IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
-		public Func<IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
+		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
 #endif
 
 		#endregion
@@ -194,8 +194,15 @@ namespace LinqToDB.Linq
 				}
 		}
 
-		public static Query<T> GetQuery(IDataContext dataContext, Expression expr)
+		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
+			var preprocessor = dataContext as IExpressionPreprocessor;
+			if (preprocessor != null)
+				expr = preprocessor.ProcessExpression(expr);
+
+			if (Configuration.Linq.UseBinaryAggregateExpression)
+				expr = ExpressionBuilder.AggregateExpression(expr);
+
 			if (Configuration.Linq.DisableQueryCache)
 				return CreateQuery(dataContext, expr);
 
@@ -304,7 +311,7 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class QueryInfo : IQueryContext
+	public class QueryInfo : IQueryContext
 	{
 		public QueryInfo()
 		{
@@ -328,7 +335,7 @@ namespace LinqToDB.Linq
 		public List<ParameterAccessor> Parameters = new List<ParameterAccessor>();
 	}
 
-	class ParameterAccessor
+	public class ParameterAccessor
 	{
 		public ParameterAccessor(
 			Expression                         expression,
