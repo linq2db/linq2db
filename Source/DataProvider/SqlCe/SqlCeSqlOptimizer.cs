@@ -42,7 +42,40 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
+			CorrectSkip(selectQuery);
+
 			return selectQuery;
+		}
+
+		void CorrectSkip(SelectQuery selectQuery)
+		{
+			((ISqlExpressionWalkable)selectQuery).Walk(false, e =>
+				{
+					var q = e as SelectQuery;
+					if (q != null && q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+					{
+						if (q.Select.Columns.Count == 0)
+						{
+							var source = q.Select.From.Tables[0].Source;
+							var keys = source.GetKeys(true);
+
+							foreach (var key in keys)
+							{
+								q.Select.AddNew(key);
+							}
+						}
+
+						for (var i = 0; i < q.Select.Columns.Count; i++)
+							q.OrderBy.ExprAsc(q.Select.Columns[i].Expression);
+
+						if (q.OrderBy.IsEmpty)
+						{
+							throw new LinqToDBException("Order by required for Skip operation.");
+						}
+					}
+					return e;
+				}
+			);
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

@@ -61,27 +61,6 @@ namespace LinqToDB.DataProvider.SqlCe
 				base.BuildFromClause();
 		}
 
-		protected override void BuildOrderByClause()
-		{
-			if (SelectQuery.OrderBy.Items.Count == 0 && SelectQuery.Select.SkipValue != null)
-			{
-				AppendIndent();
-
-				StringBuilder.Append("ORDER BY").AppendLine();
-
-				Indent++;
-
-				AppendIndent();
-
-				BuildExpression(SelectQuery.Select.Columns[0].Expression);
-				StringBuilder.AppendLine();
-
-				Indent--;
-			}
-			else
-				base.BuildOrderByClause();
-		}
-
 		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
