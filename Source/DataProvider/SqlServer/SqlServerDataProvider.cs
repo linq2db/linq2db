@@ -74,9 +74,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString  (i));
 			}
 
-			_sqlOptimizer              = new SqlServerSqlOptimizer    (SqlProviderFlags);
 			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
+			_sqlServer2008SqlOptimizer = new SqlServerSqlOptimizer    (SqlProviderFlags);
+			_sqlServer2012SqlOptimizer = new SqlServer2012SqlOptimizer(SqlProviderFlags);
 
 			SetField<IDataReader,decimal>((r,i) => r.GetDecimal(i));
 			SetField<IDataReader,decimal>("money",      (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
@@ -139,9 +140,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException();
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2000SqlOptimizer;
 		readonly ISqlOptimizer _sqlServer2005SqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2008SqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2012SqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
@@ -149,9 +151,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case SqlServerVersion.v2000 : return _sqlServer2000SqlOptimizer;
 				case SqlServerVersion.v2005 : return _sqlServer2005SqlOptimizer;
+				case SqlServerVersion.v2008 : return _sqlServer2008SqlOptimizer;
+				case SqlServerVersion.v2012 : return _sqlServer2012SqlOptimizer;
 			}
 
-			return _sqlOptimizer;
+			return _sqlServer2008SqlOptimizer;
 		}
 
 		public override bool IsCompatibleConnection(IDbConnection connection)

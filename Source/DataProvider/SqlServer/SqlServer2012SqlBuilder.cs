@@ -22,17 +22,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2012SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildSql()
-		{
-			if (NeedSkip && SelectQuery.OrderBy.IsEmpty)
-			{
-				for (var i = 0; i < SelectQuery.Select.Columns.Count; i++)
-					SelectQuery.OrderBy.ExprAsc(new SqlValue(i + 1));
-			}
-
-			base.BuildSql();
-		}
-
 		protected override void BuildInsertOrUpdateQuery()
 		{
 			BuildInsertOrUpdateQueryAsMerge(null);

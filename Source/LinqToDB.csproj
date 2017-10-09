@@ -204,6 +204,7 @@
     <Compile Include="DataProvider\SQLite\SQLiteSqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2005SqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2000SqlOptimizer.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2012SqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerBulkCopy.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerMerge.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerSqlOptimizer.cs" />
