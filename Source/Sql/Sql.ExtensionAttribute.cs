@@ -428,15 +428,11 @@ namespace LinqToDB
 
 								break;
 							}
-						case ExpressionType.Constant:
-						case ExpressionType.Parameter:
-							{
-								current = null;
-								continue;
-							}
 						default:
-							throw new InvalidOperationException(string.Format("Invalid method chain for Extension ({0}) -> {1}", expr, current));
-
+						{
+							current = null;
+							continue;
+						}
 					}
 
 					var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo,

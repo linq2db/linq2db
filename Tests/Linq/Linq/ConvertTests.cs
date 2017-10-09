@@ -651,5 +651,28 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		[Test, NorthwindDataContext]
+		public void ConvertDataToDecimalNoConvert(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var actual = (from od in db.OrderDetail
+					select
+						Sql.NoConvert(Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount)))).ToArray();
+
+				var expected = (from od in db.OrderDetail
+					select
+						od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount)).ToArray();
+
+				Assert.AreEqual(actual.Length, expected.Length);
+
+				for (var i = 0; i < actual.Length; i++)
+				{
+					Assert.GreaterOrEqual(0.01m, Math.Abs(actual[i] - expected[i]));
+				}
+			}
+		}
+
 	}
 }

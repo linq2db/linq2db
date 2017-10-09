@@ -127,6 +127,35 @@ namespace LinqToDB
 
 		#endregion
 
+		#region NoConvert
+
+		class NoConvertBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var expr = builder.GetExpression("expr");
+				expr = new QueryVisitor().Convert(expr, e =>
+				{
+					var func = e as SqlFunction;
+					if (func != null && func.Name == "Convert" && func.Parameters.Length > 0)
+					{
+						return func.Parameters[func.Parameters.Length - 1];
+					}
+					return e;
+				});
+
+				builder.ResultExpression = expr;
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(NoConvertBuilder))]
+		public static T NoConvert<T>([ExprParameter] T expr)
+		{
+			return expr;
+		}
+
+		#endregion
+
 		#region Guid Functions
 
 		[Sql.Function  (PN.Oracle,   "Sys_Guid", ServerSideOnly=true)]
