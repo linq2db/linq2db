@@ -657,13 +657,24 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var actual = (from od in db.OrderDetail
+				var qActual =
+					from od in db.OrderDetail
 					select
-						Sql.NoConvert(Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount)))).ToArray();
+						Sql.NoConvert(Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount)));
 
-				var expected = (from od in db.OrderDetail
+				var qExpected =
+					from od in db.OrderDetail
 					select
-						od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount)).ToArray();
+						Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount));
+
+				var sqlActual   = qActual.  ToString();
+				var sqlExpected = qExpected.ToString();
+
+				Assert.That(sqlActual,   Is.Not.Contains("Convert"));
+				Assert.That(sqlExpected, Contains.Substring("Convert"));
+
+				var actual   = qActual.  ToArray();
+				var expected = qExpected.ToArray();
 
 				Assert.AreEqual(actual.Length, expected.Length);
 
@@ -673,6 +684,5 @@ namespace Tests.Linq
 				}
 			}
 		}
-
 	}
 }

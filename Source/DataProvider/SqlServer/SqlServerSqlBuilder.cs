@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				AppendOutputTableVariable(SelectQuery.Insert.Into)
 					.AppendLine();
 			}
-			else 
+			else
 			{
 				StringBuilder
 					.AppendLine()
