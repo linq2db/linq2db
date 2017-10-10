@@ -2311,7 +2311,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		protected void AlternativeBuildSql(bool implementOrderBy, Action buildSql)
+		protected void AlternativeBuildSql(bool implementOrderBy, Action buildSql, string emptyOrderByValue)
 		{
 			if (NeedSkip)
 			{
@@ -2341,7 +2341,11 @@ namespace LinqToDB.SqlProvider
 					if (SelectQuery.OrderBy.IsEmpty)
 					{
 						AppendIndent().Append("ORDER BY").AppendLine();
-						BuildAliases(aliases[0], SelectQuery.Select.Columns.Take(1).ToList(), null);
+
+						if (SelectQuery.Select.Columns.Count > 0)
+							BuildAliases(aliases[0], SelectQuery.Select.Columns.Take(1).ToList(), null);
+						else
+							AppendIndent().Append(emptyOrderByValue).AppendLine();
 					}
 					else
 						BuildAlternativeOrderBy(true);
