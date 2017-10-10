@@ -2,14 +2,14 @@
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp2.0;net452;netcoreapp1.0</TargetFrameworks>
+		<TargetFrameworks>net452;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<AssemblyName>linq2db.Tests</AssemblyName>
 		<Configurations>Debug;Release;Travis;NET.45;CORE.1;CORE.2</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
-		<TargetFrameworks>net452</TargetFrameworks>
+		<TargetFrameworks>net452;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
@@ -17,7 +17,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.1' ">
-		<TargetFrameworks>netcoreapp1.0</TargetFrameworks>
+		<TargetFrameworks>netcoreapp1.0;net452;netcoreapp2.0</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
@@ -25,7 +25,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.2' ">
-		<TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+		<TargetFrameworks>netcoreapp2.0;net452;netcoreapp1.0</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
@@ -59,21 +59,10 @@
 		<PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.11.0" />
 		<PackageReference Include="Npgsql" Version="3.2.1" />
+		<PackageReference Include="Mono.Cecil" Version="0.10.0-beta6" />
 
 		<None Update="..\..\Data\Northwind.sqlite">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x64\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
@@ -103,6 +92,18 @@
 		<Reference Include="System.Runtime.Serialization" />
 		<Reference Include="System.Windows.Forms" />
 
+		<None Update="SqlServerTypes\x64\msvcr120.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x86\msvcr120.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<Reference Include="IBM.Data.DB2">
 			<HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
 		</Reference>
