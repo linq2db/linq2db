@@ -647,11 +647,11 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 	}
 
-    public static class WhereExtension
-    {
-        public static TOutput Where2<TOutput, TSource, TInput>(this TInput source, Func<TSource, bool> predicate)
-        {
-            throw new InvalidOperationException();
-        }
-    }
+	public static class WhereExtension
+	{
+		public static TOutput Where2<TOutput, TSource, TInput>(this TInput source, Func<TSource, bool> predicate)
+		{
+			throw new InvalidOperationException();
+		}
+	}
 }
