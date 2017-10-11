@@ -104,19 +104,23 @@ namespace LinqToDB.DataProvider.MySql
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-            if (options.RetrieveSequence)
+            if (source == null)
+                throw new ArgumentException("Source is null!", "source");
+            if ( options.RetrieveSequence)
             {
                 var supportedFileTypes = new[] { typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(short), typeof(ushort) };
 
                 var entityDescriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-                var columns          = entityDescriptor.Columns.Where(x => x.IsPrimaryKey).ToList();
+                var columns          = entityDescriptor.Columns.Where(x => x.IsIdentity).ToList();
 
                 if (columns.Count == 1 && supportedFileTypes.Contains(columns.First().MemberType))
                 {
-                    var c = columns.First();
-                    var lastId = dataConnection.Query<int>($"SELECT {c.ColumnName} FROM {entityDescriptor.TableName} ORDER BY {c.ColumnName} DESC LIMIT 1").FirstOrDefault();
-                    lastId = lastId + source.Count(); //Insert the max id first in order to prevent inserting collisions on inserting from another thread (on big batches)
-                    foreach (var item in source)
+                    var c          = columns.First();
+                    var lastId     = dataConnection.Query<int>($"SELECT {c.ColumnName} FROM {entityDescriptor.TableName} ORDER BY {c.ColumnName} DESC LIMIT 1").FirstOrDefault();
+                    var sourceList = source.ToList();
+                    lastId = lastId + sourceList.Count; //Insert the max id first in order to prevent inserting collisions on inserting from another thread (on big batches)
+
+                    foreach (var item in sourceList)
                         c.MemberAccessor.SetValue(item, lastId--);
                     
                     options.KeepIdentity = true;
