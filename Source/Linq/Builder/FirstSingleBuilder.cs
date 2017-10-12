@@ -7,6 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlQuery;
+	using Common;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -24,7 +25,8 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var take     = 0;
 
-			if (!buildInfo.IsSubQuery || builder.DataContextInfo.SqlProviderFlags.IsSubQueryTakeSupported)
+			if (!buildInfo.IsSubQuery || builder.DataContext.SqlProviderFlags.IsSubQueryTakeSupported)
+			{
 				switch (methodCall.Method.Name)
 				{
 					case "First"           :
@@ -37,13 +39,16 @@ namespace LinqToDB.Linq.Builder
 						if (!buildInfo.IsSubQuery)
 						{
 							var takeValue = buildInfo.SelectQuery.Select.TakeValue as SqlValue;
+
 							if (takeValue != null && (int) takeValue.Value >= 2)
 							{
 								take = 2;
 							}
 						}
+
 						break;
 				}
+			}
 
 			if (take != 0)
 				builder.BuildTake(sequence, new SqlValue(take), null);
@@ -99,11 +104,102 @@ namespace LinqToDB.Linq.Builder
 
 				switch (_methodCall.Method.Name)
 				{
-					case "First"           : query.GetElement = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).First();           break;
-					case "FirstOrDefault"  : query.GetElement = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).FirstOrDefault();  break;
-					case "Single"          : query.GetElement = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).Single();          break;
-					case "SingleOrDefault" : query.GetElement = (ctx, db, expr, ps) => query.GetIEnumerable(ctx, db, expr, ps).SingleOrDefault(); break;
+					case "First"           : GetFirstElement          (query); break;
+					case "FirstOrDefault"  : GetFirstOrDefaultElement (query); break;
+					case "Single"          : GetSingleElement         (query); break;
+					case "SingleOrDefault" : GetSingleOrDefaultElement(query); break;
 				}
+			}
+
+			static void GetFirstElement<T>(Query<T> query)
+			{
+				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).First();
+
+#if !NOASYNC
+
+				query.GetElementAsync = async (db, expr, ps, token) =>
+				{
+					var count = 0;
+					var obj   = default(T);
+
+					await query.GetForEachAsync(db, expr, ps,
+						r => { obj = r; count++; return false; }, token);
+
+					return count > 0 ? obj : Array<T>.Empty.First();
+				};
+
+#endif
+			}
+
+			static void GetFirstOrDefaultElement<T>(Query<T> query)
+			{
+				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).FirstOrDefault();
+
+#if !NOASYNC
+
+				query.GetElementAsync = async (db, expr, ps, token) =>
+				{
+					var count = 0;
+					var obj   = default(T);
+
+					await query.GetForEachAsync(db, expr, ps, r => { obj = r; count++; return false; }, token);
+
+					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
+				};
+
+#endif
+			}
+
+			static void GetSingleElement<T>(Query<T> query)
+			{
+				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).Single();
+
+#if !NOASYNC
+
+				query.GetElementAsync = async (db, expr, ps, token) =>
+				{
+					var count = 0;
+					var obj   = default(T);
+
+					await query.GetForEachAsync(db, expr, ps,
+						r =>
+						{
+							if (count == 0)
+								obj = r;
+							count++;
+							return count == 1;
+						}, token);
+
+					return count == 1 ? obj : new T[count].Single();
+				};
+
+#endif
+			}
+
+			static void GetSingleOrDefaultElement<T>(Query<T> query)
+			{
+				query.GetElement      = (db, expr, ps) => query.GetIEnumerable(db, expr, ps).SingleOrDefault();
+
+#if !NOASYNC
+
+				query.GetElementAsync = async (db, expr, ps, token) =>
+				{
+					var count = 0;
+					var obj   = default(T);
+
+					await query.GetForEachAsync(db, expr, ps,
+						r =>
+						{
+							if (count == 0)
+								obj = r;
+							count++;
+							return count == 1;
+						}, token);
+
+					return count == 1 ? obj : new T[count].SingleOrDefault();
+				};
+
+#endif
 			}
 
 			static object SequenceException()
@@ -111,7 +207,7 @@ namespace LinqToDB.Linq.Builder
 				return new object[0].First();
 			}
 
-			bool _isJoinCreated = false;
+			bool _isJoinCreated;
 
 			void CreateJoin()
 			{
@@ -138,17 +234,17 @@ namespace LinqToDB.Linq.Builder
 				return _checkNullIndex;
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				if (expression == null || level == 0)
 				{
-					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported &&
+					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
 						Parent.SelectQuery.GroupBy.IsEmpty &&
 						Parent.SelectQuery.From.Tables.Count > 0)
 					{
 						CreateJoin();
 
-						var expr = Sequence.BuildExpression(expression, expression == null ? level : level + 1);
+						var expr = Sequence.BuildExpression(expression, expression == null ? level : level + 1, enforceServerSide);
 
 						Expression defaultValue;
 
@@ -175,7 +271,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 					{
 						if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
-							return Builder.BuildMultipleQuery(Parent, _methodCall);
+							return Builder.BuildMultipleQuery(Parent, _methodCall, enforceServerSide);
 
 						return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
 					}

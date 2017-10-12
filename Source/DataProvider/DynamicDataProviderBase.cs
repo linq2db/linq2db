@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
-
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider
 {
+	using Configuration;
+	using Extensions;
 	using Mapping;
 
 	public abstract class DynamicDataProviderBase : DataProviderBase
@@ -47,7 +48,7 @@ namespace LinqToDB.DataProvider
 
 		public override bool IsCompatibleConnection(IDbConnection connection)
 		{
-			return GetConnectionType().IsSameOrParentOf(connection.GetType());
+			return GetConnectionType().IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
 		private         Type _dataReaderType;

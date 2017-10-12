@@ -2,11 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
+
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -22,7 +27,9 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
 			SqlProviderFlags.IsDistinctOrderBySupported   = version != DB2Version.zOS;
 
-			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
+			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
+
+			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
 		}
@@ -213,10 +220,18 @@ namespace LinqToDB.DataProvider.DB2
 						value    = ((Guid)value).ToByteArray();
 						dataType = DataType.VarBinary;
 					}
+					if (value == null)
+						dataType = DataType.VarBinary;
 					break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					if (value is Guid) value = ((Guid)value).ToByteArray();
+					else if (parameter.Size == 0 && value != null && value.GetType().Name == "DB2Binary")
+					{
+						dynamic v = value;
+						if (v.IsNull)
+							value = DBNull.Value;
+					}
 					break;
 				case DataType.Blob       :
 					base.SetParameter(parameter, "@" + name, dataType, value);
@@ -227,7 +242,7 @@ namespace LinqToDB.DataProvider.DB2
 			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
 		DB2BulkCopy _bulkCopy;
 
@@ -243,9 +258,9 @@ namespace LinqToDB.DataProvider.DB2
 				source);
 		}
 
-#endregion
+		#endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -256,6 +271,26 @@ namespace LinqToDB.DataProvider.DB2
 			return new DB2Merge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#endregion
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			if (delete)
+				throw new LinqToDBException("DB2 MERGE statement does not support DELETE by source.");
+
+			return new DB2Merge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection,
+			IMergeable<TTarget, TSource> merge)
+		{
+			return new DB2MergeBuilder<TTarget, TSource>(connection, merge);
+		}
+
+		#endregion
 	}
 }

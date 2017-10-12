@@ -2,9 +2,13 @@
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 namespace LinqToDB.ServiceModel
 {
-	class LinqServiceClient : ClientBase<ILinqService>, ILinqService, IDisposable
+	class LinqServiceClient : ClientBase<ILinqClient>, ILinqClient, IDisposable
 	{
 		#region Init
 
@@ -41,6 +45,35 @@ namespace LinqToDB.ServiceModel
 		{
 			return Channel.ExecuteBatch(configuration, queryData);
 		}
+
+#if !NOASYNC
+
+		public Task<LinqServiceInfo> GetInfoAsync(string configuration)
+		{
+			return Channel.GetInfoAsync(configuration);
+		}
+
+		public Task<int> ExecuteNonQueryAsync(string configuration, string queryData)
+		{
+			return Channel.ExecuteNonQueryAsync(configuration, queryData);
+		}
+
+		public Task<object> ExecuteScalarAsync(string configuration, string queryData)
+		{
+			return Channel.ExecuteScalarAsync(configuration, queryData);
+		}
+
+		public Task<string> ExecuteReaderAsync(string configuration, string queryData)
+		{
+			return Channel.ExecuteReaderAsync(configuration, queryData);
+		}
+
+		public Task<int> ExecuteBatchAsync(string configuration, string queryData)
+		{
+			return Channel.ExecuteBatchAsync(configuration, queryData);
+		}
+
+#endif
 
 		#endregion
 

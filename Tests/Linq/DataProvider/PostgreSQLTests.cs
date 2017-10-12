@@ -707,6 +707,34 @@ namespace Tests.DataProvider
 			}
 		}
 
+		public class CreateTableTestClass
+		{
+			public DateTimeOffset TimeOffset;
+			public Guid           Guid;
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void CreateTableTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new LocalTable<CreateTableTestClass>(db))
+			{
+				var e = new CreateTableTestClass
+				{
+					Guid = Guid.NewGuid(),
+					TimeOffset = new DateTimeOffset(2017, 06, 17, 16, 40, 33, 0, TimeSpan.FromHours(-3))
+				};
+				db.Insert(e);
+
+				var e2 = db.GetTable<CreateTableTestClass>()
+					.FirstOrDefault(_ => _.Guid == e.Guid);
+
+				Assert.IsNotNull(e2);
+				Assert.AreEqual(e.Guid,       e2.Guid);
+				Assert.AreEqual(e.TimeOffset, e2.TimeOffset);
+			}
+		}
+
 #if !NPGSQL226
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void NpgsqlDateTimeTest(string context)

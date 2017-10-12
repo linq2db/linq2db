@@ -38,7 +38,7 @@ namespace LinqToDB.SqlProvider
 					SqlProviderFlags.IsGroupByExpressionSupported);
 
 			if (Common.Configuration.Linq.OptimizeJoins)
-				selectQuery = OptimizeJoins(selectQuery);
+				OptimizeJoins(selectQuery);
 
 			return selectQuery;
 		}
@@ -133,7 +133,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-						if (new QueryVisitor().Find(cond, checkTable) == null)
+						if (QueryVisitor.Find(cond, checkTable) == null)
 							continue;
 
 						var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -189,7 +189,7 @@ namespace LinqToDB.SqlProvider
 
 						subQuery.Select.Columns.RemoveAt(0);
 
-						query.Select.Columns[i].Expression = 
+						query.Select.Columns[i].Expression =
 							new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[0]);
 					}
 					else
@@ -248,8 +248,11 @@ namespace LinqToDB.SqlProvider
 								levelTables.Add((ISqlTableSource)e);
 						});
 
-						if (SqlProviderFlags.IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, checkTable) == null)
+						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, checkTable) == null)
 							continue;
+
+						// Join should not have ParentSelect, while SubQuery has
+						subQuery.ParentSelect = null;
 
 						var join = SelectQuery.LeftJoin(subQuery);
 
@@ -259,7 +262,7 @@ namespace LinqToDB.SqlProvider
 
 						var isCount      = false;
 						var isAggregated = false;
-						
+
 						if (subQuery.Select.Columns.Count == 1)
 						{
 							var subCol = subQuery.Select.Columns[0];
@@ -268,12 +271,10 @@ namespace LinqToDB.SqlProvider
 							{
 								switch (((SqlFunction)subCol.Expression).Name)
 								{
-									case "Min"     :
-									case "Max"     :
-									case "Sum"     :
-									case "Average" : isAggregated = true;                 break;
-									case "Count"   : isAggregated = true; isCount = true; break;
+									case "Count" : isCount = true; break;
 								}
+
+								isAggregated = ((SqlFunction) subCol.Expression).IsAggregate;
 							}
 						}
 
@@ -299,7 +300,7 @@ namespace LinqToDB.SqlProvider
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-							if (new QueryVisitor().Find(cond, checkTable) == null)
+							if (QueryVisitor.Find(cond, checkTable) == null)
 								continue;
 
 							var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -737,7 +738,7 @@ namespace LinqToDB.SqlProvider
 										return parms[0];
 
 									if (parms.Length != len)
-										return new SqlFunction(func.SystemType, func.Name, func.Precedence, parms);
+										return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
 								}
 
 								break;
@@ -829,7 +830,7 @@ namespace LinqToDB.SqlProvider
 							}
 						}
 
-						
+
 						if (expr.Operator == SelectQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
 						{
 							var value = Equals(((SqlValue)expr.Expr1).Value, ((SqlValue)expr.Expr2).Value);
@@ -1127,17 +1128,7 @@ namespace LinqToDB.SqlProvider
 			if (to.Type == typeof(object))
 				return func.Parameters[2];
 
-			if (to.Precision > 0)
-			{
-				var maxPrecision = GetMaxPrecision(from);
-				var maxScale     = GetMaxScale    (from);
-				var newPrecision = maxPrecision >= 0 ? Math.Min(to.Precision ?? 0, maxPrecision) : to.Precision;
-				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale     ?? 0, maxScale)     : to.Scale;
-
-				if (to.Precision != newPrecision || to.Scale != newScale)
-					to = new SqlDataType(to.DataType, to.Type, null, newPrecision, newScale);
-			}
-			else if (to.Length > 0)
+			if (to.Length > 0)
 			{
 				var maxLength = to.Type == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
 				var newLength = maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength) : to.Length;
@@ -1204,8 +1195,8 @@ namespace LinqToDB.SqlProvider
 
 		protected SelectQuery GetAlternativeDelete(SelectQuery selectQuery)
 		{
-			if (selectQuery.IsDelete && 
-				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) && 
+			if (selectQuery.IsDelete &&
+				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) &&
 				selectQuery.From.Tables[0].Source is SqlTable)
 			{
 				var sql = new SelectQuery { QueryType = QueryType.Delete, IsParameterDependent = selectQuery.IsParameterDependent };
@@ -1266,8 +1257,8 @@ namespace LinqToDB.SqlProvider
 					var table = selectQuery.Update.Table ?? (SqlTable)selectQuery.From.Tables[0].Source;
 
 					if (selectQuery.Update.Table != null)
-						if (new QueryVisitor().Find(selectQuery.From, t => t == table) == null)
-							table = (SqlTable)new QueryVisitor().Find(selectQuery.From,
+						if (QueryVisitor.Find(selectQuery.From, t => t == table) == null)
+							table = (SqlTable)QueryVisitor.Find(selectQuery.From,
 								ex => ex is SqlTable && ((SqlTable)ex).ObjectType == table.ObjectType) ?? table;
 
 					var copy = new SqlTable(table);
@@ -1432,10 +1423,18 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Joins
 
-		public SelectQuery OptimizeJoins(SelectQuery selectQuery)
+		public void OptimizeJoins(SelectQuery selectQuery)
 		{
-			var optimizer = new JoinOptimizer();
-			return optimizer.OptimizeJoins(selectQuery);
+			((ISqlExpressionWalkable) selectQuery).Walk(false, element =>
+			{
+				var query = element as SelectQuery;
+				if (query != null)
+				{
+					var optimizer = new JoinOptimizer();
+					optimizer.OptimizeJoins(query);
+				}
+				return element;
+			});
 		}
 
 		#endregion

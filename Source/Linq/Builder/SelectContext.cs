@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
-
-using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlQuery;
@@ -63,10 +62,10 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = BuildExpression(null, 0);
+			var expr   = BuildExpression(null, 0, false);
 			var mapper = Builder.BuildMapper<T>(expr);
 
-			query.SetQuery(mapper);
+			QueryRunner.SetRunQuery(query, mapper);
 		}
 
 		#endregion
@@ -75,7 +74,22 @@ namespace LinqToDB.Linq.Builder
 
 		ParameterExpression _rootExpression;
 
-		public virtual Expression BuildExpression(Expression expression, int level)
+		public virtual Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+#if DEBUG && TRACK_BUILD
+		{
+			Debug.WriteLine("{0}.BuildExpression start {1}:\n{2}".Args(GetType().Name, level, (expression ?? Body).GetDebugView()));
+			Debug.WriteLine("{0}.BuildExpression start:\n{1}".Args(GetType().Name, SelectQuery));
+
+			var expr = BuildExpressionInternal(expression, level, enforceServerSide);
+
+			Debug.WriteLine("{0}.BuildExpression end:\n{1}".Args(GetType().Name, (expression ?? Body).GetDebugView()));
+			Debug.WriteLine("{0}.BuildExpression end:\n{1}".Args(GetType().Name, SelectQuery));
+
+			return expr;
+		}
+
+		Expression BuildExpressionInternal(Expression expression, int level, bool enforceServerSide)
+#endif
 		{
 			{
 				var key = Tuple.Create(expression, level, ConvertFlags.Field);
@@ -88,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 
 					var expr = (expression ?? Body);
 					if (IsExpression(expr, level, RequestFor.Object).Result)
-						return Builder.BuildExpression(this, expr);
+						return Builder.BuildExpression(this, expr, enforceServerSide);
 
 					return Builder.BuildSql((expression ?? Body).Type, idx);
 				}
@@ -98,7 +112,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_rootExpression == null)
 				{
-					var expr = Builder.BuildExpression(this, Body);
+					var expr = Builder.BuildExpression(this, Body, enforceServerSide);
 
 					if (Builder.IsBlockDisable)
 						return expr;
@@ -109,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 				return _rootExpression;
 			}
 
-			var levelExpression = expression.GetLevelExpression(level);
+			var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 			if (IsScalar)
 			{
@@ -126,8 +140,8 @@ namespace LinqToDB.Linq.Builder
 				return ProcessScalar(
 					expression,
 					level,
-					(ctx, ex, l) => ctx.BuildExpression(ex, l),
-					() => GetSequence(expression, level).BuildExpression(null, 0));
+					(ctx, ex, l) => ctx.BuildExpression(ex, l, enforceServerSide),
+					() => GetSequence(expression, level).BuildExpression(null, 0, enforceServerSide));
 			}
 			else
 			{
@@ -136,8 +150,8 @@ namespace LinqToDB.Linq.Builder
 					var sequence = GetSequence(expression, level);
 
 					return ReferenceEquals(levelExpression, expression) ?
-						sequence.BuildExpression(null,       0) :
-						sequence.BuildExpression(expression, level + 1);
+						sequence.BuildExpression(null,       0,         enforceServerSide) :
+						sequence.BuildExpression(expression, level + 1, enforceServerSide);
 				}
 
 				switch (levelExpression.NodeType)
@@ -178,8 +192,11 @@ namespace LinqToDB.Linq.Builder
 																	return Builder.BuildSql(e.Type, idx);
 																}
 
-																return Builder.BuildExpression(this, e);
+																return Builder.BuildExpression(this, e, enforceServerSide);
 														}
+
+														if (enforceServerSide)
+															return Builder.BuildExpression(this, e, true);
 													}
 
 													return e;
@@ -199,7 +216,7 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								return Builder.BuildExpression(this, memberExpression);
+								return Builder.BuildExpression(this, memberExpression, enforceServerSide);
 							}
 
 							{
@@ -210,25 +227,25 @@ namespace LinqToDB.Linq.Builder
 									case ExpressionType.Parameter  :
 										{
 											var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
-										
+
 											if (ReferenceEquals(memberExpression, parameter))
-												return sequence.BuildExpression(expression, level + 1);
+												return sequence.BuildExpression(expression, level + 1, enforceServerSide);
 
 											break;
-										
+
 										}
 
 									case ExpressionType.New        :
 									case ExpressionType.MemberInit :
 										{
 											var mmExpresion = GetMemberExpression(memberExpression, expression, level + 1);
-											return Builder.BuildExpression(this, mmExpresion);
+											return Builder.BuildExpression(this, mmExpresion, enforceServerSide);
 										}
 								}
 
 								var expr = expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex);
 
-								return sequence.BuildExpression(expr, 1);
+								return sequence.BuildExpression(expr, 1, enforceServerSide);
 							}
 						}
 
@@ -271,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (Body.NodeType != ExpressionType.Parameter && level == 0)
 							{
-								var levelExpression = expression.GetLevelExpression(level);
+								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 								if (levelExpression != expression)
 									if (flags != ConvertFlags.Field && IsExpression(expression, level, RequestFor.Field).Result)
@@ -311,7 +328,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Key   :
 					case ConvertFlags.Field :
 						{
-							var levelExpression = expression.GetLevelExpression(level);
+							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 							switch (levelExpression.NodeType)
 							{
@@ -492,7 +509,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					switch (flags)
 					{
-						case ConvertFlags.Field : 
+						case ConvertFlags.Field :
 						case ConvertFlags.Key   :
 						case ConvertFlags.All   :
 							{
@@ -529,7 +546,7 @@ namespace LinqToDB.Linq.Builder
 								return idx;
 							}
 
-							var levelExpression = expression.GetLevelExpression(level);
+							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 							switch (levelExpression.NodeType)
 							{
@@ -676,7 +693,7 @@ namespace LinqToDB.Linq.Builder
 								return new IsExpressionResult(requestFlag == RequestFor.Object);
 							}
 
-							var levelExpression = expression.GetLevelExpression(level);
+							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 							switch (levelExpression.NodeType)
 							{
@@ -725,7 +742,7 @@ namespace LinqToDB.Linq.Builder
 											(MemberExpression)levelExpression,
 											level,
 											(n,ctx,ex,l,ex1) => n == 0 ?
-												new IsExpressionResult(requestFlag == RequestFor.Expression, ex1) : 
+												new IsExpressionResult(requestFlag == RequestFor.Expression, ex1) :
 												ctx.IsExpression(ex, l, requestFlag));
 									}
 
@@ -778,7 +795,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var levelExpression = expression.GetLevelExpression(level);
+				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 				switch (levelExpression.NodeType)
 				{
@@ -882,7 +899,7 @@ namespace LinqToDB.Linq.Builder
 						action(sequence, expression, 1);
 				}
 
-				var levelExpression = expression.GetLevelExpression(level);
+				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 				if (!ReferenceEquals(levelExpression, expression))
 				{
@@ -907,11 +924,11 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var root = Body.GetRootObject();
+				var root = Body.GetRootObject(Builder.MappingSchema);
 
 				if (root.NodeType == ExpressionType.Parameter)
 				{
-					var levelExpression = expression.GetLevelExpression(level - 1);
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
 					var newExpression   = GetExpression(expression, levelExpression, Body);
 
 					return action(this, newExpression, 0);
@@ -982,11 +999,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (IsScalar)
 			{
-				root = expression.GetRootObject();
+				root = expression.GetRootObject(Builder.MappingSchema);
 			}
 			else
 			{
-				var levelExpression = expression.GetLevelExpression(level);
+				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 				switch (levelExpression.NodeType)
 				{
@@ -994,7 +1011,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var memberExpression = Members[((MemberExpression)levelExpression).Member];
 
-							root =  memberExpression.GetRootObject();
+							root =  memberExpression.GetRootObject(Builder.MappingSchema);
 
 							if (root.NodeType != ExpressionType.Parameter)
 								return null;
@@ -1004,7 +1021,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Parameter :
 						{
-							root = expression.GetRootObject();
+							root = expression.GetRootObject(Builder.MappingSchema);
 							break;
 						}
 				}
@@ -1035,16 +1052,16 @@ namespace LinqToDB.Linq.Builder
 				memberExpression;
 		}
 
-		static Expression GetMemberExpression(Expression newExpression, Expression expression, int level)
+		Expression GetMemberExpression(Expression newExpression, Expression expression, int level)
 		{
-			var levelExpresion = expression.GetLevelExpression(level);
+			var levelExpresion = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 			switch (newExpression.NodeType)
 			{
 				case ExpressionType.New        :
 				case ExpressionType.MemberInit : break;
 				default                        :
-					var le = expression.GetLevelExpression(level - 1);
+					var le = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
 					return GetExpression(expression, le, newExpression);
 			}
 

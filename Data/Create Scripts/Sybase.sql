@@ -1,29 +1,14 @@
-USE master
+﻿USE master
 GO
 
 DROP DATABASE TestData
 GO
 
 CREATE DATABASE TestData
+	ON master = '102400K'
 GO
 
 USE TestData
-GO
-
-IF OBJECT_ID('dbo.Doctor') IS NOT NULL
-BEGIN DROP TABLE Doctor END
-GO
-
-IF OBJECT_ID('dbo.InheritanceParent') IS NOT NULL
-BEGIN DROP TABLE Patient END
-GO
-
-IF OBJECT_ID('dbo.Patient') IS NOT NULL
-BEGIN DROP TABLE InheritanceParent END
-GO
-
-IF OBJECT_ID('dbo.InheritanceChild') IS NOT NULL
-BEGIN DROP TABLE InheritanceChild END
 GO
 
 CREATE TABLE InheritanceParent
@@ -49,10 +34,6 @@ GO
 
 -- Person Table
 
-IF OBJECT_ID('dbo.Person') IS NOT NULL
-BEGIN DROP TABLE Person END
-GO
-
 CREATE TABLE Person
 (
 	PersonID   int          IDENTITY,
@@ -69,6 +50,8 @@ GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+GO
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
 GO
 -- Doctor Table Extension
 
@@ -101,22 +84,11 @@ INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoi
 GO
 
 
-DROP TABLE Parent
-GO
-DROP TABLE Child
-GO
-DROP TABLE GrandChild
-GO
-
 CREATE TABLE Parent      (ParentID int, Value1 int NULL)
 GO
 CREATE TABLE Child       (ParentID int, ChildID int)
 GO
 CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
-GO
-
-
-DROP TABLE LinqDataTypes
 GO
 
 CREATE TABLE LinqDataTypes
@@ -130,13 +102,11 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    binary(500)   NULL,
 	SmallIntValue  smallint      NULL,
 	IntValue       int           NULL,
-	BigIntValue    bigint        NULL
+	BigIntValue    bigint        NULL,
+	StringValue    nvarchar(50)  NULL
 )
 GO
 
-
-DROP TABLE TestIdentity
-GO
 
 CREATE TABLE TestIdentity
 (
@@ -145,10 +115,6 @@ CREATE TABLE TestIdentity
 GO
 
 -- AllTypes
-
-IF OBJECT_ID('dbo.AllTypes') IS NOT NULL
-BEGIN DROP TABLE AllTypes END
-GO
 
 CREATE TABLE AllTypes
 (
@@ -175,6 +141,7 @@ CREATE TABLE AllTypes
 	timeDataType             time              NULL,
 
 	charDataType             char(1)           NULL,
+	char20DataType           char(20)          NULL,
 	varcharDataType          varchar(20)       NULL,
 	textDataType             text              NULL,
 	ncharDataType            nchar(20)         NULL,
@@ -219,3 +186,61 @@ SELECT
 	        1,         2, Cast(3 as varbinary)
 
 GO
+
+-- merge test tables
+CREATE TABLE TestMerge1
+(
+	Id     int NOT NULL,
+	Field1 int NULL,
+	Field2 int NULL,
+	Field3 int NULL,
+	Field4 int NULL,
+	Field5 int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      REAL              NULL,
+	FieldDouble     FLOAT             NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       CHAR(36)          NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+	FieldDate       DATE              NULL,
+	FieldTime       TIME              NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL,
+
+	CONSTRAINT PK_TestMerge1 PRIMARY KEY CLUSTERED (Id)
+)
+GO
+
+CREATE TABLE TestMerge2
+(
+	Id     int NOT NULL,
+	Field1 int NULL,
+	Field2 int NULL,
+	Field3 int NULL,
+	Field4 int NULL,
+	Field5 int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      REAL              NULL,
+	FieldDouble     FLOAT             NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       CHAR(36)          NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+	FieldDate       DATE              NULL,
+	FieldTime       TIME              NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL,
+
+	CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED (Id)
+)

@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -14,7 +18,7 @@ namespace Tests.Samples
 	public class ConcurrencyCheckTests : TestBase
 	{
 #if !MONO
-		private class InterceptDataConnection : DataConnection
+		class InterceptDataConnection : DataConnection
 		{
 			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
 			{
@@ -24,7 +28,7 @@ namespace Tests.Samples
 			/// We need to use same paremeters as for original query
 			/// </summary>
 			/// <param name="original"></param>
-			private SelectQuery Clone(SelectQuery original)
+			SelectQuery Clone(SelectQuery original)
 			{
 				var clone = original.Clone();
 
@@ -118,6 +122,7 @@ namespace Tests.Samples
 					}
 				}
 				#endregion Insert
+
 				return selectQuery;
 			}
 		}
@@ -167,15 +172,18 @@ namespace Tests.Samples
 
 			var table = db.GetTable<TestTable>();
 
-			var row = table.First(t => t.ID == 1);
-			row.Description = "Changed desc";
+			for (int i = 0; i < 3; i++)
+			{
+				var row = table.First(t => t.ID == 1);
+				row.Description = "Changed desc " + i;
 
-			var result = db.Update(row);
+				var result = db.Update(row);
 
-			Assert.AreEqual(1, result);
+				Assert.AreEqual(1, result);
 
-			var updated = table.First(t => t.ID == 1);
-			Assert.AreEqual(row.RowVer + 1, updated.RowVer);
+				var updated = table.First(t => t.ID == 1);
+				Assert.AreEqual(row.RowVer + 1, updated.RowVer);
+			}
 		}
 
 		[Test]
@@ -202,7 +210,7 @@ namespace Tests.Samples
 			Assert.AreEqual(0, result);
 		}
 
-		[Test]
+		[Test, Parallelizable(ParallelScope.None)]
 		public void InsertAndDeleteTest()
 		{
 			var db = _connection;
@@ -224,6 +232,33 @@ namespace Tests.Samples
 			Assert.AreEqual(0, db.Delete(obj1000));
 			Assert.AreEqual(1, db.Delete(obj1001));
 		}
+
+#if !NOASYNC
+
+		[Test, Parallelizable(ParallelScope.None)]
+		public async Task InsertAndDeleteTestAsync()
+		{
+			var db    = _connection;
+			var table = db.GetTable<TestTable>();
+
+			await db.InsertAsync(new TestTable { ID = 2000, Description = "Delete Candidate 1000" });
+			await db.InsertAsync(new TestTable { ID = 2001, Description = "Delete Candidate 1001" });
+
+			var obj2000 = await table.FirstAsync(_ => _.ID == 2000);
+			var obj2001 = await table.FirstAsync(_ => _.ID == 2001);
+
+			Assert.IsNotNull(obj2000);
+			Assert.IsNotNull(obj2001);
+			Assert.AreEqual(1, obj2000.RowVer);
+			Assert.AreEqual(1, obj2001.RowVer);
+
+			await db.UpdateAsync(obj2000);
+
+			Assert.AreEqual(0, await db.DeleteAsync(obj2000));
+			Assert.AreEqual(1, await db.DeleteAsync(obj2001));
+		}
+
+#endif
 
 		[Test]
 		public void CheckInsertOrUpdate()

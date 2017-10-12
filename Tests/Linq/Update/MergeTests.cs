@@ -1,9 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -13,164 +12,212 @@ namespace Tests.xUpdate
 	using Model;
 
 	[TestFixture]
-	public class MergeTests : TestBase
+	public partial class MergeTests : TestBase
 	{
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs,
-			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase, TestProvName.MariaDB, TestProvName.MySql57)]
-		public void Merge(string context)
+		public class MergeUpdateWithDeleteDataContextSourceAttribute : IncludeDataContextSourceAttribute
 		{
-			using (var db = new TestDataConnection(context))
+			public MergeUpdateWithDeleteDataContextSourceAttribute()
+				: base(false, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)
 			{
-				db.Merge(db.Types2);
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs,
-			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void MergeWithEmptySource(string context)
+		public class MergeBySourceDataContextSourceAttribute : IncludeDataContextSourceAttribute
 		{
-			using (var db = new TestDataConnection(context))
+			public MergeBySourceDataContextSourceAttribute()
+				: base(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)
 			{
-				db.Merge(new Person[] {});
+				ParallelScope = ParallelScope.None;
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void MergeWithDelete(string context)
+		public class MergeDataContextSourceAttribute : DataContextSourceAttribute
 		{
-			using (var db = new TestDataConnection(context))
+			static string[] Unsupported = new []
 			{
-				db.Merge(true, db.Types2);
+				ProviderName.Access,
+				ProviderName.SqlCe,
+				ProviderName.SQLite,
+				TestProvName.SQLiteMs,
+				ProviderName.SqlServer2000,
+				ProviderName.SqlServer2005,
+				ProviderName.PostgreSQL,
+				ProviderName.PostgreSQL92,
+				ProviderName.PostgreSQL93,
+				ProviderName.MySql,
+				TestProvName.MySql57,
+				TestProvName.MariaDB
+			};
+
+			public MergeDataContextSourceAttribute(params string[] except)
+				: base(false, Unsupported.Concat(except).ToArray())
+			{
+				ParallelScope = ParallelScope.None;
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void MergeWithDeletePredicate1(string context)
+		[Table("merge1")]
+		class TestMapping1
 		{
-			using (var db = new TestDataConnection(context))
-			{
-				db.Merge(t => t.ID > 5, db.Types2.Where(t => t.ID > 5));
-			}
+			[Column("Id")]
+			[PrimaryKey]
+			public int Id;
+
+			[Column("Field1")]
+			public int? Field1;
+
+			[Column("Field2")]
+			public int? Field2;
+
+			[Column("Field3", SkipOnInsert = true)]
+			public int? Field3;
+
+			[Column("Field4", SkipOnUpdate = true)]
+			public int? Field4;
+
+			[Column("Field5", SkipOnInsert = true, SkipOnUpdate = true)]
+			public int? Field5;
+
+			[Column("fake", Configuration = "Other")]
+			public int Fake;
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SapHana,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void MergeWithDeletePredicate2(string context)
+		[Table("merge2")]
+		class TestMapping2
 		{
-			using (var db = new TestDataConnection(context))
-			{
-				db.Merge(db.Types2, t => t.ID > 5);
-			}
+			[Column("Id")]
+			[PrimaryKey]
+			public int OtherId;
+
+			[Column("Field1", SkipOnInsert = true)]
+			public int? OtherField1;
+
+			[Column("Field2", SkipOnInsert = true, SkipOnUpdate = true)]
+			public int? OtherField2;
+
+			[Column("Field3", SkipOnUpdate = true)]
+			public int? OtherField3;
+
+			[Column("Field4")]
+			public int? OtherField4;
+
+			[Column("Field5")]
+			public int? OtherField5;
+
+			[Column("fake", Configuration = "Other")]
+			public int OtherFake;
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void MergeWithDeletePredicate3(string context)
-		{
-			using (var db = new TestDataConnection(context))
+		private static ITable<TestMapping1> GetTarget(IDataContext db)
 			{
-				var patient = db.Patient.First();
-				db.Merge(db.Person, t => t.Patient == patient);
-			}
+			return db.GetTable<TestMapping1>().TableName("TestMerge1");
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void MergeWithDeletePredicate4(string context)
-		{
-			using (var db = new TestDataConnection(context))
+		private static ITable<TestMapping1> GetSource1(IDataContext db)
 			{
-				var patient = db.Patient.First().PersonID;
-				db.Merge(db.Person, t => t.Patient.PersonID == patient);
-				patient++;
-				db.Merge(db.Person, t => t.Patient.PersonID == patient);
-			}
+			return db.GetTable<TestMapping1>().TableName("TestMerge2");
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void MergeWithDeletePredicate5(string context)
-		{
-			using (var db = new TestDataConnection(context))
+		private static ITable<TestMapping2> GetSource2(IDataContext db)
 			{
-				db.Merge(db.Child, t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22));
-			}
+			return db.GetTable<TestMapping2>().TableName("TestMerge2");
 		}
 
-		[Table("AllTypes")]
-		class AllType
+		private void AssertRow(TestMapping1 expected, TestMapping1 actual, int? exprected3, int? exprected4)
 		{
-			[PrimaryKey, Identity] public int ID;
-			[Column(DataType = DataType.Char,  Length = 1)]   public char   charDataType;
-			[Column(DataType = DataType.NChar, Length = 20)]  public string ncharDataType;
+			Assert.AreEqual(expected.Id, actual.Id);
+			Assert.AreEqual(expected.Field1, actual.Field1);
+			Assert.AreEqual(expected.Field2, actual.Field2);
+			Assert.AreEqual(exprected3, actual.Field3);
+			Assert.AreEqual(exprected4, actual.Field4);
+			Assert.IsNull(actual.Field5);
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void MergeChar1(string context)
+		private void PrepareData(IDataContext db)
 		{
-			using (var db = new TestDataConnection(context))
+			using (new DisableLogging())
 			{
-				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
+				GetTarget(db).Delete();
+				foreach (var record in InitialTargetData)
 				{
-					charDataType  = '\x0',
-					ncharDataType = "\x0"
-				}));
-
-				try
-				{
-					db.Merge(db.GetTable<AllType>().Where(t => t.ID == id));
+					db.Insert(record, "TestMerge1");
 				}
-				finally
+
+				GetSource1(db).Delete();
+				foreach (var record in InitialSourceData)
 				{
-					db.GetTable<AllType>().Delete(t => t.ID == id);
+					db.Insert(record, "TestMerge2");
 				}
 			}
 		}
 
-		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57,
-			ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
-		public void MergeChar2(string context)
+		private static readonly TestMapping1[] InitialTargetData = new[]
 		{
-			using (var db = new TestDataConnection(context))
+			new TestMapping1() { Id = 1                                                                   },
+			new TestMapping1() { Id = 2, Field1 = 2,             Field3 = 101                             },
+			new TestMapping1() { Id = 3,             Field2 = 3,               Field4 = 203               },
+			new TestMapping1() { Id = 4, Field1 = 5, Field2 = 6,                             Field5 = 304 },
+		};
+
+		private static readonly TestMapping1[] InitialSourceData = new[]
 			{
-				try
+			new TestMapping1() { Id = 3,              Field2 = 3,  Field3 = 113                             },
+			new TestMapping1() { Id = 4, Field1 = 5,  Field2 = 7,                Field4 = 214               },
+			new TestMapping1() { Id = 5, Field1 = 10, Field2 = 4,                             Field5 = 315 },
+			new TestMapping1() { Id = 6,                           Field3 = 116, Field4 = 216, Field5 = 316 },
+		};
+
+		private static IEnumerable<TestMapping2> GetInitialSourceData2()
 				{
-					db.Merge(new[]
+			foreach (var record in InitialSourceData)
 					{
-						new AllType
+				yield return new TestMapping2()
 						{
-							ID            = 10,
-							charDataType  = '\x0',
-							ncharDataType = "\x0"
+					OtherId = record.Id,
+					OtherField1 = record.Field1,
+					OtherField2 = record.Field2,
+					OtherField3 = record.Field3,
+					OtherField4 = record.Field4,
+					OtherField5 = record.Field5,
+					OtherFake = record.Fake
+				};
 						}
-					});
 				}
-				finally
-				{
-					db.GetTable<AllType>().Delete(t => t.ID == 10);
-				}
+
+		[Test, DataContextSource(false)]
+		public void TestDataGenerationTest(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var result1 = GetTarget(db).OrderBy(_ => _.Id).ToList();
+				var result2 = GetSource1(db).OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(4, result1.Count);
+				Assert.AreEqual(4, result2.Count);
+
+				AssertRow(InitialTargetData[0], result1[0], null, null);
+				AssertRow(InitialTargetData[1], result1[1], null, null);
+				AssertRow(InitialTargetData[2], result1[2], null, 203);
+				AssertRow(InitialTargetData[3], result1[3], null, null);
+
+				AssertRow(InitialSourceData[0], result2[0], null, null);
+				AssertRow(InitialSourceData[1], result2[1], null, 214);
+				AssertRow(InitialSourceData[2], result2[2], null, null);
+				AssertRow(InitialSourceData[3], result2[3], null, 216);
 			}
+		}
+
+		private void AssertRowCount(int expected, int actual, string context)
+		{
+			// another sybase quirk, nothing surprising
+			if (context == ProviderName.Sybase)
+				Assert.LessOrEqual(expected, actual);
+			else if (context == ProviderName.OracleNative && actual == -1)
+			{ }
+			else
+				Assert.AreEqual(expected, actual);
 		}
 	}
 }

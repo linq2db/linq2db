@@ -5,19 +5,14 @@ namespace LinqToDB.Linq
 {
 	class Table<T> : ExpressionQuery<T>, ITable<T>, ITable
 	{
-		public Table(IDataContextInfo dataContextInfo)
-		{
-			Init(dataContextInfo, null);
-		}
-
 		public Table(IDataContext dataContext)
 		{
-			Init(dataContext == null ? null : new DataContextInfo(dataContext), null);
+			Init(dataContext, null);
 		}
 
 		public Table(IDataContext dataContext, Expression expression)
 		{
-			Init(dataContext == null ? null : new DataContextInfo(dataContext), expression);
+			Init(dataContext, expression);
 		}
 
 #if !SILVERLIGHT

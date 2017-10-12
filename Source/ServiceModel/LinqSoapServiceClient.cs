@@ -2,9 +2,13 @@
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 namespace LinqToDB.ServiceModel
 {
-	class LinqSoapServiceClient : ClientBase<ILinqSoapService>, ILinqService, IDisposable
+	class LinqSoapServiceClient : ClientBase<ILinqSoapClient>, ILinqClient, IDisposable
 	{
 		#region Init
 
@@ -41,6 +45,35 @@ namespace LinqToDB.ServiceModel
 		{
 			return Channel.ExecuteBatch(configuration, queryData);
 		}
+
+#if !NOASYNC
+
+		public Task<LinqServiceInfo> GetInfoAsync(string configuration)
+		{
+			return Channel.GetInfoAsync(configuration);
+		}
+
+		public Task<int> ExecuteNonQueryAsync(string configuration, string queryData)
+		{
+			return Channel.ExecuteNonQueryAsync(configuration, queryData);
+		}
+
+		public Task<object> ExecuteScalarAsync(string configuration, string queryData)
+		{
+			return Channel.ExecuteScalarAsync(configuration, queryData);
+		}
+
+		public Task<string> ExecuteReaderAsync(string configuration, string queryData)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<int> ExecuteBatchAsync(string configuration, string queryData)
+		{
+			return Channel.ExecuteBatchAsync(configuration, queryData);
+		}
+
+#endif
 
 		#endregion
 

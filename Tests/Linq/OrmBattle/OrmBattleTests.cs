@@ -39,25 +39,25 @@ namespace Tests.OrmBattle
 			using (db)
 				db = null;
 
-			// LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
-			db = new NorthwindDB(context);
-
-			Customers = db.Customer.ToList();
-			Employees = db.Employee.ToList();
-			Order = db.Order.ToList();
-			Products = db.Product.ToList();
-
-			foreach (var o in Order)
+			using (new DisableLogging())
 			{
-				o.Customer = Customers.SingleOrDefault(c => c.CustomerID == o.CustomerID);
-				o.Employee = Employees.SingleOrDefault(e => e.EmployeeID == o.EmployeeID);
+				// LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+				db = new NorthwindDB(context);
+
+				Customers = db.Customer.ToList();
+				Employees = db.Employee.ToList();
+				Order = db.Order.ToList();
+				Products = db.Product.ToList();
+
+				foreach (var o in Order)
+				{
+					o.Customer = Customers.SingleOrDefault(c => c.CustomerID == o.CustomerID);
+					o.Employee = Employees.SingleOrDefault(e => e.EmployeeID == o.EmployeeID);
+				}
+
+				foreach (var c in Customers)
+					c.Orders = Order.Where(o => c.CustomerID == o.CustomerID).ToList();
 			}
-
-			foreach (var c in Customers)
-				c.Orders = Order.Where(o => c.CustomerID == o.CustomerID).ToList();
-
-			DataConnection.TurnTraceSwitchOn();
-			DataConnection.WriteTraceLine = (s, s1) => Console.WriteLine(s, s1);
 
 			_currentContext = context;
 		}
@@ -66,7 +66,6 @@ namespace Tests.OrmBattle
 		protected void TearDown()
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
-			DataConnection.TraceSwitch = null;
 			_currentContext = null;
 			using (db)
 				db = null;
@@ -353,29 +352,32 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(0, expected.Except(list).Count());
 		}
 
-		[Test, NorthwindDataContext, Ignore("Disabled, multiply queries")]
+		[Test, NorthwindDataContext, Ignore("Not working at the Moment -> issue #573")]
 		[Category("WindowsOnly")]
 		public void SelectSubqueryTest(string context)
 		{
-			Setup(context);
-			Assert.AreNotEqual(db.GetType().FullName, "OrmBattle.EF7Model.NorthwindContext",
-				"EF7 has infinite loop here");
+			using (new AllowMultipleQuery())
+			{
+				Setup(context);
+				Assert.AreNotEqual(db.GetType().FullName, "OrmBattle.EF7Model.NorthwindContext",
+					"EF7 has infinite loop here");
 
-			var result = from o in db.Order
-				select db.Customer.Where(c => c.CustomerID == o.Customer.CustomerID);
-			var expected = from o in Order
-				select Customers.Where(c => c.CustomerID == o.Customer.CustomerID);
-			var list = result.ToList();
+				var result = from o in db.Order
+					select db.Customer.Where(c => c.CustomerID == o.Customer.CustomerID);
+				var expected = from o in Order
+					select Customers.Where(c => c.CustomerID == o.Customer.CustomerID);
+				var list = result.ToList();
 
-			var expectedList = expected.ToList();
-			CollectionAssert.AreEquivalent(expectedList, list);
+				var expectedList = expected.ToList();
+				CollectionAssert.AreEquivalent(expectedList, list);
 
-			//Assert.AreEqual(expected.Count(), list.Count);
-			//expected.Zip(result, (expectedCustomers, actualCustomers) => {
-			//                       Assert.AreEqual(expectedCustomers.Count(), actualCustomers.Count());
-			//                       Assert.AreEqual(0, expectedCustomers.Except(actualCustomers));
-			//                       return true;
-			//                     });
+				//Assert.AreEqual(expected.Count(), list.Count);
+				//expected.Zip(result, (expectedCustomers, actualCustomers) => {
+				//                       Assert.AreEqual(expectedCustomers.Count(), actualCustomers.Count());
+				//                       Assert.AreEqual(0, expectedCustomers.Except(actualCustomers));
+				//                       return true;
+				//                     });
+			}
 		}
 
 		[Test, NorthwindDataContext]
@@ -521,24 +523,27 @@ namespace Tests.OrmBattle
 			Assert.IsTrue(expected.SequenceEqual(list));
 		}
 
-		[Test, NorthwindDataContext, Ignore("Disabled, multiply queries")]
+		[Test, NorthwindDataContext]
 		[Category("Take/Skip")]
 		public void TakeNestedTest(string context)
 		{
-			Setup(context);
-			var result =
-				from c in db.Customer
-				select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
-			var expected =
-				from c in Customers
-				select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
-			var list = result.ToList();
-			Assert.AreEqual(expected.Count(), list.Count);
-			foreach (var anonymous in list)
+			using (new AllowMultipleQuery())
 			{
-				var count = anonymous.TopOrder.ToList().Count;
-				Assert.GreaterOrEqual(count, 0);
-				Assert.LessOrEqual(count, 5);
+				Setup(context);
+				var result =
+					from c in db.Customer
+					select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
+				var expected =
+					from c in Customers
+					select new {Customer = c, TopOrder = c.Orders.OrderByDescending(o => o.OrderDate).Take(5)};
+				var list = result.ToList();
+				Assert.AreEqual(expected.Count(), list.Count);
+				foreach (var anonymous in list)
+				{
+					var count = anonymous.TopOrder.ToList().Count;
+					Assert.GreaterOrEqual(count, 0);
+					Assert.LessOrEqual(count, 5);
+				}
 			}
 		}
 
@@ -555,6 +560,7 @@ namespace Tests.OrmBattle
 				.Where(o => o.OrderDate != null)
 				.Select(o => o.RequiredDate)
 				.Distinct()
+				.OrderByDescending(_ => _)
 				.Skip(10);
 			var result = db.Order
 				.OrderBy(o => o.OrderDate)
@@ -564,6 +570,7 @@ namespace Tests.OrmBattle
 				.Where(o => o.OrderDate != null)
 				.Select(o => o.RequiredDate)
 				.Distinct()
+				.OrderByDescending(_ => _)
 				.Skip(10);
 			var originalList = original.ToList();
 			var resultList = result.ToList();
@@ -1209,11 +1216,11 @@ namespace Tests.OrmBattle
 		{
 			Setup(context);
 			var result =
-				from o in db.Order
+				(from o in db.Order
 				where
 				db.Customer.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
 				db.Employee.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
-				select o;
+				select o).ToList();
 			var expected =
 				from o in Order
 				where
@@ -1261,7 +1268,7 @@ namespace Tests.OrmBattle
 		public void AnyTest(string context)
 		{
 			Setup(context);
-			var result = db.Customer.Where(c => c.Orders.Any(o => o.Freight > 400));
+			var result = db.Customer.Where(c => c.Orders.Any(o => o.Freight > 400)).ToList();
 			var expected = Customers.Where(c => c.Orders.Any(o => o.Freight > 400));
 			Assert.AreEqual(0, expected.Except(result).Count());
 			Assert.AreEqual(10, result.ToList().Count);
@@ -1482,24 +1489,26 @@ namespace Tests.OrmBattle
 
 		#region Complex tests
 
-		[Test, NorthwindDataContext, Ignore("Disabled, multiply queries")]
+		[Test, NorthwindDataContext]
 		[Category("WindowsOnly")]
 		public void ComplexTest1(string context)
 		{
-			//TODO: sdanyliv: too many queries and looks like it is leaked
-			Setup(context);
-			var result = db.Supplier.Select(
-				supplier => db.Product.Select(
-					product => db.Product.Where(p => p.ProductID == product.ProductID && p.Supplier.SupplierID == supplier.SupplierID)));
-			var count = result.ToList().Count;
-			Assert.Greater(count, 0);
-			foreach (var queryable in result)
+			using (new AllowMultipleQuery())
 			{
-				foreach (var queryable1 in queryable)
+				Setup(context);
+				var result = db.Supplier.Select(
+					supplier => db.Product.Select(
+						product => db.Product.Where(p => p.ProductID == product.ProductID && p.Supplier.SupplierID == supplier.SupplierID)));
+				var count = result.ToList().Count;
+				Assert.Greater(count, 0);
+				foreach (var queryable in result)
 				{
-					foreach (var product in queryable1)
+					foreach (var queryable1 in queryable)
 					{
-						Assert.IsNotNull(product);
+						foreach (var product in queryable1)
+						{
+							Assert.IsNotNull(product);
+						}
 					}
 				}
 			}

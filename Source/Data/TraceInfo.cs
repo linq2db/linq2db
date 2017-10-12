@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace LinqToDB.Data
@@ -9,14 +10,24 @@ namespace LinqToDB.Data
 
 	public class TraceInfo
 	{
-		public bool           BeforeExecute   { get; set; }
-		public TraceLevel     TraceLevel      { get; set; }
-		public DataConnection DataConnection  { get; set; }
-		public IDbCommand     Command         { get; set; }
-		public TimeSpan?      ExecutionTime   { get; set; }
-		public int?           RecordsAffected { get; set; }
-		public Exception      Exception       { get; set; }
-		public string         CommandText     { get; set; }
+		public TraceInfo(TraceInfoStep traceInfoStep)
+		{
+			TraceInfoStep = traceInfoStep;
+		}
+
+		public TraceInfoStep  TraceInfoStep    { get; private set; }
+		public TraceLevel     TraceLevel       { get; set; }
+		public DataConnection DataConnection   { get; set; }
+		public IDbCommand     Command          { get; set; }
+		public TimeSpan?      ExecutionTime    { get; set; }
+		public int?           RecordsAffected  { get; set; }
+		public Exception      Exception        { get; set; }
+		public string         CommandText      { get; set; }
+		public Expression     MapperExpression { get; set; }
+		public bool           IsAsync          { get; set; }
+
+		[Obsolete("Use TraceInfoStep instead.")]
+		public bool BeforeExecute              { get { return TraceInfoStep == TraceInfoStep.BeforeExecute; } }
 
 		private string _sqlText;
 		public  string  SqlText
@@ -41,6 +52,9 @@ namespace LinqToDB.Data
 
 					if (DataConnection.DataProvider.Name != sqlProvider.Name)
 						sb.Append(' ').Append(sqlProvider.Name);
+
+					if (IsAsync)
+						sb.Append(" (asynchronously)");
 
 					sb.AppendLine();
 

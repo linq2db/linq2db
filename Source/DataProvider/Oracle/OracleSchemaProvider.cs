@@ -7,6 +7,7 @@ using System.Data;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
+	using Configuration;
 	using Data;
 	using SchemaProvider;
 
@@ -21,12 +22,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetDataSourceName(DbConnection dbConnection)
 		{
-			return ((dynamic)dbConnection).HostName;
+			return ((dynamic)Proxy.GetUnderlyingObject(dbConnection)).HostName;
 		}
 
 		protected override string GetDatabaseName(DbConnection dbConnection)
 		{
-			return ((dynamic)dbConnection).DatabaseName;
+			return ((dynamic)Proxy.GetUnderlyingObject(dbConnection)).DatabaseName;
 		}
 
 		string _currentUser;

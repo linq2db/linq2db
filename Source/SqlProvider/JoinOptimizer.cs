@@ -596,16 +596,19 @@ namespace LinqToDB.SqlProvider
 		void CorrectMappings()
 		{
 			if (_replaceMap != null && _replaceMap.Count > 0 || _removedSources != null)
-				_selectQuery = new QueryVisitor().Convert(_selectQuery, element =>
-				{
-					var field = element as SqlField;
-					if (field != null)
-						return GetNewField(new VirtualField(field)).Element;
-					var column = element as SelectQuery.Column;
-					if (column != null)
-						return GetNewField(new VirtualField(column)).Element;
-					return element;
-				});
+			{
+				((ISqlExpressionWalkable) _selectQuery)
+					.Walk(false, element =>
+					{
+						var field = element as SqlField;
+						if (field != null)
+							return GetNewField(new VirtualField(field)).Element;
+						var column = element as SelectQuery.Column;
+						if (column != null)
+							return GetNewField(new VirtualField(column)).Element;
+						return element;
+					});
+			}
 		}
 
 		int GetSourceIndex(SelectQuery.TableSource table, int sourceId)
@@ -708,7 +711,7 @@ namespace LinqToDB.SqlProvider
 			return keys;
 		}
 
-		public SelectQuery OptimizeJoins(SelectQuery selectQuery)
+		public void OptimizeJoins(SelectQuery selectQuery)
 		{
 			_selectQuery = selectQuery;
 
@@ -814,7 +817,6 @@ namespace LinqToDB.SqlProvider
 			OptimizeFilters();
 			CorrectMappings();
 
-			return _selectQuery;
 		}
 
 		static VirtualField GetUnderlayingField(ISqlExpression expr)
@@ -923,6 +925,12 @@ namespace LinqToDB.SqlProvider
 			var found       = SearchForFields(fromTable, join);
 
 			if (found == null)
+				return false;
+
+			// for removing join with same table fields should be equal
+			found = found.Where(f => f.OneField.Name == f.ManyField.Name).ToList();
+
+			if (found.Count == 0)
 				return false;
 
 			if (hasLeftJoin)
@@ -1145,7 +1153,7 @@ namespace LinqToDB.SqlProvider
 						join.Condition.Conditions.Clear();
 					}
 
-					// add filer for nullable fileds because after INNER JOIN records with nulls dissapear
+					// add filer for nullable fileds because after INNER JOIN records with nulls disappear
 					foreach (var item in found)
 						if (item.ManyField.CanBeNull)
 							AddSearchCondition(_selectQuery.Where.SearchCondition,

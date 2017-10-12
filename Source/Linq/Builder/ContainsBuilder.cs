@@ -15,8 +15,17 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			return new ContainsContext(buildInfo.Parent, methodCall, sequence);
+			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var buildInStatement = false;
+
+			if (sequence.SelectQuery.Select.TakeValue != null ||
+			    sequence.SelectQuery.Select.SkipValue != null)
+			{
+				sequence         = new SubQueryContext(sequence);
+				buildInStatement = true;
+			}
+
+			return new ContainsContext(buildInfo.Parent, methodCall, sequence, buildInStatement);
 		}
 
 		protected override SequenceConvertInfo Convert(
@@ -36,11 +45,13 @@ namespace LinqToDB.Linq.Builder
 		class ContainsContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;
+			readonly bool                 _buildInStatement;
 
-			public ContainsContext(IBuildContext parent, MethodCallExpression methodCall, IBuildContext sequence)
+			public ContainsContext(IBuildContext parent, MethodCallExpression methodCall, IBuildContext sequence, bool buildInStatement)
 				: base(parent, sequence, null)
 			{
-				_methodCall = methodCall;
+				_methodCall       = methodCall;
+				_buildInStatement = buildInStatement;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -53,10 +64,10 @@ namespace LinqToDB.Linq.Builder
 				var expr   = Builder.BuildSql(typeof(bool), 0);
 				var mapper = Builder.BuildMapper<object>(expr);
 
-				query.SetElementQuery(mapper.Compile());
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				var idx = ConvertToIndex(expression, level, ConvertFlags.Field);
 				return Builder.BuildSql(typeof(bool), idx[0].Index);
@@ -131,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 
 					SelectQuery.Condition cond;
 
-					if (Sequence.SelectQuery != SelectQuery &&
+					if ((Sequence.SelectQuery != SelectQuery || _buildInStatement) &&
 						(ctx.IsExpression(expr, 0, RequestFor.Field).     Result ||
 						 ctx.IsExpression(expr, 0, RequestFor.Expression).Result))
 					{

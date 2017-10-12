@@ -12,6 +12,10 @@ Visit our [blog](http://blog.linq2db.com/) and see [Wiki](https://github.com/lin
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples).
 
+# How to help the project
+
+No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://github.com/linq2db/linq2db/wiki/How-can-i-help).
+
 # Project Build Status
 --------------------
 | |Appveyor|Travis
@@ -21,10 +25,10 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 
 # Feeds
 
-* Release builds can be found on [NuGet](https://www.nuget.org/packages?q=linq2db)
-* [MyGet](https://www.myget.org/gallery/linq2db)
- * V2 `https://www.myget.org/F/linq2db/api/v2`
- * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
+* NuGet [![NuGet](https://img.shields.io/nuget/v/linq2db.svg)](https://www.nuget.org/packages?q=linq2db)
+* MyGet [![MyGet](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://www.myget.org/gallery/linq2db)
+  * V2 `https://www.myget.org/F/linq2db/api/v2`
+  * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
 
 # Let's get started
 
@@ -142,7 +146,7 @@ public static List<Product> All()
 }
 ```
 
-Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool.
+Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool. [Details](https://github.com/linq2db/linq2db/wiki/Managing-data-connection)
 
 Selecting Columns
 -----------------

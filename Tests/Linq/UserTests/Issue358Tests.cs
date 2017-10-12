@@ -15,8 +15,6 @@ namespace Tests.UserTests
 	public class Issue358Tests : TestBase
 	{
 #if !MONO
-		private DataConnection _connection;
-
 		enum TestIssue358Enum
 		{
 			Value1,
@@ -97,55 +95,173 @@ namespace Tests.UserTests
 			} 
 		}
 
-		[OneTimeSetUp]
-		public void SetUp()
+		static LinqDataTypes2 FixData(LinqDataTypes2 data)
 		{
-			_connection = new DataConnection(ProviderName.SQLite, "Data Source=:memory:;");
+			data.StringValue = null;
+			return data;
+		}
 
-			_connection.CreateTable<LinqDataTypes2>();
-
-			var dt = DateTime.Today;
-			var guid = Guid.NewGuid();
-
-			_types = new[]
+		[Test, DataContextSource]
+		public void Test1(string context)
+		{
+			using (var db = GetDataContext(context))
 			{
-				new LinqDataTypes2() {ID = 1, DateTimeValue = null, BigIntValue = null, BoolValue = null,  DateTimeValue2 = null, GuidValue = null, IntValue = null, MoneyValue = 0, SmallIntValue = null},
-				new LinqDataTypes2() {ID = 2, DateTimeValue = dt,   BigIntValue = 1,    BoolValue = false, DateTimeValue2 = dt,   GuidValue = guid, IntValue = 1,    MoneyValue = 0, SmallIntValue = 1   }
-			};
-
-			_connection.BulkCopy(_types);
-
-
+				AreEqual(FixData,
+					   Types2.Where(_ => _.BigIntValue != 2),
+					db.Types2.Where(_ => _.BigIntValue != 2));
+			}
 		}
 
-		private IEnumerable<LinqDataTypes2> _types;
-
-		[OneTimeTearDown]
-		public void TearDown()
+		[Test, DataContextSource]
+		public void Test2(string context)
 		{
-			_connection.Dispose();
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(FixData,
+					   Types2.Where(_ => !_.BoolValue.Value),
+					db.Types2.Where(_ => !_.BoolValue.Value));
+			}
 		}
 
-
-		[Test]
-		public void Test1()
+		[Test, DataContextSource]
+		public void Test3(string context)
 		{
-			var types = _connection.GetTable<LinqDataTypes2>();
-			var bigintFilter = new Int64?[] {2};
-			var boolFilter   = new bool? [] {true};
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(FixData,
+					   Types2.Where(_ => (_.BoolValue ?? false) != true),
+					db.Types2.Where(_ => _.BoolValue != true));
+			}
+		}
 
-			AreEqual(_types.Where(_ => _.BigIntValue != 2),             types.Where(_ => _.BigIntValue != 2));
-			AreEqual(_types,                                            types.Where(_ => !_.BoolValue.Value));
-			AreEqual(_types.Where(_ => (_.BoolValue ?? false) != true), types.Where(_ => _.BoolValue != true));
+		[Test, DataContextSource]
+		public void Test4(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var bigintFilter = new Int64?[] {2};
 
-			AreEqual(_types.Where(_ => !bigintFilter.Contains(_.BigIntValue)), types.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
-			AreEqual(_types.Where(_ => !boolFilter.  Contains(_.BoolValue)),   types.Where(_ => !boolFilter.  Contains(_.BoolValue)));
+				AreEqual(FixData,
+					   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)),
+					db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
+			}
+		}
 
-			AreEqual(_types.Where(_ => !bigintFilter.Contains(_.BigIntValue)), types.Where(_ => bigintFilter.Contains(_.BigIntValue) == false));
-			AreEqual(_types.Where(_ => !boolFilter.  Contains(_.BoolValue)),   types.Where(_ => boolFilter.  Contains(_.BoolValue)   == false));
+		[Test, DataContextSource]
+		public void Test5(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var boolFilter = new bool? [] {true};
 
-			 AreEqual(_types.Where(_ => !bigintFilter.Contains(_.BigIntValue)), types.Where(_ => bigintFilter.Contains(_.BigIntValue) != true));
-			AreEqual(_types.Where(_ => !boolFilter.   Contains(_.BoolValue)),   types.Where(_ => boolFilter.  Contains(_.BoolValue)   != true));
+				AreEqual(FixData,
+					   Types2.Where(_ => !boolFilter.  Contains(_.BoolValue)),
+					db.Types2.Where(_ => !boolFilter.  Contains(_.BoolValue)));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test6(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var bigintFilter = new Int64?[] {2};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == false),
+					db.Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == false));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test7(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var boolFilter = new bool? [] {true};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => boolFilter.  Contains(_.BoolValue) == false),
+					db.Types2.Where(_ => boolFilter.  Contains(_.BoolValue) == false));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test8(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var bigintFilter = new Int64?[] {2};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) != true),
+					db.Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) != true));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test9(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var boolFilter   = new bool? [] {true};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => boolFilter.  Contains(_.BoolValue) != true),
+					db.Types2.Where(_ => boolFilter.  Contains(_.BoolValue) != true));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test81(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var bigintFilter = new Int64?[] {2};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue)),
+					db.Types2.Where(_ => bigintFilter.Contains(_.BigIntValue)));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test91(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var boolFilter   = new bool? [] {true};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => boolFilter.  Contains(_.BoolValue)),
+					db.Types2.Where(_ => boolFilter.  Contains(_.BoolValue)));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test82(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var bigintFilter = new Int64?[] {2};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == true),
+					db.Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == true));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test92(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var boolFilter   = new bool? [] {true};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => boolFilter.  Contains(_.BoolValue) == true),
+					db.Types2.Where(_ => boolFilter.  Contains(_.BoolValue) == true));
+			}
 		}
 #endif
 	}

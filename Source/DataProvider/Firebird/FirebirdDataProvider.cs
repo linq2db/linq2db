@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
+
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
@@ -22,7 +27,8 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			SqlProviderFlags.IsIdentityParameterRequired = true;
 
-			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
@@ -126,6 +132,26 @@ namespace LinqToDB.DataProvider.Firebird
 				throw new LinqToDBException("Firebird MERGE statement does not support DELETE by source.");
 
 			return new FirebirdMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
+		}
+
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			if (delete)
+				throw new LinqToDBException("Firebird MERGE statement does not support DELETE by source.");
+
+			return new FirebirdMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection,
+			IMergeable<TTarget, TSource> merge)
+		{
+			return new FirebirdMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
 #endregion

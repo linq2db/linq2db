@@ -194,13 +194,13 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(null, 0);
+				var expr   = BuildExpression(null, 0, false);
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				query.SetQuery(mapper);
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				if (_isObject)
 				{
@@ -244,14 +244,14 @@ namespace LinqToDB.Linq.Builder
 									.Cast<MemberBinding>());
 						}
 
-						var ex = Builder.BuildExpression(this, expr);
+						var ex = Builder.BuildExpression(this, expr, enforceServerSide);
 
 						return ex;
 					}
 
 					if (level == 0 || level == 1)
 					{
-						var levelExpression = expression.GetLevelExpression(1);
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
 
 						if (ReferenceEquals(expression, levelExpression) && !IsExpression(expression, 1, RequestFor.Object).Result)
 						{
@@ -266,7 +266,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var ret = _sequence1.BuildExpression(expression, level);
+				var ret = _sequence1.BuildExpression(expression, level, enforceServerSide);
 
 				//if (level == 1)
 				//	_sequence2.BuildExpression(expression, level);
@@ -332,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (expression != null && (level == 0 || level == 1) && expression.NodeType == ExpressionType.MemberAccess)
 							{
-								var levelExpression = expression.GetLevelExpression(1);
+								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
 
 								if (expression == levelExpression)
 								{

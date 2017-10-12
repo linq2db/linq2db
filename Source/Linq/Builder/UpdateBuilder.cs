@@ -33,6 +33,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						CheckAssociation(sequence);
 
+						if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+							sequence = new SubQueryContext(sequence);
+
 						BuildSetter(
 							builder,
 							buildInfo,
@@ -55,6 +58,9 @@ namespace LinqToDB.Linq.Builder
 							//
 							sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
 
+							if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+								sequence = new SubQueryContext(sequence);
+
 							BuildSetter(
 								builder,
 								buildInfo,
@@ -76,7 +82,7 @@ namespace LinqToDB.Linq.Builder
 								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
 
 								if (tableInfo.Result == false)
-									throw new LinqException("Expression '{0}' mast be a table.");
+									throw new LinqException("Expression '{0}' must be a table.");
 
 								into = tableInfo.Context;
 							}
@@ -88,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							new SelectQueryOptimizer(builder.DataContextInfo.SqlProviderFlags, sequence.SelectQuery)
+							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, sequence.SelectQuery)
 								.ResolveWeakJoins(new List<ISqlTableSource>());
 							sequence.SelectQuery.Select.Columns.Clear();
 
@@ -266,7 +272,7 @@ namespace LinqToDB.Linq.Builder
 			while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)
 				ext = ((UnaryExpression)ext).Operand;
 
-			if (ext.NodeType != ExpressionType.MemberAccess || ext.GetRootObject() != extract.Parameters[0])
+			if (ext.NodeType != ExpressionType.MemberAccess || ext.GetRootObject(builder.MappingSchema) != extract.Parameters[0])
 				throw new LinqException("Member expression expected for the 'Set' statement.");
 
 			var body   = (MemberExpression)ext;
@@ -329,7 +335,7 @@ namespace LinqToDB.Linq.Builder
 			while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)
 				ext = ((UnaryExpression)ext).Operand;
 
-			if (ext.NodeType != ExpressionType.MemberAccess || ext.GetRootObject() != extract.Parameters[0])
+			if (ext.NodeType != ExpressionType.MemberAccess || ext.GetRootObject(builder.MappingSchema) != extract.Parameters[0])
 				throw new LinqException("Member expression expected for the 'Set' statement.");
 
 			var body   = (MemberExpression)ext;
@@ -361,10 +367,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				query.SetNonQueryQuery();
+				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}
@@ -404,6 +410,10 @@ namespace LinqToDB.Linq.Builder
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+				if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+					sequence = new SubQueryContext(sequence);
+
 				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var update   =                   methodCall.Arguments[2].Unwrap();
 

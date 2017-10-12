@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.SapHana
 			BuildInsertOrUpdateQueryAsUpdateInsert();
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
@@ -256,6 +256,16 @@ namespace LinqToDB.DataProvider.SapHana
 				cond,
 				parameters[start + 1],
 				ConvertCase(systemType, parameters, start + 2));
+		}
+
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			// "db..table" syntax not supported:
+			// <table_name> ::= [[<database_name>.]<schema.name>.]<identifier>
+			if (database != null && owner == null)
+				throw new LinqToDBException("SAP HANA requires schema name if database name provided.");
+
+			return base.BuildTableName(sb, database, owner, table);
 		}
 	}
 }

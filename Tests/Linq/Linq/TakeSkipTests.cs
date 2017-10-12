@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
 
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -295,6 +299,20 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(() => n));
 		}
 
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task ElementAt2Async(string context)
+		{
+			var n = 3;
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					      (from p in    Parent where p.ParentID > 1 select p).ElementAt(n),
+					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtAsync(() => n));
+		}
+
+#endif
+
 		[Test, DataContextSource]
 		public void ElementAtDefault1(string context)
 		{
@@ -321,6 +339,20 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
 		}
 
+#if !NOASYNC
+
+		[Test, DataContextSource]
+		public async Task ElementAtDefault3Async(string context)
+		{
+			var n = 3;
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					      (from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(n),
+					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefaultAsync(() => n));
+		}
+
+#endif
+
 		[Test, DataContextSource]
 		public void ElementAtDefault4(string context)
 		{
@@ -334,8 +366,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					   Person.ElementAtOrDefault(3),
-					db.Person.ElementAtOrDefault(3));
+					Person.   OrderBy(p => p.LastName).ElementAtOrDefault(3),
+					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(3));
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
@@ -416,6 +448,25 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
+		}
+
+		[Test, DataContextSource(ProviderName.Sybase)]
+		public void TakeSkipJoin(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 =    Types.Concat(   Types).Take(15);
+				var q2 = db.Types.Concat(db.Types).Take(15);
+
+				AreEqual(
+					from e in q1
+					from p in q1.Where(_ => _.ID == e.ID).DefaultIfEmpty()
+					select new {e.ID, p.SmallIntValue},
+					from e in q2
+					from p in q2.Where(_ => _.ID == e.ID).DefaultIfEmpty()
+					select new { e.ID, p.SmallIntValue }
+					);
+			}
 		}
 	}
 }

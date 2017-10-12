@@ -1,4 +1,4 @@
-DROP PROCEDURE Person_SelectByKey;            COMMIT;
+﻿DROP PROCEDURE Person_SelectByKey;            COMMIT;
 DROP PROCEDURE Person_SelectAll;              COMMIT;
 DROP PROCEDURE Person_SelectByName;           COMMIT;
 DROP PROCEDURE Person_Insert;                 COMMIT;
@@ -106,12 +106,15 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 COMMIT;
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
 COMMIT;
+-- INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M');
+INSERT INTO Person (FirstName, LastName, Gender) VALUES (_utf8 x'4AC3BC7267656E', _utf8 x'4BC3B66E6967',     'M');
+COMMIT;
 
 -- Doctor Table Extension
 
 CREATE TABLE Doctor
 (
-	PersonID INTEGER     NOT NULL,
+	PersonID INTEGER     NOT NULL PRIMARY KEY,
 	Taxonomy VARCHAR(50) NOT NULL,
 		CONSTRAINT FK_Doctor_Person FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 			ON DELETE CASCADE
@@ -125,7 +128,7 @@ COMMIT;
 
 CREATE TABLE Patient
 (
-	PersonID  int           NOT NULL,
+	PersonID  int           NOT NULL PRIMARY KEY,
 	Diagnosis VARCHAR(256)  NOT NULL,
 	FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 			ON DELETE CASCADE
@@ -227,7 +230,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    blob,
 	SmallIntValue  smallint,
 	IntValue       int,
-	BigIntValue    bigint
+	BigIntValue    bigint,
+	StringValue    VARCHAR(50)
 )
 COMMIT;
 
@@ -295,6 +299,7 @@ CREATE TABLE AllTypes
 	timestampDataType        timestamp,
 
 	charDataType             char(1),
+	char20DataType           char(20),
 	varcharDataType          varchar(20),
 	textDataType             blob sub_type TEXT,
 	ncharDataType            char(20) character set UNICODE_FSS,
@@ -302,6 +307,16 @@ CREATE TABLE AllTypes
 
 	blobDataType             blob
 )
+COMMIT;
+
+CREATE GENERATOR AllTypesID;
+COMMIT;
+
+CREATE TRIGGER AllTypes_ID FOR AllTypes
+BEFORE INSERT POSITION 0
+AS BEGIN
+	NEW.ID = GEN_ID(AllTypesID, 1);
+END
 COMMIT;
 
 INSERT INTO AllTypes
@@ -318,6 +333,7 @@ VALUES
 
 	NULL,
 
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -343,6 +359,7 @@ VALUES
 	Cast('2012-12-12 12:12:12' as timestamp),
 
 	'1',
+	'1',
 	'234',
 	'567',
 	'23233',
@@ -350,17 +367,6 @@ VALUES
 
 	'12345'
 )
-COMMIT;
-
-
-CREATE GENERATOR AllTypesID;
-COMMIT;
-
-CREATE TRIGGER AllTypes_ID FOR AllTypes
-BEFORE INSERT POSITION 0
-AS BEGIN
-	NEW.ID = GEN_ID(AllTypesID, 1);
-END
 COMMIT;
 
 
@@ -702,4 +708,64 @@ CREATE TABLE "CamelCaseName"
 	"_NAME4" VARCHAR(20),
 	"NAME 5" VARCHAR(20)
 )
+COMMIT;
+
+
+DROP TABLE TestMerge1;                            COMMIT;
+DROP TABLE TestMerge2;                            COMMIT;
+
+CREATE TABLE TestMerge1
+(
+	Id     INTEGER     NOT NULL PRIMARY KEY,
+	Field1 INTEGER,
+	Field2 INTEGER,
+	Field3 INTEGER,
+	Field4 INTEGER,
+	Field5 INTEGER,
+
+	FieldInt64      BIGINT,
+	FieldBoolean    CHAR(1),
+	FieldString     VARCHAR(20),
+	FieldNString    VARCHAR(20) CHARACTER SET UNICODE_FSS,
+	FieldChar       CHAR(1),
+	FieldNChar      CHAR(1) CHARACTER SET UNICODE_FSS,
+	FieldFloat      FLOAT,
+	FieldDouble     DOUBLE PRECISION,
+	FieldDateTime   TIMESTAMP,
+	FieldBinary     BLOB(20),
+	FieldGuid       CHAR(38),
+	FieldDecimal    DECIMAL(18, 10),
+	FieldDate       DATE,
+	FieldTime       TIMESTAMP,
+	FieldEnumString VARCHAR(20),
+	FieldEnumNumber INT
+);
+COMMIT;
+
+CREATE TABLE TestMerge2
+(
+	Id     INTEGER     NOT NULL PRIMARY KEY,
+	Field1 INTEGER,
+	Field2 INTEGER,
+	Field3 INTEGER,
+	Field4 INTEGER,
+	Field5 INTEGER,
+
+	FieldInt64      BIGINT,
+	FieldBoolean    CHAR(1),
+	FieldString     VARCHAR(20),
+	FieldNString    VARCHAR(20) CHARACTER SET UNICODE_FSS,
+	FieldChar       CHAR(1),
+	FieldNChar      CHAR(1) CHARACTER SET UNICODE_FSS,
+	FieldFloat      FLOAT,
+	FieldDouble     DOUBLE PRECISION,
+	FieldDateTime   TIMESTAMP,
+	FieldBinary     BLOB(20),
+	FieldGuid       CHAR(38),
+	FieldDecimal    DECIMAL(18, 10),
+	FieldDate       DATE,
+	FieldTime       TIMESTAMP,
+	FieldEnumString VARCHAR(20),
+	FieldEnumNumber INT
+);
 COMMIT;

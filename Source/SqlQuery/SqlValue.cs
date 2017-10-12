@@ -25,8 +25,8 @@ namespace LinqToDB.SqlQuery
 
 		// TODO refactor this to make DataType required parameter for SqlValue
 		/// <summary>
-		/// This implementation is hack to fix https://github.com/linq2db/linq2db/issues/271
-		/// https://github.com/linq2db/linq2db/pull/608
+		/// This implementation is hack to fix <a href="https://github.com/linq2db/linq2db/issues/271">issue 271</a> 
+		/// <a href="https://github.com/linq2db/linq2db/pull/608">PR</a>.
 		/// </summary>
 		internal DataType? DataType   { get; set; }
 

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -54,6 +55,8 @@ namespace LinqToDB.Linq.Builder
 			context.MethodCall = methodCall;
 #endif
 
+			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);
+
 			return context;
 		}
 
@@ -77,15 +80,15 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr = BuildExpression(null, 0);
+				var expr = BuildExpression(null, 0, false);
 
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));
 
-				var mapper = Expression.Lambda<Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>>(
+				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],int,T>>(
 					Builder.BuildBlock(expr), new []
 					{
-						ExpressionBuilder.ContextParam,
+						ExpressionBuilder.QueryRunnerParam,
 						ExpressionBuilder.DataContextParam,
 						ExpressionBuilder.DataReaderParam,
 						ExpressionBuilder.ExpressionParam,
@@ -93,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 						_counterParam
 					});
 
-				query.SetQuery(mapper);
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
@@ -110,12 +113,12 @@ namespace LinqToDB.Linq.Builder
 				return base.IsExpression(expression, level, requestFlag);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				if (expression == Lambda.Parameters[1])
 					return _counterParam;
 
-				return base.BuildExpression(expression, level);
+				return base.BuildExpression(expression, level, enforceServerSide);
 			}
 		}
 

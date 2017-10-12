@@ -2,6 +2,10 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+#if !SL4
+using System.Threading.Tasks;
+#endif
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -220,7 +224,21 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					   Child.All(c => c.ParentID > 3),
 					db.Child.All(c => c.ParentID > 3));
+
 		}
+
+#if !SL4
+
+		[Test, DataContextSource]
+		public async Task All4Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					         Child.All     (c => c.ParentID > 3),
+					await db.Child.AllAsync(c => c.ParentID > 3));
+		}
+
+#endif
 
 		[Test, DataContextSource]
 		public void All5(string context)

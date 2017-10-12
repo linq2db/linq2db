@@ -22,28 +22,35 @@ namespace LinqToDB.Linq.Builder
 
 			if (sequence.SelectQuery != buildInfo.SelectQuery)
 			{
-//				if (sequence is JoinBuilder.GroupJoinSubQueryContext)
-//				{
-//					var ctx = new CountContext(buildInfo.Parent, sequence, returnType)
-//					{
-//						SelectQuery =
-//							sequence.SelectQuery
-//							//((JoinBuilder.GroupJoinSubQueryContext)sequence).GetCounter(methodCall)
-//					};
+				if (sequence is JoinBuilder.GroupJoinSubQueryContext)
+				{
+					var ctx = new CountContext(buildInfo.Parent, sequence, returnType)
+					{
+						SelectQuery =
+							sequence.SelectQuery
+							//((JoinBuilder.GroupJoinSubQueryContext)sequence).GetCounter(methodCall)
+					};
+
+					ctx.Sql        = ctx.SelectQuery;
+					ctx.FieldIndex = ctx.SelectQuery.Select.Add(SqlFunction.CreateCount(returnType, ctx.SelectQuery), "cnt");
+
+					return ctx;
+				}
+
+				if (sequence is GroupByBuilder.GroupByContext)
+				{
+//					var ctx = new CountContext(buildInfo.Parent, sequence, returnType);
 //
 //					ctx.Sql        = ctx.SelectQuery;
 //					ctx.FieldIndex = ctx.SelectQuery.Select.Add(SqlFunction.CreateCount(returnType, ctx.SelectQuery), "cnt");
 //
 //					return ctx;
-//				}
 
-				if (sequence is GroupByBuilder.GroupByContext)
-				{
-					return new CountContext(buildInfo.Parent, sequence, returnType)
-					{
-						Sql        = SqlFunction.CreateCount(returnType, sequence.SelectQuery),
-						FieldIndex = -1
-					};
+//					return new CountContext(buildInfo.Parent, sequence, returnType)
+//					{
+//						Sql        = SqlFunction.CreateCount(returnType, sequence.SelectQuery),
+//						FieldIndex = -1
+//					};
 				}
 			}
 
@@ -56,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else if (!sequence.SelectQuery.GroupBy.IsEmpty)
 			{
-				if (!builder.DataContextInfo.SqlProviderFlags.IsSybaseBuggyGroupBy)
+				if (!builder.DataContext.SqlProviderFlags.IsSybaseBuggyGroupBy)
 					sequence.SelectQuery.Select.Add(new SqlValue(0));
 				else
 					foreach (var item in sequence.SelectQuery.GroupBy.Items)
@@ -106,10 +113,10 @@ namespace LinqToDB.Linq.Builder
 				var expr   = Builder.BuildSql(_returnType, FieldIndex);
 				var mapper = Builder.BuildMapper<object>(expr);
 
-				query.SetElementQuery(mapper.Compile());
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				var index = ConvertToIndex(expression, level, ConvertFlags.Field)[0].Index;
 				if (Parent != null)

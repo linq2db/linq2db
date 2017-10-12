@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			SetValueToSqlConverter(typeof(String),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),           (sb,dt,v) => ConvertCharToSql          (sb, dt, (char)v));
-			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,v) => ConvertDateTimeToSql      (sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,v) => ConvertDateTimeToSql      (sb, null, (DateTime)v));
 			SetValueToSqlConverter(typeof(TimeSpan),       (sb,dt,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v));
 			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql        (sb, (byte[])v));
@@ -115,21 +115,21 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
 		{
-			string start;
+			string startPrefix;
 
 			switch (sqlDataType.DataType)
 			{
 				case DataType.Char    :
 				case DataType.VarChar :
 				case DataType.Text    :
-					start = "'";
+					startPrefix = null;
 					break;
 				default               :
-					start = "N'";
+					startPrefix = "N";
 					break;
 			}
 
-			DataTools.ConvertStringToSql(stringBuilder, "+", start, AppendConversion, value);
+			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversion, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
@@ -151,14 +151,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
 		}
 
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
+		internal static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
 			var format =
 				value.Millisecond == 0
 					? value.Hour == 0 && value.Minute == 0 && value.Second == 0
 						? "yyyy-MM-dd"
 						: "yyyy-MM-ddTHH:mm:ss"
-					: "yyyy-MM-ddTHH:mm:ss.fff";
+					: dt == null || dt.DataType != DataType.DateTime2
+						? "yyyy-MM-ddTHH:mm:ss.fff"
+						: dt.Precision == 0
+							? "yyyy-MM-ddTHH:mm:ss"
+							: "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Precision ?? 7);
 
 			stringBuilder
 				.Append('\'')
@@ -176,11 +180,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 			{
 				var format = value.Days > 0
-					? value.Milliseconds > 0
-						? "d\\.hh\\:mm\\:ss\\.fff"
+					? value.Ticks % 10000000 != 0
+						? "d\\.hh\\:mm\\:ss\\.fffffff"
 						: "d\\.hh\\:mm\\:ss"
-					: value.Milliseconds > 0
-						? "hh\\:mm\\:ss\\.fff"
+					: value.Ticks % 10000000 != 0
+						? "hh\\:mm\\:ss\\.fffffff"
 						: "hh\\:mm\\:ss";
 
 				stringBuilder
@@ -250,6 +254,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2008MappingSchema()
 			: base(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance)
 		{
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}
 
 		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
@@ -263,6 +268,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2012MappingSchema()
 			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
 		{
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}
 
 		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)

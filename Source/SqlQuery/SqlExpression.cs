@@ -7,17 +7,23 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
-		public SqlExpression(Type systemType, string expr, int precedence, params ISqlExpression[] parameters)
+		public SqlExpression(Type systemType, string expr, int precedence, bool isAggregate, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException("parameters");
 
 			foreach (var value in parameters)
 				if (value == null) throw new ArgumentNullException("parameters");
 
-			SystemType = systemType;
-			Expr       = expr;
-			Precedence = precedence;
-			Parameters = parameters;
+			SystemType  = systemType;
+			Expr        = expr;
+			Precedence  = precedence;
+			Parameters  = parameters;
+			IsAggregate = isAggregate;
+		}
+
+		public SqlExpression(Type systemType, string expr, int precedence, params ISqlExpression[] parameters)
+			: this(systemType, expr, precedence, false, parameters)
+		{
 		}
 
 		public SqlExpression(string expr, int precedence, params ISqlExpression[] parameters)
@@ -35,10 +41,11 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public Type             SystemType { get; private set; }
-		public string           Expr       { get; private set; }
-		public int              Precedence { get; private set; }
-		public ISqlExpression[] Parameters { get; private set; }
+		public Type             SystemType  { get; private set; }
+		public string           Expr        { get; private set; }
+		public int              Precedence  { get; private set; }
+		public ISqlExpression[] Parameters  { get; private set; }
+		public bool             IsAggregate { get; private set; }
 
 		#region Overrides
 
@@ -112,7 +119,7 @@ namespace LinqToDB.SqlQuery
 
 			return comparer(this, other);
 		}
-	
+
 		#endregion
 
 		#region ICloneableElement Members
@@ -152,7 +159,7 @@ namespace LinqToDB.SqlQuery
 				sb.Length = len;
 				return (object)s;
 			});
-			
+
 			return sb.AppendFormat(Expr, ss.ToArray());
 		}
 

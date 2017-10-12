@@ -48,21 +48,8 @@ namespace Tests.Samples
 				}
 			}
 
-			public Type DataReaderType
-			{
-				get
-				{
-					return _context.DataReaderType;
-				}
-			}
-
-			public Func<ISqlOptimizer> GetSqlOptimizer
-			{
-				get
-				{
-					return _context.GetSqlOptimizer;
-				}
-			}
+			public Type                DataReaderType  { get { return _context.DataReaderType; } }
+			public Func<ISqlOptimizer> GetSqlOptimizer { get { return _context.GetSqlOptimizer; } }
 
 			public bool InlineParameters
 			{
@@ -77,21 +64,9 @@ namespace Tests.Samples
 				}
 			}
 
-			public MappingSchema MappingSchema
-			{
-				get
-				{
-					return _mappingSchema;
-				}
-			}
-
-			public List<string> NextQueryHints
-			{
-				get
-				{
-					return _context.NextQueryHints;
-				}
-			}
+			public MappingSchema MappingSchema { get { return _mappingSchema; } }
+			public List<string> NextQueryHints { get { return _context.NextQueryHints; } }
+			public bool         CloseAfterUse  { get; set; }
 
 			public List<string> QueryHints
 			{
@@ -118,24 +93,19 @@ namespace Tests.Samples
 				return _context.Clone(forNestedQuery);
 			}
 
+			public void Close()
+			{
+				_context.Close();
+			}
+
 			public void Dispose()
 			{
 				_context.Dispose();
 			}
 
-			public int ExecuteNonQuery(object query)
+			public IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
 			{
-				return _context.ExecuteNonQuery(query);
-			}
-
-			public IDataReader ExecuteReader(object query)
-			{
-				return _context.ExecuteReader(query);
-			}
-
-			public object ExecuteScalar(object query)
-			{
-				return _context.ExecuteScalar(query);
+				return _context.GetQueryRunner(query, queryNumber, expression, parameters);
 			}
 
 			public Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
@@ -143,24 +113,9 @@ namespace Tests.Samples
 				return _context.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
 			}
 
-			public string GetSqlText(object query)
-			{
-				return _context.GetSqlText(query);
-			}
-
 			public bool? IsDBNullAllowed(IDataReader reader, int idx)
 			{
 				return _context.IsDBNullAllowed(reader, idx);
-			}
-
-			public void ReleaseQuery(object query)
-			{
-				_context.ReleaseQuery(query);
-			}
-
-			public object SetQuery(IQueryContext queryContext)
-			{
-				return _context.SetQuery(queryContext);
 			}
 		}
 
@@ -170,7 +125,7 @@ namespace Tests.Samples
 			public string Name;
 		}
 
-		[Test]
+//		[Test]
 		public void Sample()
 		{
 			using (var db = new TestDataConnection())

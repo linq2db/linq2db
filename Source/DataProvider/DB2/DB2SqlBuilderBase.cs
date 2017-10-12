@@ -131,13 +131,13 @@ namespace LinqToDB.DataProvider.DB2
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime  : StringBuilder.Append("timestamp"); break;
-				case DataType.DateTime2 : StringBuilder.Append("timestamp"); break;
-				default                 : base.BuildDataType(type);          break;
+				case DataType.DateTime  : StringBuilder.Append("timestamp");      break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");      break;
+				default                 : base.BuildDataType(type, createDbType); break;
 			}
 		}
 
@@ -208,6 +208,15 @@ namespace LinqToDB.DataProvider.DB2
 		protected override void BuildCreateTableIdentityAttribute1(SqlField field)
 		{
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
+		}
+
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			// "db..table" syntax not supported
+			if (database != null && owner == null)
+				throw new LinqToDBException("DB2 requires schema name if database name provided.");
+
+			return base.BuildTableName(sb, database, owner, table);
 		}
 
 #if !SILVERLIGHT && !NETFX_CORE

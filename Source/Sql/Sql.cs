@@ -317,12 +317,14 @@ namespace LinqToDB
 
 		#region String Functions
 
-		[Sql.Function(                             PreferServerSide = true)]
-		[Sql.Function(PN.Access,    "Len",         PreferServerSide = true)]
-		[Sql.Function(PN.Firebird,  "Char_Length", PreferServerSide = true)]
-		[Sql.Function(PN.SqlServer, "Len",         PreferServerSide = true)]
-		[Sql.Function(PN.SqlCe,     "Len",         PreferServerSide = true)]
-		[Sql.Function(PN.Sybase,    "Len",         PreferServerSide = true)]
+		[Sql.Function  (                                                   PreferServerSide = true)]
+		[Sql.Function  (PN.Access,    "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.Firebird,  "Char_Length",                       PreferServerSide = true)]
+		[Sql.Function  (PN.SqlServer, "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.SqlCe,     "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.Sybase,    "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.MySql,     "Char_Length",                       PreferServerSide = true)]
+		[Sql.Expression(PN.DB2LUW,    "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true)]
 		public static int? Length(string str)
 		{
 			return str == null ? null : (int?)str.Length;
@@ -368,6 +370,7 @@ namespace LinqToDB
 		[Sql.Function(PN.DB2,     "Locate")]
 		[Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate", 1, 0)]
+		[Sql.Function(PN.Firebird, "Position")]
 		public static int? CharIndex(string value, string str)
 		{
 			if (str == null || value == null)
@@ -379,6 +382,7 @@ namespace LinqToDB
 		[Sql.Function]
 		[Sql.Function  (ProviderName.DB2,   "Locate")]
 		[Sql.Function  (ProviderName.MySql, "Locate")]
+		[Sql.Function  (PN.Firebird,        "Position")]
 		[Sql.Expression(PN.SapHana,         "Locate(Substring({1},{2} + 1),{0}) + {2}")]
 		public static int? CharIndex(string value, string str, int? startLocation)
 		{
@@ -686,6 +690,7 @@ namespace LinqToDB
 			Millisecond = 10,
 		}
 
+		[CLSCompliant(false)]
 		public class DatePartAttribute : Sql.ExpressionAttribute
 		{
 			public DatePartAttribute(string sqlProvider, string expression, int datePartIndex, params int[] argIndices)

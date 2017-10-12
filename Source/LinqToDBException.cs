@@ -18,7 +18,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// This constructor initializes the <see cref="Exception.Message"/>
-		/// property of the new instance such as "A Build Type exception has occurred."
+		/// property of the new instance such as "A Build Type exception has occurred.".
 		/// </remarks>
 		public LinqToDBException()
 			: base("A Build Type exception has occurred.")
@@ -80,6 +80,10 @@ namespace LinqToDB
 		{
 		}
 
+#endif
+
+#if SILVERLIGHT
+		public string HelpLink { get; set; }
 #endif
 	}
 }

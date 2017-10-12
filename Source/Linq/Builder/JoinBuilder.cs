@@ -314,7 +314,7 @@ namespace LinqToDB.Linq.Builder
 					var outerParam = Expression.Parameter(context._outerKeyLambda.Body.Type, "o");
 					var outerKey   = context._outerKeyLambda.GetBody(context.Lambda.Parameters[0]);
 
-					outerKey = context.Builder.BuildExpression(context, outerKey);
+					outerKey = context.Builder.BuildExpression(context, outerKey, false);
 
 					// Convert inner condition.
 					//
@@ -360,7 +360,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => GetGrouping(null, null, default(TKey), null)),
 						new[]
 						{
-							ExpressionBuilder.ContextParam,
+							ExpressionBuilder.QueryRunnerParam,
 							Expression.Constant(context.Builder.CurrentSqlParameters),
 							outerKey,
 							Expression.Constant(itemReader),
@@ -368,12 +368,12 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				static IEnumerable<TElement> GetGrouping(
-					QueryContext             context,
+					IQueryRunner             runner,
 					List<ParameterAccessor>  parameterAccessor,
 					TKey                     key,
 					Func<IDataContext,TKey,object[],IQueryable<TElement>> itemReader)
 				{
-					return new GroupByBuilder.GroupByContext.Grouping<TKey,TElement>(key, context, parameterAccessor, itemReader);
+					return new GroupByBuilder.GroupByContext.Grouping<TKey,TElement>(key, runner, parameterAccessor, itemReader);
 				}
 			}
 
@@ -401,7 +401,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public override Expression BuildExpression(Expression expression, int level)
+			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				if (ReferenceEquals(expression, Lambda.Parameters[1]))
 				{
@@ -430,7 +430,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var levelExpression = expression.GetLevelExpression(level);
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 						if (levelExpression.NodeType == ExpressionType.MemberAccess)
 						{
@@ -454,11 +454,11 @@ namespace LinqToDB.Linq.Builder
 
 						expr = call.Transform(e => e == replaceExpression ? expr : e);
 
-						return Builder.BuildExpression(this, expr);
+						return Builder.BuildExpression(this, expr, enforceServerSide);
 					}
 				}
 
-				return base.BuildExpression(expression, level);
+				return base.BuildExpression(expression, level, enforceServerSide);
 			}
 		}
 

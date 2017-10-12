@@ -30,9 +30,9 @@ namespace LinqToDB.Linq.Builder
 			Context.BuildQuery(query, queryParameter);
 		}
 
-		public virtual Expression BuildExpression(Expression expression, int level)
+		public virtual Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 		{
-			return Context.BuildExpression(expression, level);
+			return Context.BuildExpression(expression, level, enforceServerSide);
 		}
 
 		public virtual SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)

@@ -5,17 +5,19 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
+
+#if !NOASYNC
+using System.Threading.Tasks;
+#endif
 
 namespace LinqToDB.ServiceModel
 {
 	using Expressions;
 	using Extensions;
-	using Linq;
 	using Mapping;
 	using SqlProvider;
 
-	public abstract class RemoteDataContextBase : IDataContext
+	public abstract partial class RemoteDataContextBase : IDataContext
 	{
 		public string Configuration { get; set; }
 
@@ -26,6 +28,14 @@ namespace LinqToDB.ServiceModel
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ConcurrentDictionary<string,ConfigurationInfo>();
+
+		class RemoteMappingSchema : MappingSchema
+		{
+			public RemoteMappingSchema(string configuration, MappingSchema mappingSchema)
+				: base(configuration, mappingSchema)
+			{
+			}
+		}
 
 		ConfigurationInfo _configurationInfo;
 
@@ -52,7 +62,7 @@ namespace LinqToDB.ServiceModel
 					else
 					{
 						var type = Type.GetType(info.MappingSchemaType);
-						ms = (MappingSchema)Activator.CreateInstance(type);
+						ms = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
 					}
 
 					_configurationInfo = new ConfigurationInfo
@@ -70,7 +80,7 @@ namespace LinqToDB.ServiceModel
 			return _configurationInfo;
 		}
 
-		protected abstract ILinqService GetClient();
+		protected abstract ILinqClient  GetClient();
 		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
 
@@ -88,6 +98,8 @@ namespace LinqToDB.ServiceModel
 		}
 
 		public  bool InlineParameters { get; set; }
+		public  bool CloseAfterUse    { get; set; }
+
 
 		private List<string> _queryHints;
 		public  List<string>  QueryHints
@@ -289,155 +301,66 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		class QueryContext
-		{
-			public IQueryContext Query;
-			public ILinqService  Client;
-		}
+#if !NOASYNC
 
-		object IDataContext.SetQuery(IQueryContext queryContext)
+		public async Task CommitBatchAsync()
 		{
-			return new QueryContext { Query = queryContext };
-		}
+			if (_batchCounter == 0)
+				throw new InvalidOperationException();
 
-		int IDataContext.ExecuteNonQuery(object query)
-		{
-			var ctx  = (QueryContext)query;
-			var q    = ctx.Query.SelectQuery.ProcessParameters();
-			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints);
+			_batchCounter--;
 
-			if (_batchCounter > 0)
+			if (_batchCounter == 0)
 			{
-				_queryBatch.Add(data);
-				return -1;
-			}
+				var client = GetClient();
 
-			ctx.Client = GetClient();
-
-			return ctx.Client.ExecuteNonQuery(Configuration, data);
-		}
-
-		object IDataContext.ExecuteScalar(object query)
-		{
-			if (_batchCounter > 0)
-				throw new LinqException("Incompatible batch operation.");
-
-			var ctx = (QueryContext)query;
-
-			ctx.Client = GetClient();
-
-			var q = ctx.Query.SelectQuery.ProcessParameters();
-
-			return ctx.Client.ExecuteScalar(
-				Configuration,
-				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints));
-		}
-
-		IDataReader IDataContext.ExecuteReader(object query)
-		{
-			if (_batchCounter > 0)
-				throw new LinqException("Incompatible batch operation.");
-
-			var ctx = (QueryContext)query;
-
-			ctx.Client = GetClient();
-
-			var q      = ctx.Query.SelectQuery.ProcessParameters();
-			var ret    = ctx.Client.ExecuteReader(
-				Configuration,
-				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints));
-			var result = LinqServiceSerializer.DeserializeResult(ret);
-
-			return new ServiceModelDataReader(MappingSchema, result);
-		}
-
-		public void ReleaseQuery(object query)
-		{
-			var ctx = (QueryContext)query;
-
-			if (ctx.Client != null)
-				((IDisposable)ctx.Client).Dispose();
-		}
-
-		string IDataContext.GetSqlText(object query)
-		{
-			var ctx        = (QueryContext)query;
-			var sqlBuilder = ((IDataContext)this).CreateSqlProvider();
-			var sb         = new StringBuilder();
-
-			sb
-				.Append("-- ")
-				.Append("ServiceModel")
-				.Append(' ')
-				.Append(((IDataContext)this).ContextID)
-				.Append(' ')
-				.Append(sqlBuilder.Name)
-				.AppendLine();
-
-			if (ctx.Query.SelectQuery.Parameters != null && ctx.Query.SelectQuery.Parameters.Count > 0)
-			{
-				foreach (var p in ctx.Query.SelectQuery.Parameters)
+				try
 				{
-					var value = p.Value;
-
-					sb
-						.Append("-- DECLARE ")
-						.Append(p.Name)
-						.Append(' ')
-						.Append(value == null ? p.SystemType.ToString() : value.GetType().Name)
-						.AppendLine();
+					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
+					await client.ExecuteBatchAsync(Configuration, data);
 				}
-
-				sb.AppendLine();
-
-				foreach (var p in ctx.Query.SelectQuery.Parameters)
+				finally
 				{
-					var value = p.Value;
-
-					if (value is string || value is char)
-						value = "'" + value.ToString().Replace("'", "''") + "'";
-
-					sb
-						.Append("-- SET ")
-						.Append(p.Name)
-						.Append(" = ")
-						.Append(value)
-						.AppendLine();
-				}
-
-				sb.AppendLine();
-			}
-
-			var cc = sqlBuilder.CommandCount(ctx.Query.SelectQuery);
-
-			for (var i = 0; i < cc; i++)
-			{
-				sqlBuilder.BuildSql(i, ctx.Query.SelectQuery, sb);
-
-				if (i == 0 && ctx.Query.QueryHints != null && ctx.Query.QueryHints.Count > 0)
-				{
-					var sql = sb.ToString();
-
-					sql = sqlBuilder.ApplyQueryHints(sql, ctx.Query.QueryHints);
-
-					sb = new StringBuilder(sql);
+					((IDisposable)client).Dispose();
+					_queryBatch = null;
 				}
 			}
-
-			return sb.ToString();
 		}
 
+#endif
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
+			ThrowOnDisposed();
+
 			return Clone();
 		}
 
 		public event EventHandler OnClosing;
 
-		public void Dispose()
+		protected bool Disposed { get; private set; }
+
+		protected void ThrowOnDisposed()
+		{
+			if (Disposed)
+				throw new ObjectDisposedException("RemoteDataContext", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
+		}
+
+		void IDataContext.Close()
+		{
+			Close();
+		}
+
+		void Close()
 		{
 			if (OnClosing != null)
 				OnClosing(this, EventArgs.Empty);
+		}
+
+		public void Dispose()
+		{
+			Disposed = true;
+
+			Close();
 		}
 	}
 }

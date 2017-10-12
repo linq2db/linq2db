@@ -123,7 +123,7 @@ namespace LinqToDB.DataProvider
 			var argsParameter   = Expression.Parameter(eventParams[1].ParameterType, eventParams[1].Name);
 
 #if !NETSTANDARD
-			var mi = MemberHelper.MethodOf(() =>Delegate.CreateDelegate(typeof(string), (object) null, "", false));
+			var mi = MemberHelper.MethodOf(() => Delegate.CreateDelegate(typeof(string), (object) null, "", false));
 #else
 			MethodInfo mi = null;
 			throw new NotImplementedException("This is not implemented for .Net Core");
@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider
 			//var del = func.GetMethodInfo().CreateDelegate(typeof(string));
 #endif
 
-			var lambda = Expression.Lambda<Func<Action<object>, Delegate>>(
+			var lambda = Expression.Lambda<Func<Action<object>,Delegate>>(
 				Expression.Call(
 					null,
 					mi,
@@ -157,9 +157,8 @@ namespace LinqToDB.DataProvider
 		{
 			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 			{
-				dataConnection.OnTraceConnection(new TraceInfo
+				dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.BeforeExecute)
 				{
-					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = dataConnection,
 					CommandText    = commandText,
@@ -174,7 +173,7 @@ namespace LinqToDB.DataProvider
 
 				if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.AfterExecute)
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = dataConnection,
@@ -188,7 +187,7 @@ namespace LinqToDB.DataProvider
 			{
 				if (DataConnection.TraceSwitch.TraceError && dataConnection.OnTraceConnection != null)
 				{
-					dataConnection.OnTraceConnection(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = dataConnection,

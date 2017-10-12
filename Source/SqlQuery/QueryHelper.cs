@@ -1,3 +1,5 @@
+using System;
+
 namespace LinqToDB.SqlQuery
 {
 	using System.Collections.Generic;
@@ -45,5 +47,51 @@ namespace LinqToDB.SqlQuery
 			}
 			return query;
 		}
+
+		public static SelectQuery.JoinedTable FindJoin(this SelectQuery query,
+			Func<SelectQuery.JoinedTable, bool> match)
+		{
+			return QueryVisitor.Find(query, e =>
+			{
+				if (e.ElementType == QueryElementType.JoinedTable)
+				{
+					if (match((SelectQuery.JoinedTable) e))
+						return true;
+				}
+				return false;
+			}) as SelectQuery.JoinedTable;
+		}
+
+		public static void ConcatSearchCondition(this SelectQuery.WhereClause where, SelectQuery.SearchCondition search)
+		{
+			if (where.IsEmpty)
+			{
+				where.SearchCondition.Conditions.AddRange(search.Conditions);
+			}
+			else
+			{
+				if (where.SearchCondition.Precedence < Precedence.LogicalConjunction)
+				{
+					var sc1 = new SelectQuery.SearchCondition();
+
+					sc1.Conditions.AddRange(where.SearchCondition.Conditions);
+
+					where.SearchCondition.Conditions.Clear();
+					where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc1));
+				}
+
+				if (search.Precedence < Precedence.LogicalConjunction)
+				{
+					var sc2 = new SelectQuery.SearchCondition();
+
+					sc2.Conditions.AddRange(search.Conditions);
+
+					where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc2));
+				}
+				else
+					where.SearchCondition.Conditions.AddRange(search.Conditions);
+			}
+		}
+
 	}
 }

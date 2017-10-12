@@ -2,13 +2,20 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 
+#if !NOASYNC
+using System.Threading;
+using System.Threading.Tasks;
+#endif
+
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Configuration;
 	using Common;
 	using Data;
 	using Extensions;
@@ -21,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Init
 
 		public SqlServerDataProvider(string name, SqlServerVersion version)
-			: base(name, null)
+			: base(name, (MappingSchema)null)
 		{
 			Version = version;
 
@@ -37,8 +44,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlProviderFlags.TakeHintsSupported      = TakeHints.Percent | TakeHints.WithTies;
 			}
 
-			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
-			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharFieldToType<char>("char",  (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("nchar", (r, i) => DataTools.GetChar(r, i));
 
 			if (!Configuration.AvoidSpecificDataProviderAPI)
 			{
@@ -147,7 +156,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override bool IsCompatibleConnection(IDbConnection connection)
 		{
-			return typeof(SqlConnection).IsSameOrParentOf(connection.GetType());
+			return typeof(SqlConnection).IsSameOrParentOf(Proxy.GetUnderlyingObject((DbConnection)connection).GetType());
 		}
 
 #if !NETSTANDARD
@@ -240,13 +249,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Time          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Time;          break;
 				case DataType.SmallDateTime : ((SqlParameter)parameter).SqlDbType = SqlDbType.SmallDateTime; break;
 				case DataType.Timestamp     : ((SqlParameter)parameter).SqlDbType = SqlDbType.Timestamp;     break;
+				case DataType.Xml           : ((SqlParameter)parameter).SqlDbType = SqlDbType.Xml;           break;
 				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
 		}
 
 #endregion
 
-#region Udt support
+		#region Udt support
 
 		static readonly ConcurrentDictionary<Type,string> _udtTypes = new ConcurrentDictionary<Type,string>();
 
@@ -278,9 +288,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			_udtTypes[typeof(T)] = udtName;
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		SqlServerBulkCopy _bulkCopy;
 
@@ -296,9 +306,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				source);
 		}
 
-#endregion
+		#endregion
 
-#region Merge
+		#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -306,6 +316,31 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-#endregion
+#if !NOASYNC
+
+		public override Task<int> MergeAsync<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName, CancellationToken token)
+		{
+			return new SqlServerMerge().MergeAsync(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName, token);
+		}
+
+#endif
+		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
+			DataConnection connection, 
+			IMergeable<TTarget, TSource> merge)
+		{
+			return new SqlServerMergeBuilder<TTarget, TSource>(connection, merge);
+		}
+
+		#endregion
+
+		#region Async
+
+#if !NOASYNC
+
+
+#endif
+
+		#endregion
 	}
 }

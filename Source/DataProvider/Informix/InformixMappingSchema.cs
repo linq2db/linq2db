@@ -6,9 +6,10 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using SqlQuery;
 
-
 	public class InformixMappingSchema : MappingSchema
 	{
+		private static readonly char[] _extraEscapes = new[] { '\r', '\n' };
+
 		public InformixMappingSchema() : this(ProviderName.Informix)
 		{
 		}
@@ -27,8 +28,10 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
+			// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
+			// this is fine as long as we don't have out-of-range characters in _extraEscapes
 			stringBuilder
-				.Append("char(")
+				.Append("chr(")
 				.Append(value)
 				.Append(")")
 				;
@@ -36,12 +39,21 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", "'", AppendConversion, value);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, _extraEscapes);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			switch (value)
+			{
+				case '\r':
+				case '\n':
+					AppendConversion(stringBuilder, value);
+					break;
+				default:
+					DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+					break;
+			}
 		}
 	}
 }

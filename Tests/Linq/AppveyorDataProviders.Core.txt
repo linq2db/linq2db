@@ -9,3 +9,5 @@ PostgreSQL      * Server=localhost;Port=5432;Database=TestData;User Id=postgres;
 Northwind       * Server=localhost\SQL2012SP1;Database=Northwind;User Id=sa;Password=Password12!;                                                * System.Data.SqlClient 
 SqlServer.2012  * Server=localhost\SQL2012SP1;Database=TestData;User Id=sa;Password=Password12!;                                                 * System.Data.SqlClient 
 --SqlServer.2008 * Server=localhost\SQL2008R2SP2;Database=TestData;User Id=sa;Password=Password12!;                                               * System.Data.SqlClient 
+
+TestNoopProvider  * ConnectionString;                         * TestNoopProvider

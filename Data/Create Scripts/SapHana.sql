@@ -1,6 +1,6 @@
 DROP PROCEDURE DROPEXISTINGTABLE;;
 CREATE PROCEDURE DROPEXISTINGTABLE
-( 	IN TABLENAME VARCHAR(50), 
+( 	IN TABLENAME VARCHAR(50),
 	IN SCHEMANAME VARCHAR(50)
 ) LANGUAGE SQLSCRIPT AS MYROWID INTEGER;
 BEGIN
@@ -13,7 +13,7 @@ END;;
 
 DROP PROCEDURE DROPEXISTINGPROCEDURE;;
 CREATE PROCEDURE DROPEXISTINGPROCEDURE
-( 	IN PROCEDURENAME VARCHAR(50), 
+( 	IN PROCEDURENAME VARCHAR(50),
 	IN SCHEMANAME VARCHAR(50)
 ) LANGUAGE SQLSCRIPT AS MYROWID INTEGER;
 BEGIN
@@ -26,7 +26,7 @@ END;;
 
 DROP PROCEDURE DROPEXISTINGFUNCTION;;
 CREATE PROCEDURE DROPEXISTINGFUNCTION
-( 	IN FUNCTIONNAME VARCHAR(50), 
+( 	IN FUNCTIONNAME VARCHAR(50),
 	IN SCHEMANAME VARCHAR(50)
 ) LANGUAGE SQLSCRIPT AS MYROWID INTEGER;
 BEGIN
@@ -39,7 +39,7 @@ END;;
 
 DROP PROCEDURE DROPEXISTINGVIEW;;
 CREATE PROCEDURE DROPEXISTINGVIEW
-( 	IN VIEWNAME VARCHAR(50), 
+( 	IN VIEWNAME VARCHAR(50),
 	IN SCHEMANAME VARCHAR(50)
 ) LANGUAGE SQLSCRIPT AS MYROWID INTEGER;
 BEGIN
@@ -105,6 +105,7 @@ CREATE COLUMN TABLE "Person" (
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('John',   'Pupkin',    'M');;
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Tester', 'Testerson', 'M');;
 INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Jane',   'Doe',       'F');;
+INSERT INTO "Person"("FirstName","LastName","Gender") VALUES ('Jürgen', 'König',     'M');;
 
 
 CREATE COLUMN TABLE "Doctor"
@@ -304,13 +305,15 @@ CREATE COLUMN TABLE "AllTypes"
 	"dateDataType" DATE NULL,
 	"timeDataType" TIME NULL,
 	"seconddateDataType" SECONDDATE NULL,
-	"timestampDataType" TIMESTAMP NULL,	
+	"timestampDataType" TIMESTAMP NULL,
 
 	"charDataType" CHAR(1) NULL,
+	"char20DataType" CHAR(20) NULL,
 	"varcharDataType" VARCHAR(20) NULL,
 	"textDataType" TEXT NULL,
 	"shorttextDataType" SHORTTEXT(20) NULL,
 	"ncharDataType" NCHAR(1) NULL,
+	"nchar20DataType" NCHAR(20) NULL,
 	"nvarcharDataType" NVARCHAR(20) NULL,
 	"alphanumDataType" ALPHANUM(20) NULL,
 
@@ -319,7 +322,7 @@ CREATE COLUMN TABLE "AllTypes"
 
 	"blobDataType" BLOB NULL,
 	"clobDataType" CLOB NULL,
-	"nclobDataType" NCLOB NULL,		
+	"nclobDataType" NCLOB NULL,
 	PRIMARY KEY ("ID")
 );;
 
@@ -453,7 +456,8 @@ CREATE COLUMN TABLE "LinqDataTypes"
 	"BinaryValue" VARBINARY(5000) NULL,
 	"SmallIntValue" SMALLINT,
 	"IntValue" INTEGER NULL,
-	"BigIntValue" BIGINT NULL
+	"BigIntValue" BIGINT NULL,
+	"StringValue" NVARCHAR(50) NULL
 );;
 
 CALL DROPEXISTINGTABLE('BulkInsertLowerCaseColumns', CURRENT_SCHEMA);;
@@ -524,3 +528,65 @@ CREATE COLUMN TABLE "IndexTable2" (
 	PRIMARY KEY ("PKField1", "PKField2")
 );;
 ALTER TABLE "IndexTable2" ADD CONSTRAINT "FK_Patient2_IndexTable" FOREIGN KEY ("PKField1", "PKField2") REFERENCES "IndexTable" ("PKField1", "PKField2") ON UPDATE CASCADE ON DELETE CASCADE;;
+
+CALL DROPEXISTINGTABLE('TestMerge1', CURRENT_SCHEMA);;
+
+CALL DROPEXISTINGTABLE('TestMerge2', CURRENT_SCHEMA);;
+
+CREATE TABLE "TestMerge1"
+(
+	"Id"       INTEGER        NOT NULL,
+	"Field1"   INTEGER            NULL,
+	"Field2"   INTEGER            NULL,
+	"Field3"   INTEGER            NULL,
+	"Field4"   INTEGER            NULL,
+	"Field5"   INTEGER            NULL,
+
+	"FieldInt64"      BIGINT            NULL,
+	"FieldBoolean"    TINYINT           NULL,
+	"FieldString"     VARCHAR(20)       NULL,
+	"FieldNString"    NVARCHAR(20)      NULL,
+	"FieldChar"       CHAR(1)           NULL,
+	"FieldNChar"      NCHAR(1)          NULL,
+	"FieldFloat"      FLOAT(24)         NULL,
+	"FieldDouble"     FLOAT(53)         NULL,
+	"FieldDateTime"   DATETIME          NULL,
+	"FieldBinary"     VARBINARY(20)     NULL,
+	"FieldGuid"       CHAR(36)          NULL,
+	"FieldDecimal"    DECIMAL(24, 10)   NULL,
+	"FieldDate"       DATE              NULL,
+	"FieldTime"       TIME              NULL,
+	"FieldEnumString" VARCHAR(20)       NULL,
+	"FieldEnumNumber" INT               NULL,
+	
+	PRIMARY KEY ("Id")
+);;
+
+CREATE TABLE "TestMerge2"
+(
+	"Id"       INTEGER        NOT NULL,
+	"Field1"   INTEGER            NULL,
+	"Field2"   INTEGER            NULL,
+	"Field3"   INTEGER            NULL,
+	"Field4"   INTEGER            NULL,
+	"Field5"   INTEGER            NULL,
+
+	"FieldInt64"      BIGINT            NULL,
+	"FieldBoolean"    TINYINT           NULL,
+	"FieldString"     VARCHAR(20)       NULL,
+	"FieldNString"    NVARCHAR(20)      NULL,
+	"FieldChar"       CHAR(1)           NULL,
+	"FieldNChar"      NCHAR(1)          NULL,
+	"FieldFloat"      FLOAT(24)         NULL,
+	"FieldDouble"     FLOAT(53)         NULL,
+	"FieldDateTime"   DATETIME          NULL,
+	"FieldBinary"     VARBINARY(20)     NULL,
+	"FieldGuid"       CHAR(36)          NULL,
+	"FieldDecimal"    DECIMAL(24, 10)   NULL,
+	"FieldDate"       DATE              NULL,
+	"FieldTime"       TIME              NULL,
+	"FieldEnumString" VARCHAR(20)       NULL,
+	"FieldEnumNumber" INT               NULL,
+
+	PRIMARY KEY ("Id")
+);;

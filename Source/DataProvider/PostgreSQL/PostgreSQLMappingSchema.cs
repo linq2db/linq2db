@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", "'", AppendConversion, value);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)

@@ -9,32 +9,80 @@ namespace LinqToDB.Mapping
 	using Linq;
 	using Reflection;
 
+	/// <summary>
+	/// Stores mapping entity descriptor.
+	/// </summary>
 	public class EntityDescriptor
 	{
+		/// <summary>
+		/// Creates descriptor instance.
+		/// </summary>
+		/// <param name="mappingSchema">Mapping schema, associated with descriptor.</param>
+		/// <param name="type">Mapping class type.</param>
 		public EntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
-			_mappingSchema = mappingSchema;
-
 			TypeAccessor = TypeAccessor.GetAccessor(type);
 			Associations = new List<AssociationDescriptor>();
 			Columns      = new List<ColumnDescriptor>();
 
-			Init();
-			InitInheritanceMapping();
+			Init(mappingSchema);
+			InitInheritanceMapping(mappingSchema);
 		}
 
-		readonly MappingSchema _mappingSchema;
-
+		/// <summary>
+		/// Gets mapping type accessor.
+		/// </summary>
 		public TypeAccessor                TypeAccessor              { get; private set; }
+
+		/// <summary>
+		/// Gets name of table or view in database.
+		/// </summary>
 		public string                      TableName                 { get; private set; }
+
+		/// <summary>
+		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
 		public string                      SchemaName                { get; private set; }
+
+		/// <summary>
+		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
 		public string                      DatabaseName              { get; private set; }
+
+		// TODO: V2: remove?
+		/// <summary>
+		/// Gets or sets column mapping rules for current mapping class or interface.
+		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
+		/// - <see cref="ColumnAttribute"/>;
+		/// - <see cref="PrimaryKeyAttribute"/>;
+		/// - <see cref="IdentityAttribute"/>;
+		/// - <see cref="ColumnAliasAttribute"/>.
+		/// Otherwise all supported members of scalar type will be used:
+		/// - public instance fields and properties;
+		/// - explicit interface implmentation properties.
+		/// Also see <seealso cref="Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
+		/// </summary>
 		public bool                        IsColumnAttributeRequired { get; private set; }
+
+		/// <summary>
+		/// Gets list of column descriptors for current entity.
+		/// </summary>
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
+
+		/// <summary>
+		/// Gets list of association descriptors for current entity.
+		/// </summary>
 		public List<AssociationDescriptor> Associations              { get; private set; }
+
+		/// <summary>
+		/// Gets mapping dictionary to map column aliases to target columns or aliases.
+		/// </summary>
 		public Dictionary<string,string>   Aliases                   { get; private set; }
 
 		private List<InheritanceMapping> _inheritanceMappings;
+		/// <summary>
+		/// Gets list of inheritace mapping descriptors for current entity.
+		/// </summary>
 		public  List<InheritanceMapping>  InheritanceMapping
 		{
 			get
@@ -43,11 +91,14 @@ namespace LinqToDB.Mapping
 			}
 		}
 
+		/// <summary>
+		/// Gets mapping class type.
+		/// </summary>
 		public Type ObjectType { get { return TypeAccessor.Type; } }
 
-		void Init()
+		void Init(MappingSchema mappingSchema)
 		{
-			var ta = _mappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
+			var ta = mappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
 
 			if (ta != null)
 			{
@@ -69,16 +120,16 @@ namespace LinqToDB.Mapping
 
 			foreach (var member in TypeAccessor.Members)
 			{
-				var aa = _mappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var aa = mappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 				if (aa != null)
 				{
 					Associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.Storage, aa.CanBeNull));
+						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.ExpressionPredicate, aa.Storage, aa.CanBeNull));
 					continue;
 				}
 
-				var ca = _mappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var ca = mappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 				if (ca != null)
 				{
@@ -90,24 +141,24 @@ namespace LinqToDB.Mapping
 						}
 						else
 						{
-							var cd = new ColumnDescriptor(_mappingSchema, ca, member);
+							var cd = new ColumnDescriptor(mappingSchema, ca, member);
 							Columns.Add(cd);
 							_columnNames.Add(member.Name, cd);
 						}
 					}
 				}
 				else if (
-					!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type) ||
-					_mappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
-					_mappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
+					!IsColumnAttributeRequired && mappingSchema.IsScalarType(member.Type) ||
+					mappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
+					mappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
 				{
-					var cd = new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member);
+					var cd = new ColumnDescriptor(mappingSchema, new ColumnAttribute(), member);
 					Columns.Add(cd);
 					_columnNames.Add(member.Name, cd);
 				}
 				else
 				{
-					var caa = _mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+					var caa = mappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
 					if (caa != null)
 					{
@@ -119,14 +170,14 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			var typeColumnAttrs = _mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
+			var typeColumnAttrs = mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
 
 			foreach (var attr in typeColumnAttrs.Concat(attrs))
 				if (attr.IsColumn)
-					SetColumn(attr);
+					SetColumn(attr, mappingSchema);
 		}
 
-		void SetColumn(ColumnAttribute attr)
+		void SetColumn(ColumnAttribute attr, MappingSchema mappingSchema)
 		{
 			if (attr.MemberName == null)
 				throw new LinqToDBException("The Column attribute of the '{0}' type must have MemberName.".Args(TypeAccessor.Type));
@@ -134,14 +185,14 @@ namespace LinqToDB.Mapping
 			if (attr.MemberName.IndexOf('.') < 0)
 			{
 				var ex = TypeAccessor[attr.MemberName];
-				var cd = new ColumnDescriptor(_mappingSchema, attr, ex);
+				var cd = new ColumnDescriptor(mappingSchema, attr, ex);
 
 				Columns.Add(cd);
 				_columnNames.Add(attr.MemberName, cd);
 			}
 			else
 			{
-				var cd = new ColumnDescriptor(_mappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName));
+				var cd = new ColumnDescriptor(mappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName));
 
 				if (!string.IsNullOrWhiteSpace(attr.MemberName))
 				{
@@ -153,6 +204,11 @@ namespace LinqToDB.Mapping
 
 		readonly Dictionary<string,ColumnDescriptor> _columnNames = new Dictionary<string, ColumnDescriptor>();
 
+		/// <summary>
+		/// Gets column descriptor by member name.
+		/// </summary>
+		/// <param name="memberName">Member name.</param>
+		/// <returns>Returns column descriptor or <c>null</c>, if descriptor not found.</returns>
 		public ColumnDescriptor this[string memberName]
 		{
 			get
@@ -171,9 +227,9 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		internal void InitInheritanceMapping()
+		internal void InitInheritanceMapping(MappingSchema mappingSchema)
 		{
-			var mappingAttrs = _mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
+			var mappingAttrs = mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
 			var result       = new List<InheritanceMapping>(mappingAttrs.Length);
 
 			if (mappingAttrs.Length > 0)
@@ -189,7 +245,7 @@ namespace LinqToDB.Mapping
 
 					var ed = mapping.Type.Equals(ObjectType)
 						? this
-						: _mappingSchema.GetEntityDescriptor(mapping.Type);
+						: mappingSchema.GetEntityDescriptor(mapping.Type);
 
 					//foreach (var column in this.Columns)
 					//{

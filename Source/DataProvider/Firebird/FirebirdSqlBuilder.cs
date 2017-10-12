@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Common;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Text;
 
 	public class FirebirdSqlBuilder : BasicSqlBuilder
 	{
@@ -78,12 +79,12 @@ namespace LinqToDB.DataProvider.Firebird
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
 			switch (type.DataType)
 			{
 				case DataType.Decimal       :
-					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale) : type);
+					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale) : type, createDbType);
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
@@ -98,7 +99,7 @@ namespace LinqToDB.DataProvider.Firebird
 						StringBuilder.Append('(').Append(type.Length).Append(')');
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					break;
-				default                      : base.BuildDataType(type); break;
+				default                      : base.BuildDataType(type, createDbType); break;
 			}
 		}
 
@@ -166,6 +167,12 @@ namespace LinqToDB.DataProvider.Firebird
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
+		/// <summary>
+		/// Specifies how identifiers like table and field names should be quoted.
+		/// </summary>
+		/// <remarks>
+		/// By default identifiers will not be quoted.
+		/// </remarks>
 		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None;
 
 		public override object Convert(object value, ConvertType convertType)
@@ -288,6 +295,11 @@ namespace LinqToDB.DataProvider.Firebird
 						.AppendLine  ("END");
 				}
 			}
+		}
+
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			return sb.Append(table);
 		}
 
 #if !SILVERLIGHT

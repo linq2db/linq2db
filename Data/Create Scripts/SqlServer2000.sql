@@ -1,4 +1,4 @@
-DROP TABLE InheritanceParent
+﻿DROP TABLE InheritanceParent
 DROP TABLE InheritanceChild
 
 CREATE TABLE InheritanceParent
@@ -42,6 +42,8 @@ GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+GO
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
 GO
 -- Doctor Table Extension
 
@@ -355,6 +357,7 @@ CREATE TABLE AllTypes
 	smalldatetimeDataType    smalldatetime    NULL,
 
 	charDataType             char(1)          NULL,
+	char20DataType           char(20)         NULL,
 	varcharDataType          varchar(20)      NULL,
 	textDataType             text             NULL,
 	ncharDataType            nchar(20)        NULL,
@@ -407,22 +410,22 @@ INSERT INTO AllTypes
 	xmlDataType
 )
 SELECT
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,    NULL, NULL,   NULL,  NULL,  NULL,
-	     NULL,      NULL,
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
-	     NULL,      NULL,  NULL,
-	     NULL,      NULL,
-	     NULL,      NULL,  NULL,
-	     NULL
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,    NULL, NULL,   NULL,  NULL,  NULL,
+		 NULL,      NULL,
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
+		 NULL,      NULL,  NULL,
+		 NULL,      NULL,
+		 NULL,      NULL,  NULL,
+		 NULL
 UNION ALL
 SELECT
 	 1000000,    9999999,     1,   25555, 2222222, 100000, 7777777,  100, 100000, 20.31, 16.2,
 	Cast('2012-12-12 12:12:12' as datetime),
-	           Cast('2012-12-12 12:12:12' as smalldatetime),
-	      '1',     '234', '567', '23233',  '3323',  '111',
-	        1,         2, Cast(3 as varbinary),
+			   Cast('2012-12-12 12:12:12' as smalldatetime),
+		  '1',     '234', '567', '23233',  '3323',  '111',
+			1,         2, Cast(3 as varbinary),
 	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier),
-	                  10,
+					  10,
 	  '22322',    '3333',  2345,
 	'<root><element strattr="strvalue" intattr="12345"/></root>'
 
@@ -500,7 +503,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    varbinary(5000) NULL,
 	SmallIntValue  smallint,
 	IntValue       int             NULL,
-	BigIntValue    bigint          NULL
+	BigIntValue    bigint          NULL,
+	StringValue    nvarchar(50)    NULL
 )
 GO
 
@@ -589,4 +593,63 @@ SELECT -12345678901234.56789012345678,                           NULL,          
 SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
 SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL
 
+GO
+
+-- merge test tables
+DROP TABLE TestMerge1
+GO
+
+DROP TABLE TestMerge2
+GO
+
+CREATE TABLE TestMerge1
+(
+	Id        int NOT NULL CONSTRAINT PK_TestMerge1 PRIMARY KEY CLUSTERED,
+	Field1    int NULL,
+	Field2    int NULL,
+	Field3    int NULL,
+	Field4    int NULL,
+	Field5    int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+)
+GO
+
+CREATE TABLE TestMerge2
+(
+	Id        int NOT NULL CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED,
+	Field1    int NULL,
+	Field2    int NULL,
+	Field3    int NULL,
+	Field4    int NULL,
+	Field5    int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+)
 GO

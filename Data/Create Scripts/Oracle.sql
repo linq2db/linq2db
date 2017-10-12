@@ -1,4 +1,4 @@
--- Cleanup schema
+﻿-- Cleanup schema
 
 DROP SEQUENCE PersonSeq
 /
@@ -142,6 +142,8 @@ INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',   
 INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 /
 INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+/
+INSERT INTO Person  (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M')
 /
 INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (1, 'Psychiatry')
 /
@@ -621,7 +623,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    blob         NULL,
 	SmallIntValue  smallint,
 	IntValue       int          NULL,
-	BigIntValue    number(20,0) NULL
+	BigIntValue    number(20,0) NULL,
+	StringValue    VARCHAR2(50) NULL
 )
 /
 
@@ -728,6 +731,7 @@ CREATE TABLE AllTypes
 	localZoneDataType        timestamp with local time zone NULL,
 
 	charDataType             char(1)                        NULL,
+	char20DataType           char(20)                       NULL,
 	varcharDataType          varchar2(20)                   NULL,
 	textDataType             clob                           NULL,
 	ncharDataType            nchar(20)                      NULL,
@@ -891,4 +895,62 @@ SELECT -12345678901234.56789012345678,                           NULL,          
 SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
 SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual
 
+/
+-- merge test tables
+DROP TABLE TestMerge1
+/
+DROP TABLE TestMerge2
+/
+
+CREATE TABLE TestMerge1
+(
+	Id		NUMBER	NOT NULL PRIMARY KEY,
+	Field1	NUMBER	NULL,
+	Field2	NUMBER	NULL,
+	Field3	NUMBER	NULL,
+	Field4	NUMBER	NULL,
+	Field5	NUMBER	NULL,
+
+	FieldInt64      NUMBER(20, 0)            NULL,
+	FieldBoolean    NUMBER(1, 0)             NULL,
+	FieldString     VARCHAR(20)              NULL,
+	FieldNString    NVARCHAR2(20)            NULL,
+	FieldChar       CHAR(1)                  NULL,
+	FieldNChar      NCHAR(1)                 NULL,
+	FieldFloat      BINARY_FLOAT             NULL,
+	FieldDouble     BINARY_DOUBLE            NULL,
+	FieldDateTime   DATE                     NULL,
+	FieldDateTime2  TIMESTAMP WITH TIME ZONE NULL,
+	FieldBinary     BLOB                     NULL,
+	FieldGuid       RAW(16)                  NULL,
+	FieldDecimal    DECIMAL(24, 10)          NULL,
+	FieldEnumString VARCHAR(20)              NULL,
+	FieldEnumNumber NUMBER                   NULL
+)
+/
+CREATE TABLE TestMerge2
+(
+	Id		NUMBER	NOT NULL PRIMARY KEY,
+	Field1	NUMBER	NULL,
+	Field2	NUMBER	NULL,
+	Field3	NUMBER	NULL,
+	Field4	NUMBER	NULL,
+	Field5	NUMBER	NULL,
+
+	FieldInt64      NUMBER(20, 0)            NULL,
+	FieldBoolean    NUMBER(1, 0)             NULL,
+	FieldString     VARCHAR(20)              NULL,
+	FieldNString    NVARCHAR2(20)            NULL,
+	FieldChar       CHAR(1)                  NULL,
+	FieldNChar      NCHAR(1)                 NULL,
+	FieldFloat      BINARY_FLOAT             NULL,
+	FieldDouble     BINARY_DOUBLE            NULL,
+	FieldDateTime   DATE                     NULL,
+	FieldDateTime2  TIMESTAMP WITH TIME ZONE NULL,
+	FieldBinary     BLOB                     NULL,
+	FieldGuid       RAW(16)                  NULL,
+	FieldDecimal    DECIMAL(24, 10)          NULL,
+	FieldEnumString VARCHAR(20)              NULL,
+	FieldEnumNumber NUMBER                   NULL
+)
 /

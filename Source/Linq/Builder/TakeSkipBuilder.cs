@@ -21,6 +21,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
+			if (sequence.SelectQuery.Select.IsDistinct)
+				sequence = new SubQueryContext(sequence);
+
 			var arg = methodCall.Arguments[1].Unwrap();
 
 			if (arg.NodeType == ExpressionType.Lambda)
@@ -70,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sql = sequence.SelectQuery;
 
-			if (hints != null && !builder.DataContextInfo.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
+			if (hints != null && !builder.DataContext.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
 				throw new LinqException("TakeHints are {0} not supported by current database".Args(hints));
 
 			if (hints != null && sql.Select.SkipValue != null)
@@ -79,8 +82,8 @@ namespace LinqToDB.Linq.Builder
 			sql.Select.Take(expr, hints);
 
 			if ( sql.Select.SkipValue != null &&
-				 builder.DataContextInfo.SqlProviderFlags.IsTakeSupported &&
-				!builder.DataContextInfo.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
+				 builder.DataContext.SqlProviderFlags.IsTakeSupported &&
+				!builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
 			{
 				if (sql.Select.SkipValue is SqlParameter && sql.Select.TakeValue is SqlValue)
 				{
@@ -103,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive)), hints);
 			}
 
-			if (!builder.DataContextInfo.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
+			if (!builder.DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
 			{
 				var p = sql.Select.TakeValue as SqlParameter;
 
@@ -124,8 +127,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (sql.Select.TakeValue != null)
 			{
-				if (builder.DataContextInfo.SqlProviderFlags.GetIsSkipSupportedFlag(sql) ||
-					!builder.DataContextInfo.SqlProviderFlags.IsTakeSupported)
+				if (builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql) ||
+					!builder.DataContext.SqlProviderFlags.IsTakeSupported)
 					sql.Select.Take(builder.Convert(
 						sequence,
 						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", sql.Select.SkipValue, Precedence.Additive)), sql.Select.TakeHints);
@@ -136,7 +139,7 @@ namespace LinqToDB.Linq.Builder
 						new SqlBinaryExpression(typeof(int), prevSkipValue, "+", sql.Select.SkipValue, Precedence.Additive)));
 			}
 
-			if (!builder.DataContextInfo.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
+			if (!builder.DataContext.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
 			{
 				var p = sql.Select.SkipValue as SqlParameter;
 
