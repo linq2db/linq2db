@@ -149,6 +149,9 @@ namespace LinqToDB.Linq.Builder
 
 		public override void SetAlias(string alias)
 		{
+			if (alias == null)
+				return;
+
 #if NETFX_CORE
 			if (alias.Contains("<"))
 #else
