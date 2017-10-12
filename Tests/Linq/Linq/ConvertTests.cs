@@ -660,7 +660,7 @@ namespace Tests.Linq
 				var qActual =
 					from od in db.OrderDetail
 					select
-						Sql.NoConvert(Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount)));
+						Sql.NoConvert(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount));
 
 				var qExpected =
 					from od in db.OrderDetail
@@ -670,8 +670,8 @@ namespace Tests.Linq
 				var sqlActual   = qActual.  ToString();
 				var sqlExpected = qExpected.ToString();
 
-				Assert.That(sqlActual,   Is.Not.Contains("Convert"));
-				Assert.That(sqlExpected, Contains.Substring("Convert"));
+				Assert.That(sqlActual,   Is.Not.Contains   ("Convert").Or.Contains("Cast"));
+				Assert.That(sqlExpected, Contains.Substring("Convert").Or.Contains("Cast"));
 
 				var actual   = qActual.  ToArray();
 				var expected = qExpected.ToArray();

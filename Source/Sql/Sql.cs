@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -15,6 +16,7 @@ namespace LinqToDB
 {
 	using Common;
 	using Extensions;
+	using Expressions;
 	using Linq;
 	using SqlQuery;
 
@@ -129,27 +131,53 @@ namespace LinqToDB
 
 		#region NoConvert
 
+		[Sql.Function("$Convert_Remover$", ServerSideOnly = true)]
+		public static TR ConvertRemover<T, TR>(T input)
+		{
+			throw new NotImplementedException();
+		}
+
 		class NoConvertBuilder : Sql.IExtensionCallBuilder
 		{
+			private MethodInfo _method = MethodHelper.GetMethodInfo(Sql.ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
+
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var expr = builder.GetExpression("expr");
-				expr = new QueryVisitor().Convert(expr, e =>
+				var expr    = builder.Arguments[0];
+				var newExpr = expr.Transform(e =>
 				{
-					var func = e as SqlFunction;
-					if (func != null && func.Name == "Convert" && func.Parameters.Length > 0)
+					if (e.NodeType == ExpressionType.Convert || e.NodeType == ExpressionType.ConvertChecked)
 					{
-						return func.Parameters[func.Parameters.Length - 1];
+						var unary  = (UnaryExpression)e;
+						var method = _method.MakeGenericMethod(unary.Operand.Type, unary.Type);
+						return Expression.Call(null, method, unary.Operand);
 					}
 					return e;
 				});
 
-				builder.ResultExpression = expr;
+				if (newExpr == expr)
+				{
+					builder.ResultExpression = builder.GetExpression(0);
+					return;
+				}
+
+				var sqlExpr = builder.ConvertExpressionToSql(newExpr);
+				sqlExpr     = new QueryVisitor().Convert(sqlExpr, e =>
+				{
+					var func = e as SqlFunction;
+					if (func != null && func.Name == "$Convert_Remover$")
+					{
+						return func.Parameters[0];
+					}
+					return e;
+				});
+
+				builder.ResultExpression = sqlExpr;
 			}
 		}
 
-		[Sql.Extension("", BuilderType = typeof(NoConvertBuilder))]
-		public static T NoConvert<T>([ExprParameter] T expr)
+		[Sql.Extension("", BuilderType = typeof(NoConvertBuilder), ServerSideOnly = true)]
+		public static T NoConvert<T>(T expr)
 		{
 			return expr;
 		}
