@@ -44,6 +44,10 @@ namespace Tests.Linq
 				where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID.Value)
 				select new { p.ParentID, gc3 };
 
+
+				var test = result.GenerateTestString();
+				Console.WriteLine(test);
+
 				result.ToList();
 			}
 		}
