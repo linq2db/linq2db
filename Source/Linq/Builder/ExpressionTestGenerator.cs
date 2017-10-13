@@ -865,6 +865,7 @@ namespace {0}
 			}
 		}
 
+
 #if NETFX_CORE && !NETSTANDARD
 
 		public string GenerateSource(Expression expr)
@@ -898,7 +899,6 @@ namespace {0}
 		}
 
 #else
-
 
 		public string GenerateSource(Expression expr)
 		{
@@ -939,6 +939,8 @@ namespace {0}
 
 			return fileName;
 		}
+
+#endif
 
 		public string GenerateSourceString(Expression expr)
 		{
@@ -987,7 +989,5 @@ namespace Tests.UserTests
 
 			return result;
 		}
-
-#endif
 	}
 }
