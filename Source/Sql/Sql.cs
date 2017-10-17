@@ -132,14 +132,14 @@ namespace LinqToDB
 		#region NoConvert
 
 		[Sql.Function("$Convert_Remover$", ServerSideOnly = true)]
-		public static TR ConvertRemover<T, TR>(T input)
+		static TR ConvertRemover<T, TR>(T input)
 		{
 			throw new NotImplementedException();
 		}
 
 		class NoConvertBuilder : Sql.IExtensionCallBuilder
 		{
-			private MethodInfo _method = MethodHelper.GetMethodInfo(Sql.ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
+			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(Sql.ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
 
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
