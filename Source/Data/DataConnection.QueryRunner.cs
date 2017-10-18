@@ -16,7 +16,7 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-		IQueryRunner IDataContextEx.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
 		{
 			ThrowOnDisposed();
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
