@@ -15,7 +15,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
-
+using LinqToDB.Tools;
 using NUnit.Framework;
 
 using Oracle.ManagedDataAccess.Client;
@@ -943,13 +943,14 @@ namespace Tests.DataProvider
 				var options = new BulkCopyOptions
 				{
 					MaxBatchSize       = 5,
-					RetrieveSequence   = true,
+					//RetrieveSequence   = true,
+					KeepIdentity       = true,
 					BulkCopyType       = bulkCopyType,
 					NotifyAfter        = 3,
 					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
-				db.BulkCopy(options, data);
+				db.BulkCopy(options, data.RetrieveIdentity(db));
 
 				foreach (var d in data)
 				{
@@ -1677,7 +1678,7 @@ namespace Tests.DataProvider
 				{
 					db.DropTable<ClobEntity>();
 				}
-				
+
 			}
 		}
 
@@ -1723,7 +1724,7 @@ namespace Tests.DataProvider
 					var now = new DateTimeOffset(2000, 1, 1, 10, 11, 12, TimeSpan.FromHours(5));
 					db.CreateTable<DateTimeOffsetTable>();
 					db.Insert(new DateTimeOffsetTable() {DateTimeOffsetValue = now});
-					Assert.AreEqual(now, db.GetTable<DateTimeOffsetTable>().Select(_ => _.DateTimeOffsetValue).Single()); 
+					Assert.AreEqual(now, db.GetTable<DateTimeOffsetTable>().Select(_ => _.DateTimeOffsetValue).Single());
 				}
 				finally
 				{
@@ -1859,7 +1860,7 @@ namespace Tests.DataProvider
 			using (var db = new TestDataConnection(context))
 			{
 				db.AddMappingSchema(ms);
-				
+
 				var currentUser = db.Execute<string>("SELECT user FROM dual");
 				db.Execute("GRANT CREATE ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT CREATE ANY SEQUENCE TO " + currentUser);

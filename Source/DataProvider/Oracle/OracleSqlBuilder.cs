@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -218,7 +219,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.VarBinary      :
 					if (type.Length == null || type.Length == 0)
 						StringBuilder.Append("BLOB");
-					else 
+					else
 						StringBuilder.Append("Raw(").Append(type.Length).Append(")");
 					break;
 				default: base.BuildDataType(type, createDbType);                                  break;
@@ -267,9 +268,9 @@ namespace LinqToDB.DataProvider.Oracle
 			BuildInsertOrUpdateQueryAsMerge("FROM SYS.DUAL");
 		}
 
-		public string BuildReserveSequenceValuesSql(int count, string sequenceName)
+		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return "SELECT " + sequenceName + ".nextval Id from DUAL connect by level <= " + count;
+			return "SELECT " + sequenceName + ".nextval ID from DUAL connect by level <= " + count;
 		}
 
 		protected override void BuildEmptyInsert()

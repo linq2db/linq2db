@@ -529,6 +529,7 @@
     <Compile Include="ServiceModel\SoapDataContext.cs" />
     <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
     <Compile Include="TakeHints.cs" />
+    <Compile Include="Tools\DataExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

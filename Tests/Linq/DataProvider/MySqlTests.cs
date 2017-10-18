@@ -8,7 +8,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-
+using LinqToDB.Tools;
 using NUnit.Framework;
 
 using MySql.Data.Types;
@@ -331,7 +331,7 @@ namespace Tests.DataProvider
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, MySqlDataContext, Ignore("It works too long.")]
+		[Test, MySqlDataContext, Explicit("It works too long.")]
 		public void BulkCopyRetrieveSequencesMultipleRows(string context)
 		{
 			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
@@ -343,7 +343,7 @@ namespace Tests.DataProvider
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[Test, MySqlDataContext, Ignore("It works too long.")]
+		[Test, MySqlDataContext, Explicit("It works too long.")]
 		public void BulkCopyRetrieveSequencesProviderSpecific(string context)
 		{
 			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
@@ -389,12 +389,13 @@ namespace Tests.DataProvider
 				var options = new BulkCopyOptions
 				{
 					MaxBatchSize = 5,
-					RetrieveSequence = true,
+					//RetrieveSequence = true,
+					KeepIdentity = true,
 					BulkCopyType = bulkCopyType,
-					NotifyAfter = 3,
+					NotifyAfter  = 3,
 					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
-				db.BulkCopy(options, data);
+				db.BulkCopy(options, data.RetrieveIdentity(db));
 
 				foreach (var d in data)
 					Assert.That(d.PersonID, Is.GreaterThan(0));

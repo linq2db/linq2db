@@ -7,6 +7,7 @@ namespace LinqToDB.Data
 		public int?         MaxBatchSize           { get; set; }
 		public int?         BulkCopyTimeout        { get; set; }
 		public BulkCopyType BulkCopyType           { get; set; }
+		[Obsolete("Use the Tools.RetrieveIdentity method instead.")]
 		public bool         RetrieveSequence       { get; set; }
 		[Obsolete]
 		public bool?        IgnoreSkipOnInsert     { get; set; }
