@@ -513,8 +513,8 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-        static readonly MethodInfo _whereMethodInfo =
-			MemberHelper.MethodOf(() => WhereExtension.Where2<int,int,object>(null,null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _whereMethodInfo =
+			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
 
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
 		{
@@ -645,13 +645,5 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
-	}
-
-	public static class WhereExtension
-	{
-		public static TOutput Where2<TOutput, TSource, TInput>(this TInput source, Func<TSource, bool> predicate)
-		{
-			throw new InvalidOperationException();
-		}
 	}
 }

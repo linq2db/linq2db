@@ -218,14 +218,14 @@ namespace LinqToDB
 		/// <code>
 		/// // loads records from Table1 with Reference association loaded for each Table1 record
 		/// db.Table1.LoadWith(r => r.Reference);
-		/// 
+		///
 		/// // loads records from Table1 with Reference1 association loaded for each Table1 record
 		/// // loads records from Reference2 association for each loaded Reference1 record
 		/// db.Table1.LoadWith(r => r.Reference1.Reference2);
-		/// 
+		///
 		/// // loads records from Table1 with References collection association loaded for each Table1 record
 		/// db.Table1.LoadWith(r => r.References);
-		/// 
+		///
 		/// // loads records from Table1 with Reference1 collection association loaded for each Table1 record
 		/// // loads records from Reference2 collection association for each loaded Reference1 record
 		/// // loads records from Reference3 association for each loaded Reference2 record
@@ -2714,6 +2714,16 @@ namespace LinqToDB
 
 		#endregion
 
+		#region Stub helpers
+
+		// Please do not move it if you do not understand why it's here.
+		//
+		internal static TOutput Where<TOutput,TSource,TInput>(this TInput source, Func<TSource,bool> predicate)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
 
 		#region SqlJoin
 
