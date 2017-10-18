@@ -146,13 +146,16 @@ namespace LinqToDB
 			SqlExtension   Extension        { get; }
 			ISqlExpression ResultExpression { get; set; }
 			string         Expression       { get; set; }
+			Expression[]   Arguments        { get; }
 
 			T GetValue<T>(int index);
 			T GetValue<T>(string argName);
+
 			ISqlExpression GetExpression(int index);
 			ISqlExpression GetExpression(string argName);
 			ISqlExpression ConvertToSqlExpression();
 			ISqlExpression ConvertToSqlExpression(int precedence);
+			ISqlExpression ConvertExpressionToSql(Expression expression);
 
 			SqlExtensionParam AddParameter(string name, ISqlExpression expr);
 		}
@@ -286,8 +289,6 @@ namespace LinqToDB
 					return _convert.Convert(expr);
 				}
 
-				public Expression[]   Arguments        { get; private set; }
-
 				#region ISqExtensionBuilder Members
 
 				public string         Configuration    { get; private set; }
@@ -296,6 +297,7 @@ namespace LinqToDB
 				public MemberInfo     Member           { get; private set; }
 				public SqlExtension   Extension        { get; private set; }
 				public ISqlExpression ResultExpression { get;         set; }
+				public Expression[]   Arguments        { get; private set; }
 
 				public string Expression
 				{
@@ -356,6 +358,11 @@ namespace LinqToDB
 				public ISqlExpression ConvertToSqlExpression(int precedence)
 				{
 					return BuildSqlExpression(Extension, Extension.SystemType, precedence, Extension.IsAggregate);
+				}
+
+				public ISqlExpression ConvertExpressionToSql(Expression expression)
+				{
+					return ConvertExpression(expression);
 				}
 
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
@@ -428,15 +435,11 @@ namespace LinqToDB
 
 								break;
 							}
-						case ExpressionType.Constant:
-						case ExpressionType.Parameter:
-							{
-								current = null;
-								continue;
-							}
 						default:
-							throw new InvalidOperationException(string.Format("Invalid method chain for Extension ({0}) -> {1}", expr, current));
-
+						{
+							current = null;
+							continue;
+						}
 					}
 
 					var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedTypeEx(), memberInfo,
