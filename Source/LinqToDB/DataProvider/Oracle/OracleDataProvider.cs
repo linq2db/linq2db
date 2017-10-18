@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -17,6 +16,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
+	using Tools;
 
 	public class OracleDataProvider : DynamicDataProviderBase
 	{
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Oracle
 			//				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));
 
 			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
-		
+
 //			SetField<IDataReader,decimal>((r,i) => OracleTools.DataReaderGetDecimal(r, i));
 		}
 
@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.Oracle
 				//     while (true)
 				//     {
 				//        try
-				//        {  
+				//        {
 				//           tstz = OracleDecimal.SetPrecision(tstz, precision);
 				//           decimalVar = (decimal)tstz;
 				//           break;
@@ -363,7 +363,7 @@ namespace LinqToDB.DataProvider.Oracle
 			dynamic tstz = value;
 
 			return new DateTimeOffset(
-				tstz.Year, tstz.Month,  tstz.Day, 
+				tstz.Year, tstz.Month,  tstz.Day,
 				tstz.Hour, tstz.Minute, tstz.Second,
 				tstz.GetTimeZoneOffset()).AddTicks(tstz.Nanosecond / NanosecondsPerTick);
 		}
@@ -426,7 +426,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return new OracleSchemaProvider(Name);
 		}
-#endif 
+#endif
 
 		Action<DataConnection> _setBindByName;
 
@@ -451,7 +451,7 @@ namespace LinqToDB.DataProvider.Oracle
 						if (value.Length != 0)
 						{
 							dynamic command = Proxy.GetUnderlyingObject((DbCommand)dataConnection.Command);
-						
+
 							command.ArrayBindCount = value.Length;
 
 							break;
@@ -576,58 +576,28 @@ namespace LinqToDB.DataProvider.Oracle
 
 		OracleBulkCopy _bulkCopy;
 
-		private List<long> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
-		{
-			var sql         = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
-			var sequenceIds = db.Query<long>(sql);
-
-			return sequenceIds.ToList();
-		}
-
 		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
 				_bulkCopy = new OracleBulkCopy(this, GetConnectionType());
 
-			IList<T> sourceList = null;
-
+#pragma warning disable 618
 			if (options.RetrieveSequence)
 			{
-				var entityDescriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+				var list = source.RetrieveIdentity(dataConnection);
 
-				bool foundIdentityColumn = false;
-				foreach (ColumnDescriptor column in entityDescriptor.Columns)
-				{
-					foundIdentityColumn = foundIdentityColumn || column.IsIdentity;
+				if (!ReferenceEquals(list, source))
+					options.KeepIdentity = true;
 
-					var sequenceName = column.MemberInfo
-						.GetCustomAttributesEx(typeof(SequenceNameAttribute), true)
-						.OfType<SequenceNameAttribute>()
-						.Select(a => a.SequenceName)
-						.FirstOrDefault(s => !string.IsNullOrEmpty(s));
-
-					if (!string.IsNullOrWhiteSpace(sequenceName))
-					{
-						sourceList    = sourceList ?? source.ToList();
-						var sequences = ReserveSequenceValues(dataConnection, sourceList.Count, sequenceName);
-
-						for (var i = 0; i < sourceList.Count; i++)
-						{
-							var item = sourceList[i];
-							var value = Converter.ChangeType(sequences[i], column.MemberType);
-							column.MemberAccessor.SetValue(item, value);
-						}
-					}
-				}
-
-				options.KeepIdentity = foundIdentityColumn;
+				source = list;
 			}
+#pragma warning restore 618
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
 				dataConnection,
 				options,
-				sourceList ?? source);
+				source);
 		}
 
 		#endregion
@@ -653,7 +623,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		protected override BasicMergeBuilder<TTarget, TSource> GetMergeBuilder<TTarget, TSource>(
-			DataConnection connection, 
+			DataConnection connection,
 			IMergeable<TTarget, TSource> merge)
 		{
 			return new OracleMergeBuilder<TTarget, TSource>(connection, merge);

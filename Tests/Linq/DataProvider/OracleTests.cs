@@ -15,7 +15,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
-
+using LinqToDB.Tools;
 using NUnit.Framework;
 
 using Oracle.ManagedDataAccess.Client;
@@ -943,13 +943,14 @@ namespace Tests.DataProvider
 				var options = new BulkCopyOptions
 				{
 					MaxBatchSize       = 5,
-					RetrieveSequence   = true,
+					//RetrieveSequence   = true,
+					KeepIdentity       = true,
 					BulkCopyType       = bulkCopyType,
 					NotifyAfter        = 3,
 					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
-				db.BulkCopy(options, data);
+				db.BulkCopy(options, data.RetrieveIdentity(db));
 
 				foreach (var d in data)
 				{

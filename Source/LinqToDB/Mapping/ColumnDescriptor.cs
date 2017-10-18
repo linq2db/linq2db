@@ -84,13 +84,20 @@ namespace LinqToDB.Mapping
 			}
 
 			if (columnAttribute.HasIsIdentity())
+			{
 				IsIdentity = columnAttribute.IsIdentity;
+			}
 			else if (MemberName.IndexOf(".") < 0)
 			{
 				var a = mappingSchema.GetAttribute<IdentityAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
 				if (a != null)
 					IsIdentity = true;
 			}
+
+			SequenceName = mappingSchema.GetAttribute<SequenceNameAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+
+			if (SequenceName != null)
+				IsIdentity = true;
 
 			SkipOnInsert = columnAttribute.HasSkipOnInsert() ? columnAttribute.SkipOnInsert : IsIdentity;
 			SkipOnUpdate = columnAttribute.HasSkipOnUpdate() ? columnAttribute.SkipOnUpdate : IsIdentity;
@@ -154,7 +161,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets the name of mapped member.
 		/// When applied to class or interface, should contain name of property of field.
-		/// 
+		///
 		/// If column is mapped to a property or field of composite object, <see cref="MemberName"/> should contain a path to that
 		/// member using dot as separator.
 		/// <example>
@@ -164,13 +171,13 @@ namespace LinqToDB.Mapping
 		///     public string Street   { get; set; }
 		///     public int    Building { get; set; }
 		/// }
-		/// 
+		///
 		/// [Column("city", "Residence.Street")]
 		/// [Column("user_name", "Name")]
 		/// public class User
 		/// {
 		///     public string Name;
-		///     
+		///
 		///     [Column("street", ".Street")]
 		///     [Column("building_number", MemberName = ".Building")]
 		///     public Address Residence { get; set; }
@@ -272,6 +279,11 @@ namespace LinqToDB.Mapping
 		/// - {3} - identity specification.
 		/// </summary>
 		public string         CreateFormat    { get; private set; }
+
+		/// <summary>
+		/// Gets sequence name for specified column.
+		/// </summary>
+		public SequenceNameAttribute SequenceName { get; private set; }
 
 		Func<object,object> _getter;
 

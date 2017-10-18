@@ -2911,12 +2911,35 @@ namespace LinqToDB.SqlProvider
 			return sb.ToString();
 		}
 
+		public virtual string GetReserveSequenceValuesSql(int count, string sequenceName)
+		{
+			throw new NotImplementedException();
+		}
+
+		public virtual string GetMaxValueSql(EntityDescriptor entity, ColumnDescriptor column)
+		{
+			var database = entity.DatabaseName;
+			var schema   = entity.SchemaName;
+			var table    =  entity.TableName;
+
+			var columnName = Convert(column.ColumnName, ConvertType.NameToQueryField);
+			var tableName  = BuildTableName(
+				new StringBuilder(),
+				database == null ? null : Convert(database, ConvertType.NameToDatabase).  ToString(),
+				schema   == null ? null : Convert(schema,   ConvertType.NameToOwner).     ToString(),
+				table    == null ? null : Convert(table,    ConvertType.NameToQueryTable).ToString())
+			.ToString();
+
+			return string.Format("SELECT Max({0}) FROM {1}", columnName, tableName);
+		}
+
 		private string _name;
 
 		public virtual string Name
 		{
 			get { return _name ?? (_name = GetType().Name.Replace("SqlBuilder", "")); }
 		}
+
 		#endregion
 	}
 }
