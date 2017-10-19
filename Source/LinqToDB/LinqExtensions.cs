@@ -2694,5 +2694,14 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		#region Tests
+
+		public static string GenerateTestString(this IQueryable query, bool encryptNames = false)
+		{
+			return new ExpressionTestGenerator(encryptNames).GenerateSourceString(query.Expression);
+		}
+
+		#endregion
 	}
 }

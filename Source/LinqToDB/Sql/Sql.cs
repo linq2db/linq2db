@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -15,6 +16,7 @@ namespace LinqToDB
 {
 	using Common;
 	using Extensions;
+	using Expressions;
 	using Linq;
 	using SqlQuery;
 
@@ -123,6 +125,61 @@ namespace LinqToDB
 			where T : struct, IComparable
 		{
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
+		}
+
+		#endregion
+
+		#region NoConvert
+
+		[Sql.Function("$Convert_Remover$", ServerSideOnly = true)]
+		static TR ConvertRemover<T, TR>(T input)
+		{
+			throw new NotImplementedException();
+		}
+
+		class NoConvertBuilder : Sql.IExtensionCallBuilder
+		{
+			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(Sql.ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
+
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var expr    = builder.Arguments[0];
+				var newExpr = expr.Transform(e =>
+				{
+					if (e.NodeType == ExpressionType.Convert || e.NodeType == ExpressionType.ConvertChecked)
+					{
+						var unary  = (UnaryExpression)e;
+						var method = _method.MakeGenericMethod(unary.Operand.Type, unary.Type);
+						return Expression.Call(null, method, unary.Operand);
+					}
+					return e;
+				});
+
+				if (newExpr == expr)
+				{
+					builder.ResultExpression = builder.GetExpression(0);
+					return;
+				}
+
+				var sqlExpr = builder.ConvertExpressionToSql(newExpr);
+				sqlExpr     = new QueryVisitor().Convert(sqlExpr, e =>
+				{
+					var func = e as SqlFunction;
+					if (func != null && func.Name == "$Convert_Remover$")
+					{
+						return func.Parameters[0];
+					}
+					return e;
+				});
+
+				builder.ResultExpression = sqlExpr;
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(NoConvertBuilder), ServerSideOnly = true)]
+		public static T NoConvert<T>(T expr)
+		{
+			return expr;
 		}
 
 		#endregion

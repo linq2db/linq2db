@@ -15,9 +15,19 @@ namespace LinqToDB.Linq.Builder
 
 	class ExpressionTestGenerator
 	{
+		readonly bool          _encryptNames;
 		readonly StringBuilder _exprBuilder = new StringBuilder();
 
 		string _indent = "\t\t\t\t";
+
+		public ExpressionTestGenerator(): this(true)
+		{
+		}
+
+		public ExpressionTestGenerator(bool encryptNames)
+		{
+			_encryptNames = encryptNames;
+		}
 
 		void PushIndent() { _indent += '\t'; }
 		void PopIndent () { _indent = _indent.Substring(1); }
@@ -197,7 +207,7 @@ namespace LinqToDB.Linq.Builder
 
 						_exprBuilder.Append(".").Append(EncryptName(mi.DeclaringType, mi.Name, "M"));
 
-						if (mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
+						if (!ex.IsQueryable() && mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
 						{
 							_exprBuilder
 								.Append("<")
@@ -248,7 +258,11 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						if (expr.ToString() == "value(" + expr.Type + ")")
+						if (typeof(Table<>).IsSameOrParentOf(expr.Type))
+						{
+							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArgumentsEx()[0]));
+						}
+						else if (expr.ToString() == "value(" + expr.Type + ")")
 							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(")");
 						else
 							_exprBuilder.Append(expr);
@@ -260,10 +274,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						var le = (LambdaExpression)expr;
 						var ps = le.Parameters
-							.Select(p => (GetTypeName(p.Type) + " " + EncryptName(p.Name, "p")).TrimStart())
+							.Select(p => (/*GetTypeName(p.Type) + " " + */ EncryptName(p.Name, "p")).TrimStart())
 							.Aggregate("", (p1, p2) => p1 + ", " + p2, p => p.TrimStart(',', ' '));
 
-						_exprBuilder.Append("(").Append(ps).Append(") => ");
+						if (le.Parameters.Count == 1)
+							_exprBuilder.Append(ps);
+						else
+							_exprBuilder.Append("(").Append(ps).Append(")");
+						_exprBuilder.Append(" => ");
 
 						le.Body.Visit(new Func<Expression,bool>(BuildExpression));
 						return false;
@@ -523,15 +541,17 @@ namespace LinqToDB.Linq.Builder
 #else
 				var attrs = c.GetCustomAttributesData();
 #endif
+				var attr  = attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "";
 				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + EncryptName(p.Name, "p")).ToArray();
+
 				return string.Format(@"{0}
 		public {1}({2})
 		{{
 			throw new NotImplementedException();
 		}}",
-				attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
-				name,
-				ps.Length == 0 ? "" : ps.Aggregate((s,t) => s + ", " + t));
+					attr,
+					name,
+					ps.Length == 0 ? "" : ps.Aggregate((s, t) => s + ", " + t));
 			}).ToList();
 
 			if (ctors.Count == 1 && ctors[0].IndexOf("()") >= 0)
@@ -544,9 +564,11 @@ namespace LinqToDB.Linq.Builder
 #else
 				var attrs = f.GetCustomAttributesData();
 #endif
+				var attr = attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "";
+
 				return string.Format(@"{0}
 		public {1} {2};",
-					attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
+					attr,
 					GetTypeName(f.FieldType),
 					EncryptName(isUserName, f.Name, "P"));
 			})
@@ -659,6 +681,9 @@ namespace {0}
 
 		string EncryptName(string name, string prefix)
 		{
+			if (!_encryptNames)
+				return name;
+
 			var oldNames = name.Split('.');
 			var newNames = new string[oldNames.Length];
 
@@ -844,10 +869,45 @@ namespace {0}
 			}
 		}
 
+
+#if NETFX_CORE && !NETSTANDARD
+
 		public string GenerateSource(Expression expr)
 		{
-			string       fileName = null;
-			StreamWriter sw       = null;
+			string fileName = null;
+
+			try
+			{
+				var tf  = Windows.Storage.ApplicationData.Current.TemporaryFolder;
+				var dir = tf.CreateFolderAsync("linq2db", Windows.Storage.CreationCollisionOption.OpenIfExists).AsTask().Result;
+
+				var number = 0;//DateTime.Now.Ticks;
+
+				fileName = Path.Combine("ExpressionTest." + number  + ".cs");
+
+				var file = dir.CreateFileAsync(fileName, Windows.Storage.CreationCollisionOption.ReplaceExisting).AsTask().Result;
+
+				var source = GenerateSourceString(expr);
+
+				Windows.Storage.FileIO.WriteTextAsync(
+					file,
+					source).AsTask().RunSynchronously();
+
+				fileName = Path.Combine(dir.Name, fileName);
+			}
+			catch (Exception)
+			{
+			}
+
+			return fileName;
+		}
+
+#else
+
+		public string GenerateSource(Expression expr)
+		{
+			string fileName = null;
+			StreamWriter sw = null;
 
 			try
 			{
@@ -858,50 +918,14 @@ namespace {0}
 
 				var number = 0;//DateTime.Now.Ticks;
 
-				fileName = Path.Combine(dir, "ExpressionTest." + number  + ".cs");
-
-				expr.Visit(new Action<Expression>(VisitMembers));
-				expr.Visit(new Action<Expression>(VisitTypes));
-
-				foreach (var type in _usedTypes.OrderBy(t => t.Namespace).ThenBy(t => t.Name))
-					BuildType(type);
-
-				expr.Visit(new Func<Expression,bool>(BuildExpression));
-
-				_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
+				fileName = Path.Combine(dir, "ExpressionTest." + number + ".cs");
 
 				sw = File.CreateText(fileName);
 
-				sw.WriteLine(@"//---------------------------------------------------------------------------------------------------
-// This code was generated by LinqToDB.
-//---------------------------------------------------------------------------------------------------
-using System;
-using System.Linq.Expressions;
-
-using NUnit.Framework;
-{0}
-namespace Tests.UserTests
-{{
-	[TestFixture]
-	public class UserTest : TestBase
-	{{
-		[Test]
-		public void Test([DataContexts] string context)
-		{{
-			// {1}
-			using (var db = GetDataContext(context))
-			{{
-				{2};
-			}}
-		}}
-	}}
-}}
-",
-					_typeBuilder,
-					_nameDic.Aggregate(expr.ToString(), (current,item) => current.Replace(item.Key.Substring(1), item.Value)),
-					_exprBuilder);
+				var source = GenerateSourceString(expr);
+				sw.WriteLine(source);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				if (sw != null)
 				{
@@ -918,6 +942,56 @@ namespace Tests.UserTests
 			}
 
 			return fileName;
+		}
+
+#endif
+
+		public string GenerateSourceString(Expression expr)
+		{
+			expr.Visit(new Action<Expression>(VisitMembers));
+			expr.Visit(new Action<Expression>(VisitTypes));
+
+			foreach (var type in _usedTypes.OrderBy(t => t.Namespace).ThenBy(t => t.Name))
+				BuildType(type);
+
+			expr.Visit(new Func<Expression,bool>(BuildExpression));
+
+			_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
+			_exprBuilder.Insert(0, "var quey = ");
+
+			var result = string.Format(
+@"//---------------------------------------------------------------------------------------------------
+// This code was generated by LinqToDB.
+//---------------------------------------------------------------------------------------------------
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+using LinqToDB;
+
+using NUnit.Framework;
+{0}
+namespace Tests.UserTests
+{{
+	[TestFixture]
+	public class UserTest : TestBase
+	{{
+		[Test, DataContextSource]
+		public void Test(string context)
+		{{
+			// {1}
+			using (var db = GetDataContext(context))
+			{{
+				{2};
+			}}
+		}}
+	}}
+}}
+",
+				_typeBuilder,
+				_nameDic.Aggregate(expr.ToString(), (current,item) => current.Replace(item.Key.Substring(1), item.Value)),
+				_exprBuilder);
+
+			return result;
 		}
 	}
 }
