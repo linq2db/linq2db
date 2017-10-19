@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System.Linq;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	using Mapping;
 	using SqlQuery;
@@ -16,7 +18,7 @@
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
 			SetValueToSqlConverter(typeof(string), (sb, dt, v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => MakeUtf8Literal(sb, Encoding.UTF8.GetBytes(new[] { (char)v })));
+			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
@@ -24,7 +26,33 @@
 			if (value == string.Empty)
 				stringBuilder.Append("''");
 			else
-				MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(value));
+				if (FirebirdConfiguration.SupportsLiteralEncoding && value.Any(NeedsEncoding))
+					MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(value));
+				else
+				{
+					stringBuilder
+						.Append("'")
+						.Append(value.Replace("'", "''"))
+						.Append("'");
+				}
+		}
+
+		static bool NeedsEncoding(char c)
+		{
+			return c == '\x00' || c > '\x80';
+		}
+
+		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
+		{
+			if (FirebirdConfiguration.SupportsLiteralEncoding && NeedsEncoding(value))
+				MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(new[] {value}));
+			else
+			{
+				stringBuilder
+					.Append("'")
+					.Append(value == '\'' ? '\'' : value)
+					.Append("'");
+			}
 		}
 
 		private static void MakeUtf8Literal(StringBuilder stringBuilder, byte[] bytes)
