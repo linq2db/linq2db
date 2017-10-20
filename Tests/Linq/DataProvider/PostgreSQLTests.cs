@@ -22,12 +22,12 @@ using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
 
-using Tests.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Tests.DataProvider
 {
+	using Model;
 
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
@@ -324,7 +324,7 @@ namespace Tests.DataProvider
 		}
 
 		/// <summary>
-		/// Ensure we can pass data as Json parameter type and get 
+		/// Ensure we can pass data as Json parameter type and get
 		/// same value back out equivalent in value
 		/// </summary>
 		[Test, IncludeDataContextSource(CurrentProvider)]
@@ -740,7 +740,7 @@ namespace Tests.DataProvider
 		public void NpgsqlDateTimeTest(string context)
 		{
 			PostgreSQLTools.GetDataProvider().CreateConnection(DataConnection.GetConnectionString(context));
-				
+
 			var d  = new NpgsqlDateTime(DateTime.Today);
 			var o  = new DateTimeOffset(DateTime.Today);
 			var c1 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset>();

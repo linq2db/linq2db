@@ -100,7 +100,7 @@ namespace Tests
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
-#if !NETSTANDARD1_6 && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
