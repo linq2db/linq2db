@@ -39,8 +39,6 @@
   "buildOptions": {
     "outputName": "linq2db",
     "embed": [ "**/*.resx", "**/*.txt" ],
-    "publicSign": true,
-    "keyFile": "linq2db.snk",
     "xmlDoc": true,
     "nowarn": [ "1591" ] 
   },
