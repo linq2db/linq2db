@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.Firebird
 			if (value == string.Empty)
 				stringBuilder.Append("''");
 			else
-				if (FirebirdConfiguration.SupportsLiteralEncoding && value.Any(NeedsEncoding))
+				if (FirebirdConfiguration.IsLiteralEncodingSupported && NeedsEncoding(value))
 					MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(value));
 				else
 				{
@@ -37,14 +37,24 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 		}
 
+		static bool NeedsEncoding(string str)
+		{
+			for (int i = 0; i < str.Length; i++)
+			{
+				if (NeedsEncoding(str[i]))
+					return true;
+			}
+			return false;
+		}
+
 		static bool NeedsEncoding(char c)
 		{
-			return c == '\x00' || c > '\x80';
+			return c == '\x00' || c >= '\x80';
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			if (FirebirdConfiguration.SupportsLiteralEncoding && NeedsEncoding(value))
+			if (FirebirdConfiguration.IsLiteralEncodingSupported && NeedsEncoding(value))
 				MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(new[] {value}));
 			else
 			{
