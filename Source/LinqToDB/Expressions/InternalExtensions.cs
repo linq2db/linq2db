@@ -383,6 +383,15 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
+		static object EvaluateExpression(Expression epr)
+		{
+			if (epr.NodeType == ExpressionType.Constant)
+				return ((ConstantExpression)epr).Value;
+
+			var value = Expression.Lambda(epr).Compile().DynamicInvoke();
+			return value;
+		}
+
 		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count || expr1.Method != expr2.Method)
@@ -395,6 +404,16 @@ namespace LinqToDB.Expressions
 				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
 					return false;
 
+			var parameters = expr1.Method.GetParameters();
+			for (var i = 0; i < parameters.Length; i++)
+			{
+				if (parameters[i].GetCustomAttributes(typeof(SqlEvaluateAttribute), false).Any())
+				{
+					if (!Equals(EvaluateExpression(expr1.Arguments[i]), EvaluateExpression(expr2.Arguments[i])))
+						return false;
+				}
+			}
+
 			if (info.QueryableAccessorDic.Count > 0)
 			{
 				QueryableAccessor qa;
@@ -405,7 +424,6 @@ namespace LinqToDB.Expressions
 
 			return true;
 		}
-
 		#endregion
 
 		#region Path
