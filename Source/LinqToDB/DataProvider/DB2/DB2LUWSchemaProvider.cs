@@ -209,8 +209,14 @@ namespace LinqToDB.DataProvider.DB2
 
 					for (var i = 0; thisColumns.Length > 0; i++)
 					{
-						var thisColumn  = thisTable. First(c => thisColumns. StartsWith(c.Name));
-						var otherColumn = otherTable.First(c => otherColumns.StartsWith(c.Name));
+						var thisColumn  = thisTable. FirstOrDefault(c => thisColumns. StartsWith(c.Name));
+						if (thisColumn  == null)
+							continue;
+
+						var otherColumn = otherTable.FirstOrDefault(c => otherColumns.StartsWith(c.Name));
+						if (otherColumn == null)
+							continue;
+
 
 						list.Add(new ForeingKeyInfo
 						{

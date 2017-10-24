@@ -141,9 +141,16 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
+			return ReadEnumerator(DataConnection.ExecuteReader(GetCommandBehavior()), objectReader);
+		}
+
+		static IEnumerable<T> ReadEnumerator<T>(IDataReader rd, Func<IDataReader, T> objectReader)
+		{
+			using (rd)
+			{
 				while (rd.Read())
 					yield return objectReader(rd);
+			}
 		}
 
 		#endregion
@@ -259,7 +266,12 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
+			return ReadEnumerator<T>(DataConnection.ExecuteReader(GetCommandBehavior()));
+		}
+
+		IEnumerable<T> ReadEnumerator<T>(IDataReader rd)
+		{
+			using (rd)
 			{
 				if (rd.Read())
 				{

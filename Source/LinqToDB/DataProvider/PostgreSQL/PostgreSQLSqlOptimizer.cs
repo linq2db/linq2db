@@ -72,10 +72,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				var e = (SqlExpression)expr;
 
-				if (e.Expr.StartsWith("Extract(DOW"))
+				if (e.Expr.StartsWith("Cast(Floor(Extract(DOW"))
 					return Inc(new SqlExpression(expr.SystemType, e.Expr.Replace("Extract(DOW", "Extract(Dow"), e.Parameters));
 
-				if (e.Expr.StartsWith("Extract(Millisecond"))
+				if (e.Expr.StartsWith("Cast(Floor(Extract(Millisecond"))
 					return new SqlExpression(expr.SystemType, "Cast(To_Char({0}, 'MS') as int)", e.Parameters);
 			}
 

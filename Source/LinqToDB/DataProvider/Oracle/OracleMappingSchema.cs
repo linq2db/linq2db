@@ -96,9 +96,9 @@ namespace LinqToDB.DataProvider.Oracle
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
 			var format =
-				dataType.DataType == DataType.DateTime ?
-					"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
-					"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+				dataType.DataType == DataType.DateTime2 ?
+					"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')" :
+					"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
 
 			if (value.Millisecond == 0)
 			{
