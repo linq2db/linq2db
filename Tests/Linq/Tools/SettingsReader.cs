@@ -248,7 +248,7 @@ namespace Tests.Tools
 					});
 
 				yield return new TestCaseData("User Core 2", "CORE2", _defaultData, _userData)
-					.SetName("Tests.Tools.UserCore2")
+					//.SetName("Tests.Tools.UserCore2")
 					.Returns(new[]
 					{
 						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
