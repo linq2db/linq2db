@@ -18,49 +18,72 @@ namespace Tests.Tools
 
 	public class TestSettings
 	{
+		public string                            BasedOn;
 		public Dictionary<string,TestConnection> Connections;
 	}
 
 	static class SettingsReader
 	{
-		static TestSettings Deserialize(string config, string jsonData)
+		public static TestSettings Deserialize(string configName, string defaultJson, string userJson)
 		{
-			var settings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(jsonData);
-
-			settings.TryGetValue("Default", out var defaultSettings);
-
-			if (config != null && config != "Default")
+			void Merge(TestSettings settings1, TestSettings settings2)
 			{
-				if (settings.TryGetValue(config, out var configSettings))
-				{
-					if (defaultSettings == null)
-						return configSettings;
-
-					foreach (var connection in configSettings.Connections)
-						defaultSettings.Connections[connection.Key] = connection.Value;
-				}
+				foreach (var connection in settings2.Connections)
+					if (!settings1.Connections.ContainsKey(connection.Key))
+						settings1.Connections.Add(connection.Key, connection.Value);
 			}
 
-			return defaultSettings;
-		}
-
-		public static TestSettings Deserialize(string config, string defaultJson, string userJson)
-		{
-			var defaultSettings = Deserialize(config, defaultJson);
+			var defaultSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(defaultJson);
 
 			if (userJson != null)
 			{
-				var userSettings = Deserialize(config, userJson);
+				var userSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(userJson);
 
-				if (defaultSettings == null)
-					return userSettings;
+				foreach (var uSetting in userSettings)
+				{
+					if (defaultSettings.TryGetValue(uSetting.Key, out var dSetting))
+					{
+						Merge(uSetting.Value, dSetting);
 
-				if (userSettings != null)
-					foreach (var connection in userSettings.Connections)
-						defaultSettings.Connections[connection.Key] = connection.Value;
+						if (uSetting.Value.BasedOn == null)
+							uSetting.Value.BasedOn = dSetting.BasedOn;
+					}
+					else
+					{
+						defaultSettings.Add(uSetting.Key, uSetting.Value);
+					}
+				}
+
+				foreach (var dSetting in defaultSettings)
+					if (!userSettings.ContainsKey(dSetting.Key))
+						userSettings.Add(dSetting.Key, dSetting.Value);
+
+				defaultSettings = userSettings;
 			}
 
-			return defaultSettings;
+			var readConfigs = new HashSet<string>();
+
+			TestSettings GetSettings(string config)
+			{
+				if (readConfigs.Contains(config))
+					throw new InvalidOperationException($"Circle basedOn configuration: '{config}'.");
+
+				readConfigs.Add(config);
+
+				if (!defaultSettings.TryGetValue(config, out var settings))
+					throw new InvalidOperationException($"Configuration {config} not found.");
+
+				if (settings.BasedOn != null)
+				{
+					var baseOnSettings = GetSettings(settings.BasedOn);
+
+					Merge(settings, baseOnSettings);
+				}
+
+				return settings;
+			}
+
+			return GetSettings(configName ?? "");
 		}
 
 		public static void Serialize()
@@ -120,51 +143,57 @@ namespace Tests.Tools
 	{
 		static string _defaultData = @"
 {
-	'Default':
+	Default:
 	{
-		'Connections':
+		Connections:
 		{
-			'Con 1' : { 'ConnectionString' : 'AAA', 'Provider' : 'SqlServer' },
-			'Con 2' : { 'ConnectionString' : 'BBB', 'Provider' : 'SqlServer' }
+			'Con 1' : { ConnectionString : 'AAA', Provider : 'SqlServer' },
+			'Con 2' : { ConnectionString : 'BBB', Provider : 'SqlServer' }
+		},
+
+		Providers:
+		[ '111', '222' ]
+	},
+
+	CORE1:
+	{
+		BasedOn     : 'Default',
+		Connections :
+		{
+			'Con 2' : { ConnectionString : 'AAA', Provider : 'SqlServer' },
+			'Con 3' : { ConnectionString : 'CCC', Provider : 'SqlServer' }
 		}
 	},
 
-	'CORE1':
+	CORE2:
 	{
-		'Connections':
+		BasedOn     : 'Default',
+		Connections :
 		{
-			'Con 2' : { 'ConnectionString' : 'AAA', 'Provider' : 'SqlServer' },
-			'Con 3' : { 'ConnectionString' : 'CCC', 'Provider' : 'SqlServer' }
-		}
-	},
-
-	'CORE2':
-	{
-		'Connections':
-		{
-			'Con 2' : { 'ConnectionString' : 'AAA', 'Provider' : 'SqlServer' },
-			'Con 3' : { 'ConnectionString' : 'CCC', 'Provider' : 'SqlServer' }
+			'Con 2' : { ConnectionString : 'AAA', Provider : 'SqlServer' },
+			'Con 3' : { ConnectionString : 'CCC', Provider : 'SqlServer' }
 		}
 	}
 }";
 
 		static string _userData = @"
 {
-	'Default':
+	Default:
 	{
-		'Connections':
+		Connections:
 		{
-			'Con 1' : { 'ConnectionString' : 'DDD', 'Provider' : 'SqlServer' },
-			'Con 4' : { 'ConnectionString' : 'FFF', 'Provider' : 'SqlServer' }
+			'Con 1' : { ConnectionString : 'DDD', Provider : 'SqlServer' },
+			'Con 4' : { ConnectionString : 'FFF', Provider : 'SqlServer' }
 		}
 	},
 
 	'CORE2':
 	{
-		'Connections':
+		BasedOn     : 'Default',
+		Connections :
 		{
-			'Con 2' : { 'ConnectionString' : 'WWW', 'Provider' : 'SqlServer' },
-			'Con 5' : { 'ConnectionString' : 'EEE', 'Provider' : 'SqlServer' }
+			'Con 2' : { ConnectionString : 'WWW', Provider : 'SqlServer' },
+			'Con 5' : { ConnectionString : 'EEE', Provider : 'SqlServer' }
 		}
 	}
 }";
@@ -173,7 +202,7 @@ namespace Tests.Tools
 		{
 			get
 			{
-				yield return new TestCaseData("Default", null, _defaultData, null)
+				yield return new TestCaseData("Default", "Default", _defaultData, null)
 					//.SetName("Default")
 					.Returns(new[]
 					{
@@ -199,7 +228,7 @@ namespace Tests.Tools
 						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
 					});
 
-				yield return new TestCaseData("User Default", null, _defaultData, _userData)
+				yield return new TestCaseData("User Default", "Default", _defaultData, _userData)
 					//.SetName("User Default")
 					.Returns(new[]
 					{
@@ -219,7 +248,7 @@ namespace Tests.Tools
 					});
 
 				yield return new TestCaseData("User Core 2", "CORE2", _defaultData, _userData)
-					//.SetName("User Core 2")
+					.SetName("Tests.Tools.UserCore2")
 					.Returns(new[]
 					{
 						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
@@ -236,7 +265,9 @@ namespace Tests.Tools
 		{
 			var settings = SettingsReader.Deserialize(config, defaultJson, userJson);
 
-			return settings.Connections.Select(c => new { c.Key, c.Value.ConnectionString, c.Value.Provider });
+			return settings.Connections
+				.Select (c => new { c.Key, c.Value.ConnectionString, c.Value.Provider })
+				.OrderBy(c => c.Key);
 		}
 
 		[Test, Explicit]

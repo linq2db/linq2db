@@ -30,9 +30,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().VisitAll(_selectQuery, e =>
 			{
-				var sql = e as SelectQuery;
-
-				if (sql != null)
+				if (e is SelectQuery sql)
 				{
 					if (dic.ContainsKey(sql))
 						throw new InvalidOperationException("SqlQuery circle reference detected.");
@@ -54,9 +52,9 @@ namespace LinqToDB.SqlQuery
 
 		class QueryData
 		{
-			public SelectQuery          Query;
-			public List<ISqlExpression> Fields  = new List<ISqlExpression>();
-			public List<QueryData>      Queries = new List<QueryData>();
+			public          SelectQuery          Query;
+			public readonly List<ISqlExpression> Fields  = new List<ISqlExpression>();
+			public readonly List<QueryData>      Queries = new List<QueryData>();
 		}
 
 		void ResolveFields()
@@ -113,12 +111,12 @@ namespace LinqToDB.SqlQuery
 			if (field.Table == table.Source)
 				return table;
 
-			foreach (var @join in table.Joins)
+			foreach (var join in table.Joins)
 			{
-				var t = FindField(field, @join.Table);
+				var t = FindField(field, join.Table);
 
 				if (t != null)
-					return @join.Table;
+					return join.Table;
 			}
 
 			return null;
@@ -320,23 +318,10 @@ namespace LinqToDB.SqlQuery
 		void OptimizeUnions()
 		{
 			var isAllUnion = QueryVisitor.Find(_selectQuery,
-				ne =>
-				{
-					var nu = ne as SelectQuery.Union;
-					if (nu != null && nu.IsAll == true)
-						return true;
+				ne => ne is SelectQuery.Union nu && nu.IsAll == true);
 
-					return false;
-				});
 			var isNotAllUnion = QueryVisitor.Find(_selectQuery,
-				ne =>
-				{
-					var nu = ne as SelectQuery.Union;
-					if (nu != null && nu.IsAll == false)
-						return true;
-
-					return false;
-				});
+				ne => ne is SelectQuery.Union nu && nu.IsAll == false);
 
 			if (isNotAllUnion != null && isAllUnion != null)
 				return;
@@ -345,9 +330,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
-				var sql = e as SelectQuery;
-
-				if (sql == null || sql.From.Tables.Count != 1 || !sql.IsSimple || sql.IsInsert || sql.IsUpdate || sql.IsDelete)
+				if (!(e is SelectQuery sql) || sql.From.Tables.Count != 1 || !sql.IsSimple || sql.IsInsert || sql.IsUpdate || sql.IsDelete)
 					return;
 
 				var table = sql.From.Tables[0];
@@ -395,15 +378,8 @@ namespace LinqToDB.SqlQuery
 				sql.Unions.InsertRange(0, union.Unions);
 			});
 
-			((ISqlExpressionWalkable)_selectQuery).Walk(false, expr =>
-			{
-				ISqlExpression e;
-
-				if (exprs.TryGetValue(expr, out e))
-					return e;
-
-				return expr;
-			});
+			((ISqlExpressionWalkable)_selectQuery).Walk(
+				false, expr => exprs.TryGetValue(expr, out var e) ? e : expr);
 		}
 
 		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, List<ISqlTableSource> tables)
@@ -419,9 +395,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
-				var sql = e as SelectQuery;
-
-				if (sql != null && sql != _selectQuery)
+				if (e is SelectQuery sql && sql != _selectQuery)
 				{
 					sql.ParentSelect = _selectQuery;
 					new SelectQueryOptimizer(_flags, sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
@@ -439,9 +413,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
-				var sql = e as SelectQuery;
-
-				if (sql != null && sql != _selectQuery)
+				if (e is SelectQuery sql && sql != _selectQuery)
 					RemoveOrderBy(sql);
 			});
 		}
@@ -469,10 +441,8 @@ namespace LinqToDB.SqlQuery
 			{
 				var cond = searchCondition.Conditions[0];
 
-				if (cond.Predicate is SelectQuery.SearchCondition)
+				if (cond.Predicate is SelectQuery.SearchCondition sc)
 				{
-					var sc = (SelectQuery.SearchCondition)cond.Predicate;
-
 					if (!cond.IsNot)
 					{
 						searchCondition.Conditions.Clear();
@@ -519,14 +489,10 @@ namespace LinqToDB.SqlQuery
 				{
 					var expr = (SelectQuery.Predicate.Expr)cond.Predicate;
 
-					if (expr.Expr1 is SqlValue)
-					{
-						var value = (SqlValue)expr.Expr1;
-
-						if (value.Value is bool)
-							if (cond.IsNot ? !(bool)value.Value : (bool)value.Value)
+					if (expr.Expr1 is SqlValue value)
+						if (value.Value is bool b)
+							if (cond.IsNot ? !b : b)
 								searchCondition.Conditions.Clear();
-					}
 				}
 			}
 
@@ -538,13 +504,11 @@ namespace LinqToDB.SqlQuery
 				{
 					var expr = (SelectQuery.Predicate.Expr)cond.Predicate;
 
-					if (expr.Expr1 is SqlValue)
+					if (expr.Expr1 is SqlValue value)
 					{
-						var value = (SqlValue)expr.Expr1;
-
-						if (value.Value is bool)
+						if (value.Value is bool b)
 						{
-							if (cond.IsNot ? !(bool)value.Value : (bool)value.Value)
+							if (cond.IsNot ? !b : b)
 							{
 								if (i > 0)
 								{
@@ -586,27 +550,27 @@ namespace LinqToDB.SqlQuery
 
 		internal void ResolveWeakJoins(List<ISqlTableSource> tables)
 		{
-			Func<SelectQuery.TableSource,bool> findTable = null; findTable = table =>
+			bool FindTable(SelectQuery.TableSource table)
 			{
 				if (tables.Contains(table.Source))
 					return true;
 
 				foreach (var join in table.Joins)
 				{
-					if (findTable(join.Table))
+					if (FindTable(join.Table))
 					{
 						join.IsWeak = false;
 						return true;
 					}
 				}
 
-				if (table.Source is SelectQuery)
-					foreach (var t in ((SelectQuery)table.Source).From.Tables)
-						if (findTable(t))
+				if (table.Source is SelectQuery query)
+					foreach (var t in query.From.Tables)
+						if (FindTable(t))
 							return true;
 
 				return false;
-			};
+			}
 
 			var areTablesCollected = false;
 
@@ -622,46 +586,42 @@ namespace LinqToDB.SqlQuery
 						{
 							areTablesCollected = true;
 
-							Action<IQueryElement> tableCollector = expr =>
+							void TableCollector(IQueryElement expr)
 							{
-								var field = expr as SqlField;
-
-								if (field != null && !tables.Contains(field.Table))
+								if (expr is SqlField field && !tables.Contains(field.Table))
 									tables.Add(field.Table);
-							};
+							}
 
 							var visitor = new QueryVisitor();
 
-							visitor.VisitAll(_selectQuery.Select,  tableCollector);
-							visitor.VisitAll(_selectQuery.Where,   tableCollector);
-							visitor.VisitAll(_selectQuery.GroupBy, tableCollector);
-							visitor.VisitAll(_selectQuery.Having,  tableCollector);
-							visitor.VisitAll(_selectQuery.OrderBy, tableCollector);
+							visitor.VisitAll(_selectQuery.Select,  TableCollector);
+							visitor.VisitAll(_selectQuery.Where,   TableCollector);
+							visitor.VisitAll(_selectQuery.GroupBy, TableCollector);
+							visitor.VisitAll(_selectQuery.Having,  TableCollector);
+							visitor.VisitAll(_selectQuery.OrderBy, TableCollector);
 
 							if (_selectQuery.IsInsert)
-								visitor.VisitAll(_selectQuery.Insert, tableCollector);
+								visitor.VisitAll(_selectQuery.Insert, TableCollector);
 
 							if (_selectQuery.IsUpdate)
-								visitor.VisitAll(_selectQuery.Update, tableCollector);
+								visitor.VisitAll(_selectQuery.Update, TableCollector);
 
 							if (_selectQuery.IsDelete)
-								visitor.VisitAll(_selectQuery.Delete, tableCollector);
+								visitor.VisitAll(_selectQuery.Delete, TableCollector);
 
 							visitor.VisitAll(_selectQuery.From, expr =>
 							{
-								var tbl = expr as SqlTable;
-
-								if (tbl != null && tbl.TableArguments != null)
+								if (expr is SqlTable tbl && tbl.TableArguments != null)
 								{
 									var v = new QueryVisitor();
 
 									foreach (var arg in tbl.TableArguments)
-										v.VisitAll(arg, tableCollector);
+										v.VisitAll(arg, TableCollector);
 								}
 							});
 						}
 
-						if (findTable(join.Table))
+						if (FindTable(join.Table))
 						{
 							join.IsWeak = false;
 						}
@@ -695,9 +655,7 @@ namespace LinqToDB.SqlQuery
 
 				if (table != jt.Table)
 				{
-					var sql = jt.Table.Source as SelectQuery;
-
-					if (sql != null && sql.OrderBy.Items.Count > 0)
+					if (jt.Table.Source is SelectQuery sql && sql.OrderBy.Items.Count > 0)
 						foreach (var item in sql.OrderBy.Items)
 							_selectQuery.OrderBy.Expr(item.Expression, item.IsDescending);
 
@@ -705,8 +663,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			var select = source.Source as SelectQuery;
-			if (select != null)
+			if (source.Source is SelectQuery select)
 			{
 				var canRemove = !CorrectCrossJoinQuery(select);
 				if (canRemove)
@@ -766,16 +723,15 @@ namespace LinqToDB.SqlQuery
 				var toReplace = foundFields.ToDictionary(f => f,
 					f => subQuery.Select.Columns[subQuery.Select.Add(f)] as ISqlExpression);
 
-				Func<ISqlExpression, ISqlExpression> transformFunc = e =>
+				ISqlExpression TransformFunc(ISqlExpression e)
 				{
-					ISqlExpression newValue;
-					return toReplace.TryGetValue(e, out newValue) ? newValue : e;
-				};
+					return toReplace.TryGetValue(e, out var newValue) ? newValue : e;
+				}
 
-				((ISqlExpressionWalkable) query.RootQuery()).Walk(false, transformFunc);
+				((ISqlExpressionWalkable) query.RootQuery()).Walk(false, TransformFunc);
 				foreach (var j in joins)
 				{
-					((ISqlExpressionWalkable) j).Walk(false, transformFunc);
+					((ISqlExpressionWalkable) j).Walk(false, TransformFunc);
 				}
 
 				query.Select.From.Tables.Add(baseTable);
@@ -789,26 +745,24 @@ namespace LinqToDB.SqlQuery
 			if (expr is SqlField || expr is SelectQuery.Column)
 				return false;
 
-			if (expr is SqlValue)
-				return !optimizeValues && 1.Equals(((SqlValue)expr).Value);
+			if (expr is SqlValue sqlValue)
+				return !optimizeValues && 1.Equals(sqlValue.Value);
 
-			if (expr is SqlBinaryExpression)
+			if (expr is SqlBinaryExpression e1)
 			{
-				var e = (SqlBinaryExpression)expr;
-
-				if (e.Operation == "*" && e.Expr1 is SqlValue)
+				if (e1.Operation == "*" && e1.Expr1 is SqlValue)
 				{
-					var value = (SqlValue)e.Expr1;
+					var value = (SqlValue)e1.Expr1;
 
-					if (value.Value is int && (int)value.Value == -1)
-						return CheckColumn(column, e.Expr2, query, optimizeValues, optimizeColumns);
+					if (value.Value is int i && i == -1)
+						return CheckColumn(column, e1.Expr2, query, optimizeValues, optimizeColumns);
 				}
 			}
 
 			var visitor = new QueryVisitor();
 
 			if (optimizeColumns &&
-				QueryVisitor.Find(expr, e => e is SelectQuery || IsAggregationFunction(e)) == null)
+				QueryVisitor.Find(expr, ex => ex is SelectQuery || IsAggregationFunction(ex)) == null)
 			{
 				var n = 0;
 				var q = query.ParentSelect ?? query;
@@ -856,11 +810,8 @@ namespace LinqToDB.SqlQuery
 			while (top.ParentSelect != null)
 				top = top.ParentSelect;
 
-			((ISqlExpressionWalkable)top).Walk(false, expr =>
-			{
-				ISqlExpression fld;
-				return map.TryGetValue(expr, out fld) ? fld : expr;
-			});
+			((ISqlExpressionWalkable)top).Walk(
+				false, expr => map.TryGetValue(expr, out var fld) ? fld : expr);
 
 			new QueryVisitor().Visit(top, expr =>
 			{
@@ -883,13 +834,9 @@ namespace LinqToDB.SqlQuery
 
 			((ISqlExpressionWalkable)top).Walk(false, expr =>
 			{
-				if (expr is SelectQuery)
-				{
-					var sql = (SelectQuery)expr;
-
+				if (expr is SelectQuery sql)
 					if (sql.ParentSelect == query)
 						sql.ParentSelect = query.ParentSelect ?? _selectQuery;
-				}
 
 				return expr;
 			});
@@ -899,17 +846,11 @@ namespace LinqToDB.SqlQuery
 
 		static bool IsAggregationFunction(IQueryElement expr)
 		{
-			var func = expr as SqlFunction;
-			if (func != null)
-			{ 
+			if (expr is SqlFunction func)
 				return func.IsAggregate;
-			}
 
-			var expression = expr as SqlExpression;
-			if (expression != null)
-			{ 
+			if (expr is SqlExpression expression)
 				return expression.IsAggregate;
-			}
 
 			return false;
 		}
@@ -960,9 +901,7 @@ namespace LinqToDB.SqlQuery
 
 					if (table != joinTable.Table)
 					{
-						var q = joinTable.Table.Source as SelectQuery;
-
-						if (q != null && q.OrderBy.Items.Count > 0)
+						if (joinTable.Table.Source is SelectQuery q && q.OrderBy.Items.Count > 0)
 							foreach (var item in q.OrderBy.Items)
 								_selectQuery.OrderBy.Expr(item.Expression, item.IsDescending);
 
@@ -1052,9 +991,9 @@ namespace LinqToDB.SqlQuery
 		{
 			((ISqlExpressionWalkable)_selectQuery.Select).Walk(false, expr =>
 			{
-				var query = expr as SelectQuery;
-					
-				if (query != null && query.From.Tables.Count == 0 && query.Select.Columns.Count == 1)
+				if (expr is SelectQuery query    &&
+					query.From.Tables.Count == 0 &&
+					query.Select.Columns.Count == 1)
 				{
 					new QueryVisitor().Visit(query.Select.Columns[0].Expression, e =>
 					{
