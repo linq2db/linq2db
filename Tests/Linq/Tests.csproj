@@ -116,11 +116,17 @@
 		<Reference Include="Sybase.AdoNet45.AseClient">
 			<HintPath>..\..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
 		</Reference>
+		<Reference Include="Oracle.DataAccess, Version=4.122.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
+		</Reference>
 
 		<PackageReference Include="MySql.Data" Version="6.9.9" />
 		<PackageReference Include="xunit" Version="1.9.1" />
 		<PackageReference Include="xunit.extensions" Version="1.9.1" />
+		<!--
 		<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
+		-->
 		<PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.24160419" />
 		<PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />

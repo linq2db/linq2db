@@ -727,6 +727,41 @@ namespace LinqToDB.Data
 				dataProvider ?? FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]));
 		}
 
+		class ConnectionStringSettings : IConnectionStringSettings
+		{
+			public ConnectionStringSettings(
+				string name,
+				string connectionString,
+				string providerName)
+			{
+				Name             = name;
+				ConnectionString = connectionString;
+				ProviderName     = providerName;
+			}
+
+			public string ConnectionString { get; }
+			public string Name             { get; }
+			public string ProviderName     { get; }
+			public bool   IsGlobal         { get; }
+		}
+
+		public static void AddOrSetConfiguration(
+			[JetBrains.Annotations.NotNull] string configuration,
+			[JetBrains.Annotations.NotNull] string connectionString,
+			[JetBrains.Annotations.NotNull] string dataProvider)
+		{
+			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
+			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			if (dataProvider     == null) throw new ArgumentNullException(nameof(dataProvider));
+
+			InitConfig();
+
+			var info = new ConfigurationInfo(
+				new ConnectionStringSettings(configuration, connectionString, dataProvider));
+
+			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
+		}
+
 		/// <summary>
 		/// Sets connection string for specified connection name.
 		/// </summary>

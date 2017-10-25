@@ -17,7 +17,6 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
@@ -29,6 +28,7 @@ using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
+using Tests.Tools;
 
 //[assembly: Parallelizable]
 
@@ -36,29 +36,6 @@ namespace Tests
 {
 	using Model;
 	using System.Text.RegularExpressions;
-
-	class Retry : IRetryPolicy
-	{
-		public TResult Execute<TResult>(Func<TResult> operation)
-		{
-			return operation();
-		}
-
-		public void Execute(Action operation)
-		{
-			operation();
-		}
-
-		public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return operation(cancellationToken);
-		}
-
-		public Task ExecuteAsync(Func<CancellationToken,Task> operation, CancellationToken cancellationToken = new CancellationToken())
-		{
-			return operation(cancellationToken);
-		}
-	}
 
 	public class TestBase
 	{
@@ -73,8 +50,6 @@ namespace Tests
 				);
 
 			var traceCount = 0;
-
-			Configuration.Linq.TraceMapperExpression = false;
 
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
@@ -92,10 +67,11 @@ namespace Tests
 #endif
 			};
 
-			//Configuration.RetryPolicy.Factory = db => new Retry();
+//			Configuration.RetryPolicy.Factory = db => new Retry();
 
-			//Configuration.AvoidSpecificDataProviderAPI = true;
-			//Configuration.Linq.GenerateExpressionTest = true;
+//			Configuration.AvoidSpecificDataProviderAPI = true;
+			Configuration.Linq.TraceMapperExpression   = false;
+//			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
 			ProjectPath = FindProjectPath(assemblyPath);
@@ -114,18 +90,24 @@ namespace Tests
 #else
 			Environment.CurrentDirectory = assemblyPath;
 #endif
-#if NETSTANDARD1_6 || NETSTANDARD2_0
-			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
-			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
+
+			var dataProvidersJsonFile     = Path.Combine(ProjectPath, @"DataProviders.json");
+			var userDataProvidersJsonFile = Path.Combine(ProjectPath, @"UserDataProviders.json");
+
+			var dataProvidersJson     = File.ReadAllText(dataProvidersJsonFile);
+			var userDataProvidersJson =
+				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
+
+#if NETSTANDARD1_6
+			var configName = "CORE1";
+#elif NETSTANDARD2_0
+			var configName = "CORE2";
 #else
-			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
-			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
+			var configName = "NET45";
 #endif
 
-			var providerListFile =
-				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
-
-			var dataPath = Path.GetFullPath(@"Database\Data");
+			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
+			var dataPath     = Path.GetFullPath(@"Database\Data");
 
 			if (Directory.Exists(dataPath))
 				Directory.Delete(dataPath, true);
@@ -137,35 +119,11 @@ namespace Tests
 			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
 				File.Copy(file, Path.Combine(dataPath, Path.GetFileName(file)), true);
 
-			UserProviders =
-				File.ReadAllLines(providerListFile)
-					.Select(s => s.Trim())
-					.Where (s => s.Length > 0 && !s.StartsWith("--"))
-					.Select(s =>
-					{
-						var isDefault = s.StartsWith("!");
-						if (isDefault)
-							s = s.Substring(1);
+			UserProviders = new HashSet<string>(testSettings.Providers);
 
-						var ss = s.Split('*');
-						switch (ss.Length)
-						{
-							case 0 : return null;
-							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0],        IsDefault = isDefault };
-							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0],        IsDefault = isDefault };
-							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim(), IsDefault = isDefault };
-						}
-					})
-					.Where(up => up != null && _providers.Any(p => up.Name == p))
-					.ToDictionary(i => i.Name);
-
-			var logLevel = File.ReadAllLines(providerListFile)
-				.Select(s => s.Trim())
-				.Where(s => s.Length > 0 && s.StartsWith("--") && s.ToLower().Contains("tracelevel"))
-				.Select(s => s.Split(new []{'='}, StringSplitOptions.RemoveEmptyEntries)[1].Trim())
-				.FirstOrDefault();
-
+			var logLevel   = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
+
 			if (!string.IsNullOrEmpty(logLevel))
 				if (!Enum.TryParse(logLevel, true, out traceLevel))
 					traceLevel = TraceLevel.Info;
@@ -185,23 +143,27 @@ namespace Tests
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
-			foreach (var provider in UserProviders.Values)
+			foreach (var provider in testSettings.Connections)
 			{
-				if (string.IsNullOrWhiteSpace(provider.ConnectionString))
+				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
 					throw new InvalidOperationException("ConnectionString should be provided");
 
-				if (string.IsNullOrWhiteSpace(provider.ProviderName))
+				if (string.IsNullOrWhiteSpace(provider.Value.Provider))
 					throw new InvalidOperationException("provider.ProviderName should be provided");
 
-				TxtSettings.Instance.AddConnectionString(provider.Name,provider.ProviderName, provider.ConnectionString);
+				TxtSettings.Instance.AddConnectionString(
+					provider.Key, provider.Value.Provider, provider.Value.ConnectionString);
 			}
 #else
-			foreach (var provider in UserProviders.Values)
-				if (provider.ConnectionString != null)
-					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
+			foreach (var provider in testSettings.Connections)
+				DataConnection.AddOrSetConfiguration(
+					provider.Key,
+					provider.Value.ConnectionString,
+					provider.Value.Provider ?? "");
 #endif
 
-			var defaultConfiguration = UserProviders.Where(_ => _.Value.IsDefault).Select(_ => _.Key).FirstOrDefault();
+			var defaultConfiguration = testSettings.DefaultConfiguration;
+
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
@@ -227,14 +189,17 @@ namespace Tests
 
 		protected static string FindProjectPath(string basePath)
 		{
-			var fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
+			var fileName = Path.GetFullPath(Path.Combine(basePath, "DataProviders.json"));
+
 			while (!File.Exists(fileName))
 			{
-				Console.WriteLine("File not found: " + fileName);
+				Console.WriteLine($"File not found: {fileName}");
+
 				basePath = Path.GetDirectoryName(basePath);
-				fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
+				fileName = Path.GetFullPath(Path.Combine(basePath, "DataProviders.json"));
 			}
-			Console.WriteLine("Base path found: " + basePath);
+
+			Console.WriteLine($"Base path found: {basePath}");
 
 			return basePath;
 		}
@@ -278,12 +243,11 @@ namespace Tests
 		public class UserProviderInfo
 		{
 			public string Name;
-			public string ConnectionString;
+			public string ConnectionString1;
 			public string ProviderName;
-			public bool   IsDefault;
 		}
 
-		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
+		internal static readonly HashSet<string> UserProviders;
 
 		static readonly List<string> _providers = new List<string>
 		{
@@ -386,7 +350,7 @@ namespace Tests
 
 				foreach (var provider in _providerNames)
 				{
-					var isIgnore = !UserProviders.ContainsKey(provider);
+					var isIgnore = !UserProviders.Contains(provider);
 
 					var caseNumber = 0;
 					foreach (var parameters in GetParameters(provider))
@@ -1389,7 +1353,7 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			return TestBase.UserProviders.Keys.Where(p => !Providers.Contains(p));
+			return TestBase.UserProviders.Where(p => !Providers.Contains(p));
 		}
 	}
 
@@ -1406,7 +1370,7 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			return Providers.Where(TestBase.UserProviders.ContainsKey);
+			return Providers.Where(TestBase.UserProviders.Contains);
 		}
 
 	}

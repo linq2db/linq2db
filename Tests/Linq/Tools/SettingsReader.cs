@@ -18,8 +18,11 @@ namespace Tests.Tools
 
 	public class TestSettings
 	{
-		public string                            BasedOn;
-		public Dictionary<string,TestConnection> Connections;
+		public string   BasedOn;
+		public string[] Providers;
+		public string   TraceLevel;
+		public string   DefaultConfiguration;
+		public Dictionary<string,TestConnection> Connections = new Dictionary<string,TestConnection>();
 	}
 
 	static class SettingsReader
@@ -31,6 +34,15 @@ namespace Tests.Tools
 				foreach (var connection in settings2.Connections)
 					if (!settings1.Connections.ContainsKey(connection.Key))
 						settings1.Connections.Add(connection.Key, connection.Value);
+
+				if (settings1.Providers == null)
+					settings1.Providers = settings2.Providers;
+
+				if (settings1.TraceLevel == null)
+					settings1.TraceLevel = settings2.TraceLevel;
+
+				if (settings1.DefaultConfiguration == null)
+					settings1.DefaultConfiguration = settings2.DefaultConfiguration;
 			}
 
 			var defaultSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(defaultJson);
@@ -157,6 +169,7 @@ namespace Tests.Tools
 
 	CORE1:
 	{
+		TraceLevel  : 'Error',
 		BasedOn     : 'Default',
 		Connections :
 		{

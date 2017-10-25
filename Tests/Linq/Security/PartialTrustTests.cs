@@ -18,7 +18,7 @@ namespace Tests.Security
 //		[Fact]
 		public void Test()
 		{
-			if (TestBase.UserProviders.ContainsKey("SqlServer.2012"))
+			if (TestBase.UserProviders.Contains("SqlServer.2012"))
 			{
 				using (var db = new DataConnection("SqlServer.2012"))
 				{

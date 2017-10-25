@@ -105,7 +105,7 @@ namespace Tests.DataProvider
 
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
 			{
-				var tests = UserProviders.ContainsKey(_providerName) ?
+				var tests = UserProviders.Contains(_providerName) ?
 					new[]
 					{
 						new TypeTestData("bigintDataType", 0,   (n,t,c) => t.TestTypeEx<long?>             (c, n, DataType.Int64),   1000000),
@@ -190,7 +190,7 @@ namespace Tests.DataProvider
 
 					test.Properties.Set(PropertyNames.Category, _providerName);
 
-					if (!UserProviders.ContainsKey(_providerName))
+					if (!UserProviders.Contains(_providerName))
 					{
 						test.RunState = RunState.Ignored;
 						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
