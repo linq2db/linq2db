@@ -121,7 +121,7 @@
 			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
 
-		<PackageReference Include="MySql.Data" Version="6.9.9" />
+		<PackageReference Include="MySql.Data" Version="6.9.10" />
 		<PackageReference Include="xunit" Version="1.9.1" />
 		<PackageReference Include="xunit.extensions" Version="1.9.1" />
 		<!--

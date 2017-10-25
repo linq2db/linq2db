@@ -132,7 +132,7 @@
 			"NorthwindSqlite"   : { "Provider" : "System.Data.SQLite", "ConnectionString" : "Data Source=Database\\Northwind.sqlite" },
 			"SQLiteMs"          : { "Provider" : "SQLite",             "ConnectionString" : "Data Source=Database\\TestData.sqlite" },
 			"NorthwindSqliteMs" : { "Provider" : "SQLite",             "ConnectionString" : "Data Source=Database\\Northwind.sqlite" },
-			"TestNoopProvider"  : { "Provider" : "TestNoopProvider",   "ConnectionString" : "" }
+			"TestNoopProvider"  : { "Provider" : "TestNoopProvider",   "ConnectionString" : "TestNoopProvider" }
 		}
 	},
 

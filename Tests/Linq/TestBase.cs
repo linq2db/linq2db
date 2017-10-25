@@ -143,16 +143,13 @@ namespace Tests
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
-			foreach (var provider in testSettings.Connections)
+			foreach (var provider in testSettings.Connections.Where(c => UserProviders.Contains(c.Key)))
 			{
 				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
 					throw new InvalidOperationException("ConnectionString should be provided");
 
-				if (string.IsNullOrWhiteSpace(provider.Value.Provider))
-					throw new InvalidOperationException("provider.ProviderName should be provided");
-
 				TxtSettings.Instance.AddConnectionString(
-					provider.Key, provider.Value.Provider, provider.Value.ConnectionString);
+					provider.Key, provider.Value.Provider ?? provider.Key, provider.Value.ConnectionString);
 			}
 #else
 			foreach (var provider in testSettings.Connections)
@@ -429,7 +426,7 @@ namespace Tests
 
 			public DataContextSourceAttribute(bool includeLinqService, params string[] except)
 				: base(includeLinqService,
-					_providers.Where(providerName => except == null || !except.Contains(providerName)).ToArray())
+					_providers.Where(providerName => UserProviders.Contains(providerName) && except == null || !except.Contains(providerName)).ToArray())
 			{
 			}
 		}

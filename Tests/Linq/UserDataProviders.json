@@ -11,12 +11,9 @@
 //			"NorthwindSqliteMs",
 			"SqlServer",
 			"SqlServer.2014",
-			"SqlServer.2012",
-			"SqlServer.2012.1",
-			"SqlServer.2008",
-			"SqlServer.2008.1",
-			"SqlServer.2005",
-			"SqlServer.2005.1",
+			"SqlServer.2012", "SqlServer.2012.1",
+			"SqlServer.2008", "SqlServer.2008.1",
+			"SqlServer.2005", "SqlServer.2005.1",
 //			"SqlServer.2000",
 			"SqlAzure.2012",
 			"DB2",
@@ -39,54 +36,25 @@
 		[
 			"SQLiteMs",
 //			"NorthwindSqliteMs",
-//			"SqlServer",
-//			"SqlServer.2014",
-//			"SqlServer.2012",
-//			"SqlServer.2012.1",
-//			"SqlServer.2008",
-//			"SqlServer.2008.1",
-//			"SqlServer.2005",
-//			"SqlServer.2005.1",
+			"SqlServer",
+			"SqlServer.2014",
+			"SqlServer.2012", "SqlServer.2012.1",
+			"SqlServer.2008", "SqlServer.2008.1",
+			"SqlServer.2005", "SqlServer.2005.1",
 //			"SqlServer.2000",
-//			"SqlAzure.2012",
+			"SqlAzure.2012",
 			"Firebird",
 			"MySql",
 			"MariaDB",
-//			"Oracle.Native",
-//			"Oracle.Managed",
-//			"PostgreSQL",
-//			"Northwind"
+			"PostgreSQL",
+			"Northwind",
 			"TestNoopProvider"
 		]
 	},
 
 	"CORE2" :
 	{
-		"Providers"            :
-		[
-			"SQLiteMs",
-//			"NorthwindSqliteMs",
-//			"TestNoopProvider",
-//			"SqlServer",
-//			"SqlServer.2014",
-//			"SqlServer.2012",
-//			"SqlServer.2012.1",
-//			"SqlServer.2008",
-//			"SqlServer.2008.1",
-//			"SqlServer.2005",
-//			"SqlServer.2005.1",
-//			"SqlServer.2000",
-//			"SqlAzure.2012",
-//			"Firebird",
-//			"MySql",
-//			"MySql57",
-//			"MariaDB",
-//			"Oracle.Native",
-//			"Oracle.Managed",
-			"PostgreSQL",
-			"Northwind",
-			"TestNoopProvider"
-		]
+		"BasedOn" : "CORE1"
 	},
 
 	"LocalConnectionStrings":
