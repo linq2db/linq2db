@@ -351,7 +351,7 @@ namespace Tests.xUpdate
 		// Expected: '*'
 		// But was:  '4'
 		// at Tests.Merge.MergeTests.AssertChar
-		[Test, DataContextSource(false, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
 		public void TestMergeTypes(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -412,7 +412,7 @@ namespace Tests.xUpdate
 			if (context != ProviderName.Informix)
 				Assert.AreEqual(expected.FieldGuid, actual.FieldGuid);
 
-			if (context != ProviderName.SQLite)
+			if (context != ProviderName.SQLiteClassic && context != ProviderName.SQLiteMS)
 				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
 			if (context != ProviderName.SqlServer2000
@@ -502,7 +502,8 @@ namespace Tests.xUpdate
 				&& context != TestProvName.MySql57
 				&& context != TestProvName.MariaDB
 				&& context != ProviderName.Access
-				&& context != ProviderName.SQLite
+				&& context != ProviderName.SQLiteClassic
+				&& context != ProviderName.SQLiteMS
 				&& context != ProviderName.Sybase
 				&& context != ProviderName.DB2
 				&& context != ProviderName.SapHana)
@@ -602,7 +603,8 @@ namespace Tests.xUpdate
 				|| context == ProviderName.OracleManaged
 				|| context == ProviderName.OracleNative
 				|| context == ProviderName.SqlCe
-				|| context == ProviderName.SQLite
+				|| context == ProviderName.SQLiteClassic
+				|| context == ProviderName.SQLiteMS
 				|| context == ProviderName.MySql
 				// MySql57 and MariaDB work, but column is disabled...
 				|| context == TestProvName.MySql57

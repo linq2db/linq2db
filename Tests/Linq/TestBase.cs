@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,14 +29,13 @@ using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
-using Tests.Tools;
 
 //[assembly: Parallelizable]
 
 namespace Tests
 {
 	using Model;
-	using System.Text.RegularExpressions;
+	using Tools;
 
 	public class TestBase
 	{
@@ -258,7 +258,7 @@ namespace Tests
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged,
 			ProviderName.SqlCe,
-			ProviderName.SQLite,
+			ProviderName.SQLiteClassic,
 #endif
 			ProviderName.Firebird,
 			ProviderName.SqlServer2008,
@@ -270,7 +270,7 @@ namespace Tests
 			ProviderName.MySql,
 			TestProvName.SqlAzure,
 			TestProvName.MySql57,
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteMS,
 			TestProvName.Firebird3
 		};
 
@@ -448,10 +448,13 @@ namespace Tests
 		[AttributeUsage(AttributeTargets.Method)]
 		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false) : base(
-				excludeSqlite
-				? new[] { "Northwind" }
-				:  ( excludeSqliteMs  ? new[] { "Northwind", "NorthwindSqlite" } : new[] { "Northwind", "NorthwindSqlite",  "NorthwindSqliteMs"}))
+			public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false)
+				: base(
+					excludeSqlite ?
+						new[] { TestProvName.Northwind } :
+					excludeSqliteMs ?
+						new[] { TestProvName.Northwind, TestProvName.NorthwindSQLite } :
+						new[] { TestProvName.Northwind, TestProvName.NorthwindSQLite, TestProvName.NorthwindSQLiteMS })
 			{
 			}
 

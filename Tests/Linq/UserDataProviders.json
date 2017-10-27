@@ -5,10 +5,10 @@
 		[
 			"Access",
 			"SqlCe",
-			"SQLite",
-//			"NorthwindSqlite",
-//			"SQLiteMs",
-//			"NorthwindSqliteMs",
+			"SQLite.Classic",
+			"SQLite.MS",
+			"Northwind.SQLite",
+			"Northwind.SQLite.MS",
 			"SqlServer",
 			"SqlServer.2014",
 			"SqlServer.2012", "SqlServer.2012.1",
@@ -34,8 +34,8 @@
 	{
 		"Providers" :
 		[
-			"SQLiteMs",
-//			"NorthwindSqliteMs",
+			"SQLite.MS",
+			"Northwind.SQLite.MS",
 			"SqlServer",
 			"SqlServer.2014",
 			"SqlServer.2012", "SqlServer.2012.1",

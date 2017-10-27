@@ -17,7 +17,7 @@ namespace Tests.UserTests
 		class IssueContextSourceAttribute : IncludeDataContextSourceAttribute
 		{
 			public IssueContextSourceAttribute(bool includeLinqService = true)
-				: base(includeLinqService, ProviderName.SQLite, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SQLiteMs)
+				: base(includeLinqService, ProviderName.SQLiteClassic, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SQLiteMS)
 			{ }
 		}
 

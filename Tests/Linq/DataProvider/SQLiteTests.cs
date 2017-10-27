@@ -23,7 +23,7 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SQLiteTests : TestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -54,7 +54,7 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -132,7 +132,7 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -167,7 +167,7 @@ namespace Tests.DataProvider
 				TestNumeric(conn, uint.MaxValue,     DataType.UInt32);
 
 #if NETSTANDARD1_6
-				if (context != TestProvName.SQLiteMs)
+				if (context != ProviderName.SQLiteMS)
 					TestNumeric(conn, ulong.MaxValue,    DataType.UInt64,     "bigint bit decimal int money numeric smallint tinyint float real");
 #endif
 
@@ -184,7 +184,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs), Category("WindowsOnly")]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS), Category("WindowsOnly")]
 		public void TestNumericsDouble(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -194,7 +194,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -210,7 +210,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -236,7 +236,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 
 #if NETSTANDARD1_6
-				if (context != TestProvName.SQLiteMs)
+				if (context != ProviderName.SQLiteMS)
 				{
 					Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
@@ -261,7 +261,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -301,7 +301,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 1 };
@@ -330,7 +330,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -350,7 +350,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestObject(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -364,7 +364,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -389,7 +389,7 @@ namespace Tests.DataProvider
 		/// Ensure we can pass data as Json parameter type and get
 		/// same value back out equivalent in value
 		/// </summary>
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestJson(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -406,7 +406,7 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -418,7 +418,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -441,7 +441,7 @@ namespace Tests.DataProvider
 
 #if NETSTANDARD1_6
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite), Parallelizable(ParallelScope.None)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS), Parallelizable(ParallelScope.None)]
 		public void CreateDatabase(string context)
 		{
 			try
@@ -467,7 +467,7 @@ namespace Tests.DataProvider
 
 #endif
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void BulkCopyLinqTypes(string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
@@ -495,7 +495,7 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void Issue784Test(string context)
 		{
 			using (var db = new TestDataConnection(context))

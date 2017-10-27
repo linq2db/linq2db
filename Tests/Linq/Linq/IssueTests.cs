@@ -460,7 +460,7 @@ namespace Tests.Linq
 			                                           public char   Gender;
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void Issue88(string context)
 		{
 			using (var db = GetDataContext(context))

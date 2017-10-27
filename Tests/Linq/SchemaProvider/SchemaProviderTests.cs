@@ -256,10 +256,10 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void SchemaProviderNormalizeName(string context)
 		{
-			using (var db = new DataConnection(ProviderName.SQLite, "Data Source=:memory:;"))
+			using (var db = new DataConnection(ProviderName.SQLiteClassic, "Data Source=:memory:;"))
 			{
 				db.Execute(
 					@"create table Customer

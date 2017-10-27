@@ -195,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access, ProviderName.SapHana)]
+			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access, ProviderName.SapHana)]
 		public void NewGuid(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -247,7 +247,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void InsertBinary1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -317,7 +317,7 @@ namespace Tests.Linq
 											from t in db.Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t);
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void DateTime21(string context)
 		{
 			using (var db = GetDataContext(context))

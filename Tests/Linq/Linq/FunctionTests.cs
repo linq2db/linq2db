@@ -300,7 +300,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+			ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void NewGuid1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -309,7 +309,7 @@ namespace Tests.Linq
 					from p in db.Types where p.GuidValue != Sql.NewGuid() select p.GuidValue);
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void NewGuid2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -453,7 +453,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(true, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void MatchFtsTest(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override string ConnectionTypeName  => Name == ProviderName.SQLiteClassic
 			? "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"
 			: "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite";
-		protected override string DataReaderTypeName  =>Name == ProviderName.SQLiteClassic
+		protected override string DataReaderTypeName   =>Name == ProviderName.SQLiteClassic
 			? "System.Data.SQLite.SQLiteDataReader, System.Data.SQLite"
 			: "Microsoft.Data.Sqlite.SqliteDataReader, Microsoft.Data.Sqlite";
 

@@ -61,10 +61,6 @@
 		<PackageReference Include="Npgsql" Version="3.2.5" />
 		<PackageReference Include="Mono.Cecil" Version="0.10.0-beta6" />
 		<PackageReference Include="MySql.Data" Version="6.10.4" />
-
-		<None Update="..\..\Data\Northwind.sqlite">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
 	</ItemGroup>
 
 
@@ -105,6 +101,15 @@
 		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Update="x64\**\*">
+			<Link>x64/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="x86\**\*">
+			<Link>x86/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
 		<Reference Include="IBM.Data.DB2">
 			<HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
 		</Reference>
@@ -133,15 +138,6 @@
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.105.2" />
-
-		<None Update="..\..\packages\System.Data.SQLite.Core.1.0.105.2\build\net45\x64\**\*">
-			<Link>x64/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="..\..\packages\System.Data.SQLite.Core.1.0.105.2\build\net45\x86\**\*">
-			<Link>x86/%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 	</ItemGroup>
 
 

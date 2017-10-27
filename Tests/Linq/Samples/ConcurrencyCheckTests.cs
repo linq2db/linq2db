@@ -148,7 +148,7 @@ namespace Tests.Samples
 		[OneTimeSetUp]
 		public void SetUp()
 		{
-			_connection = new InterceptDataConnection(ProviderName.SQLite, "Data Source=:memory:;");
+			_connection = new InterceptDataConnection(ProviderName.SQLiteClassic, "Data Source=:memory:;");
 
 			_connection.CreateTable<TestTable>();
 

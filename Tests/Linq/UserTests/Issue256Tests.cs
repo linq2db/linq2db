@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		{
 			// tests are provider-agnostic
 			public Issue256TestSourceAttribute()
-				: base(ProviderName.SQLite)
+				: base(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)
 			{
 			}
 
