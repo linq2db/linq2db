@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
 	using Configuration;
 	using Data;
 	using Expressions;
@@ -381,10 +380,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		public string AssemblyName
-		{
-			get { return Name == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess"; }
-		}
+		public string AssemblyName => Name == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess";
 
 		public    override string ConnectionNamespace => $"{AssemblyName}.Client";
 		protected override string ConnectionTypeName  => $"{AssemblyName}.Client.OracleConnection, {AssemblyName}";
@@ -397,22 +393,15 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
-
 		static class MappingSchemaInstance
 		{
 			public static readonly OracleMappingSchema.NativeMappingSchema  NativeMappingSchema  = new OracleMappingSchema.NativeMappingSchema();
 			public static readonly OracleMappingSchema.ManagedMappingSchema ManagedMappingSchema = new OracleMappingSchema.ManagedMappingSchema();
 		}
 
-		public override MappingSchema MappingSchema
-		{
-			get
-			{
-				return Name == ProviderName.OracleNative
-					? MappingSchemaInstance.NativeMappingSchema as MappingSchema
-					: MappingSchemaInstance.ManagedMappingSchema;
-			}
-		}
+		public override MappingSchema MappingSchema => Name == ProviderName.OracleNative
+			? MappingSchemaInstance.NativeMappingSchema as MappingSchema
+			: MappingSchemaInstance.ManagedMappingSchema;
 
 		readonly ISqlOptimizer _sqlOptimizer;
 

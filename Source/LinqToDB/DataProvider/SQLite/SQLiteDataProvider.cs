@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;
@@ -16,7 +15,12 @@ namespace LinqToDB.DataProvider.SQLite
 	public class SQLiteDataProvider : DynamicDataProviderBase
 	{
 		public SQLiteDataProvider()
-			: this(ProviderName.SQLite, new SQLiteMappingSchema())
+			: this(ProviderName.SQLite)
+		{
+		}
+
+		public SQLiteDataProvider(string name)
+			: this(name, null)
 		{
 		}
 
@@ -36,9 +40,15 @@ namespace LinqToDB.DataProvider.SQLite
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace => SQLiteTools.AssemblyName;
-		protected override string ConnectionTypeName  => $"{SQLiteTools.AssemblyName}.{SQLiteTools.ConnectionName}, {SQLiteTools.AssemblyName}";
-		protected override string DataReaderTypeName  => $"{SQLiteTools.AssemblyName}.{SQLiteTools.DataReaderName}, {SQLiteTools.AssemblyName}";
+		public    override string ConnectionNamespace => Name == ProviderName.SQLiteClassic
+			? "System.Data.SQLite"
+			: "Microsoft.Data.Sqlite";
+		protected override string ConnectionTypeName  => Name == ProviderName.SQLiteClassic
+			? "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"
+			: "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite";
+		protected override string DataReaderTypeName  =>Name == ProviderName.SQLiteClassic
+			? "System.Data.SQLite.SQLiteDataReader, System.Data.SQLite"
+			: "Microsoft.Data.Sqlite.SqliteDataReader, Microsoft.Data.Sqlite";
 
 		protected override string NormalizeTypeName(string typeName)
 		{
@@ -63,12 +73,19 @@ namespace LinqToDB.DataProvider.SQLite
 			return new SQLiteSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
+		static class MappingSchemaInstance
+		{
+			public static readonly SQLiteMappingSchema.ClassicMappingSchema   ClassicMappingSchema   = new SQLiteMappingSchema.ClassicMappingSchema();
+			public static readonly SQLiteMappingSchema.MicrosoftMappingSchema MicrosoftMappingSchema = new SQLiteMappingSchema.MicrosoftMappingSchema();
+		}
+
+		public override MappingSchema MappingSchema => Name == ProviderName.SQLiteClassic
+			? MappingSchemaInstance.ClassicMappingSchema as MappingSchema
+			: MappingSchemaInstance.MicrosoftMappingSchema;
+
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
-		{
-			return _sqlOptimizer;
-		}
+		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
 
 #if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
@@ -102,8 +119,6 @@ namespace LinqToDB.DataProvider.SQLite
 			base.SetParameterType(parameter, dataType);
 		}
 
-#if NETSTANDARD1_6
-
 		static Action<string> _createDatabase;
 
 		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
@@ -136,6 +151,9 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
+			if (Name == ProviderName.SQLiteClassic)
+				return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
 			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
 			var typeName     = ((DbDataReader)reader).GetDataTypeName(idx);
@@ -197,8 +215,6 @@ namespace LinqToDB.DataProvider.SQLite
 				fieldType);
 		}
 
-#endif
-
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
@@ -211,6 +227,6 @@ namespace LinqToDB.DataProvider.SQLite
 				source);
 		}
 
-#endregion
+		#endregion
 	}
 }

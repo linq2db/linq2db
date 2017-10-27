@@ -111,6 +111,14 @@ namespace LinqToDB
 		/// </summary>
 		public const string SQLite        = "SQLite";
 		/// <summary>
+		/// System.Data.Sqlite provider.
+		/// </summary>
+		public const string SQLiteClassic = "SQLite.Classic";
+		/// <summary>
+		/// Microsoft.Data.Sqlite provider.
+		/// </summary>
+		public const string SQLiteMS      = "SQLite.MS";
+		/// <summary>
 		/// Sybase ASE provider.
 		/// Used as configuration name for Sybase ASE mapping schema <see cref="DataProvider.Sybase.SybaseMappingSchema"/>.
 		/// </summary>

@@ -80,5 +80,23 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
 		}
+
+		internal static readonly SQLiteMappingSchema Instance = new SQLiteMappingSchema();
+
+		public class ClassicMappingSchema : MappingSchema
+		{
+			public ClassicMappingSchema()
+				: base(ProviderName.SQLiteClassic, Instance)
+			{
+			}
+		}
+
+		public class MicrosoftMappingSchema : MappingSchema
+		{
+			public MicrosoftMappingSchema()
+				: base(ProviderName.SQLiteMS, Instance)
+			{
+			}
+		}
 	}
 }

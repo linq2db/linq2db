@@ -4,13 +4,12 @@ using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Linq;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Common;
 	using Configuration;
-
+	using Extensions;
 	using Data;
 
 	public static partial class OracleTools
@@ -48,7 +47,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
+			if (css.IsGlobal)
 				return null;
 
 			switch (css.ProviderName)
@@ -80,15 +79,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static string _detectedProviderName;
 
-		public static string  DetectedProviderName
-		{
-			get { return _detectedProviderName ?? (_detectedProviderName = DetectProviderName()); }
-		}
+		public static string  DetectedProviderName =>
+			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
 
-		static OracleDataProvider DetectedProvider
-		{
-			get { return DetectedProviderName == ProviderName.OracleNative ? _oracleNativeDataProvider : _oracleManagedDataProvider; }
-		}
+		static OracleDataProvider DetectedProvider =>
+			DetectedProviderName == ProviderName.OracleNative ? _oracleNativeDataProvider : _oracleManagedDataProvider;
 
 		static string DetectProviderName()
 		{
@@ -100,7 +95,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))
 						return ProviderName.OracleManaged;;
 			}
-			catch (Exception)
+			catch
 			{
 			}
 
@@ -112,23 +107,10 @@ namespace LinqToDB.DataProvider.Oracle
 			return DetectedProvider;
 		}
 
-		public static void ResolveOracle(string path)
-		{
-			new AssemblyResolver(path, AssemblyName);
-		}
+		public static void ResolveOracle(string path)       => new AssemblyResolver(path, AssemblyName);
+		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, AssemblyName);
 
-		public static void ResolveOracle(Assembly assembly)
-		{
-			new AssemblyResolver(assembly, AssemblyName);
-		}
-
-		public static bool IsXmlTypeSupported
-		{
-			get
-			{
-				return DetectedProvider.IsXmlTypeSupported;
-			}
-		}
+		public static bool IsXmlTypeSupported => DetectedProvider.IsXmlTypeSupported;
 
 		#region CreateDataConnection
 
@@ -151,12 +133,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#region BulkCopy
 
-		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
-		public  static BulkCopyType  DefaultBulkCopyType
-		{
-			get { return _defaultBulkCopyType;  }
-			set { _defaultBulkCopyType = value; }
-		}
+		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
 			this DataConnection        dataConnection,

@@ -78,6 +78,5 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		#endregion
-
 	}
 }

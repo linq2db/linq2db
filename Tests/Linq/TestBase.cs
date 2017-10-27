@@ -426,7 +426,7 @@ namespace Tests
 
 			public DataContextSourceAttribute(bool includeLinqService, params string[] except)
 				: base(includeLinqService,
-					_providers.Where(providerName => UserProviders.Contains(providerName) && except == null || !except.Contains(providerName)).ToArray())
+					_providers.Where(providerName => /*UserProviders.Contains(providerName) &&*/ except == null || !except.Contains(providerName)).ToArray())
 			{
 			}
 		}

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Expressions;
+	using Extensions;
 	using Mapping;
 	using SqlQuery;
 	using System.Globalization;

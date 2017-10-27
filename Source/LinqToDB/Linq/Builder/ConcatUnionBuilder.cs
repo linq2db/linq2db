@@ -207,16 +207,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 					{
 						var type  = _methodCall.Method.GetGenericArguments()[0];
-						var nctor = (NewExpression)Expression.Find(e =>
-						{
-							if (e.NodeType == ExpressionType.New && e.Type == type)
-							{
-								var ne = (NewExpression)e;
-								return ne.Arguments != null && ne.Arguments.Count > 0;
-							}
-
-							return false;
-						});
+						var nctor = (NewExpression)Expression.Find(e => e is NewExpression ne && e.Type == type && ne.Arguments?.Count > 0);
 
 						Expression expr;
 
@@ -228,9 +219,7 @@ namespace LinqToDB.Linq.Builder
 
 							expr = Expression.New(
 								nctor.Constructor,
-								members
-									.Select(m => Expression.PropertyOrField(_unionParameter, m.Name))
-									.Cast<Expression>(),
+								members.Select(m => Expression.PropertyOrField(_unionParameter, m.Name)),
 								members);
 						}
 						else
@@ -239,9 +228,7 @@ namespace LinqToDB.Linq.Builder
 
 							expr = Expression.MemberInit(
 								Expression.New(ta.Type),
-								_members
-									.Select(m => Expression.Bind(m.Value.MemberExpression.Member, m.Value.MemberExpression))
-									.Cast<MemberBinding>());
+								_members.Select(m => Expression.Bind(m.Value.MemberExpression.Member, m.Value.MemberExpression)));
 						}
 
 						var ex = Builder.BuildExpression(this, expr, enforceServerSide);

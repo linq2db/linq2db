@@ -1128,7 +1128,7 @@ namespace LinqToDB.Data
 					var members =
 					(
 						from n in names.Select((name,idx) => new { name, idx })
-						let   member = td.Columns.FirstOrDefault(m => 
+						let   member = td.Columns.FirstOrDefault(m =>
 							string.Compare(m.ColumnName, n.name, dataConnection.MappingSchema.ColumnComparisonOption) == 0)
 						where member != null
 						select new
@@ -1150,7 +1150,7 @@ namespace LinqToDB.Data
 				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
 
 				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
-				expr = Expression.Block(new[] { dataReaderVar }, new[] { assignment, expr });
+				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 			}
 
 			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);

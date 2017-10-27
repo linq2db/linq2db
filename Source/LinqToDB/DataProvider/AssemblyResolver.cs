@@ -20,11 +20,8 @@ namespace LinqToDB.DataProvider
 
 		public AssemblyResolver([NotNull] string path, [NotNull] string resolveName)
 		{
-			if (path        == null) throw new ArgumentNullException("path");
-			if (resolveName == null) throw new ArgumentNullException("resolveName");
-
-			_path        = path;
-			_resolveName = resolveName;
+			_path        = path ?? throw new ArgumentNullException("path");
+			_resolveName = resolveName ?? throw new ArgumentNullException("resolveName");
 
 			if (_path.StartsWith("file://"))
 				_path = _path.GetPathFromUri();
@@ -46,7 +43,7 @@ namespace LinqToDB.DataProvider
 			ResolveEventHandler resolver = Resolver;
 
 			//#if NET40
-			// use this to avoid 
+			// use this to avoid
 			// System.MethodAccessException : Attempt by security transparent method 'LinqToDB.DataProvider.AssemblyResolver.SetResolver()' to access security critical method 'System.AppDomain.add_AssemblyResolve(System.ResolveEventHandler)'
 			var l = Expression.Lambda<Action>(Expression.Call(
 				Expression.Constant(AppDomain.CurrentDomain),
@@ -101,7 +98,7 @@ namespace LinqToDB.DataProvider
 		{
 			var fullName = Path.Combine(_path, _resolveName, ".dll");
 			if(File.Exists(fullName))
-			{ 
+			{
 				var f = new FileAssemblyLoadContext(_path);
 				f.LoadFromAssemblyPath(fullName);
 			}
@@ -109,5 +106,4 @@ namespace LinqToDB.DataProvider
 #endif
 
 	}
-
 }

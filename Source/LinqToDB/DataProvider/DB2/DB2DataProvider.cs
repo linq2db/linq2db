@@ -118,11 +118,11 @@ namespace LinqToDB.DataProvider.DB2
 			return getValue.Compile()();
 		}
 
-		public    override string ConnectionNamespace { get { return "IBM.Data.DB2"; } }
-		protected override string ConnectionTypeName  { get { return "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"; } }
-		protected override string DataReaderTypeName  { get { return "IBM.Data.DB2.DB2DataReader, IBM.Data.DB2"; } }
+		public    override string ConnectionNamespace => "IBM.Data.DB2";
+		protected override string ConnectionTypeName  => "IBM.Data.DB2.DB2Connection, IBM.Data.DB2";
+		protected override string DataReaderTypeName  => "IBM.Data.DB2.DB2DataReader, IBM.Data.DB2";
 
-		public DB2Version Version { get; private set; }
+		public DB2Version Version { get; }
 
 		static class MappingSchemaInstance
 		{

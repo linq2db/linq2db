@@ -7,108 +7,137 @@ using System.Reflection;
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
+	using Configuration;
 	using Data;
 	using Extensions;
 
 	public static class SQLiteTools
 	{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-		public static string AssemblyName   = "System.Data.SQLite";
-		public static string ConnectionName = "SQLiteConnection";
-		public static string DataReaderName = "SQLiteDataReader";
-#else
-		public static string AssemblyName   = "Microsoft.Data.Sqlite";
-		public static string ConnectionName = "SqliteConnection";
-		public static string DataReaderName = "SqliteDataReader";
-#endif
+		public static string AssemblyName;
 
-		static readonly SQLiteDataProvider _SQLiteDataProvider = new SQLiteDataProvider();
+		static readonly SQLiteDataProvider _SQLiteClassicDataProvider  = new SQLiteDataProvider(ProviderName.SQLiteClassic);
+		static readonly SQLiteDataProvider _SQLiteMSDataProvider       = new SQLiteDataProvider(ProviderName.SQLiteMS);
 
 		public static bool AlwaysCheckDbNull = true;
 
 		static SQLiteTools()
 		{
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+			AssemblyName = DetectedProviderName == ProviderName.SQLiteClassic ? "System.Data.SQLite" : "Microsoft.Data.Sqlite";
+
+			DataConnection.AddDataProvider(ProviderName.SQLite, DetectedProvider);
+			DataConnection.AddDataProvider(_SQLiteClassicDataProvider);
+			DataConnection.AddDataProvider(_SQLiteMSDataProvider);
+
+			DataConnection.AddProviderDetector(ProviderDetector);
+		}
+
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
+		{
+			if (css.IsGlobal)
+				return null;
+
+			switch (css.ProviderName)
+			{
+				case ""                                :
+				case null                              :
+
+					if (css.Name.Contains("SQLite"))
+						goto case "SQLite";
+					break;
+
+				case "SQLite.MS"             :
+				case "SQLite.Microsoft"      :
+				case "Microsoft.Data.Sqlite" :
+				case "Microsoft.Data.SQLite" : return _SQLiteMSDataProvider;
+				case "SQLite.Classic"        :
+				case "System.Data.SQLite"    : return _SQLiteClassicDataProvider;
+				case "SQLite"                :
+
+					if (css.Name.Contains("MS") || css.Name.Contains("Microsoft"))
+						return _SQLiteMSDataProvider;
+
+					if (css.Name.Contains("Classic"))
+						return _SQLiteClassicDataProvider;
+
+					return DetectedProvider;
+			}
+
+			return null;
+		}
+
+		static string _detectedProviderName;
+
+		public static string  DetectedProviderName =>
+			_detectedProviderName ?? (_detectedProviderName = DetectProviderName());
+
+		static SQLiteDataProvider DetectedProvider =>
+			DetectedProviderName == ProviderName.SQLiteClassic ? _SQLiteClassicDataProvider : _SQLiteMSDataProvider;
+
+		static string DetectProviderName()
+		{
 			try
 			{
 				var path = typeof(SQLiteTools).AssemblyEx().GetPath();
 
-				if (!File.Exists(Path.Combine(path, AssemblyName + ".dll")))
-				{
-					if (Type.GetType("Mono.Runtime") != null || File.Exists(Path.Combine(path, "Mono.Data.Sqlite.dll")))
-					{
-						AssemblyName   = "Mono.Data.Sqlite";
-						ConnectionName = "SqliteConnection";
-						DataReaderName = "SqliteDataReader";
-					}
-					else if (File.Exists(Path.Combine(path, "Microsoft.Data.Sqlite.dll")))
-					{
-						AssemblyName   = "Microsoft.Data.Sqlite";
-						ConnectionName = "SqliteConnection";
-						DataReaderName = "SqliteDataReader";
-					}
-				}
+				if (!File.Exists(Path.Combine(path, "System.Data.SQLite.dll")))
+					if (File.Exists(Path.Combine(path, "Microsoft.Data.Sqlite.dll")))
+						return ProviderName.SQLiteMS;
 			}
 			catch (Exception)
 			{
 			}
+
+#if NET45
+			return ProviderName.SQLiteClassic;
+#else
+			return ProviderName.SQLiteMS;
 #endif
-			DataConnection.AddDataProvider(_SQLiteDataProvider);
 		}
+
 
 		public static IDataProvider GetDataProvider()
 		{
-			return _SQLiteDataProvider;
+			return DetectedProvider;
 		}
 
 		public static void ResolveSQLite(string path)
 		{
 			new AssemblyResolver(path, AssemblyName);
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-			new AssemblyResolver(path, "Mono.Data.Sqlite");
-#endif
 		}
 
 		public static void ResolveSQLite(Assembly assembly)
 		{
 			new AssemblyResolver(assembly, AssemblyName);
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0
-			new AssemblyResolver(assembly, "Mono.Data.Sqlite");
-#endif
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
-			return new DataConnection(_SQLiteDataProvider, connectionString);
+			return new DataConnection(DetectedProvider, connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(IDbConnection connection)
 		{
-			return new DataConnection(_SQLiteDataProvider, connection);
+			return new DataConnection(DetectedProvider, connection);
 		}
 
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
-			return new DataConnection(_SQLiteDataProvider, transaction);
+			return new DataConnection(DetectedProvider, transaction);
 		}
 
 		#endregion
 
-#if NETSTANDARD1_6
-
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			_SQLiteDataProvider.CreateDatabase(databaseName, deleteIfExists);
+			DetectedProvider.CreateDatabase(databaseName, deleteIfExists);
 		}
 
 		public static void DropDatabase(string databaseName)
 		{
-			_SQLiteDataProvider.DropDatabase(databaseName);
+			DetectedProvider.DropDatabase(databaseName);
 		}
-
-#endif
 
 		#region BulkCopy
 
@@ -129,6 +158,6 @@ namespace LinqToDB.DataProvider.SQLite
 				}, source);
 		}
 
-#endregion
+		#endregion
 	}
 }
