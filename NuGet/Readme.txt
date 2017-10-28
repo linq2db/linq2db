@@ -1,3 +1,38 @@
+LINQ to DB 1.10.0  Release Notes
+---------------------------------
+- breaking change: [Oracle] bulk mode property (OracleTools.UseAlternativeBulkCopy) changed type from bool to AlternativeBulkCopy enum. If you assigned it to true, you should replace it with AlternativeBulkCopy.InsertInto value.
+- breaking change: [Oracle] Old implementation used TO_DATE literal for DataType.DateTime type and TO_TIMESTAMP literal for other date and time types. New implementation will use TO_TIMESTAMP for DataType.DateTime2 type and TO_DATE for other date and time types (#879)
+
+- documentation: Added XML documentation for mapping functionality (#836)
+- documentation: Added documentation on explicit join definition: https://github.com/linq2db/linq2db/wiki/Join-Operators
+
+- feature: LINQ extension methods to define inner and outer (left, right, full) joins (#685)
+- feature: [Oracle] New bulk insert mode added (AlternativeBulkCopy.InsertDual) (#878)
+- feature: new DataConnection async extensions: ExecuteAsync, ExecuteProcAsync, QueryToListAsync, QueryToArrayAsync (#838)
+- feature: [MySQL] BulkCopyOptions.RetrieveSequence support (only for single integer indentity per table) (#866)
+- feature: support for query expression preprocessing (#852)
+
+- improvement: added Sql.NoConvert helper function to remove unnecessary conversions, introduced by LINQ (#870). Fixes #722
+- improvement: [MS SQL] XML parameters support for SQL Server (#859)
+- improvement: joins optimization improvements (#834)
+- improvement: expression tests generator improvements (#877)
+- improvement: [Informix] return default schema flag and schema name for tables in schema provider (#858)
+
+- fix: [Firebird] regression in string literals support for Firebird < 2.5 (#851). You should set FirebirdConfiguration.IsLiteralEncodingSupported to false for firebird < 2.5
+- fix: internal IDataContextEx interface functionality merged into IDataContext interface to allow custom data contexts implementations (#837)
+- fix: functions doesn't work in association predicate exptessions (#841)
+- fix: query cache ignores changes to query, made by ProcessQuery method (#862)
+- fix: group by issues when grouping by date parts (#264, #790)
+- fix: some scenarios doesn't work with extension method associations (#833)
+- fix: [.net core] SerializableAttribute type redefinition conflict (#839)
+- fix: [.net core] Removed strong name from linq2db.core (#867)
+- fix: execute query before returning enumerable result to user (#872)
+- fix: [PostgreSQL] added result conversion to integer for DatePart function (#882)
+- fix: [DB2] fix exception in DB2 schema provider (#880)
+- fix: fix potential NRE (#875)
+
+All changes: https://github.com/linq2db/linq2db/milestone/6
+
 LINQ to DB 1.9.0  Release Notes
 ---------------------------------
 - breaking change: [MySql] access to a table using fully-qualified name using schema/owner is not supported anymore. You should update your code to use database name for it (#681)
