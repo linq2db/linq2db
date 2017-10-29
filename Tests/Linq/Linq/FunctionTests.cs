@@ -504,7 +504,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Sql.Extension("{table_field} matches {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
+		[Sql.Extension("{table_field} match {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
 		public static bool MatchFts<TEntity>(TEntity src, [ExprParameter]string match)
 		{
 			throw new InvalidOperationException();

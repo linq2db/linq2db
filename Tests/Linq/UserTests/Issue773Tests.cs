@@ -25,8 +25,8 @@ namespace Tests.UserTests
 			public string MidName { get; set; }
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.SQLite)]
-		public void Test(string context)
+		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
+		public void Test_Negative(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -43,7 +43,36 @@ namespace Tests.UserTests
 							result.LastName,
 						});
 
-					var list = data.Where(arg => SqlLite.MatchFts(arg, "John*")).ToList(); // <=THROWS EXCEPTION
+					Assert.Throws<NotImplementedException>(() => data.Where(arg => SqlLite.MatchFts(arg, "John*")).ToList());
+				}
+				finally
+				{
+					// cleanup
+					db.Execute("DROP TABLE dataFTS");
+				}
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
+		public void Test_Positive(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.Execute(@"CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
+
+				try
+				{
+					var data = db.GetTable<DtaFts>()
+						.Where(arg => SqlLite.MatchFts(arg, "John*"))
+						.Select(result =>
+						new
+						{
+							result.FirstName,
+							result.MidName,
+							result.LastName,
+						});
+
+					var list = data.ToList(); // <=THROWS EXCEPTION
 
 					Assert.AreEqual(0, list.Count);
 
@@ -58,7 +87,7 @@ namespace Tests.UserTests
 							FirstName = "DoeJohn"
 						});
 
-					list = data.Where(arg => SqlLite.MatchFts(arg, "John*")).ToList(); // <=THROWS EXCEPTION
+					list = data.ToList(); // <=THROWS EXCEPTION
 
 					Assert.AreEqual(1, list.Count);
 					Assert.AreEqual("JohnTheRipper", list[0].FirstName);
