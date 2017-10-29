@@ -16,7 +16,7 @@ namespace Tests.SchemaProvider
 	[TestFixture]
 	public class SchemaProviderTests : TestBase
 	{
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
 		public void Test(string context)
 		{
 			SqlServerTools.ResolveSqlTypes("");
@@ -125,7 +125,7 @@ namespace Tests.SchemaProvider
 			//Assert.That(schemaTable.ForeignKeys.Count >= e.Associations.Count);
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, NorthwindDataContext(false, true)]
 		public void NorthwindTest(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -295,7 +295,7 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
 		public void PrimaryForeignKeyTest(string context)
 		{
 			using (var db = new DataConnection(context))

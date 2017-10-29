@@ -87,10 +87,10 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 			}
 
-#if NET45
-			return ProviderName.SQLiteClassic;
-#else
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 			return ProviderName.SQLiteMS;
+#else
+			return ProviderName.SQLiteClassic;
 #endif
 		}
 
@@ -119,12 +119,16 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static DataConnection CreateDataConnection(IDbConnection connection)
 		{
-			return new DataConnection(DetectedProvider, connection);
+			return new DataConnection(
+				connection.GetType().Namespace.Contains("Microsoft") ? _SQLiteMSDataProvider : _SQLiteClassicDataProvider,
+				connection);
 		}
 
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
-			return new DataConnection(DetectedProvider, transaction);
+			return new DataConnection(
+				transaction.GetType().Namespace.Contains("Microsoft") ? _SQLiteMSDataProvider : _SQLiteClassicDataProvider,
+				transaction);
 		}
 
 		#endregion

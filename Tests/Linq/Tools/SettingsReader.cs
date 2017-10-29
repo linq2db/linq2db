@@ -216,7 +216,7 @@ namespace Tests.Tools
 			get
 			{
 				yield return new TestCaseData("Default", "Default", _defaultData, null)
-					//.SetName("Default")
+					.SetName("Tests.Tools.Default")
 					.Returns(new[]
 					{
 						new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
@@ -224,7 +224,7 @@ namespace Tests.Tools
 					});
 
 				yield return new TestCaseData("Core 1", "CORE1", _defaultData, null)
-					//.SetName("Core 1")
+					.SetName("Tests.Tools.Core1")
 					.Returns(new[]
 					{
 						new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
@@ -233,7 +233,7 @@ namespace Tests.Tools
 					});
 
 				yield return new TestCaseData("Core 2", "CORE2", _defaultData, null)
-					//.SetName("Core 2")
+					.SetName("Tests.Tools.Core2")
 					.Returns(new[]
 					{
 						new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
@@ -242,7 +242,7 @@ namespace Tests.Tools
 					});
 
 				yield return new TestCaseData("User Default", "Default", _defaultData, _userData)
-					//.SetName("User Default")
+					.SetName("Tests.Tools.UserDefault")
 					.Returns(new[]
 					{
 						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
@@ -251,7 +251,7 @@ namespace Tests.Tools
 					});
 
 				yield return new TestCaseData("User Core 1", "CORE1", _defaultData, _userData)
-					//.SetName("User Core 1")
+					.SetName("Tests.Tools.UserCore1")
 					.Returns(new[]
 					{
 						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
@@ -261,7 +261,7 @@ namespace Tests.Tools
 					});
 
 				yield return new TestCaseData("User Core 2", "CORE2", _defaultData, _userData)
-					//.SetName("Tests.Tools.UserCore2")
+					.SetName("Tests.Tools.UserCore2")
 					.Returns(new[]
 					{
 						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },

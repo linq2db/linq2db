@@ -495,7 +495,7 @@ namespace Tests.DataProvider
 
 #if !NETSTANDARD1_6
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic)]
 		public void Issue784Test(string context)
 		{
 			using (var db = new TestDataConnection(context))

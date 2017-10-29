@@ -129,11 +129,11 @@
 			"Access.Data"         : {                                       "ConnectionString" : "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
 			"SqlCe"               : {                                       "ConnectionString" : "Data Source=Database\\TestData.sdf"          },
 			"SqlCe.Data"          : {                                       "ConnectionString" : "Data Source=Database\\Data\\TestData.sdf"    },
-			"SQLiteClassic"       : {                                       "ConnectionString" : "Data Source=Database\\TestData.sqlite"       },
-			"SQLiteClassic.Data"  : {                                       "ConnectionString" : "Data Source=Database\\Data\\TestData.sqlite" },
+			"SQLite.Classic"      : { "Provider" : "SQLite",                "ConnectionString" : "Data Source=Database\\TestData.sqlite"       },
+			"SQLite.Classic.Data" : { "Provider" : "SQLite.Classic",        "ConnectionString" : "Data Source=Database\\Data\\TestData.sqlite" },
 			"SQLite.MS"           : { "Provider" : "SQLite.MS",             "ConnectionString" : "Data Source=Database\\TestData..MS.sqlite" },
 			"SQLite.MS.Data"      : { "Provider" : "Microsoft.Data.Sqlite", "ConnectionString" : "Data Source=Database\\Data\\TestData..MS.sqlite" },
-			"Northwind.Sqlite"    : { "Provider" : "System.Data.SQLite",    "ConnectionString" : "Data Source=Database\\Northwind.sqlite" },
+			"Northwind.SQLite"    : { "Provider" : "System.Data.SQLite",    "ConnectionString" : "Data Source=Database\\Northwind.sqlite" },
 			"Northwind.SQLite.MS" : { "Provider" : "SQLite.Microsoft",      "ConnectionString" : "Data Source=Database\\Northwind.MS.sqlite" },
 			"TestNoopProvider"    : { "Provider" : "TestNoopProvider",      "ConnectionString" : "TestNoopProvider" }
 		}
