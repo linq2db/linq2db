@@ -463,7 +463,7 @@ namespace Tests.Linq
 					select c;
 
 				var str = q.ToString();
-				Assert.True(str.Contains(" matches "));
+				Assert.True(str.Contains(" match "));
 			}
 		}
 	}
