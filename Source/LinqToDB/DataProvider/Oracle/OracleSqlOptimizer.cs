@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider.Oracle
 					case "AddMinute"      : return Add<DateTime>(func.Parameters[0], Div(func.Parameters[1],             60 * 24));
 					case "AddSecond"      : return Add<DateTime>(func.Parameters[0], Div(func.Parameters[1],        60 * 60 * 24));
 					case "AddMillisecond" : return Add<DateTime>(func.Parameters[0], Div(func.Parameters[1], 1000 * 60 * 60 * 24));
-					case "Avg"            : 
+					case "Avg"            :
 						return new SqlFunction(
 							func.SystemType,
 							"Round",
