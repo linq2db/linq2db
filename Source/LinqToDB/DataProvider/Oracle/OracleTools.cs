@@ -9,8 +9,14 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Configuration;
-	using Extensions;
 	using Data;
+	using Extensions;
+	public enum AlternativeBulkCopy
+	{
+		InsertAll,
+		InsertInto,
+		InsertDual	
+	}
 
 	public static partial class OracleTools
 	{
@@ -170,7 +176,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#endregion
 
-		public static bool UseAlternativeBulkCopy = false;
+		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 
 		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
