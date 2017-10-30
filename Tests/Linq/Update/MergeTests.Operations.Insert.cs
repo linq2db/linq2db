@@ -415,6 +415,78 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[3], result[3], null, null);
 			}
 		}
+
+		// temporary test
+		[Test, MergeDataContextSource]
+		public void InsertFromCrossJoinedSourceQuery2(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+							 select new TestMapping1()
+							 {
+								 Id = t1.Id,
+								 Fake = t2.Fake,
+								 Field1 = t1.Field1,
+								 Field2 = t2.Field2,
+								 Field3 = t1.Field3,
+								 Field4 = t2.Field4,
+								 Field5 = t1.Field5
+							 };
+
+				source.ToList();
+			}
+		}
+
+		[Test, MergeDataContextSource]
+		public void InsertFromCrossJoinedSourceQuery(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+							 select new TestMapping1()
+							 {
+								 Id = t1.Id,
+								 //Fake = t2.Fake,
+								 Field1 = t1.Field1,
+								 Field2 = t2.Field2,
+								 Field3 = t1.Field3,
+								 Field4 = t2.Field4,
+								 Field5 = t1.Field5
+							 };
+
+				var rows = table
+					.Merge()
+					.Using(source)
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				// TODO: asserts
+				//AssertRowCount(2, rows, context);
+
+				//Assert.AreEqual(6, result.Count);
+
+				//AssertRow(InitialTargetData[0], result[0], null, null);
+				//AssertRow(InitialTargetData[1], result[1], null, null);
+				//AssertRow(InitialTargetData[2], result[2], null, 203);
+				//AssertRow(InitialTargetData[3], result[3], null, null);
+				//AssertRow(InitialSourceData[2], result[4], null, null);
+				//AssertRow(InitialSourceData[3], result[5], null, 216);
+			}
+		}
 		#endregion
 
 		#region Insert<TEntity>(predicate)
