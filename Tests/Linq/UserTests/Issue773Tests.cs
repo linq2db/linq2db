@@ -1,17 +1,41 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Mapping;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System;
 using System.Linq;
-using Tests.Linq;
-using Tests.Model;
+using System.Reflection;
 
 namespace Tests.UserTests
 {
+	using LinqToDB;
+	using LinqToDB.Data;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
+
 	[TestFixture]
 	public class Issue773Tests : TestBase
 	{
+
+		public static class SqlLite
+		{
+			class MatchBuilder : Sql.IExtensionCallBuilder
+			{
+				public void Build(Sql.ISqExtensionBuilder builder)
+				{
+					var method = (MethodInfo) builder.Member;
+					var arg = method.GetGenericArguments().Single();
+
+					builder.AddParameter("table_field", new SqlTable(builder.Mapping, arg));
+				}
+			}
+
+			// ReSharper disable once UnusedTypeParameter
+			[Sql.Extension("{table_field} match {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
+			public static bool MatchFts<TEntity>([ExprParameter]string match)
+			{
+				throw new InvalidOperationException();
+			}
+		}
+
+
 		[Table("dataFTS")]
 		public partial class DtaFts
 		{
@@ -25,12 +49,15 @@ namespace Tests.UserTests
 			public string MidName { get; set; }
 		}
 
+
 		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
-		public void Test_Negative(string context)
+		public void TestAnonymous(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
-				db.Execute(@"CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
+				db.Execute(@"
+	DROP TABLE IF EXISTS dataFTS;
+	CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
 
 				try
 				{
@@ -43,7 +70,9 @@ namespace Tests.UserTests
 							result.LastName,
 						});
 
-					Assert.Throws<NotImplementedException>(() => data.Where(arg => SqlLite.MatchFts(arg, "John*")).ToList());
+					var query = data.Where(arg => SqlLite.MatchFts<DtaFts>("John*"));
+					Console.WriteLine(query.ToString());
+					query.ToList();
 				}
 				finally
 				{
@@ -54,16 +83,18 @@ namespace Tests.UserTests
 		}
 
 		[Test, IncludeDataContextSource(false, ProviderName.SQLite)]
-		public void Test_Positive(string context)
+		public void TestDirect(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
-				db.Execute(@"CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
+				db.Execute(@"
+	DROP TABLE IF EXISTS dataFTS;
+	CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
 
 				try
 				{
 					var data = db.GetTable<DtaFts>()
-						.Where(arg => SqlLite.MatchFts(arg, "John*"))
+						.Where(arg => SqlLite.MatchFts<DtaFts>("John*"))
 						.Select(result =>
 						new
 						{
