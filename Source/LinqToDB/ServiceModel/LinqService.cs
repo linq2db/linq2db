@@ -146,9 +146,23 @@ namespace LinqToDB.ServiceModel
 							Data       = new List<string[]>(),
 						};
 
+						var names = new HashSet<string>();
+
 						for (var i = 0; i < ret.FieldCount; i++)
 						{
-							ret.FieldNames[i] = rd.GetName(i);
+							var name = rd.GetName(i);
+							var idx  = 0;
+
+							if (names.Contains(name))
+							{
+								while (names.Contains(name = "c" + ++idx))
+								{
+								}
+							}
+
+							names.Add(name);
+
+							ret.FieldNames[i] = name;
 							ret.FieldTypes[i] = rd.GetFieldType(i);
 						}
 

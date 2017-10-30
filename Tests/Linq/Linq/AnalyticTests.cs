@@ -1143,7 +1143,7 @@
 		}
 
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		[Test, IncludeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void TestVarianceOracle(string context)
 		{
 			using (var db = GetDataContext(context))

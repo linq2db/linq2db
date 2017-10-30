@@ -877,20 +877,20 @@ namespace LinqToDB.Linq
 			{ M(() => Math.Abs    ((SByte)  0)), N(() => L<SByte,  SByte>  ((SByte   p) => Sql.Abs(p).Value )) },
 			{ M(() => Math.Abs    ((Single) 0)), N(() => L<Single, Single> ((Single  p) => Sql.Abs(p).Value )) },
 
-			{ M(() => Math.Acos   (0)   ), N(() => L<Double,Double>  ((Double p)     => Sql.Acos   (p)   .Value )) },
-			{ M(() => Math.Asin   (0)   ), N(() => L<Double,Double>  ((Double p)     => Sql.Asin   (p)   .Value )) },
-			{ M(() => Math.Atan   (0)   ), N(() => L<Double,Double>  ((Double p)     => Sql.Atan   (p)   .Value )) },
-			{ M(() => Math.Atan2  (0,0) ), N(() => L<Double,Double,Double>((Double x,Double y) => Sql.Atan2  (x, y).Value )) },
-			{ M(() => Math.Ceiling((Decimal)0)), N(() => L<Decimal,Decimal>  ((Decimal p)     => Sql.Ceiling(p)   .Value )) },
-			{ M(() => Math.Ceiling((Double)0)), N(() => L<Double,Double>  ((Double p)     => Sql.Ceiling(p)   .Value )) },
-			{ M(() => Math.Cos            (0)), N(() => L<Double,Double>  ((Double p)     => Sql.Cos    (p)   .Value )) },
-			{ M(() => Math.Cosh           (0)), N(() => L<Double,Double>  ((Double p)     => Sql.Cosh   (p)   .Value )) },
-			{ M(() => Math.Exp            (0)), N(() => L<Double,Double>  ((Double p)     => Sql.Exp    (p)   .Value )) },
-			{ M(() => Math.Floor ((Decimal)0)), N(() => L<Decimal,Decimal>((Decimal p)    => Sql.Floor  (p)   .Value )) },
-			{ M(() => Math.Floor  ((Double)0)), N(() => L<Double,Double>       ((Double p)          => Sql.Floor  (p)   .Value )) },
-			{ M(() => Math.Log            (0)), N(() => L<Double,Double>       ((Double p)          => Sql.Log    (p)   .Value )) },
-			{ M(() => Math.Log          (0,0)), N(() => L<Double,Double,Double>((Double m,Double n) => Sql.Log    (n, m).Value )) },
-			{ M(() => Math.Log10          (0)), N(() => L<Double,Double>       ((Double p)          => Sql.Log10  (p)   .Value )) },
+			{ M(() => Math.Acos   (0)   ),       N(() => L<Double,Double>       ((Double p)          => Sql.Acos   (p)   .Value )) },
+			{ M(() => Math.Asin   (0)   ),       N(() => L<Double,Double>       ((Double p)          => Sql.Asin   (p)   .Value )) },
+			{ M(() => Math.Atan   (0)   ),       N(() => L<Double,Double>       ((Double p)          => Sql.Atan   (p)   .Value )) },
+			{ M(() => Math.Atan2  (0,0) ),       N(() => L<Double,Double,Double>((Double x,Double y) => Sql.Atan2  (x, y).Value )) },
+			{ M(() => Math.Ceiling((Decimal)0)), N(() => L<Decimal,Decimal>     ((Decimal p)         => Sql.Ceiling(p)   .Value )) },
+			{ M(() => Math.Ceiling((Double)0)),  N(() => L<Double,Double>       ((Double p)          => Sql.Ceiling(p)   .Value )) },
+			{ M(() => Math.Cos            (0)),  N(() => L<Double,Double>       ((Double p)          => Sql.Cos    (p)   .Value )) },
+			{ M(() => Math.Cosh           (0)),  N(() => L<Double,Double>       ((Double p)          => Sql.Cosh   (p)   .Value )) },
+			{ M(() => Math.Exp            (0)),  N(() => L<Double,Double>       ((Double p)          => Sql.Exp    (p)   .Value )) },
+			{ M(() => Math.Floor ((Decimal)0)),  N(() => L<Decimal,Decimal>     ((Decimal p)         => Sql.Floor  (p)   .Value )) },
+			{ M(() => Math.Floor  ((Double)0)),  N(() => L<Double,Double>       ((Double p)          => Sql.Floor  (p)   .Value )) },
+			{ M(() => Math.Log            (0)),  N(() => L<Double,Double>       ((Double p)          => Sql.Log    (p)   .Value )) },
+			{ M(() => Math.Log          (0,0)),  N(() => L<Double,Double,Double>((Double m,Double n) => Sql.Log    (n, m).Value )) },
+			{ M(() => Math.Log10          (0)),  N(() => L<Double,Double>       ((Double p)          => Sql.Log10  (p)   .Value )) },
 
 			{ M(() => Math.Max((Byte)   0, (Byte)   0)), N(() => L<Byte,   Byte,   Byte>   ((v1,v2) => v1 > v2 ? v1 : v2)) },
 			{ M(() => Math.Max((Decimal)0, (Decimal)0)), N(() => L<Decimal,Decimal,Decimal>((v1,v2) => v1 > v2 ? v1 : v2)) },
@@ -1218,6 +1218,11 @@ namespace LinqToDB.Linq
 
 					{ M(() => Sql.Truncate(0m)),  N(() => L<Decimal?,Decimal?>((Decimal? v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
 					{ M(() => Sql.Truncate(0.0)), N(() => L<Double?,Double?>  ((Double?  v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
+				}},
+
+				{ ProviderName.SQLiteMS, new Dictionary<MemberInfo,IExpressionInfo> {
+					{ M(() => Math.Floor((Decimal)0)), N(() => L<Decimal,Decimal>((Decimal x) => x > 0 ? (int)x : (int)(x-0.9999999999999999m) )) },
+					{ M(() => Math.Floor ((Double)0)), N(() => L<Double,Double>  ((Double  x) => x > 0 ? (int)x : (int)(x-0.9999999999999999) )) },
 				}},
 
 				#endregion

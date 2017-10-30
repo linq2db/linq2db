@@ -880,10 +880,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Property("@@DATEFIRST")]
-		public static int DateFirst
-		{
-			get { return 7; }
-		}
+		public static int DateFirst => 7;
 
 		[Sql.Function]
 		public static DateTime? MakeDateTime(int? year, int? month, int? day)

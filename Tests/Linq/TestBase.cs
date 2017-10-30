@@ -1111,8 +1111,8 @@ namespace Tests
 					message.AppendLine  ();
 				}
 
-			Assert.AreEqual(0, exceptExpected, "Expected Was" + Environment.NewLine + message.ToString());
-			Assert.AreEqual(0, exceptResult,   "Expect Result"   + Environment.NewLine + message.ToString());
+			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
+			Assert.AreEqual(0, exceptResult,   $"Expect Result{Environment.NewLine}{message}");
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
