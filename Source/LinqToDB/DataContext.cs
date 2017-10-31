@@ -48,11 +48,8 @@ namespace LinqToDB
 		/// <param name="connectionString">Database connection string.</param>
 		public DataContext([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
 		{
-			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
-			if (connectionString == null) throw new ArgumentNullException("connectionString");
-
-			DataProvider     = dataProvider;
-			ConnectionString = connectionString;
+			DataProvider     = dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider));
+			ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
 			ContextID        = DataProvider.Name;
 			MappingSchema    = DataProvider.MappingSchema;
 		}
@@ -94,7 +91,7 @@ namespace LinqToDB
 		/// </summary>
 		public  bool  KeepConnectionAlive
 		{
-			get { return _keepConnectionAlive; }
+			get => _keepConnectionAlive;
 			set
 			{
 				_keepConnectionAlive = value;
@@ -122,7 +119,7 @@ namespace LinqToDB
 
 				return _isMarsEnabled.Value;
 			}
-			set { _isMarsEnabled = value; }
+			set => _isMarsEnabled = value;
 		}
 
 		private List<string> _queryHints;
