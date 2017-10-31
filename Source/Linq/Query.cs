@@ -130,7 +130,7 @@ namespace LinqToDB.Linq
 		internal static readonly ConcurrentBag<Action> CacheCleaners = new ConcurrentBag<Action>();
 
 		/// <summary>
-		/// Clears query caches for all typed queries
+		/// Clears query caches for all typed queries.
 		/// </summary>
 		public static void ClearCaches()
 		{
