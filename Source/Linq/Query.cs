@@ -127,6 +127,7 @@ namespace LinqToDB.Linq
 
 		#region Cache Support
 
+#if !SILVERLIGHT
 		internal static readonly ConcurrentBag<Action> CacheCleaners = new ConcurrentBag<Action>();
 
 		/// <summary>
@@ -140,6 +141,7 @@ namespace LinqToDB.Linq
 				cleaner();
 			}
 		}
+#endif
 
 		#endregion
 	}
@@ -202,7 +204,9 @@ namespace LinqToDB.Linq
 			_sync         = new object();
 			_orderedCache = new List<Query<T>>(CacheSize);
 
+#if !SILVERLIGHT
 			Query.CacheCleaners.Add(ClearCache);
+#endif
 		}
 
 		/// <summary>
