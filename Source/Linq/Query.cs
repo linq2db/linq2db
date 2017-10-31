@@ -124,6 +124,24 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
+		#region Cache Support
+
+		internal static readonly ConcurrentBag<Action> CacheCleaners = new ConcurrentBag<Action>();
+
+		/// <summary>
+		/// Clears query caches for all typed queries.
+		/// </summary>
+		public static void ClearCaches()
+		{
+			// ConcurrentBag has thread safe enumerator
+			foreach (var cleaner in CacheCleaners)
+			{
+				cleaner();
+			}
+		}
+
+		#endregion
 	}
 
 	class Query<T> : Query
@@ -162,7 +180,7 @@ namespace LinqToDB.Linq
 
 		#region GetInfo
 
-		static          List<Query<T>> _orderedCache = new List<Query<T>>(CacheSize);
+		static readonly List<Query<T>> _orderedCache;
 
 		/// <summary>
 		/// LINQ query cache version. Changed when query added or removed from cache.
@@ -172,12 +190,20 @@ namespace LinqToDB.Linq
 		/// <summary>
 		/// LINQ query cache synchronization object.
 		/// </summary>
-		static readonly object   _sync = new object();
+		static readonly object         _sync;
 
 		/// <summary>
 		/// LINQ query cache size (per entity type).
 		/// </summary>
 		const int CacheSize = 100;
+
+		static Query()
+		{
+			_sync         = new object();
+			_orderedCache = new List<Query<T>>(CacheSize);
+
+			Query.CacheCleaners.Add(ClearCache);
+		}
 
 		/// <summary>
 		/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
