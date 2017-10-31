@@ -15,7 +15,7 @@ environment:
   matrix:
     - buildConfiguration: net452
     - buildConfiguration: netcoreapp1.0
-    - buildConfiguration: docfx
+    - buildConfiguration: netcoreapp2.0
 
 
 version: $(packageVersion).{build}
@@ -50,7 +50,7 @@ before_build:
     #Write-Host "ldfFile : $ldfFile "
     #sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [Northwind] ON (FILENAME = '$mdfFile'),(FILENAME = '$ldfFile') for ATTACH"
 
-    # MySql 
+    # MySql
     $env:MYSQL_PWD="Password12!"
     $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
     iex "& $cmd"

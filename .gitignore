@@ -27,7 +27,7 @@ obj/
 _ReSharper*/
 [Tt]est[Rr]esult*
 linq2db.sln.docstates
-Tests/**/UserDataProviders*.txt
+Tests/**/UserDataProviders*.*
 NuGet/*.nupkg
 !*.dll
 !*.exe
