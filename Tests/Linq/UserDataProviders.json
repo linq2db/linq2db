@@ -41,7 +41,6 @@
 			"SqlServer.2012", "SqlServer.2012.1",
 			"SqlServer.2008", "SqlServer.2008.1",
 			"SqlServer.2005", "SqlServer.2005.1",
-//			"SqlServer.2000",
 			"SqlAzure.2012",
 			"Firebird",
 			"MySql",
@@ -54,7 +53,23 @@
 
 	"CORE2" :
 	{
-		"BasedOn" : "CORE1"
+		"Providers" :
+		[
+			"SQLite.MS",
+			"Northwind.SQLite.MS",
+			"SqlServer",
+			"SqlServer.2014",
+			"SqlServer.2012", "SqlServer.2012.1",
+			"SqlServer.2008", "SqlServer.2008.1",
+			"SqlServer.2005", "SqlServer.2005.1",
+			"SqlAzure.2012",
+			"Firebird",
+			"MySql",
+			"MariaDB",
+			"PostgreSQL",
+			"Northwind",
+			"TestNoopProvider"
+		]
 	},
 
 	"LocalConnectionStrings":

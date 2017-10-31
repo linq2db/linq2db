@@ -36,15 +36,7 @@ namespace Tests.Samples
 				var dic = pairs.ToDictionary(p => p.New, p => p.Old);
 
 				clone = new QueryVisitor().Convert(clone, e =>
-							  {
-								  var param = e as SqlParameter;
-								  SqlParameter newParam;
-								  if (param != null && dic.TryGetValue(param, out newParam))
-								  {
-									  return newParam;
-								  }
-								  return e;
-							  });
+					e is SqlParameter param && dic.TryGetValue(param, out var newParam) ? newParam : e);
 
 				clone.Parameters.Clear();
 				clone.Parameters.AddRange(original.Parameters);
@@ -101,7 +93,7 @@ namespace Tests.Samples
 					if (rowVersion == null)
 						return selectQuery;
 
-					
+
 					var newQuery = Clone(selectQuery);
 
 					var field = newQuery.Insert.Into[rowVersion.ColumnName];
@@ -148,7 +140,11 @@ namespace Tests.Samples
 		[OneTimeSetUp]
 		public void SetUp()
 		{
+#if NETSTANDARD1_6 || NETSTANDARD2_0
+			_connection = new InterceptDataConnection(ProviderName.SQLiteMS, "Data Source=:memory:;");
+#else
 			_connection = new InterceptDataConnection(ProviderName.SQLiteClassic, "Data Source=:memory:;");
+#endif
 
 			_connection.CreateTable<TestTable>();
 
@@ -273,5 +269,5 @@ namespace Tests.Samples
 			Assert.AreEqual(3, table.Count());
 		}
 #endif
-	}
+		}
 }

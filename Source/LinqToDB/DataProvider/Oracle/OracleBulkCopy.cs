@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.Oracle
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (_bulkCopyCreator != null)
 				{
-					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToList();
+					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 					var rd      = new BulkCopyReader(_dataProvider, dataConnection.MappingSchema, columns, source);
 					var rc      = new BulkCopyRowsCopied();
 

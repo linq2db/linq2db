@@ -139,25 +139,40 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
+			Debug.WriteLine("Connection strings:");
+
 #if NETSTANDARD1_6 || NETSTANDARD2_0
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
-			foreach (var provider in testSettings.Connections.Where(c => UserProviders.Contains(c.Key)))
+			foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
 			{
 				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
 					throw new InvalidOperationException("ConnectionString should be provided");
+
+				Debug.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 				TxtSettings.Instance.AddConnectionString(
 					provider.Key, provider.Value.Provider ?? provider.Key, provider.Value.ConnectionString);
 			}
 #else
+
+
 			foreach (var provider in testSettings.Connections)
+			{
+				Debug.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+
 				DataConnection.AddOrSetConfiguration(
 					provider.Key,
 					provider.Value.ConnectionString,
 					provider.Value.Provider ?? "");
+			}
 #endif
+
+			Debug.WriteLine("Providers:");
+
+			foreach (var userProvider in UserProviders)
+				Debug.WriteLine($"\t{userProvider}");
 
 			var defaultConfiguration = testSettings.DefaultConfiguration;
 

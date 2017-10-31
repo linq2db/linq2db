@@ -186,9 +186,9 @@ namespace Tests._Create
 					options,
 					new[]
 					{
-						new InheritanceParent2() {InheritanceParentId = 1, TypeDiscriminator = null, Name = null },
-						new InheritanceParent2() {InheritanceParentId = 2, TypeDiscriminator = 1,    Name = null },
-						new InheritanceParent2() {InheritanceParentId = 3, TypeDiscriminator = 2,    Name = "InheritanceParent2" }
+						new InheritanceParent2 {InheritanceParentId = 1, TypeDiscriminator = null, Name = null },
+						new InheritanceParent2 {InheritanceParentId = 2, TypeDiscriminator = 1,    Name = null },
+						new InheritanceParent2 {InheritanceParentId = 3, TypeDiscriminator = 2,    Name = "InheritanceParent2" }
 					});
 
 				db.BulkCopy(
@@ -200,8 +200,7 @@ namespace Tests._Create
 						new InheritanceChild2() {InheritanceChildId = 3, TypeDiscriminator = 2,    InheritanceParentId = 3, Name = "InheritanceParent2" }
 					});
 
-				if (action != null)
-					action(db.Connection);
+				action?.Invoke(db.Connection);
 			}
 		}
 

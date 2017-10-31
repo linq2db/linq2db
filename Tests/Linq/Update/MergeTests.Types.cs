@@ -11,7 +11,7 @@ namespace Tests.xUpdate
 {
 	using Model;
 
-	public partial class MergeTests
+	public partial class MergeTests : TestBase
 	{
 		[Table("unspecified")]
 		class MergeTypes
@@ -163,7 +163,7 @@ namespace Tests.xUpdate
 
 		private void PrepareTypesData(IDataContext db)
 		{
-			using (new DisableLogging())
+			//using (new DisableLogging())
 			{
 				GetTypes1(db).Delete();
 				GetTypes2(db).Delete();

@@ -16,7 +16,11 @@ namespace Tests.SchemaProvider
 	[TestFixture]
 	public class SchemaProviderTests : TestBase
 	{
-		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS
+#if NETSTANDARD2_0
+			, ProviderName.MySql, TestProvName.MySql57
+#endif
+			)]
 		public void Test(string context)
 		{
 			SqlServerTools.ResolveSqlTypes("");
@@ -137,6 +141,8 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+#if !NETSTANDARD2_0
+
 		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void MySqlTest(string context)
 		{
@@ -169,6 +175,8 @@ namespace Tests.SchemaProvider
 				Assert.That(pk, Is.Not.Null);
 			}
 		}
+
+#endif
 
 		class PKTest
 		{
@@ -218,7 +226,11 @@ namespace Tests.SchemaProvider
 			Assert.AreEqual("_1", SchemaProviderBase.ToValidName("\t1\t"));
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS
+#if NETSTANDARD2_0
+			, ProviderName.MySql, TestProvName.MySql57
+#endif
+			)]
 		public void IncludeExcludeCatalogTest(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -235,7 +247,11 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS
+#if NETSTANDARD2_0
+			, ProviderName.MySql, TestProvName.MySql57
+#endif
+			)]
 		public void IncludeExcludeSchemaTest(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -256,10 +272,10 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
 		public void SchemaProviderNormalizeName(string context)
 		{
-			using (var db = new DataConnection(ProviderName.SQLiteClassic, "Data Source=:memory:;"))
+			using (var db = new DataConnection(context, "Data Source=:memory:;"))
 			{
 				db.Execute(
 					@"create table Customer
@@ -295,7 +311,11 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS
+#if NETSTANDARD2_0
+			, ProviderName.MySql, TestProvName.MySql57
+#endif
+			)]
 		public void PrimaryForeignKeyTest(string context)
 		{
 			using (var db = new DataConnection(context))

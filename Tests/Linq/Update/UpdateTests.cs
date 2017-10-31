@@ -902,6 +902,7 @@ namespace Tests.xUpdate
 			TestProvName.MySql57,
 			TestProvName.MariaDB,
 			ProviderName.Sybase,
+			ProviderName.OracleNative,
 			ProviderName.OracleManaged)]
 		public void TestUpdateTakeOrdered(string context)
 		{
@@ -951,8 +952,8 @@ namespace Tests.xUpdate
 			TestProvName.MySql57,
 			TestProvName.MariaDB,
 			ProviderName.Sybase,
-			ProviderName.OracleManaged
-		 )]
+			ProviderName.OracleNative,
+			ProviderName.OracleManaged)]
 		public void TestUpdateSkipTake(string context)
 		{
 			using (var db = GetDataContext(context))

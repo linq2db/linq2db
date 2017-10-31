@@ -439,7 +439,7 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-#if NETSTANDARD1_6
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 
 		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS), Parallelizable(ParallelScope.None)]
 		public void CreateDatabase(string context)

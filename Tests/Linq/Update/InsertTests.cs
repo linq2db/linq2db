@@ -1009,7 +1009,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[DataContextSource]
+		[DataContextSource(ProviderName.OracleNative)]
 		public void InsertOrUpdate2(string context)
 		{
 			using (var db = GetDataContext(context))

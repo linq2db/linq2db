@@ -211,23 +211,34 @@ namespace LinqToDB.DataProvider.Oracle
 
 				// static T GetDecimalValue<T>(OracleDataReader rd, int idx)
 				// {
-				//    return (T) OracleDecimal.SetPrecision(rd.GetOracleDecimal(idx), 27);
+				//    return (T)(decimal)OracleDecimal.SetPrecision(rd.GetOracleDecimal(idx), 27);
 				// }
 
-				Func<Type, LambdaExpression> getDecimal = t =>
-					Expression.Lambda(
-						Expression.ConvertChecked(
-							Expression.Call(setPrecisionMethod,
-								Expression.Call(dataReaderParameter, "GetOracleDecimal", null, indexParameter), Expression.Constant(27)),
-							t),
+				LambdaExpression GetDecimal(Type t, bool convToDecimal)
+				{
+					Expression expr =
+						Expression.Call(setPrecisionMethod,
+							Expression.Call(
+								dataReaderParameter,
+								"GetOracleDecimal",
+								null,
+								indexParameter),
+							Expression.Constant(27));
+
+					if (convToDecimal)
+						expr = Expression.Convert(expr, typeof(decimal));
+
+					return Expression.Lambda(
+						Expression.Convert(expr, t),
 						dataReaderParameter,
 						indexParameter);
+				}
 
 				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = _oracleDecimal }] = getDecimalAdv;
 				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), FieldType = typeof(decimal)}        ] = getDecimalAdv;
-				ReaderExpressions[new ReaderInfo { ToType = typeof(int),     FieldType = typeof(decimal)}        ] = getDecimal(typeof(int));
-				ReaderExpressions[new ReaderInfo { ToType = typeof(long),    FieldType = typeof(decimal)}        ] = getDecimal(typeof(long));
-				ReaderExpressions[new ReaderInfo {                           FieldType = typeof(decimal)}        ] = getDecimal(typeof(decimal));
+				ReaderExpressions[new ReaderInfo { ToType = typeof(int),     FieldType = typeof(decimal)}        ] = GetDecimal(typeof(int),     true);
+				ReaderExpressions[new ReaderInfo { ToType = typeof(long),    FieldType = typeof(decimal)}        ] = GetDecimal(typeof(long),    true);
+				ReaderExpressions[new ReaderInfo {                           FieldType = typeof(decimal)}        ] = GetDecimal(typeof(decimal), false);
 			}
 
 			{
