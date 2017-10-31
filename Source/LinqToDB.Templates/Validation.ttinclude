@@ -28,7 +28,7 @@ void ValidationImpl()
 			var isValid      = new Method("bool", "IsValid", new[] { cl.Name + " obj" }) { IsStatic = true };
 			var validator    = new Class("CustomValidator", isValid) { IsStatic = true, };
 			var partialGroup = new MemberGroup { IsCompact = true };
-			
+
 			validationGroup.Members.Add(new Field("int", "_isValidCounter") { Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } } });
 			validationGroup.Members.Add(validator);
 			validationGroup.Members.Add(partialGroup);

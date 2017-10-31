@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
@@ -35,6 +35,35 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests.FSharp", "Tests\FSharp\Tests.FSharp.fsproj", "{56109866-4005-4852-9F9A-19A7A8D3B369}"
 EndProject
 Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "Tests.VisualBasic", "Tests\VisualBasic\Tests.VisualBasic.vbproj", "{A5524EBC-8058-4B16-8D09-D992555CBFCB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LinqToDB.Templates", "LinqToDB.Templates", "{61C8125A-1D37-43E4-9AE6-F53270D4DB74}"
+	ProjectSection(SolutionItems) = preProject
+		Source\LinqToDB.Templates\DataAnnotations.ttinclude = Source\LinqToDB.Templates\DataAnnotations.ttinclude
+		Source\LinqToDB.Templates\DataModel.ttinclude = Source\LinqToDB.Templates\DataModel.ttinclude
+		Source\LinqToDB.Templates\EditableObject.ttinclude = Source\LinqToDB.Templates\EditableObject.ttinclude
+		Source\LinqToDB.Templates\Humanizer.ttinclude = Source\LinqToDB.Templates\Humanizer.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.Access.ttinclude = Source\LinqToDB.Templates\LinqToDB.Access.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude = Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude = Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.Informix.ttinclude = Source\LinqToDB.Templates\LinqToDB.Informix.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude = Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.Oracle.ttinclude = Source\LinqToDB.Templates\LinqToDB.Oracle.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.PostgreSQL.ttinclude = Source\LinqToDB.Templates\LinqToDB.PostgreSQL.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.SapHana.ttinclude = Source\LinqToDB.Templates\LinqToDB.SapHana.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.SqlCe.ttinclude = Source\LinqToDB.Templates\LinqToDB.SqlCe.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude = Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.SqlServer.SqlTypes.ttinclude = Source\LinqToDB.Templates\LinqToDB.SqlServer.SqlTypes.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude = Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude = Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude
+		Source\LinqToDB.Templates\LinqToDB.ttinclude = Source\LinqToDB.Templates\LinqToDB.ttinclude
+		Source\LinqToDB.Templates\MultipleFiles.ttinclude = Source\LinqToDB.Templates\MultipleFiles.ttinclude
+		Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude = Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude
+		Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude = Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude
+		Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude = Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude
+		Source\LinqToDB.Templates\PluralizationService.ttinclude = Source\LinqToDB.Templates\PluralizationService.ttinclude
+		Source\LinqToDB.Templates\T4Model.ttinclude = Source\LinqToDB.Templates\T4Model.ttinclude
+		Source\LinqToDB.Templates\Validation.ttinclude = Source\LinqToDB.Templates\Validation.ttinclude
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -114,6 +143,7 @@ Global
 		{0A1B1E37-2615-4387-B6F5-94F004814ED0} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{56109866-4005-4852-9F9A-19A7A8D3B369} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{A5524EBC-8058-4B16-8D09-D992555CBFCB} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
+		{61C8125A-1D37-43E4-9AE6-F53270D4DB74} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
