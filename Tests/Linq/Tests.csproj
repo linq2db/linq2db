@@ -109,6 +109,10 @@
 			<Link>x86/%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Update="x86\sqlite3.dll">
+			<Link>sqlite3.dll</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 
 		<Reference Include="IBM.Data.DB2">
 			<HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
@@ -154,6 +158,18 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<Compile Remove="SchemaProvider\SchemaProviderTests.cs" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
+		<None Update="x64\**\*">
+			<Link>x64/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="x86\**\*">
+			<Link>x86/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="x86\sqlite3.dll">
+			<Link>sqlite3.dll</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
