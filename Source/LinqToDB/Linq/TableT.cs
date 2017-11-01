@@ -21,14 +21,10 @@ namespace LinqToDB.Linq
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
-
 		public override string ToString()
 		{
 			return "Table(" + typeof(T).Name + ")";
 		}
-
-#endif
 
 		#endregion
 	}

@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 // ReSharper disable UnusedMember.Local
@@ -481,34 +480,6 @@ namespace Tests.Linq
 			throw new InvalidOperationException();
 		}
 
-	}
-
-	public static class SqlLite
-	{
-		class MatchBuilder : Sql.IExtensionCallBuilder
-		{
-			public void Build(Sql.ISqExtensionBuilder builder)
-			{
-				var field = builder.GetExpression("src") as SqlField;
-				if (field == null)
-					throw new InvalidOperationException("Can not get table");
-
-				var sqlTable = (SqlTable) field.Table;
-				var newField = new SqlField
-				{
-					Name  = sqlTable.PhysicalName,
-					Table = sqlTable
-				};
-
-				builder.AddParameter("table_field", newField);
-			}
-		}
-
-		[Sql.Extension("{table_field} matches {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
-		public static bool MatchFts<TEntity>(TEntity src, [ExprParameter]string match)
-		{
-			throw new InvalidOperationException();
-		}
 	}
 
 }

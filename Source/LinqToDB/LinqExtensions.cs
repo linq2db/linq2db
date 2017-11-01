@@ -2639,6 +2639,14 @@ namespace LinqToDB
 
 		#region SqlJoin
 
+		/// <summary>
+		/// Defines inner or outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="joinType">Type of join.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
 		[Pure]
 		[LinqTunnel]
 		internal static IQueryable<TSource> Join<TSource>(
@@ -2657,6 +2665,13 @@ namespace LinqToDB
 					new[] {source.Expression, Expression.Constant(joinType), predicate != null ? Expression.Quote(predicate) : null}));
 		}
 
+		/// <summary>
+		/// Defines inner join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> InnerJoin<TSource>(
@@ -2666,6 +2681,13 @@ namespace LinqToDB
 			return Join(source, SqlJoinType.Inner, predicate);
 		}
 
+		/// <summary>
+		/// Defines left outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> LeftJoin<TSource>(
@@ -2675,6 +2697,13 @@ namespace LinqToDB
 			return Join(source, SqlJoinType.Left, predicate);
 		}
 
+		/// <summary>
+		/// Defines right outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> RightJoin<TSource>(
@@ -2684,6 +2713,13 @@ namespace LinqToDB
 			return Join(source, SqlJoinType.Right, predicate);
 		}
 
+		/// <summary>
+		/// Defines full outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> FullJoin<TSource>(
@@ -2697,9 +2733,16 @@ namespace LinqToDB
 
 		#region Tests
 
-		public static string GenerateTestString(this IQueryable query, bool encryptNames = false)
+		/// <summary>
+		/// Generates test source code for specified query.
+		/// This method could be usefull to debug queries and attach test code to linq2db issue reports.
+		/// </summary>
+		/// <param name="query">Query to test.</param>
+		/// <param name="mangleNames">Should we use real names for used types, members and namespace or generate obfuscated names.</param>
+		/// <returns>Test source code.</returns>
+		public static string GenerateTestString(this IQueryable query, bool mangleNames = false)
 		{
-			return new ExpressionTestGenerator(encryptNames).GenerateSourceString(query.Expression);
+			return new ExpressionTestGenerator(mangleNames).GenerateSourceString(query.Expression);
 		}
 
 		#endregion

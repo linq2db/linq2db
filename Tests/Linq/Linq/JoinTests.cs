@@ -11,7 +11,7 @@ namespace Tests.Linq
 {
 	using Model;
 
-	public static class EnumerableExtesions
+	public static class EnumerableExtensions
 	{
 		class Results<T, TKey>
 		{
