@@ -1075,9 +1075,8 @@ namespace LinqToDB.Data
 
 			if (!_objectReaders.TryGetValue(key, out func))
 			{
-				//return GetObjectReader2<T>(dataConnection, dataReader);
-				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce(dataReader));
+				var readerBuilder   = new RecordReaderBuilder(dataConnection, dataConnection.MappingSchema, typeof(T), dataReader);
+				_objectReaders[key] = func = readerBuilder.BuildReaderFunction<T>();
 			}
 
 			return (Func<IDataReader,T>)func;
@@ -1087,93 +1086,12 @@ namespace LinqToDB.Data
 		{
 			var key = new QueryKey(typeof(T), dataConnection.ID, sql);
 
-			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce());
+			var readerBuilder = new RecordReaderBuilder(dataConnection, dataConnection.MappingSchema, typeof(T), dataReader);
+			var func          = readerBuilder.BuildReaderFunction<T>();
 
 			_objectReaders[key] = func;
 
 			return func;
-		}
-
-		static Func<IDataReader,T> CreateObjectReader<T>(
-			DataConnection dataConnection,
-			IDataReader    dataReader,
-			Func<Type,int,Expression,Expression> getMemberExpression)
-		{
-			var parameter      = Expression.Parameter(typeof(IDataReader));
-			var dataReaderExpr = Expression.Convert(parameter, dataReader.GetType());
-
-			Expression expr;
-
-			if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
-			{
-				expr = getMemberExpression(typeof(T), 0, dataReaderExpr);
-			}
-			else
-			{
-				var td    = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var names = new List<string>(dataReader.FieldCount);
-
-				for (var i = 0; i < dataReader.FieldCount; i++)
-					names.Add(dataReader.GetName(i));
-
-				expr = null;
-
-				var ctors = typeof(T).GetConstructorsEx().Select(c => new { c, ps = c.GetParameters() }).ToList();
-
-				if (ctors.Count > 0 && ctors.All(c => c.ps.Length > 0))
-				{
-					var q =
-						from c in ctors
-						let count = c.ps.Count(p => names.Contains(p.Name))
-						orderby count descending
-						select c;
-
-					var ctor = q.FirstOrDefault();
-
-					if (ctor != null)
-					{
-						expr = Expression.New(
-							ctor.c,
-							ctor.ps.Select(p => names.Contains(p.Name) ?
-								getMemberExpression(p.ParameterType, names.IndexOf(p.Name), dataReaderExpr) :
-								Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType)));
-					}
-				}
-
-				if (expr == null)
-				{
-					var members =
-					(
-						from n in names.Select((name,idx) => new { name, idx })
-						let   member = td.Columns.FirstOrDefault(m => 
-							string.Compare(m.ColumnName, n.name, dataConnection.MappingSchema.ColumnComparisonOption) == 0)
-						where member != null
-						select new
-						{
-							Member = member,
-							Expr   = getMemberExpression(member.MemberType, n.idx, dataReaderExpr),
-						}
-					).ToList();
-
-					expr = Expression.MemberInit(
-						Expression.New(typeof(T)),
-						members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
-				}
-			}
-
-			if (expr.GetCount(e => e == dataReaderExpr) > 1)
-			{
-				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "dr");
-				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
-
-				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
-				expr = Expression.Block(new[] { dataReaderVar }, new[] { assignment, expr });
-			}
-
-			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
-
-			return lex.Compile();
 		}
 
 		#endregion
