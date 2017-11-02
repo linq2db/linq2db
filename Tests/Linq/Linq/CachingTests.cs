@@ -82,7 +82,7 @@ namespace Tests.Linq
 
 			if(subString != "")
 			{
-				while ((n = source.IndexOf(subString, n, StringComparison.InvariantCulture)) != -1)
+				while ((n = source.IndexOf(subString, n, StringComparison.Ordinal)) != -1)
 				{
 					n += subString.Length;
 					++count;
