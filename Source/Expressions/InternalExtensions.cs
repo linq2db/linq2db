@@ -397,9 +397,18 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
+			var parameters = expr1.Method.GetParameters();
 			for (var i = 0; i < expr1.Arguments.Count; i++)
-				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
-					return false;
+			{
+				if (parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Any())
+				{
+					if (!Equals(expr1.Arguments[i].EvaluateExpression(), expr2.Arguments[i].EvaluateExpression()))
+						return false;
+				}
+				else 
+					if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+						return false;
+			}
 
 			if (info.QueryableAccessorDic.Count > 0)
 			{
@@ -972,6 +981,35 @@ namespace LinqToDB.Expressions
 			}
 
 			return 0;
+		}
+
+		public static object EvaluateExpression(this Expression expr)
+		{
+			switch (expr.NodeType) 
+			{
+				case ExpressionType.Constant:
+					return ((ConstantExpression)expr).Value;
+
+				case ExpressionType.MemberAccess:
+					{
+						var member = (MemberExpression) expr;
+						switch (member.Member.MemberType)
+						{
+							case MemberTypes.Field:
+							{
+								return ((FieldInfo) member.Member).GetValue(member.Expression.EvaluateExpression());
+							}
+							case MemberTypes.Property:
+							{
+								return ((PropertyInfo) member.Member).GetValue(member.Expression.EvaluateExpression());
+							}
+						}
+						break;
+					}
+			}
+
+			var value = Expression.Lambda(expr).Compile().DynamicInvoke();
+			return value;
 		}
 
 		#endregion

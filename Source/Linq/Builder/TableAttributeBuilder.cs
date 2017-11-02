@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = (TableBuilder.TableContext)sequence;
-			var value    = (string)((ConstantExpression)methodCall.Arguments[1]).Value;
+			var value    = (string)methodCall.Arguments[1].EvaluateExpression();
 
 			switch (methodCall.Method.Name)
 			{
