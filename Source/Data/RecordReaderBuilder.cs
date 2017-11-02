@@ -29,12 +29,12 @@ namespace LinqToDB.Data
 		const bool  IsBlockDisable = true;
 #endif
 
-		public IDataContext            DataContext   { get; }
-		public MappingSchema           MappingSchema { get; }
-		public Type                    ObjectType    { get; }
-		public Type                    OriginalType  { get; }
-		public IDataReader             Reader        { get; }
-		public Dictionary<string, int> ReaderIndexes { get; }
+		public IDataContext            DataContext   { get; private set; }
+		public MappingSchema           MappingSchema { get; private set; }
+		public Type                    ObjectType    { get; private set; }
+		public Type                    OriginalType  { get; private set; }
+		public IDataReader             Reader        { get; private set; }
+		public Dictionary<string, int> ReaderIndexes { get; private set; }
 
 		int                 _varIndex;
 		ParameterExpression _variable;
