@@ -1001,7 +1001,7 @@ namespace LinqToDB.Expressions
 							}
 							case MemberTypes.Property:
 							{
-								return ((PropertyInfo) member.Member).GetValue(member.Expression.EvaluateExpression());
+								return ((PropertyInfo) member.Member).GetValue(member.Expression.EvaluateExpression(), null);
 							}
 						}
 						break;
