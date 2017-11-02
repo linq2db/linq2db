@@ -29,11 +29,11 @@ namespace LinqToDB.Data
 		const bool  IsBlockDisable = true;
 #endif
 
-		public IDataContext            DataContext { get; }
+		public IDataContext            DataContext   { get; }
 		public MappingSchema           MappingSchema { get; }
-		public Type                    ObjectType { get; }
-		public Type                    OriginalType { get; }
-		public IDataReader             Reader { get; }
+		public Type                    ObjectType    { get; }
+		public Type                    OriginalType  { get; }
+		public IDataReader             Reader        { get; }
 		public Dictionary<string, int> ReaderIndexes { get; }
 
 		int                 _varIndex;
@@ -244,7 +244,7 @@ namespace LinqToDB.Data
 
 		Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType)
 		{
-			var ctor = objectType.GetConstructorsEx().Single();
+			var ctor  = objectType.GetConstructorsEx().Single();
 
 			var exprs = GetExpressions(entityDescriptor.TypeAccessor, true,
 				(
@@ -342,7 +342,7 @@ namespace LinqToDB.Data
 
 			foreach (var mapping in inheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
 			{
-				var ed = MappingSchema.GetEntityDescriptor(mapping.m.Type);
+				var ed     = MappingSchema.GetEntityDescriptor(mapping.m.Type);
 				var dindex = GetReaderIndex(ed, null, mapping.m.DiscriminatorName);
 
 				if (dindex >= 0)
