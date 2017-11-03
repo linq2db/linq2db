@@ -106,7 +106,7 @@ namespace Tests
 			var configName = "NET45";
 #endif
 
-#if APPVEYOR
+#if APPVEYOR1
 			Console.WriteLine("Appveyor configuration detected.");
 			configName += ".Appveyor";
 #endif
