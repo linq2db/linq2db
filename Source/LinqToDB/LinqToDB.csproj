@@ -3,7 +3,7 @@
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net45;netcoreapp2.0;netstandard1.6;net40;netstandard2.0;net451</TargetFrameworks>
+		<TargetFrameworks>net451;netcoreapp2.0;netstandard1.6;net40;netstandard2.0;net45</TargetFrameworks>
 		<AssemblyName>linq2db</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
@@ -79,9 +79,7 @@
 		<Compile Remove="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 	</ItemGroup>
 
-	<Import
-		Project="..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets"
-		Condition="Exists('..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets') AND '$(TargetFramework)' == 'net40'" />
+	<Import Project="..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets') AND '$(TargetFramework)' == 'net40'" />
 
 	<Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == '' AND '$(TargetFramework)' == 'net40'">
 		<Error Condition="!Exists('..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
