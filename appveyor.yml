@@ -5,7 +5,7 @@ environment:
   packageVersion: 2.0.0
 
 cache:
-- packages -> **\packages.config
+- packages -> appveyor.yml
 
 version: $(packageVersion).{build}
 
@@ -26,7 +26,7 @@ before_build:
   - nuget restore  linq2db.sln
 
 build_script:
-  msbuild linq2db.sln /p:Configuration=Release /t:Build /v:m /p:DefineConstants="APPVEYOR"
+  msbuild linq2db.sln /p:Configuration=Debug /t:Build /v:m /p:DefineConstants="APPVEYOR"
 
 before_test:
 - ps: |
