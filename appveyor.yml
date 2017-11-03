@@ -52,7 +52,7 @@ before_test:
     iex "& $cmd"
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: 7z e Data\northwind.sql.zip
-- cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "northwind.sql" > nul
+- cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
 
 test:
   # only assemblies to test
