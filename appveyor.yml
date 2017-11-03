@@ -1,28 +1,12 @@
-image:
-- Visual Studio 2017
+image: Visual Studio 2017
 
 configuration: Release
 
 environment:
   packageVersion: 2.0.0
-  access_token:
-    secure: IlfmHXRdUK6v8dX/WqieXQ==
-  regularProviders: AppveyorDataProviders.txt
-  coreProviders: AppveyorDataProviders.Core.txt
-  testfilter: TestCategory != FreeText & TestCategory != Explicit
-  testRunner: dotnet
-  testLogger: trx
-  matrix:
-    - buildConfiguration: net452
-    - buildConfiguration: netcoreapp1.0
-    - buildConfiguration: netcoreapp2.0
 
 
 version: $(packageVersion).{build}
-
-cache:
-- packages -> **\packages.config
-- tools
 
 services:
 - mssql2014
@@ -33,10 +17,8 @@ init:
 - cmd: git config --global core.autocrlf true
 - ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
 
-test: off
-
 before_build:
-- ps: |
+- ps:
     $startPath = "$($env:appveyor_build_folder)\Data"
     $sqlInstance = "(local)\SQL2014"
     $dbName = "TestData"
@@ -69,7 +51,7 @@ nuget:
   project_feed: false
 
 build_script:
-- ps: .\build.ps1
+- ps: msbuild linq2db.sln /p:Configuration=Release /t:Restore;Clean;Rebuild /v:m
 
 artifacts:
 - path: \**\linq2db*.nupkg

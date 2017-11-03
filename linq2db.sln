@@ -62,13 +62,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811-C5AA-4C35-B996-AA5913F41A0D}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		Build.cmd = Build.cmd
+		Clean.cmd = Clean.cmd
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E-D3B3-433F-A3CA-EE29CD24C324}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests.FSharp", "Tests\FSharp\Tests.FSharp.fsproj", "{E3E09A92-ED23-457B-8E59-CCD34667B6EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.Utils", "Tests\Utils\Tests.Utils.csproj", "{780957BE-9905-41FE-9797-CB17BE361D4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Utils", "Tests\Utils\Tests.Utils.csproj", "{780957BE-9905-41FE-9797-CB17BE361D4D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
