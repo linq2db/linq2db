@@ -3,7 +3,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
-		<Configurations>Debug;Release;Travis</Configurations>
+		<Configurations>Debug;Release</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

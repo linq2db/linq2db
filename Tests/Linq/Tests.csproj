@@ -5,7 +5,13 @@
 		<TargetFrameworks>net452;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<Configurations>Debug;Release;Travis;NET.45;CORE.1;CORE.2</Configurations>
+		<Configurations>Debug;Release;AppVeyor;NET.45;CORE.1;CORE.2</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
+		<DefineConstants>RELEASE;APPVEYOR</DefineConstants>
+		<DebugSymbols>false</DebugSymbols>
+		<Optimize>true</Optimize>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
@@ -32,9 +38,6 @@
 		<Optimize>false</Optimize>
 	</PropertyGroup>
 
-
-	<!-- BEGIN: Do not delete or change this ItemGroup, it is temporary hack to build on travis -->
-	<!-- END: Do not delete or change this ItemGroup, it is temporary hack to build on travis -->
 
 	<ItemGroup>
 		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />

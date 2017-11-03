@@ -22,11 +22,8 @@ nuget:
   account_feed: false
   project_feed: false
 
-before_build:
-  - nuget restore  linq2db.sln
-
 build_script:
-  msbuild linq2db.sln /p:Configuration=Debug /t:Build /v:m
+  msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
 
 before_test:
 - ps: |
@@ -56,6 +53,11 @@ before_test:
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: 7z e Data\northwind.sql.zip
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "northwind.sql" > nul
+
+test:
+  # only assemblies to test
+  assemblies:
+    - Tests\Linq\**\linq2db.Tests.dll
 
 artifacts:
 - path: \**\linq2db*.nupkg

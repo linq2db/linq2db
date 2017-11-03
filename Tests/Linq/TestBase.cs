@@ -106,9 +106,11 @@ namespace Tests
 			var configName = "NET45";
 #endif
 
-#if APPVEYOR1
-			Console.WriteLine("Appveyor configuration detected.");
-			configName += ".Appveyor";
+#if APPVEYOR
+#warning "AppVeyor configuration detected."
+
+			Console.WriteLine("AppVeyor configuration detected.");
+			configName += ".AppVeyor";
 #endif
 
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);

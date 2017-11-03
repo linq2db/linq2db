@@ -13,7 +13,7 @@
 		<PackageProjectUrl>http://linq2db.com</PackageProjectUrl>
 		<PackageLicenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</PackageLicenseUrl>
 
-		<Configurations>Debug;Release;Travis</Configurations>
+		<Configurations>Debug;Release</Configurations>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
 	</PropertyGroup>
 

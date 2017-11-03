@@ -61,7 +61,7 @@
 		]
 	},
 
-	"NET45.Appveyor" :
+	"NET45.AppVeyor" :
 	{
 		"BasedOn"              : "AppveyorConnectionStrings",
 		"DefaultConfiguration" : "SQLite.Classic",
@@ -77,12 +77,13 @@
 			"MySql57",
 			"PostgreSQL",
 			"Northwind",
+			"SqlServer",
 			"SqlServer.2014",
 			"TestNoopProvider"
 		]
 	},
 
-	"CORE1.Appveyor" :
+	"CORE1.AppVeyor" :
 	{
 		"BasedOn"              : "AppveyorConnectionStrings",
 		"DefaultConfiguration" : "SQLite.MS",
@@ -94,12 +95,13 @@
 			"MySql57",
 			"PostgreSQL",
 			"Northwind",
+			"SqlServer",
 			"SqlServer.2014",
 			"TestNoopProvider"
 		]
 	},
 
-	"CORE2.Appveyor" :
+	"CORE2.AppVeyor" :
 	{
 		"BasedOn"              : "AppveyorConnectionStrings",
 		"DefaultConfiguration" : "SQLite.MS",
@@ -111,6 +113,7 @@
 			"MySql57",
 			"PostgreSQL",
 			"Northwind",
+			"SqlServer",
 			"SqlServer.2014",
 			"TestNoopProvider"
 		]
@@ -172,6 +175,7 @@
 			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Port=3306;Database=TestData;Uid=root;Pwd=Password12!;charset=utf8;" },
 			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Port=5432;Database=TestData;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"Northwind"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=Northwind;User Id=sa;Password=Password12!;" },
+			"SqlServer"           : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestData;User Id=sa;Password=Password12!;" },
 			"SqlServer.2014"      : { "Provider" : "System.Data.SqlClient",  "ConnectionString" : "Server=localhost\\SQL2014;Database=TestData;User Id=sa;Password=Password12!;" }
 		}
 	},
