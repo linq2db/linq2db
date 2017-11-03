@@ -133,7 +133,7 @@
 
 	<!-- .NET Core -->
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp2.0|AnyCPU'">
+	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.0'">
 		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
 	</PropertyGroup>
 
