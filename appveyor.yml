@@ -24,7 +24,8 @@ before_build:
     $dbName = "TestData"
 
     # create database
-    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+    $cmd = 'sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"'
+    iex "& $cmd"
 
     #$mdfFile = join-path $startPath "northwnd.mdf"
     #$ldfFile = join-path $startPath "northwnd.ldf"
