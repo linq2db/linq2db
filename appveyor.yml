@@ -18,14 +18,13 @@ init:
 - ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
 
 before_build:
-- ps:
+- ps: |
     $startPath = "$($env:appveyor_build_folder)\Data"
     $sqlInstance = "(local)\SQL2014"
     $dbName = "TestData"
 
     # create database
-    $cmd = 'sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"'
-    iex "& $cmd"
+    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
 
     #$mdfFile = join-path $startPath "northwnd.mdf"
     #$ldfFile = join-path $startPath "northwnd.ldf"
