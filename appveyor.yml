@@ -5,6 +5,8 @@ configuration: Release
 environment:
   packageVersion: 2.0.0
 
+cache:
+- packages -> **\packages.config
 
 version: $(packageVersion).{build}
 
@@ -51,7 +53,7 @@ nuget:
   project_feed: false
 
 build_script:
-- ps: msbuild linq2db.sln /p:Configuration=Release /t:Restore;Clean;Rebuild /v:m
+- ps: msbuild linq2db.sln /p:Configuration=Release /t:Restore;Build /v:m
 
 artifacts:
 - path: \**\linq2db*.nupkg
