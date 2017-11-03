@@ -33,28 +33,6 @@
 			"SQLite.MS",
 			"Northwind.SQLite",
 			"Northwind.SQLite.MS",
-//			"SqlServer",
-//			"SqlServer.2014",
-//			"SqlServer.2012",
-//			"SqlServer.2012.1",
-//			"SqlServer.2008",
-//			"SqlServer.2008.1",
-//			"SqlServer.2005",
-//			"SqlServer.2005.1",
-//			"SqlServer.2000",
-//			"SqlAzure.2012",
-//			"DB2",
-//			"Firebird",
-//			"Informix",
-//			"MySql",
-//			"MySql57",
-//			"MariaDB",
-//			"Oracle.Native",
-//			"Oracle.Managed",
-//			"PostgreSQL",
-//			"Sybase",
-//			"SapHana",
-//			"Northwind"
 			"TestNoopProvider"
 		]
 	},
@@ -67,24 +45,6 @@
 		[
 			"SQLite.MS",
 			"Northwind.SQLite.MS",
-//			"SqlServer",
-//			"SqlServer.2014",
-//			"SqlServer.2012",
-//			"SqlServer.2012.1",
-//			"SqlServer.2008",
-//			"SqlServer.2008.1",
-//			"SqlServer.2005",
-//			"SqlServer.2005.1",
-//			"SqlServer.2000",
-//			"SqlAzure.2012",
-//			"Firebird",
-//			"MySql",
-//			"MySql57",
-//			"MariaDB",
-//			"Oracle.Native",
-//			"Oracle.Managed",
-//			"PostgreSQL",
-//			"Northwind"
 			"TestNoopProvider"
 		]
 	},
@@ -97,26 +57,61 @@
 		[
 			"SQLite.MS",
 			"Northwind.SQLite.MS",
-//			"NorthwindSqliteMs",
-//			"TestNoopProvider",
-//			"SqlServer",
-//			"SqlServer.2014",
-//			"SqlServer.2012",
-//			"SqlServer.2012.1",
-//			"SqlServer.2008",
-//			"SqlServer.2008.1",
-//			"SqlServer.2005",
-//			"SqlServer.2005.1",
-//			"SqlServer.2000",
-//			"SqlAzure.2012",
-//			"Firebird",
-//			"MySql",
-//			"MySql57",
-//			"MariaDB",
-//			"Oracle.Native",
-//			"Oracle.Managed",
-//			"PostgreSQL",
-//			"Northwind"
+			"TestNoopProvider"
+		]
+	},
+
+	"NET45.Appveyor" :
+	{
+		"BasedOn"              : "AppveyorConnectionStrings",
+		"DefaultConfiguration" : "SQLite.Classic",
+		"TraceLevel"           : "Error",
+		"Providers"            :
+		[
+			"Access",
+			"SqlCe",
+			"SQLite.Classic",
+			"SQLite.MS",
+			"Northwind.SQLite",
+			"Northwind.SQLite.MS",
+			"MySql57",
+			"PostgreSQL",
+			"Northwind",
+			"SqlServer.2014",
+			"TestNoopProvider"
+		]
+	},
+
+	"CORE1.Appveyor" :
+	{
+		"BasedOn"              : "AppveyorConnectionStrings",
+		"DefaultConfiguration" : "SQLite.MS",
+		"TraceLevel"           : "Error",
+		"Providers"            :
+		[
+			"SQLite.MS",
+			"Northwind.SQLite.MS",
+			"MySql57",
+			"PostgreSQL",
+			"Northwind",
+			"SqlServer.2014",
+			"TestNoopProvider"
+		]
+	},
+
+	"CORE2.Appveyor" :
+	{
+		"BasedOn"              : "AppveyorConnectionStrings",
+		"DefaultConfiguration" : "SQLite.MS",
+		"TraceLevel"           : "Error",
+		"Providers"            :
+		[
+			"SQLite.MS",
+			"Northwind.SQLite.MS",
+			"MySql57",
+			"PostgreSQL",
+			"Northwind",
+			"SqlServer.2014",
 			"TestNoopProvider"
 		]
 	},
@@ -189,5 +184,41 @@
 			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Database=TestData;Uid=root;Pwd=;charset=utf8;" },
 			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Database=testdata;User Id=postgres;Password=;Pooling=true;MinPoolSize=10;MaxPoolSize=100" }
 		}
+	},
+
+	"All.Providers" :
+	{
+		"Providers" :
+		[
+			"Access",
+			"SqlCe",
+			"SQLite.Classic",
+			"SQLite.MS",
+			"Northwind.SQLite",
+			"Northwind.SQLite.MS",
+			"SqlServer",
+			"SqlServer.2014",
+			"SqlServer.2012",
+			"SqlServer.2012.1",
+			"SqlServer.2008",
+			"SqlServer.2008.1",
+			"SqlServer.2005",
+			"SqlServer.2005.1",
+			"SqlServer.2000",
+			"SqlAzure.2012",
+			"DB2",
+			"Firebird",
+			"Informix",
+			"MySql",
+			"MySql57",
+			"MariaDB",
+			"Oracle.Native",
+			"Oracle.Managed",
+			"PostgreSQL",
+			"Sybase",
+			"SapHana",
+			"Northwind",
+			"TestNoopProvider"
+		]
 	}
 }

@@ -52,7 +52,7 @@ nuget:
   project_feed: false
 
 build_script:
-  msbuild linq2db.sln /p:Configuration=Release /t:Restore;Build /v:m
+  msbuild linq2db.sln /p:Configuration=Release /t:Restore;Build /v:m /p:DefineConstants="APPVEYOR"
 
 artifacts:
 - path: \**\linq2db*.nupkg

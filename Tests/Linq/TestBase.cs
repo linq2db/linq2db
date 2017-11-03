@@ -106,6 +106,11 @@ namespace Tests
 			var configName = "NET45";
 #endif
 
+#if APPVEYOR
+			Console.WriteLine("Appveyor configuration detected.");
+			configName += ".Appveyor";
+#endif
+
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 			var dataPath     = Path.GetFullPath(@"Database\Data");
 

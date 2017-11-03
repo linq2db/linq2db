@@ -5,17 +5,8 @@ VisualStudioVersion = 15.0.27004.2006
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
-		appveyor.core.yml = appveyor.core.yml
-		appveyor.mono.yml = appveyor.mono.yml
-		appveyor.yml = appveyor.yml
-		Av-InitDatabases.ps1 = Av-InitDatabases.ps1
-		av.cake = av.cake
-		build.cake = build.cake
-		build.ps1 = build.ps1
-		build.sh = build.sh
 		Build\linq2db.Default.props = Build\linq2db.Default.props
 		Build\linq2db.snk = Build\linq2db.snk
-		travisbuild.sh = travisbuild.sh
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{AF93451E-198C-4A94-8EB4-C330D886E102}"
@@ -62,6 +53,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811-C5AA-4C35-B996-AA5913F41A0D}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		appveyor.yml = appveyor.yml
 		Build.cmd = Build.cmd
 		Clean.cmd = Clean.cmd
 	EndProjectSection
