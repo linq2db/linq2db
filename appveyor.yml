@@ -1,5 +1,4 @@
 image: Visual Studio 2017
-
 configuration: Release
 
 environment:
@@ -53,7 +52,7 @@ nuget:
   project_feed: false
 
 build_script:
-- ps: msbuild linq2db.sln /p:Configuration=Release /t:Restore;Build /v:m
+  msbuild linq2db.sln /p:Configuration=Release /t:Restore;Build /v:m
 
 artifacts:
 - path: \**\linq2db*.nupkg
