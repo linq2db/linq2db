@@ -82,9 +82,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							{
 								conn.Open();
 
-								int version;
-
-								if (int.TryParse(conn.ServerVersion.Split('.')[0], out version))
+								if (int.TryParse(conn.ServerVersion.Split('.')[0], out var version))
 								{
 									switch (version)
 									{

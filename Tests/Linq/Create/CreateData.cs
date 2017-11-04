@@ -53,7 +53,8 @@ namespace Tests._Create
 				.Where  (c => !string.IsNullOrEmpty(c))
 				.ToArray();
 
-			Console.WriteLine("Commands count: {0}", cmds.Length);
+			if (DataConnection.TraceSwitch.TraceInfo)
+				Console.WriteLine("Commands count: {0}", cmds.Length);
 
 			Exception exception = null;
 
@@ -65,23 +66,34 @@ namespace Tests._Create
 				{
 					try
 					{
-						Console.WriteLine(command);
+						if (DataConnection.TraceSwitch.TraceInfo)
+							Console.WriteLine(command);
+
 						db.Execute(command);
-						Console.WriteLine("\nOK\n");
+
+						if (DataConnection.TraceSwitch.TraceInfo)
+							Console.WriteLine("\nOK\n");
 					}
 					catch (Exception ex)
 					{
-						Console.WriteLine(ex.Message);
-
-						if (command.TrimStart().StartsWith("DROP")
-							|| command.TrimStart().StartsWith("CALL DROP"))
-							Console.WriteLine("\nnot too OK\n");
-						else
+						if (DataConnection.TraceSwitch.TraceError)
 						{
-							Console.WriteLine("\nFAILED\n");
+							if (!DataConnection.TraceSwitch.TraceInfo)
+								Console.WriteLine(command);
 
-							if (exception == null)
-								exception = ex;
+							Console.WriteLine(ex.Message);
+
+							if (command.TrimStart().StartsWith("DROP")
+								|| command.TrimStart().StartsWith("CALL DROP"))
+								Console.WriteLine("\nnot too OK\n");
+							else
+							{
+								Console.WriteLine("\nFAILED\n");
+
+								if (exception == null)
+									exception = ex;
+							}
+
 						}
 					}
 				}
@@ -89,7 +101,8 @@ namespace Tests._Create
 				if (exception != null)
 					throw exception;
 
-				Console.WriteLine("\nBulkCopy LinqDataTypes\n");
+				if (DataConnection.TraceSwitch.TraceInfo)
+					Console.WriteLine("\nBulkCopy LinqDataTypes\n");
 
 				var options = new BulkCopyOptions();
 
@@ -111,7 +124,8 @@ namespace Tests._Create
 						new LinqDataTypes2 { ID = 12, MoneyValue = 11.45m, DateTimeValue = new DateTime(2012, 11,   7, 19, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("03021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 12, StringValue = "0"  }
 					});
 
-				Console.WriteLine("\nBulkCopy Parent\n");
+				if (DataConnection.TraceSwitch.TraceInfo)
+					Console.WriteLine("\nBulkCopy Parent\n");
 
 				db.BulkCopy(
 					options,
@@ -126,7 +140,8 @@ namespace Tests._Create
 						new Parent { ParentID = 7, Value1 = 1    }
 					});
 
-				Console.WriteLine("\nBulkCopy Child\n");
+				if (DataConnection.TraceSwitch.TraceInfo)
+					Console.WriteLine("\nBulkCopy Child\n");
 
 				db.BulkCopy(
 					options,
@@ -151,7 +166,8 @@ namespace Tests._Create
 						new Child { ParentID = 7, ChildID = 77 }
 					});
 
-				Console.WriteLine("\nBulkCopy GrandChild\n");
+				if (DataConnection.TraceSwitch.TraceInfo)
+					Console.WriteLine("\nBulkCopy GrandChild\n");
 
 				db.BulkCopy(
 					options,

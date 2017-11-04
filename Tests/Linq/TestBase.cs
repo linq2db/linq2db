@@ -58,13 +58,9 @@ namespace Tests
 					Console.WriteLine("{0}: {1}", s2, s1);
 					Debug.WriteLine(s1, s2);
 				}
-#if MONO
-				else
-					Console.Write("z");
-#else
+
 				if (traceCount++ > 10000)
-					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
-#endif
+					DataConnection.TurnTraceSwitchOn(TraceLevel.Error);
 			};
 
 //			Configuration.RetryPolicy.Factory = db => new Retry();
@@ -76,7 +72,7 @@ namespace Tests
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			try
 			{
 				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
@@ -137,16 +133,7 @@ namespace Tests
 
 			DataConnection.TurnTraceSwitchOn(traceLevel);
 
-			//var map = new ExeConfigurationFileMap();
-			//map.ExeConfigFilename = Path.Combine(
-			//	Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Substring("file:///".Length)),
-			//	@"..\..\App.config");
-
-			//var config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
-
-			//DataConnection.SetConnectionStrings(config);
-
-			Debug.WriteLine("Connection strings:");
+			Console.WriteLine("Connection strings:");
 
 #if NETSTANDARD1_6 || NETSTANDARD2_0
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
@@ -157,17 +144,15 @@ namespace Tests
 				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
 					throw new InvalidOperationException("ConnectionString should be provided");
 
-				Debug.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 				TxtSettings.Instance.AddConnectionString(
 					provider.Key, provider.Value.Provider ?? provider.Key, provider.Value.ConnectionString);
 			}
 #else
-
-
 			foreach (var provider in testSettings.Connections)
 			{
-				Debug.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 				DataConnection.AddOrSetConfiguration(
 					provider.Key,
@@ -176,10 +161,10 @@ namespace Tests
 			}
 #endif
 
-			Debug.WriteLine("Providers:");
+			Console.WriteLine("Providers:");
 
 			foreach (var userProvider in UserProviders)
-				Debug.WriteLine($"\t{userProvider}");
+				Console.WriteLine($"\t{userProvider}");
 
 			var defaultConfiguration = testSettings.DefaultConfiguration;
 

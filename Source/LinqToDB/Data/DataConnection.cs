@@ -9,13 +9,14 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Data
 {
 	using Common;
 	using Configuration;
 	using DataProvider;
 	using Expressions;
-	using JetBrains.Annotations;
 	using Mapping;
 	using RetryPolicy;
 
