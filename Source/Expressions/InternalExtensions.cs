@@ -993,17 +993,13 @@ namespace LinqToDB.Expressions
 				case ExpressionType.MemberAccess:
 					{
 						var member = (MemberExpression) expr;
-						switch (member.Member.MemberType)
-						{
-							case MemberTypes.Field:
-							{
-								return ((FieldInfo) member.Member).GetValue(member.Expression.EvaluateExpression());
-							}
-							case MemberTypes.Property:
-							{
-								return ((PropertyInfo) member.Member).GetValue(member.Expression.EvaluateExpression(), null);
-							}
-						}
+
+						if (member.Member.IsFieldEx())
+							return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
+
+						if (member.Member.IsPropertyEx())
+							return ((PropertyInfo)member.Member).GetValue(member.Expression.EvaluateExpression(), null);
+
 						break;
 					}
 			}
