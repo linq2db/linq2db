@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Linq;
+	using Expressions;
 
 	using PN = LinqToDB.ProviderName;
 
@@ -178,7 +179,7 @@ namespace LinqToDB
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
 			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedAcceptOverReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedAcceptOverReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
 			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
@@ -186,7 +187,7 @@ namespace LinqToDB
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
 			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedAcceptOverReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedAcceptOverReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 		}
 
 		public interface INeedSingleOrderByAndMaybeOverWithPartition<out TR>
@@ -206,13 +207,13 @@ namespace LinqToDB
 			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))] 
-			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 
 			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IOrderedAcceptOverReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedAcceptOverReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedAcceptOverReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 		}
 
 		public interface IOverMayHavePartition<out TR> : IReadyToFunction<TR>
@@ -253,13 +254,13 @@ namespace LinqToDB
 			IOrderedReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 
 			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedReadyToFunction<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 		}
 
 		public interface INeedsWithinGroupWithOrderOnly<out TR>
@@ -288,7 +289,7 @@ namespace LinqToDB
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
 			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedReadyToFunction<TR> OrderBy<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
 			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
@@ -296,7 +297,7 @@ namespace LinqToDB
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
 			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedReadyToFunction<TR> OrderByDesc<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 		}
 
 		#region Full Support
@@ -309,7 +310,7 @@ namespace LinqToDB
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
 			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedReadyToWindowing<TR> OrderBy<TKey>([ExprParameter("expr")] TKey keySelector, Sql.NullsPosition nulls);
+			IOrderedReadyToWindowing<TR> OrderBy<TKey>([ExprParameter("expr")] TKey keySelector, [SqlEvaluate] Sql.NullsPosition nulls);
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
 			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
@@ -317,7 +318,7 @@ namespace LinqToDB
 
 			[Sql.Extension("ORDER BY {order_item, ', '}", TokenName = "order_by_clause")]
 			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedReadyToWindowing<TR> OrderByDesc<TKey>([ExprParameter("expr")] TKey keySelector, Sql.NullsPosition nulls);
+			IOrderedReadyToWindowing<TR> OrderByDesc<TKey>([ExprParameter("expr")] TKey keySelector, [SqlEvaluate] Sql.NullsPosition nulls);
 		}
 
 		public interface IReadyForFullAnalyticClause<out TR> : IReadyToFunction<TR>, IReadyForSortingWithWindow<TR>
@@ -342,13 +343,13 @@ namespace LinqToDB
 			IOrderedReadyToWindowing<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedReadyToWindowing<TR> ThenBy<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedReadyToWindowing<TR> ThenBy<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 
 			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 			IOrderedReadyToWindowing<TR> ThenByDesc<TKey>([ExprParameter] TKey expr);
 
 			[Sql.Extension("{expr} DESC", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
-			IOrderedReadyToWindowing<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, Sql.NullsPosition nulls);
+			IOrderedReadyToWindowing<TR> ThenByDesc<TKey>([ExprParameter] TKey expr, [SqlEvaluate] Sql.NullsPosition nulls);
 		}
 
 		public interface IBoundaryExpected<out TR>
@@ -408,13 +409,13 @@ namespace LinqToDB
 		#region Average
 
 		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static double Average<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		public static double Average<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static double Average<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
+		public static double Average<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (expr == null) throw new ArgumentNullException("expr");
@@ -434,7 +435,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
+		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
@@ -484,13 +485,13 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static long CountExt<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		public static long CountExt<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static long CountExt<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+		public static long CountExt<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlEvaluate] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (expr == null) throw new ArgumentNullException("expr");
@@ -515,7 +516,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
+		public static IAggregateFunctionSelfContained<long> Count(this Sql.ISqlExtension ext, [ExprParameter] object expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
@@ -615,37 +616,37 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
+		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [SqlEvaluate] Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("LAG({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
-		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
+		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [SqlEvaluate] Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
-		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
+		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [SqlEvaluate] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
+		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [SqlEvaluate] Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("LEAD({expr}{_}{modifier?})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls)
+		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [SqlEvaluate] Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
-		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
+		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [SqlEvaluate] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] int? @default)
 		{
 			throw new NotImplementedException();
 		}
@@ -664,13 +665,13 @@ namespace LinqToDB
 		#region Max
 
 		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static TV Max<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		public static TV Max<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static TV Max<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
+		public static TV Max<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (expr == null) throw new ArgumentNullException("expr");
@@ -690,7 +691,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
+		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
@@ -730,13 +731,13 @@ namespace LinqToDB
 		#region Min
 
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static TV Min<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		public static TV Min<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static TV Min<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier)
+		public static TV Min<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (expr == null) throw new ArgumentNullException("expr");
@@ -756,7 +757,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
+		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
@@ -770,7 +771,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("NTH_VALUE({expr}, {n}){_}{from?}{_}{nulls?}", TokenName = FunctionToken, BuilderType = typeof(ApplyFromAndNullsModifier), ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> NthValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] long n, Sql.From from, Sql.Nulls nulls)
+		public static IAggregateFunctionSelfContained<T> NthValue<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [ExprParameter] long n, [SqlEvaluate] Sql.From from, [SqlEvaluate] Sql.Nulls nulls)
 		{
 			throw new NotImplementedException();
 		}
@@ -902,14 +903,14 @@ namespace LinqToDB
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
-		public static double StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		public static double StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
-		public static double StdDev<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
+		public static double StdDev<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlEvaluate] Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (expr == null) throw new ArgumentNullException("expr");
@@ -931,7 +932,7 @@ namespace LinqToDB
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
+		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
@@ -1005,7 +1006,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("SUM({modifier?}{_}{expr})" , BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> Sum<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, Sql.AggregateModifier modifier)
+		public static IAggregateFunctionSelfContained<T> Sum<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
@@ -1079,13 +1080,13 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static TV Variance<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, Sql.AggregateModifier modifier)
+		public static TV Variance<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
-		public static TV Variance<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+		public static TV Variance<TEntity, TV>([NotNull] this IQueryable<TEntity> source, [NotNull] [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlEvaluate] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (expr == null) throw new ArgumentNullException("expr");
@@ -1105,7 +1106,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
-		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, Sql.AggregateModifier modifier)
+		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension ext, [ExprParameter] object expr, [SqlEvaluate] Sql.AggregateModifier modifier)
 		{
 			throw new NotImplementedException();
 		}

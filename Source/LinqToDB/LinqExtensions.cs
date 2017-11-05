@@ -2649,9 +2649,9 @@ namespace LinqToDB
 		/// <returns>Right operand.</returns>
 		[Pure]
 		[LinqTunnel]
-		internal static IQueryable<TSource> Join<TSource>(
+		public static IQueryable<TSource> Join<TSource>(
 			this IQueryable<TSource>        source,
-			SqlJoinType                     joinType,
+			[SqlEvaluate] SqlJoinType       joinType,
 			Expression<Func<TSource, bool>> predicate)
 		{
 			//TODO: make public after solving caching issues
