@@ -31,20 +31,7 @@ namespace LinqToDB.Linq.Builder
 				default:
 					conditionIndex = 2;
 
-					SqlJoinType? joinValue = null;
-
-					if (methodCall.Arguments[1].NodeType == ExpressionType.Constant)
-					{
-						var c = (ConstantExpression)methodCall.Arguments[1];
-
-						if (c.Value is SqlJoinType)
-							joinValue = (SqlJoinType)c.Value;
-					}
-
-					if (joinValue == null)
-					{
-						joinValue = Expression.Lambda<Func<SqlJoinType>>(methodCall.Arguments[1]).Compile()();
-					}
+					var joinValue = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression();
 
 					switch (joinValue)
 					{

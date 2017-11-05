@@ -135,6 +135,7 @@
     <Compile Include="Expressions\IGenericInfoProvider.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Expressions\TransformInfo.cs" />
+    <Compile Include="Expressions\SqlQueryDependentAttribute.cs" />
     <Compile Include="Extensions\MappingExtensions.cs" />
     <Compile Include="Extensions\ReflectionExtensions.cs" />
     <Compile Include="IDataContext.cs" />
