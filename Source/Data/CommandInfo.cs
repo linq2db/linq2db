@@ -1075,7 +1075,6 @@ namespace LinqToDB.Data
 
 			if (!_objectReaders.TryGetValue(key, out func))
 			{
-				//return GetObjectReader2<T>(dataConnection, dataReader);
 				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
 					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce(dataReader));
 			}
@@ -1112,6 +1111,13 @@ namespace LinqToDB.Data
 			else
 			{
 				var td    = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+
+				if (td.InheritanceMapping.Count > 0)
+				{
+					var    readerBuilder = new RecordReaderBuilder(dataConnection, dataConnection.MappingSchema, typeof(T), dataReader);
+					return readerBuilder.BuildReaderFunction<T>();
+				}
+
 				var names = new List<string>(dataReader.FieldCount);
 
 				for (var i = 0; i < dataReader.FieldCount; i++)

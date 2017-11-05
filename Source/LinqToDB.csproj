@@ -110,6 +110,7 @@
     <Compile Include="DataProvider\SqlServer\SqlServerRetryPolicy.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerTransientErrorDetector.cs" />
     <Compile Include="Data\DataConnection.QueryRunner.cs" />
+    <Compile Include="Data\RecordReaderBuilder.cs" />
     <Compile Include="Data\RetryPolicy\DefaultRetryPolicyFactory.cs" />
     <Compile Include="Data\RetryPolicy\IRetryPolicy.cs" />
     <Compile Include="Data\RetryPolicy\RetryingDbCommand.cs">
