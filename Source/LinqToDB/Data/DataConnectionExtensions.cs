@@ -1943,7 +1943,7 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergAsync<T>(
+		public static Task<int> MergeAsync<T>(
 			this ITable<T>           table, 
 			Expression<Func<T,bool>> predicate, 
 			IEnumerable<T>           source,

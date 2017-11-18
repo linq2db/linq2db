@@ -11,7 +11,7 @@ namespace Tests.Linq
 {
 	using Model;
 
-	public static class EnumerableExtensions
+	public static class EnumerableExtesions
 	{
 		class Results<T, TKey>
 		{
@@ -1105,7 +1105,6 @@ namespace Tests.Linq
 					SqlJoinType.Right,
 					SqlJoinType.Full)] SqlJoinType joinType)
 		{
-			using (new DisableQueryCache())
 			using (var db = GetDataContext(context))
 			{
 				var expected = from p in Parent
@@ -1175,7 +1174,6 @@ namespace Tests.Linq
 				SqlJoinType.Right,
 				SqlJoinType.Full)] SqlJoinType joinType)
 		{
-			using (new DisableQueryCache())
 			using (var db = GetDataContext(context))
 			{
 				var expected = from p in Parent.Where(p => p.ParentID > 0).Take(10)
@@ -1199,7 +1197,6 @@ namespace Tests.Linq
 				SqlJoinType.Right,
 				SqlJoinType.Full)] SqlJoinType joinType)
 		{
-			using (new DisableQueryCache())
 			using (var db = GetDataContext(context))
 			{
 				var expected = Parent.SqlJoinInternal(Parent, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1,
@@ -1223,7 +1220,6 @@ namespace Tests.Linq
 				SqlJoinType.Right,
 				SqlJoinType.Full)] SqlJoinType joinType)
 		{
-			using (new DisableQueryCache())
 			using (var db = GetDataContext(context))
 			{
 				var expected = Parent.Take(10).SqlJoinInternal(Parent.Take(10), (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1,

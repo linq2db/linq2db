@@ -53,8 +53,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.IsGlobal)
-				return null;
+			//if (css.IsGlobal)
+			//	return null;
 
 			switch (css.ProviderName)
 			{

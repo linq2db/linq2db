@@ -101,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 				switch (n)
 				{
 					case 0 : return null;
-					case 1 : return new TableContext(builder, buildInfo, ((IQueryable)((ConstantExpression)buildInfo.Expression).Value).ElementType);
+					case 1 : return new TableContext(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()).ElementType);
 					case 2 :
 					case 3 : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArgumentsEx()[0]);
 					case 4 : return ctx.GetContext(buildInfo.Expression, 0, buildInfo);

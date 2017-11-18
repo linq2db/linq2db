@@ -32,7 +32,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> TableName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> TableName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -64,7 +64,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new database name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> DatabaseName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> DatabaseName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -95,7 +95,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -126,7 +126,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -161,7 +161,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new table source expression.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> WithTableExpression<T>([NotNull] this ITable<T> table, [NotNull] string expression)
+		public static ITable<T> WithTableExpression<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string expression)
 		{
 			if (expression == null) throw new ArgumentNullException("expression");
 
@@ -189,7 +189,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> With<T>([NotNull] this ITable<T> table, [NotNull] string args)
+		public static ITable<T> With<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string args)
 		{
 			if (args == null) throw new ArgumentNullException("args");
 
@@ -896,7 +896,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
-			[NotNull]                this IUpdatable<T>    source,
+			[NotNull]                this IUpdatable<T>     source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
 			TV                                              value)
 		{
@@ -2332,7 +2332,7 @@ namespace LinqToDB
 		public static IQueryable<TSource> Take<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    count,
-			[NotNull]                TakeHints                hints)
+			[SqlQueryDependent]      TakeHints                hints)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (count  == null) throw new ArgumentNullException("count");
@@ -2358,9 +2358,9 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
-			[NotNull] this IQueryable<TSource> source,
-			[NotNull] int                      count,
-			[NotNull] TakeHints                hints)
+			[NotNull]                this IQueryable<TSource> source,
+			[NotNull]                int                      count,
+			[SqlQueryDependent]      TakeHints                hints)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
@@ -2649,13 +2649,11 @@ namespace LinqToDB
 		/// <returns>Right operand.</returns>
 		[Pure]
 		[LinqTunnel]
-		internal static IQueryable<TSource> Join<TSource>(
-			this IQueryable<TSource>        source,
-			SqlJoinType                     joinType,
-			Expression<Func<TSource, bool>> predicate)
+		public static IQueryable<TSource> Join<TSource>(
+			[NotNull]           this IQueryable<TSource>        source,
+			[SqlQueryDependent] SqlJoinType                     joinType,
+			[CanBeNull]         Expression<Func<TSource, bool>> predicate)
 		{
-			//TODO: make public after solving caching issues
-
 			if (source == null) throw new ArgumentNullException("source");
 
 			return source.Provider.CreateQuery<TSource>(
@@ -2675,8 +2673,8 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> InnerJoin<TSource>(
-			this IQueryable<TSource>        source,
-			Expression<Func<TSource, bool>> predicate)
+			[NotNull]   this IQueryable<TSource>        source,
+			[CanBeNull] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Inner, predicate);
 		}
@@ -2691,8 +2689,8 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> LeftJoin<TSource>(
-			this IQueryable<TSource>        source,
-			Expression<Func<TSource, bool>> predicate)
+			[NotNull]   this IQueryable<TSource>        source,
+			[CanBeNull] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Left, predicate);
 		}
@@ -2707,8 +2705,8 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> RightJoin<TSource>(
-			this IQueryable<TSource>        source,
-			Expression<Func<TSource, bool>> predicate)
+			[NotNull]   this IQueryable<TSource>        source,
+			[CanBeNull] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Right, predicate);
 		}
@@ -2723,8 +2721,8 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> FullJoin<TSource>(
-			this IQueryable<TSource>        source,
-			Expression<Func<TSource, bool>> predicate)
+			[NotNull]   this IQueryable<TSource>        source,
+			[CanBeNull] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Full, predicate);
 		}

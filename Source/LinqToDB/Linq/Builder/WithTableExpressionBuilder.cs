@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -17,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = (TableBuilder.TableContext)sequence;
-			var value    = (string)((ConstantExpression)methodCall.Arguments[1]).Value;
+			var value    = (string)methodCall.Arguments[1].EvaluateExpression();
 
 			table.SqlTable.SqlTableType   = SqlTableType.Expression;
 			table.SqlTable.TableArguments = new ISqlExpression[0];

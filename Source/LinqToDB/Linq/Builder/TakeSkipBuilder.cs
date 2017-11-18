@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				TakeHints? hints = null;
 				if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))
-					hints = (TakeHints)((ConstantExpression)methodCall.Arguments[2]).Value;
+					hints = (TakeHints)methodCall.Arguments[2].EvaluateExpression();
 
 				BuildTake(builder, sequence, expr, hints);
 			}
