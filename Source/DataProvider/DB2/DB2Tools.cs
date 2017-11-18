@@ -37,8 +37,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
-				return null;
+			//if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
+			//	return null;
 
 			switch (css.ProviderName)
 			{
