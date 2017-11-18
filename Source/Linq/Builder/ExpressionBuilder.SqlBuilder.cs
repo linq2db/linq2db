@@ -2531,22 +2531,24 @@ namespace LinqToDB.Linq.Builder
 
 			var inList = predicate as SelectQuery.Predicate.InList;
 
-			if (predicate is SelectQuery.SearchCondition)
-			{
-				var sc = (SelectQuery.SearchCondition) predicate;
+			// ili this will fail https://github.com/linq2db/linq2db/issues/909
+			//
+			//if (predicate is SelectQuery.SearchCondition)
+			//{
+			//	var sc = (SelectQuery.SearchCondition) predicate;
 
-				inList = QueryVisitor
-					.Find(sc, _ => _.ElementType == QueryElementType.InListPredicate) as SelectQuery.Predicate.InList;
+			//	inList = QueryVisitor
+			//		.Find(sc, _ => _.ElementType == QueryElementType.InListPredicate) as SelectQuery.Predicate.InList;
 
-				if (inList != null)
-				{
-					isNot = QueryVisitor.Find(sc, _ =>
-					{
-						var condition = _ as SelectQuery.Condition;
-						return condition != null && condition.IsNot;
-					}) != null;
-				}
-			}
+			//	if (inList != null)
+			//	{
+			//		isNot = QueryVisitor.Find(sc, _ =>
+			//		{
+			//			var condition = _ as SelectQuery.Condition;
+			//			return condition != null && condition.IsNot;
+			//		}) != null;
+			//	}
+			//}
 
 			if (predicate.CanBeNull && predicate is SelectQuery.Predicate.ExprExpr || inList != null)
 			{
