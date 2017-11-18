@@ -632,9 +632,6 @@ namespace LinqToDB.Data
 			private readonly string _configurationString;
 			public ConfigurationInfo(string configurationString, string connectionString, IDataProvider dataProvider)
 			{
-				if (string.IsNullOrWhiteSpace(configurationString))
-					throw new LinqToDBException("Connection string is not provided for configuration: {0}".Args(configurationString));
-
 				ConnectionString     = connectionString;
 				_dataProvider        = dataProvider;
 				_dataProviderSetted  = dataProvider != null;
@@ -654,9 +651,6 @@ namespace LinqToDB.Data
 				get { return _connectionString; }
 				set
 				{
-					if (string.IsNullOrWhiteSpace(value))
-						throw new LinqToDBException("Empty connection string for configuration {0}".Args(_configurationString));
-
 					if (!_dataProviderSetted)
 						_dataProvider = null;
 
@@ -787,7 +781,7 @@ namespace LinqToDB.Data
 
 			InitConfig();
 
-			_configurations[configuration].ConnectionString = connectionString;
+			GetConfigurationInfo(configuration).ConnectionString = connectionString;
 		}
 
 		/// <summary>
