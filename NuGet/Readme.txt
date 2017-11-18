@@ -30,6 +30,8 @@ LINQ to DB 1.10.0  Release Notes
 - fix: [PostgreSQL] added result conversion to integer for DatePart function (#882)
 - fix: [DB2] fix exception in DB2 schema provider (#880)
 - fix: fix potential NRE (#875)
+- fix: configuration (#906)
+- fix: generating in (#909)
 
 All changes: https://github.com/linq2db/linq2db/milestone/6
 
