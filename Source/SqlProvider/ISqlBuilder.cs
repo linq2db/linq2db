@@ -5,6 +5,7 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
+	using Mapping;
 	using SqlQuery;
 
 	public interface ISqlBuilder
@@ -19,6 +20,9 @@ namespace LinqToDB.SqlProvider
 
 		StringBuilder    PrintParameters      (StringBuilder sb, IDbDataParameter[] parameters);
 		string           ApplyQueryHints      (string sqlText, List<string> queryHints);
+
+		string           GetReserveSequenceValuesSql(int count, string sequenceName);
+		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);
 
 		string           Name { get; }
 	}

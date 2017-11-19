@@ -623,5 +623,6 @@ namespace Tests.Linq
 				var        list = iq.OfType<Test18Female>().ToList();
 			}
 		}
+
 	}
 }

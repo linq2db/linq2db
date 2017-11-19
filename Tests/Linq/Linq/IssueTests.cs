@@ -516,6 +516,69 @@ namespace Tests.Linq
 				AreEqual(expected, result);
 			}
 		}
+
+		[Test, DataContextSource]
+		public void Issue909(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = new int?[] { 123 };
+
+				var expected = from p in Parent
+					where !values.Contains(p.Value1)
+					select p;
+
+				var actual = from p in db.GetTable<Parent>()
+						where !values.Contains(p.Value1)
+						select p;
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue909Join(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = new int?[] { 123 };
+
+				var expected = from c in Child
+					from p in Parent
+					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
+					select c;
+
+				var actual = from c in db.GetTable<Child>()
+					from p in db.GetTable<Parent>()
+					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
+					select c;
+
+				AreEqual(expected, actual);
+			}
+		}
+		[Test, DataContextSource]
+		public void Issue909Subquery(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = new int[] { 123 };
+
+				var expected = from c in Child
+					where (from p in Parent
+						where p.ParentID == c.ParentID && (p.Value1 == null || !values.Contains(p.Value1.Value))
+						select p).Any()
+					select c;
+
+				var actual = from c in db.GetTable<Child>()
+					where (from p in db.GetTable<Parent>()
+						where p.ParentID == c.ParentID && !values.Contains(p.Value1.Value)
+						select p).Any()
+					select c;
+
+				AreEqual(expected, actual);
+			}
+		}
+
 	}
 
 }

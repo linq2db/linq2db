@@ -20,15 +20,21 @@
 		<file src="Readme.txt"                                                  target="" />
 		<file src="..\Source\bin\Release.4.0\linq2db.dll"                       target="lib\net40" />
 		<file src="..\Source\bin\Release.4.0\linq2db.pdb"                       target="lib\net40" />
+		<file src="..\Source\bin\Release.4.0\linq2db.xml"                       target="lib\net40" />
 		<file src="..\Source\bin\Release.4.5\linq2db.dll"                       target="lib\net45" />
 		<file src="..\Source\bin\Release.4.5\linq2db.pdb"                       target="lib\net45" />
+		<file src="..\Source\bin\Release.4.5\linq2db.xml"                       target="lib\net45" />
 		<file src="..\Source\bin\Release.Silverlight.4\linq2db.Silverlight.dll" target="lib\sl4" />
 		<file src="..\Source\bin\Release.Silverlight.4\linq2db.Silverlight.pdb" target="lib\sl4" />
+		<file src="..\Source\bin\Release.Silverlight.4\linq2db.Silverlight.xml" target="lib\sl4" />
 		<file src="..\Source\bin\Release.Silverlight.5\linq2db.Silverlight.dll" target="lib\sl5" />
 		<file src="..\Source\bin\Release.Silverlight.5\linq2db.Silverlight.pdb" target="lib\sl5" />
+		<file src="..\Source\bin\Release.Silverlight.5\linq2db.Silverlight.xml" target="lib\sl5" />
 		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.dll" target="lib\netcore45" />
 		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.pdb" target="lib\netcore45" />
+		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.xml" target="lib\netcore45" />
 		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.dll" target="lib\windows8" />
 		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.pdb" target="lib\windows8" />
+		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.xml" target="lib\windows8" />
 	</files>
 </package>

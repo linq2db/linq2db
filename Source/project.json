@@ -1,6 +1,6 @@
 {
   "name": "linq2db.Core",
-  "version": "1.9.0-*",
+  "version": "1.10.0-*",
   "authors": [ "Igor Tkachev" ],
   "description": "LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.",
 
@@ -39,8 +39,8 @@
   "buildOptions": {
     "outputName": "linq2db",
     "embed": [ "**/*.resx", "**/*.txt" ],
-    "publicSign": true,
-    "keyFile": "linq2db.snk"
+    "xmlDoc": true,
+    "nowarn": [ "1591" ] 
   },
 
   "dependencies": {
@@ -164,6 +164,7 @@
           "exclude": [
             "**/*.Silverlight.cs",
             "Compatibility/System/Collections/**/*.cs",
+            "**/SerializableAttribute.cs",
             "Compatibility/System/Data/*.cs",
             "Compatibility/System/Security/**/*.cs",
             "**/SystemDataLinqAttributeReader.cs",
@@ -190,7 +191,7 @@
         "System.Dynamic.Runtime": "4.3.0",
         "System.Linq.Queryable": "4.3.0",
         "System.Runtime.Loader": "4.3.0",
-        "System.Runtime.Serialization.Primitives": "4.3.0",
+        "System.Runtime.Serialization.Formatters": "4.3.0",
         "System.Threading.Thread": "4.3.0",
         "System.Xml.XmlDocument": "4.3.0",
         "System.Data.SqlClient": "4.3.0",

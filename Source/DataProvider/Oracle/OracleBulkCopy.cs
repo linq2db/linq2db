@@ -121,9 +121,15 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return OracleTools.UseAlternativeBulkCopy
-				? MultipleRowsCopy2(dataConnection, options, source)
-				: MultipleRowsCopy1(dataConnection, options, source);
+			switch (OracleTools.UseAlternativeBulkCopy)
+			{
+				case AlternativeBulkCopy.InsertInto:
+					return MultipleRowsCopy2(dataConnection, options, source);
+				case AlternativeBulkCopy.InsertDual:
+					return MultipleRowsCopy3(dataConnection, options, source);
+				default:
+					return MultipleRowsCopy1(dataConnection, options, source);
+			}
 		}
 
 		BulkCopyRowsCopied MultipleRowsCopy1<T>(
@@ -214,6 +220,64 @@ namespace LinqToDB.DataProvider.Oracle
 			if (helper.CurrentCount > 0)
 			{
 				Execute(dataConnection, helper, list);
+			}
+
+			return helper.RowsCopied;
+		}
+
+		BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, options.KeepIdentity ?? false);
+
+			helper.StringBuilder
+				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.Append("(");
+
+			foreach (var column in helper.Columns)
+				helper.StringBuilder
+					.AppendLine()
+					.Append("\t")
+					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+					.Append(",");
+
+			helper.StringBuilder.Length--;
+			helper.StringBuilder
+				.AppendLine()
+				.AppendLine(")")
+				;
+
+			helper.SetHeader();
+
+			foreach (var item in source)
+			{
+				helper.StringBuilder
+					.AppendLine()
+					.Append("\tSELECT ");
+				helper.BuildColumns(item, _ => _.DataType == DataType.Text || _.DataType == DataType.NText);
+				helper.StringBuilder.Append(" FROM DUAL ");
+				helper.StringBuilder.Append(" UNION ALL");
+
+				helper.RowsCopied.RowsCopied++;
+				helper.CurrentCount++;
+
+				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
+				{
+					helper.StringBuilder.Length -= " UNION ALL".Length;
+					helper.StringBuilder
+						.AppendLine()
+						;
+					if (!helper.Execute())
+						return helper.RowsCopied;
+				}
+			}
+
+			if (helper.CurrentCount > 0)
+			{
+				helper.StringBuilder.Length -= " UNION ALL".Length;
+				helper.StringBuilder
+					.AppendLine()
+					;
+				helper.Execute();
 			}
 
 			return helper.RowsCopied;

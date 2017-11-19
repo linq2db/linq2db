@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -25,7 +26,7 @@ using LinqToDB.Mapping;
 
 using LinqToDB.ServiceModel;
 
-#endif 
+#endif
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -117,7 +118,7 @@ namespace Tests
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
 #endif
-			
+
 			var providerListFile =
 				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
 
@@ -835,7 +836,7 @@ namespace Tests
 				return _inheritanceChild;
 			}
 		}
-		
+
 		#endregion
 
 #region Northwind
@@ -1113,7 +1114,7 @@ namespace Tests
 
 			if (exceptResult != 0 || exceptExpected != 0)
 				for (var i = 0; i < resultList.Count; i++)
-				{ 
+				{
 					Debug.  WriteLine   ("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendFormat("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendLine  ();
@@ -1218,6 +1219,19 @@ namespace Tests
 		}
 	}
 
+	public class DisableQueryCache : IDisposable
+	{
+		public DisableQueryCache()
+		{
+			Configuration.Linq.DisableQueryCache = true;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.DisableQueryCache = false;
+		}
+	}
+
 	public class WithoutJoinOptimization : IDisposable
 	{
 		public WithoutJoinOptimization()
@@ -1274,4 +1288,62 @@ namespace Tests
 			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
 
 	}
+
+	public abstract class DataSourcesBase : DataAttribute, IParameterDataSource
+	{
+		public bool IncludeLinqService { get; private set; }
+		public string[] Providers { get; private set; }
+
+		public DataSourcesBase(bool includeLinqService, string[] providers)
+		{
+			IncludeLinqService = includeLinqService;
+			Providers = providers;
+		}
+
+		public IEnumerable GetData(IParameterInfo parameter)
+		{
+			if (!IncludeLinqService)
+				return GetProviders();
+			var providers = GetProviders().ToArray();
+			return providers.Concat(providers.Select(p => p + ".LinqService"));
+		}
+
+		protected abstract IEnumerable<string> GetProviders();
+	}
+
+	[AttributeUsage(AttributeTargets.Parameter)]
+	public class DataSources : DataSourcesBase
+	{
+		public DataSources(params string[] excludeProviders) : base(true, excludeProviders)
+		{
+		}
+
+		public DataSources(bool includeLinqService, params string[] excludeProviders) : base(includeLinqService, excludeProviders)
+		{
+		}
+
+		protected override IEnumerable<string> GetProviders()
+		{
+			return TestBase.UserProviders.Keys.Where(p => !Providers.Contains(p));
+		}
+	}
+
+	[AttributeUsage(AttributeTargets.Parameter)]
+	public class IncludeDataSources : DataSourcesBase
+	{
+		public IncludeDataSources(params string[] includeProviders) : base(true, includeProviders)
+		{
+		}
+
+		public IncludeDataSources(bool includeLinqService, params string[] includeProviders) : base(includeLinqService, includeProviders)
+		{
+		}
+
+		protected override IEnumerable<string> GetProviders()
+		{
+			return Providers.Where(TestBase.UserProviders.ContainsKey);
+		}
+
+	}
+
 }

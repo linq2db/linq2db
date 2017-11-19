@@ -139,9 +139,16 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
+			return ReadEnumerator(DataConnection.ExecuteReader(GetCommandBehavior()), objectReader);
+		}
+
+		static IEnumerable<T> ReadEnumerator<T>(IDataReader rd, Func<IDataReader, T> objectReader)
+		{
+			using (rd)
+			{
 				while (rd.Read())
 					yield return objectReader(rd);
+			}
 		}
 
 		#endregion
@@ -261,7 +268,12 @@ namespace LinqToDB.Data
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
 
-			using (var rd = DataConnection.ExecuteReader(GetCommandBehavior()))
+			return ReadEnumerator<T>(DataConnection.ExecuteReader(GetCommandBehavior()));
+		}
+
+		IEnumerable<T> ReadEnumerator<T>(IDataReader rd)
+		{
+			using (rd)
 			{
 				if (rd.Read())
 				{
@@ -579,13 +591,36 @@ namespace LinqToDB.Data
 #if !NOASYNC
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// Executes command asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Task with resulting value.</returns>
 		public Task<T> ExecuteAsync<T>()
 		{
 			return ExecuteAsync<T>(CancellationToken.None);
+		}
+
+		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// </summary>
+		/// <typeparam name="T">Resulting value type.</typeparam>
+		/// <returns>Task with resulting value.</returns>
+		public Task<T> ExecuteProcAsync<T>()
+		{
+			CommandType = CommandType.StoredProcedure;
+			return ExecuteAsync<T>(CancellationToken.None);
+		}
+
+		/// <summary>
+		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// </summary>
+		/// <typeparam name="T">Resulting value type.</typeparam>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with resulting value.</returns>
+		public Task<T> ExecuteProcAsync<T>(CancellationToken cancellationToken)
+		{
+			CommandType = CommandType.StoredProcedure;
+			return ExecuteAsync<T>(cancellationToken);
 		}
 
 		/// <summary>
@@ -1040,7 +1075,6 @@ namespace LinqToDB.Data
 
 			if (!_objectReaders.TryGetValue(key, out func))
 			{
-				//return GetObjectReader2<T>(dataConnection, dataReader);
 				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
 					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce(dataReader));
 			}
@@ -1077,6 +1111,13 @@ namespace LinqToDB.Data
 			else
 			{
 				var td    = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+
+				if (td.InheritanceMapping.Count > 0)
+				{
+					var    readerBuilder = new RecordReaderBuilder(dataConnection, dataConnection.MappingSchema, typeof(T), dataReader);
+					return readerBuilder.BuildReaderFunction<T>();
+				}
+
 				var names = new List<string>(dataReader.FieldCount);
 
 				for (var i = 0; i < dataReader.FieldCount; i++)

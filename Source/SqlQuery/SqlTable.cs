@@ -124,10 +124,7 @@ namespace LinqToDB.SqlQuery
 			if (identityField != null)
 			{
 				var cd = ed[identityField.Name];
-
-				SequenceAttributes = mappingSchema.GetAttributes<SequenceNameAttribute>(
-					cd.MemberAccessor.TypeAccessor.Type,
-					cd.MemberAccessor.MemberInfo, a => a.Configuration);
+				SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
 			}
 		}
 

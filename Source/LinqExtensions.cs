@@ -35,7 +35,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> TableName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> TableName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -67,7 +67,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new database name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> DatabaseName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> DatabaseName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -98,7 +98,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -129,7 +129,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -164,7 +164,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new table source expression.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> WithTableExpression<T>([NotNull] this ITable<T> table, [NotNull] string expression)
+		public static ITable<T> WithTableExpression<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string expression)
 		{
 			if (expression == null) throw new ArgumentNullException("expression");
 
@@ -192,7 +192,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> With<T>([NotNull] this ITable<T> table, [NotNull] string args)
+		public static ITable<T> With<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string args)
 		{
 			if (args == null) throw new ArgumentNullException("args");
 
@@ -218,14 +218,14 @@ namespace LinqToDB
 		/// <code>
 		/// // loads records from Table1 with Reference association loaded for each Table1 record
 		/// db.Table1.LoadWith(r => r.Reference);
-		/// 
+		///
 		/// // loads records from Table1 with Reference1 association loaded for each Table1 record
 		/// // loads records from Reference2 association for each loaded Reference1 record
 		/// db.Table1.LoadWith(r => r.Reference1.Reference2);
-		/// 
+		///
 		/// // loads records from Table1 with References collection association loaded for each Table1 record
 		/// db.Table1.LoadWith(r => r.References);
-		/// 
+		///
 		/// // loads records from Table1 with Reference1 collection association loaded for each Table1 record
 		/// // loads records from Reference2 collection association for each loaded Reference1 record
 		/// // loads records from Reference3 association for each loaded Reference2 record
@@ -931,7 +931,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
-			[NotNull]                this IUpdatable<T>    source,
+			[NotNull]                this IUpdatable<T>     source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
 			TV                                              value)
 		{
@@ -2412,7 +2412,7 @@ namespace LinqToDB
 		public static IQueryable<TSource> Take<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull, InstantHandle] Expression<Func<int>>    count,
-			[NotNull]                TakeHints                hints)
+			[SqlQueryDependent]      TakeHints                hints)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (count  == null) throw new ArgumentNullException("count");
@@ -2440,7 +2440,7 @@ namespace LinqToDB
 		public static IQueryable<TSource> Take<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
 			[NotNull]                int                      count,
-			[NotNull]                TakeHints                hints)
+			[SqlQueryDependent]      TakeHints                hints)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
@@ -2716,10 +2716,119 @@ namespace LinqToDB
 
 		#region Stub helpers
 
-		// TODO: move to ExpressionBuilder.QueryBuilder where it used?
+		// Please do not move it if you do not understand why it's here.
+		//
 		internal static TOutput Where<TOutput,TSource,TInput>(this TInput source, Func<TSource,bool> predicate)
 		{
 			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region SqlJoin
+
+		/// <summary>
+		/// Defines inner or outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="joinType">Type of join.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> Join<TSource>(
+			[NotNull]           this IQueryable<TSource>        source,
+			[SqlQueryDependent] SqlJoinType                     joinType,
+			[CanBeNull]         Expression<Func<TSource, bool>> predicate)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(Join, source, joinType, predicate),
+					new[] {source.Expression, Expression.Constant(joinType), predicate != null ? Expression.Quote(predicate) : null}));
+		}
+
+		/// <summary>
+		/// Defines inner join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> InnerJoin<TSource>(
+			[NotNull]   this IQueryable<TSource>        source,
+			[CanBeNull] Expression<Func<TSource, bool>> predicate)
+		{
+			return Join(source, SqlJoinType.Inner, predicate);
+		}
+
+		/// <summary>
+		/// Defines left outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> LeftJoin<TSource>(
+			[NotNull]   this IQueryable<TSource>        source,
+			[CanBeNull] Expression<Func<TSource, bool>> predicate)
+		{
+			return Join(source, SqlJoinType.Left, predicate);
+		}
+
+		/// <summary>
+		/// Defines right outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> RightJoin<TSource>(
+			[NotNull]   this IQueryable<TSource>        source,
+			[CanBeNull] Expression<Func<TSource, bool>> predicate)
+		{
+			return Join(source, SqlJoinType.Right, predicate);
+		}
+
+		/// <summary>
+		/// Defines full outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TSource">Type of record for right join operand.</typeparam>
+		/// <param name="source">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> FullJoin<TSource>(
+			[NotNull]   this IQueryable<TSource>        source,
+			[CanBeNull] Expression<Func<TSource, bool>> predicate)
+		{
+			return Join(source, SqlJoinType.Full, predicate);
+		}
+
+		#endregion
+
+		#region Tests
+
+		/// <summary>
+		/// Generates test source code for specified query.
+		/// This method could be usefull to debug queries and attach test code to linq2db issue reports.
+		/// </summary>
+		/// <param name="query">Query to test.</param>
+		/// <param name="mangleNames">Should we use real names for used types, members and namespace or generate obfuscated names.</param>
+		/// <returns>Test source code.</returns>
+		public static string GenerateTestString(this IQueryable query, bool mangleNames = false)
+		{
+			return new ExpressionTestGenerator(mangleNames).GenerateSourceString(query.Expression);
 		}
 
 		#endregion

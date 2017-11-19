@@ -28,12 +28,13 @@ namespace LinqToDB.Linq.Builder
 			CreateSubQuery = buildInfo.CreateSubQuery;
 		}
 
-		public BuildInfo     SequenceInfo   { get; set; }
-		public IBuildContext Parent         { get; set; }
-		public Expression    Expression     { get; set; }
-		public SelectQuery   SelectQuery    { get; set; }
-		public bool          CopyTable      { get; set; }
-		public bool          CreateSubQuery { get; set; }
+		public BuildInfo            SequenceInfo   { get; set; }
+		public IBuildContext        Parent         { get; set; }
+		public Expression           Expression     { get; set; }
+		public SelectQuery          SelectQuery    { get; set; }
+		public bool                 CopyTable      { get; set; }
+		public bool                 CreateSubQuery { get; set; }
+		public SelectQuery.JoinType JoinType       { get; set; }
 
 		public bool          IsSubQuery   { get { return Parent != null; } }
 

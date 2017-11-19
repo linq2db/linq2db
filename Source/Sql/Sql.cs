@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -15,6 +16,7 @@ namespace LinqToDB
 {
 	using Common;
 	using Extensions;
+	using Expressions;
 	using Linq;
 	using SqlQuery;
 
@@ -123,6 +125,61 @@ namespace LinqToDB
 			where T : struct, IComparable
 		{
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
+		}
+
+		#endregion
+
+		#region NoConvert
+
+		[Sql.Function("$Convert_Remover$", ServerSideOnly = true)]
+		static TR ConvertRemover<T, TR>(T input)
+		{
+			throw new NotImplementedException();
+		}
+
+		class NoConvertBuilder : Sql.IExtensionCallBuilder
+		{
+			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(Sql.ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
+
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var expr    = builder.Arguments[0];
+				var newExpr = expr.Transform(e =>
+				{
+					if (e.NodeType == ExpressionType.Convert || e.NodeType == ExpressionType.ConvertChecked)
+					{
+						var unary  = (UnaryExpression)e;
+						var method = _method.MakeGenericMethod(unary.Operand.Type, unary.Type);
+						return Expression.Call(null, method, unary.Operand);
+					}
+					return e;
+				});
+
+				if (newExpr == expr)
+				{
+					builder.ResultExpression = builder.GetExpression(0);
+					return;
+				}
+
+				var sqlExpr = builder.ConvertExpressionToSql(newExpr);
+				sqlExpr     = new QueryVisitor().Convert(sqlExpr, e =>
+				{
+					var func = e as SqlFunction;
+					if (func != null && func.Name == "$Convert_Remover$")
+					{
+						return func.Parameters[0];
+					}
+					return e;
+				});
+
+				builder.ResultExpression = sqlExpr;
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(NoConvertBuilder), ServerSideOnly = true)]
+		public static T NoConvert<T>(T expr)
+		{
+			return expr;
 		}
 
 		#endregion
@@ -769,15 +826,15 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Sql.Function]
-		[Sql.DatePart(PN.DB2,        "{0}",                               false, new[] { null,     null,  null,   null,      null,   null,  "DayOfWeek", null,     null,   null,   null   }, 0, 1)]
-		[Sql.DatePart(PN.Informix,   "{0}",                                      0, 1)]
-		[Sql.DatePart(PN.MySql,      "Extract({0} from {{0}})",           true,  0, 1)]
-		[Sql.DatePart(PN.PostgreSQL, "Extract({0} from {{0}})",           true,  new[] { null,     null,  null,   "DOY",     null,   null,   "DOW",      null,     null,   null,   null   }, 0, 1)]
-		[Sql.DatePart(PN.Firebird,   "Extract({0} from {{0}})",           true,  new[] { null,     null,  null,   "YearDay", null,   null,   null,       null,     null,   null,   null   }, 0, 1)]
-		[Sql.DatePart(PN.SQLite,     "Cast(StrFTime({0}, {{0}}) as int)", true,  new[] { "'%Y'",   null,  "'%m'", "'%j'",    "'%d'", "'%W'", "'%w'",     "'%H'",   "'%M'", "'%S'", "'%f'" }, 0, 1)]
-		[Sql.DatePart(PN.Access,     "DatePart({0}, {{0}})",              true,  new[] { "'yyyy'", "'q'", "'m'",  "'y'",     "'d'",  "'ww'", "'w'",      "'h'",    "'n'", "'s'",   null   }, 0, 1)]
-		[Sql.DatePart(PN.SapHana,    "{0}",                               true,  new[] { "Year({0})",                       "Floor((Month({0})-1) / 3) + 1", "Month({0})",                     "DayOfYear({0})",                "DayOfMonth({0})",               "Week({0})",                     "MOD(Weekday({0}) + 1, 7) + 1",                  "Hour({0})",                       "Minute({0})",                   "Second({0})",                   null },                            0, 1)]
-		[Sql.DatePart(PN.Oracle,     "{0}",                               true,  new[] { "To_Number(To_Char({0}, 'YYYY'))", "To_Number(To_Char({0}, 'Q'))",  "To_Number(To_Char({0}, 'MM'))", "To_Number(To_Char({0}, 'DDD'))", "To_Number(To_Char({0}, 'DD'))", "To_Number(To_Char({0}, 'WW'))", "Mod(1 + Trunc({0}) - Trunc({0}, 'IW'), 7) + 1", "To_Number(To_Char({0}, 'HH24'))", "To_Number(To_Char({0}, 'MI'))", "To_Number(To_Char({0}, 'SS'))", "To_Number(To_Char({0}, 'FF'))" }, 0, 1)]
+		[Sql.DatePart(PN.DB2,        "{0}",                                         false, new[] { null,     null,  null,   null,      null,   null,  "DayOfWeek", null,     null,   null,   null   }, 0, 1)]
+		[Sql.DatePart(PN.Informix,   "{0}",                                                0, 1)]
+		[Sql.DatePart(PN.MySql,      "Extract({0} from {{0}})",                     true,  0, 1)]
+		[Sql.DatePart(PN.PostgreSQL, "Cast(Floor(Extract({0} from {{0}})) as int)", true,  new[] { null,     null,  null,   "DOY",     null,   null,   "DOW",      null,     null,   null,   null   }, 0, 1)]
+		[Sql.DatePart(PN.Firebird,   "Extract({0} from {{0}})",                     true,  new[] { null,     null,  null,   "YearDay", null,   null,   null,       null,     null,   null,   null   }, 0, 1)]
+		[Sql.DatePart(PN.SQLite,     "Cast(StrFTime({0}, {{0}}) as int)",           true,  new[] { "'%Y'",   null,  "'%m'", "'%j'",    "'%d'", "'%W'", "'%w'",     "'%H'",   "'%M'", "'%S'", "'%f'" }, 0, 1)]
+		[Sql.DatePart(PN.Access,     "DatePart({0}, {{0}})",                        true,  new[] { "'yyyy'", "'q'", "'m'",  "'y'",     "'d'",  "'ww'", "'w'",      "'h'",    "'n'", "'s'",   null   }, 0, 1)]
+		[Sql.DatePart(PN.SapHana,    "{0}",                                         true,  new[] { "Year({0})",                       "Floor((Month({0})-1) / 3) + 1", "Month({0})",                     "DayOfYear({0})",                "DayOfMonth({0})",               "Week({0})",                     "MOD(Weekday({0}) + 1, 7) + 1",                  "Hour({0})",                       "Minute({0})",                   "Second({0})",                   null },                            0, 1)]
+		[Sql.DatePart(PN.Oracle,     "{0}",                                         true,  new[] { "To_Number(To_Char({0}, 'YYYY'))", "To_Number(To_Char({0}, 'Q'))",  "To_Number(To_Char({0}, 'MM'))", "To_Number(To_Char({0}, 'DDD'))", "To_Number(To_Char({0}, 'DD'))", "To_Number(To_Char({0}, 'WW'))", "Mod(1 + Trunc({0}) - Trunc({0}, 'IW'), 7) + 1", "To_Number(To_Char({0}, 'HH24'))", "To_Number(To_Char({0}, 'MI'))", "To_Number(To_Char({0}, 'SS'))", "To_Number(To_Char({0}, 'FF'))" }, 0, 1)]
 		public static int? DatePart(DateParts part, DateTime? date)
 		{
 			if (date == null)

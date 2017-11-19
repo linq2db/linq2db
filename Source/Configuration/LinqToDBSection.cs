@@ -94,25 +94,31 @@ namespace LinqToDB.Configuration
 			}
 
 			public string ConnectionString { get { return _css.ConnectionString; } }
-			public string Name { get { return _css.Name; } }
-			public string ProviderName { get { return _css.ProviderName; } }
-			public bool IsGlobal { get { return IsMachineConfig(_css); } }
+			public string Name             { get { return _css.Name;             } }
+			public string ProviderName     { get { return _css.ProviderName;     } }
+			public bool IsGlobal           { get { return IsMachineConfig(_css); } }
 		}
 
 		internal static bool IsMachineConfig(ConnectionStringSettings css)
 		{
 			string source;
+			bool   isPresent;
 
 			try
 			{
-				source = css.ElementInformation.Source;
+				source    = css.ElementInformation.Source;
+				isPresent = css.ElementInformation.IsPresent;
 			}
 			catch (Exception)
 			{
-				source = "";
+				source    = "";
+				isPresent = true;
 			}
 
-			return source == null || source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase);
+			return 
+				 isPresent == false &&
+				(source    == null  || 
+				source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase));
 		}
 	}
 }

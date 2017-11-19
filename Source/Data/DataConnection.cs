@@ -307,13 +307,24 @@ namespace LinqToDB.Data
 		/// <para> - first non-global connection string name passed to <see cref="SetConnectionStrings"/> method.</para>
 		/// </summary>
 		/// <seealso cref="DefaultConfiguration"/>
-		public static string DefaultConfiguration { get; set; }
+		private static string _defaultConfiguration;
+		public  static string DefaultConfiguration
+		{
+			get { InitConfig(); return _defaultConfiguration; }
+			set {                      _defaultConfiguration = value; }
+		}
+
 		/// <summary>
 		/// Gets or sets name of default data provider, used by new connection if user didn't specified provider explicitly in constructor or in connection options.
 		/// Initialized with value from <see cref="DefaultSettings"/>.<see cref="ILinqToDBSettings.DefaultDataProvider"/>.
 		/// </summary>
 		/// <seealso cref="DefaultConfiguration"/>
-		public static string DefaultDataProvider  { get; set; }
+		private static string _defaultDataProvider;
+		public  static string DefaultDataProvider
+		{
+			get { InitConfig(); return _defaultDataProvider; }
+			set {                      _defaultDataProvider = value; }
+		}
 
 		private static Action<TraceInfo> _onTrace = OnTraceInternal;
 		/// <summary>
@@ -617,12 +628,14 @@ namespace LinqToDB.Data
 
 		class ConfigurationInfo
 		{
-			private readonly bool _dataProviderSetted;
-			public ConfigurationInfo(string connectionString, IDataProvider dataProvider)
+			private readonly bool   _dataProviderSetted;
+			private readonly string _configurationString;
+			public ConfigurationInfo(string configurationString, string connectionString, IDataProvider dataProvider)
 			{
-				ConnectionString    = connectionString;
-				_dataProvider       = dataProvider;
-				_dataProviderSetted = dataProvider != null;
+				ConnectionString     = connectionString;
+				_dataProvider        = dataProvider;
+				_dataProviderSetted  = dataProvider != null;
+				_configurationString = configurationString;
 			}
 
 			public ConfigurationInfo(IConnectionStringSettings connectionStringSettings)
@@ -650,7 +663,15 @@ namespace LinqToDB.Data
 			private IDataProvider _dataProvider;
 			public  IDataProvider  DataProvider
 			{
-				get { return _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings, ConnectionString)); }
+				get
+				{
+					var dataProvider = _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings, ConnectionString));
+
+					if (dataProvider == null)
+						throw new LinqToDBException("DataProvider is not provided for configuration: {0}".Args(_configurationString));
+
+					return dataProvider;
+				}
 			}
 
 			static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
@@ -741,6 +762,7 @@ namespace LinqToDB.Data
 			if (connectionString == null) throw new ArgumentNullException("connectionString");
 
 			_configurations[configuration] = new ConfigurationInfo(
+				configuration,
 				connectionString,
 				dataProvider ?? FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]));
 		}
@@ -759,7 +781,7 @@ namespace LinqToDB.Data
 
 			InitConfig();
 
-			_configurations[configuration].ConnectionString = connectionString;
+			GetConfigurationInfo(configuration).ConnectionString = connectionString;
 		}
 
 		/// <summary>
@@ -772,12 +794,7 @@ namespace LinqToDB.Data
 		{
 			InitConfig();
 
-			ConfigurationInfo ci;
-
-			if (_configurations.TryGetValue(configurationString, out ci))
-				return ci.ConnectionString;
-
-			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
+			return GetConfigurationInfo(configurationString).ConnectionString;
 		}
 
 #endregion

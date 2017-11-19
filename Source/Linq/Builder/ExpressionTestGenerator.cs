@@ -15,9 +15,19 @@ namespace LinqToDB.Linq.Builder
 
 	class ExpressionTestGenerator
 	{
+		readonly bool          _mangleNames;
 		readonly StringBuilder _exprBuilder = new StringBuilder();
 
 		string _indent = "\t\t\t\t";
+
+		public ExpressionTestGenerator(): this(true)
+		{
+		}
+
+		public ExpressionTestGenerator(bool mangleNames)
+		{
+			_mangleNames = mangleNames;
+		}
 
 		void PushIndent() { _indent += '\t'; }
 		void PopIndent () { _indent = _indent.Substring(1); }
@@ -165,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (MemberExpression)expr;
 
 						e.Expression.Visit(new Func<Expression,bool>(BuildExpression));
-						_exprBuilder.AppendFormat(".{0}", EncryptName(e.Member.DeclaringType, e.Member.Name, "P"));
+						_exprBuilder.AppendFormat(".{0}", MangleName(e.Member.DeclaringType, e.Member.Name, "P"));
 
 						return false;
 					}
@@ -173,7 +183,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Parameter :
 					{
 						var e = (ParameterExpression)expr;
-						_exprBuilder.Append(EncryptName(e.Name, "p"));
+						_exprBuilder.Append(MangleName(e.Name, "p"));
 						return false;
 					}
 
@@ -195,9 +205,9 @@ namespace LinqToDB.Linq.Builder
 						else
 							_exprBuilder.Append(GetTypeName(mi.DeclaringType));
 
-						_exprBuilder.Append(".").Append(EncryptName(mi.DeclaringType, mi.Name, "M"));
+						_exprBuilder.Append(".").Append(MangleName(mi.DeclaringType, mi.Name, "M"));
 
-						if (mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
+						if (!ex.IsQueryable() && mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
 						{
 							_exprBuilder
 								.Append("<")
@@ -248,7 +258,11 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						if (expr.ToString() == "value(" + expr.Type + ")")
+						if (typeof(Table<>).IsSameOrParentOf(expr.Type))
+						{
+							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArgumentsEx()[0]));
+						}
+						else if (expr.ToString() == "value(" + expr.Type + ")")
 							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(")");
 						else
 							_exprBuilder.Append(expr);
@@ -260,10 +274,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						var le = (LambdaExpression)expr;
 						var ps = le.Parameters
-							.Select(p => (GetTypeName(p.Type) + " " + EncryptName(p.Name, "p")).TrimStart())
+							.Select(p => (/*GetTypeName(p.Type) + " " + */ MangleName(p.Name, "p")).TrimStart())
 							.Aggregate("", (p1, p2) => p1 + ", " + p2, p => p.TrimStart(',', ' '));
 
-						_exprBuilder.Append("(").Append(ps).Append(") => ");
+						if (le.Parameters.Count == 1)
+							_exprBuilder.Append(ps);
+						else
+							_exprBuilder.Append("(").Append(ps).Append(")");
+						_exprBuilder.Append(" => ");
 
 						le.Body.Visit(new Func<Expression,bool>(BuildExpression));
 						return false;
@@ -292,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (ne.Members.Count == 1)
 							{
-								_exprBuilder.AppendFormat("new {{ {0} = ", EncryptName(ne.Members[0].DeclaringType, ne.Members[0].Name, "P"));
+								_exprBuilder.AppendFormat("new {{ {0} = ", MangleName(ne.Members[0].DeclaringType, ne.Members[0].Name, "P"));
 								ne.Arguments[0].Visit(new Func<Expression,bool>(BuildExpression));
 								_exprBuilder.Append(" }}");
 							}
@@ -304,7 +322,7 @@ namespace LinqToDB.Linq.Builder
 
 								for (var i = 0; i < ne.Members.Count; i++)
 								{
-									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", EncryptName(ne.Members[i].DeclaringType, ne.Members[i].Name, "P"));
+									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", MangleName(ne.Members[i].DeclaringType, ne.Members[i].Name, "P"));
 									ne.Arguments[i].Visit(new Func<Expression,bool>(BuildExpression));
 
 									if (i + 1 < ne.Members.Count)
@@ -340,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								case MemberBindingType.Assignment    :
 									var ma = (MemberAssignment)b;
-									_exprBuilder.AppendFormat("{0} = ", EncryptName(ma.Member.DeclaringType, ma.Member.Name, "P"));
+									_exprBuilder.AppendFormat("{0} = ", MangleName(ma.Member.DeclaringType, ma.Member.Name, "P"));
 									ma.Expression.Visit(new Func<Expression,bool>(BuildExpression));
 									break;
 								default:
@@ -503,7 +521,7 @@ namespace LinqToDB.Linq.Builder
 				return;
 
 			var isUserName = IsUserType(type);
-			var name       = EncryptName(isUserName, type.Name, "T");
+			var name       = MangleName(isUserName, type.Name, "T");
 			var idx        = name.LastIndexOf("`");
 
 			if (idx > 0)
@@ -523,7 +541,7 @@ namespace LinqToDB.Linq.Builder
 #else
 				var attrs = c.GetCustomAttributesData();
 #endif
-				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + EncryptName(p.Name, "p")).ToArray();
+				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
 				return @"{0}
 		public {1}({2})
 		{{
@@ -548,7 +566,7 @@ namespace LinqToDB.Linq.Builder
 		public {1} {2};".Args(
 					attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 					GetTypeName(f.FieldType),
-					EncryptName(isUserName, f.Name, "P"));
+					MangleName(isUserName, f.Name, "P"));
 			})
 			.Concat(
 				type.GetPropertiesEx().Intersect(_usedMembers.OfType<PropertyInfo>()).Select(p =>
@@ -562,7 +580,7 @@ namespace LinqToDB.Linq.Builder
 		{3}{1} {2} {{ get; set; }}",
 						attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 						GetTypeName(p.PropertyType),
-						EncryptName(isUserName, p.Name, "P"),
+						MangleName(isUserName, p.Name, "P"),
 						type.IsInterfaceEx() ? "" : "public ");
 				}))
 			.Concat(
@@ -573,7 +591,7 @@ namespace LinqToDB.Linq.Builder
 #else
 					var attrs = m.GetCustomAttributesData();
 #endif
-					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + EncryptName(p.Name, "p")).ToArray();
+					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
 					return string.Format(@"{0}
 		{5}{4}{1} {2}({3})
 		{{
@@ -581,7 +599,7 @@ namespace LinqToDB.Linq.Builder
 		}}",
 						attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 						GetTypeName(m.ReturnType),
-						EncryptName(isUserName, m.Name, "M"),
+						MangleName(isUserName, m.Name, "M"),
 						ps.Length == 0 ? "" : ps.Aggregate((s,t) => s + ", " + t),
 						m.IsStatic   ? "static "   :
 						m.IsVirtual  ? "virtual "  :
@@ -617,7 +635,7 @@ namespace {0}
 	}}
 }}
 ",
-					EncryptName(isUserName, type.Namespace, "T"),
+					MangleName(isUserName, type.Namespace, "T"),
 					type.IsInterfaceEx() ? "interface" : type.IsClassEx() ? "class" : "struct",
 					name,
 					type.IsGenericTypeEx() ? GetTypeNames(type.GetGenericArgumentsEx(), ",") : null,
@@ -647,27 +665,30 @@ namespace {0}
 
 		readonly Dictionary<string,string> _nameDic = new Dictionary<string,string>();
 
-		string EncryptName(Type type, string name, string prefix)
+		string MangleName(Type type, string name, string prefix)
 		{
-			return IsUserType(type) ? EncryptName(name, prefix) : name;
+			return IsUserType(type) ? MangleName(name, prefix) : name;
 		}
 
-		string EncryptName(bool isUserType, string name, string prefix)
+		string MangleName(bool isUserType, string name, string prefix)
 		{
-			return isUserType ? EncryptName(name, prefix) : name;
+			return isUserType ? MangleName(name, prefix) : name;
 		}
 
-		string EncryptName(string name, string prefix)
+		string MangleName(string name, string prefix)
 		{
+			if (!_mangleNames)
+				return name;
+
 			var oldNames = name.Split('.');
 			var newNames = new string[oldNames.Length];
 
 			for (var i = 0; i < oldNames.Length; i++)
 			{
-				string encryptedName;
+				string mangledName;
 
-				if (_nameDic.TryGetValue(prefix + oldNames[i], out encryptedName))
-					newNames[i] = encryptedName;
+				if (_nameDic.TryGetValue(prefix + oldNames[i], out mangledName))
+					newNames[i] = mangledName;
 				else
 					newNames[i] = _nameDic[prefix + oldNames[i]] = prefix + _nameDic.Count;
 			}
@@ -739,7 +760,7 @@ namespace {0}
 			if (type.Namespace == "System")
 				return type.Name;
 
-			return EncryptName(type, type.ToString(), "T");
+			return MangleName(type, type.ToString(), "T");
 		}
 
 		readonly HashSet<object> _usedMembers = new HashSet<object>();
@@ -844,6 +865,7 @@ namespace {0}
 			}
 		}
 
+
 #if NETFX_CORE && !NETSTANDARD
 
 		public string GenerateSource(Expression expr)
@@ -859,48 +881,13 @@ namespace {0}
 
 				fileName = Path.Combine("ExpressionTest." + number  + ".cs");
 
-				expr.Visit(new Action<Expression>(VisitMembers));
-				expr.Visit(new Action<Expression>(VisitTypes));
-
-				foreach (var type in _usedTypes.OrderBy(t => t.Namespace).ThenBy(t => t.Name))
-					BuildType(type);
-
-				expr.Visit(new Func<Expression,bool>(BuildExpression));
-
-				_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
-
 				var file = dir.CreateFileAsync(fileName, Windows.Storage.CreationCollisionOption.ReplaceExisting).AsTask().Result;
+
+				var source = GenerateSourceString(expr);
 
 				Windows.Storage.FileIO.WriteTextAsync(
 					file,
-					string.Format(@"//---------------------------------------------------------------------------------------------------
-// This code was generated by LinqToDB.
-//---------------------------------------------------------------------------------------------------
-using System;
-using System.Linq.Expressions;
-
-using NUnit.Framework;
-{0}
-namespace Tests.UserTests
-{{
-	[TestFixture]
-	public class UserTest : TestBase
-	{{
-		[Test]
-		public void Test([DataContexts] string context)
-		{{
-			// {1}
-			using (var db = GetDataContext(context))
-			{{
-				{2};
-			}}
-		}}
-	}}
-}}
-",
-					_typeBuilder,
-					expr,
-					_exprBuilder)).AsTask().RunSynchronously();
+					source).AsTask().RunSynchronously();
 
 				fileName = Path.Combine(dir.Name, fileName);
 			}
@@ -915,8 +902,8 @@ namespace Tests.UserTests
 
 		public string GenerateSource(Expression expr)
 		{
-			string       fileName = null;
-			StreamWriter sw       = null;
+			string fileName = null;
+			StreamWriter sw = null;
 
 			try
 			{
@@ -927,50 +914,14 @@ namespace Tests.UserTests
 
 				var number = 0;//DateTime.Now.Ticks;
 
-				fileName = Path.Combine(dir, "ExpressionTest." + number  + ".cs");
-
-				expr.Visit(new Action<Expression>(VisitMembers));
-				expr.Visit(new Action<Expression>(VisitTypes));
-
-				foreach (var type in _usedTypes.OrderBy(t => t.Namespace).ThenBy(t => t.Name))
-					BuildType(type);
-
-				expr.Visit(new Func<Expression,bool>(BuildExpression));
-
-				_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
+				fileName = Path.Combine(dir, "ExpressionTest." + number + ".cs");
 
 				sw = File.CreateText(fileName);
 
-				sw.WriteLine(@"//---------------------------------------------------------------------------------------------------
-// This code was generated by LinqToDB.
-//---------------------------------------------------------------------------------------------------
-using System;
-using System.Linq.Expressions;
-
-using NUnit.Framework;
-{0}
-namespace Tests.UserTests
-{{
-	[TestFixture]
-	public class UserTest : TestBase
-	{{
-		[Test]
-		public void Test([DataContexts] string context)
-		{{
-			// {1}
-			using (var db = GetDataContext(context))
-			{{
-				{2};
-			}}
-		}}
-	}}
-}}
-",
-					_typeBuilder,
-					_nameDic.Aggregate(expr.ToString(), (current,item) => current.Replace(item.Key.Substring(1), item.Value)),
-					_exprBuilder);
+				var source = GenerateSourceString(expr);
+				sw.WriteLine(source);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				if (sw != null)
 				{
@@ -990,5 +941,53 @@ namespace Tests.UserTests
 		}
 
 #endif
+
+		public string GenerateSourceString(Expression expr)
+		{
+			expr.Visit(new Action<Expression>(VisitMembers));
+			expr.Visit(new Action<Expression>(VisitTypes));
+
+			foreach (var type in _usedTypes.OrderBy(t => t.Namespace).ThenBy(t => t.Name))
+				BuildType(type);
+
+			expr.Visit(new Func<Expression,bool>(BuildExpression));
+
+			_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
+			_exprBuilder.Insert(0, "var quey = ");
+
+			var result = string.Format(
+@"//---------------------------------------------------------------------------------------------------
+// This code was generated by LinqToDB.
+//---------------------------------------------------------------------------------------------------
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+using LinqToDB;
+
+using NUnit.Framework;
+{0}
+namespace Tests.UserTests
+{{
+	[TestFixture]
+	public class UserTest : TestBase
+	{{
+		[Test, DataContextSource]
+		public void Test(string context)
+		{{
+			// {1}
+			using (var db = GetDataContext(context))
+			{{
+				{2};
+			}}
+		}}
+	}}
+}}
+",
+				_typeBuilder,
+				_nameDic.Aggregate(expr.ToString(), (current,item) => current.Replace(item.Key.Substring(1), item.Value)),
+				_exprBuilder);
+
+			return result;
+		}
 	}
 }

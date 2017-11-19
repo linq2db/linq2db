@@ -369,7 +369,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		class ConvertHelper<T> : IConvertHelper
-			where T : struct 
+			where T : struct
 		{
 			public Expression ConvertNull(MemberExpression expression)
 			{
@@ -380,7 +380,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		Expression ConvertExpression(Expression expression)
+		internal Expression ConvertExpression(Expression expression)
 		{
 			return expression.Transform(e =>
 			{
@@ -644,7 +644,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap = false)
 		{
-			if (!PreferServerSide(expression))
+			if (!PreferServerSide(expression, false))
 			{
 				if (CanBeConstant(expression))
 					return BuildConstant(expression);
@@ -1061,7 +1061,7 @@ namespace LinqToDB.Linq.Builder
 							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
 								result = IsQueryMember(e.Arguments[0]);
 						}
-						else if (e.IsAggregate(MappingSchema))
+						else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))
 						{
 							result = true;
 						}
@@ -1080,7 +1080,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (l != null)
 							{
-								result = l.Body.Unwrap().Find(IsServerSideOnly) != null;
+								result = l.Body.Unwrap().Find(ex => IsServerSideOnly(ex)) != null;
 							}
 							else
 							{
@@ -1318,7 +1318,7 @@ namespace LinqToDB.Linq.Builder
 					if (!expr.Type.IsConstantable() || AsParameters.Contains(c))
 					{
 						Expression val;
-						
+
 						if (expressionAccessors.TryGetValue(expr, out val))
 						{
 							expr = Expression.Convert(val, expr.Type);
@@ -1398,7 +1398,7 @@ namespace LinqToDB.Linq.Builder
 								.MakeGenericMethod(args[1]);
 
 							var expr = Expression.Call(
-								minf, 
+								minf,
 								Expression.PropertyOrField(e.Object, "Values"),
 								e.Arguments[0]);
 
@@ -1412,7 +1412,7 @@ namespace LinqToDB.Linq.Builder
 								.MakeGenericMethod(args[0]);
 
 							var expr = Expression.Call(
-								minf, 
+								minf,
 								Expression.PropertyOrField(e.Object, "Keys"),
 								e.Arguments[0]);
 
@@ -1447,8 +1447,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (MemberExpression)expression;
 
-						if (e.Member.Name == "HasValue" && 
-							e.Member.DeclaringType.IsGenericTypeEx() && 
+						if (e.Member.Name == "HasValue" &&
+							e.Member.DeclaringType.IsGenericTypeEx() &&
 							e.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>))
 						{
 							var expr = ConvertToSql(context, e.Expression);
@@ -1749,7 +1749,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ctx = GetContext(context, left);
 
-					if (ctx != null && 
+					if (ctx != null &&
 						(ctx.IsExpression(left, 0, RequestFor.Object).Result ||
 						 left.NodeType == ExpressionType.Parameter && ctx.IsExpression(left, 0, RequestFor.Field).Result))
 					{
@@ -2304,7 +2304,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								cond.Conditions.Add(
 									new SelectQuery.Condition(
-										false, 
+										false,
 										Convert(context,
 											new SelectQuery.Predicate.ExprExpr(
 												getSql(m.DiscriminatorName),
@@ -2531,28 +2531,30 @@ namespace LinqToDB.Linq.Builder
 
 			var inList = predicate as SelectQuery.Predicate.InList;
 
-			if (predicate is SelectQuery.SearchCondition)
-			{
-				var sc = (SelectQuery.SearchCondition) predicate;
+			// ili this will fail https://github.com/linq2db/linq2db/issues/909
+			//
+			//if (predicate is SelectQuery.SearchCondition)
+			//{
+			//	var sc = (SelectQuery.SearchCondition) predicate;
 
-				inList = QueryVisitor
-					.Find(sc, _ => _.ElementType == QueryElementType.InListPredicate) as SelectQuery.Predicate.InList;
+			//	inList = QueryVisitor
+			//		.Find(sc, _ => _.ElementType == QueryElementType.InListPredicate) as SelectQuery.Predicate.InList;
 
-				if (inList != null)
-				{
-					isNot = QueryVisitor.Find(sc, _ =>
-					{
-						var condition = _ as SelectQuery.Condition;
-						return condition != null && condition.IsNot;
-					}) != null;
-				}
-			}
+			//	if (inList != null)
+			//	{
+			//		isNot = QueryVisitor.Find(sc, _ =>
+			//		{
+			//			var condition = _ as SelectQuery.Condition;
+			//			return condition != null && condition.IsNot;
+			//		}) != null;
+			//	}
+			//}
 
 			if (predicate.CanBeNull && predicate is SelectQuery.Predicate.ExprExpr || inList != null)
 			{
 				var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
 
-				if (exprExpr != null && 
+				if (exprExpr != null &&
 					(
 						exprExpr.Operator == SelectQuery.Predicate.Operator.NotEqual && isNot == false ||
 						exprExpr.Operator == SelectQuery.Predicate.Operator.Equal    && isNot == true

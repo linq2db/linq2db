@@ -21,18 +21,18 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract class Query
+	public abstract class Query
 	{
-		public Func<IDataContextEx,Expression,object[],object> GetElement;
+		public Func<IDataContext,Expression,object[],object> GetElement;
 #if !SL4
-		public Func<IDataContextEx,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
+		public Func<IDataContext,Expression,object[],CancellationToken,Task<object>> GetElementAsync;
 #endif
 
 		#region Init
 
 		public readonly List<QueryInfo> Queries = new List<QueryInfo>(1);
 
-		public abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
+		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
 		protected Query(IDataContext dataContext, Expression expression)
 		{
@@ -124,6 +124,26 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
+		#region Cache Support
+
+#if !SILVERLIGHT
+		internal static readonly ConcurrentBag<Action> CacheCleaners = new ConcurrentBag<Action>();
+
+		/// <summary>
+		/// Clears query caches for all typed queries.
+		/// </summary>
+		public static void ClearCaches()
+		{
+			// ConcurrentBag has thread safe enumerator
+			foreach (var cleaner in CacheCleaners)
+			{
+				cleaner();
+			}
+		}
+#endif
+
+		#endregion
 	}
 
 	class Query<T> : Query
@@ -138,7 +158,7 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		public override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
+		internal override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
 		{
 			Queries.Add(new QueryInfo
 			{
@@ -153,16 +173,16 @@ namespace LinqToDB.Linq
 
 		public          bool            DoNotCache;
 
-		public Func<IDataContextEx,Expression,object[],IEnumerable<T>> GetIEnumerable;
+		public Func<IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
 #if !SL4
-		public Func<IDataContextEx,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
+		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
 #endif
 
 		#endregion
 
 		#region GetInfo
 
-		static          List<Query<T>> _orderedCache = new List<Query<T>>(CacheSize);
+		static readonly List<Query<T>> _orderedCache;
 
 		/// <summary>
 		/// LINQ query cache version. Changed when query added or removed from cache.
@@ -172,12 +192,22 @@ namespace LinqToDB.Linq
 		/// <summary>
 		/// LINQ query cache synchronization object.
 		/// </summary>
-		static readonly object   _sync = new object();
+		static readonly object         _sync;
 
 		/// <summary>
 		/// LINQ query cache size (per entity type).
 		/// </summary>
 		const int CacheSize = 100;
+
+		static Query()
+		{
+			_sync         = new object();
+			_orderedCache = new List<Query<T>>(CacheSize);
+
+#if !SILVERLIGHT
+			Query.CacheCleaners.Add(ClearCache);
+#endif
+		}
 
 		/// <summary>
 		/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
@@ -196,6 +226,10 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
+			var preprocessor = dataContext as IExpressionPreprocessor;
+			if (preprocessor != null)
+				expr = preprocessor.ProcessExpression(expr);
+
 			if (Configuration.Linq.UseBinaryAggregateExpression)
 				expr = ExpressionBuilder.AggregateExpression(expr);
 
@@ -307,7 +341,7 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class QueryInfo : IQueryContext
+	public class QueryInfo : IQueryContext
 	{
 		public QueryInfo()
 		{
@@ -331,7 +365,7 @@ namespace LinqToDB.Linq
 		public List<ParameterAccessor> Parameters = new List<ParameterAccessor>();
 	}
 
-	class ParameterAccessor
+	public class ParameterAccessor
 	{
 		public ParameterAccessor(
 			Expression                         expression,
