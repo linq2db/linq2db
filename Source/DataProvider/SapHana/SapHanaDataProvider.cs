@@ -4,6 +4,8 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using System.Data.Common;
+
 	using Common;
 	using Data;
 	using Extensions;
@@ -22,7 +24,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			//supported flags
 			SqlProviderFlags.IsCountSubQuerySupported = true;
-			
+
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
@@ -35,8 +37,8 @@ namespace LinqToDB.DataProvider.SapHana
 			//testing
 
 			//not supported flags
-			SqlProviderFlags.IsSubQueryTakeSupported   = false;
-			SqlProviderFlags.IsApplyJoinSupported      = false;
+			SqlProviderFlags.IsSubQueryTakeSupported = false;
+			SqlProviderFlags.IsApplyJoinSupported = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
@@ -60,30 +62,69 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
+		private Type _dataReaderType;
+
+		public override Type DataReaderType
+		{
+			get
+			{
+				if (_dataReaderType != null)
+					return _dataReaderType;
+
+				var assembly = DbProviderFactories
+					.GetFactory("Sap.Data.Hana").GetType().Assembly;
+
+				_dataReaderType =
+					Type.GetType("{0}.{1}, {2}".Args(ConnectionNamespace, "HanaDataReader", assembly.GetName()));
+
+
+				return _dataReaderType;
+			}
+		}
+
 		static Action<IDbDataParameter> _setText;
 		static Action<IDbDataParameter> _setNText;
 		static Action<IDbDataParameter> _setBlob;
 		static Action<IDbDataParameter> _setVarBinary;
 
+		volatile Type _connectionType;
 
+		protected override Type GetConnectionType()
+		{
+			if (_connectionType == null)
+				lock (_sync)
+					if (_connectionType == null)
+					{
+						var db = DbProviderFactories
+						  .GetFactory("Sap.Data.Hana")
+						  .CreateConnection();
+
+					    if (db == null)
+							throw new Exception("The Hana Driver is not installed.");
+
+							_connectionType = db.GetType();
+
+					    OnConnectionTypeCreated(_connectionType);
+					}
+
+			return _connectionType;
+		}
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
 			const String paramTypeName = "HanaParameter";
-			const String dataTypeName  = "HanaDbType";
+			const String dataTypeName = "HanaDbType";
 
-			_setText      = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Text");
-			_setNText     = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "NClob");
-			_setBlob      = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Blob");
+			_setText = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Text");
+			_setNText = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "NClob");
+			_setBlob = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Blob");
 			_setVarBinary = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "VarBinary");
 		}
 
-#if !NETSTANDARD
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new SapHanaSchemaProvider();
 		}
-#endif
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
@@ -106,10 +147,10 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case DataType.NChar:
 				case DataType.Char:
-					type = typeof (String);
+					type = typeof(String);
 					break;
-				case DataType.Boolean: if (type == typeof(bool)) return typeof(byte);  break;
-				case DataType.Guid   : if (type == typeof(Guid)) return typeof(string); break;
+				case DataType.Boolean: if (type == typeof(bool)) return typeof(byte); break;
+				case DataType.Guid: if (type == typeof(Guid)) return typeof(string); break;
 			}
 
 			return base.ConvertParameterType(type, dataType);
@@ -142,9 +183,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 			switch (dataType)
 			{
-				case DataType.Text  : _setText(parameter);      break;
-				case DataType.Image : _setBlob(parameter);      break;
-				case DataType.NText : _setNText(parameter);     break;
+				case DataType.Text: _setText(parameter); break;
+				case DataType.Image: _setBlob(parameter); break;
+				case DataType.NText: _setNText(parameter); break;
 				case DataType.Binary: _setVarBinary(parameter); break;
 			}
 			base.SetParameterType(parameter, dataType);
