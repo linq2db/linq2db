@@ -13,7 +13,7 @@ addons:
     - libunwind8
     - zlib1g
 
-dotnet: 1.0.4
+dotnet: 2.0.0
 
 env:
   global:
@@ -38,6 +38,7 @@ before_install:
 
 before_install:
  - chmod +x build.sh
+ - chmod +x travisbuild.sh
 
 install:
   - nuget install NUnit.Runners -Version 3.7.0 -OutputDirectory testrunner
@@ -61,7 +62,8 @@ script:
 #  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv Tests/Linq/TravisDataProviders.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
 #  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.txt Tests/Linq/UserDataProviders.txt; fi
 #  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
-  - ./build.sh --verbosity diagnostic
+#  - ./build.sh --verbosity diagnostic
+  - ./travisbuild.sh 
 #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then psql -c 'create database testdata;' -U postgres; fi  
 #  - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
 #  - mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll --where "cat != WindowsOnly"

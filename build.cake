@@ -1,4 +1,3 @@
-#addin "MagicChunks"
 #addin "Cake.DocFx"
 #addin "Cake.Git"
 #tool "docfx.console"
@@ -6,17 +5,17 @@
 
 string GetSolutionName()
 {
-	return "./linq2db.core.sln";
+	return "./linq2db.sln";
 }
 
 string GetNugetProject()
 {
-	return "./Source/Source.csproj";
+	return "./Source/LinqToDB/LinqToDB.csproj";
 }
 
 ConvertableDirectoryPath GetPackPath()
 {
-	return Directory("./Source/Source.csproj");
+	return Directory("./Source/LinqToDB/LinqToDB.csproj");
 }
 
 ConvertableDirectoryPath GetBuildArtifacts()
@@ -285,7 +284,7 @@ Task("PatchPackage")
 	Console.WriteLine("Package  Suffix      : {0}", packageSuffix);
 	Console.WriteLine("Assembly Version     : {0}", assemblyVersion);
 
-
+/* 
 	TransformConfig(GetNugetProject(), GetNugetProject(),
 		new TransformationCollection {
 			{ "Project/PropertyGroup/Version",         fullPackageVersion },
@@ -294,16 +293,19 @@ Task("PatchPackage")
 			{ "Project/PropertyGroup/AssemblyVersion", assemblyVersion },
 			{ "Project/PropertyGroup/FileVersion",     assemblyVersion },
 	 });
+*/	 
 });
 
 Task("PatchTests")
 	.WithCriteria(() => GetConfiguration() == "Travis")
 	.Does(() =>
 {
+	/*
 	TransformConfig("./Tests/Linq/Linq.csproj", "./Tests/Linq/Linq.csproj",
 		new TransformationCollection {
 			{ "Project/ItemGroup[@Condition=' '$(Configuration)' != 'Travis' ']", "" },
 	 });
+	 */
 });
 
 Task("Build")
@@ -321,7 +323,7 @@ Task("Build")
 				.UseToolVersion(MSBuildToolVersion.VS2017)
 				);
 	else 
-		DotNetCoreBuild("./Tests/Linq/Linq.csproj", 
+		DotNetCoreBuild("./Tests/Linq/Tests.csproj", 
 			new DotNetCoreBuildSettings
 			{
 				Configuration = GetConfiguration(),
@@ -386,7 +388,7 @@ Task("RunTests")
 
 	var projects = testRunner == "NUnit"
 		? new [] { File("./Tests/Linq/Bin/Release/" + GetBuildConfiguration() + "/linq2db.Tests.dll").Path }
-		: new [] { File("./Tests/Linq/Linq.csproj").Path };
+		: new [] { File("./Tests/Linq/Tests.csproj").Path };
 	
 	var testFilter = GetTestFilter();
 	Console.WriteLine("Filter: {0}", testFilter);
@@ -407,8 +409,8 @@ Task("RunTests")
 	{
 		Configuration = GetConfiguration(),
 		X86 = true,
-		Results = testResults,
-		//Framework = GetBuildConfiguration(),
+		// Results = testResults,
+		// Framework = GetBuildConfiguration(),
 		Where = testFilter
 	};
 

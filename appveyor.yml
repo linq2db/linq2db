@@ -58,6 +58,9 @@ test:
   # only assemblies to test
   assemblies:
     - Tests\Linq\**\linq2db.Tests.dll
+  categories:
+    except:
+      - A
 
 artifacts:
 - path: \**\linq2db*.nupkg
