@@ -24,9 +24,9 @@ namespace LinqToDB.Data.RetryPolicy
 		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay)
 		{
 			if (maxRetryCount < 0)
-				throw new ArgumentOutOfRangeException(nameof(maxRetryCount));
+				throw new ArgumentOutOfRangeException("maxRetryCount");
 			if (maxRetryDelay.TotalMilliseconds < 0.0)
-				throw new ArgumentOutOfRangeException(nameof(maxRetryDelay));
+				throw new ArgumentOutOfRangeException("maxRetryCount");
 
 			MaxRetryCount = maxRetryCount;
 			MaxRetryDelay = maxRetryDelay;
@@ -37,22 +37,22 @@ namespace LinqToDB.Data.RetryPolicy
 		/// <summary>
 		/// The list of exceptions that caused the operation to be retried so far.
 		/// </summary>
-		protected virtual List<Exception> ExceptionsEncountered { get; }
+		protected virtual List<Exception> ExceptionsEncountered { get; private set; }
 
 		/// <summary>
 		/// A pseudo-random number generater that can be used to vary the delay between retries.
 		/// </summary>
-		protected virtual Random Random { get; }
+		protected virtual Random Random { get; private set; }
 
 		/// <summary>
 		/// The maximum number of retry attempts.
 		/// </summary>
-		protected virtual int MaxRetryCount { get; }
+		protected virtual int MaxRetryCount { get; private set; }
 
 		/// <summary>
 		/// The maximum delay in milliseconds between retries.
 		/// </summary>
-		protected virtual TimeSpan MaxRetryDelay { get; }
+		protected virtual TimeSpan MaxRetryDelay { get; private set; }
 
 		[ThreadStatic]
 		static volatile bool _suspended;
