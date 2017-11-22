@@ -18,7 +18,8 @@ dotnet restore
 
 dotnet build ./Source/LinqToDB/LinqToDB.csproj -c Release -f netstandard1.6
 
-dotnet test ./Tests/Linq/Tests.csproj -c Release -f netcoreapp1.0 --where "cat != WindowsOnly"
+#dotnet test ./Tests/Linq/Tests.csproj -c Release -f netcoreapp1.0 --where "cat != WindowsOnly"
+dotnet test ./Tests/Linq/Tests.csproj -c Release -f netcoreapp1.0 
 
 # Instead, run directly with mono for the full .net version 
 # dotnet build ./test/TEST_PROJECT_NAME -c Release -f net451
