@@ -168,7 +168,7 @@ namespace LinqToDB.Data.RetryPolicy
 				return operation(cancellationToken);
 
 			OnFirstExecution();
-			return ExecuteImplementationAsync(ct => { operation(ct); return Task.FromResult(0); }, cancellationToken);
+			return ExecuteImplementationAsync( async ct => { await operation(ct); return 0; }, cancellationToken);
 		}
 
 		async Task<TResult> ExecuteImplementationAsync<TResult>(
