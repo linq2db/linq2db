@@ -60,7 +60,7 @@ test:
     - Tests\Linq\**\linq2db.Tests.dll
   categories:
     except:
-      - A
+      - FreeText
 
 artifacts:
 - path: \**\linq2db*.nupkg
