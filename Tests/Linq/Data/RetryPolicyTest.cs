@@ -28,7 +28,7 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryLimitExceededException();
+					throw new ApplicationException();
 				}
 			}
 
@@ -42,7 +42,7 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryLimitExceededException();
+					throw new ApplicationException();
 				}
 			}
 
@@ -57,7 +57,7 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryLimitExceededException();
+					throw new ApplicationException();
 				}
 			}
 
@@ -72,22 +72,19 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryLimitExceededException();
+					throw new ApplicationException();
 				}
 			}
 		}
 
 		public class FakeClass
-		{
-			
-		}
+		{}
 
 		[Test, DataContextSource(false)]
 		public void RetryPoliceTest(string context)
 		{
 			var ret = new Retry();
-			
-			Assert.Throws<RetryLimitExceededException>(() =>
+			Assert.Throws<ApplicationException>(() =>
 			{
 				using (var db = new DataConnection(context) { RetryPolicy = ret })
 				{
@@ -114,7 +111,7 @@ namespace Tests.Data
 			}
 			catch (AggregateException ex)
 			{
-				Assert.IsNotNull(ex.InnerExceptions.OfType<RetryLimitExceededException>().Single());
+				Assert.IsNotNull(ex.InnerExceptions.OfType<ApplicationException>().Single());
 			}
 
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command

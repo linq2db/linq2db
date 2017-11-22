@@ -24,9 +24,9 @@ namespace LinqToDB.Data.RetryPolicy
 		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay)
 		{
 			if (maxRetryCount < 0)
-				throw new ArgumentOutOfRangeException("maxRetryCount");
+				throw new ArgumentOutOfRangeException(nameof(maxRetryCount));
 			if (maxRetryDelay.TotalMilliseconds < 0.0)
-				throw new ArgumentOutOfRangeException("maxRetryDelay");
+				throw new ArgumentOutOfRangeException(nameof(maxRetryDelay));
 
 			MaxRetryCount = maxRetryCount;
 			MaxRetryDelay = maxRetryDelay;
@@ -37,22 +37,22 @@ namespace LinqToDB.Data.RetryPolicy
 		/// <summary>
 		/// The list of exceptions that caused the operation to be retried so far.
 		/// </summary>
-		protected virtual List<Exception> ExceptionsEncountered { get; private set; }
+		protected virtual List<Exception> ExceptionsEncountered { get; }
 
 		/// <summary>
 		/// A pseudo-random number generater that can be used to vary the delay between retries.
 		/// </summary>
-		protected virtual Random Random { get; private set; }
+		protected virtual Random Random { get; }
 
 		/// <summary>
 		/// The maximum number of retry attempts.
 		/// </summary>
-		protected virtual int MaxRetryCount { get; private set; }
+		protected virtual int MaxRetryCount { get; }
 
 		/// <summary>
 		/// The maximum delay in milliseconds between retries.
 		/// </summary>
-		protected virtual TimeSpan MaxRetryDelay { get; private set; }
+		protected virtual TimeSpan MaxRetryDelay { get; }
 
 		[ThreadStatic]
 		static volatile bool _suspended;
@@ -122,7 +122,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 					delay = GetNextDelay(ex);
 					if (delay == null)
-						throw new RetryLimitExceededException(ex);
+						throw;
 
 					OnRetry();
 				}
@@ -149,9 +149,6 @@ namespace LinqToDB.Data.RetryPolicy
 		///     first time or after retrying transient failures). If the task fails with a non-transient error or
 		///     the retry limit is reached, the returned task will become faulted and the exception must be observed.
 		/// </returns>
-		/// <exception cref="RetryLimitExceededException">
-		///     Thrown if the operation has not succeeded after the configured number of retries.
-		/// </exception>
 		public virtual Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation,
 			CancellationToken cancellationToken = default(CancellationToken))
 		{
@@ -199,7 +196,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 					delay = GetNextDelay(ex);
 					if (delay == null)
-						throw new RetryLimitExceededException(ex);
+						throw;
 
 					OnRetry();
 				}
