@@ -19,6 +19,7 @@
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<SignAssembly>True</SignAssembly>
+		<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
 		<AssemblyOriginatorKeyFile Condition="Exists('..\Build\linq2db.snk')">..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
 		<AssemblyOriginatorKeyFile Condition="Exists('..\..\Build\linq2db.snk')">..\..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
 		<DelaySign>False</DelaySign>
