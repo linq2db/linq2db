@@ -40,4 +40,3 @@ linq2db.sln.ide/
 *.lock.json
 /api
 /linq2db.github.io
-packages/
