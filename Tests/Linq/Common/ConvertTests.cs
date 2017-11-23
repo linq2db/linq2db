@@ -8,6 +8,9 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+// ReSharper disable UnusedMember.Local
+// ReSharper disable InconsistentNaming
+
 namespace Tests.Common
 {
 	[TestFixture]

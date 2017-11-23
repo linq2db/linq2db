@@ -655,7 +655,7 @@ namespace LinqToDB.Data
 					var dataProvider = _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings, ConnectionString));
 
 					if (dataProvider == null)
-						throw new LinqToDBException("DataProvider is not provided for configuration: {0}".Args(_configurationString));
+						throw new LinqToDBException($"DataProvider is not provided for configuration: {_configurationString}");
 
 					return dataProvider;
 				}

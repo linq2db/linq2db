@@ -9,6 +9,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 using MySql.Data.Types;
