@@ -122,7 +122,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 					delay = GetNextDelay(ex);
 					if (delay == null)
-						throw new RetryLimitExceededException(ex);
+						throw;
 
 					OnRetry();
 				}
@@ -148,9 +148,6 @@ namespace LinqToDB.Data.RetryPolicy
 		///     first time or after retrying transient failures). If the task fails with a non-transient error or
 		///     the retry limit is reached, the returned task will become faulted and the exception must be observed.
 		/// </returns>
-		/// <exception cref="RetryLimitExceededException">
-		///     Thrown if the operation has not succeeded after the configured number of retries.
-		/// </exception>
 		public virtual Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation,
 			CancellationToken cancellationToken = default(CancellationToken))
 		{
@@ -199,7 +196,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 					delay = GetNextDelay(ex);
 					if (delay == null)
-						throw new RetryLimitExceededException(ex);
+						throw;
 
 					OnRetry();
 				}
