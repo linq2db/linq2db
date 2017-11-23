@@ -217,7 +217,7 @@ namespace LinqToDB.ServiceModel
 													else
 														data[i] = rd.GetValue(i).ToString();
 												}
-												else if (ret.FieldTypes[i] == typeof(byte[]))
+												else if (type == typeof(byte[]))
 													data[i] = ConvertTo<string>.From((byte[])rd.GetValue(i));
 												else
 													data[i] = (rd.GetValue(i) ?? "").ToString();
