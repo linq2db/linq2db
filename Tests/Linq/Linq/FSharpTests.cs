@@ -87,6 +87,13 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				FSharp.InsertTest.Insert2(db);
 		}
-	}
+
+        [Test, DataContextSource]
+        public void SelectLeftJoin(string context)
+        {
+            using (var db = GetDataContext(context))
+                FSharp.SelectTest.SelectLeftJoin(db);   
+        }
+    }
 }
 #endif
