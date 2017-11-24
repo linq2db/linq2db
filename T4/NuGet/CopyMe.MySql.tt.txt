@@ -1,0 +1,43 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.MySql.Tools.ttinclude" #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#
+	/*
+		1. Copy this file to a folder where you would like to generate your data model,
+		   rename it, and delete .txt extension. For example:
+
+			MyProject
+				DataModels
+					MyDatabase.tt
+
+		2. Modify the connection settings below to connect to your database.
+
+		3. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="MyDatabase" connectionString="Server=MyServer;Port=3306;Database=MyDatabase;Uid=root;Pwd=TestPassword;charset=utf8;" providerName="MySql.Data.MySqlClient" />
+			</connectionStrings>
+
+		4. To access your database use the following code:
+
+			using (var db = new MyDatabaseDB())
+			{
+				var q =
+					from c in db.Customers
+					select c;
+
+				foreach (var c in q)
+					Console.WriteLine(c.ContactName);
+			}
+
+		5. See more at https://github.com/linq2db/t4models
+	*/
+
+	NamespaceName = "DataModels";
+
+	LoadMySqlMetadata("MyServer", "MyDatabase", "root", "TestPassword");
+//	LoadMySqlMetadata(string connectionString);
+
+	GenerateModel();
+#>

@@ -1,0 +1,152 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\Build\linq2db.Default.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net451;netcoreapp2.0;netstandard1.6;net40;netstandard2.0;net45</TargetFrameworks>
+		<AssemblyName>linq2db</AssemblyName>
+		<RootNamespace>LinqToDB</RootNamespace>
+
+		<PackageId>linq2db</PackageId>
+		<PackageTags>linq;linq2db;LinqToDB;ORM;database;DB;SQL;SqlServer;Access;SqlCe;SqlServerCe;MySql;Firebird;SQLite;Sybase;Oracle;ODP;PostgreSQL;DB2;Informix;SapHana</PackageTags>
+		<PackageIconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</PackageIconUrl>
+		<PackageProjectUrl>http://linq2db.com</PackageProjectUrl>
+		<PackageLicenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</PackageLicenseUrl>
+
+		<Configurations>Debug;Release</Configurations>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
+		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+
+		<Compile Remove="Compatibility\**\*.cs" />
+
+		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
+
+		<Compile Update="AsyncExtensions.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AsyncExtensions.tt</DependentUpon>
+		</Compile>
+
+		<None Update="AsyncExtensions.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+
+	<!-- .NET Framework -->
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' ">
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System" />
+		<Reference Include="System.Configuration" />
+		<Reference Include="System.Core" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="System.Data.Linq" />
+		<Reference Include="System.Data.Services" />
+		<Reference Include="System.ServiceModel" />
+		<Reference Include="System.Web.Services" />
+		<Reference Include="System.Xml.Linq" />
+		<Reference Include="System.Data" />
+		<Reference Include="System.Xml" />
+		<Reference Include="System.Runtime.Serialization" />
+
+		<Compile Remove="Metadata\SystemComponentModelDataAnnotationsSchemaAttributeReader.cs" />
+		<Compile Include="Compatibility\System\Threading\AsyncLocal.cs" />
+	</ItemGroup>
+
+
+	<!-- .NET 4.0 specific -->
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'net40'">
+		<None Remove="App.config" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+		<PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
+
+		<Compile Include="Compatibility\System\Data\DbConnection.cs" />
+		<Compile Include="Compatibility\System\Data\DbCommand.cs" />
+		<Compile Include="Compatibility\System\Data\DbDataReader.cs" />
+		<Compile Remove="Compatibility\System\Threading\Tasks\TaskEx.cs" />
+	</ItemGroup>
+
+	<Import Project="..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets') AND '$(TargetFramework)' == 'net40'" />
+
+	<Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == '' AND '$(TargetFramework)' == 'net40'">
+		<Error Condition="!Exists('..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
+		<Error Condition="Exists('..\..\Redist\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
+	</Target>
+
+
+	<!-- .NET Standard -->
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="1.1.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
+		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
+		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.3.0" />
+		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+
+		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
+		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
+		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
+		<Compile Remove="ServiceModel\**\*.cs;" />
+		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
+		<Compile Remove="**\*SchemaProvider*.cs" />
+		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+		<Compile Include="Compatibility\System\ICloneable.cs" />
+		<Compile Include="Compatibility\System\SerializableAttribute.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+
+		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
+		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
+		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
+		<Compile Remove="ServiceModel\**\*.cs;" />
+		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
+		<Compile Remove="**\*SchemaProvider11111*.cs" />
+		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+		<Compile Include="Compatibility\System\Data\DataTableExtensions.cs" />
+		<Compile Include="Compatibility\System\Data\DataRowExtensions.cs" />
+	</ItemGroup>
+
+
+	<!-- .NET Core -->
+
+	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.0'">
+		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+
+		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
+		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
+		<Compile Remove="Configuration\DataProviderElement.cs;Configuration\DataProviderElementCollection.cs;Configuration\ElementBase.cs;Configuration\ElementCollectionBase.cs;Configuration\LinqToDBSection.cs" />
+		<Compile Remove="ServiceModel\**\*.cs;" />
+		<Compile Remove="DataProvider\Access\*.cs;DataProvider\SapHana\SapHanaOdbc*.cs" />
+		<Compile Remove="**\*SchemaProvider11111*.cs" />
+		<Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+		<Compile Include="Compatibility\System\Data\DataTableExtensions.cs" />
+		<Compile Include="Compatibility\System\Data\DataRowExtensions.cs" />
+	</ItemGroup>
+</Project>

@@ -43,8 +43,8 @@ namespace Tests.Samples
 						o.OrderID,
 					};
 
-				foreach (var item in query)
-					Console.WriteLine(item);
+				var data = query.ToArray();
+				Assert.IsNotEmpty(data);
 			}
 		}
 	}

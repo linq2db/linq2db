@@ -6,7 +6,7 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-#if !NOFSHARP
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !TRAVIS
 using Tests.FSharp.Models;
 #else
 using Tests.Model;
@@ -47,7 +47,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.DB2)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.DB2)]
 		public void CharAsSqlParameter1(string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -59,7 +59,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2)]
 		public void CharAsSqlParameter2(string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -71,7 +71,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.Informix, ProviderName.DB2, ProviderName.SQLiteMS)]
 		public void CharAsSqlParameter3(string context)
 		{
 			using (var  db = GetDataContext(context))

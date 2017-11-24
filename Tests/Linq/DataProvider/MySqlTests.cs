@@ -9,6 +9,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 using MySql.Data.Types;
@@ -441,7 +442,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, MySqlDataContext(false)]
 		public void SchemaProviderTest(string context)
 		{

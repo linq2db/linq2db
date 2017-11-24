@@ -160,7 +160,7 @@ namespace Tests.Model
 	{
 		public GrandChild()
 		{
-			
+
 		}
 
 		public int? ParentID;
@@ -243,7 +243,7 @@ namespace Tests.Model
 			{
 				if ((int)value == 1)
 				{
-					
+
 				}
 
 				_Value1 = value;
@@ -275,7 +275,7 @@ namespace Tests.Model
 
 		public override string ToString()
 		{
-			return "ParentID: {0}, Value1: {1}".Args(ParentID, Value1);
+			return $"ParentID: {ParentID}, Value1: {Value1}";
 		}
 	}
 
@@ -596,7 +596,7 @@ namespace Tests.Model
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		public static ITable<T> WithTabLock1<T>(IDataContext ctx)
-			where T : class 
+			where T : class
 		{
 			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
 		}
@@ -614,7 +614,7 @@ namespace Tests.Model
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		public static ITable<T> WithTabLock<T>(this IDataContext ctx)
-			where T : class 
+			where T : class
 		{
 			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
 		}

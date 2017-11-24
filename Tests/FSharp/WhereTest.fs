@@ -6,16 +6,16 @@ open Tests.FSharp.Models
 
 open LinqToDB
 open LinqToDB.Mapping
-open NUnit.Framework
+open Tests.Utils
 
 let private TestOnePerson id firstName persons =
     let list = persons :> Person System.Linq.IQueryable |> Seq.toList
-    Assert.AreEqual(1, list |> List.length )
+    NUnitAssert.AreEqual(1, list |> List.length )
 
     let person = list |> List.head
 
-    Assert.AreEqual(id, person.ID)
-    Assert.AreEqual(firstName, person.FirstName)
+    NUnitAssert.AreEqual(id, person.ID)
+    NUnitAssert.AreEqual(firstName, person.FirstName)
 
 let TestOneJohn = TestOnePerson 1 "John"
 
@@ -31,7 +31,7 @@ let LoadSingle (db : IDataContext) =
     })
 
 
-let LoadSinglesWithPatient (db : IDataContext) = 
+let LoadSinglesWithPatient (db : IDataContext) =
     let persons = db.GetTable<Person>().LoadWith( fun x -> x.Patient :> Object )
     let johnId = 1
     let john = query {
@@ -40,9 +40,9 @@ let LoadSinglesWithPatient (db : IDataContext) =
         exactlyOne
     }
 
-    Assert.AreEqual(johnId, john.ID)
-    Assert.AreEqual("John", john.FirstName)
-    Assert.IsNull( john.Patient)
+    NUnitAssert.AreEqual(johnId, john.ID)
+    NUnitAssert.AreEqual("John", john.FirstName)
+    NUnitAssert.IsNull  (john.Patient)
 
     let testerId = 2
     let tester = query {
@@ -51,10 +51,10 @@ let LoadSinglesWithPatient (db : IDataContext) =
         exactlyOne
     }
 
-    Assert.AreEqual(testerId, tester.ID)
-    Assert.AreEqual("Tester", tester.FirstName)
-    Assert.IsNotNull( tester.Patient)
-    Assert.AreEqual( tester.Patient.PersonID, testerId )
+    NUnitAssert.AreEqual(testerId, tester.ID)
+    NUnitAssert.AreEqual("Tester", tester.FirstName)
+    NUnitAssert.IsNotNull( tester.Patient)
+    NUnitAssert.AreEqual( tester.Patient.PersonID, testerId )
 
 
 let LoadSingleComplexPerson (db : IDataContext) =
@@ -64,7 +64,7 @@ let LoadSingleComplexPerson (db : IDataContext) =
         where (p.ID = TestMethod())
         exactlyOne
     }
-    Assert.AreEqual(
+    NUnitAssert.AreEqual(
         { ComplexPerson.ID=1
           Name = {FirstName="John"; MiddleName=null; LastName="Pupkin"}
           Gender="M" }
@@ -77,7 +77,7 @@ let LoadSingleDeeplyComplexPerson (db : IDataContext) =
         where (p.ID = TestMethod())
         exactlyOne
     }
-    Assert.AreEqual(
+    NUnitAssert.AreEqual(
         { DeeplyComplexPerson.ID=1
           Name = {FirstName="John"; MiddleName=null; LastName={Value="Pupkin"}}
           Gender="M" }
@@ -91,7 +91,7 @@ let LoadColumnOfDeeplyComplexPerson (db : IDataContext) =
         select p.Name.LastName.Value
         exactlyOne
     }
-    Assert.AreEqual("Pupkin", lastName)
+    NUnitAssert.AreEqual("Pupkin", lastName)
 
 let LoadSingleWithOptions (db : IDataContext) =
     let persons = db.GetTable<PersonWithOptions>()
@@ -100,7 +100,7 @@ let LoadSingleWithOptions (db : IDataContext) =
         where (p.ID = TestMethod())
         exactlyOne
     }
-    Assert.AreEqual(
+    NUnitAssert.AreEqual(
         { PersonWithOptions.ID=1
           FirstName = "John"
           MiddleName = None
@@ -109,8 +109,8 @@ let LoadSingleWithOptions (db : IDataContext) =
           }
         , john)
 
-    Assert.IsTrue( match john.MiddleName with |None -> true;  |Some _ -> false );
-    Assert.IsTrue( match john.LastName   with |None -> false; |Some _ -> true );
+    NUnitAssert.IsTrue( match john.MiddleName with |None -> true;  |Some _ -> false );
+    NUnitAssert.IsTrue( match john.LastName   with |None -> false; |Some _ -> true );
 
 
 
@@ -122,9 +122,9 @@ let LoadSingleCLIMutable (db : IDataContext)  (nullPatient : PatientCLIMutable) 
         exactlyOne
     }
 
-    Assert.IsNotNull( john )
-    Assert.AreEqual( john.ID, 1 )
-    Assert.IsNull( john.Patient )
+    NUnitAssert.IsNotNull( john )
+    NUnitAssert.AreEqual( john.ID, 1 )
+    NUnitAssert.IsNull( john.Patient )
 
     let tester = query {
         for p in persons do
@@ -132,7 +132,7 @@ let LoadSingleCLIMutable (db : IDataContext)  (nullPatient : PatientCLIMutable) 
         exactlyOne
     }
 
-    Assert.IsNotNull( tester )
-    Assert.AreEqual( tester.ID, 2 )
-    Assert.IsNotNull( tester.Patient )
-    Assert.AreEqual( tester.Patient.PersonID, 2 )
+    NUnitAssert.IsNotNull( tester )
+    NUnitAssert.AreEqual( tester.ID, 2 )
+    NUnitAssert.IsNotNull( tester.Patient )
+    NUnitAssert.AreEqual( tester.Patient.PersonID, 2 )

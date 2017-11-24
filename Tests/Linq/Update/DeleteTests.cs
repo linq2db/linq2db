@@ -157,7 +157,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana)]
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana)]
 		public void DeleteMany1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -187,7 +187,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana
 			)]
 		public void DeleteMany2(string context)
 		{
@@ -227,7 +227,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SapHana
 			)]
 		public void DeleteMany3(string context)
 		{
@@ -274,8 +274,8 @@ namespace Tests.xUpdate
 			TestProvName.MariaDB,
 			TestProvName.MySql57,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite,
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteClassic,
+			ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana

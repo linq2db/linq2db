@@ -432,7 +432,7 @@ namespace Tests
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override DataRowVersion SourceVersion
 		{
 			get
@@ -513,7 +513,7 @@ namespace Tests
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override void Close()
 		{
 		}
@@ -609,7 +609,7 @@ namespace Tests
 			throw new NotImplementedException();
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override DataTable GetSchemaTable()
 		{
 			throw new NotImplementedException();
@@ -659,7 +659,7 @@ namespace Tests
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override bool IsFixedSize
 		{
 			get
@@ -826,7 +826,7 @@ namespace Tests
 			return new TestNoopSqlBuilder();
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			throw new NotImplementedException();

@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -15,7 +14,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue488Tests : TestBase
 	{
-		public class LinqDataTypes 
+		public class LinqDataTypes
 		{
 			public int ID;
 			public decimal MoneyValue;
@@ -26,7 +25,7 @@ namespace Tests.UserTests
 			public short SmallIntValue;
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -44,7 +43,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void Test2(string context)
 		{
 			using (var db = GetDataContext(context))

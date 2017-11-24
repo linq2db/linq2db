@@ -6,26 +6,23 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-#if !NETSTANDARD
 
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.ServiceModel;
 using System.ServiceModel.Description;
-
 #endif
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
-#if !NETSTANDARD
-
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using LinqToDB.ServiceModel;
-
 #endif
 
 using NUnit.Framework;
@@ -38,37 +35,14 @@ using NUnit.Framework.Internal.Builders;
 namespace Tests
 {
 	using Model;
-	using System.Text.RegularExpressions;
-
-	class Retry : IRetryPolicy
-	{
-		public TResult Execute<TResult>(Func<TResult> operation)
-		{
-			return operation();
-		}
-
-		public void Execute(Action operation)
-		{
-			operation();
-		}
-
-		public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return operation(cancellationToken);
-		}
-
-		public Task ExecuteAsync(Func<CancellationToken,Task> operation, CancellationToken cancellationToken = new CancellationToken())
-		{
-			return operation(cancellationToken);
-		}
-	}
+	using Tools;
 
 	public class TestBase
 	{
 		static TestBase()
 		{
 			Console.WriteLine("Tests started in {0}...",
-#if NETSTANDARD
+#if NETSTANDARD1_6
 				System.IO.Directory.GetCurrentDirectory()
 #else
 				Environment.CurrentDirectory
@@ -77,52 +51,66 @@ namespace Tests
 
 			var traceCount = 0;
 
-			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
-				 if (traceCount < 10000)
+				if (traceCount < 10000)
 				{
 					Console.WriteLine("{0}: {1}", s2, s1);
 					Debug.WriteLine(s1, s2);
 				}
-#if MONO
-				else
-					Console.Write("z");
-#else
+
 				if (traceCount++ > 10000)
-					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
-#endif
+					DataConnection.TurnTraceSwitchOn(TraceLevel.Error);
 			};
 
-			//Configuration.RetryPolicy.Factory = db => new Retry();
+//			Configuration.RetryPolicy.Factory = db => new Retry();
 
-			//Configuration.AvoidSpecificDataProviderAPI = true;
-			//Configuration.Linq.GenerateExpressionTest = true;
+//			Configuration.AvoidSpecificDataProviderAPI = true;
+			Configuration.Linq.TraceMapperExpression   = false;
+//			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
-#if !NETSTANDARD && !MONO
-			SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+			try
+			{
+				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+			}
+			catch // this can fail during tests discovering with NUnitTestAdapter
+			{ }
 #endif
 
-#if NETSTANDARD
+#if NETSTANDARD1_6
 			System.IO.Directory.SetCurrentDirectory(assemblyPath);
 #else
 			Environment.CurrentDirectory = assemblyPath;
 #endif
-#if NETSTANDARD
-			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
-			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
+
+			var dataProvidersJsonFile     = Path.Combine(ProjectPath, @"DataProviders.json");
+			var userDataProvidersJsonFile = Path.Combine(ProjectPath, @"UserDataProviders.json");
+
+			var dataProvidersJson     = File.ReadAllText(dataProvidersJsonFile);
+			var userDataProvidersJson =
+				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
+
+#if NETSTANDARD1_6
+			var configName = "CORE1";
+#elif NETSTANDARD2_0
+			var configName = "CORE2";
 #else
-			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
-			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
+			var configName = "NET45";
 #endif
 
-			var providerListFile =
-				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
+#if APPVEYOR
+#warning "AppVeyor configuration detected."
 
-			var dataPath = Path.GetFullPath(@"Database\Data");
+			Console.WriteLine("AppVeyor configuration detected.");
+			configName += ".AppVeyor";
+#endif
+
+			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
+			var dataPath     = Path.GetFullPath(@"Database\Data");
 
 			if (Directory.Exists(dataPath))
 				Directory.Delete(dataPath, true);
@@ -134,68 +122,61 @@ namespace Tests
 			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
 				File.Copy(file, Path.Combine(dataPath, Path.GetFileName(file)), true);
 
-			UserProviders =
-				File.ReadAllLines(providerListFile)
-					.Select(s => s.Trim())
-					.Where (s => s.Length > 0 && !s.StartsWith("--"))
-					.Select(s =>
-					{
-						var isDefault = s.StartsWith("!");
-						if (isDefault)
-							s = s.Substring(1);
+			UserProviders = new HashSet<string>(testSettings.Providers);
 
-						var ss = s.Split('*');
-						switch (ss.Length)
-						{
-							case 0 : return null;
-							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0],        IsDefault = isDefault };
-							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0],        IsDefault = isDefault };
-							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim(), IsDefault = isDefault };
-						}
-					})
-					.ToDictionary(i => i.Name);
+			var logLevel   = testSettings.TraceLevel;
+			var traceLevel = TraceLevel.Info;
 
-			//var map = new ExeConfigurationFileMap();
-			//map.ExeConfigFilename = Path.Combine(
-			//	Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Substring("file:///".Length)),
-			//	@"..\..\App.config");
+			if (!string.IsNullOrEmpty(logLevel))
+				if (!Enum.TryParse(logLevel, true, out traceLevel))
+					traceLevel = TraceLevel.Info;
 
-			//var config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
+			DataConnection.TurnTraceSwitchOn(traceLevel);
 
-			//DataConnection.SetConnectionStrings(config);
+			Console.WriteLine("Connection strings:");
 
-#if NETSTANDARD
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
-			foreach (var provider in UserProviders.Values)
+			foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
 			{
-				if (string.IsNullOrWhiteSpace(provider.ConnectionString))
+				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
 					throw new InvalidOperationException("ConnectionString should be provided");
 
-				if (string.IsNullOrWhiteSpace(provider.ProviderName))
-					throw new InvalidOperationException("provider.ProviderName should be provided");
+				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
-				TxtSettings.Instance.AddConnectionString(provider.Name,provider.ProviderName, provider.ConnectionString);
+				TxtSettings.Instance.AddConnectionString(
+					provider.Key, provider.Value.Provider ?? provider.Key, provider.Value.ConnectionString);
 			}
 #else
-			foreach (var provider in UserProviders.Values)
-				if (provider.ConnectionString != null)
-					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
+			foreach (var provider in testSettings.Connections)
+			{
+				Console.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+
+				DataConnection.AddOrSetConfiguration(
+					provider.Key,
+					provider.Value.ConnectionString,
+					provider.Value.Provider ?? "");
+			}
 #endif
 
-			var defaultConfiguration = UserProviders.Where(_ => _.Value.IsDefault).Select(_ => _.Key).FirstOrDefault();
+			Console.WriteLine("Providers:");
+
+			foreach (var userProvider in UserProviders)
+				Console.WriteLine($"\t{userProvider}");
+
+			var defaultConfiguration = testSettings.DefaultConfiguration;
+
 			if (!string.IsNullOrEmpty(defaultConfiguration))
 			{
 				DataConnection.DefaultConfiguration       = defaultConfiguration;
-#if NETSTANDARD
+#if NETSTANDARD1_6 || NETSTANDARD2_0
 				TxtSettings.Instance.DefaultConfiguration = defaultConfiguration;
 #endif
 			}
 
-			DataConnection.TurnTraceSwitchOn();
-
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -212,26 +193,29 @@ namespace Tests
 
 		protected static string FindProjectPath(string basePath)
 		{
-			var fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
+			var fileName = Path.GetFullPath(Path.Combine(basePath, "DataProviders.json"));
+
 			while (!File.Exists(fileName))
 			{
-				Console.WriteLine("File not found: " + fileName);
+				Console.WriteLine($"File not found: {fileName}");
+
 				basePath = Path.GetDirectoryName(basePath);
-				fileName = Path.GetFullPath(Path.Combine(basePath, "DefaultDataProviders.txt"));
+				fileName = Path.GetFullPath(Path.Combine(basePath, "DataProviders.json"));
 			}
-			Console.WriteLine("Base path found: " + basePath);
+
+			Console.WriteLine($"Base path found: {basePath}");
 
 			return basePath;
 		}
 
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 		const int IP = 22654;
 		static bool _isHostOpen;
 #endif
 
 		static void OpenHost()
 		{
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 			if (_isHostOpen)
 				return;
 
@@ -263,36 +247,37 @@ namespace Tests
 		public class UserProviderInfo
 		{
 			public string Name;
-			public string ConnectionString;
+			public string ConnectionString1;
 			public string ProviderName;
-			public bool   IsDefault;
 		}
 
-		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
+		internal static readonly HashSet<string> UserProviders;
 
 		static readonly List<string> _providers = new List<string>
 		{
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Informix,
+			TestProvName.MariaDB,
+			ProviderName.Sybase,
+			ProviderName.SapHana,
+			ProviderName.OracleNative,
+			ProviderName.OracleManaged,
+			ProviderName.SqlCe,
+			ProviderName.SQLiteClassic,
+#endif
+			ProviderName.Firebird,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
-			ProviderName.SqlCe,
-			ProviderName.SQLite,
-			ProviderName.Access,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
-			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
-			ProviderName.OracleNative,
-			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
-			ProviderName.Sybase,
-			ProviderName.SapHana,
 			TestProvName.SqlAzure,
-			TestProvName.MariaDB,
 			TestProvName.MySql57,
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteMS,
 			TestProvName.Firebird3
 		};
 
@@ -305,7 +290,7 @@ namespace Tests
 				_providerNames      = providers;
 			}
 
-			public ParallelScope ParallelScope { get; set; } = ParallelScope.Children;
+			public ParallelScope ParallelScope { get; set; } = ParallelScope.None;// ParallelScope.Children;
 			public int           Order         { get; set; }
 
 			readonly bool     _includeLinqService;
@@ -354,6 +339,14 @@ namespace Tests
 					.Union(method.GetCustomAttributes<IgnoreAttribute>(true))
 					.ToList();
 
+				var maxTime = method.GetCustomAttributes<MaxTimeAttribute>(true).FirstOrDefault();
+				explic.Add(maxTime ?? new MaxTimeAttribute(10000));
+
+//#if !NETSTANDARD1_6
+//				var timeout = method.GetCustomAttributes<TimeoutAttribute>(true).FirstOrDefault();
+//				explic.Add(timeout ?? new TimeoutAttribute(10000));
+//#endif
+
 				var builder = new NUnitTestCaseBuilder();
 
 				TestMethod test = null;
@@ -361,7 +354,7 @@ namespace Tests
 
 				foreach (var provider in _providerNames)
 				{
-					var isIgnore = !UserProviders.ContainsKey(provider);
+					var isIgnore = !UserProviders.Contains(provider);
 
 					var caseNumber = 0;
 					foreach (var parameters in GetParameters(provider))
@@ -393,7 +386,7 @@ namespace Tests
 
 					}
 
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 					if (!isIgnore && _includeLinqService)
 					{
 						var linqCaseNumber = 0;
@@ -440,7 +433,7 @@ namespace Tests
 
 			public DataContextSourceAttribute(bool includeLinqService, params string[] except)
 				: base(includeLinqService,
-					_providers.Where(providerName => except == null || !except.Contains(providerName)).ToArray())
+					_providers.Where(providerName => /*UserProviders.Contains(providerName) &&*/ except == null || !except.Contains(providerName)).ToArray())
 			{
 			}
 		}
@@ -462,10 +455,13 @@ namespace Tests
 		[AttributeUsage(AttributeTargets.Method)]
 		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false) : base(
-				excludeSqlite
-				? new[] { "Northwind" }
-				:  ( excludeSqliteMs  ? new[] { "Northwind", "NorthwindSqlite" } : new[] { "Northwind", "NorthwindSqlite",  "NorthwindSqliteMs"}))
+			public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false)
+				: base(
+					excludeSqlite ?
+						new[] { TestProvName.Northwind } :
+					excludeSqliteMs ?
+						new[] { TestProvName.Northwind, TestProvName.NorthwindSQLite } :
+						new[] { TestProvName.Northwind, TestProvName.NorthwindSQLite, TestProvName.NorthwindSQLiteMS })
 			{
 			}
 
@@ -478,7 +474,7 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
-#if !NETSTANDARD && !MONO
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -494,6 +490,7 @@ namespace Tests
 				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 #endif
 			}
+
 			Debug.WriteLine(configuration, "Provider ");
 
 			var res = new TestDataConnection(configuration);
@@ -801,7 +798,7 @@ namespace Tests
 			}
 		}
 
-#endregion
+		#endregion
 
 		#region Inheritance Parent/Child Model
 
@@ -839,7 +836,7 @@ namespace Tests
 
 		#endregion
 
-#region Northwind
+		#region Northwind
 
 		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
@@ -1037,6 +1034,7 @@ namespace Tests
 				}
 			}
 		}
+
 		#endregion
 
 		[Sql.Function("VERSION", ServerSideOnly = true)]
@@ -1102,7 +1100,7 @@ namespace Tests
 			var resultList   = result.  Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
 
-			Assert.AreNotEqual(0, expectedList.Count);
+			Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
 			var exceptExpectedList = resultList.  Except(expectedList).ToList();
@@ -1120,8 +1118,8 @@ namespace Tests
 					message.AppendLine  ();
 				}
 
-			Assert.AreEqual(0, exceptExpected, "Expect Expected" + Environment.NewLine + message.ToString());
-			Assert.AreEqual(0, exceptResult,   "Expect Result"   + Environment.NewLine + message.ToString());
+			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
+			Assert.AreEqual(0, exceptResult,   $"Expect Result{Environment.NewLine}{message}");
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
@@ -1169,6 +1167,41 @@ namespace Tests
 
 			Assert.AreEqual(string.Join("\n", ss), result.Trim('\r', '\n'));
 		}
+
+		protected List<LinqDataTypes> GetTypes(string context)
+		{
+			return DataCache<LinqDataTypes>.Get(context);
+		}
+	}
+
+	static class DataCache<T>
+		where T : class
+	{
+		static readonly Dictionary<string,List<T>> _dic = new Dictionary<string, List<T>>();
+		public static List<T> Get(string context)
+		{
+			lock (_dic)
+			{
+				context = context.Replace(".LinqService", "");
+
+				if (!_dic.TryGetValue(context, out var list))
+				{
+					using (new DisableLogging())
+					using (var db = new DataConnection(context))
+					{
+						list = db.GetTable<T>().ToList();
+						_dic.Add(context, list);
+					}
+				}
+
+				return list;
+			}
+		}
+
+		public static void Clear()
+		{
+			_dic.Clear();
+		}
 	}
 
 	public static class Helpers
@@ -1208,14 +1241,17 @@ namespace Tests
 
 	public class DisableLogging : IDisposable
 	{
+		private TraceSwitch _traceSwitch;
+
 		public DisableLogging()
 		{
+			_traceSwitch = DataConnection.TraceSwitch;
 			DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
 		}
 
 		public void Dispose()
 		{
-			DataConnection.TurnTraceSwitchOn();
+			DataConnection.TraceSwitch = _traceSwitch;
 		}
 	}
 
@@ -1324,7 +1360,7 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			return TestBase.UserProviders.Keys.Where(p => !Providers.Contains(p));
+			return TestBase.UserProviders.Where(p => !Providers.Contains(p));
 		}
 	}
 
@@ -1341,7 +1377,7 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			return Providers.Where(TestBase.UserProviders.ContainsKey);
+			return Providers.Where(TestBase.UserProviders.Contains);
 		}
 
 	}

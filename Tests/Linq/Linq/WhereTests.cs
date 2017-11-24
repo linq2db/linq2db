@@ -616,7 +616,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in 
+						join ch in
 							from c in GrandChild
 							where c.ParentID > 0
 							select new { ParentID = 1 + c.ParentID, c.ChildID }
@@ -626,7 +626,7 @@ namespace Tests.Linq
 					select p
 					,
 					from p in db.Parent
-						join ch in 
+						join ch in
 							from c in db.GrandChild
 							where c.ParentID > 0
 							select new { ParentID = 1 + c.ParentID, c.ChildID }
@@ -642,7 +642,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in 
+						join ch in
 							from c in Child
 							where c.ParentID > 0
 							select new { c.ParentID, c.ChildID }
@@ -652,7 +652,7 @@ namespace Tests.Linq
 					select p
 					,
 					from p in db.Parent
-						join ch in 
+						join ch in
 							from c in db.Child
 							where c.ParentID > 0
 							select new { c.ParentID, c.ChildID }
@@ -1153,7 +1153,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
-					   Types
+					GetTypes(context)
 						.Where(_ => _.DateTimeValue == new DateTime(2009, 9, 27))
 						.Select(_ => _),
 					db.Types
@@ -1183,7 +1183,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
-					   Types
+					GetTypes(context)
 						.Where(_ => _.DateTimeValue.Date == new DateTime(2009, 9, 20).Date)
 						.Select(_ => _),
 					db.Types
