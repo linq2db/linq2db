@@ -1092,11 +1092,11 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				var td    = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+				var td = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 
 				if (td.InheritanceMapping.Count > 0)
 				{
-					var    readerBuilder = new RecordReaderBuilder(dataConnection, dataConnection.MappingSchema, typeof(T), dataReader);
+					var    readerBuilder = new RecordReaderBuilder(dataConnection, td, typeof(T), dataReader);
 					return readerBuilder.BuildReaderFunction<T>();
 				}
 

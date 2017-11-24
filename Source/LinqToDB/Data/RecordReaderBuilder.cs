@@ -39,14 +39,17 @@ namespace LinqToDB.Data
 		int                 _varIndex;
 		ParameterExpression _variable;
 
-		public RecordReaderBuilder(IDataContext dataContext, MappingSchema mappingSchema, Type objectType, IDataReader reader)
+		public RecordReaderBuilder(IDataContext dataContext, EntityDescriptor entityDescriptor, Type objectType, IDataReader reader)
 		{
 			DataContext   = dataContext;
-			MappingSchema = mappingSchema;
+			MappingSchema = dataContext.MappingSchema;
 			OriginalType  = objectType;
 			ObjectType    = objectType;
 			Reader        = reader;
-			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, i => i);
+			//ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, i => i);
+			ReaderIndexes = entityDescriptor.Columns
+				.Select(c => new { c, i = reader.GetOrdinal(c.ColumnName) })
+				.ToDictionary(c => c.c.ColumnName, c => c.i);
 
 			if (Common.Configuration.AvoidSpecificDataProviderAPI)
 			{
