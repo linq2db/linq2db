@@ -18,20 +18,22 @@ Solution and folder structure
 .\Tests\Linq // All unit tests
 .\Tests\Model // Models for tests
 .\Tests\TestApp // Test application
-.\Tests\Tests.NetCore // Obsolete, needed due to some VS2015 problems with building and running Core tests
+.\Tests\Utils // Test helper and utilities application
 .\Tests\VisualBasic //Visual Basic models and tests
 ```
 Solutions:
-* `.\linq2db.4.5.sln` - VS2015/2017 solution, .Net 4.5 (NO SL and WS projects)
-* `.\linq2db.sln` - VS2015 solution, .Net 4.5, SL, WS projects
-* `.\linq2db.core.sln` - VS2015 solution, .Net Core projects
+* `.\linq2db.sln` - VS2017 solution
 
 Projects:
-* `.\Source\LinqToDB.csproj` - .Net 4.5 
-* `.\Source\LinqToDB.Silverlight.4.csproj` - SL 4
-* `.\Source\LinqToDB.Silverlight.5.csproj` - SL 5
-* `.\Source\LinqToDB.WindowsStore.csproj` - WS 8
-* `.\Source\LinqToDB.xproj` and `.\Source\project.json` - VS2015 .Net Core project
+
+| Project                                        | .NET 4.0 | 4.5 | 4.51 | 4.52 | .NET Standard 1.6 | 2.0 | .NET Core 1.0 | 2.0 |
+|----------------------------------------------- |:--------:|:---:|:----:|:----:|:-----------------:|:---:|:-------------:|:---:|
+| `.\Source\LinqToDB\LinqToDB.csproj`            |    √     |  √  |  √   |      |         √         |  √  |               |  √  |
+| `.\Tests\Linq\Tests.csproj`                    |          |     |      |  √   |                   |     |       √       |  √  |
+| `.\Tests\FSharp\Tests.FSharp.fsproj`           |          |     |      |  √   |                   |     |               |     |
+| `.\Tests\Model\Tests.Model.csproj`             |          |  √  |      |      |         √         |     |               |     |
+| `.\Tests\Utils\Tests.Utils.csproj`             |          |     |      |  √   |                   |     |       √       |  √  |
+| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj` |          |  √  |      |      |         √         |     |               |     |
 
 # Building
 You can use any solution for building and running tests. But you also should care about other supported platforms. To check if your changes have not affected other projects you can:
