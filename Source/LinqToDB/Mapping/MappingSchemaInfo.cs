@@ -210,7 +210,7 @@ namespace LinqToDB.Mapping
 
 		#region Comparers
 
-		public StringComparer ColumnNameComparer;
+		public StringComparer ColumnNameComparer { get; set; }
 
 		#endregion
 
@@ -223,8 +223,7 @@ namespace LinqToDB.Mapping
 			if (_defaultFromEnumTypes == null)
 				return null;
 
-			Type defaultFromType;
-			_defaultFromEnumTypes.TryGetValue(enumType, out defaultFromType);
+			_defaultFromEnumTypes.TryGetValue(enumType, out var defaultFromType);
 			return defaultFromType;
 		}
 
@@ -242,8 +241,8 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-		readonly ConcurrentDictionary<Type, EntityDescriptor> _entityDescriptors
-			= new ConcurrentDictionary<Type, EntityDescriptor>();
+		readonly ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors
+			= new ConcurrentDictionary<Type,EntityDescriptor>();
 
 		public EntityDescriptor GetEntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
@@ -271,6 +270,5 @@ namespace LinqToDB.Mapping
 		}
 
 		#endregion
-
 	}
 }

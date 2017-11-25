@@ -7,7 +7,6 @@ using System.Reflection;
 
 namespace LinqToDB.Data
 {
-
 	using Expressions;
 	using Extensions;
 	using Linq;
@@ -20,21 +19,15 @@ namespace LinqToDB.Data
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
 		public        readonly ParameterExpression DataReaderLocal;
 
-		public readonly List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
-		public readonly List<Expression>           BlockExpressions     = new List<Expression>();
+		public readonly List<ParameterExpression>  BlockVariables   = new List<ParameterExpression>();
+		public readonly List<Expression>           BlockExpressions = new List<Expression>();
 
-#if FW4 || SILVERLIGHT || NETFX_CORE
-		const bool IsBlockDisable = false;
-#else
-		const bool  IsBlockDisable = true;
-#endif
-
-		public IDataContext            DataContext   { get; }
-		public MappingSchema           MappingSchema { get; }
-		public Type                    ObjectType    { get; }
-		public Type                    OriginalType  { get; }
-		public IDataReader             Reader        { get; }
-		public Dictionary<string, int> ReaderIndexes { get; }
+		public IDataContext           DataContext   { get; }
+		public MappingSchema          MappingSchema { get; }
+		public Type                   ObjectType    { get; }
+		public Type                   OriginalType  { get; }
+		public IDataReader            Reader        { get; }
+		public Dictionary<string,int> ReaderIndexes { get; }
 
 		int                 _varIndex;
 		ParameterExpression _variable;
@@ -46,7 +39,7 @@ namespace LinqToDB.Data
 			OriginalType  = objectType;
 			ObjectType    = objectType;
 			Reader        = reader;
-			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, i => i, StringComparer.OrdinalIgnoreCase);
+			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, i => i, MappingSchema.ColumnNameComparer);
 
 			if (Common.Configuration.AvoidSpecificDataProviderAPI)
 			{
@@ -115,17 +108,17 @@ namespace LinqToDB.Data
 
 		int GetReaderIndex(EntityDescriptor entityDescriptor, Type objectType, string name)
 		{
-			int value;
-			if (!ReaderIndexes.TryGetValue(name, out value))
+			if (!ReaderIndexes.TryGetValue(name, out var value))
 			{
 				var cd = entityDescriptor.Columns.Find(c =>
 					(objectType == null || c.MemberAccessor.TypeAccessor.Type == objectType) && c.MemberName == name);
+
 				if (cd != null)
-				{
 					return GetReaderIndex(cd.ColumnName);
-				}
+
 				return -1;
 			}
+
 			return value;
 		}
 
@@ -304,7 +297,7 @@ namespace LinqToDB.Data
 
 			if (inheritanceMapping.Count == 0)
 			{
-				return BuildReadExpression(!IsBlockDisable, ObjectType);
+				return BuildReadExpression(true, ObjectType);
 			}
 
 			Expression expr = null;
@@ -337,7 +330,7 @@ namespace LinqToDB.Data
 
 			if (expr == null)
 			{
-				return BuildReadExpression(!IsBlockDisable, ObjectType);
+				return BuildReadExpression(true, ObjectType);
 			}
 
 			foreach (var mapping in inheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))

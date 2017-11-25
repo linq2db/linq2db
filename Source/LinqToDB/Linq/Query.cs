@@ -189,9 +189,7 @@ namespace LinqToDB.Linq
 			_sync         = new object();
 			_orderedCache = new List<Query<T>>(CacheSize);
 
-#if !SILVERLIGHT
-			Query.CacheCleaners.Add(ClearCache);
-#endif
+			CacheCleaners.Add(ClearCache);
 		}
 
 		/// <summary>

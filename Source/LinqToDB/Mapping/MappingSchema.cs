@@ -1389,6 +1389,5 @@ namespace LinqToDB.Mapping
 		}
 
 		#endregion
-
 	}
 }

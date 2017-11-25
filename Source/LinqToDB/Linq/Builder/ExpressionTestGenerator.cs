@@ -869,41 +869,6 @@ namespace {0}
 			}
 		}
 
-
-#if NETFX_CORE && !NETSTANDARD
-
-		public string GenerateSource(Expression expr)
-		{
-			string fileName = null;
-
-			try
-			{
-				var tf  = Windows.Storage.ApplicationData.Current.TemporaryFolder;
-				var dir = tf.CreateFolderAsync("linq2db", Windows.Storage.CreationCollisionOption.OpenIfExists).AsTask().Result;
-
-				var number = 0;//DateTime.Now.Ticks;
-
-				fileName = Path.Combine("ExpressionTest." + number  + ".cs");
-
-				var file = dir.CreateFileAsync(fileName, Windows.Storage.CreationCollisionOption.ReplaceExisting).AsTask().Result;
-
-				var source = GenerateSourceString(expr);
-
-				Windows.Storage.FileIO.WriteTextAsync(
-					file,
-					source).AsTask().RunSynchronously();
-
-				fileName = Path.Combine(dir.Name, fileName);
-			}
-			catch (Exception)
-			{
-			}
-
-			return fileName;
-		}
-
-#else
-
 		public string GenerateSource(Expression expr)
 		{
 			string fileName = null;
@@ -937,14 +902,11 @@ namespace {0}
 			}
 			finally
 			{
-				if (sw != null)
-					sw.Dispose();
+				sw?.Dispose();
 			}
 
 			return fileName;
 		}
-
-#endif
 
 		public string GenerateSourceString(Expression expr)
 		{
@@ -954,7 +916,7 @@ namespace {0}
 			foreach (var type in _usedTypes.OrderBy(t => t.Namespace).ThenBy(t => t.Name))
 				BuildType(type);
 
-			expr.Visit(new Func<Expression,bool>(BuildExpression));
+			expr.Visit(BuildExpression);
 
 			_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
 			_exprBuilder.Insert(0, "var quey = ");
