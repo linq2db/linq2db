@@ -167,9 +167,27 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connection">Existing database connection to use.</param>
+		/// <remarks>
+		/// <paramref name="connection"/> would not be disposed.
+		/// </remarks>
 		public DataConnection(
 			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
 			[JetBrains.Annotations.NotNull] IDbConnection connection)
+			: this(dataProvider, connection, false)
+		{
+			
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider and connection.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connection">Existing database connection to use.</param>
+		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing</param>
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbConnection connection,
+			                                bool          disposeConnection)
 		{
 			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
 			if (connection   == null) throw new ArgumentNullException(nameof(connection));
@@ -180,9 +198,10 @@ namespace LinqToDB.Data
 				throw new LinqToDBException(
 					$"DataProvider '{dataProvider}' and connection '{connection}' are not compatible.");
 
-			DataProvider  = dataProvider;
-			MappingSchema = DataProvider.MappingSchema;
-			_connection   = connection;
+			DataProvider       = dataProvider;
+			MappingSchema      = DataProvider.MappingSchema;
+			_connection        = connection;
+			_disposeConnection = disposeConnection;
 		}
 
 		/// <summary>
@@ -218,11 +237,13 @@ namespace LinqToDB.Data
 				throw new LinqToDBException(
 					$"DataProvider '{dataProvider}' and connection '{transaction.Connection}' are not compatible.");
 
-			DataProvider      = dataProvider;
-			MappingSchema     = DataProvider.MappingSchema;
-			_connection       = transaction.Connection;
-			Transaction       = transaction;
-			_closeTransaction = false;
+			DataProvider       = dataProvider;
+			MappingSchema      = DataProvider.MappingSchema;
+			_connection        = transaction.Connection;
+			Transaction        = transaction;
+			_closeTransaction  = false;
+			_closeConnection   = false;
+			_disposeConnection = false;
 		}
 
 		#endregion
@@ -822,6 +843,7 @@ namespace LinqToDB.Data
 		#region Connection
 
 		bool          _closeConnection;
+		bool          _disposeConnection = true;
 		bool          _closeTransaction;
 		IDbConnection _connection;
 
@@ -874,10 +896,15 @@ namespace LinqToDB.Data
 				Transaction = null;
 			}
 
-			if (_connection != null && _closeConnection)
+			if (_connection != null)
 			{
-				_connection.Dispose();
-				_connection = null;
+				if (_disposeConnection)
+				{
+					_connection.Dispose();
+					_connection = null;
+				}
+				else if (_closeConnection)
+					_connection.Close();
 			}
 
 			OnClosed?.Invoke(this, EventArgs.Empty);
@@ -1280,7 +1307,6 @@ namespace LinqToDB.Data
 			ConnectionString    = connectionString;
 			_connection         = connection;
 			MappingSchema       = mappingSchema;
-			_closeConnection    = true;
 		}
 
 		/// <summary>
@@ -1292,7 +1318,7 @@ namespace LinqToDB.Data
 			var connection =
 				_connection == null       ? null :
 				_connection is ICloneable ? (IDbConnection)((ICloneable)_connection).Clone() :
-				                            DataProvider.CreateConnection(ConnectionString);
+				                            null;
 
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
