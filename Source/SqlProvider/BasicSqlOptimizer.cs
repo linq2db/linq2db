@@ -860,7 +860,7 @@ namespace LinqToDB.SqlProvider
 									var expr1 = expr.Expr1;
 									var expr2 = expr.Expr2;
 
-									if (expr1.CanBeNull && expr2.CanBeNull)
+									if (Common.Configuration.Linq.CompareNullsAsValues && expr1.CanBeNull && expr2.CanBeNull)
 									{
 										if (expr1 is SqlParameter || expr2 is SqlParameter)
 											selectQuery.IsParameterDependent = true;

@@ -28,7 +28,7 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryLimitExceededException();
+					throw new TestException();
 				}
 			}
 
@@ -42,7 +42,7 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryLimitExceededException();
+					throw new TestException();
 				}
 			}
 
@@ -57,7 +57,7 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryLimitExceededException();
+					throw new TestException();
 				}
 			}
 
@@ -72,25 +72,26 @@ namespace Tests.Data
 				}
 				catch
 				{
-					throw new RetryLimitExceededException();
+					throw new TestException();
 				}
 			}
 		}
 
+		class TestException : Exception
+		{}
+
 		public class FakeClass
-		{
-			
-		}
+		{}
 
 		[Test, DataContextSource(false)]
 		public void RetryPoliceTest(string context)
 		{
 			var ret = new Retry();
-			
-			Assert.Throws<RetryLimitExceededException>(() =>
+			Assert.Throws<TestException>(() =>
 			{
 				using (var db = new DataConnection(context) { RetryPolicy = ret })
 				{
+					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 					db.GetTable<FakeClass>().ToList();
 				}
 			});
@@ -114,7 +115,7 @@ namespace Tests.Data
 			}
 			catch (AggregateException ex)
 			{
-				Assert.IsNotNull(ex.InnerExceptions.OfType<RetryLimitExceededException>().Single());
+				Assert.IsNotNull(ex.InnerExceptions.OfType<TestException>().Single());
 			}
 
 			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command

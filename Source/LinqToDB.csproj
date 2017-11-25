@@ -119,7 +119,6 @@
     <Compile Include="Data\RetryPolicy\RetryingDbConnection.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Data\RetryPolicy\RetryLimitExceededException.cs" />
     <Compile Include="Data\RetryPolicy\RetryPolicyBase.cs" />
     <Compile Include="Data\TraceInfoStep.cs" />
     <Compile Include="Expressions\SqlQueryDependentAttribute.cs" />
