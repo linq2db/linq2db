@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 			if (!sequence.SelectQuery.GroupBy.IsEmpty         ||
 				sequence.SelectQuery.Select.TakeValue != null ||
 				sequence.SelectQuery.Select.SkipValue != null ||
-				sequence.SelectQuery.Select .IsDistinct)
+				sequence.SelectQuery.Select.IsDistinct)
 			{
 				sequence = new SubQueryContext(sequence);
 			}
@@ -105,6 +105,13 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var joinType = collectionInfo.JoinType;
+
+			if (joinType == SelectQuery.JoinType.Full || joinType == SelectQuery.JoinType.Right)
+			{
+				// Subquery is needed for FULL and RIGHT joins.
+				if (!sequence.SelectQuery.Where.IsEmpty)
+					sequence = new SubQueryContext(sequence);
+			}
 
 			if (collection is TableBuilder.TableContext)
 			{
