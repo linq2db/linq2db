@@ -279,13 +279,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return new PostgreSQLBulkCopy().BulkCopy(
+			return new PostgreSQLBulkCopy(this, GetConnectionType()).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : options.BulkCopyType,
 				dataConnection,
 				options,
 				source);
 		}
 
-#endregion
+		#endregion
 	}
 }
