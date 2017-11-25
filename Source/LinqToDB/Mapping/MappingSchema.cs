@@ -1304,25 +1304,25 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Gets or sets column name comparison rules for comparison of column names in mapping with column name,
-		/// returned by provider's data reader.
+		///  returned by provider's data reader.
 		/// </summary>
-		public StringComparison ColumnComparisonOption
+		public StringComparer ColumnNameComparer
 		{
 			get
 			{
-				if (Schemas[0].ColumnComparisonOption == null)
+				if (Schemas[0].ColumnNameComparer == null)
 				{
-					Schemas[0].ColumnComparisonOption = Schemas
-						.Select        (s => s.ColumnComparisonOption)
+					Schemas[0].ColumnNameComparer = Schemas
+						.Select        (s => s.ColumnNameComparer)
 						.FirstOrDefault(s => s != null)
 						??
-						StringComparison.Ordinal;
+						StringComparer.Ordinal;
 				}
 
-				return Schemas[0].ColumnComparisonOption.Value;
+				return Schemas[0].ColumnNameComparer;
 			}
 
-			set { Schemas[0].ColumnComparisonOption = value; }
+			set => Schemas[0].ColumnNameComparer = value;
 		}
 
 		#endregion

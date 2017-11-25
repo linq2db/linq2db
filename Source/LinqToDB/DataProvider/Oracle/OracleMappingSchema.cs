@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -9,7 +10,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using System.Globalization;
 
 	public class OracleMappingSchema : MappingSchema
 	{
@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected OracleMappingSchema(string configuration) : base(configuration)
 		{
-			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
 			SetDataType(typeof(Guid),   DataType.Guid);
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));

@@ -208,9 +208,9 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
-		#region Options
+		#region Comparers
 
-		public StringComparison? ColumnComparisonOption;
+		public StringComparer ColumnNameComparer;
 
 		#endregion
 
@@ -247,12 +247,8 @@ namespace LinqToDB.Mapping
 
 		public EntityDescriptor GetEntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
-			EntityDescriptor ed;
-
-			if (!_entityDescriptors.TryGetValue(type, out ed))
-			{
+			if (!_entityDescriptors.TryGetValue(type, out var ed))
 				ed = _entityDescriptors.GetOrAdd(type, new EntityDescriptor(mappingSchema, type));
-			}
 
 			return ed;
 		}
@@ -271,9 +267,7 @@ namespace LinqToDB.Mapping
 
 		internal void ResetEntityDescriptor(Type type)
 		{
-			EntityDescriptor ed;
-
-			_entityDescriptors.TryRemove(type, out ed);
+			_entityDescriptors.TryRemove(type, out _);
 		}
 
 		#endregion

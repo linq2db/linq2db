@@ -1,10 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Mapping;
 	using SqlQuery;
-	using System.Text;
 
 	public class FirebirdMappingSchema : MappingSchema
 	{
@@ -14,6 +14,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected FirebirdMappingSchema(string configuration) : base(configuration)
 		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
@@ -39,11 +41,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static bool NeedsEncoding(string str)
 		{
-			for (int i = 0; i < str.Length; i++)
-			{
-				if (NeedsEncoding(str[i]))
+			foreach (char t in str)
+				if (NeedsEncoding(t))
 					return true;
-			}
+
 			return false;
 		}
 

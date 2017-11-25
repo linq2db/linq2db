@@ -809,7 +809,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="configurationString">Connection name.</param>
 		/// <returns>Connection string.</returns>
-		[JetBrains.Annotations.Pure]
+		[Pure]
 		public static string GetConnectionString(string configurationString)
 		{
 			InitConfig();

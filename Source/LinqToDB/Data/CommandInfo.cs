@@ -1053,9 +1053,7 @@ namespace LinqToDB.Data
 		{
 			var key = new QueryKey(typeof(T), dataConnection.ID, sql);
 
-			Delegate func;
-
-			if (!_objectReaders.TryGetValue(key, out func))
+			if (!_objectReaders.TryGetValue(key, out var func))
 			{
 				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
 					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce(dataReader));
@@ -1096,7 +1094,7 @@ namespace LinqToDB.Data
 
 				if (td.InheritanceMapping.Count > 0)
 				{
-					var    readerBuilder = new RecordReaderBuilder(dataConnection, td, typeof(T), dataReader);
+					var    readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader);
 					return readerBuilder.BuildReaderFunction<T>();
 				}
 
@@ -1113,7 +1111,7 @@ namespace LinqToDB.Data
 				{
 					var q =
 						from c in ctors
-						let count = c.ps.Count(p => names.Contains(p.Name))
+						let count = c.ps.Count(p => names.Contains(p.Name, StringComparer.OrdinalIgnoreCase))
 						orderby count descending
 						select c;
 
@@ -1123,8 +1121,13 @@ namespace LinqToDB.Data
 					{
 						expr = Expression.New(
 							ctor.c,
-							ctor.ps.Select(p => names.Contains(p.Name) ?
-								getMemberExpression(p.ParameterType, names.IndexOf(p.Name), dataReaderExpr) :
+							ctor.ps.Select(p => names.Contains(p.Name, StringComparer.OrdinalIgnoreCase) ?
+								getMemberExpression(
+									p.ParameterType,
+									(names
+										.Select((n,i) => new { n, i })
+										.FirstOrDefault(n => dataConnection.MappingSchema.ColumnNameComparer.Compare(n.n, p.Name) == 0) ?? new { n="", i=-1 }).i,
+									dataReaderExpr) :
 								Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType)));
 					}
 				}
@@ -1135,7 +1138,7 @@ namespace LinqToDB.Data
 					(
 						from n in names.Select((name,idx) => new { name, idx })
 						let   member = td.Columns.FirstOrDefault(m =>
-							string.Compare(m.ColumnName, n.name, dataConnection.MappingSchema.ColumnComparisonOption) == 0)
+							dataConnection.MappingSchema.ColumnNameComparer.Compare(m.ColumnName, n.name) == 0)
 						where member != null
 						select new
 						{

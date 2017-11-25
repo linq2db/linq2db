@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 
 	public class InformixMappingSchema : MappingSchema
 	{
-		private static readonly char[] _extraEscapes = new[] { '\r', '\n' };
+		static readonly char[] _extraEscapes = { '\r', '\n' };
 
 		public InformixMappingSchema() : this(ProviderName.Informix)
 		{
@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected InformixMappingSchema(string configuration) : base(configuration)
 		{
-			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
 			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append("'").Append((bool)v ? 't' : 'f').Append("'"));
 
