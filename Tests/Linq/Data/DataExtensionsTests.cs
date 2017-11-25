@@ -204,7 +204,7 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestDataParameterMapping2(string context)
 		{
 			var ms = new MappingSchema();
@@ -219,7 +219,7 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestDataParameterMapping3(string context)
 		{
 			var ms = new MappingSchema();
@@ -240,7 +240,7 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSourceAttribute("Northwind")]
+		[Test, IncludeDataContextSourceAttribute(TestProvName.Northwind)]
 		public void CacheTest(string context)
 		{
 			using (var dc= new DataConnection(context))

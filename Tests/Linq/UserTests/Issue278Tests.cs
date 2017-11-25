@@ -234,7 +234,7 @@ namespace Tests.UserTests
 
 		private void TestIt(string context, string caseName, int threadCount, Action<ITestDataContext>[] actions, CacheMode mode)
 		{
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 			int workerThreads;
 			int iocpThreads;
 			ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);

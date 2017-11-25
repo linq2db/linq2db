@@ -12,18 +12,18 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class GenericsFilterTests
 	{
-		[Test, TestBase.IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, TestBase.IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void WhenPredicateFactoryIsGeneric(string context)
 		{
 			var predicate = ById<Firm>(0);
-			Assert.DoesNotThrow(() => CheckPredicate(predicate));
+			Assert.DoesNotThrow(() => CheckPredicate(predicate, context));
 		}
 
-		[Test, TestBase.IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, TestBase.IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void WhenPredicateFactoryIsNotGeneric(string context)
 		{
 			var predicate = ById(0);
-			Assert.DoesNotThrow(() => CheckPredicate(predicate));
+			Assert.DoesNotThrow(() => CheckPredicate(predicate, context));
 		}
 
 		Expression<Func<T, bool>> ById<T>(int foobar)
@@ -37,15 +37,10 @@ namespace Tests.UserTests
 			return identifiable => identifiable.Id == foobar;
 		}
 
-		void CheckPredicate(Expression<Func<Firm, bool>> predicate)
+		void CheckPredicate(Expression<Func<Firm, bool>> predicate, string context)
 		{
-			using (var db = new DataConnection(ProviderName.SQLite,
-#if NETSTANDARD
-				"Data Source=:memory:;"
-#else
-				"Data Source=:memory:;Version=3;New=True;"
-#endif
-				))
+			using (var db = new DataConnection(context,
+				context == ProviderName.SQLiteMS ? "Data Source=:memory:;" : "Data Source=:memory:;Version=3;New=True;"))
 			{
 				db.CreateTable<TypeA>();
 				db.CreateTable<TypeB>();

@@ -188,8 +188,6 @@ namespace Tests.Linq
 					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task GroupBy2Async(string context)
 		{
@@ -198,8 +196,6 @@ namespace Tests.Linq
 					       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
 					(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void GroupBy3(string context)
@@ -363,7 +359,7 @@ namespace Tests.Linq
 			public int GrandChildID;
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
 		public void TestTernary1(string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -383,7 +379,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
 		public void TestTernary2(string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -597,7 +593,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
 		public void TestGenericAssociation1(string context)
 		{
 			var ids = new[] { 1, 5 };

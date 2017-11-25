@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		{
 			// tests are provider-agnostic
 			public Issue256TestSourceAttribute()
-				: base(ProviderName.SQLite)
+				: base(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)
 			{
 			}
 
@@ -76,14 +76,16 @@ namespace Tests.UserTests
 			}
 		}
 
-#if !MONO
+#if !MONO && !NETSTANDARD1_6
 		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Category("Explicit")]
 		public void SimpleTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
 			Test(context, action, 1);
 		}
 
 		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Category("Explicit")]
 		public void RetryTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
 			Test(context, action, 3);
@@ -120,6 +122,8 @@ namespace Tests.UserTests
 		{
 			var value = RunTest(db, test, calls);
 
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
 			GC.Collect();
 
 			Assert.False(value.IsAlive);

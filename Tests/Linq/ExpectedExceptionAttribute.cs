@@ -61,18 +61,18 @@ namespace Tests
 						context.CurrentResult.SetResult(ResultState.Success);
 					else
 						context.CurrentResult.SetResult(ResultState.Failure,
-							"Expected {0} but got {1}".Args(_expectedMessage, exception.Message));
+							$"Expected {_expectedMessage} but got {exception.Message}");
 
 				}
 				else if (caughtType != null)
 				{
 					context.CurrentResult.SetResult(ResultState.Failure,
-						"Expected {0} but got {1}".Args(_expectedType.Name, caughtType.Name));
+						$"Expected {_expectedType.Name} but got {caughtType.Name}");
 				}
 				else
 				{
 					context.CurrentResult.SetResult(ResultState.Failure,
-						"Expected {0} but no exception was thrown".Args(_expectedType.Name));
+						$"Expected {_expectedType.Name} but no exception was thrown");
 				}
 
 				return context.CurrentResult;

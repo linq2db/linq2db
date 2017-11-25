@@ -13,9 +13,18 @@ addons:
     - libunwind8
     - zlib1g
 
-dotnet: 1.0.0-preview2-003156
+dotnet: 2.0.0
 
-#dotnet: 1.0.0-preview2-1-003177
+env:
+  global:
+    - regularProviders=TravisDataProviders.txt
+    - coreProviders=TravisDataProviders.Core.txt
+    - testfilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != WindowsOnly"
+    - testRunner=dotnet
+    - buildConfiguration=netcoreapp1.0
+    - configuration=Travis
+    - builder=dotnet
+
 
 mono:  
   - latest
@@ -29,9 +38,10 @@ before_install:
 
 before_install:
  - chmod +x build.sh
+ - chmod +x travisbuild.sh
 
 install:
-  - nuget install NUnit.Runners -Version 3.5.0 -OutputDirectory testrunner
+  - nuget install NUnit.Runners -Version 3.7.0 -OutputDirectory testrunner
 
 #services:
 #  - mysql
@@ -39,7 +49,7 @@ install:
 
 before_script:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then sudo service postgresql start; fi
-  - nuget restore linq2db.Mono.sln
+#  - nuget restore linq2db.Mono.sln
 #  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PG_DATA=$(brew --prefix)/var/postgres; fi
 #  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pg_ctl -w start -l postgres.log --pgdata ${PG_DATA}; fi
 #  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then createuser -s postgres; fi
@@ -48,11 +58,12 @@ before_script:
 script:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mysql -e 'CREATE DATABASE TestData;'; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then psql -c 'create database testdata;' -U postgres; fi
-  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv Tests/Linq/TravisDataProviders.txt Tests/Linq/UserDataProviders.txt; fi
-  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv Tests/Linq/TravisDataProviders.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.txt Tests/Linq/UserDataProviders.txt; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
-  - ./build.sh
+#  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv Tests/Linq/TravisDataProviders.txt Tests/Linq/UserDataProviders.txt; fi
+#  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv Tests/Linq/TravisDataProviders.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.txt Tests/Linq/UserDataProviders.txt; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
+#  - ./build.sh --verbosity diagnostic
+  - ./travisbuild.sh 
 #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then psql -c 'create database testdata;' -U postgres; fi  
 #  - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
 #  - mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll --where "cat != WindowsOnly"

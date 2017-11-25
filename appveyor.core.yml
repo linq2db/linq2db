@@ -24,15 +24,15 @@ services:
 - postgresql
 
 before_build:
-- cmd: dotnet restore 
+- cmd: dotnet restore
 
 build:
-  project: linq2db.core.sln
+  project: linq2db.sln
   verbosity: minimal
 
 after_build:
 - ps: |
-    if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
+    if ($env:APPVEYOR_REPO_BRANCH -eq "release")
     {
        dotnet pack --no-build Source/project.json -c=Release
     }
@@ -49,13 +49,13 @@ before_test:
 
 test_script:
 - ps: |
-    dotnet test tests\linq -c Release -f netcoreapp1.0 
-    $test1res = $LASTEXITCODE 
+    dotnet test tests\linq -c Release -f netcoreapp1.0
+    $test1res = $LASTEXITCODE
     # upload results to AppVeyor
     $wc = New-Object 'System.Net.WebClient'
     $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
     Push-AppveyorArtifact (Resolve-Path .\TestResult.xml)
-    # try nunit3 
+    # try nunit3
     # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net40\win7-x64\linq2db.Tests.dll) --x86
     # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net45\win7-x64\linq2db.Tests.dll) --x86
     IF ($test1res -ne 0) { exit -1 }

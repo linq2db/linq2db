@@ -158,7 +158,7 @@ namespace Tests.Linq
 				select p;
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void MethodExpression8(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -177,7 +177,7 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void MethodExpression9(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -196,7 +196,7 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void MethodExpression10(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -319,8 +319,6 @@ namespace Tests.Linq
 					select GrandChildren(p).Count());
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task AssociationMethodExpressionAsync(string context)
 		{
@@ -338,8 +336,6 @@ namespace Tests.Linq
 					).ToListAsync());
 			}
 		}
-
-#endif
 
 		[Test]
 		public void ParameterlessExpression()

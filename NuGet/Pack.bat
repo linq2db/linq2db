@@ -1,7 +1,7 @@
-cd ..\Source
-call Compile.bat
+cd ..
+call Build.cmd
 
-cd ..\NuGet
+cd NuGet
 
 del *.nupkg
 

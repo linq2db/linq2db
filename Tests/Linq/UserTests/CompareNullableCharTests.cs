@@ -25,15 +25,13 @@ namespace Tests.UserTests
 			{
 			}
 
-			public ITable<Table1> Table1 { get { return this.GetTable<Table1>(); } }
+			public ITable<Table1> Table1 => this.GetTable<Table1>();
 		}
 
-#if !NETSTANDARD
-		[Test]
-#endif
-		public void Test()
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void Test(string context)
 		{
-			using (var db = new Repository(ProviderName.Access))
+			using (var db = new Repository(context))
 			{
 				var q =
 					from current  in db.Table1

@@ -37,8 +37,8 @@ namespace Tests.xUpdate
 			{
 				ProviderName.Access,
 				ProviderName.SqlCe,
-				ProviderName.SQLite,
-				TestProvName.SQLiteMs,
+				ProviderName.SQLiteClassic,
+				ProviderName.SQLiteMS,
 				ProviderName.SqlServer2000,
 				ProviderName.SqlServer2005,
 				ProviderName.PostgreSQL,

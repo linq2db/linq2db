@@ -2,21 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class QueryInheritanceTests : TestBase
 	{
-		private static IEnumerable<T> QueryTable<T>(IDataContext dataContext)
+		static IEnumerable<T> QueryTable<T>(IDataContext dataContext)
 		{
 			var query = new SelectQuery();
 			var table = new SqlTable(typeof(T));
@@ -222,7 +223,7 @@ namespace Tests.Linq
 			{
 				using (var db = inheritance.GetDataContext(context))
 					inheritance.AreEqual(
-						Enumerable.Select<Parent, ParentEx>(inheritance.Parent, p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>(),
+						Enumerable.Select<Parent,ParentEx>(inheritance.Parent, p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>(),
 						QueryTable<Parent>(db).Select(p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>());
 			}
 		}

@@ -21,7 +21,7 @@ namespace Tests.Linq
 		{
 			public IdlProvidersAttribute()
 				: base(
-					ProviderName.MySql, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
+					ProviderName.MySql, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 					ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)
 			{
 			}

@@ -59,7 +59,7 @@ namespace Tests.Linq
 				db.Update(t1);
 			}
 		}
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test, IncludeDataContextSource(
@@ -460,7 +460,7 @@ namespace Tests.Linq
 			                                           public char   Gender;
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void Issue88(string context)
 		{
 			using (var db = GetDataContext(context))

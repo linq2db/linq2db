@@ -49,8 +49,7 @@ namespace Tests.Security.TestHelpers
 					if (!typeof(MarshalByRefObject).IsAssignableFrom(testClassType))
 					{
 						throw new InvalidOperationException(
-							"In order to use the partial trust attributes here, '{0}' must derive from MarshalByRefObject.".Args(
-								testClassType.FullName));
+							$"In order to use the partial trust attributes here, '{testClassType.FullName}' must derive from MarshalByRefObject.");
 					}
 
 					sandboxedClass = PartialTrustSandbox.Default.CreateInstance(testClassType);

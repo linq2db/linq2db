@@ -46,7 +46,7 @@ namespace Tests.Linq
 				nameof(ALLTYPE.TIMEDATATYPE)
 			)] string fieldName)
 		{
-			if (!UserProviders.ContainsKey(ProviderName.SQLite))
+			if (!UserProviders.Contains(ProviderName.SQLite))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SQLite))
@@ -110,7 +110,7 @@ namespace Tests.Linq
 //			[Values("schema1",    "schema1")]    string schemaName
 //		)
 		{
-			if (!UserProviders.ContainsKey(ProviderName.SqlServer))
+			if (!UserProviders.Contains(ProviderName.SqlServer))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SqlServer))
@@ -142,7 +142,7 @@ namespace Tests.Linq
 			[Values("schema1",    "schema2")]    string schemaName
 		)
 		{
-			if (!UserProviders.ContainsKey(ProviderName.SqlServer))
+			if (!UserProviders.Contains(ProviderName.SqlServer))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SqlServer))
@@ -174,7 +174,7 @@ namespace Tests.Linq
 			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint
 		)
 		{
-			if (!UserProviders.ContainsKey(ProviderName.SqlServer))
+			if (!UserProviders.Contains(ProviderName.SqlServer))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SqlServer))
