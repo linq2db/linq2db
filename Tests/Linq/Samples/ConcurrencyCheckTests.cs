@@ -85,8 +85,7 @@ namespace Tests.Samples
 
 				#region Insert
 
-				else if (statement.QueryType == QueryType.Insert ||
-				         statement.QueryType == QueryType.InsertOrUpdate)
+				else if (statement.IsInsert())
 				{
 					var query      = (SelectQuery) statement;
 					var source     = query.Insert.Into;

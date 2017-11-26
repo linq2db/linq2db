@@ -11,6 +11,7 @@ using LinqToDB.SqlProvider;
 using System.Data;
 using System.Data.Common;
 using System.Collections;
+using LinqToDB.SqlQuery;
 
 namespace Tests
 {
@@ -887,9 +888,9 @@ namespace Tests
 			throw new NotImplementedException();
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
 		{
-			BuildInsertOrUpdateQueryAsMerge(null);
+			BuildInsertOrUpdateQueryAsMerge(selectQuery, null);
 		}
 	}
 
