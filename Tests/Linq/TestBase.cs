@@ -116,14 +116,13 @@ namespace Tests
 			configName += ".Travis";
 #endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
-			var dataPath     = Path.GetFullPath(@"Database\Data");
+			var databasePath = Path.GetFullPath(Path.Combine("Database"));
+			var dataPath     = Path.Combine(databasePath, "Data");
 
 			if (Directory.Exists(dataPath))
 				Directory.Delete(dataPath, true);
 
 			Directory.CreateDirectory(dataPath);
-
-			var databasePath = Path.GetFullPath(Path.Combine(@"Database"));
 
 			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
 			{
