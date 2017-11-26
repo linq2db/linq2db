@@ -5,8 +5,8 @@ environment:
   assemblyVersion: 2.0.0
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
-  #testfilter: TestCategory != FreeText & TestCategory != Explicit
-  testFilter: TestCategory=Create
+  testfilter: TestCategory != FreeText & TestCategory != Explicit
+  #testFilter: TestCategory=Create
   testRunner: dotnet
   testLogger: trx
   testConfiguration: AppVeyor
