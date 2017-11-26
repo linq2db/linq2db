@@ -3,6 +3,19 @@ configuration: Release
 
 environment:
   packageVersion: 2.0.0
+  access_token:
+    secure: IlfmHXRdUK6v8dX/WqieXQ==
+  testFilter: TestCategory=Create
+#  testfilter: TestCategory != FreeText & TestCategory != Explicit
+  testRunner: dotnet
+  testLogger: trx
+  testConfiguration: AppVeyor
+  matrix:
+    - target: Default
+      testTargetFramework: net452
+    - target: Default
+      testTargetFramework: netcoreapp1.0
+    - target: DocFx
 
 cache:
 - packages -> appveyor.yml

@@ -40,26 +40,26 @@ bool IsRelease()
 	return false;
 }
 
-string GetBuildConfiguration()
+string TestTargetFramework()
 {
-	var e = EnvironmentVariable("buildConfiguration") 
-		?? Argument<string>("bc", null)
-		?? "net45";
+	var e = EnvironmentVariable("testTargetFramework") 
+		?? Argument<string>("ttf", null)
+		?? "net452";
 
-	Console.WriteLine("Build Configuration: {0}", e);
+	Console.WriteLine("Test Target Framework: {0}", e);
 
 	return e.ToLower();
 }
 
 string GetTarget()
 {
-	if (GetBuildConfiguration() == "docfx")
-	{
-		Console.WriteLine("Setting Target to DocFx because of buildConfiguration");
-		return "DocFx";
-	}
+	var e = EnvironmentVariable("target") 
+		?? Argument<string>("t", null)
+		?? "Default";
 
-	return Argument("target", "Default");
+	Console.WriteLine("Target: {0}", e);
+
+	return e;
 }
 
 string GetConfiguration()
@@ -68,6 +68,16 @@ string GetConfiguration()
 		??  Argument<string>("configuration", "Release");
 
 	Console.WriteLine("Configuration: {0}", e);
+
+	return e;
+}
+
+string GetTestConfiguration()
+{
+	var e = EnvironmentVariable("testConfiguration") 
+		??  Argument<string>("tc", "Release");
+
+	Console.WriteLine("Test configuration: {0}", e);
 
 	return e;
 }
@@ -146,7 +156,7 @@ bool PatchPackage()
 
 bool SkipTests()
 {
-	return GetBuildConfiguration() == "docfx" || Argument<string>("skiptests", null) != null;
+	return TestTargetFramework() == "docfx" || Argument<string>("skiptests", null) != null;
 }
 
 bool PublishDocFx()
@@ -172,11 +182,11 @@ string RcVersion()
 
 string GetTestFilter()
 {
-	var arg = Argument<string>("testfilter", null);
+	var arg = Argument<string>("tfl", null);
 	if (arg != null)
 		return arg; 
 
-	return EnvironmentVariable("testfilter");
+	return EnvironmentVariable("testFilter");
 }
 
 void UploadTestResults(FilePath file, AppVeyorTestResultsType type)
@@ -215,6 +225,7 @@ void UploadTestResults()
 
 	foreach(var f in rootDir.GetFiles("*.trx", SearchOption.AllDirectories))
 	{
+		Console.WriteLine("Found: {0}", f.FullName);
 		UploadTestResults(f.FullName, AppVeyorTestResultsType.MSTest);
 		//DeleteFile(f.FullName);
 	}
@@ -283,30 +294,8 @@ Task("PatchPackage")
 	Console.WriteLine("Package  Version     : {0}", packageVersion);
 	Console.WriteLine("Package  Suffix      : {0}", packageSuffix);
 	Console.WriteLine("Assembly Version     : {0}", assemblyVersion);
-
-/* 
-	TransformConfig(GetNugetProject(), GetNugetProject(),
-		new TransformationCollection {
-			{ "Project/PropertyGroup/Version",         fullPackageVersion },
-			{ "Project/PropertyGroup/VersionPrefix",   packageVersion },
-			{ "Project/PropertyGroup/VersionSuffix",   packageSuffix },
-			{ "Project/PropertyGroup/AssemblyVersion", assemblyVersion },
-			{ "Project/PropertyGroup/FileVersion",     assemblyVersion },
-	 });
-*/	 
 });
 
-Task("PatchTests")
-	.WithCriteria(() => GetConfiguration() == "Travis")
-	.Does(() =>
-{
-	/*
-	TransformConfig("./Tests/Linq/Linq.csproj", "./Tests/Linq/Linq.csproj",
-		new TransformationCollection {
-			{ "Project/ItemGroup[@Condition=' '$(Configuration)' != 'Travis' ']", "" },
-	 });
-	 */
-});
 
 Task("Build")
 	.IsDependentOn("Clean")
@@ -314,22 +303,11 @@ Task("Build")
 	.IsDependentOn("PatchPackage")
 	.Does(() =>
 {
-	var builder = GetBuilder();
-
-	if (builder == "MSBuild")
-		MSBuild(GetSolutionName(), cfg => cfg
-				.SetVerbosity(Verbosity.Minimal)
-				.SetConfiguration(GetConfiguration())
-				.UseToolVersion(MSBuildToolVersion.VS2017)
-				);
-	else 
-		DotNetCoreBuild("./Tests/Linq/Tests.csproj", 
-			new DotNetCoreBuildSettings
-			{
-				Configuration = GetConfiguration(),
-				Framework = GetBuildConfiguration()
-			});
-
+	DotNetCoreBuild(GetSolutionName(),
+		new DotNetCoreBuildSettings (){
+			Configuration = GetConfiguration()
+		}
+	); 
 });
 
 Task("DocFxBuild")
@@ -363,14 +341,9 @@ Task("DocFxPublish")
 Task("RunTests")
 	.IsDependentOn("Restore")
 	.IsDependentOn("Clean")
+	.WithCriteria(() => SkipTests() == false)
 	.Does(() =>
 {
-	if(SkipTests())
-	{
-		Console.WriteLine("Tests are skipped due to configuration");
-		return;
-	}
-
 	var testRunner          = GetTestRunner();
 	var testLogger          = GetTestLogger();
 	var regularProviders    = GetRegularProviders();
@@ -387,7 +360,7 @@ Task("RunTests")
 	}
 
 	var projects = testRunner == "NUnit"
-		? new [] { File("./Tests/Linq/Bin/Release/" + GetBuildConfiguration() + "/linq2db.Tests.dll").Path }
+		? new [] { File("./Tests/Linq/Bin/Release/" + TestTargetFramework() + "/linq2db.Tests.dll").Path }
 		: new [] { File("./Tests/Linq/Tests.csproj").Path };
 	
 	var testFilter = GetTestFilter();
@@ -397,8 +370,8 @@ Task("RunTests")
 	{
 		// ArgumentCustomization = args => args.Append("--result=TestResult.xml"),
 		Configuration = GetConfiguration(),
-		NoBuild = true, 
-		Framework = GetBuildConfiguration(),
+		NoBuild = GetConfiguration() == GetTestConfiguration(), 
+		Framework = TestTargetFramework(),
 		Filter = testFilter,
 		Logger = testLogger
 	};
@@ -410,7 +383,7 @@ Task("RunTests")
 		Configuration = GetConfiguration(),
 		X86 = true,
 		// Results = testResults,
-		// Framework = GetBuildConfiguration(),
+		// Framework = TestTargetFramework(),
 		Where = testFilter
 	};
 
@@ -439,12 +412,9 @@ Task("RunTests")
 Task("Pack")
 	.IsDependentOn("Restore")
 	.IsDependentOn("Clean")
-	.WithCriteria(IsAppVeyorBuild())
+	.WithCriteria(() => (IsAppVeyorBuild() || Argument<string>("pack", null) != null) && TestTargetFramework() == "net452")
 	.Does(() =>
 {
-	if(GetBuildConfiguration() == "docfx")
-		return;
-
 	var settings = new DotNetCorePackSettings
 	{
 		Configuration = GetConfiguration(),
@@ -473,10 +443,7 @@ Task("Clean")
 Task("Restore")
 	.Does(() =>
 {
-	NuGetRestore(GetSolutionName(), new NuGetRestoreSettings()
-	{
-		Verbosity = NuGetVerbosity.Quiet,
-	});
+	DotNetCoreRestore();
 });
 
 Task("Addins")

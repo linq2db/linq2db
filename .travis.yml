@@ -17,12 +17,12 @@ dotnet: 2.0.0
 
 env:
   global:
-    - regularProviders=TravisDataProviders.txt
-    - coreProviders=TravisDataProviders.Core.txt
-    - testfilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != WindowsOnly"
+    #- testFilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != WindowsOnly"
+    - testFilter=TestCategory=Create
     - testRunner=dotnet
-    - buildConfiguration=netcoreapp1.0
+    - testTargetFramework=netcoreapp1.0
     - configuration=Travis
+    - testConfiguration=Travis
     - builder=dotnet
 
 
@@ -35,17 +35,12 @@ osx_image: xcode7.3
 
 before_install:
   - if test "$TRAVIS_OS_NAME" == "osx"; then brew update; brew install openssl; ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/; ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/; fi
-
-before_install:
- - chmod +x build.sh
- - chmod +x travisbuild.sh
+  - chmod +x build.sh
+  - chmod +x travisbuild.sh
 
 install:
   - nuget install NUnit.Runners -Version 3.7.0 -OutputDirectory testrunner
 
-#services:
-#  - mysql
-#  - postgresql
 
 before_script:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then sudo service postgresql start; fi
@@ -63,7 +58,7 @@ script:
 #  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.txt Tests/Linq/UserDataProviders.txt; fi
 #  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv Tests/Linq/TravisDataProviders.Osx.Core.txt Tests/Linq/UserDataProviders.Core.txt; fi
 #  - ./build.sh --verbosity diagnostic
-  - ./travisbuild.sh 
+  - ./build.sh 
 #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then psql -c 'create database testdata;' -U postgres; fi  
 #  - xbuild /p:Configuration=ReleaseMono linq2db.Mono.sln
 #  - mono ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe Tests/Linq/bin/ReleaseMono/linq2db.Tests.dll --where "cat != WindowsOnly"

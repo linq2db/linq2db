@@ -14,6 +14,12 @@
 		<Optimize>true</Optimize>
 	</PropertyGroup>
 
+	<PropertyGroup Condition=" '$(Configuration)' == 'Travis' ">
+		<DefineConstants>RELEASE;TRAVIS</DefineConstants>
+		<DebugSymbols>false</DebugSymbols>
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
 	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
 		<TargetFrameworks>net452;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
