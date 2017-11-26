@@ -1,11 +1,18 @@
 image: Visual Studio 2017
 configuration: Release
+skip_tags: true
+
+branches:
+  only:
+    - master
+    - release
+    - /dev.*/
 
 environment:
   assemblyVersion: 2.0.0
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
-  testfilter: TestCategory != FreeText & TestCategory != Explicit
+  testfilter: TestCategory != FreeText & TestCategory != Ignored
   #testFilter: TestCategory=Create
   testRunner: dotnet
   testLogger: trx
@@ -15,10 +22,10 @@ environment:
       testTargetFramework: net452
     - target: Tests
       testTargetFramework: netcoreapp1.0
-      testFilter: TestCategory=Create
+      testFilter: TestCategory=Create & TestCategory != Ignored
     - target: Tests
       testTargetFramework: netcoreapp2.0
-      testFilter: TestCategory=Create
+      testFilter: TestCategory=Create & TestCategory != Ignored
     - target: DocFx
 
 cache:

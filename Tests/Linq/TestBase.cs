@@ -383,9 +383,13 @@ namespace Tests
 							if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
 								test.RunState = RunState.Ignored;
 
-							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.json or DataProviders.json");
 							continue;
 						}
+
+						if (test.RunState != RunState.Runnable)
+							test.Properties.Set(PropertyNames.Category, "Ignored");
+						
 
 						hasTest = true;
 						yield return test;
