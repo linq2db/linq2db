@@ -19,6 +19,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
@@ -1323,6 +1324,20 @@ namespace Tests
 		private readonly Func<IDataContext, int> Delete =
 			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
 
+	}
+
+	public class WithoutComparasionNullCheck : IDisposable
+	{
+		public WithoutComparasionNullCheck()
+		{
+			Configuration.Linq.CompareNullsAsValues = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.CompareNullsAsValues = true;
+			Query.ClearCaches();
+		}
 	}
 
 	public abstract class DataSourcesBase : DataAttribute, IParameterDataSource

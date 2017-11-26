@@ -1,4 +1,4 @@
-# LINQ to DB [![build status](https://ci.appveyor.com/api/projects/status/github/linq2db/linq2db)](https://ci.appveyor.com/project/igor-tkachev/linq2db) [![Build Status](https://travis-ci.org/linq2db/linq2db.svg?branch=master)](https://travis-ci.org/linq2db/linq2db)
+# LINQ to DB
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
 
@@ -12,31 +12,33 @@ Visit our [blog](http://blog.linq2db.com/) and see [Wiki](https://github.com/lin
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples).
 
-# How to help the project
+## How to help the project
 
 No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://github.com/linq2db/linq2db/wiki/How-can-i-help).
 
-# Project Build Status
+## Project Build Status
+
 --------------------
 | |Appveyor|Travis
 -----|-------|--------
 |master|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)|[![Build Status](https://travis-ci.org/linq2db/linq2db.svg?branch=master)](https://travis-ci.org/linq2db/linq2db)
 |latest|[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)| |
 
-# Feeds
+## Feeds
 
 * NuGet [![NuGet](https://img.shields.io/nuget/v/linq2db.svg)](https://www.nuget.org/packages?q=linq2db)
 * MyGet [![MyGet](https://img.shields.io/myget/linq2db/vpre/linq2db.svg)](https://www.myget.org/gallery/linq2db)
   * V2 `https://www.myget.org/F/linq2db/api/v2`
   * V3 `https://www.myget.org/F/linq2db/api/v3/index.json`
 
-# Let's get started
+## Let's get started
 
-From **NuGet**: 
+From **NuGet**:
 * `Install-Package linq2db` - .Net
 * `Install-Package linq2db.core` - .Net Core
 
 ## Configuring connection strings
+
 ### .Net
 
 In your `web.config` or `app.config` make sure you have a connection string:
@@ -48,51 +50,56 @@ In your `web.config` or `app.config` make sure you have a connection string:
     providerName     = "SqlServer" />
 </connectionStrings>
 ```
+
 ### .Net Core
+
 .Net Core does not support `System.Configuration` so to configure connection strings you should implement `ILinqToDBSettings`, for example:
+
 ```cs
 public class ConnectionStringSettings : IConnectionStringSettings
 {
-	public string ConnectionString { get; set; }
-	public string Name { get; set; }
-	public string ProviderName { get; set; }
-	public bool IsGlobal => false;
+    public string ConnectionString { get; set; }
+    public string Name { get; set; }
+    public string ProviderName { get; set; }
+    public bool IsGlobal => false;
 }
 
 public class MySettings : ILinqToDBSettings
 {
-	public IEnumerable<IDataProviderSettings> DataProviders
-	{
-		get { yield break; }
-	}
-	
-	public string DefaultConfiguration => "SqlServer";
-	public string DefaultDataProvider => "SqlServer";
+    public IEnumerable<IDataProviderSettings> DataProviders
+    {
+        get { yield break; }
+    }
 
-	public IEnumerable<IConnectionStringSettings> ConnectionStrings
-	{
-		get
-		{
-			yield return
-				new ConnectionStringSettings
-				{
-					Name = "SqlServer",
-					ProviderName = "SqlServer",
-					ConnectionString = @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
-				};
-		}
-	}
+    public string DefaultConfiguration => "SqlServer";
+    public string DefaultDataProvider => "SqlServer";
+
+    public IEnumerable<IConnectionStringSettings> ConnectionStrings
+    {
+        get
+        {
+            yield return
+                new ConnectionStringSettings
+                {
+                    Name = "SqlServer",
+                    ProviderName = "SqlServer",
+                    ConnectionString = @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
+                };
+        }
+    }
 }
 
 ```
 
 And later just set:
+
 ```cs
 DataConnection.DefaultSettings = new MySettings();
 ```
+
 You can also use same for regular .Net
 
-## Now let's create a **POCO** class:
+## Now let's create a **POCO** class
 
 ```c#
 using System;
@@ -120,7 +127,7 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 
   public ITable<Product> Product { get { return GetTable<Product>(); } }
   public ITable<Category> Category { get { return GetTable<Category>(); } }
-  
+
   // ... other tables ...
 }
 ```
@@ -148,8 +155,7 @@ public static List<Product> All()
 
 Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool. [Details](https://github.com/linq2db/linq2db/wiki/Managing-data-connection)
 
-Selecting Columns
------------------
+## Selecting Columns
 
 Most times we get the entire row from the database:
 
@@ -170,8 +176,7 @@ select new Product
 };
 ```
 
-Composing queries
-------
+## Composing queries
 
 Rather than concatenating strings we can 'compose' LINQ expressions.  In the example below the final SQL will be different if `onlyActive` is true or false, or if `searchFor` is not null.
 
@@ -202,8 +207,7 @@ public static List<Product> All(bool onlyActive, string searchFor)
 }
 ```
 
-Paging
------
+## Paging
 
 A lot of times we need to write code that returns only a subset of the entire dataset. We expand on the previous example to show what a product search function could look like. 
 
@@ -231,8 +235,7 @@ public static List<Product> Search(string searchFor, int currentPage, int pageSi
 }
 ```
 
-Joins
------
+## Joins
 
 This assumes we added a `Category` class, just like we did with the `Product` class, defined all the fields, and registered it in our `DbNorthwind` data access class. We can now write an **INNER JOIN** query like this:
 
@@ -258,8 +261,9 @@ select new Product
 };
 ```
 
-Creating your POCOs
-----------------
+[More samples are here](https://linq2db.github.io/articles/Join-Operators.html)
+
+## Creating your POCOs
 
 In the previous example we assign an entire `Category` object to our product, but what if we want all the fields in our `Product` class, but we don't want to specify every field by hand? Unfortunately, we **cannot** write this:
 
@@ -292,8 +296,7 @@ public static Product Build(Product product, Category category)
 
 One caveat with this approach is that if you're using it with composed queries (see example above) the select Build part has to come only in the final select.
 
-Insert
-------
+## Insert
 
 At some point we will need to add a new `Product` to the database. One way would be to call the `Insert` extension method found in the `LinqToDB` namespace; so make sure you import that.
 
@@ -343,8 +346,7 @@ using (var db = new DbNorthwind())
 }
 ```
 
-Update
-------
+## Update
 
 Updating records follows a similar pattern to Insert. We have an extension method that updates all the columns in the database:
 
@@ -395,8 +397,7 @@ using (var db = new DbNorthwind())
 }
 ```
 
-Delete
-------
+## Delete
 
 Similar to how you update records, you can also delete records:
 
@@ -409,10 +410,9 @@ using (var db = new DbNorthwind())
 }
 ```
 
-Bulk Copy
-------
+## Bulk Copy
 
-Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For faster data inserting DO NOT use a transaction. If you use a transaction an adhoc implementation of the bulk copy feature has been added in order to insert multiple lines at once. You get faster results then inserting lines one by one, but it's still slower than the database provider bulk copy. So, DO NOT use transactions whenever you can (Take care of unicity constraints, primary keys, etc. since bulk copy ignores them at insertion)
+Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For faster data inserting DO NOT use a transaction. If you use a transaction an adhoc implementation of the bulk copy feature has been added in order to insert multiple lines at once. You get faster results then inserting lines one by one, but it's still slower than the database provider bulk copy. So, DO NOT use transactions whenever you can (Take care of unique constraints, primary keys, etc. since bulk copy ignores them at insertion)
 
 ```c#
 [Table(Name = "ProductsTemp")]
@@ -434,8 +434,7 @@ using (var db = new DbNorthwind())
 }
 ```
 
-Transactions
-------
+## Transactions
 
 Using database transactions is easy. All you have to do is call BeginTransaction() on your DataConnection, run one or more queries, and then commit the changes by calling CommitTransaction(). If something happened and you need to roll back your changes you can either call RollbackTransaction() or throw an exception.
 
@@ -461,7 +460,7 @@ Also, you can use .NET built-in TransactionScope class:
 
 ```c#
 // don't forget isolation level is serializable by default
-using (var transaction = new TransactionScope()) 
+using (var transaction = new TransactionScope())
 {
   using (var db = new DbNorthwind())
   {
@@ -471,11 +470,17 @@ using (var transaction = new TransactionScope())
 }
 ```
 
-MiniProfiler
-------
+## Merge
+
+[Here](https://linq2db.github.io/articles/Merge-API.html) you can read about MERGE support.
+
+## Window (Analytic) Functions
+
+[Here](https://linq2db.github.io/articles/Window-Functions-%28Analytic-Functions%29.html) you can read about Window (Analytic) Functions support.
+
+## MiniProfiler
 
 If you would like to use MiniProfiler from StackExchange you'd need to wrap ProfiledDbConnection around our regular DataConnection.
-
 
 ```c#
 public class DbDataContext : DataConnection
@@ -508,6 +513,4 @@ private static IDataProvider GetDataProvider()
 {
   return new LinqToDB.DataProvider.MySql.MySqlDataProvider();
 }
-```        
-
-[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)
+```

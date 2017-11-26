@@ -1,3 +1,12 @@
+LINQ to DB 1.10.1  Release Notes
+---------------------------------
+- fix async retry policy (#919)
+- fix connection management (#927)
+
+- feature: allow to configure null checking in predicates (#932)
+
+- obsoletes: LinqToDB.Configuration.Linq.CheckNullForNotEquals, use CompareNullsAsValues instead
+
 LINQ to DB 1.10.0  Release Notes
 ---------------------------------
 - breaking change: [Oracle] bulk mode property (OracleTools.UseAlternativeBulkCopy) changed type from bool to AlternativeBulkCopy enum. If you assigned it to true, you should replace it with AlternativeBulkCopy.InsertInto value.
