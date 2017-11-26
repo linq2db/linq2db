@@ -94,9 +94,12 @@ namespace LinqToDB.Common
 			public static bool OptimizeJoins = true;
 
 			/// <summary>
-			/// If set to true nullable fields would be checked for IS NULL when comparasion type is NotEqual.
+			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparasions.
+			/// This affects: Equal, NotEqual, Not Contains
 			/// Default value: <c>true</c>.
+			/// </summary>
 			/// <example>
+			/// <code>
 			/// public class MyEntity
 			/// {
 			///     public int? Value;
@@ -104,12 +107,33 @@ namespace LinqToDB.Common
 			/// 
 			/// db.MyEntity.Where(e => e.Value != 10)
 			/// 
-			/// Would be converted to
+			/// from e1 in db.MyEntity
+			/// join e2 in db.MyEntity on e1.Value equals e2.Value
+			/// select e1
 			/// 
+			/// var filter = new [] {1, 2, 3};
+			/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
+			/// </code>
+			/// 
+			/// Would be converted to next queries:
+			/// <code>
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
+			/// 
+			/// SELECT e1.Value
+			/// FROM MyEntity e1
+			/// INNER JOIN MyEntity e2 ON e1.Value = e2.Value OR (e1.Value IS NULL AND e2.Value IS NULL)
+			/// 
+			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR NOT Value IN (1, 2, 3)
+			/// </code>
 			/// </example>
-			/// </summary>
-			public static bool CheckNullForNotEquals = true;
+			public static bool CompareNullsAsValues = true;
+
+			[Obsolete("Please consider using CompareNullsAsValues")]
+			public static bool CheckNullForNotEquals
+			{
+				get { return CompareNullsAsValues; }
+				set { CompareNullsAsValues = value; }
+			}
 
 			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.

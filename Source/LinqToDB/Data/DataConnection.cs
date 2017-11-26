@@ -189,6 +189,20 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDbConnection connection,
 			                                bool          disposeConnection)
 		{
+			
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider and connection.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connection">Existing database connection to use.</param>
+		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing</param>
+		public DataConnection(
+			[JetBrains.Annotations.NotNull] IDataProvider dataProvider,
+			[JetBrains.Annotations.NotNull] IDbConnection connection,
+			                                bool          disposeConnection)
+		{
 			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
 			if (connection   == null) throw new ArgumentNullException(nameof(connection));
 
