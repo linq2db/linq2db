@@ -26,39 +26,43 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildSelectClause()
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
-			if (SelectQuery.From.Tables.Count == 0)
+			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT").AppendLine();
-				BuildColumns();
+				BuildColumns(selectQuery);
 				AppendIndent();
 				StringBuilder.Append("FROM rdb$database").AppendLine();
 			}
-			else if (SelectQuery.Select.IsDistinct)
+			else if (selectQuery.Select.IsDistinct)
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT");
-				BuildSkipFirst();
+				BuildSkipFirst(selectQuery);
 				StringBuilder.Append(" DISTINCT");
 				StringBuilder.AppendLine();
-				BuildColumns();
+				BuildColumns(selectQuery);
 			}
 			else
-				base.BuildSelectClause();
+				base.BuildSelectClause(selectQuery);
 		}
 
 		protected override bool   SkipFirst   { get { return false;       } }
 		protected override string SkipFormat  { get { return "SKIP {0}";  } }
-		protected override string FirstFormat { get { return "FIRST {0}"; } }
 
-		protected override void BuildGetIdentity()
+		protected override string FirstFormat(SelectQuery selectQuery)
 		{
-			var identityField = SelectQuery.Insert.Into.GetIdentityField();
+			return "FIRST {0}";
+		}
+
+		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		{
+			var identityField = selectQuery.Insert.Into.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", SelectQuery.Insert.Into.Name);
+				throw new SqlException("Identity field must be defined for '{0}'.", selectQuery.Insert.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append("\t");
@@ -141,13 +145,13 @@ namespace LinqToDB.DataProvider.Firebird
 //			base.BuildDataType(type, createDbType);
 //		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!selectQuery.IsUpdate)
+				base.BuildFromClause(selectQuery);
 		}
 
-		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -163,7 +167,7 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
@@ -215,9 +219,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
 		{
-			BuildInsertOrUpdateQueryAsMerge("FROM rdb$database");
+			BuildInsertOrUpdateQueryAsMerge(selectQuery, "FROM rdb$database");
 		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)

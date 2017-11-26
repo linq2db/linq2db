@@ -22,12 +22,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (Version == DB2Version.LUW && 
-				(statement.QueryType == QueryType.Insert ||
-			     statement.QueryType == QueryType.InsertOrUpdate)
-				&& ((SelectQuery)statement).Insert.WithIdentity)
+			if (Version == DB2Version.LUW && statement.IsInsertWithIdentity())
 			{
-				_identityField = SelectQuery.Insert.Into.GetIdentityField();
+				_identityField = ((SelectQuery)statement).Insert.Into.GetIdentityField();
 
 				if (_identityField == null)
 					return 2;
@@ -62,7 +59,7 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine("\t)");
 		}
 
-		protected override void BuildGetIdentity()
+		protected override void BuildGetIdentity(SelectQuery selectQuery)
 		{
 			if (Version == DB2Version.zOS)
 			{
@@ -82,21 +79,21 @@ namespace LinqToDB.DataProvider.DB2
 			AlternativeBuildSql(false, base.BuildSql);
 		}
 
-		protected override void BuildSelectClause()
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
-			if (SelectQuery.From.Tables.Count == 0)
+			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().AppendLine("SELECT");
-				BuildColumns();
+				BuildColumns(selectQuery);
 				AppendIndent().AppendLine("FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 			}
 			else
-				base.BuildSelectClause();
+				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override string LimitFormat
+		protected override string LimitFormat(SelectQuery selectQuery)
 		{
-			get { return SelectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null; }
+			return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
 		}
 
 		protected override void BuildFunction(SqlFunction func)
@@ -105,13 +102,13 @@ namespace LinqToDB.DataProvider.DB2
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!selectQuery.IsUpdate)
+				base.BuildFromClause(selectQuery);
 		}
 
-		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -127,7 +124,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
@@ -186,16 +183,16 @@ namespace LinqToDB.DataProvider.DB2
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
 		{
-			BuildInsertOrUpdateQueryAsMerge("FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
+			BuildInsertOrUpdateQueryAsMerge(selectQuery, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 		}
 
-		protected override void BuildEmptyInsert()
+		protected override void BuildEmptyInsert(SelectQuery selectQuery)
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in SelectQuery.Insert.Into.Fields)
+			foreach (var col in selectQuery.Insert.Into.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();

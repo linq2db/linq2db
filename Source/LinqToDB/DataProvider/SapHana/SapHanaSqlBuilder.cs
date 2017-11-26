@@ -17,25 +17,24 @@ namespace LinqToDB.DataProvider.SapHana
 		
 		public override int CommandCount(SqlStatement statement)
 		{
-			return (statement.QueryType == QueryType.Insert ||
-			        statement.QueryType == QueryType.InsertOrUpdate)
-			       && ((SelectQuery)statement).Insert.WithIdentity
-				? 2
-				: 1;
+			return statement.IsInsertWithIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			var identityField = SelectQuery.Insert.Into.GetIdentityField();
-			var table         = SelectQuery.Insert.Into;
+			if (Statement is SelectQuery selectQuery)
+			{
+				var identityField = selectQuery.Insert.Into.GetIdentityField();
+				var table = selectQuery.Insert.Into;
 
-			if (identityField == null || table == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", SelectQuery.Insert.Into.Name);
+				if (identityField == null || table == null)
+					throw new SqlException("Identity field must be defined for '{0}'.", selectQuery.Insert.Into.Name);
 
-			StringBuilder.Append("SELECT MAX(");
-			BuildExpression(identityField, false, true);
-			StringBuilder.Append(") FROM ");
-			BuildPhysicalTable(table, null);
+				StringBuilder.Append("SELECT MAX(");
+				BuildExpression(identityField, false, true);
+				StringBuilder.Append(") FROM ");
+				BuildPhysicalTable(table, null);
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -43,9 +42,16 @@ namespace LinqToDB.DataProvider.SapHana
 			return new SapHanaSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override string LimitFormat { get { return "LIMIT {0}"; } }
-		protected override string OffsetFormat { get { return SelectQuery.Select.TakeValue == null ? "LIMIT 4200000000 OFFSET {0}" : "OFFSET {0}"; } }
-		
+		protected override string LimitFormat(SelectQuery selectQuery)
+		{
+			return "LIMIT {0}";
+		}
+
+		protected override string OffsetFormat(SelectQuery selectQuery)
+		{
+			return selectQuery.Select.TakeValue == null ? "LIMIT 4200000000 OFFSET {0}" : "OFFSET {0}";
+		}
+
 		public override bool IsNestedJoinParenthesisRequired { get { return true; } }
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
@@ -69,9 +75,9 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert();
+			BuildInsertOrUpdateQueryAsUpdateInsert(selectQuery);
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType)
@@ -120,11 +126,11 @@ namespace LinqToDB.DataProvider.SapHana
 			base.BuildDataType(type, createDbType); 
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
-			if (SelectQuery.From.Tables.Count == 0)
+			if (!selectQuery.IsUpdate)
+				base.BuildFromClause(selectQuery);
+			if (selectQuery.From.Tables.Count == 0)
 				StringBuilder.Append("FROM DUMMY");
 		}
 
@@ -206,7 +212,7 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(")");
 		}
 
-		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -222,7 +228,7 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 

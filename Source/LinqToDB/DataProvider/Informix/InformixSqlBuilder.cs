@@ -20,11 +20,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return (statement.QueryType == QueryType.Insert ||
-			        statement.QueryType == QueryType.InsertOrUpdate)
-			       && ((SelectQuery)statement).Insert.WithIdentity
-				? 2
-				: 1;
+			return statement.IsInsertWithIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -51,29 +47,29 @@ namespace LinqToDB.DataProvider.Informix
 //			return joins.Any(j => j.JoinType == SelectQuery.JoinType.Inner && j.Condition.Conditions.IsNullOrEmpty());
 //		}
 
-		protected override void BuildSelectClause()
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
-			if (SelectQuery.From.Tables.Count == 0)
+			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().Append("SELECT FIRST 1").AppendLine();
-				BuildColumns();
+				BuildColumns(selectQuery);
 				AppendIndent().Append("FROM SYSTABLES").AppendLine();
 			}
-			else if (SelectQuery.Select.IsDistinct)
+			else if (selectQuery.Select.IsDistinct)
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT");
-				BuildSkipFirst();
+				BuildSkipFirst(selectQuery);
 				StringBuilder.Append(" DISTINCT");
 				StringBuilder.AppendLine();
-				BuildColumns();
+				BuildColumns(selectQuery);
 			}
 			else
-				base.BuildSelectClause();
+				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override string FirstFormat { get { return "FIRST {0}"; } }
-		protected override string SkipFormat  { get { return "SKIP {0}";  } }
+		protected override string FirstFormat(SelectQuery selectQuery) => "FIRST {0}";
+		protected override string SkipFormat  => "SKIP {0}";
 
 		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
 		{
@@ -127,10 +123,10 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!selectQuery.IsUpdate)
+				base.BuildFromClause(selectQuery);
 		}
 
 		public override object Convert(object value, ConvertType convertType)

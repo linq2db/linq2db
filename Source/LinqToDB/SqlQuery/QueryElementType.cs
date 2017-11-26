@@ -41,8 +41,7 @@ namespace LinqToDB.SqlQuery
 			OrderByClause,
 				OrderByItem,
 			Union,
-			CreateTableStatement,
 
-		Insert
+		CreateTableStatement
 	}
 }
