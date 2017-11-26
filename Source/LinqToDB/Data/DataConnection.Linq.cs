@@ -39,9 +39,9 @@ namespace LinqToDB.Data
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);
 		}
 
-		protected virtual SelectQuery ProcessQuery(SelectQuery selectQuery)
+		protected virtual SqlStatement ProcessQuery(SqlStatement statement)
 		{
-			return selectQuery;
+			return statement;
 		}
 
 		#region IDataContext Members

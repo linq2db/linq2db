@@ -16,21 +16,21 @@ namespace LinqToDB.Linq
 				string statementHeader, string statementFooter,
 				DefaulNullable defaulNullable)
 			{
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
+				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
+				var createTable = new SqlCreateTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Owner        = schemaName;
 
-				sqlQuery.CreateTable.Table           = sqlTable;
-				sqlQuery.CreateTable.StatementHeader = statementHeader;
-				sqlQuery.CreateTable.StatementFooter = statementFooter;
-				sqlQuery.CreateTable.DefaulNullable  = defaulNullable;
+				createTable.Table           = sqlTable;
+				createTable.StatementHeader = statementHeader;
+				createTable.StatementFooter = statementFooter;
+				createTable.DefaulNullable  = defaulNullable;
 
 				var query = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = createTable, } }
 				};
 
 				SetNonQueryQuery(query);
@@ -52,20 +52,20 @@ namespace LinqToDB.Linq
 				CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
+				var createTable = new SqlCreateTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Owner        = schemaName;
 
-				sqlQuery.CreateTable.Table           = sqlTable;
-				sqlQuery.CreateTable.StatementHeader = statementHeader;
-				sqlQuery.CreateTable.StatementFooter = statementFooter;
-				sqlQuery.CreateTable.DefaulNullable  = defaulNullable;
+				createTable.Table           = sqlTable;
+				createTable.StatementHeader = statementHeader;
+				createTable.StatementFooter = statementFooter;
+				createTable.DefaulNullable  = defaulNullable;
 
 				var query = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = createTable, } }
 				};
 
 				SetNonQueryQuery(query);

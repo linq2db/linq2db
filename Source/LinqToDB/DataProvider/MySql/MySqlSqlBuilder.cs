@@ -21,9 +21,9 @@ namespace LinqToDB.DataProvider.MySql
 			ParameterSymbol = '@';
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return statement.IsInsertWithIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -36,23 +36,26 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override string LimitFormat { get { return "LIMIT {0}"; } }
+		protected override string LimitFormat(SelectQuery selectQuery)
+		{
+			return "LIMIT {0}";
+		}
 
 		public override bool IsNestedJoinParenthesisRequired { get { return true; } }
 
-		protected override void BuildOffsetLimit()
+		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			if (SelectQuery.Select.SkipValue == null)
-				base.BuildOffsetLimit();
+			if (selectQuery.Select.SkipValue == null)
+				base.BuildOffsetLimit(selectQuery);
 			else
 			{
 				AppendIndent()
 					.AppendFormat(
 						"LIMIT {0},{1}",
-						WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.SkipValue)),
-						SelectQuery.Select.TakeValue == null ?
+						WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue)),
+						selectQuery.Select.TakeValue == null ?
 							long.MaxValue.ToString() :
-							WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.TakeValue).ToString()))
+							WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue).ToString()))
 					.AppendLine();
 			}
 		}
@@ -92,11 +95,11 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDeleteClause()
+		protected override void BuildDeleteClause(SelectQuery selectQuery)
 		{
-			var table = SelectQuery.Delete.Table != null ?
-				(SelectQuery.From.FindTableSource(SelectQuery.Delete.Table) ?? SelectQuery.Delete.Table) :
-				SelectQuery.From.Tables[0];
+			var table = selectQuery.Delete.Table != null ?
+				(selectQuery.From.FindTableSource(selectQuery.Delete.Table) ?? selectQuery.Delete.Table) :
+				selectQuery.From.Tables[0];
 
 			AppendIndent()
 				.Append("DELETE ")
@@ -104,17 +107,17 @@ namespace LinqToDB.DataProvider.MySql
 				.AppendLine();
 		}
 
-		protected override void BuildUpdateClause()
+		protected override void BuildUpdateClause(SelectQuery selectQuery)
 		{
-			base.BuildFromClause();
+			base.BuildFromClause(selectQuery);
 			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet();
+			base.BuildUpdateSet(selectQuery);
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!selectQuery.IsUpdate)
+				base.BuildFromClause(selectQuery);
 		}
 
 		public static char ParameterSymbol           { get; set; }
@@ -219,20 +222,20 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return base.BuildExpression(
 				expr,
-				buildTableName && SelectQuery.QueryType != QueryType.InsertOrUpdate,
+				buildTableName && Statement.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
 				alias,
 				ref addAlias,
 				throwExceptionIfTableNotFound);
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
 		{
 			var position = StringBuilder.Length;
 
-			BuildInsertQuery();
+			BuildInsertQuery(selectQuery);
 
-			if (SelectQuery.Update.Items.Count > 0)
+			if (selectQuery.Update.Items.Count > 0)
 			{
 				AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
@@ -240,7 +243,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				var first = true;
 
-				foreach (var expr in SelectQuery.Update.Items)
+				foreach (var expr in selectQuery.Update.Items)
 				{
 					if (!first)
 						StringBuilder.Append(',').AppendLine();
@@ -268,7 +271,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildEmptyInsert()
+		protected override void BuildEmptyInsert(SelectQuery selectQuery)
 		{
 			StringBuilder.AppendLine("() VALUES ()");
 		}
@@ -278,7 +281,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append("AUTO_INCREMENT");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");

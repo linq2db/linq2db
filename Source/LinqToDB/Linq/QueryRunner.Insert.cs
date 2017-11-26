@@ -17,7 +17,8 @@ namespace LinqToDB.Linq
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.Insert };
+				var sqlQuery = new SelectQuery();
+				sqlQuery.ChangeQueryType(QueryType.Insert);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
@@ -27,7 +28,7 @@ namespace LinqToDB.Linq
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = sqlQuery, } }
 				};
 
 				foreach (var field in sqlTable.Fields)

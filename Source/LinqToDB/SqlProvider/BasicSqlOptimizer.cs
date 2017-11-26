@@ -23,24 +23,27 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SelectQuery Finalize(SelectQuery selectQuery)
+		public virtual SqlStatement Finalize(SqlStatement statement)
 		{
-			new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
-				SqlProviderFlags.IsApplyJoinSupported,
-				SqlProviderFlags.IsGroupByExpressionSupported);
-
-			if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
-			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
-
-			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
+			if (statement is SelectQuery selectQuery)
+			{
 				new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
+				if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
+				if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
-			if (Common.Configuration.Linq.OptimizeJoins)
-				OptimizeJoins(selectQuery);
+				if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
+					new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
+						SqlProviderFlags.IsApplyJoinSupported,
+						SqlProviderFlags.IsGroupByExpressionSupported);
 
-			return selectQuery;
+				if (Common.Configuration.Linq.OptimizeJoins)
+					OptimizeJoins(selectQuery);
+
+				return selectQuery;
+			}
+			return statement;
 		}
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery)
@@ -1193,16 +1196,17 @@ namespace LinqToDB.SqlProvider
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
-		protected SelectQuery GetAlternativeDelete(SelectQuery selectQuery)
+		protected SqlStatement GetAlternativeDelete(SelectQuery selectQuery)
 		{
 			if (selectQuery.IsDelete &&
 				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) &&
 				selectQuery.From.Tables[0].Source is SqlTable)
 			{
-				var sql = new SelectQuery { QueryType = QueryType.Delete, IsParameterDependent = selectQuery.IsParameterDependent };
+				var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent };
+				sql.ChangeQueryType(QueryType.Delete);
 
 				selectQuery.ParentSelect = sql;
-				selectQuery.QueryType = QueryType.Select;
+				selectQuery.ChangeQueryType(QueryType.Select);
 
 				var table = (SqlTable)selectQuery.From.Tables[0].Source;
 				var copy  = new SqlTable(table) { Alias = null };
@@ -1249,10 +1253,11 @@ namespace LinqToDB.SqlProvider
 			{
 				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SelectQuery { QueryType = QueryType.Update, IsParameterDependent = selectQuery.IsParameterDependent  };
+					var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent  };
+					sql.ChangeQueryType(QueryType.Update);
 
 					selectQuery.ParentSelect = sql;
-					selectQuery.QueryType = QueryType.Select;
+					selectQuery.ChangeQueryType(QueryType.Select);
 
 					var table = selectQuery.Update.Table ?? (SqlTable)selectQuery.From.Tables[0].Source;
 
@@ -1334,15 +1339,15 @@ namespace LinqToDB.SqlProvider
 			return alias.Length == 0 || alias.Length > maxLen ? null : alias;
 		}
 
-		protected void CheckAliases(SelectQuery selectQuery, int maxLen)
+		protected void CheckAliases(SqlStatement statement, int maxLen)
 		{
-			new QueryVisitor().Visit(selectQuery, e =>
+			new QueryVisitor().Visit(statement, e =>
 			{
 				switch (e.ElementType)
 				{
-					case QueryElementType.SqlField     : ((SqlField)               e).Alias = SetAlias(((SqlField)            e).Alias, maxLen); break;
-					case QueryElementType.SqlParameter : ((SqlParameter)           e).Name  = SetAlias(((SqlParameter)        e).Name,  maxLen); break;
-					case QueryElementType.SqlTable     : ((SqlTable)               e).Alias = SetAlias(((SqlTable)            e).Alias, maxLen); break;
+					case QueryElementType.SqlField     : ((SqlField)               e).Alias = SetAlias(((SqlField)               e).Alias, maxLen); break;
+					case QueryElementType.SqlParameter : ((SqlParameter)           e).Name  = SetAlias(((SqlParameter)           e).Name,  maxLen); break;
+					case QueryElementType.SqlTable     : ((SqlTable)               e).Alias = SetAlias(((SqlTable)               e).Alias, maxLen); break;
 					case QueryElementType.Column       : ((SelectQuery.Column)     e).Alias = SetAlias(((SelectQuery.Column)     e).Alias, maxLen); break;
 					case QueryElementType.TableSource  : ((SelectQuery.TableSource)e).Alias = SetAlias(((SelectQuery.TableSource)e).Alias, maxLen); break;
 				}

@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 	using Mapping;
 
 	[DebuggerDisplay("SQL = {SqlText}")]
-	public class SelectQuery : ISqlTableSource
+	public class SelectQuery : SqlStatement, ISqlTableSource
 	{
 		#region Init
 
@@ -45,7 +45,6 @@ namespace LinqToDB.SqlQuery
 			OrderByClause        orderBy,
 			List<Union>          unions,
 			SelectQuery          parentSelect,
-			CreateTableStatement createTable,
 			bool                 parameterDependent,
 			List<SqlParameter>   parameters)
 		{
@@ -60,10 +59,9 @@ namespace LinqToDB.SqlQuery
 			_orderBy             = orderBy;
 			_unions              = unions;
 			ParentSelect         = parentSelect;
-			_createTable         = createTable;
 			IsParameterDependent = parameterDependent;
 
-			_parameters.AddRange(parameters);
+			Parameters.AddRange(parameters);
 
 			foreach (var col in select.Columns)
 				col.Parent = this;
@@ -76,19 +74,12 @@ namespace LinqToDB.SqlQuery
 			_orderBy.SetSqlQuery(this);
 		}
 
-		readonly List<SqlParameter> _parameters = new List<SqlParameter>();
-		public   List<SqlParameter>  Parameters
-		{
-			get { return _parameters; }
-		}
-
 		private List<object> _properties;
 		public  List<object>  Properties
 		{
 			get { return _properties ?? (_properties = new List<object>()); }
 		}
 
-		public bool        IsParameterDependent { get; set; }
 		public SelectQuery ParentSelect         { get; set; }
 
 		public bool IsSimple
@@ -96,11 +87,13 @@ namespace LinqToDB.SqlQuery
 			get { return !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty; }
 		}
 
+		public override QueryType QueryType => _queryType;
+
 		private QueryType _queryType = QueryType.Select;
-		public  QueryType  QueryType
+
+		public void ChangeQueryType(QueryType newQueryType)
 		{
-			get { return _queryType;  }
-			set { _queryType = value; }
+			_queryType = newQueryType;
 		}
 
 		public bool IsCreateTable    { get { return _queryType == QueryType.CreateTable;    } }
@@ -2146,74 +2139,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-#region CreateTableStatement
-
-		public class CreateTableStatement : IQueryElement, ISqlExpressionWalkable, ICloneableElement
-		{
-			public SqlTable       Table           { get; set; }
-			public bool           IsDrop          { get; set; }
-			public string         StatementHeader { get; set; }
-			public string         StatementFooter { get; set; }
-			public DefaulNullable DefaulNullable  { get; set; }
-
-#region IQueryElement Members
-
-			public QueryElementType ElementType { get { return QueryElementType.CreateTableStatement; } }
-
-			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
-			{
-				sb.Append(IsDrop ? "DROP TABLE " : "CREATE TABLE ");
-
-				if (Table != null)
-					((IQueryElement)Table).ToString(sb, dic);
-
-				sb.AppendLine();
-
-				return sb;
-			}
-
-#endregion
-
-#region ISqlExpressionWalkable Members
-
-			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
-			{
-				if (Table != null)
-					((ISqlExpressionWalkable)Table).Walk(skipColumns, func);
-
-				return null;
-			}
-
-#endregion
-
-#region ICloneableElement Members
-
-			public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-			{
-				if (!doClone(this))
-					return this;
-
-				var clone = new CreateTableStatement { };
-
-				if (Table != null)
-					clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
-
-				objectTree.Add(this, clone);
-
-				return clone;
-			}
-
-#endregion
-		}
-
-		private CreateTableStatement _createTable;
-		public  CreateTableStatement  CreateTable
-		{
-			get { return _createTable ?? (_createTable = new CreateTableStatement()); }
-		}
-
-#endregion
-
 #region InsertClause
 
 		public class SetExpression : IQueryElement, ISqlExpressionWalkable, ICloneableElement
@@ -3280,7 +3205,7 @@ namespace LinqToDB.SqlQuery
 
 #region ProcessParameters
 
-		public SelectQuery ProcessParameters(MappingSchema mappingSchema)
+		public override SqlStatement ProcessParameters(MappingSchema mappingSchema)
 		{
 			if (IsParameterDependent)
 			{
@@ -3533,7 +3458,7 @@ namespace LinqToDB.SqlQuery
 			_having  = new WhereClause  (this, clone._having,  objectTree, doClone);
 			_orderBy = new OrderByClause(this, clone._orderBy, objectTree, doClone);
 
-			_parameters.AddRange(clone._parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
+			Parameters.AddRange(clone.Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 			IsParameterDependent = clone.IsParameterDependent;
 
 			new QueryVisitor().Visit(this, expr =>
@@ -3557,150 +3482,6 @@ namespace LinqToDB.SqlQuery
 
 #endregion
 
-#region Aliases
-
-		IDictionary<string,object> _aliases;
-
-		public void RemoveAlias(string alias)
-		{
-			if (_aliases != null)
-			{
-				alias = alias.ToUpper();
-				if (_aliases.ContainsKey(alias))
-					_aliases.Remove(alias);
-			}
-		}
-
-		public string GetAlias(string desiredAlias, string defaultAlias)
-		{
-			if (_aliases == null)
-				_aliases = new Dictionary<string,object>();
-
-			var alias = desiredAlias;
-
-			if (string.IsNullOrEmpty(desiredAlias) || desiredAlias.Length > 25)
-			{
-				desiredAlias = defaultAlias;
-				alias        = defaultAlias + "1";
-			}
-
-			for (var i = 1; ; i++)
-			{
-				var s = alias.ToUpper();
-
-				if (!_aliases.ContainsKey(s) && !ReservedWords.IsReserved(s))
-				{
-					_aliases.Add(s, s);
-					break;
-				}
-
-				alias = desiredAlias + i;
-			}
-
-			return alias;
-		}
-
-		public string[] GetTempAliases(int n, string defaultAlias)
-		{
-			var aliases = new string[n];
-
-			for (var i = 0; i < aliases.Length; i++)
-				aliases[i] = GetAlias(defaultAlias, defaultAlias);
-
-			foreach (var t in aliases)
-				RemoveAlias(t);
-
-			return aliases;
-		}
-
-		internal void SetAliases()
-		{
-			_aliases = null;
-
-			var objs = new Dictionary<object,object>();
-
-			Parameters.Clear();
-
-			new QueryVisitor().VisitAll(this, expr =>
-			{
-				switch (expr.ElementType)
-				{
-					case QueryElementType.SqlParameter:
-						{
-							var p = (SqlParameter)expr;
-
-							if (p.IsQueryParameter)
-							{
-								if (!objs.ContainsKey(expr))
-								{
-									objs.Add(expr, expr);
-									p.Name = GetAlias(p.Name, "p");
-									Parameters.Add(p);
-								}
-							}
-							else
-								IsParameterDependent = true;
-						}
-
-						break;
-
-					case QueryElementType.Column:
-						{
-							if (!objs.ContainsKey(expr))
-							{
-								objs.Add(expr, expr);
-
-								var c = (SelectQuery.Column)expr;
-
-								if (c.Alias != "*")
-									c.Alias = GetAlias(c.Alias, "c");
-							}
-						}
-
-						break;
-
-					case QueryElementType.TableSource:
-						{
-							var table = (SelectQuery.TableSource)expr;
-
-							if (!objs.ContainsKey(table))
-							{
-								objs.Add(table, table);
-								table.Alias = GetAlias(table.Alias, "t");
-							}
-						}
-
-						break;
-
-					case QueryElementType.SqlQuery:
-						{
-							var sql = (SelectQuery)expr;
-
-							if (sql.HasUnion)
-							{
-								for (var i = 0; i < sql.Select.Columns.Count; i++)
-								{
-									var col = sql.Select.Columns[i];
-
-									foreach (var t in sql.Unions)
-									{
-										var union = t.SelectQuery.Select;
-
-										objs.Remove(union.Columns[i].Alias);
-
-										union.Columns[i].Alias = col.Alias;
-									}
-								}
-							}
-						}
-
-						break;
-				}
-			});
-		}
-
-#endregion
-
 #region Helpers
 
 		public void ForEachTable(Action<TableSource> action, HashSet<SelectQuery> visitedQueries)
@@ -3718,7 +3499,7 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public ISqlTableSource GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
 			var ts = From[table];
 
@@ -3752,8 +3533,6 @@ namespace LinqToDB.SqlQuery
 #endregion
 
 #region Overrides
-
-		public string SqlText { get { return ToString(); } }
 
 #if OVERRIDETOSTRING
 
@@ -3801,7 +3580,7 @@ namespace LinqToDB.SqlQuery
 
 #region ICloneableElement Members
 
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;
@@ -3818,7 +3597,12 @@ namespace LinqToDB.SqlQuery
 
 #region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public override bool Equals(ISqlExpression other)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (_insert != null) ((ISqlExpressionWalkable)_insert).Walk(skipColumns, func);
 			if (_update != null) ((ISqlExpressionWalkable)_update).Walk(skipColumns, func);
@@ -3894,9 +3678,9 @@ namespace LinqToDB.SqlQuery
 
 #region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlQuery; } }
+		public override QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
 			if (dic.ContainsKey(this))
 				return sb.Append("...");

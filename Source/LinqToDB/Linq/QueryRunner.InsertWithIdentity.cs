@@ -17,14 +17,15 @@ namespace LinqToDB.Linq
 			static Query<object> CreateQuery(IDataContext dataContext)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.Insert };
+				var sqlQuery = new SelectQuery();
+				sqlQuery.ChangeQueryType(QueryType.Insert);
 
 				sqlQuery.Insert.Into         = sqlTable;
 				sqlQuery.Insert.WithIdentity = true;
 
 				var ei = new Query<object>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = sqlQuery, } }
 				};
 
 				foreach (var field in sqlTable.Fields)

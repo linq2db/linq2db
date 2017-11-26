@@ -16,9 +16,9 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return statement.IsInsertWithIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -31,15 +31,22 @@ namespace LinqToDB.DataProvider.SQLite
 			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override string LimitFormat  { get { return "LIMIT {0}";  } }
-		protected override string OffsetFormat { get { return "OFFSET {0}"; } }
+		protected override string LimitFormat(SelectQuery selectQuery)
+		{
+			return "LIMIT {0}";
+		}
+
+		protected override string OffsetFormat(SelectQuery selectQuery)
+		{
+			return "OFFSET {0}";
+		}
 
 		public override bool IsNestedJoinSupported { get { return false; } }
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!selectQuery.IsUpdate)
+				base.BuildFromClause(selectQuery);
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -105,9 +112,9 @@ namespace LinqToDB.DataProvider.SQLite
 			StringBuilder.Append("PRIMARY KEY AUTOINCREMENT");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
-			if (SelectQuery.CreateTable.Table.Fields.Values.Any(f => f.IsIdentity))
+			if (createTable.Table.Fields.Values.Any(f => f.IsIdentity))
 			{
 				while (StringBuilder[StringBuilder.Length - 1] != ',')
 					StringBuilder.Length--;

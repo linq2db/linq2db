@@ -18,9 +18,9 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
+		public static string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
 		{
-			return new QuerySerializer().Serialize(query, parameters, queryHints);
+			return new QuerySerializer().Serialize(statement, parameters, queryHints);
 		}
 
 		public static LinqServiceQuery Deserialize(string str)
@@ -510,7 +510,7 @@ namespace LinqToDB.ServiceModel
 
 		class QuerySerializer : SerializerBase
 		{
-			public string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
+			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
 			{
 				var queryHintCount = queryHints == null ? 0 : queryHints.Count;
 
@@ -522,7 +522,7 @@ namespace LinqToDB.ServiceModel
 
 				var visitor = new QueryVisitor();
 
-				visitor.Visit(query, Visit);
+				visitor.Visit(statement, Visit);
 
 				foreach (var parameter in parameters)
 					if (!Dic.ContainsKey(parameter))
@@ -861,7 +861,6 @@ namespace LinqToDB.ServiceModel
 							var appendUpdate      = false;
 							var appendDelete      = false;
 							var appendSelect      = false;
-							var appendCreateTable = false;
 
 							switch (elem.QueryType)
 							{
@@ -886,10 +885,6 @@ namespace LinqToDB.ServiceModel
 										appendSelect = true;
 									break;
 
-								case QueryType.CreateTable    :
-									appendCreateTable = true;
-									break;
-
 								default                       :
 									appendSelect = true;
 									break;
@@ -899,7 +894,6 @@ namespace LinqToDB.ServiceModel
 							Append(appendUpdate);      if (appendUpdate)      Append(elem.Update);
 							Append(appendDelete);      if (appendDelete)      Append(elem.Delete);
 							Append(appendSelect);      if (appendSelect)      Append(elem.Select);
-							Append(appendCreateTable); if (appendCreateTable) Append(elem.CreateTable);
 
 							Append(elem.Where);
 							Append(elem.GroupBy);
@@ -1026,7 +1020,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.CreateTableStatement :
 						{
-							var elem = (SelectQuery.CreateTableStatement)e;
+							var elem = (SqlCreateTableStatement)e;
 
 							Append(elem.Table);
 							Append(elem.IsDrop);
@@ -1087,7 +1081,7 @@ namespace LinqToDB.ServiceModel
 
 		public class QueryDeserializer : DeserializerBase
 		{
-			SelectQuery    _query;
+			SqlStatement   _statement;
 			SqlParameter[] _parameters;
 
 			readonly Dictionary<int,SelectQuery> _queries = new Dictionary<int,SelectQuery>();
@@ -1125,7 +1119,7 @@ namespace LinqToDB.ServiceModel
 				foreach (var action in _actions)
 					action();
 
-				return new LinqServiceQuery { Query = _query, Parameters = _parameters, QueryHints = queryHints };
+				return new LinqServiceQuery { Statement = _statement, Parameters = _parameters, QueryHints = queryHints };
 			}
 
 			bool Parse()
@@ -1418,10 +1412,6 @@ namespace LinqToDB.ServiceModel
 							var delete             = readDelete ? Read<SelectQuery.DeleteClause>() : null;
 							var readSelect         = ReadBool();
 							var select             = readSelect ? Read<SelectQuery.SelectClause>() : new SelectQuery.SelectClause(null);
-							var readCreateTable    = ReadBool();
-							var createTable        = readCreateTable ?
-								Read<SelectQuery.CreateTableStatement>() :
-								new SelectQuery.CreateTableStatement();
 							var where              = Read<SelectQuery.WhereClause>();
 							var groupBy            = Read<SelectQuery.GroupByClause>();
 							var having             = Read<SelectQuery.WhereClause>();
@@ -1431,7 +1421,9 @@ namespace LinqToDB.ServiceModel
 							var unions             = ReadArray<SelectQuery.Union>();
 							var parameters         = ReadArray<SqlParameter>();
 
-							var query = _query = new SelectQuery(sid) { QueryType = queryType };
+							var query = new SelectQuery(sid);
+							_statement = query;
+							query.ChangeQueryType(queryType);
 
 							query.Init(
 								insert,
@@ -1445,11 +1437,10 @@ namespace LinqToDB.ServiceModel
 								orderBy,
 								unions?.ToList(),
 								null,
-								createTable,
 								parameterDependent,
 								parameters.ToList());
 
-							_queries.Add(sid, _query);
+							_queries.Add(sid, query);
 
 							if (parentSql != 0)
 								_actions.Add(() =>
@@ -1567,7 +1558,7 @@ namespace LinqToDB.ServiceModel
 							var statementFooter = ReadString();
 							var defaultNullable = (DefaulNullable)ReadInt();
 
-							obj = new SelectQuery.CreateTableStatement
+							obj = _statement = new SqlCreateTableStatement
 							{
 								Table           = table,
 								IsDrop          = isDrop,

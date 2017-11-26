@@ -58,8 +58,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql = GetSubQuery(null);
 
-				query.Queries[0].SelectQuery = new SelectQuery();
-				query.Queries[0].SelectQuery.Select.Add(sql);
+				var sq = new SelectQuery();
+				sq.Select.Add(sql);
+
+				query.Queries[0].Statement = sq;
 
 				var expr   = Builder.BuildSql(typeof(bool), 0);
 				var mapper = Builder.BuildMapper<object>(expr);

@@ -14,14 +14,26 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		protected override string FirstFormat  { get { return SelectQuery.Select.SkipValue == null ? "TOP ({0})" :                null; } }
-		protected override string LimitFormat  { get { return SelectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null; } }
-		protected override string OffsetFormat { get { return "OFFSET {0} ROWS"; } }
-		protected override bool   OffsetFirst  { get { return true;              } }
-
-		public override int CommandCount(SelectQuery selectQuery)
+		protected override string FirstFormat(SelectQuery selectQuery)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
+		}
+
+		protected override string LimitFormat(SelectQuery selectQuery)
+		{
+			return selectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null;
+		}
+
+		protected override string OffsetFormat(SelectQuery selectQuery)
+		{
+			return "OFFSET {0} ROWS";
+		}
+
+		protected override bool   OffsetFirst => true;
+
+		public override int CommandCount(SqlStatement statement)
+		{
+			return statement.IsInsertWithIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -55,15 +67,15 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!selectQuery.IsUpdate)
+				base.BuildFromClause(selectQuery);
 		}
 
-		protected override void BuildOrderByClause()
+		protected override void BuildOrderByClause(SelectQuery selectQuery)
 		{
-			if (SelectQuery.OrderBy.Items.Count == 0 && SelectQuery.Select.SkipValue != null)
+			if (selectQuery.OrderBy.Items.Count == 0 && selectQuery.Select.SkipValue != null)
 			{
 				AppendIndent();
 
@@ -73,16 +85,16 @@ namespace LinqToDB.DataProvider.SqlCe
 
 				AppendIndent();
 
-				BuildExpression(SelectQuery.Select.Columns[0].Expression);
+				BuildExpression(selectQuery.Select.Columns[0].Expression);
 				StringBuilder.AppendLine();
 
 				Indent--;
 			}
 			else
-				base.BuildOrderByClause();
+				base.BuildOrderByClause(selectQuery);
 		}
 
-		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -98,7 +110,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 

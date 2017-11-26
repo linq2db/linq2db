@@ -149,7 +149,7 @@ namespace LinqToDB.Linq
 		{
 			Queries.Add(new QueryInfo
 			{
-				SelectQuery = parseContext.SelectQuery,
+				Statement = parseContext.SelectQuery,
 				Parameters  = sqlParameters,
 			});
 		}
@@ -321,12 +321,7 @@ namespace LinqToDB.Linq
 
 	class QueryInfo : IQueryContext
 	{
-		public QueryInfo()
-		{
-			SelectQuery = new SelectQuery();
-		}
-
-		public SelectQuery  SelectQuery { get; set; }
+		public SqlStatement Statement   { get; set; }
 		public object       Context     { get; set; }
 		public List<string> QueryHints  { get; set; }
 

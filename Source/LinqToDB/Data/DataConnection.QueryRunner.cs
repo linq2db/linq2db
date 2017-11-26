@@ -134,7 +134,7 @@ namespace LinqToDB.Data
 				public string[]           Commands;
 				public List<SqlParameter> SqlParameters;
 				public IDbDataParameter[] Parameters;
-				public SelectQuery        SelectQuery;
+				public SqlStatement       Statement;
 				public ISqlBuilder        SqlProvider;
 				public List<string>       QueryHints;
 			}
@@ -148,13 +148,13 @@ namespace LinqToDB.Data
 					return new PreparedQuery
 					{
 						Commands      = (string[])query.Context,
-						SqlParameters = query.SelectQuery.Parameters,
-						SelectQuery   = query.SelectQuery,
+						SqlParameters = query.Statement.Parameters,
+						Statement     = query.Statement,
 						QueryHints    = query.QueryHints,
 					 };
 				}
 
-				var sql    = query.SelectQuery.ProcessParameters(dataConnection.MappingSchema);
+				var sql    = query.Statement.ProcessParameters(dataConnection.MappingSchema);
 				var newSql = dataConnection.ProcessQuery(sql);
 
 				if (!object.ReferenceEquals(sql, newSql))
@@ -185,7 +185,7 @@ namespace LinqToDB.Data
 				{
 					Commands      = commands,
 					SqlParameters = sql.Parameters,
-					SelectQuery   = sql,
+					Statement     = sql,
 					SqlProvider   = sqlProvider,
 					QueryHints    = query.QueryHints,
 				};
@@ -340,9 +340,11 @@ namespace LinqToDB.Data
 
 				if (dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
-					var sql = preparedQuery.SelectQuery;
+					var sql = preparedQuery.Statement;
 
-					if (sql.IsInsert && sql.Insert.WithIdentity)
+					if ((sql.QueryType == QueryType.Insert ||
+					    sql.QueryType == QueryType.InsertOrUpdate)
+						&& ((SelectQuery)sql).Insert.WithIdentity)
 					{
 						idparam = dataConnection.Command.CreateParameter();
 
@@ -533,9 +535,11 @@ namespace LinqToDB.Data
 
 				if (_dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
-					var sql = _preparedQuery.SelectQuery;
+					var sql = _preparedQuery.Statement;
 
-					if (sql.IsInsert && sql.Insert.WithIdentity)
+					if ((sql.QueryType == QueryType.Insert ||
+					    sql.QueryType == QueryType.InsertOrUpdate)
+						&& ((SelectQuery)sql).Insert.WithIdentity)
 					{
 						idparam = _dataConnection.Command.CreateParameter();
 

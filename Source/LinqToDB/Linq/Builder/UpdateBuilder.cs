@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 					}
 			}
 
-			sequence.SelectQuery.QueryType = QueryType.Update;
+			sequence.SelectQuery.ChangeQueryType(QueryType.Update);
 
 			return new UpdateContext(buildInfo.Parent, sequence);
 		}

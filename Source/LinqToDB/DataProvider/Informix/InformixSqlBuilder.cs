@@ -18,9 +18,9 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return statement.IsInsertWithIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -33,9 +33,9 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
 		{
-			base.BuildSql(commandNumber, selectQuery, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")
@@ -47,29 +47,29 @@ namespace LinqToDB.DataProvider.Informix
 //			return joins.Any(j => j.JoinType == SelectQuery.JoinType.Inner && j.Condition.Conditions.IsNullOrEmpty());
 //		}
 
-		protected override void BuildSelectClause()
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
-			if (SelectQuery.From.Tables.Count == 0)
+			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().Append("SELECT FIRST 1").AppendLine();
-				BuildColumns();
+				BuildColumns(selectQuery);
 				AppendIndent().Append("FROM SYSTABLES").AppendLine();
 			}
-			else if (SelectQuery.Select.IsDistinct)
+			else if (selectQuery.Select.IsDistinct)
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT");
-				BuildSkipFirst();
+				BuildSkipFirst(selectQuery);
 				StringBuilder.Append(" DISTINCT");
 				StringBuilder.AppendLine();
-				BuildColumns();
+				BuildColumns(selectQuery);
 			}
 			else
-				base.BuildSelectClause();
+				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override string FirstFormat { get { return "FIRST {0}"; } }
-		protected override string SkipFormat  { get { return "SKIP {0}";  } }
+		protected override string FirstFormat(SelectQuery selectQuery) => "FIRST {0}";
+		protected override string SkipFormat  => "SKIP {0}";
 
 		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
 		{
@@ -123,10 +123,10 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!selectQuery.IsUpdate)
+				base.BuildFromClause(selectQuery);
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.BuildCreateTableFieldType(field);
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
