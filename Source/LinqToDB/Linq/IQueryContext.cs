@@ -7,7 +7,7 @@ namespace LinqToDB.Linq
 
 	public interface IQueryContext
 	{
-		SelectQuery    SelectQuery { get; }
+		SqlStatement   Statement   { get; }
 		object         Context     { get; set; }
 		List<string>   QueryHints  { get; set; }
 

@@ -285,47 +285,50 @@ namespace LinqToDB.DataProvider.Oracle
 
 		SqlField _identityField;
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			if (selectQuery.IsCreateTable)
+			if (statement is SqlCreateTableStatement createTable)
 			{
-				_identityField = selectQuery.CreateTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+				_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 
 				if (_identityField != null)
 					return 3;
 			}
 
-			return base.CommandCount(selectQuery);
+			return base.CommandCount(statement);
 		}
 
-		protected override void BuildDropTableStatement()
+		protected override void BuildDropTableStatement(SqlCreateTableStatement createTable)
 		{
 			if (_identityField == null)
 			{
-				base.BuildDropTableStatement();
+				base.BuildDropTableStatement(createTable);
 			}
 			else
 			{
-			var schemaPrefix = string.IsNullOrWhiteSpace(SelectQuery.CreateTable.Table.Owner)
+			var schemaPrefix = string.IsNullOrWhiteSpace(createTable.Table.Owner)
 				? string.Empty
-				: SelectQuery.CreateTable.Table.Owner + ".";
+				: createTable.Table.Owner + ".";
 
 				StringBuilder
 					.Append("DROP TRIGGER ")
 					.Append(schemaPrefix)
 					.Append("TIDENTITY_")
-					.Append(SelectQuery.CreateTable.Table.PhysicalName)
+					.Append(createTable.Table.PhysicalName)
 					.AppendLine();
 			}
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			var schemaPrefix = string.IsNullOrWhiteSpace(SelectQuery.CreateTable.Table.Owner)
-				? string.Empty
-				: SelectQuery.CreateTable.Table.Owner + ".";
+			if (!(Statement is SqlCreateTableStatement createTable))
+				return;
 
-			if (SelectQuery.CreateTable.IsDrop)
+			var schemaPrefix = string.IsNullOrWhiteSpace(createTable.Table.Owner)
+				? string.Empty
+				: createTable.Table.Owner + ".";
+
+			if (createTable.IsDrop)
 			{
 				if (commandNumber == 1)
 				{
@@ -333,11 +336,11 @@ namespace LinqToDB.DataProvider.Oracle
 						.Append("DROP SEQUENCE ")
 						.Append(schemaPrefix)
 						.Append("SIDENTITY_")
-						.Append(SelectQuery.CreateTable.Table.PhysicalName)
+						.Append(createTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
-					base.BuildDropTableStatement();
+					base.BuildDropTableStatement(createTable);
 			}
 			else
 			{
@@ -347,23 +350,23 @@ namespace LinqToDB.DataProvider.Oracle
 						.Append("CREATE SEQUENCE ")
 						.Append(schemaPrefix)
 						.Append("SIDENTITY_")
-						.Append(SelectQuery.CreateTable.Table.PhysicalName)
+						.Append(createTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
 				{
 					StringBuilder
-						.AppendFormat("CREATE OR REPLACE TRIGGER {0}TIDENTITY_{1}", schemaPrefix, SelectQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("CREATE OR REPLACE TRIGGER {0}TIDENTITY_{1}", schemaPrefix, createTable.Table.PhysicalName)
 						.AppendLine()
 						.AppendFormat("BEFORE INSERT ON ");
 
-					BuildPhysicalTable(SelectQuery.CreateTable.Table, null);
+					BuildPhysicalTable(createTable.Table, null);
 
 					StringBuilder
 						.AppendLine(" FOR EACH ROW")
 						.AppendLine  ()
 						.AppendLine  ("BEGIN")
-						.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName, schemaPrefix)
+						.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, createTable.Table.PhysicalName, schemaPrefix)
 						.AppendLine  ()
 						.AppendLine  ("END;");
 				}

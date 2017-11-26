@@ -105,9 +105,9 @@ namespace LinqToDB.Linq
 		{
 			foreach (var sql in query.Queries)
 			{
-				sql.SelectQuery = query.SqlOptimizer.Finalize(sql.SelectQuery);
+				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
 				sql.Parameters  = sql.Parameters
-					.Select (p => new { p, idx = sql.SelectQuery.Parameters.IndexOf(p.SqlParameter) })
+					.Select (p => new { p, idx = sql.Statement.Parameters.IndexOf(p.SqlParameter) })
 					.OrderBy(p => p.idx)
 					.Select (p => p.p)
 					.ToList();
@@ -254,9 +254,10 @@ namespace LinqToDB.Linq
 
 			Func<Expression,object[],int> skip = null, take = null;
 
-			var select = query.Queries[0].SelectQuery.Select;
+			var selectQuery = (SelectQuery) query.Queries[0].Statement;
+			var select      = selectQuery.Select;
 
-			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(query.Queries[0].SelectQuery))
+			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery))
 			{
 				var q = queryFunc;
 

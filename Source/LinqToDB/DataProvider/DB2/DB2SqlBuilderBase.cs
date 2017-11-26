@@ -20,11 +20,14 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected abstract DB2Version Version { get; }
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			if (Version == DB2Version.LUW && selectQuery.IsInsert && selectQuery.Insert.WithIdentity)
+			if (Version == DB2Version.LUW && 
+				(statement.QueryType == QueryType.Insert ||
+			     statement.QueryType == QueryType.InsertOrUpdate)
+				&& ((SelectQuery)statement).Insert.WithIdentity)
 			{
-				_identityField = selectQuery.Insert.Into.GetIdentityField();
+				_identityField = SelectQuery.Insert.Into.GetIdentityField();
 
 				if (_identityField == null)
 					return 2;
@@ -33,9 +36,9 @@ namespace LinqToDB.DataProvider.DB2
 			return 1;
 		}
 
-		protected override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
 		{
-			SelectQuery   = selectQuery;
+			Statement     = statement;
 			StringBuilder = sb;
 			Indent        = indent;
 			SkipAlias     = skipAlias;
@@ -53,7 +56,7 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent().AppendLine("\t(");
 			}
 
-			base.BuildSql(commandNumber, selectQuery, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
 
 			if (_identityField != null)
 				sb.AppendLine("\t)");

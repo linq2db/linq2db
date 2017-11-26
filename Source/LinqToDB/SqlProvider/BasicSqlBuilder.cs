@@ -23,7 +23,9 @@ namespace LinqToDB.SqlProvider
 			ValueToSqlConverter = valueToSqlConverter;
 		}
 
-		protected SelectQuery         SelectQuery;
+		protected SqlStatement        Statement;
+		[Obsolete("Will be removed during SelectQuery refactoring")]
+		protected SelectQuery         SelectQuery => (SelectQuery)Statement;
 		protected int                 Indent;
 		protected Step                BuildStep;
 		protected ISqlOptimizer       SqlOptimizer;
@@ -51,7 +53,7 @@ namespace LinqToDB.SqlProvider
 
 		#region CommandCount
 
-		public virtual int CommandCount(SelectQuery selectQuery)
+		public virtual int CommandCount(SqlStatement statement)
 		{
 			return 1;
 		}
@@ -60,14 +62,14 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int startIndent = 0)
+		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int startIndent = 0)
 		{
-			BuildSql(commandNumber, selectQuery, sb, startIndent, false);
+			BuildSql(commandNumber, statement, sb, startIndent, false);
 		}
 
-		protected virtual void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
+		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
 		{
-			SelectQuery   = selectQuery;
+			Statement     = statement;
 			StringBuilder = sb;
 			Indent        = indent;
 			SkipAlias     = skipAlias;
@@ -76,7 +78,7 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildSql();
 
-				if (selectQuery.HasUnion)
+				if (Statement is SelectQuery selectQuery && selectQuery.HasUnion)
 				{
 					foreach (var union in selectQuery.Unions)
 					{
@@ -148,18 +150,21 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSql()
 		{
-			switch (SelectQuery.QueryType)
+			switch (Statement.QueryType)
 			{
 				case QueryType.Select        : BuildSelectQuery();         break;
 				case QueryType.Delete        : BuildDeleteQuery();         break;
 				case QueryType.Update        : BuildUpdateQuery();         break;
 				case QueryType.Insert        : BuildInsertQuery();         break;
 				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery(); break;
-				case QueryType.CreateTable   :
-					if (SelectQuery.CreateTable.IsDrop)
-						BuildDropTableStatement();
-					else
-						BuildCreateTableStatement();
+				case QueryType.CreateTable:
+					{
+						var createTable = (SqlCreateTableStatement) Statement;
+						if (createTable.IsDrop)
+							BuildDropTableStatement(createTable);
+						else
+							BuildCreateTableStatement(createTable);
+					}
 					break;
 				default                      : BuildUnknownQuery();        break;
 			}
@@ -355,7 +360,7 @@ namespace LinqToDB.SqlProvider
 
 		internal virtual void BuildUpdateSetHelper(SelectQuery qry, StringBuilder sb)
 		{
-			SelectQuery = qry;
+			Statement     = qry;
 			StringBuilder = sb;
 			BuildUpdateSet();
 		}
@@ -410,7 +415,7 @@ namespace LinqToDB.SqlProvider
 
 		internal virtual void BuildInsertClauseHelper(SelectQuery qry, StringBuilder sb)
 		{
-			SelectQuery = qry;
+			Statement     = qry;
 			StringBuilder = sb;
 			BuildInsertClause(null, false);
 		}
@@ -688,16 +693,16 @@ namespace LinqToDB.SqlProvider
 
 		#region Build DDL
 
-		protected virtual void BuildDropTableStatement()
+		protected virtual void BuildDropTableStatement(SqlCreateTableStatement createTable)
 		{
-			var table = SelectQuery.CreateTable.Table;
+			var table = createTable.Table;
 
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);
 			StringBuilder.AppendLine();
 		}
 
-		protected virtual void BuildStartCreateTableStatement(SelectQuery.CreateTableStatement createTable)
+		protected virtual void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
 			if (createTable.StatementHeader == null)
 			{
@@ -718,7 +723,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual void BuildEndCreateTableStatement(SelectQuery.CreateTableStatement createTable)
+		protected virtual void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
 		{
 			if (createTable.StatementFooter != null)
 				AppendIndent().Append(createTable.StatementFooter);
@@ -734,11 +739,11 @@ namespace LinqToDB.SqlProvider
 			public string        Null;
 		}
 
-		protected virtual void BuildCreateTableStatement()
+		protected virtual void BuildCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			var table = SelectQuery.CreateTable.Table;
+			var table = createTable.Table;
 
-			BuildStartCreateTableStatement(SelectQuery.CreateTable);
+			BuildStartCreateTableStatement(createTable);
 
 			StringBuilder.AppendLine();
 			AppendIndent().Append("(");
@@ -856,7 +861,7 @@ namespace LinqToDB.SqlProvider
 
 				WithStringBuilder(
 					field.StringBuilder,
-					() => BuildCreateTableNullAttribute(field.Field, SelectQuery.CreateTable.DefaulNullable));
+					() => BuildCreateTableNullAttribute(field.Field, createTable.DefaulNullable));
 
 				if (field.Field.CreateFormat != null)
 				{
@@ -937,8 +942,7 @@ namespace LinqToDB.SqlProvider
 			{
 				StringBuilder.AppendLine(",").AppendLine();
 
-				BuildCreateTablePrimaryKey(
-					Convert("PK_" + SelectQuery.CreateTable.Table.PhysicalName, ConvertType.NameToQueryTable).ToString(),
+				BuildCreateTablePrimaryKey(createTable, Convert("PK_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable).ToString(),
 					pk.Select(f => Convert(f.Field.PhysicalName, ConvertType.NameToQueryField).ToString()));
 			}
 
@@ -946,7 +950,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 			AppendIndent().AppendLine(")");
 
-			BuildEndCreateTableStatement(SelectQuery.CreateTable);
+			BuildEndCreateTableStatement(createTable);
 		}
 
 		internal void BuildTypeName(StringBuilder sb, SqlDataType type)
@@ -985,7 +989,7 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
-		protected virtual void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected virtual void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
@@ -1387,7 +1391,7 @@ namespace LinqToDB.SqlProvider
 		#region BuildSearchCondition
 		internal virtual void BuildSearchCondition(SelectQuery qry, SelectQuery.SearchCondition condition, StringBuilder sb)
 		{
-			SelectQuery = qry;
+			Statement = qry;
 			StringBuilder = sb;
 			BuildWhereSearchCondition(condition);
 		}

@@ -16,9 +16,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return (statement.QueryType == QueryType.Insert ||
+			        statement.QueryType == QueryType.InsertOrUpdate)
+			       && ((SelectQuery)statement).Insert.WithIdentity
+				? 2
+				: 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)

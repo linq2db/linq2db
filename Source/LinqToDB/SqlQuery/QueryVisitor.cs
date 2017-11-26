@@ -180,8 +180,8 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CreateTableStatement:
 					{
-						if (((SelectQuery.CreateTableStatement)element).Table != null)
-							Visit1(((SelectQuery.CreateTableStatement)element).Table);
+						if (((SqlCreateTableStatement)element).Table != null)
+							Visit1(((SqlCreateTableStatement)element).Table);
 						break;
 					}
 
@@ -222,8 +222,10 @@ namespace LinqToDB.SqlQuery
 					}
 
 				case QueryElementType.Union:
-					Visit1(((SelectQuery.Union)element).SelectQuery);
-					break;
+					{
+						Visit1(((SelectQuery.Union)element).SelectQuery);
+						break;
+					}
 
 				case QueryElementType.SqlQuery:
 					{
@@ -537,8 +539,8 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CreateTableStatement:
 					{
-						if (((SelectQuery.CreateTableStatement)element).Table != null)
-							Visit2(((SelectQuery.CreateTableStatement)element).Table);
+						if (((SqlCreateTableStatement)element).Table != null)
+							Visit2(((SqlCreateTableStatement)element).Table);
 						break;
 					}
 
@@ -632,10 +634,6 @@ namespace LinqToDB.SqlQuery
 					if (q.From.Tables.Count != 0)
 						Visit2(q.Select);
 
-					break;
-
-				case QueryType.CreateTable:
-					Visit2(q.CreateTable);
 					break;
 
 				default:
@@ -915,7 +913,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.CreateTableStatement:
 					{
 						return
-							Find(((SelectQuery.CreateTableStatement)element).Table, find);
+							Find(((SqlCreateTableStatement)element).Table, find);
 					}
 
 				case QueryElementType.SelectClause:
@@ -1276,12 +1274,12 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CreateTableStatement:
 					{
-						var s = (SelectQuery.CreateTableStatement)element;
+						var s = (SqlCreateTableStatement)element;
 						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
 
 						if (t != null && !ReferenceEquals(s.Table, t))
 						{
-							newElement = new SelectQuery.CreateTableStatement { Table = t, IsDrop = s.IsDrop };
+							newElement = new SqlCreateTableStatement { Table = t, IsDrop = s.IsDrop };
 						}
 
 						break;
@@ -1439,7 +1437,8 @@ namespace LinqToDB.SqlQuery
 						if (!doConvert)
 							break;
 
-						var nq = new SelectQuery { QueryType = q.QueryType };
+						var nq = new SelectQuery();
+						nq.ChangeQueryType(q.QueryType);
 
 						_visitedElements.Add(q,     nq);
 						_visitedElements.Add(q.All, nq.All);
@@ -1471,7 +1470,6 @@ namespace LinqToDB.SqlQuery
 
 						nq.Init(ic, uc, dc, sc, fc, wc, gc, hc, oc, us,
 							(SelectQuery)parent,
-							q.CreateTable,
 							q.IsParameterDependent,
 							ps);
 

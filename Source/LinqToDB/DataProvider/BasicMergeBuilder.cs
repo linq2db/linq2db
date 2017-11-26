@@ -222,7 +222,7 @@ namespace LinqToDB.DataProvider
 
 			public List<string> QueryHints { get; set; }
 
-			public SelectQuery SelectQuery { get; set; }
+			public SqlStatement Statement { get; set; }
 
 			public SqlParameter[] GetParameters()
 			{
@@ -450,7 +450,7 @@ namespace LinqToDB.DataProvider
 
 				var queryContext = new QueryContext
 				{
-					SelectQuery = query,
+					Statement = query,
 					SqlParameters = query.Parameters.ToArray()
 				};
 
@@ -696,18 +696,18 @@ namespace LinqToDB.DataProvider
 				});
 
 			var qry = Query<int>.GetQuery(DataContext, ref insertExpression);
-			var query = qry.Queries[0].SelectQuery;
+			var query = (SelectQuery)qry.Queries[0].Statement;
 
 			query.Insert.Into.Alias = _targetAlias;
 
 			// we need Insert type for proper query cloning (maybe this is a bug in clone function?)
-			query.QueryType = QueryType.Insert;
+			query.ChangeQueryType(QueryType.Insert);
 
 			var tables = MoveJoinsToSubqueries(query, SourceAlias, null, QueryElement.InsertSetter);
 			SetSourceColumnAliases(query.Insert, tables.Item1.Source);
 
 			// we need InsertOrUpdate for sql builder to generate values clause
-			query.QueryType = QueryType.InsertOrUpdate;
+			query.ChangeQueryType(QueryType.InsertOrUpdate);
 
 			QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
 
@@ -824,7 +824,7 @@ namespace LinqToDB.DataProvider
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
-			var query = qry.Queries[0].SelectQuery;
+			var query = (SelectQuery)qry.Queries[0].Statement;
 
 			if (ProviderUsesAlternativeUpdate)
 				BuildAlternativeUpdateQuery(query);
@@ -960,7 +960,7 @@ namespace LinqToDB.DataProvider
 				if (tbl != firstTable && (secondTable == null || tbl != secondTable) && tableSet.Contains(tbl))
 				{
 					var tempCopy = sql.Clone();
-					tempCopy.QueryType = QueryType.Select;
+					tempCopy.ChangeQueryType(QueryType.Select);
 					var tempTables = new List<SelectQuery.TableSource>();
 
 					// create copy of tables from main FROM clause for subquery clause
@@ -1103,7 +1103,7 @@ namespace LinqToDB.DataProvider
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
-			var query = qry.Queries[0].SelectQuery;
+			var query = (SelectQuery)qry.Queries[0].Statement;
 
 			MoveJoinsToSubqueries(query, _targetAlias, null, QueryElement.UpdateSetter);
 

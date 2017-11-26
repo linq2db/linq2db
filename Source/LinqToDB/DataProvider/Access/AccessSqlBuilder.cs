@@ -17,9 +17,13 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return (statement.QueryType == QueryType.Insert ||
+			        statement.QueryType == QueryType.InsertOrUpdate)
+			       && ((SelectQuery)statement).Insert.WithIdentity
+				? 2
+				: 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -42,40 +46,43 @@ namespace LinqToDB.DataProvider.Access
 				return;
 			}
 
-			if (SelectQuery.From.Tables.Count == 0 && SelectQuery.Select.Columns.Count == 1)
+			if (Statement is SelectQuery selectQuery)
 			{
-				if (SelectQuery.Select.Columns[0].Expression is SqlFunction)
+				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)
 				{
-					var func = (SqlFunction)SelectQuery.Select.Columns[0].Expression;
-
-					if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SelectQuery.SearchCondition)
+					if (selectQuery.Select.Columns[0].Expression is SqlFunction)
 					{
-						var sc = (SelectQuery.SearchCondition)func.Parameters[0];
+						var func = (SqlFunction) selectQuery.Select.Columns[0].Expression;
+
+						if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SelectQuery.SearchCondition)
+						{
+							var sc = (SelectQuery.SearchCondition) func.Parameters[0];
+
+							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SelectQuery.Predicate.FuncLike)
+							{
+								var p = (SelectQuery.Predicate.FuncLike) sc.Conditions[0].Predicate;
+
+								if (p.Function.Name == "EXISTS")
+								{
+									BuildAnyAsCount();
+									return;
+								}
+							}
+						}
+					}
+					else if (selectQuery.Select.Columns[0].Expression is SelectQuery.SearchCondition)
+					{
+						var sc = (SelectQuery.SearchCondition) selectQuery.Select.Columns[0].Expression;
 
 						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SelectQuery.Predicate.FuncLike)
 						{
-							var p = (SelectQuery.Predicate.FuncLike)sc.Conditions[0].Predicate;
+							var p = (SelectQuery.Predicate.FuncLike) sc.Conditions[0].Predicate;
 
 							if (p.Function.Name == "EXISTS")
 							{
 								BuildAnyAsCount();
 								return;
 							}
-						}
-					}
-				}
-				else if (SelectQuery.Select.Columns[0].Expression is SelectQuery.SearchCondition)
-				{
-					var sc = (SelectQuery.SearchCondition)SelectQuery.Select.Columns[0].Expression;
-
-					if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SelectQuery.Predicate.FuncLike)
-					{
-						var p = (SelectQuery.Predicate.FuncLike)sc.Conditions[0].Predicate;
-
-						if (p.Function.Name == "EXISTS")
-						{
-							BuildAnyAsCount();
-							return;
 						}
 					}
 				}
@@ -394,7 +401,7 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append("IDENTITY");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");

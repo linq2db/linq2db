@@ -28,7 +28,7 @@ namespace LinqToDB.ServiceModel
 
 		protected virtual void ValidateQuery(LinqServiceQuery query)
 		{
-			if (AllowUpdates == false && !query.Query.IsSelect)
+			if (AllowUpdates == false && query.Statement.QueryType != QueryType.Select)
 				throw new LinqException("Insert/Update/Delete requests are not allowed by the service policy.");
 		}
 
@@ -56,7 +56,7 @@ namespace LinqToDB.ServiceModel
 
 		class QueryContext : IQueryContext
 		{
-			public SelectQuery    SelectQuery { get; set; }
+			public SqlStatement    Statement { get; set; }
 			public object         Context     { get; set; }
 			public SqlParameter[] Parameters  { get; set; }
 			public List<string>   QueryHints  { get; set; }
@@ -80,7 +80,7 @@ namespace LinqToDB.ServiceModel
 				{
 					return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
-						SelectQuery = query.Query,
+						Statement  = query.Statement,
 						Parameters = query.Parameters,
 						QueryHints = query.QueryHints
 					});
@@ -106,7 +106,7 @@ namespace LinqToDB.ServiceModel
 				{
 					return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 					{
-						SelectQuery = query.Query,
+						Statement = query.Statement,
 						Parameters  = query.Parameters,
 						QueryHints  = query.QueryHints
 					});
@@ -132,7 +132,7 @@ namespace LinqToDB.ServiceModel
 				{
 					using (var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 					{
-						SelectQuery = query.Query,
+						Statement = query.Statement,
 						Parameters  = query.Parameters,
 						QueryHints  = query.QueryHints
 					}))
@@ -266,7 +266,7 @@ namespace LinqToDB.ServiceModel
 					{
 						DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 						{
-							SelectQuery = query.Query,
+							Statement   = query.Statement,
 							Parameters  = query.Parameters,
 							QueryHints  = query.QueryHints
 						});

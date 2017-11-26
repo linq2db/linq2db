@@ -12,37 +12,38 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			selectQuery = base.Finalize(selectQuery);
+			statement = base.Finalize(statement);
 
-			new QueryVisitor().Visit(selectQuery.Select, element =>
-			{
-				if (element.ElementType == QueryElementType.SqlParameter)
+			if (statement is SelectQuery selectQuery)
+				new QueryVisitor().Visit(selectQuery.Select, element =>
 				{
-					var p = (SqlParameter)element;
-					if (p.SystemType == null || p.SystemType.IsScalar(false))
+					if (element.ElementType == QueryElementType.SqlParameter)
 					{
-						p.IsQueryParameter = false;
+						var p = (SqlParameter)element;
+						if (p.SystemType == null || p.SystemType.IsScalar(false))
+						{
+							p.IsQueryParameter = false;
 
-						selectQuery.IsParameterDependent = true;
+							selectQuery.IsParameterDependent = true;
+						}
 					}
-				}
-			});
+				});
 
-			switch (selectQuery.QueryType)
+			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					selectQuery = GetAlternativeDelete(selectQuery);
-					selectQuery.From.Tables[0].Alias = "$";
+					statement = GetAlternativeDelete((SelectQuery) statement);
+					((SelectQuery)statement).From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					selectQuery = GetAlternativeUpdate(selectQuery);
+					statement = GetAlternativeUpdate((SelectQuery) statement);
 					break;
 			}
 
-			return selectQuery;
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

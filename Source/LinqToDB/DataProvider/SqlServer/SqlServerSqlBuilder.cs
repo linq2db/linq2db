@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append("IDENTITY");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 
@@ -263,9 +263,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append(")");
 		}
 
-		protected override void BuildDropTableStatement()
+		protected override void BuildDropTableStatement(SqlCreateTableStatement createTable)
 		{
-			var table = SelectQuery.CreateTable.Table;
+			var table = createTable.Table;
 
 			if (table.PhysicalName.StartsWith("#"))
 			{

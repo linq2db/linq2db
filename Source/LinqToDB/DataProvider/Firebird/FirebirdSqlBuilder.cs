@@ -228,47 +228,50 @@ namespace LinqToDB.DataProvider.Firebird
 
 		SqlField _identityField;
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			if (selectQuery.IsCreateTable)
+			if (statement is SqlCreateTableStatement createTable)
 			{
-				_identityField = selectQuery.CreateTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+				_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 
 				if (_identityField != null)
 					return 3;
 			}
 
-			return base.CommandCount(selectQuery);
+			return base.CommandCount(statement);
 		}
 
-		protected override void BuildDropTableStatement()
+		protected override void BuildDropTableStatement(SqlCreateTableStatement createTable)
 		{
 			if (_identityField == null)
 			{
-				base.BuildDropTableStatement();
+				base.BuildDropTableStatement(createTable);
 			}
 			else
 			{
 				StringBuilder
 					.Append("DROP TRIGGER TIDENTITY_")
-					.Append(SelectQuery.CreateTable.Table.PhysicalName)
+					.Append(createTable.Table.PhysicalName)
 					.AppendLine();
 			}
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			if (SelectQuery.CreateTable.IsDrop)
+			if (!(Statement is SqlCreateTableStatement createTable))
+				return;
+
+			if (createTable.IsDrop)
 			{
 				if (commandNumber == 1)
 				{
 					StringBuilder
 						.Append("DROP GENERATOR GIDENTITY_")
-						.Append(SelectQuery.CreateTable.Table.PhysicalName)
+						.Append(createTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
-					base.BuildDropTableStatement();
+					base.BuildDropTableStatement(createTable);
 			}
 			else
 			{
@@ -276,17 +279,17 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					StringBuilder
 						.Append("CREATE GENERATOR GIDENTITY_")
-						.Append(SelectQuery.CreateTable.Table.PhysicalName)
+						.Append(createTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
 				{
 					StringBuilder
-						.AppendFormat("CREATE TRIGGER TIDENTITY_{0} FOR {0}", SelectQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("CREATE TRIGGER TIDENTITY_{0} FOR {0}", createTable.Table.PhysicalName)
 						.AppendLine  ()
 						.AppendLine  ("BEFORE INSERT POSITION 0")
 						.AppendLine  ("AS BEGIN")
-						.AppendFormat("\tNEW.{0} = GEN_ID(GIDENTITY_{1}, 1);", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("\tNEW.{0} = GEN_ID(GIDENTITY_{1}, 1);", _identityField.PhysicalName, createTable.Table.PhysicalName)
 						.AppendLine  ()
 						.AppendLine  ("END");
 				}

@@ -18,13 +18,14 @@ namespace LinqToDB.Linq
 			static Query<int> CreateQuery(IDataContext dataContext)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.Delete };
+				var sqlQuery = new SelectQuery();
+				sqlQuery.ChangeQueryType(QueryType.Delete);
 
 				sqlQuery.From.Table(sqlTable);
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = sqlQuery, } }
 				};
 
 				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();

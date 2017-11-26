@@ -271,7 +271,7 @@ namespace LinqToDB.DataProvider
 
 						var pq = DataConnection.QueryRunner.SetQuery(dataConnection, new QueryContext
 						{
-							SelectQuery   = sql,
+							Statement     = sql,
 							SqlParameters = sql.Parameters.ToArray(),
 						});
 
@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider
 
 		class QueryContext : IQueryContext
 		{
-			public SelectQuery    SelectQuery { get; set; }
+			public SqlStatement   Statement   { get; set; }
 			public object         Context     { get; set; }
 			public SqlParameter[] SqlParameters;
 			public List<string>   QueryHints  { get; set; }

@@ -21,9 +21,13 @@ namespace LinqToDB.DataProvider.MySql
 			ParameterSymbol = '@';
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return (statement.QueryType == QueryType.Insert ||
+			        statement.QueryType == QueryType.InsertOrUpdate)
+			       && ((SelectQuery)statement).Insert.WithIdentity
+				? 2
+				: 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -278,7 +282,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append("AUTO_INCREMENT");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");

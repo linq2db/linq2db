@@ -20,9 +20,9 @@ namespace Tests.Exceptions
 			{
 			}
 
-			protected override SelectQuery ProcessQuery(SelectQuery selectQuery)
+			protected override SqlStatement ProcessQuery(SqlStatement statement)
 			{
-				if (selectQuery.IsInsert && selectQuery.Insert.Into.Name == "Parent")
+				if (statement is SelectQuery selectQuery && selectQuery.IsInsert && selectQuery.Insert.Into.Name == "Parent")
 				{
 					var expr =
 						QueryVisitor.Find(selectQuery.Insert, e =>
@@ -67,9 +67,11 @@ namespace Tests.Exceptions
 							});
 						}
 					}
+
+					return selectQuery;
 				}
 
-				return selectQuery;
+				return statement;
 			}
 		}
 

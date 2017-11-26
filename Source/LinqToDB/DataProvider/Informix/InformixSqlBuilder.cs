@@ -18,9 +18,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return (statement.QueryType == QueryType.Insert ||
+			        statement.QueryType == QueryType.InsertOrUpdate)
+			       && ((SelectQuery)statement).Insert.WithIdentity
+				? 2
+				: 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -33,9 +37,9 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
 		{
-			base.BuildSql(commandNumber, selectQuery, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")
@@ -169,7 +173,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.BuildCreateTableFieldType(field);
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");

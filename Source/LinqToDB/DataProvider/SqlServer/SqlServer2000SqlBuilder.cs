@@ -80,9 +80,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			get { return ProviderName.SqlServer2000; }
 		}
 
-		protected override void BuildDropTableStatement()
+		protected override void BuildDropTableStatement(SqlCreateTableStatement createTable)
 		{
-			var table = SelectQuery.CreateTable.Table;
+			var table = createTable.Table;
 
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);

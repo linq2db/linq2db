@@ -16,9 +16,13 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return (statement.QueryType == QueryType.Insert ||
+			        statement.QueryType == QueryType.InsertOrUpdate)
+			       && ((SelectQuery)statement).Insert.WithIdentity
+				? 2
+				: 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -105,9 +109,9 @@ namespace LinqToDB.DataProvider.SQLite
 			StringBuilder.Append("PRIMARY KEY AUTOINCREMENT");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
-			if (SelectQuery.CreateTable.Table.Fields.Values.Any(f => f.IsIdentity))
+			if (createTable.Table.Fields.Values.Any(f => f.IsIdentity))
 			{
 				while (StringBuilder[StringBuilder.Length - 1] != ',')
 					StringBuilder.Length--;

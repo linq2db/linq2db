@@ -44,25 +44,26 @@ namespace Tests.Samples
 				return clone;
 			}
 
-			protected override SelectQuery ProcessQuery(SelectQuery selectQuery)
+			protected override SqlStatement ProcessQuery(SqlStatement statement)
 			{
 				#region Update
 
-				if (selectQuery.IsUpdate)
+				if (statement.QueryType == QueryType.Update)
 				{
-					var source = selectQuery.From.Tables[0].Source as SqlTable;
+					var query = (SelectQuery) statement;
+					var source = query.From.Tables[0].Source as SqlTable;
 					if (source == null)
-						return selectQuery;
+						return statement;
 
 					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					if (descriptor == null)
-						return selectQuery;
+						return statement;
 
 					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 					if (rowVersion == null)
-						return selectQuery;
+						return statement;
 
-					var newQuery = Clone(selectQuery);
+					var newQuery = Clone(query);
 					source       = newQuery.From.Tables[0].Source as SqlTable;
 					var field    = source.Fields[rowVersion.ColumnName];
 
@@ -84,17 +85,19 @@ namespace Tests.Samples
 
 				#region Insert
 
-				else if (selectQuery.IsInsert)
+				else if (statement.QueryType == QueryType.Insert ||
+				         statement.QueryType == QueryType.InsertOrUpdate)
 				{
-					var source     = selectQuery.Insert.Into;
+					var query      = (SelectQuery) statement;
+					var source     = query.Insert.Into;
 					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 
 					if (rowVersion == null)
-						return selectQuery;
+						return statement;
 
 
-					var newQuery = Clone(selectQuery);
+					var newQuery = Clone(query);
 
 					var field = newQuery.Insert.Into[rowVersion.ColumnName];
 
@@ -112,7 +115,7 @@ namespace Tests.Samples
 				}
 				#endregion Insert
 
-				return selectQuery;
+				return statement;
 			}
 		}
 
