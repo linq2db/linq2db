@@ -109,7 +109,12 @@ namespace Tests
 			Console.WriteLine("AppVeyor configuration detected.");
 			configName += ".AppVeyor";
 #endif
+#if TRAVIS
+#warning "Travis configuration detected."
 
+			Console.WriteLine("Travis configuration detected.");
+			configName += ".Travis";
+#endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 			var dataPath     = Path.GetFullPath(@"Database\Data");
 
