@@ -21,9 +21,9 @@ env:
     - testFilter=TestCategory=Create
     - testRunner=dotnet
     - testTargetFramework=netcoreapp1.0
-    - configuration=Travis
     - testConfiguration=Travis
     - builder=dotnet
+    - target=Travis
 
 
 mono:  

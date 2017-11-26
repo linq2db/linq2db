@@ -369,8 +369,7 @@ Task("RunTests")
 	var settings = new DotNetCoreTestSettings
 	{
 		// ArgumentCustomization = args => args.Append("--result=TestResult.xml"),
-		Configuration = GetConfiguration(),
-		NoBuild = GetConfiguration() == GetTestConfiguration(), 
+		Configuration = GetTestConfiguration(),
 		Framework = TestTargetFramework(),
 		Filter = testFilter,
 		Logger = testLogger
@@ -419,7 +418,6 @@ Task("Pack")
 	{
 		Configuration = GetConfiguration(),
 		OutputDirectory = GetBuildArtifacts(),
-		NoBuild = true,
 		VersionSuffix = GetPackageSuffix()
 	};
 
@@ -462,8 +460,10 @@ Task("DocFx")
 
 Task("Default")
   .IsDependentOn("Addins")
-  .IsDependentOn("Build")
   .IsDependentOn("RunTests")
   .IsDependentOn("Pack");
+
+Task("Travis")
+  .IsDependentOn("RunTests");
 
 RunTarget(GetTarget());
