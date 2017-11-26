@@ -182,7 +182,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.3" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
 		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
 		<PackageReference Include="System.Data.Common" Version="4.3.0" />

@@ -36,18 +36,17 @@ Projects:
 | `.\Tests\VisualBasic\Tests.VisualBasic.vbproj` |          |  √  |      |      |         √         |     |               |     |
 
 # Building
-You can use any solution for building and running tests. But you also should care about other supported platforms. To check if your changes have not affected other projects you can:
-* run `.\Source\compile.cmd` - builds .Net 4, .Net 4.5, .Net WS
-* run `dotnet build` - in Root folder to build .Net Core 
+You can use the solution for building and running tests. Also you can build te whole solution or library itself
+using the following .cmd files:
+* run `.\Build.cmd` - builds all the projects in the solution for Debug, Release, and AppVeyor configurations
+* run `.\Source\LinqToDB\Compile.cmd` - builds LinqToDB projects for Debug and Release configurations
 ## Different platforms support
 Because of compiling for different platforms we do use:
 * Conditional compilation. Different projects and configurations define compilation symbols:
-  * FW4 - .Net 4.0 compatibility level
-  * SILVERLIGHT - Silverlight compatibility level
-  * NETFX_CORE - Windows Store 8 compatibility level
-  * NOASYNC - async is not supported 
-  * NETSTANDARD - .Net Core (netstandard1.6) compatibility level
-  * NOFSHARP - used by .Net Core test project to avoid compiling code dependent on F#
+  * NET40 - .Net 4.0 compatibility level
+  * NET45 - .Net 4.5 compatibility level
+  * NETSTANDARD1_6 - .NET Standard 1.6 compatibility level
+  * NETSTANDARD2_0 - .NET Standard 2.0 compatibility level
 * Exclude files from build - some files are excluded from build in projects, corresponding to target framework
 * Implementing missing classes and enums. There are some under `.\Source\Compatibility` folder.
 ## Run tests
@@ -73,27 +72,103 @@ public class Test: TestBase // TestBase - base class, provides base methods and 
 
 }
 ```
-### Configure data providers for tests 
-`DataContextSourceAttribute` generates tests for each configured data provider, configuration is taken: 
-1. From `.\Tests\Linq\UserDataProviders.txt` (if any) (UserDataProviders.Core.txt for .Net Core)
-1. From `.\Tests\Linq\DefaultDataProviders.txt` (DefaultDataProviders.Core.txt for .Net Core)
-All default connection strings are stored in `.\Tests\Linq\app.config` 
-`DataProviders.txt` structure is:
-`[!]ConfigurationName[* ConnectionString][* DataProviderName]`
-* `[]` - optional parts
-* `*` - is used as field delimiter
-* `--` - is used to comment line
-Parts:
-* `!` - means that this configuration is used as `DataConnection.DefaultConfiguration`
-* `ConfigurationName` - configuration name (passed to test as `context` parameter)
-* ConnectionString - used to override default connection string from `app.config`
-* DataProviderName - used to define DataProvider for configuration
+### Configure data providers for tests
+`DataContextSourceAttribute` generates tests for each configured data provider, configuration is taken
+from `.\Tests\Linq\DataProviders.json` and `.\Tests\Linq\UserDataProviders.json` if exists.
+`Linq\UserDataProviders.json` is used to override local user settings such as connections strings, 
+list of tested providers, base configuration, etc.
 
-**UserDataProviders.txt example**
+The `[User]DataProviders.json` is a regular JSON file:
+
+**UserDataProviders.json example**
 ```
--- this is comment line and would be ignored
-Access
-!SQLiteMs       * Data Source=Database\TestData.sqlite      * SQLite
+{
+    "NET45" :
+    {
+        "Providers" :
+        [
+            "Access",
+            "SqlCe",
+            "SQLite.Classic",
+            "SQLite.MS",
+            "Northwind.SQLite",
+            "Northwind.SQLite.MS",
+            "SqlServer",
+            "SqlServer.2014",
+            "SqlServer.2012", "SqlServer.2012.1",
+            "SqlServer.2008", "SqlServer.2008.1",
+            "SqlServer.2005", "SqlServer.2005.1",
+            "SqlAzure.2012",
+            "DB2",
+            "Firebird",
+            "Informix",
+            "MySql",
+            "MariaDB",
+            "Oracle.Native",
+            "Oracle.Managed",
+            "PostgreSQL",
+            "Sybase",
+            "Northwind",
+            "TestNoopProvider"
+        ]
+    },
+
+    "CORE1" :
+    {
+        "Providers" :
+        [
+            "SQLite.MS",
+            "Northwind.SQLite.MS",
+            "SqlServer",
+            "SqlServer.2014",
+            "SqlServer.2012", "SqlServer.2012.1",
+            "SqlServer.2008", "SqlServer.2008.1",
+            "SqlServer.2005", "SqlServer.2005.1",
+            "SqlAzure.2012",
+            "Firebird",
+            "MySql",
+            "MariaDB",
+            "PostgreSQL",
+            "Northwind",
+            "TestNoopProvider"
+        ]
+    },
+
+    "CORE2" :
+    {
+        "Providers" :
+        [
+            "SQLite.MS",
+            "Northwind.SQLite.MS",
+            "SqlServer",
+            "SqlServer.2014",
+            "SqlServer.2012", "SqlServer.2012.1",
+            "SqlServer.2008", "SqlServer.2008.1",
+            "SqlServer.2005", "SqlServer.2005.1",
+            "SqlAzure.2012",
+            "Firebird",
+            "MySql",
+            "MariaDB",
+            "PostgreSQL",
+            "Northwind",
+            "TestNoopProvider"
+        ]
+    },
+
+    "LocalConnectionStrings":
+    {
+        "BasedOn"     : "CommonConnectionStrings",
+        "Connections" :
+        {
+            "SqlAzure.2012" :
+            {
+                 "Provider"         : "System.Data.SqlClient",
+                 "ConnectionString" : "Server=tcp:xxxxxxxxx.database.windows.net,1433;Database=TestData;User ID=TestUser@zzzzzzzzz;Password=TestPassword;Trusted_Connection=False;Encrypt=True;"
+            }
+        }
+    }
+}
+
 ```
 this does mean:
 * Run tests for `Access` configuration with default settings
