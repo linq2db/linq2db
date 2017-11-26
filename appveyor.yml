@@ -2,11 +2,11 @@ image: Visual Studio 2017
 configuration: Release
 
 environment:
-  packageVersion: 2.0.0
+  assemblyVersion: 2.0.0
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
+  #testfilter: TestCategory != FreeText & TestCategory != Explicit
   testFilter: TestCategory=Create
-#  testfilter: TestCategory != FreeText & TestCategory != Explicit
   testRunner: dotnet
   testLogger: trx
   testConfiguration: AppVeyor
@@ -24,7 +24,7 @@ environment:
 cache:
 - packages -> appveyor.yml
 
-version: $(packageVersion).{build}
+version: $(assemblyVersion).{build}
 
 services:
 - mssql2014
@@ -33,7 +33,7 @@ services:
 
 init:
 - cmd: git config --global core.autocrlf true
-- ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
+- ps: $env:buildVersion = "$env:assemblyVersion.$env:appveyor_build_number"
 
 nuget:
   account_feed: false
@@ -41,6 +41,14 @@ nuget:
 
 build_script:
   #msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
+- ps: |
+    $env:packageVersion = $env:assemblyVersion
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release") 
+    {
+        $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
+    }
+
+    .\Build\CodeJam.AppVeyor.FixVersionProps.ps1 -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
 - ps: .\build.ps1
 
 before_build:
@@ -51,12 +59,6 @@ before_build:
 
     # create database
     sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
-
-    #$mdfFile = join-path $startPath "northwnd.mdf"
-    #$ldfFile = join-path $startPath "northwnd.ldf"
-    #Write-Host "mdfFile : $mdfFile "
-    #Write-Host "ldfFile : $ldfFile "
-    #sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [Northwind] ON (FILENAME = '$mdfFile'),(FILENAME = '$ldfFile') for ATTACH"
 
     # MySql
     $env:MYSQL_PWD="Password12!"
@@ -69,7 +71,6 @@ before_build:
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
 - ps: Update-AppveyorBuild -Version $env:buildVersion
-#- cmd: 7z e Data\northwind.sql.zip
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
 
 test: off
@@ -105,7 +106,7 @@ deploy:
     secure: LDw0jeA1Yo3R4/TKv2kmlgJR8dTT6Wun2MONq3uDvtVQJG4LOU9LjvVTAc7IgRfm
   skip_symbols: true
   on:
-    branch: rc_version2
+    branch: release1
 
 skip_commits:
   message: /ci skip/      # Regex for matching commit message

@@ -1,7 +1,6 @@
 #addin "Cake.DocFx"
 #addin "Cake.Git"
 #tool "docfx.console"
-#tool "nuget:?package=NUnit.ConsoleRunner"
 
 string GetSolutionName()
 {
@@ -35,20 +34,9 @@ bool IsRelease()
 		return true;
 
 	if (IsAppVeyorBuild())
-		return AppVeyor.Environment.Repository.Branch.ToLower() == "release";
+		return AppVeyor.Environment.Repository.Branch.ToLower().StartsWith("release");
 
 	return false;
-}
-
-string TestTargetFramework()
-{
-	var e = EnvironmentVariable("testTargetFramework") 
-		?? Argument<string>("ttf", null)
-		?? "net452";
-
-	Console.WriteLine("Test Target Framework: {0}", e);
-
-	return e.ToLower();
 }
 
 string GetTarget()
@@ -65,41 +53,9 @@ string GetTarget()
 string GetConfiguration()
 {
 	var e = EnvironmentVariable("configuration") 
-		??  Argument<string>("configuration", "Release");
+		??  Argument<string>("c", "Release");
 
 	Console.WriteLine("Configuration: {0}", e);
-
-	return e;
-}
-
-string GetTestConfiguration()
-{
-	var e = EnvironmentVariable("testConfiguration") 
-		??  Argument<string>("tc", "Release");
-
-	Console.WriteLine("Test configuration: {0}", e);
-
-	return e;
-}
-
-string GetRegularProviders()
-{
-	var e = EnvironmentVariable("regularProviders") 
-		?? Argument<string>("rp", null)
-		?? "";
-
-	Console.WriteLine("UserDataProviders.txt: {0}", e);
-
-	return e;
-}
-
-string GetCoreProviders()
-{
-	var e = EnvironmentVariable("coreProviders") 
-		?? Argument<string>("cp", null)
-		?? "";
-
-	Console.WriteLine("UserDataProviders.Core.txt: {0}", e);
 
 	return e;
 }
@@ -107,37 +63,52 @@ string GetCoreProviders()
 string GetPackageVersion()
 {
 	var e = EnvironmentVariable("packageVersion")
-		?? Argument<string>("nv", null)
+		?? Argument<string>("pv", null)
 		?? "2.0.0";
-
-	Console.WriteLine("Package Version: {0}", e);
-
 	return e;
-
 }
 
-string GetTestRunner()
+string GetAssemblyVersion()
 {
-	var e = EnvironmentVariable("testRunner")
-		?? Argument<string>("testRunner", null)
-		?? "NUnit";
-
-	Console.WriteLine("Test runner: {0}", e);
+	var e = EnvironmentVariable("assemblyVersion")
+		?? Argument<string>("av", null)
+		?? GetPackageVersion();
 
 	return e;
-
 }
 
 string GetTestLogger()
 {
 	var e = EnvironmentVariable("testLogger")
-		?? Argument<string>("testLogger", null);
-
-
-	Console.WriteLine("Test logger: {0}", e);
+		?? Argument<string>("tl", null);
 
 	return e;
+}
 
+string GetTestFilter()
+{
+	var arg = Argument<string>("tfl", null);
+	if (arg != null)
+		return arg; 
+
+	return EnvironmentVariable("testFilter");
+}
+
+string GetTestTargetFramework()
+{
+	var e = EnvironmentVariable("testTargetFramework") 
+		?? Argument<string>("ttf", null)
+		?? "net452";
+
+	return e.ToLower();
+}
+
+string GetTestConfiguration()
+{
+	var e = EnvironmentVariable("testConfiguration") 
+		??  Argument<string>("tc", "Release");
+
+	return e;
 }
 
 string GetAccessToken()
@@ -146,7 +117,6 @@ string GetAccessToken()
 		?? Argument<string>("gitpwd", null);
 
 	return e;
-
 }
 
 bool PatchPackage()
@@ -156,7 +126,7 @@ bool PatchPackage()
 
 bool SkipTests()
 {
-	return TestTargetFramework() == "docfx" || Argument<string>("skiptests", null) != null;
+	return Argument<string>("skiptests", null) != null;
 }
 
 bool PublishDocFx()
@@ -178,15 +148,6 @@ string RcVersion()
 		return AppVeyor.Environment.Build.Number.ToString();
 
 	return "0";
-}
-
-string GetTestFilter()
-{
-	var arg = Argument<string>("tfl", null);
-	if (arg != null)
-		return arg; 
-
-	return EnvironmentVariable("testFilter");
 }
 
 void UploadTestResults(FilePath file, AppVeyorTestResultsType type)
@@ -247,15 +208,6 @@ void UploadArtifact(FilePath file)
 	}
 }
 
-string GetBuilder()
-{
-	return 
-		EnvironmentVariable("builder")    ??
-		Argument<string>("builder", null) ?? 
-		"MSBuild";
-
-}
-
 string GetPackageSuffix()
 {
 	if (!IsRelease())
@@ -274,33 +226,9 @@ string GetDocFxSite()
 	return "./Doc/_site";
 }
 
-Task("PatchPackage")
-	.IsDependentOn("Clean")
-	.IsDependentOn("Restore")
-	.WithCriteria(PatchPackage())
-	.Does(() =>
-{
-	var packageVersion      = GetPackageVersion();
-	var assemblyVersion     = packageVersion + ".0";
-	var fullPackageVersion  = "";
-	var packageSuffix       = GetPackageSuffix();
-
-	if (!IsRelease())
-	{
-		fullPackageVersion = packageVersion + "-" + packageSuffix;
-	}
-
-	Console.WriteLine("Full Package  Version: {0}", fullPackageVersion);
-	Console.WriteLine("Package  Version     : {0}", packageVersion);
-	Console.WriteLine("Package  Suffix      : {0}", packageSuffix);
-	Console.WriteLine("Assembly Version     : {0}", assemblyVersion);
-});
-
-
 Task("Build")
 	.IsDependentOn("Clean")
 	.IsDependentOn("Restore")
-	.IsDependentOn("PatchPackage")
 	.Does(() =>
 {
 	DotNetCoreBuild(GetSolutionName(),
@@ -344,57 +272,31 @@ Task("RunTests")
 	.WithCriteria(() => SkipTests() == false)
 	.Does(() =>
 {
-	var testRunner          = GetTestRunner();
 	var testLogger          = GetTestLogger();
-	var regularProviders    = GetRegularProviders();
-	var coreProviders       = GetCoreProviders();
-
-	if (!string.IsNullOrEmpty(regularProviders))
-	{
-		CopyFile("./Tests/Linq/" + regularProviders, "./Tests/Linq/UserDataProviders.txt");
-	}
-
-	if (!string.IsNullOrEmpty(coreProviders))
-	{
-		CopyFile("./Tests/Linq/" + coreProviders, "./Tests/Linq/UserDataProviders.Core.txt");
-	}
-
-	var projects = testRunner == "NUnit"
-		? new [] { File("./Tests/Linq/Bin/Release/" + TestTargetFramework() + "/linq2db.Tests.dll").Path }
-		: new [] { File("./Tests/Linq/Tests.csproj").Path };
+	var testFilter          = GetTestFilter();
+	var testConfiguration   = GetTestConfiguration();
+	var testTargetFramework = GetTestTargetFramework();
+	var projects            = new [] { File("./Tests/Linq/Tests.csproj").Path };
 	
-	var testFilter = GetTestFilter();
-	Console.WriteLine("Filter: {0}", testFilter);
+	Console.WriteLine("Filter:        {0}", testFilter);
+	Console.WriteLine("Logger:        {0}", testLogger);
+	Console.WriteLine("Framework:     {0}", testTargetFramework);
+	Console.WriteLine("Configuration: {0}", testConfiguration);
 
 	var settings = new DotNetCoreTestSettings
 	{
 		// ArgumentCustomization = args => args.Append("--result=TestResult.xml"),
-		Configuration = GetTestConfiguration(),
-		Framework = TestTargetFramework(),
-		Filter = testFilter,
-		Logger = testLogger
+		Configuration = testConfiguration,
+		Framework     = testTargetFramework,
+		Filter        = testFilter,
+		Logger        = testLogger
 	};
-
-	var testResults = "TestResult.xml";
-
-	var nunitSettings = new NUnit3Settings 
-	{
-		Configuration = GetConfiguration(),
-		X86 = true,
-		// Results = testResults,
-		// Framework = TestTargetFramework(),
-		Where = testFilter
-	};
-
 
 	foreach(var project in projects)
 	{
 		Console.WriteLine(project.FullPath);
 
-		if (testRunner == "NUnit")
-			NUnit3(project.FullPath, nunitSettings);
-		else
-			DotNetCoreTest(project.FullPath, settings);
+		DotNetCoreTest(project.FullPath, settings);
 
 		UploadTestResults();
 	}
@@ -402,9 +304,9 @@ Task("RunTests")
 .OnError(ex => 
 {
 	Console.WriteLine("Tests failed: {0}", ex.Message);
-
-	UploadTestResults();
 	
+	UploadTestResults();
+
 	throw ex;
 });
 
@@ -414,7 +316,10 @@ Task("Pack")
 	.Does(() =>
 {
 	var suffix = GetPackageSuffix();
-	Console.WriteLine("Package suffix: {0}", suffix);
+	
+	Console.WriteLine("Package  version: {0}", GetPackageVersion());
+	Console.WriteLine("Package  suffix:  {0}", suffix);
+	Console.WriteLine("Assembly version: {0}", GetAssemblyVersion());
 
 	var settings = new DotNetCorePackSettings
 	{
