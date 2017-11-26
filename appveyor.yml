@@ -36,9 +36,10 @@ nuget:
   project_feed: false
 
 build_script:
-  msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
+  #msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
+- ps: .\build.ps1
 
-before_test:
+before_build:
 - ps: |
     $startPath = "$($env:appveyor_build_folder)\Data"
     $sqlInstance = "(local)\SQL2014"
@@ -67,13 +68,13 @@ before_test:
 #- cmd: 7z e Data\northwind.sql.zip
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
 
-test:
+test: off
   # only assemblies to test
-  assemblies:
-    - Tests\Linq\**\linq2db.Tests.dll
-  categories:
-    except:
-      - FreeText
+  #assemblies:
+  #  - Tests\Linq\**\linq2db.Tests.dll
+  #categories:
+  #  except:
+  #    - FreeText
 
 artifacts:
 - path: \**\linq2db*.nupkg

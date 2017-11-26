@@ -427,7 +427,6 @@ Task("Pack")
 });
 
 Task("Clean")
-	.IsDependentOn("PatchTests")
 	.Does(() =>
 {
 	CleanDirectories(new DirectoryPath[] { GetBuildArtifacts() });
