@@ -31,7 +31,7 @@ bool IsAppVeyorBuild()
 
 bool IsRelease()
 {
-	if(Argument<string>("Release", null) != null)
+	if(Argument<string>("release", null) != null)
 		return true;
 
 	if (IsAppVeyorBuild())
@@ -411,14 +411,16 @@ Task("RunTests")
 Task("Pack")
 	.IsDependentOn("Restore")
 	.IsDependentOn("Clean")
-	.WithCriteria(() => (IsAppVeyorBuild() || Argument<string>("pack", null) != null) && TestTargetFramework() == "net452")
 	.Does(() =>
 {
+	var suffix = GetPackageSuffix();
+	Console.WriteLine("Package suffix: {0}", suffix);
+
 	var settings = new DotNetCorePackSettings
 	{
-		Configuration = GetConfiguration(),
+		Configuration   = GetConfiguration(),
 		OutputDirectory = GetBuildArtifacts(),
-		VersionSuffix = GetPackageSuffix()
+		VersionSuffix   = suffix
 	};
 
 	DotNetCorePack(GetPackPath(), settings);
@@ -463,7 +465,7 @@ Task("Default")
   .IsDependentOn("RunTests")
   .IsDependentOn("Pack");
 
-Task("Travis")
+Task("Tests")
   .IsDependentOn("RunTests");
 
 RunTarget(GetTarget());

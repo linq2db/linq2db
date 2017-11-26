@@ -20,10 +20,10 @@ env:
     #- testFilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != WindowsOnly"
     - testFilter=TestCategory=Create
     - testRunner=dotnet
-    - testTargetFramework=netcoreapp1.0
+    - testTargetFramework=netcoreapp2.0
     - testConfiguration=Travis
     - builder=dotnet
-    - target=Travis
+    - target=Tests
 
 
 mono:  

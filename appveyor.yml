@@ -13,8 +13,12 @@ environment:
   matrix:
     - target: Default
       testTargetFramework: net452
-    - target: Default
+    - target: Tests
       testTargetFramework: netcoreapp1.0
+      testFilter: TestCategory=Create
+    - target: Tests
+      testTargetFramework: netcoreapp2.0
+      testFilter: TestCategory=Create
     - target: DocFx
 
 cache:
