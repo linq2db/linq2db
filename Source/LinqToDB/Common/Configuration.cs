@@ -128,13 +128,6 @@ namespace LinqToDB.Common
 			/// </example>
 			public static bool CompareNullsAsValues = true;
 
-			[Obsolete("Please consider using CompareNullsAsValues")]
-			public static bool CheckNullForNotEquals
-			{
-				get { return CompareNullsAsValues; }
-				set { CompareNullsAsValues = value; }
-			}
-
 			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.
 			/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
