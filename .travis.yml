@@ -17,8 +17,7 @@ dotnet: 2.0.0
 
 env:
   global:
-    #- testFilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != WindowsOnly"
-    - testFilter=TestCategory=Create
+    - testFilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != WindowsOnly"
     - testRunner=dotnet
     - testTargetFramework=netcoreapp2.0
     - testConfiguration=Travis
