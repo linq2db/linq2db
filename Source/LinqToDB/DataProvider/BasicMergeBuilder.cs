@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider
 			var ctx = target.Provider.Execute<ContextParser.Context>(
 				Expression.Call(
 					null,
-					LinqExtensions._setMethodInfo8.MakeGenericMethod(typeof(int)),
+					LinqExtensions.SetMethodInfo8.MakeGenericMethod(typeof(int)),
 					new[] { join }));
 
 			var sql = ctx.SelectQuery;
@@ -687,7 +687,7 @@ namespace LinqToDB.DataProvider
 		{
 			Expression insertExpression = Expression.Call(
 				null,
-				LinqExtensions._insertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				LinqExtensions.InsertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 				new[]
 				{
 					_connection.GetTable<TSource>().Expression,
@@ -820,7 +820,7 @@ namespace LinqToDB.DataProvider
 
 			Expression updateExpression = Expression.Call(
 				null,
-				LinqExtensions._updateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
+				LinqExtensions.UpdateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
@@ -1099,7 +1099,7 @@ namespace LinqToDB.DataProvider
 
 			Expression updateExpression = Expression.Call(
 				null,
-				LinqExtensions._updateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
+				LinqExtensions.UpdateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);

@@ -67,7 +67,7 @@ namespace LinqToDB
 
 			if (parameters.Length > 0)
 			{
-				var pis  = methodInfo.GetParameters(); 
+				var pis  = methodInfo.GetParameters();
 				var args = new List<Expression>(parameters.Length);
 
 				for (var i = 0; i < parameters.Length; i++)
@@ -79,7 +79,7 @@ namespace LinqToDB
 				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo, args);
 			}
 			else
-				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo); 
+				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo);
 
 			return new Table<T>(dataContext, expr);
 		}
@@ -183,7 +183,7 @@ namespace LinqToDB
 		public static int Insert<T>([NotNull] this IDataContext dataContext, T obj,
 			string tableName = null, string databaseName = null, string schemaName = null)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.Insert<T>.Query(dataContext, obj, tableName, databaseName, schemaName);
 		}
 
@@ -201,9 +201,9 @@ namespace LinqToDB
 		public static Task<int> InsertAsync<T>(
 			[NotNull] this IDataContext dataContext, T obj,
 			string tableName = null, string databaseName = null, string schemaName = null,
-			CancellationToken token = default(CancellationToken))
+			CancellationToken token = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.Insert<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 		}
 
@@ -221,7 +221,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static int InsertOrReplace<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.InsertOrReplace<T>.Query(dataContext, obj);
 		}
 
@@ -235,9 +235,9 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> InsertOrReplaceAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token = default(CancellationToken))
+			CancellationToken token = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, token);
 		}
 
@@ -255,7 +255,7 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static object InsertWithIdentity<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj);
 		}
 
@@ -269,7 +269,7 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static int InsertWithInt32Identity<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return dataContext.MappingSchema.ChangeTypeTo<int>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
 		}
 
@@ -283,7 +283,7 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static long InsertWithInt64Identity<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return dataContext.MappingSchema.ChangeTypeTo<long>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
 		}
 
@@ -297,7 +297,7 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static decimal InsertWithDecimalIdentity<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
 		}
 
@@ -311,9 +311,9 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static Task<object> InsertWithIdentityAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
+			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token);
 		}
 
@@ -327,9 +327,9 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
+			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
 			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token);
 			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
@@ -345,9 +345,9 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
+			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
 			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token);
 			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
@@ -363,9 +363,9 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
+			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
 			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token);
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
@@ -385,7 +385,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static int Update<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.Update<T>.Query(dataContext, obj);
 		}
 
@@ -399,9 +399,9 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> UpdateAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
+			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, token);
 		}
 
@@ -419,7 +419,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static int Delete<T>([NotNull] this IDataContext dataContext, T obj)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.Delete<T>.Query(dataContext, obj);
 		}
 
@@ -433,9 +433,9 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> DeleteAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default(CancellationToken))
+			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, token);
 		}
 
@@ -469,7 +469,7 @@ namespace LinqToDB
 			string         statementFooter = null,
 			DefaulNullable defaulNullable  = DefaulNullable.None)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.Query(dataContext,
 				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable);
 		}
@@ -500,9 +500,9 @@ namespace LinqToDB
 			string              statementHeader = null,
 			string              statementFooter = null,
 			DefaulNullable      defaulNullable  = DefaulNullable.None,
-			CancellationToken   token           = default(CancellationToken))
+			CancellationToken   token           = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
 				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable, token);
 		}
@@ -530,7 +530,7 @@ namespace LinqToDB
 			string schemaName                = null,
 			bool   throwExceptionIfNotExists = true)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
 			if (throwExceptionIfNotExists)
 			{
@@ -564,7 +564,7 @@ namespace LinqToDB
 			string schemaName                = null,
 			bool   throwExceptionIfNotExists = true)
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
 			var tbl = (Table<T>)table;
 
@@ -601,9 +601,9 @@ namespace LinqToDB
 			string databaseName              = null,
 			string schemaName                = null,
 			bool   throwExceptionIfNotExists = true,
-			CancellationToken token          = default(CancellationToken))
+			CancellationToken token          = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
 			if (throwExceptionIfNotExists)
 			{
@@ -638,9 +638,9 @@ namespace LinqToDB
 			string databaseName              = null,
 			string schemaName                = null,
 			bool   throwExceptionIfNotExists = true,
-			CancellationToken token          = default(CancellationToken))
+			CancellationToken token          = default)
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
 			var tbl = (Table<T>)table;
 

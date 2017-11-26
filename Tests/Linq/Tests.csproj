@@ -58,9 +58,9 @@
 		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" Condition=" '$(TargetFramework)' != 'net40' " />
 		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="NUnit" Version="3.8.1" />
-		<PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.11.0" />
+		<PackageReference Include="NUnit" Version="3.9.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.0" />
 		<PackageReference Include="Npgsql" Version="3.2.5" />
 		<PackageReference Include="Mono.Cecil" Version="0.10.0-beta6" />
 		<PackageReference Include="MySql.Data" Version="6.10.4" />
@@ -144,7 +144,7 @@
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.105.2" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.106.0" />
 	</ItemGroup>
 
 
