@@ -126,7 +126,11 @@ namespace Tests
 			var databasePath = Path.GetFullPath(Path.Combine(@"Database"));
 
 			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
-				File.Copy(file, Path.Combine(dataPath, Path.GetFileName(file)), true);
+			{
+				var destination = Path.Combine(dataPath, Path.GetFileName(file));
+				Console.WriteLine("{0} => {1}", file, destination);
+				File.Copy(file, destination, true);
+			}
 
 			UserProviders = new HashSet<string>(testSettings.Providers);
 

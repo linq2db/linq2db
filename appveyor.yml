@@ -5,7 +5,7 @@ skip_tags: true
 branches:
   only:
     - master
-    - release
+    - /release.*/
     - /dev.*/
 
 environment:

@@ -2,6 +2,12 @@ language: csharp
 sudo: required
 dist: trusty
 
+branches:
+  only:
+    - master
+    - /release.*/
+    - /dev.*/
+
 addons:
   postgresql: "9.6"
   apt:
