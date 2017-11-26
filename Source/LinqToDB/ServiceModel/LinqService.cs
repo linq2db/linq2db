@@ -56,7 +56,7 @@ namespace LinqToDB.ServiceModel
 
 		class QueryContext : IQueryContext
 		{
-			public SqlStatement    Statement { get; set; }
+			public SqlStatement   Statement   { get; set; }
 			public object         Context     { get; set; }
 			public SqlParameter[] Parameters  { get; set; }
 			public List<string>   QueryHints  { get; set; }
@@ -132,7 +132,7 @@ namespace LinqToDB.ServiceModel
 				{
 					using (var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 					{
-						Statement = query.Statement,
+						Statement   = query.Statement,
 						Parameters  = query.Parameters,
 						QueryHints  = query.QueryHints
 					}))
@@ -184,7 +184,7 @@ namespace LinqToDB.ServiceModel
 								{
 									var code = codes[i];
 									var type = rd.GetFieldType(i);
-									var idx = -1;
+									var idx  = -1;
 
 									if (type != ret.FieldTypes[i])
 									{
