@@ -29,12 +29,12 @@ namespace Tests.Exceptions
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
-								var se = (SelectQuery.SetExpression)e;
+								var se = (SqlSetExpression)e;
 								return ((SqlField)se.Column).Name == "ParentID";
 							}
 
 							return false;
-						}) as SelectQuery.SetExpression;
+						}) as SqlSetExpression;
 
 					if (expr != null)
 					{

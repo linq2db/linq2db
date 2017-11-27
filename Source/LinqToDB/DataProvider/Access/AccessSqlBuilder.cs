@@ -27,8 +27,8 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.AppendLine("SELECT @@IDENTITY");
 		}
 
-		public override bool IsNestedJoinSupported     { get { return false; } }
-		public override bool WrapJoinCondition         { get { return true;  } }
+		public override bool IsNestedJoinSupported => false;
+		public override bool WrapJoinCondition     => true;
 
 		#region Skip / Take Support
 
@@ -53,13 +53,13 @@ namespace LinqToDB.DataProvider.Access
 					{
 						var func = (SqlFunction) selectQuery.Select.Columns[0].Expression;
 
-						if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SelectQuery.SearchCondition)
+						if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SqlSearchCondition)
 						{
-							var sc = (SelectQuery.SearchCondition) func.Parameters[0];
+							var sc = (SqlSearchCondition) func.Parameters[0];
 
-							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SelectQuery.Predicate.FuncLike)
+							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike)
 							{
-								var p = (SelectQuery.Predicate.FuncLike) sc.Conditions[0].Predicate;
+								var p = (SqlPredicate.FuncLike) sc.Conditions[0].Predicate;
 
 								if (p.Function.Name == "EXISTS")
 								{
@@ -69,13 +69,13 @@ namespace LinqToDB.DataProvider.Access
 							}
 						}
 					}
-					else if (selectQuery.Select.Columns[0].Expression is SelectQuery.SearchCondition)
+					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition)
 					{
-						var sc = (SelectQuery.SearchCondition) selectQuery.Select.Columns[0].Expression;
+						var sc = (SqlSearchCondition) selectQuery.Select.Columns[0].Expression;
 
-						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SelectQuery.Predicate.FuncLike)
+						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike)
 						{
-							var p = (SelectQuery.Predicate.FuncLike) sc.Conditions[0].Predicate;
+							var p = (SqlPredicate.FuncLike) sc.Conditions[0].Predicate;
 
 							if (p.Function.Name == "EXISTS")
 							{
@@ -90,33 +90,33 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildSql();
 		}
 
-		SelectQuery.Column _selectColumn;
+		SqlColumn _selectColumn;
 
 		void BuildAnyAsCount(SelectQuery selectQuery)
 		{
-			SelectQuery.SearchCondition cond;
+			SqlSearchCondition cond;
 
 			if (selectQuery.Select.Columns[0].Expression is SqlFunction)
 			{
 				var func  = (SqlFunction)selectQuery.Select.Columns[0].Expression;
-				cond  = (SelectQuery.SearchCondition)func.Parameters[0];
+				cond  = (SqlSearchCondition)func.Parameters[0];
 			}
 			else
 			{
-				cond  = (SelectQuery.SearchCondition)selectQuery.Select.Columns[0].Expression;
+				cond  = (SqlSearchCondition)selectQuery.Select.Columns[0].Expression;
 			}
 
-			var exist = ((SelectQuery.Predicate.FuncLike)cond.Conditions[0].Predicate).Function;
+			var exist = ((SqlPredicate.FuncLike)cond.Conditions[0].Predicate).Function;
 			var query = (SelectQuery)exist.Parameters[0];
 
-			_selectColumn = new SelectQuery.Column(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
+			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
 
 			BuildSql(0, query, StringBuilder);
 
 			_selectColumn = null;
 		}
 
-		protected override IEnumerable<SelectQuery.Column> GetSelectedColumns(SelectQuery selectQuery)
+		protected override IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
 		{
 			if (_selectColumn != null)
 				return new[] { _selectColumn };
@@ -152,12 +152,12 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override bool ParenthesizeJoin(List<SelectQuery.JoinedTable> tsJoins)
+		protected override bool ParenthesizeJoin(List<SqlJoinedTable> tsJoins)
 		{
 			return true;
 		}
 
-		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
+		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
 			if (predicate.Expr2 is SqlValue)
 			{
@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.Access
 					var ntext = text.Replace("[", "[[]");
 
 					if (text != ntext)
-						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
 				}
 			}
 			else if (predicate.Expr2 is SqlParameter)
@@ -189,7 +189,7 @@ namespace LinqToDB.DataProvider.Access
 						var text = ((SqlValue)predicate.Expr2).Value.ToString();
 						var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
 
-						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, val, null);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, val, null);
 					}
 				}
 				else if (predicate.Expr2 is SqlParameter)
@@ -204,7 +204,7 @@ namespace LinqToDB.DataProvider.Access
 						{
 							value     = value.Replace("[", "[[]").Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
 							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType, IsQueryParameter = p.IsQueryParameter };
-							predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, p, null);
+							predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, p, null);
 						}
 					}
 				}
@@ -265,9 +265,9 @@ namespace LinqToDB.DataProvider.Access
 						return;
 					}
 
-					var sc = new SelectQuery.SearchCondition();
+					var sc = new SqlSearchCondition();
 
-					sc.Conditions.Add(new SelectQuery.Condition(false, new SelectQuery.Predicate.IsNull(func.Parameters[0], false)));
+					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
 
 					func = new SqlFunction(func.SystemType, "Iif", sc, func.Parameters[1], func.Parameters[0]);
 

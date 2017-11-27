@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				base.BuildOrderByClause(selectQuery);
 		}
 
-		protected override IEnumerable<SelectQuery.Column> GetSelectedColumns(SelectQuery selectQuery)
+		protected override IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
 		{
 			if (BuildAlternativeSql && NeedSkip(selectQuery) && !selectQuery.OrderBy.IsEmpty)
 				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
@@ -151,12 +151,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SelectQuery.SearchCondition)
+				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 				}
 			}
 
@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
+		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
 			if (predicate.Expr2 is SqlValue)
 			{
@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					var ntext = text.Replace("[", "[[]");
 
 					if (text != ntext)
-						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
 				}
 			}
 			else if (predicate.Expr2 is SqlParameter)
@@ -262,9 +262,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append(")");
 		}
 
-		protected override void BuildDropTableStatement(SqlCreateTableStatement createTable)
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = createTable.Table;
+			var table = dropTable.Table;
 
 			if (table.PhysicalName.StartsWith("#"))
 			{

@@ -70,9 +70,9 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (predicate.ElementType == QueryElementType.ExprExprPredicate)
 			{
-				var expr = (SelectQuery.Predicate.ExprExpr)predicate;
-				if (expr.Operator == SelectQuery.Predicate.Operator.Equal ||
-					expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
+				var expr = (SqlPredicate.ExprExpr)predicate;
+				if (expr.Operator == SqlPredicate.Operator.Equal ||
+					expr.Operator == SqlPredicate.Operator.NotEqual)
 				{
 					ConvertEmptyStringToNullIfNeeded(expr.Expr1);
 					ConvertEmptyStringToNullIfNeeded(expr.Expr2);
@@ -169,15 +169,15 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override void BuildWhereSearchCondition(SelectQuery selectQuery, SelectQuery.SearchCondition condition)
+		protected override void BuildWhereSearchCondition(SelectQuery selectQuery, SqlSearchCondition condition)
 		{
 			if (NeedTake(selectQuery) && !NeedSkip(selectQuery) && selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty)
 			{
 				BuildPredicate(
 					Precedence.LogicalConjunction,
-					new SelectQuery.Predicate.ExprExpr(
+					new SqlPredicate.ExprExpr(
 						new SqlExpression(null, "ROWNUM", Precedence.Primary),
-						SelectQuery.Predicate.Operator.LessOrEqual,
+						SqlPredicate.Operator.LessOrEqual,
 						selectQuery.Select.TakeValue));
 
 				if (base.BuildWhere(selectQuery))
@@ -241,12 +241,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SelectQuery.SearchCondition)
+				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 				}
 			}
 
@@ -301,77 +301,84 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.CommandCount(statement);
 		}
 
-		protected override void BuildDropTableStatement(SqlCreateTableStatement createTable)
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			if (_identityField == null)
 			{
-				base.BuildDropTableStatement(createTable);
+				base.BuildDropTableStatement(dropTable);
 			}
 			else
 			{
-			var schemaPrefix = string.IsNullOrWhiteSpace(createTable.Table.Owner)
+			var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Owner)
 				? string.Empty
-				: createTable.Table.Owner + ".";
+				: dropTable.Table.Owner + ".";
 
 				StringBuilder
 					.Append("DROP TRIGGER ")
 					.Append(schemaPrefix)
 					.Append("TIDENTITY_")
-					.Append(createTable.Table.PhysicalName)
+					.Append(dropTable.Table.PhysicalName)
 					.AppendLine();
 			}
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			if (!(Statement is SqlCreateTableStatement createTable))
-				return;
-
-			var schemaPrefix = string.IsNullOrWhiteSpace(createTable.Table.Owner)
-				? string.Empty
-				: createTable.Table.Owner + ".";
-
-			if (createTable.IsDrop)
+			string GetSchemaPrefix(SqlTable table)
 			{
-				if (commandNumber == 1)
-				{
-					StringBuilder
-						.Append("DROP SEQUENCE ")
-						.Append(schemaPrefix)
-						.Append("SIDENTITY_")
-						.Append(createTable.Table.PhysicalName)
-						.AppendLine();
-				}
-				else
-					base.BuildDropTableStatement(createTable);
+				return string.IsNullOrWhiteSpace(table.Owner)
+					? string.Empty
+					: table.Owner + ".";
 			}
-			else
+
+			switch (Statement)
 			{
-				if (commandNumber == 1)
+				case SqlDropTableStatement dropTable:
+					{
+						if (commandNumber == 1)
+						{
+							StringBuilder
+								.Append("DROP SEQUENCE ")
+								.Append(GetSchemaPrefix(dropTable.Table))
+								.Append("SIDENTITY_")
+								.Append(dropTable.Table.PhysicalName)
+								.AppendLine();
+						}
+						else
+							base.BuildDropTableStatement(dropTable);
+						break;
+					}
+				case SqlCreateTableStatement createTable:
 				{
-					StringBuilder
-						.Append("CREATE SEQUENCE ")
-						.Append(schemaPrefix)
-						.Append("SIDENTITY_")
-						.Append(createTable.Table.PhysicalName)
-						.AppendLine();
-				}
-				else
-				{
-					StringBuilder
-						.AppendFormat("CREATE OR REPLACE TRIGGER {0}TIDENTITY_{1}", schemaPrefix, createTable.Table.PhysicalName)
-						.AppendLine()
-						.AppendFormat("BEFORE INSERT ON ");
+					var schemaPrefix = GetSchemaPrefix(createTable.Table);
 
-					BuildPhysicalTable(createTable.Table, null);
+					if (commandNumber == 1)
+					{
+						StringBuilder
+							.Append("CREATE SEQUENCE ")
+							.Append(schemaPrefix)
+							.Append("SIDENTITY_")
+							.Append(createTable.Table.PhysicalName)
+							.AppendLine();
+					}
+					else
+					{
+						StringBuilder
+							.AppendFormat("CREATE OR REPLACE TRIGGER {0}TIDENTITY_{1}", schemaPrefix, createTable.Table.PhysicalName)
+							.AppendLine()
+							.AppendFormat("BEFORE INSERT ON ");
 
-					StringBuilder
-						.AppendLine(" FOR EACH ROW")
-						.AppendLine  ()
-						.AppendLine  ("BEGIN")
-						.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, createTable.Table.PhysicalName, schemaPrefix)
-						.AppendLine  ()
-						.AppendLine  ("END;");
+						BuildPhysicalTable(createTable.Table, null);
+
+						StringBuilder
+							.AppendLine(" FOR EACH ROW")
+							.AppendLine  ()
+							.AppendLine  ("BEGIN")
+							.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, createTable.Table.PhysicalName, schemaPrefix)
+							.AppendLine  ()
+							.AppendLine  ("END;");
+					}
+					break;
 				}
 			}
 		}

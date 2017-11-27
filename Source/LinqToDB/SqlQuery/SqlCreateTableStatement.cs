@@ -7,7 +7,6 @@ namespace LinqToDB.SqlQuery
 	public class SqlCreateTableStatement : SqlStatement
 	{
 		public SqlTable       Table           { get; set; }
-		public bool           IsDrop          { get; set; }
 		public string         StatementHeader { get; set; }
 		public string         StatementFooter { get; set; }
 		public DefaulNullable DefaulNullable  { get; set; }
@@ -17,7 +16,7 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			sb.Append(IsDrop ? "DROP TABLE " : "CREATE TABLE ");
+			sb.Append("CREATE TABLE ");
 
 			if (Table != null)
 				((IQueryElement)Table).ToString(sb, dic);
@@ -25,14 +24,6 @@ namespace LinqToDB.SqlQuery
 			sb.AppendLine();
 
 			return sb;
-		}
-
-		public override bool Equals(ISqlExpression other)
-		{
-			if (!(other is SqlCreateTableStatement otherCreate))
-				return false;
-
-			throw new NotImplementedException();
 		}
 
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)

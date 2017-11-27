@@ -149,7 +149,7 @@ namespace LinqToDB.Linq
 		{
 			Queries.Add(new QueryInfo
 			{
-				Statement = parseContext.SelectQuery,
+				Statement   = parseContext.GetResultStatement(),
 				Parameters  = sqlParameters,
 			});
 		}

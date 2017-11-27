@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildPredicate(ISqlPredicate predicate)
 		{
-			var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
+			var exprExpr = predicate as SqlPredicate.ExprExpr;
 
 			if (exprExpr != null)
 			{

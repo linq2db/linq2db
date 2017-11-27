@@ -78,14 +78,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildFunction(func);
 		}
 
-		public override string  Name
-		{
-			get { return ProviderName.SqlServer2000; }
-		}
+		public override string  Name => ProviderName.SqlServer2000;
 
-		protected override void BuildDropTableStatement(SqlCreateTableStatement createTable)
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = createTable.Table;
+			var table = dropTable.Table;
 
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);

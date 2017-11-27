@@ -8,7 +8,7 @@ using LinqToDB.Mapping;
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("SQL = {SqlText}")]
-	public abstract class SqlStatement: IQueryElement, IEquatable<ISqlExpression>, ISqlExpressionWalkable, ICloneableElement
+	public abstract class SqlStatement: IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
 		public string SqlText =>
 			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
@@ -38,7 +38,6 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression>
 
-		public abstract bool Equals(ISqlExpression other);
 		public abstract ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func);
 
 		#endregion
@@ -143,7 +142,7 @@ namespace LinqToDB.SqlQuery
 							{
 								objs.Add(expr, expr);
 
-								var c = (SelectQuery.Column)expr;
+								var c = (SqlColumn)expr;
 
 								if (c.Alias != "*")
 									c.Alias = GetAlias(c.Alias, "c");
@@ -154,7 +153,7 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.TableSource:
 						{
-							var table = (SelectQuery.TableSource)expr;
+							var table = (SqlTableSource)expr;
 
 							if (!objs.ContainsKey(table))
 							{

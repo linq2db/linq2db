@@ -421,7 +421,7 @@ namespace LinqToDB.DataProvider
 					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == column.Members[0]);
 
 					var alias = CreateSourceColumnAlias(columnDescriptor.ColumnName, false);
-					query.Select.Columns.Add(new SelectQuery.Column(query, column.Sql, alias));
+					query.Select.Columns.Add(new SqlColumn(query, column.Sql, alias));
 				}
 
 				// bind parameters
@@ -843,7 +843,7 @@ namespace LinqToDB.DataProvider
 			var target   = query.From.Tables[0];
 			target.Alias = _targetAlias;
 
-			SelectQuery.TableSource source = null;
+			SqlTableSource source = null;
 
 			if (subQuery.From.Tables.Count == 2)
 			{
@@ -864,7 +864,7 @@ namespace LinqToDB.DataProvider
 				{
 					if (e.ElementType == QueryElementType.TableSource)
 					{
-						var et = (SelectQuery.TableSource)e;
+						var et = (SqlTableSource)e;
 
 						tableSet.Add((SqlTable)et.Source);
 						tables.Add((SqlTable)et.Source);
@@ -958,13 +958,13 @@ namespace LinqToDB.DataProvider
 				{
 					var tempCopy = sql.Clone();
 					tempCopy.ChangeQueryType(QueryType.Select);
-					var tempTables = new List<SelectQuery.TableSource>();
+					var tempTables = new List<SqlTableSource>();
 
 					// create copy of tables from main FROM clause for subquery clause
 					new QueryVisitor().Visit(tempCopy.From, ee =>
 					{
 						if (ee.ElementType == QueryElementType.TableSource)
-							tempTables.Add((SelectQuery.TableSource)ee);
+							tempTables.Add((SqlTableSource)ee);
 					});
 
 					// main table reference in subquery
@@ -999,7 +999,7 @@ namespace LinqToDB.DataProvider
 			return element;
 		}
 
-		private static Tuple<SelectQuery.TableSource, SelectQuery.TableSource> MoveJoinsToSubqueries(
+		private static Tuple<SqlTableSource, SqlTableSource> MoveJoinsToSubqueries(
 			SelectQuery  sql,
 			string       firstTableAlias,
 			string       secondTableAlias,
@@ -1015,7 +1015,7 @@ namespace LinqToDB.DataProvider
 			{
 				if (e.ElementType == QueryElementType.TableSource)
 				{
-					var et = (SelectQuery.TableSource)e;
+					var et = (SqlTableSource)e;
 
 					tableSet.Add((SqlTable)et.Source);
 					tables.Add((SqlTable)et.Source);
@@ -1051,7 +1051,7 @@ namespace LinqToDB.DataProvider
 			var table1   = sql.From.Tables[0];
 			table1.Alias = firstTableAlias;
 
-			SelectQuery.TableSource table2 = null;
+			SqlTableSource table2 = null;
 
 			if (secondTableAlias != null)
 			{

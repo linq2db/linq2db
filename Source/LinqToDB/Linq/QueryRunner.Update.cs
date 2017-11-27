@@ -49,7 +49,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].Parameters.Add(param);
 
-					sqlQuery.Update.Items.Add(new SelectQuery.SetExpression(field, param.SqlParameter));
+					sqlQuery.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 				}
 
 				foreach (var field in keys)

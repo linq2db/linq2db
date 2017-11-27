@@ -32,6 +32,7 @@ namespace LinqToDB.Linq.Builder
 		public Expression        Body        { get; set; }
 		public ExpressionBuilder Builder     { get; private set; }
 		public SelectQuery       SelectQuery { get; set; }
+		public SqlStatement      Statement   { get; set; }
 		public IBuildContext     Parent      { get; set; }
 		public bool              IsScalar    { get; private set; }
 
@@ -408,7 +409,7 @@ namespace LinqToDB.Linq.Builder
 
 		SqlInfo CheckExpression(SqlInfo expression)
 		{
-			if (expression.Sql is SelectQuery.SearchCondition)
+			if (expression.Sql is SqlSearchCondition)
 			{
 				expression.Sql = Builder.Convert(
 					this,
@@ -883,6 +884,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
+
+		public virtual SqlStatement GetResultStatement()
+		{
+			return SelectQuery;
+		}
 
 		#region Helpers
 
