@@ -67,7 +67,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void CompiledTest5(string context)
 		{
-			var query = CompiledQuery.Compile((ITestDataContext db, object[] ps) => 
+			var query = CompiledQuery.Compile((ITestDataContext db, object[] ps) =>
 				db.Parent.Where(p => p.ParentID == (int)ps[0] && p.Value1 == (int?)ps[1]));
 
 			using (var db = GetDataContext(context))

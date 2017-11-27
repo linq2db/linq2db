@@ -291,6 +291,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+
 			if (database != null)
 				sb.Append(database).Append(".");
 

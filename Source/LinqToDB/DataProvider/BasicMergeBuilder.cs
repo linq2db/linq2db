@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider
 			var ctx = target.Provider.Execute<ContextParser.Context>(
 				Expression.Call(
 					null,
-					LinqExtensions._setMethodInfo8.MakeGenericMethod(typeof(int)),
+					LinqExtensions.SetMethodInfo8.MakeGenericMethod(typeof(int)),
 					new[] { join }));
 
 			var sql = ctx.SelectQuery;
@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider
 
 			var condition = sql.From.Tables[0].Joins[0].Condition;
 			SetSourceColumnAliases(condition, sql.From.Tables[0].Joins[0].Table.Source);
-			
+
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
 
@@ -682,7 +682,7 @@ namespace LinqToDB.DataProvider
 		{
 			Expression insertExpression = Expression.Call(
 				null,
-				LinqExtensions._insertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				LinqExtensions.InsertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 				new[]
 				{
 					_connection.GetTable<TSource>().Expression,
@@ -745,9 +745,9 @@ namespace LinqToDB.DataProvider
 				.AppendLine("(");
 
 			var sourceAlias = SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
-			
+
 			first = true;
-			
+
 			foreach (var column in insertColumns)
 			{
 				if (!first)
@@ -817,7 +817,7 @@ namespace LinqToDB.DataProvider
 
 			Expression updateExpression = Expression.Call(
 				null,
-				LinqExtensions._updateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
+				LinqExtensions.UpdateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
 			var qry   = Query<int>.GetQuery(DataContext, ref updateExpression);
@@ -859,7 +859,7 @@ namespace LinqToDB.DataProvider
 				// collect tables, referenced in FROM clause
 				var tableSet = new HashSet<SqlTable>();
 				var tables   = new List<SqlTable>();
-				
+
 				new QueryVisitor().Visit(subQuery.From, e =>
 				{
 					if (e.ElementType == QueryElementType.TableSource)
@@ -1010,7 +1010,7 @@ namespace LinqToDB.DataProvider
 			// collect tables, referenced in FROM clause
 			var tableSet = new HashSet<SqlTable>();
 			var tables   = new List<SqlTable>();
-			
+
 			new QueryVisitor().Visit(sql.From, e =>
 			{
 				if (e.ElementType == QueryElementType.TableSource)
@@ -1096,7 +1096,7 @@ namespace LinqToDB.DataProvider
 
 			Expression updateExpression = Expression.Call(
 				null,
-				LinqExtensions._updateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
+				LinqExtensions.UpdateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
@@ -1309,9 +1309,9 @@ namespace LinqToDB.DataProvider
 			if (typeof(TTarget) != typeof(TSource))
 				_sourceDescriptor = DataContext.MappingSchema.GetEntityDescriptor(typeof(TSource));
 
-			var target = (Table<TTarget>)Merge.Target;
+			var target = Merge.Target;
 			var sb     = new StringBuilder();
-			
+
 			SqlBuilder.ConvertTableName(
 				sb,
 				target.DatabaseName ?? TargetDescriptor.DatabaseName,
@@ -1446,7 +1446,7 @@ namespace LinqToDB.DataProvider
 			var hasUpdate           = false;
 			var hasDelete           = false;
 			var hasUpdateWithDelete = false;
-			
+
 			foreach (var operation in Merge.Operations)
 			{
 				switch (operation.Type)

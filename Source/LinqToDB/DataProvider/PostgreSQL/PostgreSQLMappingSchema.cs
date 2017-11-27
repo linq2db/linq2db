@@ -14,16 +14,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected PostgreSQLMappingSchema(string configuration) : base(configuration)
 		{
-			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
 			SetDataType(typeof(string), DataType.Undefined);
 
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
-			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append(v));
-
-			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(bool),   (sb,dt,v) => sb.Append(v));
+			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)

@@ -223,7 +223,7 @@ namespace Tests.Linq
 			{
 				using (var db = inheritance.GetDataContext(context))
 					inheritance.AreEqual(
-						Enumerable.Select<Parent, ParentEx>(inheritance.Parent, p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>(),
+						Enumerable.Select<Parent,ParentEx>(inheritance.Parent, p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>(),
 						QueryTable<Parent>(db).Select(p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>());
 			}
 		}

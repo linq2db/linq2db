@@ -227,8 +227,16 @@ namespace LinqToDB.SqlProvider
 			return BuildTableName(sb, database, owner, table);
 		}
 
-		public virtual StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public virtual StringBuilder BuildTableName(StringBuilder sb,
+			string database,
+			string owner,
+			[JetBrains.Annotations.NotNull] string table)
 		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+
+			if (database != null && database.Length == 0) database = null;
+			if (owner    != null && owner.   Length == 0) owner    = null;
+
 			if (database != null)
 			{
 				if (owner == null) sb.Append(database).Append("..");
@@ -1394,7 +1402,7 @@ namespace LinqToDB.SqlProvider
 		{
 			BuildSearchCondition(Precedence.Unknown, condition);
 		}
-		
+
 		protected virtual void BuildSearchCondition(SelectQuery.SearchCondition condition)
 		{
 			var isOr = (bool?)null;
@@ -1870,11 +1878,11 @@ namespace LinqToDB.SqlProvider
 		#region BuildExpression
 
 		protected virtual StringBuilder BuildExpression(
-			ISqlExpression expr, 
-			bool           buildTableName, 
-			bool           checkParentheses, 
-			string         alias, 
-			ref bool       addAlias, 
+			ISqlExpression expr,
+			bool           buildTableName,
+			bool           checkParentheses,
+			string         alias,
+			ref bool       addAlias,
 			bool           throwExceptionIfTableNotFound = true)
 		{
 			// TODO: check the necessity.

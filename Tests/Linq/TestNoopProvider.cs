@@ -1,98 +1,66 @@
-﻿using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Mapping;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
 using System.Data;
 using System.Data.Common;
 using System.Collections;
 using LinqToDB.SqlQuery;
 
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace Tests
 {
 	internal class TestNoopConnection : IDbConnection
 	{
-		private ConnectionState _state = ConnectionState.Closed;
 
 		public TestNoopConnection(string connectionString)
 		{
+			ConnectionString = connectionString;
 		}
 
-		string IDbConnection.ConnectionString
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+		public bool            Disposed          { get; private set; }
+		public string          ConnectionString  { get; set;}
+		public int             ConnectionTimeout { get; }
+		public string          Database          { get; }
+		public ConnectionState State             { get; private set; }
 
-			set
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		int IDbConnection.ConnectionTimeout
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		string IDbConnection.Database
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		ConnectionState IDbConnection.State
-		{
-			get
-			{
-				return _state;
-			}
-		}
-
-		IDbTransaction IDbConnection.BeginTransaction()
+		public IDbTransaction BeginTransaction()
 		{
 			throw new NotImplementedException();
 		}
 
-		IDbTransaction IDbConnection.BeginTransaction(IsolationLevel il)
+		public IDbTransaction BeginTransaction(IsolationLevel il)
 		{
 			throw new NotImplementedException();
 		}
 
-		void IDbConnection.ChangeDatabase(string databaseName)
+		public void ChangeDatabase(string databaseName)
 		{
 			throw new NotImplementedException();
 		}
 
-		void IDbConnection.Close()
+		public void Close()
 		{
-			throw new NotImplementedException();
+			State = ConnectionState.Closed;
 		}
 
-		IDbCommand IDbConnection.CreateCommand()
+		public IDbCommand CreateCommand()
 		{
 			return new TestNoopDbCommand();
 		}
 
-		void IDbConnection.Open()
+		public void Open()
 		{
-			_state = ConnectionState.Open;
+			State = ConnectionState.Open;
 		}
 
-		void IDisposable.Dispose()
+		public void Dispose()
 		{
-			_state = ConnectionState.Closed;
+			Close();
+			Disposed = true;
 		}
 	}
 
@@ -873,6 +841,11 @@ namespace Tests
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
+		}
+
+		public override bool IsCompatibleConnection(IDbConnection connection)
+		{
+			return true;
 		}
 	}
 

@@ -56,7 +56,7 @@ namespace LinqToDB.SchemaProvider
 			InitProvider(dataConnection);
 
 			DataTypes    = GetDataTypes(dataConnection);
-			DataTypesDic = new Dictionary<string, DataTypeInfo>(DataTypes.Count, StringComparer.OrdinalIgnoreCase);
+			DataTypesDic = new Dictionary<string,DataTypeInfo>(DataTypes.Count, StringComparer.OrdinalIgnoreCase);
 
 			foreach (var dt in DataTypes)
 				if (!DataTypesDic.ContainsKey(dt.TypeName))

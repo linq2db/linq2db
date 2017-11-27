@@ -142,14 +142,13 @@ namespace LinqToDB.DataProvider.SQLite
 					!(exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null ||
 					  exprExpr.Expr2 is IValueContainer && ((IValueContainer)exprExpr.Expr2).Value == null))
 				{
-					
 					if (leftType != null && !(exprExpr.Expr1 is SqlFunction && ((SqlFunction)exprExpr.Expr1).Name == "$Convert$"))
 					{
 						var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
 							SqlDataType.GetDataType(leftType), exprExpr.Expr1);
 						exprExpr.Expr1 = l;
 					}
-				
+
 					if (rightType != null && !(exprExpr.Expr2 is SqlFunction && ((SqlFunction)exprExpr.Expr2).Name == "$Convert$"))
 					{
 						var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
@@ -164,6 +163,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+
 			if (database != null)
 				sb.Append(database).Append(".");
 

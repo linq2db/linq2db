@@ -4,6 +4,8 @@ namespace LinqToDB.Data
 {
 	public class BulkCopyOptions
 	{
+		/// <summary>Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server.</summary>
+		/// <returns>The integer value of the <see cref="P:MaxBatchSize"></see> property, or zero if no value has been set.</returns>
 		public int?         MaxBatchSize           { get; set; }
 		public int?         BulkCopyTimeout        { get; set; }
 		public BulkCopyType BulkCopyType           { get; set; }

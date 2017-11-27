@@ -10,25 +10,25 @@ using System.Data;
 	https://blog.sqlauthority.com/2011/10/02/sql-server-ce-list-of-information_schema-system-tables/
 
 -- Get all the columns of the database
-SELECT * 
+SELECT *
 FROM INFORMATION_SCHEMA.COLUMNS
 -- Get all the indexes of the database
-SELECT * 
+SELECT *
 FROM INFORMATION_SCHEMA.INDEXES
 -- Get all the indexes and columns of the database
-SELECT * 
+SELECT *
 FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
 -- Get all the datatypes of the database
-SELECT * 
+SELECT *
 FROM INFORMATION_SCHEMA.PROVIDER_TYPES
 -- Get all the tables of the database
-SELECT * 
+SELECT *
 FROM INFORMATION_SCHEMA.TABLES
 -- Get all the constraint of the database
-SELECT * 
+SELECT *
 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
 -- Get all the foreign keys of the database
-SELECT * 
+SELECT *
 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
 */
 namespace LinqToDB.DataProvider.SqlCe
@@ -101,15 +101,15 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var data = dataConnection.Query<ForeingKeyInfo>(
-				@"SELECT 
+				@"SELECT
 					COALESCE(rc.CONSTRAINT_CATALOG,        '') + '.' + COALESCE(rc.CONSTRAINT_SCHEMA,        '') + '.' + rc.CONSTRAINT_TABLE_NAME        ThisTableID,
 					COALESCE(rc.UNIQUE_CONSTRAINT_CATALOG, '') + '.' + COALESCE(rc.UNIQUE_CONSTRAINT_SCHEMA, '') + '.' + rc.UNIQUE_CONSTRAINT_TABLE_NAME OtherTableID,
 					rc.CONSTRAINT_NAME                                                                                                                   Name,
 					tc.COLUMN_NAME                                                                                                                       ThisColumn,
 					oc.COLUMN_NAME                                                                                                                       OtherColumn
 				FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
-				INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE tc ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME 
-				INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNIQUE_CONSTRAINT_NAME 
+				INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE tc ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+				INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNIQUE_CONSTRAINT_NAME
 				");
 
 			return data.ToList();

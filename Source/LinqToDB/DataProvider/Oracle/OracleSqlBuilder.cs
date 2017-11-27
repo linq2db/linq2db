@@ -385,6 +385,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
+			if (owner != null && owner.Length == 0) owner = null;
+
 			if (owner != null)
 				sb.Append(owner).Append(".");
 

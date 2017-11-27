@@ -98,7 +98,7 @@
 		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.3.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />

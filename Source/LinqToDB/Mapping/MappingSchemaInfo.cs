@@ -208,9 +208,9 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
-		#region Options
+		#region Comparers
 
-		public StringComparison? ColumnComparisonOption;
+		public StringComparer ColumnNameComparer { get; set; }
 
 		#endregion
 
@@ -223,8 +223,7 @@ namespace LinqToDB.Mapping
 			if (_defaultFromEnumTypes == null)
 				return null;
 
-			Type defaultFromType;
-			_defaultFromEnumTypes.TryGetValue(enumType, out defaultFromType);
+			_defaultFromEnumTypes.TryGetValue(enumType, out var defaultFromType);
 			return defaultFromType;
 		}
 
@@ -242,17 +241,13 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-		readonly ConcurrentDictionary<Type, EntityDescriptor> _entityDescriptors
-			= new ConcurrentDictionary<Type, EntityDescriptor>();
+		readonly ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors
+			= new ConcurrentDictionary<Type,EntityDescriptor>();
 
 		public EntityDescriptor GetEntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
-			EntityDescriptor ed;
-
-			if (!_entityDescriptors.TryGetValue(type, out ed))
-			{
+			if (!_entityDescriptors.TryGetValue(type, out var ed))
 				ed = _entityDescriptors.GetOrAdd(type, new EntityDescriptor(mappingSchema, type));
-			}
 
 			return ed;
 		}
@@ -271,12 +266,9 @@ namespace LinqToDB.Mapping
 
 		internal void ResetEntityDescriptor(Type type)
 		{
-			EntityDescriptor ed;
-
-			_entityDescriptors.TryRemove(type, out ed);
+			_entityDescriptors.TryRemove(type, out _);
 		}
 
 		#endregion
-
 	}
 }

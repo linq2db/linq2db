@@ -2487,7 +2487,7 @@ namespace LinqToDB.Linq.Builder
 
 		static SelectQuery.Condition CheckIsNull(ISqlPredicate predicate, bool isNot)
 		{
-			if (Configuration.Linq.CheckNullForNotEquals == false)
+			if (Configuration.Linq.CompareNullsAsValues == false)
 				return null;
 
 			var inList = predicate as SelectQuery.Predicate.InList;
