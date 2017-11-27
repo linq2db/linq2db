@@ -12,7 +12,7 @@ Follow this [document](https://github.com/linq2db/linq2db/files/1056002/Developm
 Solution and folder structure
 
 | Folder                  | Description                                     |
-|------------------------ |:-----------------------------------------------:|
+|------------------------ |-------------------------------------------------|
 |.\                       | Root folder |
 |.\Data                   | Contains file server databases and scripts for creating and initializing test databases |
 |.\NuGet                  | Stuff for NUget package, readme.txt |
@@ -220,7 +220,7 @@ We do run builds and tests with:
 * [Travis](https://travis-ci.org/linq2db/linq2db) (Linux) [.travis.yml](https://github.com/linq2db/linq2db/blob/master/.travis.yml). Makes build and runs tests for:
   * .Net Core 2.0: [CORE2.Travis configuration](https://github.com/linq2db/linq2db/blob/master/Tests/Linq/DataProviders.json). Full set of tests are done.
 
-CI builds are none only for next branches:
+CI builds are done only for next branches:
 
 * `master`
 * `/version.*/` (regex)
