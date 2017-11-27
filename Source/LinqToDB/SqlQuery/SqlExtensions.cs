@@ -13,14 +13,14 @@
 			return statement.IsInsert() && ((SelectQuery)statement).Insert.WithIdentity;
 		}
 
-		public static SelectQuery.SelectClause AsSelect(this SqlStatement statement)
+		public static SqlSelectClause AsSelect(this SqlStatement statement)
 		{
 			if (statement is SelectQuery selectQuery)
 				return selectQuery.Select;
 			throw new LinqToDBException($"Satetement {statement.QueryType} is not Select Statement");
 		}
 
-		public static SelectQuery.InsertClause AsInsert(this SqlStatement statement)
+		public static SqlInsertClause AsInsert(this SqlStatement statement)
 		{
 			if (statement is SelectQuery selectQuery)
 				return selectQuery.Insert;

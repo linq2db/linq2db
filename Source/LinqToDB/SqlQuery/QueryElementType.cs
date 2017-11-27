@@ -43,6 +43,7 @@ namespace LinqToDB.SqlQuery
 			Union,
 
 		CreateTableStatement,
-		DropTableStatement
+		DropTableStatement,
+		DeleteStatement
 	}
 }

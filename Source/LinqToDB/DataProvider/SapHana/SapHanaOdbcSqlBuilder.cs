@@ -216,12 +216,12 @@ namespace LinqToDB.DataProvider.SapHana
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SelectQuery.SearchCondition)
+				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 				}
 			}
 
@@ -251,10 +251,10 @@ namespace LinqToDB.DataProvider.SapHana
 
 			if (start == 0 && SqlExpression.NeedsEqual(cond))
 			{
-				cond = new SelectQuery.SearchCondition(
-					new SelectQuery.Condition(
+				cond = new SqlSearchCondition(
+					new SqlCondition(
 						false,
-						new SelectQuery.Predicate.ExprExpr(cond, SelectQuery.Predicate.Operator.Equal, new SqlValue(1))));
+						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1))));
 			}
 
 			if (len == 3)

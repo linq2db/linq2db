@@ -80,9 +80,9 @@ namespace LinqToDB.DataProvider.SqlServer
 						return;
 					}
 
-					var sc = new SelectQuery.SearchCondition();
+					var sc = new SqlSearchCondition();
 
-					sc.Conditions.Add(new SelectQuery.Condition(false, new SelectQuery.Predicate.IsNull(func.Parameters[0], false)));
+					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
 
 					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0]);
 
@@ -100,10 +100,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (start == 0 && SqlExpression.NeedsEqual(cond))
 			{
-				cond = new SelectQuery.SearchCondition(
-					new SelectQuery.Condition(
+				cond = new SqlSearchCondition(
+					new SqlCondition(
 						false,
-						new SelectQuery.Predicate.ExprExpr(cond, SelectQuery.Predicate.Operator.Equal, new SqlValue(1))));
+						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1))));
 			}
 
 			if (len == 3)

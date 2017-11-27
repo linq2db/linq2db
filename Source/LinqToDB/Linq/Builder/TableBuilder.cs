@@ -230,8 +230,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 
-					if (predicate.GetType() != typeof(SelectQuery.Predicate.Expr))
-						SelectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
+					if (predicate.GetType() != typeof(SqlPredicate.Expr))
+						SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
 				}
 			}
 
@@ -881,18 +881,18 @@ namespace LinqToDB.Linq.Builder
 
 					foreach (var cond in association.ParentAssociationJoin.Condition.Conditions.Take(association.RegularConditionCount))
 					{
-						SelectQuery.Predicate.ExprExpr p;
+						SqlPredicate.ExprExpr p;
 
-						if (cond.Predicate is SelectQuery.SearchCondition condition)
+						if (cond.Predicate is SqlSearchCondition condition)
 						{
 							p = condition.Conditions
 								.Select(c => c.Predicate)
-								.OfType<SelectQuery.Predicate.ExprExpr>()
+								.OfType<SqlPredicate.ExprExpr>()
 								.First();
 						}
 						else
 						{
-							p = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
+							p = (SqlPredicate.ExprExpr)cond.Predicate;
 						}
 
 						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
@@ -1332,7 +1332,7 @@ namespace LinqToDB.Linq.Builder
 		public class AssociatedTableContext : TableContext
 		{
 			public readonly TableContext             ParentAssociation;
-			public readonly SelectQuery.JoinedTable  ParentAssociationJoin;
+			public readonly SqlJoinedTable  ParentAssociationJoin;
 			public readonly AssociationDescriptor    Association;
 			public readonly bool                     IsList;
 			public          int                      RegularConditionCount;
@@ -1381,12 +1381,12 @@ namespace LinqToDB.Linq.Builder
 
 //					join.Field(field1).Equal.Field(field2);
 
-					ISqlPredicate predicate = new SelectQuery.Predicate.ExprExpr(
-						field1, SelectQuery.Predicate.Operator.Equal, field2);
+					ISqlPredicate predicate = new SqlPredicate.ExprExpr(
+						field1, SqlPredicate.Operator.Equal, field2);
 
 					predicate = builder.Convert(parent, predicate);
 
-					join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
+					join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, predicate));
 				}
 
 				RegularConditionCount = join.JoinedTable.Condition.Conditions.Count;
@@ -1415,8 +1415,8 @@ namespace LinqToDB.Linq.Builder
 					association = association.ParentAssociation as AssociatedTableContext)
 				{
 					isLeft =
-						association.ParentAssociationJoin.JoinType == SelectQuery.JoinType.Left ||
-						association.ParentAssociationJoin.JoinType == SelectQuery.JoinType.OuterApply;
+						association.ParentAssociationJoin.JoinType == JoinType.Left ||
+						association.ParentAssociationJoin.JoinType == JoinType.OuterApply;
 				}
 
 				if (isLeft)

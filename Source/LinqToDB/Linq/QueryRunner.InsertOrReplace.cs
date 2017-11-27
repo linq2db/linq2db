@@ -52,7 +52,7 @@ namespace LinqToDB.Linq
 								fieldDic.Add(field, param);
 						}
 
-						sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field, param.SqlParameter));
+						sqlQuery.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
 					else if (field.IsIdentity)
 					{
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq
 							fieldDic.Add(field, param = GetParameter(typeof(T), dataContext, field));
 					}
 
-					sqlQuery.Update.Items.Add(new SelectQuery.SetExpression(field, param.SqlParameter));
+					sqlQuery.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 				}
 
 				sqlQuery.Update.Keys.AddRange(q.Select(i => i.i));
@@ -177,7 +177,7 @@ namespace LinqToDB.Linq
 			{
 				selectQuery.ChangeQueryType(QueryType.Select);
 				selectQuery.Select.Columns.Clear();
-				selectQuery.Select.Columns.Add(new SelectQuery.Column(selectQuery, new SqlExpression("1")));
+				selectQuery.Select.Columns.Add(new SqlColumn(selectQuery, new SqlExpression("1")));
 				SetQueryQuery2(query);
 			}
 

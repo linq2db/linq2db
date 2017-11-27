@@ -142,7 +142,7 @@ namespace LinqToDB.SqlQuery
 							{
 								objs.Add(expr, expr);
 
-								var c = (SelectQuery.Column)expr;
+								var c = (SqlColumn)expr;
 
 								if (c.Alias != "*")
 									c.Alias = GetAlias(c.Alias, "c");
@@ -153,7 +153,7 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.TableSource:
 						{
-							var table = (SelectQuery.TableSource)expr;
+							var table = (SqlTableSource)expr;
 
 							if (!objs.ContainsKey(table))
 							{

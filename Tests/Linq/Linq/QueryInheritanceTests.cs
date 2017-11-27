@@ -21,7 +21,7 @@ namespace Tests.Linq
 		{
 			var query = new SelectQuery();
 			var table = new SqlTable(typeof(T));
-			var tableSource = new SelectQuery.TableSource(table, "t");
+			var tableSource = new SqlTableSource(table, "t");
 			query.From.Tables.Add(tableSource);
 
 			var connection = (DataConnection) dataContext;

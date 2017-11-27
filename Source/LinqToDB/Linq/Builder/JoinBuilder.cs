@@ -196,7 +196,7 @@ namespace LinqToDB.Linq.Builder
 
 		static void BuildJoin(
 			ExpressionBuilder builder,
-			SelectQuery.FromClause.Join join,
+			SqlFromClause.Join join,
 			IBuildContext outerKeyContext, Expression outerKeySelector,
 			IBuildContext innerKeyContext, Expression innerKeySelector)
 		{
@@ -207,15 +207,15 @@ namespace LinqToDB.Linq.Builder
 
 			if (predicate == null)
 			{
-				predicate = new SelectQuery.Predicate.ExprExpr(
+				predicate = new SqlPredicate.ExprExpr(
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
-					SelectQuery.Predicate.Operator.Equal,
+					SqlPredicate.Operator.Equal,
 					builder.ConvertToSql(innerKeyContext, innerKeySelector));
 
 				predicate = builder.Convert(outerKeyContext, predicate);
 			}
 
-			join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
+			join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, predicate));
 		}
 
 		static void BuildSubQueryJoin(
@@ -231,15 +231,15 @@ namespace LinqToDB.Linq.Builder
 
 			if (predicate == null)
 			{
-				predicate = new SelectQuery.Predicate.ExprExpr(
+				predicate = new SqlPredicate.ExprExpr(
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
-					SelectQuery.Predicate.Operator.Equal,
+					SqlPredicate.Operator.Equal,
 					builder.ConvertToSql(subQueryKeyContext, innerKeySelector));
 
 				predicate = builder.Convert(outerKeyContext, predicate);
 			}
 
-			subQuerySelect.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
+			subQuerySelect.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
 		}
 
 		class InnerKeyContext : ExpressionContext
@@ -463,7 +463,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal class GroupJoinSubQueryContext : SubQueryContext
 		{
-			public SelectQuery.JoinedTable Join;
+			public SqlJoinedTable Join;
 			public SelectQuery             CounterSelect;
 			public GroupJoinContext        GroupJoin;
 			public Func<IBuildContext>     GetSubQueryContext;

@@ -70,9 +70,9 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (predicate.ElementType == QueryElementType.ExprExprPredicate)
 			{
-				var expr = (SelectQuery.Predicate.ExprExpr)predicate;
-				if (expr.Operator == SelectQuery.Predicate.Operator.Equal ||
-					expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
+				var expr = (SqlPredicate.ExprExpr)predicate;
+				if (expr.Operator == SqlPredicate.Operator.Equal ||
+					expr.Operator == SqlPredicate.Operator.NotEqual)
 				{
 					ConvertEmptyStringToNullIfNeeded(expr.Expr1);
 					ConvertEmptyStringToNullIfNeeded(expr.Expr2);
@@ -169,15 +169,15 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override void BuildWhereSearchCondition(SelectQuery selectQuery, SelectQuery.SearchCondition condition)
+		protected override void BuildWhereSearchCondition(SelectQuery selectQuery, SqlSearchCondition condition)
 		{
 			if (NeedTake(selectQuery) && !NeedSkip(selectQuery) && selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty)
 			{
 				BuildPredicate(
 					Precedence.LogicalConjunction,
-					new SelectQuery.Predicate.ExprExpr(
+					new SqlPredicate.ExprExpr(
 						new SqlExpression(null, "ROWNUM", Precedence.Primary),
-						SelectQuery.Predicate.Operator.LessOrEqual,
+						SqlPredicate.Operator.LessOrEqual,
 						selectQuery.Select.TakeValue));
 
 				if (base.BuildWhere(selectQuery))
@@ -241,12 +241,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SelectQuery.SearchCondition)
+				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 				}
 			}
 

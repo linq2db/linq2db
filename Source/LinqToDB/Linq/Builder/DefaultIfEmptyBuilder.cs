@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (groupJoin != null)
 				{
-					groupJoin.SelectQuery.From.Tables[0].Joins[0].JoinType = SelectQuery.JoinType.Left;
+					groupJoin.SelectQuery.From.Tables[0].Joins[0].JoinType = JoinType.Left;
 					groupJoin.SelectQuery.From.Tables[0].Joins[0].IsWeak   = false;
 				}
 			}

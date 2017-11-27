@@ -21,22 +21,22 @@ namespace Tests.Linq
 			return (SelectQuery)info.Queries.Single().Statement;
 		}
 
-		SelectQuery.SearchCondition GetWhere<T>(IQueryable<T> query)
+		SqlSearchCondition GetWhere<T>(IQueryable<T> query)
 		{
 			return GetSelectQuery(query).Where.SearchCondition;
 		}
 
-		SelectQuery.SearchCondition GetWhere(SelectQuery selectQuery)
+		SqlSearchCondition GetWhere(SelectQuery selectQuery)
 		{
 			return selectQuery.Where.SearchCondition;
 		}
 
-		SelectQuery.TableSource GeTableSource(SelectQuery selectQuery)
+		SqlTableSource GeTableSource(SelectQuery selectQuery)
 		{
 			return selectQuery.From.Tables.Single();
 		}
 
-		SelectQuery.TableSource GeTableSource<T>(IQueryable<T> query)
+		SqlTableSource GeTableSource<T>(IQueryable<T> query)
 		{
 			return GetSelectQuery(query).From.Tables.Single();
 		}
@@ -251,8 +251,8 @@ namespace Tests.Linq
 				Assert.AreEqual(q, q2);
 
 				var ts = GeTableSource(q);
-				Assert.AreEqual(2, ts.Joins.Count(j => j.JoinType == SelectQuery.JoinType.Inner));
-				Assert.AreEqual(3, ts.Joins.Count(j => j.JoinType == SelectQuery.JoinType.Left));
+				Assert.AreEqual(2, ts.Joins.Count(j => j.JoinType == JoinType.Inner));
+				Assert.AreEqual(3, ts.Joins.Count(j => j.JoinType == JoinType.Left));
 			}
 		}
 
@@ -437,7 +437,7 @@ namespace Tests.Linq
 					};
 
 				var ts = GeTableSource(q);
-				Assert.AreEqual(1, ts.Joins.Count(j => j.JoinType == SelectQuery.JoinType.Left));
+				Assert.AreEqual(1, ts.Joins.Count(j => j.JoinType == JoinType.Left));
 			}
 		}
 
@@ -459,7 +459,7 @@ namespace Tests.Linq
 					};
 
 				var ts = GeTableSource(q);
-				Assert.AreEqual(2, ts.Joins.Count(j => j.JoinType == SelectQuery.JoinType.Left));
+				Assert.AreEqual(2, ts.Joins.Count(j => j.JoinType == JoinType.Left));
 			}
 		}
 

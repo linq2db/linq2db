@@ -193,12 +193,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			base.BuildCreateTableFieldType(field);
 		}
 
-		protected override bool BuildJoinType(SelectQuery.JoinedTable join)
+		protected override bool BuildJoinType(SqlJoinedTable join)
 		{
 			switch (join.JoinType)
 			{
-				case SelectQuery.JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
-				case SelectQuery.JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
+				case JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
+				case JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
 			}
 
 			return base.BuildJoinType(join);

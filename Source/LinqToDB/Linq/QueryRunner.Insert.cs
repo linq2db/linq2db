@@ -39,7 +39,7 @@ namespace LinqToDB.Linq
 
 						ei.Queries[0].Parameters.Add(param);
 
-						sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, param.SqlParameter));
+						sqlQuery.Insert.Items.Add(new SqlSetExpression(field.Value, param.SqlParameter));
 					}
 					else if (field.Value.IsIdentity)
 					{
@@ -47,7 +47,7 @@ namespace LinqToDB.Linq
 						var expr = sqlb.GetIdentityExpression(sqlTable);
 
 						if (expr != null)
-							sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, expr));
+							sqlQuery.Insert.Items.Add(new SqlSetExpression(field.Value, expr));
 					}
 				}
 

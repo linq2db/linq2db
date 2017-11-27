@@ -71,7 +71,7 @@ namespace Tests.Samples
 					var updateColumn = newQuery.Update.Items.FirstOrDefault(ui => ui.Column is SqlField && ((SqlField)ui.Column).Equals(field));
 					if (updateColumn == null)
 					{
-						updateColumn = new SelectQuery.SetExpression(field, field);
+						updateColumn = new SqlSetExpression(field, field);
 						newQuery.Update.Items.Add(updateColumn);
 					}
 

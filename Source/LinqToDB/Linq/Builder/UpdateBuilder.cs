@@ -111,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 							sql.Select.Columns.Clear();
 
 							foreach (var item in sql.Update.Items)
-								sql.Select.Columns.Add(new SelectQuery.Column(sql, item.Expression));
+								sql.Select.Columns.Add(new SqlColumn(sql, item.Expression));
 
 							sql.Update.Table = ((TableBuilder.TableContext)into).SqlTable;
 						}
@@ -168,7 +168,7 @@ namespace LinqToDB.Linq.Builder
 			BuildInfo                       buildInfo,
 			LambdaExpression                setter,
 			IBuildContext                   into,
-			List<SelectQuery.SetExpression> items,
+			List<SqlSetExpression> items,
 			IBuildContext                   sequence)
 		{
 			var path = Expression.Parameter(setter.Body.Type, "p");
@@ -200,7 +200,7 @@ namespace LinqToDB.Linq.Builder
 					var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 					var expr   = info.Sql;
 
-					items.Add(new SelectQuery.SetExpression(column[0].Sql, expr));
+					items.Add(new SqlSetExpression(column[0].Sql, expr));
 				}
 			}
 		}
@@ -208,7 +208,7 @@ namespace LinqToDB.Linq.Builder
 		static void BuildSetter(
 			ExpressionBuilder               builder,
 			IBuildContext                   into,
-			List<SelectQuery.SetExpression> items,
+			List<SqlSetExpression> items,
 			IBuildContext                   ctx,
 			MemberInitExpression            expression,
 			Expression                      path)
@@ -244,13 +244,13 @@ namespace LinqToDB.Linq.Builder
 							var parm  = (SqlParameter)expr;
 							var field = column[0].Sql is SqlField
 								? (SqlField)column[0].Sql
-								: (SqlField)((SelectQuery.Column)column[0].Sql).Expression;
+								: (SqlField)((SqlColumn)column[0].Sql).Expression;
 
 							if (parm.DataType == DataType.Undefined)
 								parm.DataType = field.DataType;
 						}
 
-						items.Add(new SelectQuery.SetExpression(column[0].Sql, expr));
+						items.Add(new SqlSetExpression(column[0].Sql, expr));
 					}
 				}
 				else
@@ -265,7 +265,7 @@ namespace LinqToDB.Linq.Builder
 			LambdaExpression                update,
 			IBuildContext                   select,
 			SqlTable                        table,
-			List<SelectQuery.SetExpression> items)
+			List<SqlSetExpression> items)
 		{
 			var ext = extract.Body;
 
@@ -316,7 +316,7 @@ namespace LinqToDB.Linq.Builder
 
 			builder.ReplaceParent(ctx, sp);
 
-			items.Add(new SelectQuery.SetExpression(column, expr));
+			items.Add(new SqlSetExpression(column, expr));
 		}
 
 		internal static void ParseSet(
@@ -325,7 +325,7 @@ namespace LinqToDB.Linq.Builder
 			LambdaExpression                extract,
 			Expression                      update,
 			IBuildContext                   select,
-			List<SelectQuery.SetExpression> items)
+			List<SqlSetExpression> items)
 		{
 			var ext = extract.Body;
 
@@ -351,7 +351,7 @@ namespace LinqToDB.Linq.Builder
 
 			var expr = builder.ConvertToSql(select, update);
 
-			items.Add(new SelectQuery.SetExpression(column[0].Sql, expr));
+			items.Add(new SqlSetExpression(column[0].Sql, expr));
 		}
 
 		#endregion
