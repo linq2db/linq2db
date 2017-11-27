@@ -5,6 +5,7 @@ skip_tags: true
 branches:
   only:
     - master
+    - /version.*/
     - /release.*/
     - /dev.*/
 
