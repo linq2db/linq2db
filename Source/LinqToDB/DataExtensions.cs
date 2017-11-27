@@ -55,8 +55,8 @@ namespace LinqToDB
 			[NotNull] params object[] parameters)
 			where T : class
 		{
-			if (methodInfo == null) throw new ArgumentNullException("methodInfo");
-			if (parameters == null) throw new ArgumentNullException("parameters");
+			if (methodInfo == null) throw new ArgumentNullException(nameof(methodInfo));
+			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			if (!typeof(ITable<>).IsSameOrParentOf(methodInfo.ReturnType))
 				throw new LinqException(
@@ -566,15 +566,21 @@ namespace LinqToDB
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl = (Table<T>)table;
-
 			if (throwExceptionIfNotExists)
 			{
-				QueryRunner.DropTable<T>.Query(tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName);
+				QueryRunner.DropTable<T>.Query(
+					table.DataContext,
+					tableName    ?? table.TableName,
+					databaseName ?? table.DatabaseName,
+					schemaName   ?? table.SchemaName);
 			}
 			else try
 			{
-				QueryRunner.DropTable<T>.Query(tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName);
+				QueryRunner.DropTable<T>.Query(
+					table.DataContext,
+					tableName    ?? table.TableName,
+					databaseName ?? table.DatabaseName,
+					schemaName   ?? table.SchemaName);
 			}
 			catch
 			{
@@ -642,17 +648,22 @@ namespace LinqToDB
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl = (Table<T>)table;
-
 			if (throwExceptionIfNotExists)
 			{
 				await QueryRunner.DropTable<T>.QueryAsync(
-					tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName, token);
+					table.DataContext,
+					tableName    ?? table.TableName,
+					databaseName ?? table.DatabaseName,
+					schemaName   ?? table.SchemaName, token);
 			}
 			else try
 			{
 				await QueryRunner.DropTable<T>.QueryAsync(
-					tbl.DataContext, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName, token);
+					table.DataContext,
+					tableName    ?? table.TableName,
+					databaseName ?? table.DatabaseName,
+					schemaName   ?? table.SchemaName,
+					token);
 			}
 			catch
 			{

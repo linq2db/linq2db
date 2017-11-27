@@ -206,6 +206,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+			if (owner    != null && owner.   Length == 0) owner    = null;
+
 			// "db..table" syntax not supported and postgresql doesn't support database name, if it is not current database
 			// so we can clear database name to avoid error from server
 			if (database != null && owner == null)

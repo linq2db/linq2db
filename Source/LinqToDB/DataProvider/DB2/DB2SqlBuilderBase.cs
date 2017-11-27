@@ -205,6 +205,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+			if (owner    != null && owner.   Length == 0) owner    = null;
+
 			// "db..table" syntax not supported
 			if (database != null && owner == null)
 				throw new LinqToDBException("DB2 requires schema name if database name provided.");

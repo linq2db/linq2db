@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace LinqToDB.Linq
 {
@@ -15,9 +16,14 @@ namespace LinqToDB.Linq
 			Init(dataContext, expression);
 		}
 
-		public string DatabaseName;
-		public string SchemaName;
-		public string TableName;
+		public string DatabaseName { get; set; }
+		public string SchemaName   { get; set; }
+		public string TableName    { get; set; }
+
+		public string GetTableName() =>
+			DataContext.CreateSqlProvider()
+				.ConvertTableName(new StringBuilder(), DatabaseName, SchemaName, TableName)
+				.ToString();
 
 		#region Overrides
 

@@ -10,8 +10,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
-	using Linq;
-
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
@@ -1384,7 +1382,7 @@ namespace LinqToDB.Data
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 			return dataConnection.DataProvider.BulkCopy(dataConnection, options, source);
 		}
 
@@ -1393,12 +1391,12 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="dataConnection">Database connection.</param>
-		/// <param name="maxBatchSize">TODO</param>
+		/// <param name="maxBatchSize">Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server. </param>
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			return dataConnection.DataProvider.BulkCopy(
 				dataConnection,
@@ -1415,7 +1413,7 @@ namespace LinqToDB.Data
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, IEnumerable<T> source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			return dataConnection.DataProvider.BulkCopy(
 				dataConnection,
@@ -1433,17 +1431,14 @@ namespace LinqToDB.Data
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
-			if (options.TableName    == null) options.TableName    = tbl.TableName;
-			if (options.DatabaseName == null) options.DatabaseName = tbl.DatabaseName;
-			if (options.SchemaName   == null) options.SchemaName   = tbl.SchemaName;
+			if (options.TableName    == null) options.TableName    = table.TableName;
+			if (options.DatabaseName == null) options.DatabaseName = table.DatabaseName;
+			if (options.SchemaName   == null) options.SchemaName   = table.SchemaName;
 
 			return dataConnection.DataProvider.BulkCopy(dataConnection, options, source);
 		}
@@ -1453,17 +1448,14 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="table">Target table.</param>
-		/// <param name="maxBatchSize">TODO</param>
+		/// <param name="maxBatchSize">Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server. </param>
 		/// <param name="source">Records to insert.</param>
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source)
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.BulkCopy(
@@ -1471,9 +1463,9 @@ namespace LinqToDB.Data
 				new BulkCopyOptions
 				{
 					MaxBatchSize = maxBatchSize,
-					TableName    = tbl.TableName,
-					DatabaseName = tbl.DatabaseName,
-					SchemaName   = tbl.SchemaName,
+					TableName    = table.TableName,
+					DatabaseName = table.DatabaseName,
+					SchemaName   = table.SchemaName,
 				},
 				source);
 		}
@@ -1487,21 +1479,18 @@ namespace LinqToDB.Data
 		/// <returns>Bulk insert operation status.</returns>
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, IEnumerable<T> source)
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.BulkCopy(
 				dataConnection,
 				new BulkCopyOptions
 				{
-					TableName    = tbl.TableName,
-					DatabaseName = tbl.DatabaseName,
-					SchemaName   = tbl.SchemaName,
+					TableName    = table.TableName,
+					DatabaseName = table.DatabaseName,
+					SchemaName   = table.SchemaName,
 				},
 				source);
 		}
@@ -1526,14 +1515,14 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
-			this DataConnection      dataConnection, 
-			IQueryable<T>            source, 
+			this DataConnection      dataConnection,
+			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string                   tableName    = null, 
-			string                   databaseName = null, 
+			string                   tableName    = null,
+			string                   databaseName = null,
 			string                   schemaName   = null
 		)
-			where T : class 
+			where T : class
 		{
 			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate), tableName, databaseName, schemaName);
 		}
@@ -1554,14 +1543,14 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
-			this DataConnection      dataConnection, 
-			Expression<Func<T,bool>> predicate, 
+			this DataConnection      dataConnection,
+			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string                   tableName    = null, 
-			string                   databaseName = null, 
+			string                   tableName    = null,
+			string                   databaseName = null,
 			string                   schemaName   = null
 		)
-			where T : class 
+			where T : class
 		{
 			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source, tableName, databaseName, schemaName);
 		}
@@ -1582,14 +1571,14 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
-			this DataConnection dataConnection, 
-			bool                delete, 
+			this DataConnection dataConnection,
+			bool                delete,
 			IEnumerable<T>      source,
-			string              tableName    = null, 
-			string              databaseName = null, 
+			string              tableName    = null,
+			string              databaseName = null,
 			string              schemaName   = null
 		)
-			where T : class 
+			where T : class
 		{
 			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source, tableName, databaseName, schemaName);
 		}
@@ -1607,13 +1596,13 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
-			this DataConnection dataConnection, 
+			this DataConnection dataConnection,
 			IEnumerable<T>      source,
-			string              tableName    = null, 
-			string              databaseName = null, 
+			string              tableName    = null,
+			string              databaseName = null,
 			string              schemaName   = null
 		)
-			where T : class 
+			where T : class
 		{
 			return dataConnection.DataProvider.Merge(dataConnection, null, false, source, tableName, databaseName, schemaName);
 		}
@@ -1634,27 +1623,24 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
-			this ITable<T>           table, 
-			IQueryable<T>            source, 
+			this ITable<T>           table,
+			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string                   tableName    = null, 
-			string                   databaseName = null, 
+			string                   tableName    = null,
+			string                   databaseName = null,
 			string                   schemaName   = null
 		)
-			where T : class 
+			where T : class
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate),
-				tableName    ?? tbl.TableName,
-				databaseName ?? tbl.DatabaseName,
-				schemaName   ?? tbl.SchemaName);
+				tableName    ?? table.TableName,
+				databaseName ?? table.DatabaseName,
+				schemaName   ?? table.SchemaName);
 		}
 
 		/// <summary>
@@ -1673,27 +1659,24 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
-			this ITable<T>           table, 
-			Expression<Func<T,bool>> predicate, 
+			this ITable<T>           table,
+			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string                   tableName    = null, 
-			string                   databaseName = null, 
+			string                   tableName    = null,
+			string                   databaseName = null,
 			string                   schemaName   = null
 		)
-			where T : class 
+			where T : class
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source,
-				tableName    ?? tbl.TableName,
-				databaseName ?? tbl.DatabaseName,
-				schemaName   ?? tbl.SchemaName);
+				tableName    ?? table.TableName,
+				databaseName ?? table.DatabaseName,
+				schemaName   ?? table.SchemaName);
 		}
 
 		/// <summary>
@@ -1712,27 +1695,24 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
-			this ITable<T> table, 
-			bool           delete, 
+			this ITable<T> table,
+			bool           delete,
 			IEnumerable<T> source,
-			string         tableName    = null, 
-			string         databaseName = null, 
+			string         tableName    = null,
+			string         databaseName = null,
 			string         schemaName   = null
 		)
-			where T : class 
+			where T : class
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source,
-				tableName    ?? tbl.TableName,
-				databaseName ?? tbl.DatabaseName,
-				schemaName   ?? tbl.SchemaName);
+				tableName    ?? table.TableName,
+				databaseName ?? table.DatabaseName,
+				schemaName   ?? table.SchemaName);
 		}
 
 		/// <summary>
@@ -1748,26 +1728,23 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		public static int Merge<T>(
-			this ITable<T> table, 
+			this ITable<T> table,
 			IEnumerable<T> source,
-			string         tableName    = null, 
-			string         databaseName = null, 
+			string         tableName    = null,
+			string         databaseName = null,
 			string         schemaName   = null
 		)
-			where T : class 
+			where T : class
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.Merge(dataConnection, null, false, source,
-				tableName    ?? tbl.TableName,
-				databaseName ?? tbl.DatabaseName,
-				schemaName   ?? tbl.SchemaName);
+				tableName    ?? table.TableName,
+				databaseName ?? table.DatabaseName,
+				schemaName   ?? table.SchemaName);
 		}
 
 		/// <summary>
@@ -1787,13 +1764,13 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
-			this DataConnection      dataConnection, 
-			IQueryable<T>            source, 
+			this DataConnection      dataConnection,
+			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string                   tableName         = null, 
-			string                   databaseName      = null, 
+			string                   tableName         = null,
+			string                   databaseName      = null,
 			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default(CancellationToken))
+			CancellationToken        cancellationToken = default)
 			where T : class
 		{
 			return dataConnection.DataProvider.MergeAsync(
@@ -1817,13 +1794,13 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
-			this DataConnection      dataConnection, 
-			Expression<Func<T,bool>> predicate, 
+			this DataConnection      dataConnection,
+			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string                   tableName         = null, 
-			string                   databaseName      = null, 
+			string                   tableName         = null,
+			string                   databaseName      = null,
 			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default(CancellationToken))
+			CancellationToken        cancellationToken = default)
 			where T : class
 		{
 			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source, tableName, databaseName, schemaName, cancellationToken);
@@ -1846,13 +1823,13 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
-			this DataConnection dataConnection, 
-			bool                delete, 
+			this DataConnection dataConnection,
+			bool                delete,
 			IEnumerable<T>      source,
-			string              tableName         = null, 
-			string              databaseName      = null, 
+			string              tableName         = null,
+			string              databaseName      = null,
 			string              schemaName        = null,
-			CancellationToken   cancellationToken = default(CancellationToken)
+			CancellationToken   cancellationToken = default
 		)
 			where T : class
 		{
@@ -1872,13 +1849,13 @@ namespace LinqToDB.Data
 		/// <param name="schemaName">Optional target table's schema name.</param>
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
-		public static Task<int> MergeAsync<T>(			
-			this DataConnection dataConnection, 
+		public static Task<int> MergeAsync<T>(
+			this DataConnection dataConnection,
 			IEnumerable<T>      source,
-			string              tableName         = null, 
-			string              databaseName      = null, 
+			string              tableName         = null,
+			string              databaseName      = null,
 			string              schemaName        = null,
-			CancellationToken   cancellationToken = default(CancellationToken)
+			CancellationToken   cancellationToken = default
 		)
 			where T : class
 		{
@@ -1902,28 +1879,25 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
-			this ITable<T>           table, 
-			IQueryable<T>            source, 
+			this ITable<T>           table,
+			IQueryable<T>            source,
 			Expression<Func<T,bool>> predicate,
-			string                   tableName         = null, 
-			string                   databaseName      = null, 
+			string                   tableName         = null,
+			string                   databaseName      = null,
 			string                   schemaName        = null,
-		    CancellationToken        cancellationToken = default(CancellationToken)
+			CancellationToken        cancellationToken = default
 		)
-			where T : class 
+			where T : class
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source.Where(predicate),
-				tableName    ?? tbl.TableName,
-				databaseName ?? tbl.DatabaseName,
-				schemaName   ?? tbl.SchemaName,
+				tableName    ?? table.TableName,
+				databaseName ?? table.DatabaseName,
+				schemaName   ?? table.SchemaName,
 				cancellationToken);
 		}
 
@@ -1944,28 +1918,25 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
-			this ITable<T>           table, 
-			Expression<Func<T,bool>> predicate, 
+			this ITable<T>           table,
+			Expression<Func<T,bool>> predicate,
 			IEnumerable<T>           source,
-			string                   tableName         = null, 
-			string                   databaseName      = null, 
+			string                   tableName         = null,
+			string                   databaseName      = null,
 			string                   schemaName        = null,
-			CancellationToken        cancellationToken = default(CancellationToken)
+			CancellationToken        cancellationToken = default
 		)
-			where T : class 
+			where T : class
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.MergeAsync(dataConnection, predicate, true, source,
-				tableName    ?? tbl.TableName,
-				databaseName ?? tbl.DatabaseName,
-				schemaName   ?? tbl.SchemaName,
+				tableName    ?? table.TableName,
+				databaseName ?? table.DatabaseName,
+				schemaName   ?? table.SchemaName,
 				cancellationToken);
 		}
 
@@ -1986,28 +1957,25 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		public static Task<int> MergeAsync<T>(
-			this ITable<T>    table, 
-			bool              delete, 
+			this ITable<T>    table,
+			bool              delete,
 			IEnumerable<T>    source,
-			string            tableName         = null, 
-			string            databaseName      = null, 
+			string            tableName         = null,
+			string            databaseName      = null,
 			string            schemaName        = null,
-			CancellationToken cancellationToken = default(CancellationToken)
+			CancellationToken cancellationToken = default
 		)
-			where T : class 
+			where T : class
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.MergeAsync(dataConnection, null, delete, source,
-				tableName    ?? tbl.TableName,
-				databaseName ?? tbl.DatabaseName,
-				schemaName   ?? tbl.SchemaName,
+				tableName    ?? table.TableName,
+				databaseName ?? table.DatabaseName,
+				schemaName   ?? table.SchemaName,
 				cancellationToken);
 		}
 
@@ -2030,21 +1998,18 @@ namespace LinqToDB.Data
 			string            tableName         = null,
 			string            databaseName      = null,
 			string            schemaName        = null,
-			CancellationToken cancellationToken = default(CancellationToken))
-			where T : class 
+			CancellationToken cancellationToken = default)
+			where T : class
 		{
-			if (table == null) throw new ArgumentNullException("table");
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			var tbl            = (Table<T>)table;
-			var dataConnection = tbl.DataContext as DataConnection;
-
-			if (dataConnection == null)
+			if (!(table.DataContext is DataConnection dataConnection))
 				throw new ArgumentException("DataContext must be of DataConnection type.");
 
 			return dataConnection.DataProvider.MergeAsync(dataConnection, null, false, source,
-				tableName    ?? tbl.TableName,
-				databaseName ?? tbl.DatabaseName,
-				schemaName   ?? tbl.SchemaName,
+				tableName    ?? table.TableName,
+				databaseName ?? table.DatabaseName,
+				schemaName   ?? table.SchemaName,
 				cancellationToken);
 		}
 

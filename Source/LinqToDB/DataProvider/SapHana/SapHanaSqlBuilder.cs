@@ -270,6 +270,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+			if (owner    != null && owner.   Length == 0) owner    = null;
+
 			// "db..table" syntax not supported:
 			// <table_name> ::= [[<database_name>.]<schema.name>.]<identifier>
 			if (database != null && owner == null)

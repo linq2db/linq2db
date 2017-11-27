@@ -114,76 +114,28 @@ namespace Tests.xUpdate
 			Assert.Throws<ArgumentNullException>(action);
 		}
 
-		private class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>
+		class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>
 		{ }
 
-		private class FakeMergeUsing<TTarget> : IMergeableUsing<TTarget>
+		class FakeMergeUsing<TTarget> : IMergeableUsing<TTarget>
 		{ }
 
-		private class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>
+		class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>
 		{ }
 
-		private class FakeTable<TEntity> : ITable<TEntity>
+		class FakeTable<TEntity> : ITable<TEntity>
 		{
-			IDataContext IExpressionQuery.DataContext
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			Type IQueryable.ElementType
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			Expression IExpressionQuery.Expression
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			Expression IQueryable.Expression
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
+			IDataContext   IExpressionQuery.DataContext => throw new NotImplementedException();
+			Expression     IExpressionQuery.Expression  => throw new NotImplementedException();
+			string         IExpressionQuery.SqlText     => throw new NotImplementedException();
+			Type           IQueryable.      ElementType => throw new NotImplementedException();
+			Expression     IQueryable.      Expression  => throw new NotImplementedException();
+			IQueryProvider IQueryable.      Provider    => throw new NotImplementedException();
 
 			Expression IExpressionQuery<TEntity>.Expression
 			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-
-				set
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			IQueryProvider IQueryable.Provider
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			string IExpressionQuery.SqlText
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
+				get => throw new NotImplementedException();
+				set => throw new NotImplementedException();
 			}
 
 			IQueryable IQueryProvider.CreateQuery(Expression expression)
@@ -217,6 +169,15 @@ namespace Tests.xUpdate
 			}
 
 			IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator()
+			{
+				throw new NotImplementedException();
+			}
+
+			public string DatabaseName { get; }
+			public string SchemaName   { get; }
+			public string TableName    { get; }
+
+			public string GetTableName()
 			{
 				throw new NotImplementedException();
 			}
