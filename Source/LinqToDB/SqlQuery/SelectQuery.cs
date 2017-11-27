@@ -23,9 +23,9 @@ namespace LinqToDB.SqlQuery
 			Select   = new SqlSelectClause (this);
 			_from    = new SqlFromClause   (this);
 			_where   = new SqlWhereClause  (this);
-			_groupBy = new GroupByClause(this);
+			_groupBy = new SqlGroupByClause(this);
 			_having  = new SqlWhereClause  (this);
-			_orderBy = new OrderByClause(this);
+			_orderBy = new SqlOrderByClause(this);
 		}
 
 		internal SelectQuery(int id)
@@ -40,9 +40,9 @@ namespace LinqToDB.SqlQuery
 			SqlSelectClause         select,
 			SqlFromClause           from,
 			SqlWhereClause          where,
-			GroupByClause        groupBy,
+			SqlGroupByClause        groupBy,
 			SqlWhereClause          having,
-			OrderByClause        orderBy,
+			SqlOrderByClause        orderBy,
 			List<SqlUnion>          unions,
 			SelectQuery          parentSelect,
 			bool                 parameterDependent,
@@ -198,107 +198,8 @@ namespace LinqToDB.SqlQuery
 
 #region GroupByClause
 
-		public class GroupByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
-		{
-			internal GroupByClause(SelectQuery selectQuery) : base(selectQuery)
-			{
-			}
-
-			internal GroupByClause(
-				SelectQuery   selectQuery,
-				GroupByClause clone,
-				Dictionary<ICloneableElement,ICloneableElement> objectTree,
-				Predicate<ICloneableElement> doClone)
-				: base(selectQuery)
-			{
-				_items.AddRange(clone._items.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)));
-			}
-
-			internal GroupByClause(IEnumerable<ISqlExpression> items) : base(null)
-			{
-				_items.AddRange(items);
-			}
-
-			public GroupByClause Expr(ISqlExpression expr)
-			{
-				Add(expr);
-				return this;
-			}
-
-			public GroupByClause Field(SqlField field)
-			{
-				return Expr(field);
-			}
-
-			void Add(ISqlExpression expr)
-			{
-				foreach (var e in Items)
-					if (e.Equals(expr))
-						return;
-
-				Items.Add(expr);
-			}
-
-			readonly List<ISqlExpression> _items = new List<ISqlExpression>();
-			public   List<ISqlExpression>  Items
-			{
-				get { return _items; }
-			}
-
-			public bool IsEmpty
-			{
-				get { return Items.Count == 0; }
-			}
-
-#if OVERRIDETOSTRING
-
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
-
-#endif
-
-#region ISqlExpressionWalkable Members
-
-			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
-			{
-				for (var i = 0; i < Items.Count; i++)
-					Items[i] = Items[i].Walk(skipColumns, func);
-
-				return null;
-			}
-
-#endregion
-
-#region IQueryElement Members
-
-			public QueryElementType ElementType { get { return QueryElementType.GroupByClause; } }
-
-			StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-			{
-				if (Items.Count == 0)
-					return sb;
-
-				sb.Append(" \nGROUP BY \n");
-
-				foreach (var item in Items)
-				{
-					sb.Append('\t');
-					item.ToString(sb, dic);
-					sb.Append(",");
-				}
-
-				sb.Length--;
-
-				return sb;
-			}
-
-#endregion
-		}
-
-		private GroupByClause _groupBy;
-		public  GroupByClause  GroupBy
+		private SqlGroupByClause _groupBy;
+		public  SqlGroupByClause  GroupBy
 		{
 			get { return _groupBy; }
 		}
@@ -317,113 +218,8 @@ namespace LinqToDB.SqlQuery
 
 #region OrderByClause
 
-		public class OrderByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
-		{
-			internal OrderByClause(SelectQuery selectQuery) : base(selectQuery)
-			{
-			}
-
-			internal OrderByClause(
-				SelectQuery   selectQuery,
-				OrderByClause clone,
-				Dictionary<ICloneableElement,ICloneableElement> objectTree,
-				Predicate<ICloneableElement> doClone)
-				: base(selectQuery)
-			{
-				_items.AddRange(clone._items.Select(item => (SqlOrderByItem)item.Clone(objectTree, doClone)));
-			}
-
-			internal OrderByClause(IEnumerable<SqlOrderByItem> items) : base(null)
-			{
-				_items.AddRange(items);
-			}
-
-			public OrderByClause Expr(ISqlExpression expr, bool isDescending)
-			{
-				Add(expr, isDescending);
-				return this;
-			}
-
-			public OrderByClause Expr     (ISqlExpression expr)               { return Expr(expr,  false);        }
-			public OrderByClause ExprAsc  (ISqlExpression expr)               { return Expr(expr,  false);        }
-			public OrderByClause ExprDesc (ISqlExpression expr)               { return Expr(expr,  true);         }
-			public OrderByClause Field    (SqlField field, bool isDescending) { return Expr(field, isDescending); }
-			public OrderByClause Field    (SqlField field)                    { return Expr(field, false);        }
-			public OrderByClause FieldAsc (SqlField field)                    { return Expr(field, false);        }
-			public OrderByClause FieldDesc(SqlField field)                    { return Expr(field, true);         }
-
-			void Add(ISqlExpression expr, bool isDescending)
-			{
-				foreach (var item in Items)
-					if (item.Expression.Equals(expr, (x, y) =>
-					{
-						var col = x as SqlColumn;
-						return col == null || !col.Parent.HasUnion || x == y;
-					}))
-						return;
-
-				Items.Add(new SqlOrderByItem(expr, isDescending));
-			}
-
-			readonly List<SqlOrderByItem> _items = new List<SqlOrderByItem>();
-			public   List<SqlOrderByItem>  Items
-			{
-				get { return _items; }
-			}
-
-			public bool IsEmpty
-			{
-				get { return Items.Count == 0; }
-			}
-
-#if OVERRIDETOSTRING
-
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
-
-#endif
-
-#region ISqlExpressionWalkable Members
-
-			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
-			{
-				foreach (var t in Items)
-					t.Walk(skipColumns, func);
-				return null;
-			}
-
-#endregion
-
-#region IQueryElement Members
-
-			public QueryElementType ElementType { get { return QueryElementType.OrderByClause; } }
-
-			StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-			{
-				if (Items.Count == 0)
-					return sb;
-
-				sb.Append(" \nORDER BY \n");
-
-				foreach (IQueryElement item in Items)
-				{
-					sb.Append('\t');
-					item.ToString(sb, dic);
-					sb.Append(", ");
-				}
-
-				sb.Length -= 2;
-
-				return sb;
-			}
-
-#endregion
-		}
-
-		private OrderByClause _orderBy;
-		public  OrderByClause  OrderBy
+		private SqlOrderByClause _orderBy;
+		public  SqlOrderByClause  OrderBy
 		{
 			get { return _orderBy; }
 		}
@@ -698,9 +494,9 @@ namespace LinqToDB.SqlQuery
 			Select  = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
 			_from    = new SqlFromClause   (this, clone._from,    objectTree, doClone);
 			_where   = new SqlWhereClause  (this, clone._where,   objectTree, doClone);
-			_groupBy = new GroupByClause(this, clone._groupBy, objectTree, doClone);
+			_groupBy = new SqlGroupByClause(this, clone._groupBy, objectTree, doClone);
 			_having  = new SqlWhereClause  (this, clone._having,  objectTree, doClone);
-			_orderBy = new OrderByClause(this, clone._orderBy, objectTree, doClone);
+			_orderBy = new SqlOrderByClause(this, clone._orderBy, objectTree, doClone);
 
 			Parameters.AddRange(clone.Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 			IsParameterDependent = clone.IsParameterDependent;

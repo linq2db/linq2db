@@ -10,9 +10,9 @@
 		public SqlSelectClause  Select  => SelectQuery.Select;
 		public SqlFromClause    From    => SelectQuery.From;
 		public SqlWhereClause   Where   => SelectQuery.Where;
-		public SelectQuery.GroupByClause GroupBy => SelectQuery.GroupBy;
+		public SqlGroupByClause GroupBy => SelectQuery.GroupBy;
 		public SqlWhereClause   Having  => SelectQuery.Having;
-		public SelectQuery.OrderByClause OrderBy => SelectQuery.OrderBy;
+		public SqlOrderByClause OrderBy => SelectQuery.OrderBy;
 		public SelectQuery   End()   { return SelectQuery; }
 
 		protected internal SelectQuery SelectQuery { get; private set; }
@@ -33,9 +33,9 @@
 
 		public SqlSelectClause  Select  => SelectQuery.Select;
 		public SqlFromClause    From    => SelectQuery.From;
-		public SelectQuery.GroupByClause GroupBy => SelectQuery.GroupBy;
+		public SqlGroupByClause GroupBy => SelectQuery.GroupBy;
 		public SqlWhereClause   Having  => SelectQuery.Having;
-		public SelectQuery.OrderByClause OrderBy => SelectQuery.OrderBy;
+		public SqlOrderByClause OrderBy => SelectQuery.OrderBy;
 		public SelectQuery   End()   { return SelectQuery; }
 
 		protected internal SelectQuery SelectQuery { get; private set; }

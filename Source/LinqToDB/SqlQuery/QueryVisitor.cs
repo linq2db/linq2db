@@ -212,13 +212,13 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.GroupByClause:
 					{
-						Visit1X((SelectQuery.GroupByClause)element);
+						Visit1X((SqlGroupByClause)element);
 						break;
 					}
 
 				case QueryElementType.OrderByClause:
 					{
-						Visit1X((SelectQuery.OrderByClause)element);
+						Visit1X((SqlOrderByClause)element);
 						break;
 					}
 
@@ -303,12 +303,12 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		void Visit1X(SelectQuery.OrderByClause element)
+		void Visit1X(SqlOrderByClause element)
 		{
 			foreach (var i in element.Items) Visit1(i);
 		}
 
-		void Visit1X(SelectQuery.GroupByClause element)
+		void Visit1X(SqlGroupByClause element)
 		{
 			foreach (var i in element.Items) Visit1(i);
 		}
@@ -578,13 +578,13 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.GroupByClause:
 					{
-						Visit2X((SelectQuery.GroupByClause)element);
+						Visit2X((SqlGroupByClause)element);
 						break;
 					}
 
 				case QueryElementType.OrderByClause:
 					{
-						Visit2X((SelectQuery.OrderByClause)element);
+						Visit2X((SqlOrderByClause)element);
 						break;
 					}
 
@@ -697,12 +697,12 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		void Visit2X(SelectQuery.OrderByClause element)
+		void Visit2X(SqlOrderByClause element)
 		{
 			foreach (var i in element.Items) Visit2(i);
 		}
 
-		void Visit2X(SelectQuery.GroupByClause element)
+		void Visit2X(SqlGroupByClause element)
 		{
 			foreach (var i in element.Items) Visit2(i);
 		}
@@ -825,8 +825,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.IsNullPredicate   : return Find(((SqlPredicate.IsNull)  element).Expr1,           find);
 				case QueryElementType.FromClause        : return Find(((SqlFromClause)        element).Tables,          find);
 				case QueryElementType.WhereClause       : return Find(((SqlWhereClause)       element).SearchCondition, find);
-				case QueryElementType.GroupByClause     : return Find(((SelectQuery.GroupByClause)     element).Items,           find);
-				case QueryElementType.OrderByClause     : return Find(((SelectQuery.OrderByClause)     element).Items,           find);
+				case QueryElementType.GroupByClause     : return Find(((SqlGroupByClause)     element).Items,           find);
+				case QueryElementType.OrderByClause     : return Find(((SqlOrderByClause)     element).Items,           find);
 				case QueryElementType.OrderByItem       : return Find(((SqlOrderByItem)       element).Expression,      find);
 				case QueryElementType.Union             : return Find(((SqlUnion)             element).SelectQuery,     find);
 				case QueryElementType.FuncLikePredicate : return Find(((SqlPredicate.FuncLike)element).Function,        find);
@@ -1376,7 +1376,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.GroupByClause:
 					{
-						var gc = (SelectQuery.GroupByClause)element;
+						var gc = (SqlGroupByClause)element;
 						var es = Convert(gc.Items, action);
 
 						IQueryElement parent;
@@ -1384,8 +1384,8 @@ namespace LinqToDB.SqlQuery
 
 						if (parent != null || es != null && !ReferenceEquals(gc.Items, es))
 						{
-							newElement = new SelectQuery.GroupByClause(es ?? gc.Items);
-							((SelectQuery.GroupByClause)newElement).SetSqlQuery((SelectQuery)parent);
+							newElement = new SqlGroupByClause(es ?? gc.Items);
+							((SqlGroupByClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
 						break;
@@ -1393,7 +1393,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.OrderByClause:
 					{
-						var oc = (SelectQuery.OrderByClause)element;
+						var oc = (SqlOrderByClause)element;
 						var es = Convert(oc.Items, action);
 
 						IQueryElement parent;
@@ -1401,8 +1401,8 @@ namespace LinqToDB.SqlQuery
 
 						if (parent != null || es != null && !ReferenceEquals(oc.Items, es))
 						{
-							newElement = new SelectQuery.OrderByClause(es ?? oc.Items);
-							((SelectQuery.OrderByClause)newElement).SetSqlQuery((SelectQuery)parent);
+							newElement = new SqlOrderByClause(es ?? oc.Items);
+							((SqlOrderByClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
 						break;
@@ -1482,9 +1482,9 @@ namespace LinqToDB.SqlQuery
 						var uc = q.IsUpdate ? ((SqlUpdateClause)ConvertInternal(q.Update, action) ?? q.Update) : null;
 						var dc = q.IsDelete ? ((SqlDeleteClause)ConvertInternal(q.Delete, action) ?? q.Delete) : null;
 						var wc = (SqlWhereClause)  ConvertInternal(q.Where,   action) ?? q.Where;
-						var gc = (SelectQuery.GroupByClause)ConvertInternal(q.GroupBy, action) ?? q.GroupBy;
+						var gc = (SqlGroupByClause)ConvertInternal(q.GroupBy, action) ?? q.GroupBy;
 						var hc = (SqlWhereClause)  ConvertInternal(q.Having,  action) ?? q.Having;
-						var oc = (SelectQuery.OrderByClause)ConvertInternal(q.OrderBy, action) ?? q.OrderBy;
+						var oc = (SqlOrderByClause)ConvertInternal(q.OrderBy, action) ?? q.OrderBy;
 						var us = q.HasUnion ? Convert(q.Unions, action) : q.Unions;
 
 						var ps = new List<SqlParameter>(q.Parameters.Count);

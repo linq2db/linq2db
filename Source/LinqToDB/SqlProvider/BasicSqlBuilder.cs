@@ -2319,10 +2319,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void AlternativeBuildSql(bool implementOrderBy, Action buildSql)
 		{
-			if (!(Statement is SelectQuery selectQuery))
-				return;
-
-			if (NeedSkip(selectQuery))
+			if (Statement is SelectQuery selectQuery && NeedSkip(selectQuery))
 			{
 				var aliases  = GetTempAliases(2, "t");
 				var rnaliase = GetTempAliases(1, "rn")[0];

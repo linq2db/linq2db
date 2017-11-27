@@ -290,7 +290,7 @@ namespace LinqToDB.SqlQuery
 
 						case QueryElementType.GroupByClause :
 							{
-								var expr = (SelectQuery.GroupByClause)e;
+								var expr = (SqlGroupByClause)e;
 
 								for (var i = 0; i < expr.Items.Count; i++)
 									if (dic.TryGetValue(expr.Items[i], out ex))

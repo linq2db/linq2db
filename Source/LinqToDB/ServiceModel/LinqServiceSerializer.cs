@@ -1041,8 +1041,8 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.FromClause    : Append(((SqlFromClause)   e).Tables);          break;
 					case QueryElementType.WhereClause   : Append(((SqlWhereClause)  e).SearchCondition); break;
-					case QueryElementType.GroupByClause : Append(((SelectQuery.GroupByClause)e).Items);           break;
-					case QueryElementType.OrderByClause : Append(((SelectQuery.OrderByClause)e).Items);           break;
+					case QueryElementType.GroupByClause : Append(((SqlGroupByClause)e).Items);           break;
+					case QueryElementType.OrderByClause : Append(((SqlOrderByClause)e).Items);           break;
 
 					case QueryElementType.OrderByItem :
 						{
@@ -1421,9 +1421,9 @@ namespace LinqToDB.ServiceModel
 							var readSelect         = ReadBool();
 							var select             = readSelect ? Read<SqlSelectClause>() : new SqlSelectClause(null);
 							var where              = Read<SqlWhereClause>();
-							var groupBy            = Read<SelectQuery.GroupByClause>();
+							var groupBy            = Read<SqlGroupByClause>();
 							var having             = Read<SqlWhereClause>();
-							var orderBy            = Read<SelectQuery.OrderByClause>();
+							var orderBy            = Read<SqlOrderByClause>();
 							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
 							var unions             = ReadArray<SqlUnion>();
@@ -1591,8 +1591,8 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SetExpression : obj = new SqlSetExpression(Read     <ISqlExpression>(), Read<ISqlExpression>()); break;
 					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>());                break;
 					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>());            break;
-					case QueryElementType.GroupByClause : obj = new SelectQuery.GroupByClause(ReadArray<ISqlExpression>());                         break;
-					case QueryElementType.OrderByClause : obj = new SelectQuery.OrderByClause(ReadArray<SqlOrderByItem>());                break;
+					case QueryElementType.GroupByClause : obj = new SqlGroupByClause(ReadArray<ISqlExpression>());                         break;
+					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>());                break;
 
 					case QueryElementType.OrderByItem :
 						{
