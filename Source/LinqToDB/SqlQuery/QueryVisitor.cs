@@ -185,6 +185,13 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.DropTableStatement:
+					{
+						if (((SqlDropTableStatement)element).Table != null)
+							Visit1(((SqlDropTableStatement)element).Table);
+						break;
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						Visit1X((SelectQuery.SelectClause)element);
@@ -541,6 +548,13 @@ namespace LinqToDB.SqlQuery
 					{
 						if (((SqlCreateTableStatement)element).Table != null)
 							Visit2(((SqlCreateTableStatement)element).Table);
+						break;
+					}
+
+				case QueryElementType.DropTableStatement:
+					{
+						if (((SqlDropTableStatement)element).Table != null)
+							Visit2(((SqlDropTableStatement)element).Table);
 						break;
 					}
 
@@ -916,6 +930,12 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlCreateTableStatement)element).Table, find);
 					}
 
+				case QueryElementType.DropTableStatement:
+					{
+						return
+							Find(((SqlCreateTableStatement)element).Table, find);
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						return
@@ -1279,7 +1299,20 @@ namespace LinqToDB.SqlQuery
 
 						if (t != null && !ReferenceEquals(s.Table, t))
 						{
-							newElement = new SqlCreateTableStatement { Table = t, IsDrop = s.IsDrop };
+							newElement = new SqlCreateTableStatement { Table = t };
+						}
+
+						break;
+					}
+
+				case QueryElementType.DropTableStatement:
+					{
+						var s = (SqlCreateTableStatement)element;
+						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
+
+						if (t != null && !ReferenceEquals(s.Table, t))
+						{
+							newElement = new SqlDropTableStatement { Table = t };
 						}
 
 						break;

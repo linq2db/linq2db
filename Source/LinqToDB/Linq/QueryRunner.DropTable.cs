@@ -14,14 +14,13 @@ namespace LinqToDB.Linq
 			public static void Query(IDataContext dataContext, string tableName, string databaseName, string ownerName)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var dropTable = new SqlCreateTableStatement();
+				var dropTable = new SqlDropTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (ownerName    != null) sqlTable.Owner        = ownerName;
 
 				dropTable.Table  = sqlTable;
-				dropTable.IsDrop = true;
 
 				var query = new Query<int>(dataContext, null)
 				{
@@ -36,14 +35,13 @@ namespace LinqToDB.Linq
 			public static async Task QueryAsync(IDataContext dataContext, string tableName, string databaseName, string ownerName, CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var dropTable = new SqlCreateTableStatement();
+				var dropTable = new SqlDropTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (ownerName    != null) sqlTable.Owner        = ownerName;
 
 				dropTable.Table  = sqlTable;
-				dropTable.IsDrop = true;
 
 				var query = new Query<int>(dataContext, null)
 				{

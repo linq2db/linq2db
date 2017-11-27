@@ -163,5 +163,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			return null;
 		}
+
+		public override SqlStatement GetResultStatement()
+		{
+			return SelectQuery;
+		}
 	}
 }

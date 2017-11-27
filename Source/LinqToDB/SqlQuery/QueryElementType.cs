@@ -42,6 +42,7 @@ namespace LinqToDB.SqlQuery
 				OrderByItem,
 			Union,
 
-		CreateTableStatement
+		CreateTableStatement,
+		DropTableStatement
 	}
 }

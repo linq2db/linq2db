@@ -262,9 +262,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append(")");
 		}
 
-		protected override void BuildDropTableStatement(SqlCreateTableStatement createTable)
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = createTable.Table;
+			var table = dropTable.Table;
 
 			if (table.PhysicalName.StartsWith("#"))
 			{

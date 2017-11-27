@@ -1295,7 +1295,7 @@ namespace Tests
 			catch
 			{
 				_db.DropTable<T>();
-				throw;
+				_db.CreateTable<T>();
 			}
 		}
 

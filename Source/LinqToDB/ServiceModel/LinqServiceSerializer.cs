@@ -1023,13 +1023,21 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlCreateTableStatement)e;
 
 							Append(elem.Table);
-							Append(elem.IsDrop);
 							Append(elem.StatementHeader);
 							Append(elem.StatementFooter);
 							Append((int)elem.DefaulNullable);
 
 							break;
 						}
+
+					case QueryElementType.DropTableStatement :
+					{
+						var elem = (SqlDropTableStatement)e;
+
+						Append(elem.Table);
+
+						break;
+					}
 
 					case QueryElementType.FromClause    : Append(((SelectQuery.FromClause)   e).Tables);          break;
 					case QueryElementType.WhereClause   : Append(((SelectQuery.WhereClause)  e).SearchCondition); break;
@@ -1553,7 +1561,6 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.CreateTableStatement :
 						{
 							var table           = Read<SqlTable>();
-							var isDrop          = ReadBool();
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
 							var defaultNullable = (DefaulNullable)ReadInt();
@@ -1561,7 +1568,6 @@ namespace LinqToDB.ServiceModel
 							obj = _statement = new SqlCreateTableStatement
 							{
 								Table           = table,
-								IsDrop          = isDrop,
 								StatementHeader = statementHeader,
 								StatementFooter = statementFooter,
 								DefaulNullable  = defaultNullable,
@@ -1569,6 +1575,18 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
+					case QueryElementType.DropTableStatement :
+					{
+						var table = Read<SqlTable>();
+
+						obj = _statement = new SqlDropTableStatement
+						{
+							Table = table,
+						};
+
+						break;
+					}
 
 					case QueryElementType.SetExpression : obj = new SelectQuery.SetExpression(Read     <ISqlExpression>(), Read<ISqlExpression>()); break;
 					case QueryElementType.FromClause    : obj = new SelectQuery.FromClause   (ReadArray<SelectQuery.TableSource>());                break;

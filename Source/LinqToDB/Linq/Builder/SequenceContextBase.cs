@@ -34,6 +34,7 @@ namespace LinqToDB.Linq.Builder
 		public ExpressionBuilder Builder     { get; set; }
 		public LambdaExpression  Lambda      { get; set; }
 		public SelectQuery       SelectQuery { get; set; }
+		public SqlStatement      Statement   { get; set; }
 
 		Expression IBuildContext.Expression { get { return Lambda; } }
 
@@ -52,6 +53,11 @@ namespace LinqToDB.Linq.Builder
 		public abstract SqlInfo[]          ConvertToIndex (Expression expression, int level, ConvertFlags flags);
 		public abstract IsExpressionResult IsExpression   (Expression expression, int level, RequestFor requestFlag);
 		public abstract IBuildContext      GetContext     (Expression expression, int level, BuildInfo buildInfo);
+
+		public virtual SqlStatement GetResultStatement()
+		{
+			return SelectQuery;
+		}
 
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)
 		{

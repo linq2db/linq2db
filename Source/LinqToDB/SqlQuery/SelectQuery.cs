@@ -3597,11 +3597,6 @@ namespace LinqToDB.SqlQuery
 
 #region ISqlExpressionWalkable Members
 
-		public override bool Equals(ISqlExpression other)
-		{
-			throw new NotImplementedException();
-		}
-
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (_insert != null) ((ISqlExpressionWalkable)_insert).Walk(skipColumns, func);

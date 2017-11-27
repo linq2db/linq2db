@@ -245,58 +245,61 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.CommandCount(statement);
 		}
 
-		protected override void BuildDropTableStatement(SqlCreateTableStatement createTable)
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			if (_identityField == null)
 			{
-				base.BuildDropTableStatement(createTable);
+				base.BuildDropTableStatement(dropTable);
 			}
 			else
 			{
 				StringBuilder
 					.Append("DROP TRIGGER TIDENTITY_")
-					.Append(createTable.Table.PhysicalName)
+					.Append(dropTable.Table.PhysicalName)
 					.AppendLine();
 			}
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			if (!(Statement is SqlCreateTableStatement createTable))
-				return;
+			switch (Statement)
+			{
+				case SqlDropTableStatement dropTable:
+					{
+						if (commandNumber == 1)
+						{
+							StringBuilder
+								.Append("DROP GENERATOR GIDENTITY_")
+								.Append(dropTable.Table.PhysicalName)
+								.AppendLine();
+						}
+						else
+							base.BuildDropTableStatement(dropTable);
+						break;
+					}
 
-			if (createTable.IsDrop)
-			{
-				if (commandNumber == 1)
-				{
-					StringBuilder
-						.Append("DROP GENERATOR GIDENTITY_")
-						.Append(createTable.Table.PhysicalName)
-						.AppendLine();
-				}
-				else
-					base.BuildDropTableStatement(createTable);
-			}
-			else
-			{
-				if (commandNumber == 1)
-				{
-					StringBuilder
-						.Append("CREATE GENERATOR GIDENTITY_")
-						.Append(createTable.Table.PhysicalName)
-						.AppendLine();
-				}
-				else
-				{
-					StringBuilder
-						.AppendFormat("CREATE TRIGGER TIDENTITY_{0} FOR {0}", createTable.Table.PhysicalName)
-						.AppendLine  ()
-						.AppendLine  ("BEFORE INSERT POSITION 0")
-						.AppendLine  ("AS BEGIN")
-						.AppendFormat("\tNEW.{0} = GEN_ID(GIDENTITY_{1}, 1);", _identityField.PhysicalName, createTable.Table.PhysicalName)
-						.AppendLine  ()
-						.AppendLine  ("END");
-				}
+				case SqlCreateTableStatement createTable:
+					{
+						if (commandNumber == 1)
+						{
+							StringBuilder
+								.Append("CREATE GENERATOR GIDENTITY_")
+								.Append(createTable.Table.PhysicalName)
+								.AppendLine();
+						}
+						else
+						{
+							StringBuilder
+								.AppendFormat("CREATE TRIGGER TIDENTITY_{0} FOR {0}", createTable.Table.PhysicalName)
+								.AppendLine  ()
+								.AppendLine  ("BEFORE INSERT POSITION 0")
+								.AppendLine  ("AS BEGIN")
+								.AppendFormat("\tNEW.{0} = GEN_ID(GIDENTITY_{1}, 1);", _identityField.PhysicalName, createTable.Table.PhysicalName)
+								.AppendLine  ()
+								.AppendLine  ("END");
+						}
+						break;
+					}
 			}
 		}
 

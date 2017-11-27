@@ -23,8 +23,9 @@ namespace LinqToDB.Linq.Builder
 		public virtual ExpressionBuilder Builder     { get { return Context.Builder;     } }
 		public virtual Expression        Expression  { get { return Context.Expression;  } }
 		public virtual SelectQuery       SelectQuery { get { return Context.SelectQuery; } set { Context.SelectQuery = value; } }
+		public virtual SqlStatement      Statement   { get { return Context.Statement;   } set { Context.Statement = value; } }
 		public virtual IBuildContext     Parent      { get { return Context.Parent;      } set { Context.Parent      = value; } }
-
+		
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
 			Context.BuildQuery(query, queryParameter);
@@ -68,6 +69,11 @@ namespace LinqToDB.Linq.Builder
 		public virtual ISqlExpression GetSubQuery(IBuildContext context)
 		{
 			return Context.GetSubQuery(context);
+		}
+
+		public virtual SqlStatement GetResultStatement()
+		{
+			return Context.GetResultStatement();
 		}
 	}
 }

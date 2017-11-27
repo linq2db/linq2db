@@ -150,21 +150,14 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (Statement.QueryType)
 			{
-				case QueryType.Select        : BuildSelectQuery((SelectQuery)Statement);         break;
-				case QueryType.Delete        : BuildDeleteQuery((SelectQuery)Statement);         break;
-				case QueryType.Update        : BuildUpdateQuery((SelectQuery)Statement);         break;
-				case QueryType.Insert        : BuildInsertQuery((SelectQuery)Statement);         break;
-				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery((SelectQuery)Statement); break;
-				case QueryType.CreateTable:
-					{
-						var createTable = (SqlCreateTableStatement) Statement;
-						if (createTable.IsDrop)
-							BuildDropTableStatement(createTable);
-						else
-							BuildCreateTableStatement(createTable);
-					}
-					break;
-				default                      : BuildUnknownQuery();                              break;
+				case QueryType.Select        : BuildSelectQuery((SelectQuery)Statement);                      break;
+				case QueryType.Delete        : BuildDeleteQuery((SelectQuery)Statement);                      break;
+				case QueryType.Update        : BuildUpdateQuery((SelectQuery)Statement);                      break;
+				case QueryType.Insert        : BuildInsertQuery((SelectQuery)Statement);                      break;
+				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery((SelectQuery)Statement);              break;
+				case QueryType.CreateTable   : BuildCreateTableStatement((SqlCreateTableStatement)Statement); break;
+				case QueryType.DropTable     : BuildDropTableStatement((SqlDropTableStatement)Statement);     break;
+				default                      : BuildUnknownQuery();                                           break;
 			}
 		}
 
@@ -691,9 +684,9 @@ namespace LinqToDB.SqlProvider
 
 		#region Build DDL
 
-		protected virtual void BuildDropTableStatement(SqlCreateTableStatement createTable)
-		{
-			var table = createTable.Table;
+		protected virtual void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{ 
+			var table = dropTable.Table;
 
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);

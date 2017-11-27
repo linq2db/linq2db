@@ -4,19 +4,16 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCreateTableStatement : SqlStatement
+	public class SqlDropTableStatement : SqlStatement
 	{
 		public SqlTable       Table           { get; set; }
-		public string         StatementHeader { get; set; }
-		public string         StatementFooter { get; set; }
-		public DefaulNullable DefaulNullable  { get; set; }
 
-		public override QueryType QueryType          => QueryType.CreateTable;
-		public override QueryElementType ElementType => QueryElementType.CreateTableStatement;
+		public override QueryType QueryType          => QueryType.DropTable;
+		public override QueryElementType ElementType => QueryElementType.DropTableStatement;
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			sb.Append("CREATE TABLE ");
+			sb.Append("DROP TABLE ");
 
 			if (Table != null)
 				((IQueryElement)Table).ToString(sb, dic);
@@ -39,7 +36,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			var clone = new SqlCreateTableStatement();
+			var clone = new SqlDropTableStatement();
 
 			if (Table != null)
 				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);

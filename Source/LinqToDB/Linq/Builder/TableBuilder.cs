@@ -137,12 +137,9 @@ namespace LinqToDB.Linq.Builder
 			public ExpressionBuilder  Builder     { get; }
 			public Expression         Expression  { get; }
 
-			public SelectQuery        SelectQuery {
-				get => (SelectQuery) Statement;
-				set => Statement = value;
-			}
-
+			public SelectQuery        SelectQuery { get; set; }
 			public SqlStatement       Statement   { get; set; }
+
 			public List<MemberInfo[]> LoadWith    { get; set; }
 
 			public virtual IBuildContext Parent { get; set; }
@@ -1000,6 +997,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				throw new InvalidOperationException();
+			}
+
+			public SqlStatement GetResultStatement()
+			{
+				return SelectQuery;
 			}
 
 			#endregion

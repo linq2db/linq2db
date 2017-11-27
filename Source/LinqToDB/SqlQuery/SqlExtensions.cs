@@ -12,5 +12,34 @@
 		{
 			return statement.IsInsert() && ((SelectQuery)statement).Insert.WithIdentity;
 		}
+
+		public static SelectQuery.SelectClause AsSelect(this SqlStatement statement)
+		{
+			if (statement is SelectQuery selectQuery)
+				return selectQuery.Select;
+			throw new LinqToDBException($"Satetement {statement.QueryType} is not Select Statement");
+		}
+
+		public static SelectQuery.InsertClause AsInsert(this SqlStatement statement)
+		{
+			if (statement is SelectQuery selectQuery)
+				return selectQuery.Insert;
+			throw new LinqToDBException($"Satetement {statement.QueryType} is not Insert Statement");
+		}
+
+		public static SelectQuery AsQuery(this SqlStatement statement)
+		{
+			if (statement is SelectQuery selectQuery)
+				return selectQuery;
+			throw new LinqToDBException($"Satetement {statement.QueryType} is not SelectQuery");
+		}
+		
+		public static ISqlExpression AsExpression(this SqlStatement statement)
+		{
+			if (statement is ISqlExpression expression)
+				return expression;
+			throw new LinqToDBException($"Satetement {statement.QueryType} do not supports ISqlExpression interface");
+		}
+		
 	}
 }
