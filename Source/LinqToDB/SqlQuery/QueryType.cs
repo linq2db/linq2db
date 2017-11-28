@@ -10,5 +10,6 @@ namespace LinqToDB.SqlQuery
 		Insert,
 		InsertOrUpdate,
 		CreateTable,
+		DropTable,
 	}
 }

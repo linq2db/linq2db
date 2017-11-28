@@ -15,14 +15,17 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
-		protected override void BuildGetIdentity()
+		protected override void BuildGetIdentity(SelectQuery selectQuery)
 		{
 			StringBuilder
 				.AppendLine()
 				.AppendLine("SELECT @@IDENTITY");
 		}
 
-		protected override string FirstFormat { get { return "TOP {0}"; } }
+		protected override string FirstFormat(SelectQuery selectQuery)
+		{
+			return "TOP {0}";
+		}
 
 		protected override void BuildFunction(SqlFunction func)
 		{
@@ -39,30 +42,30 @@ namespace LinqToDB.DataProvider.Sybase
 			_skipAliases = skipAliases;
 		}
 
-		protected override void BuildSelectClause()
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
 			_isSelect = true;
-			base.BuildSelectClause();
+			base.BuildSelectClause(selectQuery);
 			_isSelect = false;
 		}
 
-		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SelectQuery.SearchCondition)
+				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 				}
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 
 			if (_skipAliases) addAlias = false;
@@ -82,22 +85,22 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		protected override void BuildDeleteClause()
+		protected override void BuildDeleteClause(SelectQuery selectQuery)
 		{
 			AppendIndent();
 			StringBuilder.Append("DELETE");
-			BuildSkipFirst();
+			BuildSkipFirst(selectQuery);
 			StringBuilder.Append(" FROM ");
 
 			ISqlTableSource table;
 			ISqlTableSource source;
 
-			if (SelectQuery.Delete.Table != null)
-				table = source = SelectQuery.Delete.Table;
+			if (selectQuery.Delete.Table != null)
+				table = source = selectQuery.Delete.Table;
 			else
 			{
-				table  = SelectQuery.From.Tables[0];
-				source = SelectQuery.From.Tables[0].Source;
+				table  = selectQuery.From.Tables[0];
+				source = selectQuery.From.Tables[0].Source;
 			}
 
 			var alias = GetTableAlias(table);
@@ -106,7 +109,7 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
+		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
 			if (predicate.Expr2 is SqlValue)
 			{
@@ -118,7 +121,7 @@ namespace LinqToDB.DataProvider.Sybase
 					var ntext = text.Replace("[", "[[]");
 
 					if (text != ntext)
-						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
 				}
 			}
 			else if (predicate.Expr2 is SqlParameter)
@@ -130,12 +133,12 @@ namespace LinqToDB.DataProvider.Sybase
 			base.BuildLikePredicate(predicate);
 		}
 
-		protected override void BuildUpdateTableName()
+		protected override void BuildUpdateTableName(SelectQuery selectQuery)
 		{
-			if (SelectQuery.Update.Table != null && SelectQuery.Update.Table != SelectQuery.From.Tables[0].Source)
-				BuildPhysicalTable(SelectQuery.Update.Table, null);
+			if (selectQuery.Update.Table != null && selectQuery.Update.Table != selectQuery.From.Tables[0].Source)
+				BuildPhysicalTable(selectQuery.Update.Table, null);
 			else
-				BuildTableName(SelectQuery.From.Tables[0], true, false);
+				BuildTableName(selectQuery.From.Tables[0], true, false);
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -197,12 +200,12 @@ namespace LinqToDB.DataProvider.Sybase
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert();
+			BuildInsertOrUpdateQueryAsUpdateInsert(selectQuery);
 		}
 
-		protected override void BuildEmptyInsert()
+		protected override void BuildEmptyInsert(SelectQuery selectQuery)
 		{
 			StringBuilder.AppendLine("VALUES ()");
 		}
@@ -212,7 +215,7 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.Append("IDENTITY");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");

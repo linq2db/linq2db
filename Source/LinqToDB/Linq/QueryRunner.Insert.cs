@@ -17,7 +17,8 @@ namespace LinqToDB.Linq
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.Insert };
+				var sqlQuery = new SelectQuery();
+				sqlQuery.ChangeQueryType(QueryType.Insert);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
@@ -27,7 +28,7 @@ namespace LinqToDB.Linq
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = sqlQuery, } }
 				};
 
 				foreach (var field in sqlTable.Fields)
@@ -38,7 +39,7 @@ namespace LinqToDB.Linq
 
 						ei.Queries[0].Parameters.Add(param);
 
-						sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, param.SqlParameter));
+						sqlQuery.Insert.Items.Add(new SqlSetExpression(field.Value, param.SqlParameter));
 					}
 					else if (field.Value.IsIdentity)
 					{
@@ -46,7 +47,7 @@ namespace LinqToDB.Linq
 						var expr = sqlb.GetIdentityExpression(sqlTable);
 
 						if (expr != null)
-							sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, expr));
+							sqlQuery.Insert.Items.Add(new SqlSetExpression(field.Value, expr));
 					}
 				}
 

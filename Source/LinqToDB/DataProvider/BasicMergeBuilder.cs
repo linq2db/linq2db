@@ -56,7 +56,7 @@ namespace LinqToDB.DataProvider
 				ParameterExpression target,
 				ParameterExpression source)
 			{
-				_tuple = tuple;
+				_tuple  = tuple;
 				_target = target;
 				_source = source;
 			}
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider
 			var ctx = target.Provider.Execute<ContextParser.Context>(
 				Expression.Call(
 					null,
-					LinqExtensions._setMethodInfo8.MakeGenericMethod(typeof(int)),
+					LinqExtensions.SetMethodInfo8.MakeGenericMethod(typeof(int)),
 					new[] { join }));
 
 			var sql = ctx.SelectQuery;
@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider
 
 			var condition = sql.From.Tables[0].Joins[0].Condition;
 			SetSourceColumnAliases(condition, sql.From.Tables[0].Joins[0].Table.Source);
-			
+
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
 
@@ -164,10 +164,8 @@ namespace LinqToDB.DataProvider
 					IQueryable<TTuple> query,
 					Expression<Func<TTarget, TSource, bool>> predicate)
 		{
-			var p = Expression.Parameter(typeof(TTuple));
-
-			var rewriter = new ExpressionParameterRewriter(p, predicate.Parameters[0], predicate.Parameters[1]);
-
+			var p            = Expression.Parameter(typeof(TTuple));
+			var rewriter     = new ExpressionParameterRewriter(p, predicate.Parameters[0], predicate.Parameters[1]);
 			var newPredicate = Expression.Lambda<Func<TTuple, bool>>(rewriter.Visit(predicate.Body), p);
 
 			return query.Where(newPredicate);
@@ -218,11 +216,11 @@ namespace LinqToDB.DataProvider
 		{
 			public SqlParameter[] SqlParameters;
 
-			public object Context { get; set; }
+			public object         Context    { get; set; }
 
-			public List<string> QueryHints { get; set; }
+			public List<string>   QueryHints { get; set; }
 
-			public SelectQuery SelectQuery { get; set; }
+			public SqlStatement   Statement  { get; set; }
 
 			public SqlParameter[] GetParameters()
 			{
@@ -255,8 +253,7 @@ namespace LinqToDB.DataProvider
 
 		protected void AddSourceValueAsParameter(DataType dataType, object value)
 		{
-			var name = GetNextParameterName();
-
+			var name     = GetNextParameterName();
 			var fullName = SqlBuilder.Convert(name, ConvertType.NameToQueryParameter).ToString();
 
 			Command.Append(fullName);
@@ -424,7 +421,7 @@ namespace LinqToDB.DataProvider
 					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == column.Members[0]);
 
 					var alias = CreateSourceColumnAlias(columnDescriptor.ColumnName, false);
-					query.Select.Columns.Add(new SelectQuery.Column(query, column.Sql, alias));
+					query.Select.Columns.Add(new SqlColumn(query, column.Sql, alias));
 				}
 
 				// bind parameters
@@ -450,7 +447,7 @@ namespace LinqToDB.DataProvider
 
 				var queryContext = new QueryContext
 				{
-					SelectQuery = query,
+					Statement     = query,
 					SqlParameters = query.Parameters.ToArray()
 				};
 
@@ -473,10 +470,8 @@ namespace LinqToDB.DataProvider
 
 		private void BuildSourceSubQueryValues(IEnumerable<TSource> source)
 		{
-			var hasData = false;
-
-			var columnTypes = GetSourceColumnTypes();
-
+			var hasData        = false;
+			var columnTypes    = GetSourceColumnTypes();
 			var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
 
 			foreach (var item in source)
@@ -612,9 +607,9 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected virtual void BuildUpdateWithDelete(
-			Expression<Func<TTarget, TSource, bool>> updatePredicate,
+			Expression<Func<TTarget, TSource, bool>>    updatePredicate,
 			Expression<Func<TTarget, TSource, TTarget>> updateExpression,
-			Expression<Func<TTarget, TSource, bool>> deletePredicate)
+			Expression<Func<TTarget, TSource, bool>>    deletePredicate)
 		{
 			// must be implemented by descendant that supports this operation
 			throw new NotImplementedException();
@@ -687,7 +682,7 @@ namespace LinqToDB.DataProvider
 		{
 			Expression insertExpression = Expression.Call(
 				null,
-				LinqExtensions._insertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				LinqExtensions.InsertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 				new[]
 				{
 					_connection.GetTable<TSource>().Expression,
@@ -695,19 +690,19 @@ namespace LinqToDB.DataProvider
 					Expression.Quote(create)
 				});
 
-			var qry = Query<int>.GetQuery(DataContext, ref insertExpression);
-			var query = qry.Queries[0].SelectQuery;
+			var qry   = Query<int>.GetQuery(DataContext, ref insertExpression);
+			var query = (SelectQuery)qry.Queries[0].Statement;
 
 			query.Insert.Into.Alias = _targetAlias;
 
 			// we need Insert type for proper query cloning (maybe this is a bug in clone function?)
-			query.QueryType = QueryType.Insert;
+			query.ChangeQueryType(QueryType.Insert);
 
 			var tables = MoveJoinsToSubqueries(query, SourceAlias, null, QueryElement.InsertSetter);
 			SetSourceColumnAliases(query.Insert, tables.Item1.Source);
 
 			// we need InsertOrUpdate for sql builder to generate values clause
-			query.QueryType = QueryType.InsertOrUpdate;
+			query.ChangeQueryType(QueryType.InsertOrUpdate);
 
 			QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
 
@@ -750,7 +745,9 @@ namespace LinqToDB.DataProvider
 				.AppendLine("(");
 
 			var sourceAlias = SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
+
 			first = true;
+
 			foreach (var column in insertColumns)
 			{
 				if (!first)
@@ -814,17 +811,17 @@ namespace LinqToDB.DataProvider
 		protected void BuildCustomUpdate(Expression<Func<TTarget, TSource, TTarget>> update)
 		{
 			// build update query
-			var target = _connection.GetTable<TTarget>();
+			var target      = _connection.GetTable<TTarget>();
 			var updateQuery = target.SelectMany(_ => _connection.GetTable<TSource>(), (t, s) => new { t, s });
-			var predicate = RewriteUpdatePredicateParameters(updateQuery, update);
+			var predicate   = RewriteUpdatePredicateParameters(updateQuery, update);
 
 			Expression updateExpression = Expression.Call(
 				null,
-				LinqExtensions._updateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
+				LinqExtensions.UpdateMethodInfo.MakeGenericMethod(new[] { updateQuery.GetType().GetGenericArgumentsEx()[0], typeof(TTarget) }),
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
-			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
-			var query = qry.Queries[0].SelectQuery;
+			var qry   = Query<int>.GetQuery(DataContext, ref updateExpression);
+			var query = (SelectQuery)qry.Queries[0].Statement;
 
 			if (ProviderUsesAlternativeUpdate)
 				BuildAlternativeUpdateQuery(query);
@@ -843,11 +840,10 @@ namespace LinqToDB.DataProvider
 		private void BuildAlternativeUpdateQuery(SelectQuery query)
 		{
 			var subQuery = (SelectQuery)QueryVisitor.Find(query.Where.SearchCondition, e => e.ElementType == QueryElementType.SqlQuery);
-
-			var target = query.From.Tables[0];
+			var target   = query.From.Tables[0];
 			target.Alias = _targetAlias;
 
-			SelectQuery.TableSource source = null;
+			SqlTableSource source = null;
 
 			if (subQuery.From.Tables.Count == 2)
 			{
@@ -862,12 +858,13 @@ namespace LinqToDB.DataProvider
 
 				// collect tables, referenced in FROM clause
 				var tableSet = new HashSet<SqlTable>();
-				var tables = new List<SqlTable>();
+				var tables   = new List<SqlTable>();
+
 				new QueryVisitor().Visit(subQuery.From, e =>
 				{
 					if (e.ElementType == QueryElementType.TableSource)
 					{
-						var et = (SelectQuery.TableSource)e;
+						var et = (SqlTableSource)e;
 
 						tableSet.Add((SqlTable)et.Source);
 						tables.Add((SqlTable)et.Source);
@@ -893,7 +890,7 @@ namespace LinqToDB.DataProvider
 				Command.AppendLine("SET");
 
 				var sourceAlias = (string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
-				var maxLen = updateColumns.Max(c => ((string)SqlBuilder.Convert(c.ColumnName, ConvertType.NameToQueryField)).Length);
+				var maxLen      = updateColumns.Max(c => ((string)SqlBuilder.Convert(c.ColumnName, ConvertType.NameToQueryField)).Length);
 
 				var first = true;
 				foreach (var column in updateColumns)
@@ -917,7 +914,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected virtual void BuildUpdate(
-					Expression<Func<TTarget, TSource, bool>> predicate,
+					Expression<Func<TTarget, TSource, bool>>    predicate,
 					Expression<Func<TTarget, TSource, TTarget>> update)
 		{
 			Command
@@ -960,14 +957,14 @@ namespace LinqToDB.DataProvider
 				if (tbl != firstTable && (secondTable == null || tbl != secondTable) && tableSet.Contains(tbl))
 				{
 					var tempCopy = sql.Clone();
-					tempCopy.QueryType = QueryType.Select;
-					var tempTables = new List<SelectQuery.TableSource>();
+					tempCopy.ChangeQueryType(QueryType.Select);
+					var tempTables = new List<SqlTableSource>();
 
 					// create copy of tables from main FROM clause for subquery clause
 					new QueryVisitor().Visit(tempCopy.From, ee =>
 					{
 						if (ee.ElementType == QueryElementType.TableSource)
-							tempTables.Add((SelectQuery.TableSource)ee);
+							tempTables.Add((SqlTableSource)ee);
 					});
 
 					// main table reference in subquery
@@ -1002,22 +999,23 @@ namespace LinqToDB.DataProvider
 			return element;
 		}
 
-		private static Tuple<SelectQuery.TableSource, SelectQuery.TableSource> MoveJoinsToSubqueries(
-			SelectQuery sql,
-			string firstTableAlias,
-			string secondTableAlias,
+		private static Tuple<SqlTableSource, SqlTableSource> MoveJoinsToSubqueries(
+			SelectQuery  sql,
+			string       firstTableAlias,
+			string       secondTableAlias,
 			QueryElement part)
 		{
 			var baseTablesCount = secondTableAlias == null ? 1 : 2;
 
 			// collect tables, referenced in FROM clause
 			var tableSet = new HashSet<SqlTable>();
-			var tables = new List<SqlTable>();
+			var tables   = new List<SqlTable>();
+
 			new QueryVisitor().Visit(sql.From, e =>
 			{
 				if (e.ElementType == QueryElementType.TableSource)
 				{
-					var et = (SelectQuery.TableSource)e;
+					var et = (SqlTableSource)e;
 
 					tableSet.Add((SqlTable)et.Source);
 					tables.Add((SqlTable)et.Source);
@@ -1026,7 +1024,7 @@ namespace LinqToDB.DataProvider
 
 			if (tables.Count > baseTablesCount)
 			{
-				var firstTable = (SqlTable)sql.From.Tables[0].Source;
+				var firstTable  = (SqlTable)sql.From.Tables[0].Source;
 				var secondTable = baseTablesCount > 1
 					? (SqlTable)sql.From.Tables[0].Joins[0].Table.Source
 					: null;
@@ -1050,10 +1048,10 @@ namespace LinqToDB.DataProvider
 				queryPart.Walk(true, element => ConvertToSubquery(sql, element, tableSet, tables, firstTable, secondTable));
 			}
 
-			var table1 = sql.From.Tables[0];
+			var table1   = sql.From.Tables[0];
 			table1.Alias = firstTableAlias;
 
-			SelectQuery.TableSource table2 = null;
+			SqlTableSource table2 = null;
 
 			if (secondTableAlias != null)
 			{
@@ -1069,11 +1067,10 @@ namespace LinqToDB.DataProvider
 		}
 
 		private Expression<Func<TTuple, TTarget>> RewriteUpdatePredicateParameters<TTuple>(
-			IQueryable<TTuple> query,
+			IQueryable<TTuple>                          query,
 			Expression<Func<TTarget, TSource, TTarget>> predicate)
 		{
-			var p = Expression.Parameter(typeof(TTuple));
-
+			var p        = Expression.Parameter(typeof(TTuple));
 			var rewriter = new ExpressionParameterRewriter(p, predicate.Parameters[0], predicate.Parameters[1]);
 
 			return Expression.Lambda<Func<TTuple, TTarget>>(rewriter.Visit(predicate.Body), p);
@@ -1082,7 +1079,7 @@ namespace LinqToDB.DataProvider
 
 		#region Operations: UPDATE BY SOURCE
 		private void BuildUpdateBySource(
-							Expression<Func<TTarget, bool>> predicate,
+							Expression<Func<TTarget, bool>>    predicate,
 							Expression<Func<TTarget, TTarget>> update)
 		{
 			Command
@@ -1099,11 +1096,11 @@ namespace LinqToDB.DataProvider
 
 			Expression updateExpression = Expression.Call(
 				null,
-				LinqExtensions._updateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
+				LinqExtensions.UpdateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
-			var query = qry.Queries[0].SelectQuery;
+			var query = (SelectQuery)qry.Queries[0].Statement;
 
 			MoveJoinsToSubqueries(query, _targetAlias, null, QueryElement.UpdateSetter);
 
@@ -1312,13 +1309,14 @@ namespace LinqToDB.DataProvider
 			if (typeof(TTarget) != typeof(TSource))
 				_sourceDescriptor = DataContext.MappingSchema.GetEntityDescriptor(typeof(TSource));
 
-			var target = (Table<TTarget>)Merge.Target;
-			var sb = new StringBuilder();
+			var target = Merge.Target;
+			var sb     = new StringBuilder();
+
 			SqlBuilder.ConvertTableName(
 				sb,
 				target.DatabaseName ?? TargetDescriptor.DatabaseName,
-				target.SchemaName ?? TargetDescriptor.SchemaName,
-				target.TableName ?? TargetDescriptor.TableName);
+				target.SchemaName   ?? TargetDescriptor.SchemaName,
+				target.TableName    ?? TargetDescriptor.TableName);
 			TargetTableName = sb.ToString();
 
 			BuildCommandText();
@@ -1445,9 +1443,10 @@ namespace LinqToDB.DataProvider
 
 			// - validate that specified operations supported by provider
 			// - validate that operations don't have conditions if provider doesn't support them
-			var hasUpdate = false;
-			var hasDelete = false;
+			var hasUpdate           = false;
+			var hasDelete           = false;
 			var hasUpdateWithDelete = false;
+
 			foreach (var operation in Merge.Operations)
 			{
 				switch (operation.Type)

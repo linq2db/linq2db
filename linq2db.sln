@@ -57,6 +57,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 		appveyor.yml = appveyor.yml
 		Build.cmd = Build.cmd
 		Clean.cmd = Clean.cmd
+		CONTRIBUTING.md = CONTRIBUTING.md
 		MIT-LICENSE.txt = MIT-LICENSE.txt
 	EndProjectSection
 EndProject

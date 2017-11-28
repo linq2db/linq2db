@@ -22,17 +22,18 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
+			if (statement is SelectQuery selectQuery)
+				new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
 
-			selectQuery = base.Finalize(selectQuery);
+			statement = base.Finalize(statement);
 
-			switch (selectQuery.QueryType)
+			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
-				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
-				default               : return selectQuery;
+				case QueryType.Delete : return GetAlternativeDelete((SelectQuery)statement);
+				case QueryType.Update : return GetAlternativeUpdate((SelectQuery)statement);
+				default               : return statement;
 			}
 		}
 

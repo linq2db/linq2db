@@ -149,7 +149,7 @@ namespace LinqToDB.Linq
 		{
 			Queries.Add(new QueryInfo
 			{
-				SelectQuery = parseContext.SelectQuery,
+				Statement   = parseContext.GetResultStatement(),
 				Parameters  = sqlParameters,
 			});
 		}
@@ -189,9 +189,7 @@ namespace LinqToDB.Linq
 			_sync         = new object();
 			_orderedCache = new List<Query<T>>(CacheSize);
 
-#if !SILVERLIGHT
-			Query.CacheCleaners.Add(ClearCache);
-#endif
+			CacheCleaners.Add(ClearCache);
 		}
 
 		/// <summary>
@@ -323,12 +321,7 @@ namespace LinqToDB.Linq
 
 	class QueryInfo : IQueryContext
 	{
-		public QueryInfo()
-		{
-			SelectQuery = new SelectQuery();
-		}
-
-		public SelectQuery  SelectQuery { get; set; }
+		public SqlStatement Statement   { get; set; }
 		public object       Context     { get; set; }
 		public List<string> QueryHints  { get; set; }
 

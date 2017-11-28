@@ -17,9 +17,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2008SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
 		{
-			BuildInsertOrUpdateQueryAsMerge(null);
+			BuildInsertOrUpdateQueryAsMerge(selectQuery, null);
 			StringBuilder.AppendLine(";");
 		}
 

@@ -109,7 +109,7 @@ namespace LinqToDB.Linq.Builder
 				.Select(idx =>
 				{
 					idx.Query = SelectQuery;
-					idx.Index = GetIndex((SelectQuery.Column)idx.Sql);
+					idx.Index = GetIndex((SqlColumn)idx.Sql);
 
 					return idx;
 				})
@@ -128,7 +128,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected internal readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();
 
-		protected virtual int GetIndex(SelectQuery.Column column)
+		protected virtual int GetIndex(SqlColumn column)
 		{
 			int idx;
 
@@ -162,6 +162,11 @@ namespace LinqToDB.Linq.Builder
 		public override ISqlExpression GetSubQuery(IBuildContext context)
 		{
 			return null;
+		}
+
+		public override SqlStatement GetResultStatement()
+		{
+			return SelectQuery;
 		}
 	}
 }

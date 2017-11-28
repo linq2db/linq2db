@@ -12,8 +12,16 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		protected override string LimitFormat         { get { return SelectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null; } }
-		protected override string OffsetFormat        { get { return "OFFSET {0} ROWS"; } }
+		protected override string LimitFormat(SelectQuery selectQuery)
+		{
+			return selectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null;
+		}
+
+		protected override string OffsetFormat(SelectQuery selectQuery)
+		{
+			return "OFFSET {0} ROWS";
+		}
+
 		protected override bool   OffsetFirst         { get { return true;              } }
 		protected override bool   BuildAlternativeSql { get { return false;             } }
 
@@ -24,18 +32,21 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildSql()
 		{
-			if (NeedSkip && SelectQuery.OrderBy.IsEmpty)
+			if (Statement is SelectQuery selectQuery)
 			{
-				for (var i = 0; i < SelectQuery.Select.Columns.Count; i++)
-					SelectQuery.OrderBy.ExprAsc(new SqlValue(i + 1));
+				if (NeedSkip(selectQuery) && selectQuery.OrderBy.IsEmpty)
+				{
+					for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+						selectQuery.OrderBy.ExprAsc(new SqlValue(i + 1));
+				}
 			}
 
 			base.BuildSql();
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
 		{
-			BuildInsertOrUpdateQueryAsMerge(null);
+			BuildInsertOrUpdateQueryAsMerge(selectQuery, null);
 			StringBuilder.AppendLine(";");
 		}
 
@@ -65,13 +76,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
 						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-						              new SqlFunction(func.SystemType, func.Name, parms)));
+							new SqlFunction(func.SystemType, func.Name, parms)));
 						return;
 					}
 
-					var sc = new SelectQuery.SearchCondition();
+					var sc = new SqlSearchCondition();
 
-					sc.Conditions.Add(new SelectQuery.Condition(false, new SelectQuery.Predicate.IsNull(func.Parameters[0], false)));
+					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
 
 					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0]);
 
@@ -89,10 +100,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (start == 0 && SqlExpression.NeedsEqual(cond))
 			{
-				cond = new SelectQuery.SearchCondition(
-					new SelectQuery.Condition(
+				cond = new SqlSearchCondition(
+					new SqlCondition(
 						false,
-						new SelectQuery.Predicate.ExprExpr(cond, SelectQuery.Predicate.Operator.Equal, new SqlValue(1))));
+						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1))));
 			}
 
 			if (len == 3)

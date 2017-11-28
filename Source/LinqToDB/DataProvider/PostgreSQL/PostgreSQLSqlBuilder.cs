@@ -16,33 +16,36 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return statement.IsInsertWithIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			var into = SelectQuery.Insert.Into;
-			var attr = GetSequenceNameAttribute(into, false);
-			var name =
-				attr != null ?
-					attr.SequenceName :
-					Convert(
-						string.Format("{0}_{1}_seq", into.PhysicalName, into.GetIdentityField().PhysicalName),
-						ConvertType.NameToQueryField);
+			if (Statement is SelectQuery selectQuery)
+			{
+				var into = selectQuery.Insert.Into;
+				var attr = GetSequenceNameAttribute(into, false);
+				var name =
+					attr != null
+						? attr.SequenceName
+						: Convert(
+							string.Format("{0}_{1}_seq", into.PhysicalName, into.GetIdentityField().PhysicalName),
+							ConvertType.NameToQueryField);
 
-			name = Convert(name, ConvertType.NameToQueryTable);
+				name = Convert(name, ConvertType.NameToQueryTable);
 
-			var database = GetTableDatabaseName(into);
-			var owner    = GetTableOwnerName   (into);
+				var database = GetTableDatabaseName(into);
+				var owner = GetTableOwnerName(into);
 
-			AppendIndent()
-				.Append("SELECT currval('");
+				AppendIndent()
+					.Append("SELECT currval('");
 
-			BuildTableName(StringBuilder, database, owner, name.ToString());
+				BuildTableName(StringBuilder, database, owner, name.ToString());
 
-			StringBuilder.AppendLine("')");
+				StringBuilder.AppendLine("')");
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -50,8 +53,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override string LimitFormat  { get { return "LIMIT {0}";   } }
-		protected override string OffsetFormat { get { return "OFFSET {0} "; } }
+		protected override string LimitFormat(SelectQuery selectQuery)
+		{
+			return "LIMIT {0}";
+		}
+
+		protected override string OffsetFormat(SelectQuery selectQuery)
+		{
+			return "OFFSET {0} ";
+		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
@@ -82,10 +92,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!selectQuery.IsUpdate)
+				base.BuildFromClause(selectQuery);
 		}
 
 		protected sealed override bool IsReserved(string word)
@@ -183,12 +193,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			base.BuildCreateTableFieldType(field);
 		}
 
-		protected override bool BuildJoinType(SelectQuery.JoinedTable join)
+		protected override bool BuildJoinType(SqlJoinedTable join)
 		{
 			switch (join.JoinType)
 			{
-				case SelectQuery.JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
-				case SelectQuery.JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
+				case JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
+				case JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
 			}
 
 			return base.BuildJoinType(join);
@@ -196,6 +206,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+			if (owner    != null && owner.   Length == 0) owner    = null;
+
 			// "db..table" syntax not supported and postgresql doesn't support database name, if it is not current database
 			// so we can clear database name to avoid error from server
 			if (database != null && owner == null)

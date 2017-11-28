@@ -119,6 +119,20 @@
 		]
 	},
 
+	"CORE2.Travis" :
+	{
+		"BasedOn"              : "TravisConnectionStrings",
+		"DefaultConfiguration" : "SQLite.MS",
+		"TraceLevel"           : "Error",
+		"Providers"            :
+		[
+			"SQLite.MS",
+			"Northwind.SQLite.MS",
+			"MySql57",
+			"PostgreSQL"
+		]
+	},
+
 	"CommonConnectionStrings" :
 	{
 		"Connections":
@@ -129,8 +143,8 @@
 			"SqlCe.Data"          : {                                       "ConnectionString" : "Data Source=Database\\Data\\TestData.sdf"    },
 			"SQLite.Classic"      : { "Provider" : "SQLite",                "ConnectionString" : "Data Source=Database\\TestData.sqlite"       },
 			"SQLite.Classic.Data" : { "Provider" : "SQLite.Classic",        "ConnectionString" : "Data Source=Database\\Data\\TestData.sqlite" },
-			"SQLite.MS"           : { "Provider" : "SQLite.MS",             "ConnectionString" : "Data Source=Database\\TestData..MS.sqlite" },
-			"SQLite.MS.Data"      : { "Provider" : "Microsoft.Data.Sqlite", "ConnectionString" : "Data Source=Database\\Data\\TestData..MS.sqlite" },
+			"SQLite.MS"           : { "Provider" : "SQLite.MS",             "ConnectionString" : "Data Source=Database\\TestData.MS.sqlite" },
+			"SQLite.MS.Data"      : { "Provider" : "Microsoft.Data.Sqlite", "ConnectionString" : "Data Source=Database\\Data\\TestData.MS.sqlite" },
 			"Northwind.SQLite"    : { "Provider" : "System.Data.SQLite",    "ConnectionString" : "Data Source=Database\\Northwind.sqlite" },
 			"Northwind.SQLite.MS" : { "Provider" : "SQLite.Microsoft",      "ConnectionString" : "Data Source=Database\\Northwind.MS.sqlite" },
 			"TestNoopProvider"    : { "Provider" : "TestNoopProvider",      "ConnectionString" : "TestNoopProvider" }
@@ -186,7 +200,11 @@
 		"Connections" :
 		{
 			"MySql57"             : { "Provider" : "MySql.Data.MySqlClient", "ConnectionString" : "Server=localhost;Database=TestData;Uid=root;Pwd=;charset=utf8;" },
-			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Database=testdata;User Id=postgres;Password=;Pooling=true;MinPoolSize=10;MaxPoolSize=100" }
+			"PostgreSQL"          : { "Provider" : "Npgsql",                 "ConnectionString" : "Server=localhost;Database=testdata;User Id=postgres;Password=;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
+			"SQLite.MS"           : { "Provider" : "SQLite.MS",              "ConnectionString" : "Data Source=Database/TestData.MS.sqlite" },
+			"SQLite.MS.Data"      : { "Provider" : "Microsoft.Data.Sqlite",  "ConnectionString" : "Data Source=Database/Data/TestData.MS.sqlite" },
+			"Northwind.SQLite"    : { "Provider" : "System.Data.SQLite",     "ConnectionString" : "Data Source=Database/Northwind.sqlite" },
+			"Northwind.SQLite.MS" : { "Provider" : "SQLite.Microsoft",       "ConnectionString" : "Data Source=Database/Northwind.MS.sqlite" }
 		}
 	},
 
@@ -224,5 +242,67 @@
 			"Northwind",
 			"TestNoopProvider"
 		]
+	},
+
+	"Example Configuration" :
+	{
+		// Base configuration. All the configuration properties are replaced,
+		// except for the Connection property that adds new and replaces existing values.
+		"BasedOn"     : "Base Example Configuration",
+
+		// Specifies what messages to output for the System.Diagnostics.TraceSwitch class.
+		// Possible values: Off, Error, Warning, Info, Verbose.
+		"TraceLevel"  : "Error",
+
+		// List of tested providers.
+		"Providers"   :
+		[
+			"Access",
+			"SQLite.Classic",
+			"SqlServer.2014"
+		],
+
+		// List of connection strings.
+		"Connections" :
+		{
+			"SqlServer.2014" : { "Provider" : "System.Data.SqlClient", "ConnectionString" : "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;" }
+		}
+	},
+
+	"Base Example Configuration" :
+	{
+		// Default configuration is used to load etalon data to compare.
+		"DefaultConfiguration" : "SQLite.Classic",
+		"Providers"            :
+		[
+			"Access",
+			"SQLite.Classic",
+			"SQLite.MS"
+		],
+		"Connections"          :
+		{
+			"Access"         : {                           "ConnectionString" : "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"SQLite.Classic" : { "Provider" : "SQLite",    "ConnectionString" : "Data Source=Database\\TestData.sqlite"     },
+			"SQLite.MS"      : { "Provider" : "SQLite.MS", "ConnectionString" : "Data Source=Database\\TestData..MS.sqlite" }
+		}
+	},
+
+	"Result Example Configuration" :
+	{
+		"TraceLevel"           : "Error",
+		"DefaultConfiguration" : "SQLite.Classic",
+		"Providers"            :
+		[
+			"Access",
+			"SQLite.Classic",
+			"SqlServer.2014"
+		],
+		"Connections"          :
+		{
+			"Access"         : {                           "ConnectionString" : "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"SQLite.Classic" : { "Provider" : "SQLite",    "ConnectionString" : "Data Source=Database\\TestData.sqlite"     },
+			"SQLite.MS"      : { "Provider" : "SQLite.MS", "ConnectionString" : "Data Source=Database\\TestData..MS.sqlite" },
+			"SqlServer.2014" : { "Provider" : "System.Data.SqlClient", "ConnectionString" : "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;" }
+		}
 	}
 }

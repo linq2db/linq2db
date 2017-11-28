@@ -50,31 +50,31 @@ namespace LinqToDB.DataProvider.Firebird
 			return true;
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			CheckAliases(selectQuery, int.MaxValue);
+			CheckAliases(statement, int.MaxValue);
 
-			new QueryVisitor().VisitParentFirst(selectQuery, SearchSelectClause);
+			new QueryVisitor().VisitParentFirst(statement, SearchSelectClause);
 
-			if (selectQuery.QueryType == QueryType.InsertOrUpdate)
+			if (statement.QueryType == QueryType.InsertOrUpdate)
 			{
-				foreach (var key in selectQuery.Insert.Items)
+				foreach (var key in ((SelectQuery)statement).Insert.Items)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 
-				foreach (var key in selectQuery.Update.Items)
+				foreach (var key in ((SelectQuery)statement).Update.Items)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 
-				foreach (var key in selectQuery.Update.Keys)
+				foreach (var key in ((SelectQuery)statement).Update.Keys)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 			}
 
-			selectQuery = base.Finalize(selectQuery);
+			statement = base.Finalize(statement);
 
-			switch (selectQuery.QueryType)
+			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
-				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
-				default               : return selectQuery;
+				case QueryType.Delete : return GetAlternativeDelete((SelectQuery)statement);
+				case QueryType.Update : return GetAlternativeUpdate((SelectQuery)statement);
+				default               : return statement;
 			}
 		}
 

@@ -718,7 +718,7 @@ namespace Tests.Linq
 				var sql = ctx.ConvertToSql(null, 0, ConvertFlags.Field);
 
 				Assert.AreEqual        (1, sql.Length);
-				Assert.IsAssignableFrom(typeof(SelectQuery.Column), sql[0].Sql);
+				Assert.IsAssignableFrom(typeof(SqlColumn), sql[0].Sql);
 			}
 		}
 

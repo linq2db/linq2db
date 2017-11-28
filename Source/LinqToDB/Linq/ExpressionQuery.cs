@@ -20,10 +20,8 @@ namespace LinqToDB.Linq
 
 		protected void Init([NotNull] IDataContext dataContext, Expression expression)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-
-			DataContext = dataContext;
-			Expression  = expression ?? Expression.Constant(this);
+			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
+			Expression  = expression  ?? Expression.Constant(this);
 		}
 
 		[NotNull] public Expression   Expression  { get; set; }

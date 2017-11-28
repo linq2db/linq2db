@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace LinqToDB.SchemaProvider
 {
@@ -13,7 +12,7 @@ namespace LinqToDB.SchemaProvider
 		public string[] IncludedCatalogs;
 		public string[] ExcludedCatalogs;
 
-		public IEqualityComparer<string>     StringComparer           = System.StringComparer.OrdinalIgnoreCase;
+		public StringComparer                StringComparer           = StringComparer.OrdinalIgnoreCase;
 		public Func<ProcedureSchema,bool>    LoadProcedure            = _ => true;
 		public Func<ForeignKeySchema,string> GetAssociationMemberName = null;
 		public Action<int,int>               ProcedureLoadingProgress = (outOf,current) => {};

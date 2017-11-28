@@ -1111,7 +1111,7 @@ namespace LinqToDB.Data
 				{
 					var q =
 						from c in ctors
-						let count = c.ps.Count(p => names.Contains(p.Name, StringComparer.OrdinalIgnoreCase))
+						let count = c.ps.Count(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer))
 						orderby count descending
 						select c;
 
@@ -1121,7 +1121,7 @@ namespace LinqToDB.Data
 					{
 						expr = Expression.New(
 							ctor.c,
-							ctor.ps.Select(p => names.Contains(p.Name, StringComparer.OrdinalIgnoreCase) ?
+							ctor.ps.Select(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer) ?
 								getMemberExpression(
 									p.ParameterType,
 									(names

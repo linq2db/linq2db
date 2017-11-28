@@ -19,9 +19,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			sequence.SelectQuery.QueryType          = QueryType.CreateTable;
-			sequence.SelectQuery.CreateTable.Table  = sequence.SqlTable;
-			sequence.SelectQuery.CreateTable.IsDrop = true;
+			sequence.Statement = new SqlDropTableStatement {Table = sequence.SqlTable};
 
 			return new DropContext(buildInfo.Parent, sequence);
 		}
@@ -71,6 +69,11 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
+			}
+
+			public override SqlStatement GetResultStatement()
+			{
+				return Sequence.Statement;
 			}
 		}
 

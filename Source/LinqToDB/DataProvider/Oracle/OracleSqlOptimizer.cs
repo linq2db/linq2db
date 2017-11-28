@@ -12,27 +12,30 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			CheckAliases(selectQuery, 30);
+			CheckAliases(statement, 30);
 
-			new QueryVisitor().Visit(selectQuery.Select, element =>
+			if (statement is SelectQuery selectQuery)
 			{
-				if (element.ElementType == QueryElementType.SqlParameter)
+				new QueryVisitor().Visit(selectQuery.Select, element =>
 				{
-					var p = ((SqlParameter)element);
-					if (p.SystemType == null || p.SystemType.IsScalar(false))
-						p.IsQueryParameter = false;
-				}
-			});
+					if (element.ElementType == QueryElementType.SqlParameter)
+					{
+						var p = (SqlParameter) element;
+						if (p.SystemType == null || p.SystemType.IsScalar(false))
+							p.IsQueryParameter = false;
+					}
+				});
+			}
 
-			selectQuery = base.Finalize(selectQuery);
+			statement = base.Finalize(statement);
 
-			switch (selectQuery.QueryType)
+			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
-				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
-				default               : return selectQuery;
+				case QueryType.Delete : return GetAlternativeDelete((SelectQuery) statement);
+				case QueryType.Update : return GetAlternativeUpdate((SelectQuery) statement);
+				default               : return statement;
 			}
 		}
 

@@ -1,9 +1,11 @@
+# Creating generic CRUD class
+
 ```c#
 public static class DBGenericActions
 {
     public static void UpdateEntity<T>(T entity) where T : class
     {
-        using (var db = new myDB())
+        using (var db = new DataConnection())
         {
             db.Update<T>(entity);
         }
@@ -11,7 +13,7 @@ public static class DBGenericActions
 
     public static object InsertEntity<T>(T entity) where T : class
     {
-        using (var db = new myDB())
+        using (var db = new DataConnection())
         {
             return db.InsertWithIdentity<T>(entity);
         }
@@ -19,7 +21,7 @@ public static class DBGenericActions
 
     public static void DeleteEntity<T>(T entity) where T : class
     {
-        using (var db = new myDB())
+        using (var db = new DataConnection())
         {
             db.Delete<T>(entity);
         }
@@ -27,20 +29,20 @@ public static class DBGenericActions
 
     public static List<T> GetAllFromEntity<T>() where T : class
     {
-        using (var db = new myDB())
+        using (var db = new DataConnection())
         {
             return db.GetTable<T>().ToList();
         }
     }
-    
+
     public static List<T> GetEntitiesByParameters<T>(Func<T, bool> where) where T : class
     {
-        using (var db = new nassif_devDB())
+        using (var db = new DataConnection())
         {
-            return db.GetTable<T>().Where<T>(where).Where<T>(GetLogicExclusion<T>()).ToList);                    
+            return db.GetTable<T>().Where<T>(where).Where<T>(GetLogicExclusion<T>()).ToList);
         }
     }
-            
+
     /// <summary>
     /// 
     /// </summary>
@@ -49,9 +51,11 @@ public static class DBGenericActions
     /// <returns>T linqToDb mapped class</returns>
     public static T GetEntityByPK<T>(object pk) where T : class
     {
-        using (var db = new myDB())
+        using (var db = new DataConnection())
         {
-            var pkName =  typeof(T).GetProperties().Where(prop => prop.GetCustomAttributes(typeof(LinqToDB.Mapping.PrimaryKeyAttribute), false).Count() > 0).First();
+            var pkName =  typeof(T)
+                .GetProperties()
+                .Where(prop => prop.GetCustomAttributes(typeof(LinqToDB.Mapping.PrimaryKeyAttribute), false).Count() > 0).First();
             var expression = SimpleComparison<T>(pkName.Name, pk);
 
             return db.GetTable<T>().Where<T>(expression).FirstOrDefault();
@@ -74,7 +78,7 @@ public static class DBGenericActions
 
         var expression = SimpleComparison<T,D>(propertyName, valueToFilter);
 
-        using (var db = new myDB())
+        using (var db = new DataConnection())
         {
             var data = db.GetTable<T>().Where<T>(expression).ToList();
             return data;
@@ -102,6 +106,7 @@ public static class DBGenericActions
 
         return Expression.Lambda<Func<T, bool>>(
             Expression.Equal(propertyReference, constantReference),
-            new[] { pe }).Compile();              
+            new[] { pe }).Compile();
     }
 }
+```

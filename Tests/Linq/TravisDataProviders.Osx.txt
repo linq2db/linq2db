@@ -1,3 +1,0 @@
-﻿--TraceLevel = Error
-
-TestNoopProvider * ConnectionString;                                                                                        * TestNoopProvider

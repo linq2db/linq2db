@@ -53,6 +53,7 @@ namespace LinqToDB.Linq.Builder
 			public ExpressionBuilder Builder     { get; private set; }
 			public Expression        Expression  { get; set; }
 			public SelectQuery       SelectQuery { get; set; }
+			public SqlStatement      Statement   { get; set; }
 			public IBuildContext     Parent      { get; set; }
 
 			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -128,6 +129,11 @@ namespace LinqToDB.Linq.Builder
 			public ISqlExpression GetSubQuery(IBuildContext context)
 			{
 				return null;
+			}
+
+			public virtual SqlStatement GetResultStatement()
+			{
+				return SelectQuery;
 			}
 		}
 	}

@@ -19,6 +19,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
@@ -108,19 +109,27 @@ namespace Tests
 			Console.WriteLine("AppVeyor configuration detected.");
 			configName += ".AppVeyor";
 #endif
+#if TRAVIS
+#warning "Travis configuration detected."
 
+			Console.WriteLine("Travis configuration detected.");
+			configName += ".Travis";
+#endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
-			var dataPath     = Path.GetFullPath(@"Database\Data");
+			var databasePath = Path.GetFullPath(Path.Combine("Database"));
+			var dataPath     = Path.Combine(databasePath, "Data");
 
 			if (Directory.Exists(dataPath))
 				Directory.Delete(dataPath, true);
 
 			Directory.CreateDirectory(dataPath);
 
-			var databasePath = Path.GetFullPath(Path.Combine(@"Database"));
-
 			foreach (var file in Directory.GetFiles(databasePath, "*.*"))
-				File.Copy(file, Path.Combine(dataPath, Path.GetFileName(file)), true);
+			{
+				var destination = Path.Combine(dataPath, Path.GetFileName(file));
+				Console.WriteLine("{0} => {1}", file, destination);
+				File.Copy(file, destination, true);
+			}
 
 			UserProviders = new HashSet<string>(testSettings.Providers);
 
@@ -377,9 +386,13 @@ namespace Tests
 							if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
 								test.RunState = RunState.Ignored;
 
-							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.json or DataProviders.json");
 							continue;
 						}
+
+						if (test.RunState != RunState.Runnable)
+							test.Properties.Set(PropertyNames.Category, "Ignored");
+						
 
 						hasTest = true;
 						yield return test;
@@ -1295,7 +1308,7 @@ namespace Tests
 			catch
 			{
 				_db.DropTable<T>();
-				throw;
+				_db.CreateTable<T>();
 			}
 		}
 
@@ -1323,6 +1336,20 @@ namespace Tests
 		private readonly Func<IDataContext, int> Delete =
 			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
 
+	}
+
+	public class WithoutComparasionNullCheck : IDisposable
+	{
+		public WithoutComparasionNullCheck()
+		{
+			Configuration.Linq.CompareNullsAsValues = false;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.CompareNullsAsValues = true;
+			Query.ClearCaches();
+		}
 	}
 
 	public abstract class DataSourcesBase : DataAttribute, IParameterDataSource

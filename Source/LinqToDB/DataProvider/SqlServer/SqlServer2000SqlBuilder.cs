@@ -12,19 +12,22 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		protected override string FirstFormat { get { return "TOP {0}"; } }
+		protected override string FirstFormat(SelectQuery selectQuery)
+		{
+			return "TOP {0}";
+		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new SqlServer2000SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildOutputSubclause()
+		protected override void BuildOutputSubclause(SelectQuery selectQuery)
 		{
 			// OUTPUT clause is only supported by the MS SQL Server starts with 2005 version.
 		}
 
-		protected override void BuildGetIdentity()
+		protected override void BuildGetIdentity(SelectQuery selectQuery)
 		{
 			StringBuilder
 				.AppendLine()
@@ -75,14 +78,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildFunction(func);
 		}
 
-		public override string  Name
-		{
-			get { return ProviderName.SqlServer2000; }
-		}
+		public override string  Name => ProviderName.SqlServer2000;
 
-		protected override void BuildDropTableStatement()
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = SelectQuery.CreateTable.Table;
+			var table = dropTable.Table;
 
 			AppendIndent().Append("DROP TABLE ");
 			BuildPhysicalTable(table, null);

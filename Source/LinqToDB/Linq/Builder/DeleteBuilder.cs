@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.Arguments.Count == 2)
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
 
-			sequence.SelectQuery.QueryType = QueryType.Delete;
+			sequence.SelectQuery.ChangeQueryType(QueryType.Delete);
 
 			// Check association.
 			//

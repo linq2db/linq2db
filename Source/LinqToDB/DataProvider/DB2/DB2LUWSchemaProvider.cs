@@ -12,9 +12,10 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
-		private HashSet<string> _systemSchemas =
+		readonly HashSet<string> _systemSchemas =
 			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
 				StringComparer.OrdinalIgnoreCase);
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
@@ -488,7 +489,7 @@ namespace LinqToDB.DataProvider.DB2
 		public static string ToString(this IDataReader reader, int i)
 		{
 			var value = Converter.ChangeTypeTo<string>(reader[i]);
-			return value == null ? null : value.TrimEnd();
+			return value?.TrimEnd();
 		}
 	}
 }

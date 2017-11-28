@@ -5,7 +5,7 @@ namespace LinqToDB
 	/// <summary>
 	/// When applied to method or property, tells linq2db to replace them in queryable LINQ expression with another expression,
 	/// returned by method, specified in this attribute.
-	/// 
+	///
 	/// Requirements to expression method:
 	/// <para>
 	/// - expression method should be in the same class and replaced property of method;

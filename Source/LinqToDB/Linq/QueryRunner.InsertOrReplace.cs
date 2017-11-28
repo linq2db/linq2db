@@ -20,7 +20,8 @@ namespace LinqToDB.Linq
 			{
 				var fieldDic = new Dictionary<SqlField,ParameterAccessor>();
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.InsertOrUpdate };
+				var sqlQuery = new SelectQuery();
+				sqlQuery.ChangeQueryType(QueryType.InsertOrUpdate);
 
 				ParameterAccessor param;
 
@@ -31,7 +32,7 @@ namespace LinqToDB.Linq
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = sqlQuery, } }
 				};
 
 				var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
@@ -51,7 +52,7 @@ namespace LinqToDB.Linq
 								fieldDic.Add(field, param);
 						}
 
-						sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field, param.SqlParameter));
+						sqlQuery.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
 					else if (field.IsIdentity)
 					{
@@ -95,7 +96,7 @@ namespace LinqToDB.Linq
 							fieldDic.Add(field, param = GetParameter(typeof(T), dataContext, field));
 					}
 
-					sqlQuery.Update.Items.Add(new SelectQuery.SetExpression(field, param.SqlParameter));
+					sqlQuery.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 				}
 
 				sqlQuery.Update.Keys.AddRange(q.Select(i => i.i));
@@ -141,13 +142,13 @@ namespace LinqToDB.Linq
 
 			var insertQuery = (SelectQuery)selectQuery.Clone(dic, _ => true);
 
-			insertQuery.QueryType = QueryType.Insert;
+			insertQuery.ChangeQueryType(QueryType.Insert);
 			insertQuery.ClearUpdate();
 			insertQuery.From.Tables.Clear();
 
 			query.Queries.Add(new QueryInfo
 			{
-				SelectQuery = insertQuery,
+				Statement = insertQuery,
 				Parameters  = query.Queries[0].Parameters
 					.Select(p => new ParameterAccessor
 						(
@@ -169,20 +170,20 @@ namespace LinqToDB.Linq
 
 			if (selectQuery.Update.Items.Count > 0)
 			{
-				selectQuery.QueryType = QueryType.Update;
+				selectQuery.ChangeQueryType(QueryType.Update);
 				SetNonQueryQuery2(query);
 			}
 			else
 			{
-				selectQuery.QueryType = QueryType.Select;
+				selectQuery.ChangeQueryType(QueryType.Select);
 				selectQuery.Select.Columns.Clear();
-				selectQuery.Select.Columns.Add(new SelectQuery.Column(selectQuery, new SqlExpression("1")));
+				selectQuery.Select.Columns.Add(new SqlColumn(selectQuery, new SqlExpression("1")));
 				SetQueryQuery2(query);
 			}
 
 			query.Queries.Add(new QueryInfo
 			{
-				SelectQuery = insertQuery,
+				Statement = insertQuery,
 				Parameters  = query.Queries[0].Parameters.ToList(),
 			});
 		}

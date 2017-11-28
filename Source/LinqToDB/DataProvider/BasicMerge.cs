@@ -211,7 +211,7 @@ namespace LinqToDB.DataProvider
 						{
 							if (e.ElementType == QueryElementType.TableSource)
 							{
-								var et = (SelectQuery.TableSource)e;
+								var et = (SqlTableSource)e;
 
 								tableSet.Add((SqlTable)et.Source);
 								tables.  Add((SqlTable)et.Source);
@@ -233,12 +233,12 @@ namespace LinqToDB.DataProvider
 								if (tbl != fromTable && tableSet.Contains(tbl))
 								{
 									var tempCopy   = sql.Clone();
-									var tempTables = new List<SelectQuery.TableSource>();
+									var tempTables = new List<SqlTableSource>();
 
 									new QueryVisitor().Visit(tempCopy.From, ee =>
 									{
 										if (ee.ElementType == QueryElementType.TableSource)
-											tempTables.Add((SelectQuery.TableSource)ee);
+											tempTables.Add((SqlTableSource)ee);
 									});
 
 									var tt = tempTables[tables.IndexOf(tbl)];
@@ -271,7 +271,7 @@ namespace LinqToDB.DataProvider
 
 						var pq = DataConnection.QueryRunner.SetQuery(dataConnection, new QueryContext
 						{
-							SelectQuery   = sql,
+							Statement     = sql,
 							SqlParameters = sql.Parameters.ToArray(),
 						});
 
@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider
 
 		class QueryContext : IQueryContext
 		{
-			public SelectQuery    SelectQuery { get; set; }
+			public SqlStatement   Statement   { get; set; }
 			public object         Context     { get; set; }
 			public SqlParameter[] SqlParameters;
 			public List<string>   QueryHints  { get; set; }

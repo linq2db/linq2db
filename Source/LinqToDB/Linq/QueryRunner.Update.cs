@@ -19,13 +19,14 @@ namespace LinqToDB.Linq
 			static Query<int> CreateQuery(IDataContext dataContext)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.Update };
+				var sqlQuery = new SelectQuery();
+				sqlQuery.ChangeQueryType(QueryType.Update);
 
 				sqlQuery.From.Table(sqlTable);
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = sqlQuery, } }
 				};
 
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
@@ -48,7 +49,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].Parameters.Add(param);
 
-					sqlQuery.Update.Items.Add(new SelectQuery.SetExpression(field, param.SqlParameter));
+					sqlQuery.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 				}
 
 				foreach (var field in keys)

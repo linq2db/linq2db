@@ -16,9 +16,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Data context.</param>
 		public DataContextTransaction([NotNull] DataContext dataContext)
 		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-
-			DataContext = dataContext;
+			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 		}
 
 		/// <summary>

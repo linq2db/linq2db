@@ -83,8 +83,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql = GetSubQuery(null);
 
-				query.Queries[0].SelectQuery = new SelectQuery();
-				query.Queries[0].SelectQuery.Select.Add(sql);
+				var sq = new SelectQuery();
+				sq.Select.Add(sql);
+
+				query.Queries[0].Statement = sq;
 
 				var expr   = Builder.BuildSql(typeof(bool), 0);
 				var mapper = Builder.BuildMapper<object>(expr);
@@ -151,11 +153,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_subQuerySql == null)
 				{
-					var cond = new SelectQuery.Condition(
+					var cond = new SqlCondition(
 						_methodCall.Method.Name == "All",
-						new SelectQuery.Predicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
+						new SqlPredicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
 
-					_subQuerySql = new SelectQuery.SearchCondition(cond);
+					_subQuerySql = new SqlSearchCondition(cond);
 				}
 
 				return _subQuerySql;
