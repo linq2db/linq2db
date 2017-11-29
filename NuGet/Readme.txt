@@ -7,6 +7,7 @@ LINQ to DB 1.10.1  Release Notes
 
 - obsoletes: LinqToDB.Configuration.Linq.CheckNullForNotEquals, use CompareNullsAsValues instead
 
+
 LINQ to DB 1.10.0  Release Notes
 ---------------------------------
 - breaking change: [Oracle] bulk mode property (OracleTools.UseAlternativeBulkCopy) changed type from bool to AlternativeBulkCopy enum. If you assigned it to true, you should replace it with AlternativeBulkCopy.InsertInto value.
@@ -43,6 +44,7 @@ LINQ to DB 1.10.0  Release Notes
 - fix: generating in (#909)
 
 All changes: https://github.com/linq2db/linq2db/milestone/6
+
 
 LINQ to DB 1.9.0  Release Notes
 ---------------------------------
@@ -83,6 +85,7 @@ LINQ to DB 1.9.0  Release Notes
 
 All changes: https://github.com/linq2db/linq2db/milestone/5
 
+
 LINQ to DB 1.8.3  Release Notes
 ---------------------------------
 [!] Fixed problems with Configuration.Linq.UseBinaryAggregateExpression (#708, #716)
@@ -118,6 +121,7 @@ Improved SqlCe support (#695 )
 
 Minor changes (#664 #696)
 
+
 LINQ to DB 1.8.0  Release Notes
 ---------------------------------
 
@@ -133,10 +137,10 @@ Fluent mapping enchantments (fixed inheritance & changing attributes several tim
 
 Number of bug fixes and optimizations
 
+
 LINQ to DB 1.7.6  Release Notes
 ---------------------------------
 
-Welcome to the release notes for LINQ to DB 1.7.6
 
 What's new in 1.7.6
 ---------------------
@@ -145,6 +149,7 @@ Multi-threading issues fixes
 Inner Joins optimizations (Configuration.Linq.OptimizeJoins)
 Fixed issues with paths on Linux
 F# options support
+
 
 What's new in 1.0.7.5
 ---------------------

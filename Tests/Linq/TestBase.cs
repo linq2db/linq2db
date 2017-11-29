@@ -386,7 +386,9 @@ namespace Tests
 							if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
 								test.RunState = RunState.Ignored;
 
+#if !APPVEYOR && !TRAVIS
 							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.json or DataProviders.json");
+#endif
 							continue;
 						}
 

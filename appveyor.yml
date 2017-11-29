@@ -51,7 +51,7 @@ build_script:
   #msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
 - ps: |
     $env:packageVersion = $env:assemblyVersion
-    if ($env:APPVEYOR_REPO_BRANCH -ne "release") 
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
     {
         $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
     }

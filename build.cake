@@ -41,7 +41,7 @@ bool IsRelease()
 
 string GetTarget()
 {
-	var e = EnvironmentVariable("target") 
+	var e = EnvironmentVariable("target")
 		?? Argument<string>("t", null)
 		?? "Default";
 
@@ -52,7 +52,7 @@ string GetTarget()
 
 string GetConfiguration()
 {
-	var e = EnvironmentVariable("configuration") 
+	var e = EnvironmentVariable("configuration")
 		??  Argument<string>("c", "Release");
 
 	Console.WriteLine("Configuration: {0}", e);
@@ -89,14 +89,14 @@ string GetTestFilter()
 {
 	var arg = Argument<string>("tfl", null);
 	if (arg != null)
-		return arg; 
+		return arg;
 
 	return EnvironmentVariable("testFilter");
 }
 
 string GetTestTargetFramework()
 {
-	var e = EnvironmentVariable("testTargetFramework") 
+	var e = EnvironmentVariable("testTargetFramework")
 		?? Argument<string>("ttf", null)
 		?? "net452";
 
@@ -105,7 +105,7 @@ string GetTestTargetFramework()
 
 string GetTestConfiguration()
 {
-	var e = EnvironmentVariable("testConfiguration") 
+	var e = EnvironmentVariable("testConfiguration")
 		??  Argument<string>("tc", "Release");
 
 	return e;
@@ -178,7 +178,7 @@ void UploadTestResults()
 		UploadTestResults(testResults, AppVeyorTestResultsType.NUnit3);
 		//DeleteFile(testResults);
 	}
-	else 
+	else
 		Console.WriteLine("No test results (expected at {0})", testResults);
 
 
@@ -235,7 +235,7 @@ Task("Build")
 		new DotNetCoreBuildSettings (){
 			Configuration = GetConfiguration()
 		}
-	); 
+	);
 });
 
 Task("DocFxBuild")
@@ -277,7 +277,7 @@ Task("RunTests")
 	var testConfiguration   = GetTestConfiguration();
 	var testTargetFramework = GetTestTargetFramework();
 	var projects            = new [] { File("./Tests/Linq/Tests.csproj").Path };
-	
+
 	Console.WriteLine("Filter:        {0}", testFilter);
 	Console.WriteLine("Logger:        {0}", testLogger);
 	Console.WriteLine("Framework:     {0}", testTargetFramework);
@@ -301,10 +301,10 @@ Task("RunTests")
 		UploadTestResults();
 	}
 })
-.OnError(ex => 
+.OnError(ex =>
 {
 	Console.WriteLine("Tests failed: {0}", ex.Message);
-	
+
 	UploadTestResults();
 
 	throw ex;
@@ -316,7 +316,7 @@ Task("Pack")
 	.Does(() =>
 {
 	var suffix = GetPackageSuffix();
-	
+
 	Console.WriteLine("Package  version: {0}", GetPackageVersion());
 	Console.WriteLine("Package  suffix:  {0}", suffix);
 	Console.WriteLine("Assembly version: {0}", GetAssemblyVersion());

@@ -32,10 +32,8 @@ namespace LinqToDB.Data
 
 			readonly DataConnection _dataConnection;
 			readonly DateTime       _startedOn = DateTime.Now;
-#pragma warning disable 0649
-			bool _isAsync;
-#pragma warning restore 0649
 
+			bool       _isAsync;
 			Expression _mapperExpression;
 
 			public override Expression  MapperExpression
