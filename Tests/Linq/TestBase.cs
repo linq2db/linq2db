@@ -394,7 +394,6 @@ namespace Tests
 
 						if (test.RunState != RunState.Runnable)
 							test.Properties.Set(PropertyNames.Category, "Ignored");
-						
 
 						hasTest = true;
 						yield return test;

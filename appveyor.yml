@@ -23,10 +23,10 @@ environment:
       testTargetFramework: net452
     - target: Tests
       testTargetFramework: netcoreapp1.0
-      testFilter: TestCategory=Create & TestCategory != Ignored
+      testFilter: TestCategory != Ignored
     - target: Tests
       testTargetFramework: netcoreapp2.0
-      testFilter: TestCategory=Create & TestCategory != Ignored
+      testFilter: TestCategory != Ignored
     - target: DocFx
 
 cache:
@@ -85,16 +85,16 @@ before_build:
 after_build:
 - cmd: |
     cd NuGet
-    PackAV
+    PackAV $env:packageVersion
     cd ..
 
-test: off
+test:
   # only assemblies to test
-  #assemblies:
-  #  - Tests\Linq\**\linq2db.Tests.dll
-  #categories:
-  #  except:
-  #    - FreeText
+  assemblies:
+    - Tests\Linq\**\linq2db.Tests.dll
+  categories:
+    except:
+      - Ignored
 
 artifacts:
 - path: \**\linq2db*.nupkg
