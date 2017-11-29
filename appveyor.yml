@@ -18,16 +18,16 @@ environment:
 ##  testRunner: dotnet
 ##  testLogger: trx
 ##  testConfiguration: AppVeyor
-  matrix:
-    - target: Default
-      testTargetFramework: net452
-    - target: Core1
-      testTargetFramework: netcoreapp1.0
-      testRunner: dotnet
+##  matrix:
+##    - target: Default
+##      testTargetFramework: net452
+##    - target: Core1
+##      testTargetFramework: netcoreapp1.0
+##      testRunner: dotnet
 ##      testFilter: TestCategory != Ignored
-    - target: Core2
-      testTargetFramework: netcoreapp2.0
-      testRunner: dotnet
+##    - target: Core2
+##      testTargetFramework: netcoreapp2.0
+##      testRunner: dotnet
 ##      testFilter: TestCategory != Ignored
 ##    - target: DocFx
 
