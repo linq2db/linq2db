@@ -23,8 +23,8 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="Init.ps1"                                                             target="tools" />
-		<file src="..\Tests\Linq\bin\Release\net452\FirebirdSql.Data.FirebirdClient.dll" target="tools" />
-		<file src="Firebird\*.*"                                                         target="content\LinqToDB.Templates" />
+		<file src="Init.ps1"                                                              target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net452\FirebirdSql.Data.FirebirdClient.dll" target="tools" />
+		<file src="Firebird\*.*"                                                          target="content\LinqToDB.Templates" />
 	</files>
 </package>
