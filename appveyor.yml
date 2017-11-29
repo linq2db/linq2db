@@ -13,21 +13,21 @@ environment:
   assemblyVersion: 2.0.0
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
-  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
-  #testFilter: TestCategory=Create
-  testRunner: dotnet
-  testLogger: trx
-  testConfiguration: AppVeyor
-  matrix:
-    - target: Default
-      testTargetFramework: net452
-    - target: Tests
-      testTargetFramework: netcoreapp1.0
-      testFilter: TestCategory != Ignored
-    - target: Tests
-      testTargetFramework: netcoreapp2.0
-      testFilter: TestCategory != Ignored
-    - target: DocFx
+##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
+##  #testFilter: TestCategory=Create
+##  testRunner: dotnet
+##  testLogger: trx
+##  testConfiguration: AppVeyor
+##  matrix:
+##    - target: Default
+##      testTargetFramework: net452
+##    - target: Tests
+##      testTargetFramework: netcoreapp1.0
+##      testFilter: TestCategory != Ignored
+##    - target: Tests
+##      testTargetFramework: netcoreapp2.0
+##      testFilter: TestCategory != Ignored
+##    - target: DocFx
 
 cache:
 - packages -> appveyor.yml
@@ -48,7 +48,19 @@ nuget:
   project_feed: false
 
 build_script:
-  #msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
+  msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
+##- ps: |
+##    $env:packageVersion = $env:assemblyVersion
+##    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
+##    {
+##        $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
+##    }
+##
+##    .\Build\CodeJam.AppVeyor.FixVersionProps.ps1 -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
+##    .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion
+##- ps: .\build.ps1
+
+before_build:
 - ps: |
     $env:packageVersion = $env:assemblyVersion
     if ($env:APPVEYOR_REPO_BRANCH -ne "release")
@@ -58,10 +70,7 @@ build_script:
 
     .\Build\CodeJam.AppVeyor.FixVersionProps.ps1 -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
     .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion
-- ps: .\build.ps1
 
-before_build:
-- ps: |
     $startPath = "$($env:appveyor_build_folder)\Data"
     $sqlInstance = "(local)\SQL2014"
     $dbName = "TestData"
@@ -85,7 +94,7 @@ before_build:
 after_build:
 - cmd: |
     cd NuGet
-    PackAV $env:packageVersion
+    PackAV
     cd ..
 
 test:
