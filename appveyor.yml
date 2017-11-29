@@ -51,15 +51,6 @@ nuget:
 
 build_script:
   msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
-##- ps: |
-##    $env:packageVersion = $env:assemblyVersion
-##    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
-##    {
-##        $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
-##    }
-##
-##    .\Build\CodeJam.AppVeyor.FixVersionProps.ps1 -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
-##    .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion
 ##- ps: .\build.ps1
 
 before_build:
