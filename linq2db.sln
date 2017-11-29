@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
+		Build\AppVeyor.FixVersionNugets.ps1 = Build\AppVeyor.FixVersionNugets.ps1
+		Build\CodeJam.AppVeyor.FixVersionProps.ps1 = Build\CodeJam.AppVeyor.FixVersionProps.ps1
 		Build\linq2db.Default.props = Build\linq2db.Default.props
 		Build\linq2db.snk = Build\linq2db.snk
 	EndProjectSection
@@ -73,6 +75,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.nuspec = NuGet\linq2db.nuspec
 		NuGet\linq2db.png = NuGet\linq2db.png
 		NuGet\Pack.bat = NuGet\Pack.bat
+		NuGet\PackAV.bat = NuGet\PackAV.bat
 		NuGet\Push.bat = NuGet\Push.bat
 		NuGet\Readme.txt = NuGet\Readme.txt
 	EndProjectSection
@@ -83,6 +86,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Utils", "Tests\Utils\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "t4models", "t4models", "{3294F9A3-2530-4ACE-BE44-0C1182DB34C9}"
 	ProjectSection(SolutionItems) = preProject
+		NuGet\t4models\CopyMe.tt.txt = NuGet\t4models\CopyMe.tt.txt
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\t4models\LinqToDB.Tools.ttinclude = NuGet\t4models\LinqToDB.Tools.ttinclude
 	EndProjectSection
@@ -120,6 +124,60 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySql", "MySql", "{FB9C38B7
 		NuGet\MySql\CopyMe.MySql.tt.txt = NuGet\MySql\CopyMe.MySql.tt.txt
 		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
 		NuGet\MySql\LinqToDB.MySql.Tools.ttinclude = NuGet\MySql\LinqToDB.MySql.Tools.ttinclude
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Oracle", "Oracle", "{470C3FEA-ABA7-49D5-B052-156AC86D6A39}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\Oracle\CopyMe.Oracle.tt.txt = NuGet\Oracle\CopyMe.Oracle.tt.txt
+		NuGet\linq2db.Oracle.Managed.nuspec = NuGet\linq2db.Oracle.Managed.nuspec
+		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
+		NuGet\Oracle\LinqToDB.Oracle.Managed.Tools.ttinclude = NuGet\Oracle\LinqToDB.Oracle.Managed.Tools.ttinclude
+		NuGet\Oracle\LinqToDB.Oracle.Tools.ttinclude = NuGet\Oracle\LinqToDB.Oracle.Tools.ttinclude
+		NuGet\Oracle\LinqToDB.Oracle.x64.Tools.ttinclude = NuGet\Oracle\LinqToDB.Oracle.x64.Tools.ttinclude
+		NuGet\Oracle\LinqToDB.Oracle.x86.Tools.ttinclude = NuGet\Oracle\LinqToDB.Oracle.x86.Tools.ttinclude
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PostgreSQL", "PostgreSQL", "{3C616729-3105-4DD7-9DFE-6673A2FF549E}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\PostgreSQL\CopyMe.PostgreSQL.tt.txt = NuGet\PostgreSQL\CopyMe.PostgreSQL.tt.txt
+		NuGet\linq2db.PostgreSQL.nuspec = NuGet\linq2db.PostgreSQL.nuspec
+		NuGet\PostgreSQL\LinqToDB.PostgreSQL.Tools.ttinclude = NuGet\PostgreSQL\LinqToDB.PostgreSQL.Tools.ttinclude
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SapHana", "SapHana", "{07E42E73-852A-47B3-9E53-0508B5709870}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\SapHana\CopyMe.SapHana.tt.txt = NuGet\SapHana\CopyMe.SapHana.tt.txt
+		NuGet\linq2db.SapHana.nuspec = NuGet\linq2db.SapHana.nuspec
+		NuGet\SapHana\LinqToDB.SapHana.Tools.ttinclude = NuGet\SapHana\LinqToDB.SapHana.Tools.ttinclude
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SqlCe", "SqlCe", "{FD12E2D7-E764-4376-B232-46ED8559BC6B}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\SqlCe\CopyMe.SqlCe.tt.txt = NuGet\SqlCe\CopyMe.SqlCe.tt.txt
+		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
+		NuGet\SqlCe\LinqToDB.SqlCe.Tools.ttinclude = NuGet\SqlCe\LinqToDB.SqlCe.Tools.ttinclude
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SqlServer", "SqlServer", "{949EA01F-64E8-4AB4-8120-699D79A51F6E}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\SqlServer\CopyMe.SqlServer.tt.txt = NuGet\SqlServer\CopyMe.SqlServer.tt.txt
+		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
+		NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude = NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude
+		NuGet\SqlServer\LinqToDB.SqlServer.Tools.ttinclude = NuGet\SqlServer\LinqToDB.SqlServer.Tools.ttinclude
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sybase", "Sybase", "{4E326A65-7691-4767-8A21-BA37EF707BEF}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\Sybase\CopyMe.Sybase.tt.txt = NuGet\Sybase\CopyMe.Sybase.tt.txt
+		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
+		NuGet\Sybase\LinqToDB.Sybase.Tools.ttinclude = NuGet\Sybase\LinqToDB.Sybase.Tools.ttinclude
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQLite", "SQLite", "{FCE717EF-5F7B-4F33-8A77-E02B0B92D586}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\SQLite\CopyMe.SQLite.tt.txt = NuGet\SQLite\CopyMe.SQLite.tt.txt
+		NuGet\linq2db.SQLite.nuspec = NuGet\linq2db.SQLite.nuspec
+		NuGet\SQLite\LinqToDB.SQLite.Tools.ttinclude = NuGet\SQLite\LinqToDB.SQLite.Tools.ttinclude
 	EndProjectSection
 EndProject
 Global
@@ -235,6 +293,13 @@ Global
 		{93B6C26B-DC1C-4A57-B10A-1A659AEAA9E8} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{3E0E254D-E267-4DEA-919D-F038840F9A87} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{FB9C38B7-CD88-4595-8B00-4C9FFEE04E05} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{470C3FEA-ABA7-49D5-B052-156AC86D6A39} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{3C616729-3105-4DD7-9DFE-6673A2FF549E} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{07E42E73-852A-47B3-9E53-0508B5709870} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{FD12E2D7-E764-4376-B232-46ED8559BC6B} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{949EA01F-64E8-4AB4-8120-699D79A51F6E} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{4E326A65-7691-4767-8A21-BA37EF707BEF} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{FCE717EF-5F7B-4F33-8A77-E02B0B92D586} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

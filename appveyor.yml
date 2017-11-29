@@ -57,6 +57,7 @@ build_script:
     }
 
     .\Build\CodeJam.AppVeyor.FixVersionProps.ps1 -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
+    .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion
 - ps: .\build.ps1
 
 before_build:
@@ -80,6 +81,12 @@ before_build:
     iex "& $cmd"
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
+
+after_build:
+- cmd: |
+    cd NuGet
+    PackAV
+    cd ..
 
 test: off
   # only assemblies to test

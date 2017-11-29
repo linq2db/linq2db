@@ -12,9 +12,9 @@ if ($buildVersion -or $nugetVersion) {
 	$xmlPath = Resolve-Path "$path"
 
 	$xml = [XML](Get-Content "$xmlPath")
-    $xml.PreserveWhitespace = $true
- 	$save = $false
-	
+	$xml.PreserveWhitespace = $true
+	$save = $false
+
 	if ($buildVersion) {
 		$xPath = "//PropertyGroup/Version"
 		$nodes = $xml.SelectNodes($xPath)
@@ -23,7 +23,7 @@ if ($buildVersion -or $nugetVersion) {
 			$save = $true
 		}
 	}
-	
+
 	if ($nugetVersion) {
 		$xPath = "//PropertyGroup/PackageVersion"
 		$nodes = $xml.SelectNodes($xPath)
@@ -32,9 +32,9 @@ if ($buildVersion -or $nugetVersion) {
 			$save = $true
 		}
 	}
-	
+
 	if ($save) {
-        Write-Host "Patched $xmlPath"
+		Write-Host "Patched $xmlPath"
 		$xml.Save($xmlPath)
 	}
 }
