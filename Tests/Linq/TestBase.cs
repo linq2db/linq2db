@@ -50,6 +50,14 @@ namespace Tests
 #endif
 				);
 
+			Console.WriteLine("CLR Version: {0}...",
+#if NETSTANDARD1_6
+				System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription
+#else
+				Environment.Version
+#endif
+				);
+
 			var traceCount = 0;
 
 			DataConnection.WriteTraceLine = (s1,s2) =>

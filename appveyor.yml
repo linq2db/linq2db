@@ -18,14 +18,16 @@ environment:
 ##  testRunner: dotnet
 ##  testLogger: trx
 ##  testConfiguration: AppVeyor
-##  matrix:
-##    - target: Default
-##      testTargetFramework: net452
-##    - target: Tests
-##      testTargetFramework: netcoreapp1.0
+  matrix:
+    - target: Default
+      testTargetFramework: net452
+    - target: Core1
+      testTargetFramework: netcoreapp1.0
+      testRunner: dotnet
 ##      testFilter: TestCategory != Ignored
-##    - target: Tests
-##      testTargetFramework: netcoreapp2.0
+    - target: Core2
+      testTargetFramework: netcoreapp2.0
+      testRunner: dotnet
 ##      testFilter: TestCategory != Ignored
 ##    - target: DocFx
 
@@ -68,7 +70,7 @@ before_build:
         $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
     }
 
-    .\Build\CodeJam.AppVeyor.FixVersionProps.ps1 -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
+    .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
     .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion
 
     $startPath = "$($env:appveyor_build_folder)\Data"
@@ -97,13 +99,8 @@ after_build:
     PackAV
     cd ..
 
-test:
-  # only assemblies to test
-  assemblies:
-    - Tests\Linq\**\linq2db.Tests.dll
-  categories:
-    except:
-      - Ignored
+test_script:
+  - ps: .\Build\AppVeyor.NUnit.Tests.ps1
 
 artifacts:
 - path: \**\linq2db*.nupkg

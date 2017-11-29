@@ -12,6 +12,8 @@
 		<DefineConstants>RELEASE;APPVEYOR</DefineConstants>
 		<DebugSymbols>false</DebugSymbols>
 		<Optimize>true</Optimize>
+		<AssemblyName Condition="'$(TargetFramework)' == 'netcoreapp1.0'">linq2db.Tests.Core1</AssemblyName>
+		<AssemblyName Condition="'$(TargetFramework)' == 'netcoreapp2.0'">linq2db.Tests.Core2</AssemblyName>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Travis' ">
