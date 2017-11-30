@@ -85,7 +85,11 @@ namespace Tests._Create
 
 							if (command.TrimStart().StartsWith("DROP")
 								|| command.TrimStart().StartsWith("CALL DROP"))
+							{
+#if !APPVEYOR
 								Console.WriteLine("\nnot too OK\n");
+#endif
+							}
 							else
 							{
 								Console.WriteLine("\nFAILED\n");
