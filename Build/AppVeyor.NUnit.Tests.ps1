@@ -16,7 +16,7 @@ if ($LastExitCode -ne 0) {
 
 $logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_core2_results.xml"
 
-dotnet vstest Tests\Linq\bin\AppVeyor\netcoreapp2.0\linq2db.Tests.Core2.dll --logger:"trx;LogFileName=$logFileName" --filter TestCategory!=Ignored
+dotnet vstest Tests\Linq\bin\AppVeyor\netcoreapp2.0\linq2db.Tests.Core2.dll --logger:"trx;LogFileName=$logFileName"
 
 if ($LastExitCode -ne 0) {
 	echo "FAIL: dotnet vstest $a --logger:'trx;LogFileName=$logFileName'"
@@ -32,7 +32,7 @@ if ($LastExitCode -ne 0) {
 
 $logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_core1_results.xml"
 
-dotnet vstest Tests\Linq\bin\AppVeyor\netcoreapp1.0\linq2db.Tests.Core1.dll --logger:"trx;LogFileName=$logFileName" --filter TestCategory!=Ignored
+dotnet vstest Tests\Linq\bin\AppVeyor\netcoreapp1.0\linq2db.Tests.Core1.dll --logger:"trx;LogFileName=$logFileName"
 
 if ($LastExitCode -ne 0) {
 	echo "FAIL: dotnet vstest $a --logger:'trx;LogFileName=$logFileName'"
