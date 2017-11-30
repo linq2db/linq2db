@@ -1,4 +1,5 @@
 $wc = New-Object System.Net.WebClient
+$wc.Timeout = 1800000
 
 $logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_net452_results.xml"
 
