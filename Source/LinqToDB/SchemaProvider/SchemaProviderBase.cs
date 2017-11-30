@@ -17,7 +17,7 @@ namespace LinqToDB.SchemaProvider
 		protected abstract List<TableInfo>      GetTables     (DataConnection dataConnection);
 		protected abstract List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection);
 		protected abstract List<ColumnInfo>     GetColumns    (DataConnection dataConnection);
-		protected abstract List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection);
+		protected abstract List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection);
 		protected abstract string               GetProviderSpecificTypeNamespace();
 
 		protected virtual List<ProcedureInfo> GetProcedures(DataConnection dataConnection)

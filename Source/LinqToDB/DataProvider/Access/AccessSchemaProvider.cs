@@ -125,13 +125,13 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var data = ((OleDbConnection)Proxy.GetUnderlyingObject((DbConnection)dataConnection.Connection))
 				.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, new object[] { null, null });
 
 			var q = from fk in data.AsEnumerable()
-					select new ForeingKeyInfo
+					select new ForeignKeyInfo
 					{
 						Name         = fk.Field<string>("FK_NAME"),
 						ThisColumn   = fk.Field<string>("FK_COLUMN_NAME"),

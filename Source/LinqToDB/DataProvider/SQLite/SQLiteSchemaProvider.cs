@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.SQLite
 			).ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
 
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SQLite
 			(
 				from fk in fks.AsEnumerable()
 				where fk.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY"
-				select new ForeingKeyInfo
+				select new ForeignKeyInfo
 				{
 					Name         = fk.Field<string>("CONSTRAINT_NAME"           ),
 					ThisTableID  = fk.Field<string>("TABLE_CATALOG"             ) + "." + fk.Field<string>("TABLE_SCHEMA")   + "." + fk.Field<string>("TABLE_NAME"),

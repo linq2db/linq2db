@@ -348,7 +348,6 @@ namespace LinqToDB.Data
 
 						idparam.ParameterName = "IDENTITY_PARAMETER";
 						idparam.Direction     = ParameterDirection.Output;
-						idparam.Direction     = ParameterDirection.Output;
 						idparam.DbType        = DbType.Decimal;
 
 						dataConnection.Command.Parameters.Add(idparam);
@@ -542,7 +541,6 @@ namespace LinqToDB.Data
 						idparam = _dataConnection.Command.CreateParameter();
 
 						idparam.ParameterName = "IDENTITY_PARAMETER";
-						idparam.Direction     = ParameterDirection.Output;
 						idparam.Direction     = ParameterDirection.Output;
 						idparam.DbType        = DbType.Decimal;
 

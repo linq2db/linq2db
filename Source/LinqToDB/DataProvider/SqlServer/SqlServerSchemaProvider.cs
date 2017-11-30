@@ -210,9 +210,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			return dataConnection.Query<ForeingKeyInfo>(@"
+			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
 					fk.name                                                     as Name,
 					DB_NAME() + '.' + SCHEMA_NAME(po.schema_id) + '.' + po.name as ThisTableID,

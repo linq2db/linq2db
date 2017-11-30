@@ -355,7 +355,7 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var names = new HashSet<string>();
 
@@ -458,7 +458,7 @@ namespace LinqToDB.DataProvider.Informix
 									JOIN systables  ot ON oc.tabid   = ot.tabid")
 				from c in fk.arr.Select((c,i) => new { c, i })
 				where c.c[0] != null
-				select new ForeingKeyInfo
+				select new ForeignKeyInfo
 				{
 					Name         = fk.Name.Trim(),
 					ThisTableID  = fk.ThisTableID,
