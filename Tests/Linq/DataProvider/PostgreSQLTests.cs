@@ -193,7 +193,7 @@ namespace Tests.DataProvider
 					if (!UserProviders.Contains(_providerName))
 					{
 						test.RunState = RunState.Ignored;
-						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See DataProviders.json");
 					}
 
 					yield return test;

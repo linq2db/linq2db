@@ -50,6 +50,14 @@ namespace Tests
 #endif
 				);
 
+			Console.WriteLine("CLR Version: {0}...",
+#if NETSTANDARD1_6
+				System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription
+#else
+				Environment.Version
+#endif
+				);
+
 			var traceCount = 0;
 
 			DataConnection.WriteTraceLine = (s1,s2) =>
@@ -386,13 +394,14 @@ namespace Tests
 							if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
 								test.RunState = RunState.Ignored;
 
+#if !APPVEYOR && !TRAVIS
 							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.json or DataProviders.json");
+#endif
 							continue;
 						}
 
 						if (test.RunState != RunState.Runnable)
 							test.Properties.Set(PropertyNames.Category, "Ignored");
-						
 
 						hasTest = true;
 						yield return test;

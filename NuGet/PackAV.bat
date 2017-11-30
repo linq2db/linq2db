@@ -1,11 +1,7 @@
-cd ..
-call Build.cmd
-cd NuGet
-
+@rem Building packages for appveyor
 del *.nupkg
 
 ..\Redist\NuGet Pack linq2db.nuspec
-
 ..\Redist\NuGet Pack linq2db.t4models.nuspec
 
 ..\Redist\NuGet Pack linq2db.Access.nuspec

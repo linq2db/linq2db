@@ -12,6 +12,8 @@
 		<DefineConstants>RELEASE;APPVEYOR</DefineConstants>
 		<DebugSymbols>false</DebugSymbols>
 		<Optimize>true</Optimize>
+		<AssemblyName Condition="'$(TargetFramework)' == 'netcoreapp1.0'">linq2db.Tests.Core1</AssemblyName>
+		<AssemblyName Condition="'$(TargetFramework)' == 'netcoreapp2.0'">linq2db.Tests.Core2</AssemblyName>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Travis' ">
@@ -21,7 +23,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
-		<TargetFrameworks>net452;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
+		<TargetFrameworks>net452</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
@@ -29,7 +31,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.1' ">
-		<TargetFrameworks>netcoreapp1.0;net452;netcoreapp2.0</TargetFrameworks>
+		<TargetFrameworks>netcoreapp1.0</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
@@ -37,7 +39,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.2' ">
-		<TargetFrameworks>netcoreapp2.0;net452;netcoreapp1.0</TargetFrameworks>
+		<TargetFrameworks>netcoreapp2.0</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
