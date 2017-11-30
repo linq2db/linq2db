@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.Sybase
 				.ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			const string baseSql = @"
 				SELECT
@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			sql = "SELECT * FROM (" + sql + ") as t WHERE ThisColumn IS NOT NULL";
 
-			return dataConnection.Query<ForeingKeyInfo>(sql).ToList();
+			return dataConnection.Query<ForeignKeyInfo>(sql).ToList();
 		}
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)

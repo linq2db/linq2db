@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return dataConnection.Query<ColumnInfo>(sql).ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var data = dataConnection.Query(
 				rd => new
@@ -199,7 +199,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					.Zip(item.otherColumns, (thisColumn,otherColumn) => new { thisColumn, otherColumn })
 					.Select((cs,i) => new { cs.thisColumn, cs.otherColumn, ordinal = i})
 				where col.thisColumn != null && !(col.thisColumn is DBNull)
-				select new ForeingKeyInfo
+				select new ForeignKeyInfo
 				{
 					Name         = name,
 					ThisTableID  = thisTableID,

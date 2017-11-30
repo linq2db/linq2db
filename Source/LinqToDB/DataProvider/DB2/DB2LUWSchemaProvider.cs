@@ -176,7 +176,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			return dataConnection
 				.Query(rd => new
@@ -206,7 +206,7 @@ namespace LinqToDB.DataProvider.DB2
 					var thisColumns  = fk.thisColumns. Trim();
 					var otherColumns = fk.otherColumns.Trim();
 
-					var list = new List<ForeingKeyInfo>();
+					var list = new List<ForeignKeyInfo>();
 
 					for (var i = 0; thisColumns.Length > 0; i++)
 					{
@@ -219,7 +219,7 @@ namespace LinqToDB.DataProvider.DB2
 							continue;
 
 
-						list.Add(new ForeingKeyInfo
+						list.Add(new ForeignKeyInfo
 						{
 							Name         = fk.name,
 							ThisTableID  = fk.thisTable,

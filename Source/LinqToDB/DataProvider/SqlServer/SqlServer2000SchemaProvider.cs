@@ -64,9 +64,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			return dataConnection.Query<ForeingKeyInfo>(@"
+			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
 					rc.CONSTRAINT_NAME                                             as Name,
 					fk.TABLE_CATALOG + '.' + fk.TABLE_SCHEMA + '.' + fk.TABLE_NAME as ThisTableID,

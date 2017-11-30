@@ -160,13 +160,13 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow
 				return
-					dataConnection.Query<ForeingKeyInfo>(@"
+					dataConnection.Query<ForeignKeyInfo>(@"
 						SELECT
 							FKCON.CONSTRAINT_NAME                  as Name,
 							FKCON.OWNER || '.' || FKCON.TABLE_NAME as ThisTableID,
@@ -199,7 +199,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				// This is significally faster
 				return
-					dataConnection.Query<ForeingKeyInfo>(@"
+					dataConnection.Query<ForeignKeyInfo>(@"
 						SELECT
 							FKCON.CONSTRAINT_NAME                    as Name,
 							FKCON.OWNER || '.' || FKCON.TABLE_NAME   as ThisTableID,

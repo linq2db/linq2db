@@ -85,14 +85,14 @@ namespace LinqToDB.DataProvider.Firebird
 			).ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var cols = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeyColumns");
 
 			return
 			(
 				from c in cols.AsEnumerable()
-				select new ForeingKeyInfo
+				select new ForeignKeyInfo
 				{
 					Name         = c.Field<string>("CONSTRAINT_NAME"),
 					ThisTableID  = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
