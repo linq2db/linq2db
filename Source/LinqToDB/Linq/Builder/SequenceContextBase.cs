@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual SqlStatement GetResultStatement()
 		{
-			return SelectQuery;
+			return Sequence.GetResultStatement();
 		}
 
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)

@@ -859,7 +859,6 @@ namespace LinqToDB.ServiceModel
 
 							var appendInsert      = false;
 							var appendUpdate      = false;
-							var appendDelete      = false;
 							var appendSelect      = false;
 
 							switch (elem.QueryType)
@@ -872,11 +871,6 @@ namespace LinqToDB.ServiceModel
 								case QueryType.Update         :
 									appendUpdate = true;
 									appendSelect = elem.Select.SkipValue != null || elem.Select.TakeValue != null;
-									break;
-
-								case QueryType.Delete         :
-									appendDelete = true;
-									appendSelect = true;
 									break;
 
 								case QueryType.Insert         :
@@ -892,7 +886,6 @@ namespace LinqToDB.ServiceModel
 
 							Append(appendInsert);      if (appendInsert)      Append(elem.Insert);
 							Append(appendUpdate);      if (appendUpdate)      Append(elem.Update);
-							Append(appendDelete);      if (appendDelete)      Append(elem.Delete);
 							Append(appendSelect);      if (appendSelect)      Append(elem.Select);
 
 							Append(elem.Where);
@@ -1002,9 +995,38 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.DeleteClause :
+					case QueryElementType.SelectStatement :
 						{
-							Append(((SqlDeleteClause)e).Table);
+							var elem = (SqlSelectStatement)e;
+							Append(elem.SelectQuery);
+
+							break;
+						}
+
+					case QueryElementType.InsertStatement :
+						{
+							var elem = (SqlInsertStatement)e;
+							Append(elem.SelectQuery);
+
+							break;
+						}
+
+					case QueryElementType.UpdateStatement :
+						{
+							var elem = (SqlUpdateStatement)e;
+							Append(elem.SelectQuery);
+
+							break;
+						}
+
+					case QueryElementType.DeleteStatement :
+						{
+							var elem = (SqlDeleteStatement)e;
+
+							Append(elem.Table);
+							Append(elem.Top);
+							Append(elem.SelectQuery);
+
 							break;
 						}
 
@@ -1416,8 +1438,6 @@ namespace LinqToDB.ServiceModel
 							var insert             = readInsert ? Read<SqlInsertClause>() : null;
 							var readUpdate         = ReadBool();
 							var update             = readUpdate ? Read<SqlUpdateClause>() : null;
-							var readDelete         = ReadBool();
-							var delete             = readDelete ? Read<SqlDeleteClause>() : null;
 							var readSelect         = ReadBool();
 							var select             = readSelect ? Read<SqlSelectClause>() : new SqlSelectClause(null);
 							var where              = Read<SqlWhereClause>();
@@ -1429,14 +1449,12 @@ namespace LinqToDB.ServiceModel
 							var unions             = ReadArray<SqlUnion>();
 							var parameters         = ReadArray<SqlParameter>();
 
-							var query = new SelectQuery(sid);
-							_statement = query;
-							query.ChangeQueryType(queryType);
+							var query = new SelectQuery(sid) {QueryType = queryType};
+							_statement = new SqlSelectStatement(query);
 
 							query.Init(
 								insert,
 								update,
-								delete,
 								select,
 								from,
 								where,
@@ -1551,10 +1569,34 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.DeleteClause :
+					case QueryElementType.SelectStatement :
 						{
-							var table = Read<SqlTable>();
-							obj = new SqlDeleteClause { Table = table };
+							var selectQuery = Read<SelectQuery>();
+							obj = _statement = new SqlSelectStatement(selectQuery);
+							break;
+						}
+
+					case QueryElementType.InsertStatement :
+						{
+							var selectQuery = Read<SelectQuery>();
+							obj = _statement = new SqlInsertStatement(selectQuery);
+							break;
+						}
+
+					case QueryElementType.UpdateStatement :
+						{
+							var selectQuery = Read<SelectQuery>();
+							obj = _statement = new SqlUpdateStatement(selectQuery);
+							break;
+						}
+
+					case QueryElementType.DeleteStatement :
+						{
+							var table       = Read<SqlTable>();
+							var top         = Read<ISqlExpression>();
+							var selectQuery = Read<SelectQuery>();
+
+							obj = _statement = new SqlDeleteStatement { Table = table, Top = top, SelectQuery = selectQuery };
 							break;
 						}
 

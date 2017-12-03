@@ -219,9 +219,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectQuery, "FROM rdb$database");
+			BuildInsertOrUpdateQueryAsMerge(selectStatement, "FROM rdb$database");
 		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)

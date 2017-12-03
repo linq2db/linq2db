@@ -21,7 +21,7 @@ namespace LinqToDB.Linq
 				var fieldDic = new Dictionary<SqlField,ParameterAccessor>();
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 				var sqlQuery = new SelectQuery();
-				sqlQuery.ChangeQueryType(QueryType.InsertOrUpdate);
+				sqlQuery.QueryType = QueryType.InsertOrUpdate;
 
 				ParameterAccessor param;
 
@@ -32,7 +32,7 @@ namespace LinqToDB.Linq
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { Statement = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = new SqlSelectStatement(sqlQuery), } }
 				};
 
 				var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
@@ -142,13 +142,13 @@ namespace LinqToDB.Linq
 
 			var insertQuery = (SelectQuery)selectQuery.Clone(dic, _ => true);
 
-			insertQuery.ChangeQueryType(QueryType.Insert);
+			insertQuery.QueryType = QueryType.Insert;
 			insertQuery.ClearUpdate();
 			insertQuery.From.Tables.Clear();
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement = insertQuery,
+				Statement   = new SqlSelectStatement(insertQuery),
 				Parameters  = query.Queries[0].Parameters
 					.Select(p => new ParameterAccessor
 						(
@@ -168,14 +168,15 @@ namespace LinqToDB.Linq
 
 			selectQuery.ClearInsert();
 
+			//TODO! looks not working solution
 			if (selectQuery.Update.Items.Count > 0)
 			{
-				selectQuery.ChangeQueryType(QueryType.Update);
+				selectQuery.QueryType = QueryType.Update;
 				SetNonQueryQuery2(query);
 			}
 			else
 			{
-				selectQuery.ChangeQueryType(QueryType.Select);
+				selectQuery.QueryType = QueryType.Select;
 				selectQuery.Select.Columns.Clear();
 				selectQuery.Select.Columns.Add(new SqlColumn(selectQuery, new SqlExpression("1")));
 				SetQueryQuery2(query);
@@ -183,7 +184,7 @@ namespace LinqToDB.Linq
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement = insertQuery,
+				Statement = new SqlSelectStatement(insertQuery),
 				Parameters  = query.Queries[0].Parameters.ToList(),
 			});
 		}

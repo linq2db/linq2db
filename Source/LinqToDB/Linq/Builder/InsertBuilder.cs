@@ -97,8 +97,9 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			sequence.SelectQuery.ChangeQueryType(QueryType.Insert);
+			sequence.SelectQuery.QueryType = QueryType.Insert;
 			sequence.SelectQuery.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
+			sequence.Statement = new SqlInsertStatement(sequence.SelectQuery);
 
 			return new InsertContext(buildInfo.Parent, sequence, sequence.SelectQuery.Insert.WithIdentity);
 		}

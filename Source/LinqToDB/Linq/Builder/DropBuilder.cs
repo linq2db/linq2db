@@ -73,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlStatement GetResultStatement()
 			{
-				return Sequence.Statement;
+				return Sequence.GetResultStatement();
 			}
 		}
 

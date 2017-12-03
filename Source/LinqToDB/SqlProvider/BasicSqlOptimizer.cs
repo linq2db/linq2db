@@ -25,24 +25,25 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement Finalize(SqlStatement statement)
 		{
-			if (statement is SelectQuery selectQuery)
-			{
+			var selectQuery = statement.SelectQuery;
+			if (selectQuery == null) 
+				return statement;
+			
+			new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
+				SqlProviderFlags.IsApplyJoinSupported,
+				SqlProviderFlags.IsGroupByExpressionSupported);
+			if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
+			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
+
+			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
 				new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
-				if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
-				if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
-				if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-					new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
-						SqlProviderFlags.IsApplyJoinSupported,
-						SqlProviderFlags.IsGroupByExpressionSupported);
+			if (Common.Configuration.Linq.OptimizeJoins)
+				OptimizeJoins(selectQuery);
 
-				if (Common.Configuration.Linq.OptimizeJoins)
-					OptimizeJoins(selectQuery);
-
-				return selectQuery;
-			}
+			statement.SelectQuery = selectQuery;
 			return statement;
 		}
 
@@ -1196,27 +1197,25 @@ namespace LinqToDB.SqlProvider
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
-		protected SqlStatement GetAlternativeDelete(SelectQuery selectQuery)
+		protected SqlStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement)
 		{
-			if (selectQuery.IsDelete &&
-				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) &&
-				selectQuery.From.Tables[0].Source is SqlTable)
+			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0) &&
+				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable)
 			{
-				var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent };
-				sql.ChangeQueryType(QueryType.Delete);
+				var sql = new SelectQuery { IsParameterDependent = deleteStatement.IsParameterDependent };
 
-				selectQuery.ParentSelect = sql;
-				selectQuery.ChangeQueryType(QueryType.Select);
+				deleteStatement.SelectQuery.ParentSelect = sql;
+				deleteStatement.SelectQuery.QueryType = QueryType.Select;
 
-				var table = (SqlTable)selectQuery.From.Tables[0].Source;
+				var table = (SqlTable)deleteStatement.SelectQuery.From.Tables[0].Source;
 				var copy  = new SqlTable(table) { Alias = null };
 
 				var tableKeys = table.GetKeys(true);
 				var copyKeys  = copy. GetKeys(true);
 
-				if (selectQuery.Where.SearchCondition.Conditions.Any(c => c.IsOr))
+				if (deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Any(c => c.IsOr))
 				{
-					var sc1 = new SqlSearchCondition(selectQuery.Where.SearchCondition.Conditions);
+					var sc1 = new SqlSearchCondition(deleteStatement.SelectQuery.Where.SearchCondition.Conditions);
 					var sc2 = new SqlSearchCondition();
 
 					for (var i = 0; i < tableKeys.Count; i++)
@@ -1226,44 +1225,44 @@ namespace LinqToDB.SqlProvider
 							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i])));
 					}
 
-					selectQuery.Where.SearchCondition.Conditions.Clear();
-					selectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
-					selectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
+					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();
+					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
+					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
 				}
 				else
 				{
 					for (var i = 0; i < tableKeys.Count; i++)
-						selectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
+						deleteStatement.SelectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
 				}
 
-				sql.From.Table(copy).Where.Exists(selectQuery);
-				sql.Parameters.AddRange(selectQuery.Parameters);
+				sql.From.Table(copy).Where.Exists(deleteStatement.SelectQuery);
+				sql.Parameters.AddRange(deleteStatement.Parameters);
 
-				selectQuery.Parameters.Clear();
+				deleteStatement.Parameters.Clear();
 
-				selectQuery = sql;
+				deleteStatement = new SqlDeleteStatement(sql);
 			}
 
-			return selectQuery;
+			return deleteStatement;
 		}
 
-		protected SelectQuery GetAlternativeUpdate(SelectQuery selectQuery)
+		protected SqlStatement GetAlternativeUpdate(SqlStatement statement)
 		{
-			if (selectQuery.IsUpdate && (selectQuery.From.Tables[0].Source is SqlTable || selectQuery.Update.Table != null))
+			if (statement.IsUpdate() && (statement.SelectQuery.From.Tables[0].Source is SqlTable || statement.SelectQuery.Update.Table != null))
 			{
-				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
+				if (statement.SelectQuery.From.Tables.Count > 1 || statement.SelectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent  };
-					sql.ChangeQueryType(QueryType.Update);
+					var sql = new SelectQuery { IsParameterDependent = statement.IsParameterDependent  };
+					sql.QueryType = QueryType.Update;
 
-					selectQuery.ParentSelect = sql;
-					selectQuery.ChangeQueryType(QueryType.Select);
+					statement.SelectQuery.ParentSelect = sql;
+					statement.SelectQuery.QueryType = QueryType.Select;
 
-					var table = selectQuery.Update.Table ?? (SqlTable)selectQuery.From.Tables[0].Source;
+					var table = statement.SelectQuery.Update.Table ?? (SqlTable)statement.SelectQuery.From.Tables[0].Source;
 
-					if (selectQuery.Update.Table != null)
-						if (QueryVisitor.Find(selectQuery.From, t => t == table) == null)
-							table = (SqlTable)QueryVisitor.Find(selectQuery.From,
+					if (statement.SelectQuery.Update.Table != null)
+						if (QueryVisitor.Find(statement.SelectQuery.From, t => t == table) == null)
+							table = (SqlTable)QueryVisitor.Find(statement.SelectQuery.From,
 								ex => ex is SqlTable && ((SqlTable)ex).ObjectType == table.ObjectType) ?? table;
 
 					var copy = new SqlTable(table);
@@ -1272,17 +1271,17 @@ namespace LinqToDB.SqlProvider
 					var copyKeys  = copy. GetKeys(true);
 
 					for (var i = 0; i < tableKeys.Count; i++)
-						selectQuery.Where
+						statement.SelectQuery.Where
 							.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
 
-					sql.From.Table(copy).Where.Exists(selectQuery);
+					sql.From.Table(copy).Where.Exists(statement.SelectQuery);
 
 					var map = new Dictionary<SqlField,SqlField>(table.Fields.Count);
 
 					foreach (var field in table.Fields.Values)
 						map.Add(field, copy[field.Name]);
 
-					foreach (var item in selectQuery.Update.Items)
+					foreach (var item in statement.SelectQuery.Update.Items)
 					{
 						var ex = new QueryVisitor().Convert(item, expr =>
 						{
@@ -1293,19 +1292,19 @@ namespace LinqToDB.SqlProvider
 						sql.Update.Items.Add(ex);
 					}
 
-					sql.Parameters.AddRange(selectQuery.Parameters);
-					sql.Update.Table = selectQuery.Update.Table;
+					sql.Parameters.AddRange(statement.Parameters);
+					sql.Update.Table = statement.SelectQuery.Update.Table;
 
-					selectQuery.Parameters.Clear();
-					selectQuery.Update.Items.Clear();
+					statement.Parameters.Clear();
+					statement.SelectQuery.Update.Items.Clear();
 
-					selectQuery = sql;
+					statement = new SqlSelectStatement(sql);
 				}
 
-				selectQuery.From.Tables[0].Alias = "$";
+				statement.SelectQuery.From.Tables[0].Alias = "$";
 			}
 
-			return selectQuery;
+			return statement;
 		}
 
 		#endregion

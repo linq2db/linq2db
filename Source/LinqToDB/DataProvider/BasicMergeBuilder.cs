@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
 
-			SqlBuilder.BuildSearchCondition(sql, condition, Command);
+			SqlBuilder.BuildSearchCondition(new SqlSelectStatement(sql), condition, Command);
 
 			Command.Append(" ");
 		}
@@ -132,7 +132,7 @@ namespace LinqToDB.DataProvider
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
 
-			SqlBuilder.BuildSearchCondition(sql, sql.Where.SearchCondition, Command);
+			SqlBuilder.BuildSearchCondition(new SqlSelectStatement(sql), sql.Where.SearchCondition, Command);
 
 			Command.Append(" ");
 		}
@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider
 			ctx.SetParameters();
 			SaveParameters(sql.Parameters);
 
-			SqlBuilder.BuildSearchCondition(sql, sql.Where.SearchCondition, Command);
+			SqlBuilder.BuildSearchCondition(new SqlSelectStatement(sql), sql.Where.SearchCondition, Command);
 
 			Command.Append(" ");
 		}
@@ -447,7 +447,7 @@ namespace LinqToDB.DataProvider
 
 				var queryContext = new QueryContext
 				{
-					Statement     = query,
+					Statement     = new SqlSelectStatement(query),
 					SqlParameters = query.Parameters.ToArray()
 				};
 
@@ -691,18 +691,18 @@ namespace LinqToDB.DataProvider
 				});
 
 			var qry   = Query<int>.GetQuery(DataContext, ref insertExpression);
-			var query = (SelectQuery)qry.Queries[0].Statement;
+			var query = qry.Queries[0].Statement.SelectQuery;
 
 			query.Insert.Into.Alias = _targetAlias;
 
 			// we need Insert type for proper query cloning (maybe this is a bug in clone function?)
-			query.ChangeQueryType(QueryType.Insert);
+			query.QueryType = QueryType.Insert;
 
 			var tables = MoveJoinsToSubqueries(query, SourceAlias, null, QueryElement.InsertSetter);
 			SetSourceColumnAliases(query.Insert, tables.Item1.Source);
 
 			// we need InsertOrUpdate for sql builder to generate values clause
-			query.ChangeQueryType(QueryType.InsertOrUpdate);
+			query.QueryType = QueryType.InsertOrUpdate;
 
 			QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
 
@@ -712,7 +712,7 @@ namespace LinqToDB.DataProvider
 				&& query.Insert.Items.Any(_ => _.Column is SqlField && ((SqlField)_.Column).IsIdentity))
 				OnInsertWithIdentity();
 
-			SqlBuilder.BuildInsertClauseHelper(query, Command);
+			SqlBuilder.BuildInsertClauseHelper(new SqlInsertStatement(query), Command);
 		}
 
 		protected void BuildDefaultInsert()
@@ -821,7 +821,7 @@ namespace LinqToDB.DataProvider
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
 			var qry   = Query<int>.GetQuery(DataContext, ref updateExpression);
-			var query = (SelectQuery)qry.Queries[0].Statement;
+			var query = qry.Queries[0].Statement.SelectQuery;
 
 			if (ProviderUsesAlternativeUpdate)
 				BuildAlternativeUpdateQuery(query);
@@ -834,7 +834,7 @@ namespace LinqToDB.DataProvider
 			QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
 			SaveParameters(query.Parameters);
 
-			SqlBuilder.BuildUpdateSetHelper(query, Command);
+			SqlBuilder.BuildUpdateSetHelper(new SqlUpdateStatement(query), Command);
 		}
 
 		private void BuildAlternativeUpdateQuery(SelectQuery query)
@@ -957,7 +957,7 @@ namespace LinqToDB.DataProvider
 				if (tbl != firstTable && (secondTable == null || tbl != secondTable) && tableSet.Contains(tbl))
 				{
 					var tempCopy = sql.Clone();
-					tempCopy.ChangeQueryType(QueryType.Select);
+					tempCopy.QueryType = QueryType.Select;
 					var tempTables = new List<SqlTableSource>();
 
 					// create copy of tables from main FROM clause for subquery clause
@@ -1100,14 +1100,14 @@ namespace LinqToDB.DataProvider
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
-			var query = (SelectQuery)qry.Queries[0].Statement;
+			var query = qry.Queries[0].Statement.SelectQuery;
 
 			MoveJoinsToSubqueries(query, _targetAlias, null, QueryElement.UpdateSetter);
 
 			QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
 			SaveParameters(query.Parameters);
 
-			SqlBuilder.BuildUpdateSetHelper(query, Command);
+			SqlBuilder.BuildUpdateSetHelper(new SqlUpdateStatement(query), Command);
 		}
 		#endregion
 

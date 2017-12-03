@@ -85,8 +85,10 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		protected override void BuildDeleteClause(SelectQuery selectQuery)
+		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
+			var selectQuery = deleteStatement.SelectQuery;
+			
 			AppendIndent();
 			StringBuilder.Append("DELETE");
 			BuildSkipFirst(selectQuery);
@@ -95,8 +97,8 @@ namespace LinqToDB.DataProvider.Sybase
 			ISqlTableSource table;
 			ISqlTableSource source;
 
-			if (selectQuery.Delete.Table != null)
-				table = source = selectQuery.Delete.Table;
+			if (deleteStatement.Table != null)
+				table = source = deleteStatement.Table;
 			else
 			{
 				table  = selectQuery.From.Tables[0];
@@ -200,9 +202,9 @@ namespace LinqToDB.DataProvider.Sybase
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(selectQuery);
+			BuildInsertOrUpdateQueryAsUpdateInsert(selectStatement);
 		}
 
 		protected override void BuildEmptyInsert(SelectQuery selectQuery)

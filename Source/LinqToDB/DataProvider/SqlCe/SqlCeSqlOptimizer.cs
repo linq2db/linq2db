@@ -16,7 +16,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			statement = base.Finalize(statement);
 
-			if (statement is SelectQuery selectQuery)
+			var selectQuery = statement.SelectQuery;
+			if (selectQuery != null)
 				new QueryVisitor().Visit(selectQuery.Select, element =>
 				{
 					if (element.ElementType == QueryElementType.SqlParameter)
@@ -34,12 +35,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					statement = GetAlternativeDelete((SelectQuery) statement);
-					((SelectQuery)statement).From.Tables[0].Alias = "$";
+					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
+					statement.SelectQuery.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SelectQuery) statement);
+					statement = GetAlternativeUpdate((SqlSelectStatement) statement);
 					break;
 			}
 

@@ -36,17 +36,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			return StringBuilder;
 		}
 
-		protected override void BuildInsertQuery(SelectQuery selectQuery)
+		protected override void BuildInsertQuery(SqlSelectStatement selectStatement)
 		{
-			if (selectQuery.Insert.WithIdentity)
+			if (selectStatement.SelectQuery.Insert.WithIdentity)
 			{
-				var identityField = selectQuery.Insert.Into.GetIdentityField();
+				var identityField = selectStatement.SelectQuery.Insert.Into.GetIdentityField();
 
 				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
-					AppendOutputTableVariable(selectQuery.Insert.Into)
+					AppendOutputTableVariable(selectStatement.SelectQuery.Insert.Into)
 						.Append(" TABLE (")
 						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
 						.Append(" ");
@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 			}
 
-			base.BuildInsertQuery(selectQuery);
+			base.BuildInsertQuery(selectStatement);
 		}
 
 		protected override void BuildOutputSubclause(SelectQuery selectQuery)
@@ -116,16 +116,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetSelectedColumns(selectQuery);
 		}
 
-		protected override void BuildDeleteClause(SelectQuery selectQuery)
+		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
-			var table = selectQuery.Delete.Table != null ?
-				(selectQuery.From.FindTableSource(selectQuery.Delete.Table) ?? selectQuery.Delete.Table) :
-				selectQuery.From.Tables[0];
+			var table = deleteStatement.Table != null ?
+				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
+				deleteStatement.SelectQuery.From.Tables[0];
 
 			AppendIndent()
 				.Append("DELETE");
 
-			BuildSkipFirst(selectQuery);
+			BuildSkipFirst(deleteStatement.SelectQuery);
 
 			StringBuilder
 				.Append(" ")
@@ -240,9 +240,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(selectQuery);
+			BuildInsertOrUpdateQueryAsUpdateInsert(selectStatement);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)

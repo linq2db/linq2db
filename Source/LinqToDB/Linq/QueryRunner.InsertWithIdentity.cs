@@ -18,14 +18,14 @@ namespace LinqToDB.Linq
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 				var sqlQuery = new SelectQuery();
-				sqlQuery.ChangeQueryType(QueryType.Insert);
+				sqlQuery.QueryType = QueryType.Insert;
 
 				sqlQuery.Insert.Into         = sqlTable;
 				sqlQuery.Insert.WithIdentity = true;
 
 				var ei = new Query<object>(dataContext, null)
 				{
-					Queries = { new QueryInfo { Statement = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = new SqlInsertStatement(sqlQuery), } }
 				};
 
 				foreach (var field in sqlTable.Fields)

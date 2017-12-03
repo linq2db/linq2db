@@ -171,10 +171,29 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.DeleteClause:
+				case QueryElementType.SelectStatement:
 					{
-						if (((SqlDeleteClause)element).Table != null)
-							Visit1(((SqlDeleteClause)element).Table);
+						Visit1(((SqlSelectStatement)element).SelectQuery);
+						break;
+					}
+
+				case QueryElementType.InsertStatement:
+					{
+						Visit1(((SqlInsertStatement)element).SelectQuery);
+						break;
+					}
+
+				case QueryElementType.UpdateStatement:
+					{
+						Visit1(((SqlUpdateStatement)element).SelectQuery);
+						break;
+					}
+
+				case QueryElementType.DeleteStatement:
+					{
+						Visit1(((SqlDeleteStatement)element).Table);
+						Visit1(((SqlDeleteStatement)element).Top);
+						Visit1(((SqlDeleteStatement)element).SelectQuery);
 						break;
 					}
 
@@ -264,11 +283,6 @@ namespace LinqToDB.SqlQuery
 
 				case QueryType.Update:
 					Visit1(q.Update);
-					Visit1(q.Select);
-					break;
-
-				case QueryType.Delete:
-					Visit1(q.Delete);
 					Visit1(q.Select);
 					break;
 
@@ -537,10 +551,29 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.DeleteClause:
+				case QueryElementType.SelectStatement:
 					{
-						if (((SqlDeleteClause)element).Table != null)
-							Visit2(((SqlDeleteClause)element).Table);
+						Visit2(((SqlSelectStatement)element).SelectQuery);
+						break;
+					}
+
+				case QueryElementType.InsertStatement:
+					{
+						Visit2(((SqlInsertStatement)element).SelectQuery);
+						break;
+					}
+
+				case QueryElementType.UpdateStatement:
+					{
+						Visit2(((SqlUpdateStatement)element).SelectQuery);
+						break;
+					}
+
+				case QueryElementType.DeleteStatement:
+					{
+						Visit2(((SqlDeleteStatement)element).Table);
+						Visit2(((SqlDeleteStatement)element).Top);
+						Visit2(((SqlDeleteStatement)element).SelectQuery);
 						break;
 					}
 
@@ -634,11 +667,6 @@ namespace LinqToDB.SqlQuery
 
 				case QueryType.Update:
 					Visit2(q.Update);
-					Visit2(q.Select);
-					break;
-
-				case QueryType.Delete:
-					Visit2(q.Delete);
 					Visit2(q.Select);
 					break;
 
@@ -919,9 +947,12 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlUpdateClause)element).Keys,  find);
 					}
 
-				case QueryElementType.DeleteClause:
+				case QueryElementType.DeleteStatement:
 					{
-						return Find(((SqlDeleteClause)element).Table, find);
+						return 
+							Find(((SqlDeleteStatement)element).Table, find) ??
+							Find(((SqlDeleteStatement)element).Top,   find) ??
+							Find(((SqlDeleteStatement)element).SelectQuery, find);
 					}
 
 				case QueryElementType.CreateTableStatement:
@@ -1279,14 +1310,18 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.DeleteClause:
+				case QueryElementType.DeleteStatement:
 					{
-						var s = (SqlDeleteClause)element;
-						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
+						var s = (SqlDeleteStatement)element;
+						var table       = s.Table != null ? (SqlTable)         ConvertInternal(s.Table, action) : null;
+						var top         = s.Top   != null ? (ISqlExpression)   ConvertInternal(s.Top,  action) : null;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)ConvertInternal(s.SelectQuery, action) : null;
 
-						if (t != null && !ReferenceEquals(s.Table, t))
+						if (table       != null && !ReferenceEquals(s.Table,       table)       ||
+							top         != null && !ReferenceEquals(s.Top,         top)         ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
 						{
-							newElement = new SqlDeleteClause { Table = t };
+							newElement = new SqlDeleteStatement { Table = table, SelectQuery = selectQuery, Top = top, IsParameterDependent = s.IsParameterDependent};
 						}
 
 						break;
@@ -1345,13 +1380,9 @@ namespace LinqToDB.SqlQuery
 						var fc   = (SqlFromClause)element;
 						var ts = Convert(fc.Tables, action);
 
-						IQueryElement parent;
-						_visitedElements.TryGetValue(fc.SelectQuery, out parent);
-
-						if (parent != null || ts != null && !ReferenceEquals(fc.Tables, ts))
+						if (ts != null && !ReferenceEquals(fc.Tables, ts))
 						{
 							newElement = new SqlFromClause(ts ?? fc.Tables);
-							((SqlFromClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
 						break;
@@ -1471,7 +1502,7 @@ namespace LinqToDB.SqlQuery
 							break;
 
 						var nq = new SelectQuery();
-						nq.ChangeQueryType(q.QueryType);
+						nq.QueryType = q.QueryType;
 
 						_visitedElements.Add(q,     nq);
 						_visitedElements.Add(q.All, nq.All);
@@ -1480,7 +1511,6 @@ namespace LinqToDB.SqlQuery
 						var sc = (SqlSelectClause) ConvertInternal(q.Select,  action) ?? q.Select;
 						var ic = q.IsInsert ? ((SqlInsertClause)ConvertInternal(q.Insert, action) ?? q.Insert) : null;
 						var uc = q.IsUpdate ? ((SqlUpdateClause)ConvertInternal(q.Update, action) ?? q.Update) : null;
-						var dc = q.IsDelete ? ((SqlDeleteClause)ConvertInternal(q.Delete, action) ?? q.Delete) : null;
 						var wc = (SqlWhereClause)  ConvertInternal(q.Where,   action) ?? q.Where;
 						var gc = (SqlGroupByClause)ConvertInternal(q.GroupBy, action) ?? q.GroupBy;
 						var hc = (SqlWhereClause)  ConvertInternal(q.Having,  action) ?? q.Having;
@@ -1501,7 +1531,7 @@ namespace LinqToDB.SqlQuery
 								ps.Add((SqlParameter)e);
 						}
 
-						nq.Init(ic, uc, dc, sc, fc, wc, gc, hc, oc, us,
+						nq.Init(ic, uc, sc, fc, wc, gc, hc, oc, us,
 							(SelectQuery)parent,
 							q.IsParameterDependent,
 							ps);

@@ -11,8 +11,8 @@ namespace LinqToDB.SqlQuery
 	using LinqToDB.Extensions;
 	using Mapping;
 
-	[DebuggerDisplay("SQL = {SqlText}")]
-	public class SelectQuery : SqlStatement, ISqlTableSource
+	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
+	public class SelectQuery : ISqlTableSource
 	{
 		#region Init
 
@@ -36,7 +36,6 @@ namespace LinqToDB.SqlQuery
 		internal void Init(
 			SqlInsertClause         insert,
 			SqlUpdateClause         update,
-			SqlDeleteClause      delete,
 			SqlSelectClause         select,
 			SqlFromClause           from,
 			SqlWhereClause          where,
@@ -50,7 +49,6 @@ namespace LinqToDB.SqlQuery
 		{
 			_insert              = insert;
 			_update              = update;
-			_delete              = delete;
 			Select               = select;
 			_from                = from;
 			_where               = where;
@@ -66,7 +64,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var col in select.Columns)
 				col.Parent = this;
 
-			Select. SetSqlQuery(this);
+			Select.  SetSqlQuery(this);
 			_from.   SetSqlQuery(this);
 			_where.  SetSqlQuery(this);
 			_groupBy.SetSqlQuery(this);
@@ -81,42 +79,161 @@ namespace LinqToDB.SqlQuery
 
 		public bool IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
 
-		public override QueryType QueryType => _queryType;
+		public QueryType QueryType { get; set; } = QueryType.Select;
 
-		private QueryType _queryType = QueryType.Select;
+		public bool IsSelect         => QueryType == QueryType.Select;
+		public bool IsInsertOrUpdate => QueryType == QueryType.InsertOrUpdate;
+		public bool IsInsert         => QueryType == QueryType.Insert || QueryType == QueryType.InsertOrUpdate;
+		public bool IsUpdate         => QueryType == QueryType.Update || QueryType == QueryType.InsertOrUpdate;
 
-		public void ChangeQueryType(QueryType newQueryType)
-		{
-			_queryType = newQueryType;
-		}
-
-		public bool IsSelect         => _queryType == QueryType.Select;
-		public bool IsDelete         => _queryType == QueryType.Delete;
-		public bool IsInsertOrUpdate => _queryType == QueryType.InsertOrUpdate;
-		public bool IsInsert         => _queryType == QueryType.Insert || _queryType == QueryType.InsertOrUpdate;
-		public bool IsUpdate         => _queryType == QueryType.Update || _queryType == QueryType.InsertOrUpdate;
+		public List<SqlParameter> Parameters           { get;      } = new List<SqlParameter>();
+		public bool               IsParameterDependent { get; set; }
 
 		#endregion
 
-		#region Temporary Delete
+		#region Aliases
 
-		private SqlDeleteClause _delete;
-		public  SqlDeleteClause  Delete
+		IDictionary<string,object> _aliases;
+
+		public void RemoveAlias(string alias)
 		{
-			get { return _delete ?? (_delete = new SqlDeleteClause()); }
+			if (_aliases != null)
+			{
+				alias = alias.ToUpper();
+				if (_aliases.ContainsKey(alias))
+					_aliases.Remove(alias);
+			}
 		}
 
-		public void ClearDelete()
+		public string GetAlias(string desiredAlias, string defaultAlias)
 		{
-			_delete = null;
+			if (_aliases == null)
+				_aliases = new Dictionary<string,object>();
+
+			var alias = desiredAlias;
+
+			if (string.IsNullOrEmpty(desiredAlias) || desiredAlias.Length > 25)
+			{
+				desiredAlias = defaultAlias;
+				alias        = defaultAlias + "1";
+			}
+
+			for (var i = 1; ; i++)
+			{
+				var s = alias.ToUpper();
+
+				if (!_aliases.ContainsKey(s) && !ReservedWords.IsReserved(s))
+				{
+					_aliases.Add(s, s);
+					break;
+				}
+
+				alias = desiredAlias + i;
+			}
+
+			return alias;
+		}
+
+		public string[] GetTempAliases(int n, string defaultAlias)
+		{
+			var aliases = new string[n];
+
+			for (var i = 0; i < aliases.Length; i++)
+				aliases[i] = GetAlias(defaultAlias, defaultAlias);
+
+			foreach (var t in aliases)
+				RemoveAlias(t);
+
+			return aliases;
+		}
+
+		internal void SetAliases()
+		{
+			_aliases = null;
+
+			var objs = new Dictionary<object,object>();
+
+			Parameters.Clear();
+
+			new QueryVisitor().VisitAll(this, expr =>
+			{
+				switch (expr.ElementType)
+				{
+					case QueryElementType.SqlParameter:
+						{
+							var p = (SqlParameter)expr;
+
+							if (p.IsQueryParameter)
+							{
+								if (!objs.ContainsKey(expr))
+								{
+									objs.Add(expr, expr);
+									p.Name = GetAlias(p.Name, "p");
+									Parameters.Add(p);
+								}
+							}
+							else
+								IsParameterDependent = true;
+						}
+
+						break;
+
+					case QueryElementType.Column:
+						{
+							if (!objs.ContainsKey(expr))
+							{
+								objs.Add(expr, expr);
+
+								var c = (SqlColumn)expr;
+
+								if (c.Alias != "*")
+									c.Alias = GetAlias(c.Alias, "c");
+							}
+						}
+
+						break;
+
+					case QueryElementType.TableSource:
+						{
+							var table = (SqlTableSource)expr;
+
+							if (!objs.ContainsKey(table))
+							{
+								objs.Add(table, table);
+								table.Alias = GetAlias(table.Alias, "t");
+							}
+						}
+
+						break;
+
+					case QueryElementType.SqlQuery:
+						{
+							var sql = (SelectQuery)expr;
+
+							if (sql.HasUnion)
+							{
+								for (var i = 0; i < sql.Select.Columns.Count; i++)
+								{
+									var col = sql.Select.Columns[i];
+
+									foreach (var t in sql.Unions)
+									{
+										var union = t.SelectQuery.Select;
+
+										objs.Remove(union.Columns[i].Alias);
+
+										union.Columns[i].Alias = col.Alias;
+									}
+								}
+							}
+						}
+
+						break;
+				}
+			});
 		}
 
 		#endregion
-
-		#region OrderByItem
-
-		#endregion
-
 
 		#region SelectClause
 
@@ -127,10 +244,7 @@ namespace LinqToDB.SqlQuery
 		#region InsertClause
 
 		private SqlInsertClause _insert;
-		public  SqlInsertClause  Insert
-		{
-			get { return _insert ?? (_insert = new SqlInsertClause()); }
-		}
+		public  SqlInsertClause  Insert => _insert ?? (_insert = new SqlInsertClause());
 
 		public void ClearInsert()
 		{
@@ -245,7 +359,7 @@ namespace LinqToDB.SqlQuery
 
 #region ProcessParameters
 
-		public override SqlStatement ProcessParameters(MappingSchema mappingSchema)
+		public SelectQuery ProcessParameters(MappingSchema mappingSchema)
 		{
 			if (IsParameterDependent)
 			{
@@ -485,13 +599,12 @@ namespace LinqToDB.SqlQuery
 			if (clone.ParentSelect != null)
 				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
 
-			_queryType = clone._queryType;
+			QueryType = clone.QueryType;
 
 			if (IsInsert) _insert = (SqlInsertClause)clone._insert.Clone(objectTree, doClone);
 			if (IsUpdate) _update = (SqlUpdateClause)clone._update.Clone(objectTree, doClone);
-			if (IsDelete) _delete = (SqlDeleteClause)clone._delete.Clone(objectTree, doClone);
 
-			Select  = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
+			Select   = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
 			_from    = new SqlFromClause   (this, clone._from,    objectTree, doClone);
 			_where   = new SqlWhereClause  (this, clone._where,   objectTree, doClone);
 			_groupBy = new SqlGroupByClause(this, clone._groupBy, objectTree, doClone);
@@ -539,7 +652,7 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
 			var ts = From[table];
 
@@ -571,7 +684,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 #endregion
-
+		
 #region Overrides
 
 #if OVERRIDETOSTRING
@@ -620,7 +733,7 @@ namespace LinqToDB.SqlQuery
 
 #region ICloneableElement Members
 
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;
@@ -637,11 +750,10 @@ namespace LinqToDB.SqlQuery
 
 #region ISqlExpressionWalkable Members
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (_insert != null) ((ISqlExpressionWalkable)_insert).Walk(skipColumns, func);
 			if (_update != null) ((ISqlExpressionWalkable)_update).Walk(skipColumns, func);
-			if (_delete != null) ((ISqlExpressionWalkable)_delete).Walk(skipColumns, func);
 
 			((ISqlExpressionWalkable)Select) .Walk(skipColumns, func);
 			((ISqlExpressionWalkable)From)   .Walk(skipColumns, func);
@@ -713,9 +825,13 @@ namespace LinqToDB.SqlQuery
 
 #region IQueryElement Members
 
-		public override QueryElementType ElementType => QueryElementType.SqlQuery;
+		public QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public string SqlText =>
+			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+			.ToString();
+
+		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
 			if (dic.ContainsKey(this))
 				return sb.Append("...");

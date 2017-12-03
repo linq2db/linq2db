@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (Version == DB2Version.LUW && statement.IsInsertWithIdentity())
 			{
-				_identityField = ((SelectQuery)statement).Insert.Into.GetIdentityField();
+				_identityField = statement.SelectQuery.Insert.Into.GetIdentityField();
 
 				if (_identityField == null)
 					return 2;
@@ -183,9 +183,9 @@ namespace LinqToDB.DataProvider.DB2
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectQuery, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
+			BuildInsertOrUpdateQueryAsMerge(selectStatement, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 		}
 
 		protected override void BuildEmptyInsert(SelectQuery selectQuery)

@@ -22,13 +22,13 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			if (Statement is SelectQuery selectQuery)
+			if (Statement.IsInsert())
 			{
-				var identityField = selectQuery.Insert.Into.GetIdentityField();
-				var table = selectQuery.Insert.Into;
+				var identityField = Statement.SelectQuery.Insert.Into.GetIdentityField();
+				var table = Statement.SelectQuery.Insert.Into;
 
 				if (identityField == null || table == null)
-					throw new SqlException("Identity field must be defined for '{0}'.", selectQuery.Insert.Into.Name);
+					throw new SqlException("Identity field must be defined for '{0}'.", Statement.SelectQuery.Insert.Into.Name);
 
 				StringBuilder.Append("SELECT MAX(");
 				BuildExpression(identityField, false, true);
@@ -75,9 +75,9 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(selectQuery);
+			BuildInsertOrUpdateQueryAsUpdateInsert(selectStatement);
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType)

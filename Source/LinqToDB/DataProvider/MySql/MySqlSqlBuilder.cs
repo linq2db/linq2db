@@ -95,11 +95,11 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDeleteClause(SelectQuery selectQuery)
+		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
-			var table = selectQuery.Delete.Table != null ?
-				(selectQuery.From.FindTableSource(selectQuery.Delete.Table) ?? selectQuery.Delete.Table) :
-				selectQuery.From.Tables[0];
+			var table = deleteStatement.Table != null ?
+				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
+				deleteStatement.SelectQuery.From.Tables[0];
 
 			AppendIndent()
 				.Append("DELETE ")
@@ -229,13 +229,13 @@ namespace LinqToDB.DataProvider.MySql
 				throwExceptionIfTableNotFound);
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
 			var position = StringBuilder.Length;
 
-			BuildInsertQuery(selectQuery);
+			BuildInsertQuery(selectStatement);
 
-			if (selectQuery.Update.Items.Count > 0)
+			if (selectStatement.SelectQuery.Update.Items.Count > 0)
 			{
 				AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
@@ -243,7 +243,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				var first = true;
 
-				foreach (var expr in selectQuery.Update.Items)
+				foreach (var expr in selectStatement.SelectQuery.Update.Items)
 				{
 					if (!first)
 						StringBuilder.Append(',').AppendLine();

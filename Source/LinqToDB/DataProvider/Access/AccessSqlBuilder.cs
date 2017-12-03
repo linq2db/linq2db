@@ -39,7 +39,8 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildSql()
 		{
-			if (Statement is SelectQuery selectQuery)
+			var selectQuery = Statement.SelectQuery;
+			if (selectQuery != null)
 			{
 				if (NeedSkip(selectQuery))
 				{
@@ -111,7 +112,7 @@ namespace LinqToDB.DataProvider.Access
 
 			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
 
-			BuildSql(0, query, StringBuilder);
+			BuildSql(0, new SqlSelectStatement(query), StringBuilder);
 
 			_selectColumn = null;
 		}

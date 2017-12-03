@@ -23,7 +23,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			if (Statement is SelectQuery selectQuery)
+			var selectQuery = Statement.SelectQuery;
+			if (selectQuery != null)
 			{
 				var identityField = selectQuery.Insert.Into.GetIdentityField();
 				var table = selectQuery.Insert.Into;
@@ -76,9 +77,9 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(selectQuery);
+			BuildInsertOrUpdateQueryAsUpdateInsert(selectStatement);
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType)

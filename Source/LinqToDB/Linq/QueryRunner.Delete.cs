@@ -18,14 +18,13 @@ namespace LinqToDB.Linq
 			static Query<int> CreateQuery(IDataContext dataContext)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery();
-				sqlQuery.ChangeQueryType(QueryType.Delete);
+				var deleteStatement = new SqlDeleteStatement();
 
-				sqlQuery.From.Table(sqlTable);
+				deleteStatement.SelectQuery.From.Table(sqlTable);
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { Statement = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = deleteStatement, } }
 				};
 
 				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
@@ -39,10 +38,10 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].Parameters.Add(param);
 
-					sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
+					deleteStatement.SelectQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
 
 					if (field.CanBeNull)
-						sqlQuery.IsParameterDependent = true;
+						deleteStatement.IsParameterDependent = true;
 				}
 
 				SetNonQueryQuery(ei);

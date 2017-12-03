@@ -341,8 +341,8 @@ namespace LinqToDB.Data
 					var sql = preparedQuery.Statement;
 
 					if ((sql.QueryType == QueryType.Insert ||
-					    sql.QueryType == QueryType.InsertOrUpdate)
-						&& ((SelectQuery)sql).Insert.WithIdentity)
+					     sql.QueryType == QueryType.InsertOrUpdate)
+						&& sql.SelectQuery.Insert.WithIdentity)
 					{
 						idparam = dataConnection.Command.CreateParameter();
 
@@ -537,7 +537,7 @@ namespace LinqToDB.Data
 
 					if ((sql.QueryType == QueryType.Insert ||
 					    sql.QueryType == QueryType.InsertOrUpdate)
-						&& ((SelectQuery)sql).Insert.WithIdentity)
+						&& sql.SelectQuery.Insert.WithIdentity)
 					{
 						idparam = _dataConnection.Command.CreateParameter();
 

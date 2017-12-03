@@ -23,7 +23,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			if (Statement is SelectQuery selectQuery)
+			var selectQuery = Statement.SelectQuery;
+			if (selectQuery != null)
 			{
 				var into = selectQuery.Insert.Into;
 				var attr = GetSequenceNameAttribute(into, false);

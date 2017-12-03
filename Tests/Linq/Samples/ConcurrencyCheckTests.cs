@@ -50,7 +50,7 @@ namespace Tests.Samples
 
 				if (statement.QueryType == QueryType.Update)
 				{
-					var query = (SelectQuery) statement;
+					var query = statement.SelectQuery;
 					var source = query.From.Tables[0].Source as SqlTable;
 					if (source == null)
 						return statement;
@@ -77,7 +77,7 @@ namespace Tests.Samples
 
 					updateColumn.Expression = new SqlBinaryExpression(typeof(int), field, "+", new SqlValue(1));
 
-					return newQuery;
+					return new SqlUpdateStatement(newQuery);
 
 				}
 
@@ -87,7 +87,7 @@ namespace Tests.Samples
 
 				else if (statement.IsInsert())
 				{
-					var query      = (SelectQuery) statement;
+					var query      = statement.SelectQuery;
 					var source     = query.Insert.Into;
 					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
@@ -109,7 +109,7 @@ namespace Tests.Samples
 					if (versionColumn != null)
 					{
 						versionColumn.Expression = new SqlValue(1);
-						return newQuery;
+						return new SqlInsertStatement(newQuery);
 					}
 				}
 				#endregion Insert

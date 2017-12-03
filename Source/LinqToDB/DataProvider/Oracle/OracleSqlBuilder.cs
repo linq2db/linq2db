@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildSql()
 		{
-			var selectQuery = (SelectQuery) Statement;
+			var selectQuery = Statement.SelectQuery;
 
 			if (NeedSkip(selectQuery))
 			{
@@ -266,9 +266,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectQuery, "FROM SYS.DUAL");
+			BuildInsertOrUpdateQueryAsMerge(selectStatement, "FROM SYS.DUAL");
 		}
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)

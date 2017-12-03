@@ -254,7 +254,7 @@ namespace LinqToDB.Linq
 
 			Func<Expression,object[],int> skip = null, take = null;
 
-			var selectQuery = (SelectQuery) query.Queries[0].Statement;
+			var selectQuery = query.Queries[0].Statement.SelectQuery;
 			var select      = selectQuery.Select;
 
 			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery))
@@ -636,7 +636,7 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement      = (db, expr, ps) => NonQueryQuery2(query, db, expr, ps);
+			query.GetElement      = (db, expr, ps)        => NonQueryQuery2(query, db, expr, ps);
 			query.GetElementAsync = (db, expr, ps, token) => NonQueryQuery2Async(query, db, expr, ps, token);
 		}
 

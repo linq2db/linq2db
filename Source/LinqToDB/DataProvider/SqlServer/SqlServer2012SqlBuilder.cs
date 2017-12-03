@@ -32,7 +32,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildSql()
 		{
-			if (Statement is SelectQuery selectQuery)
+			var selectQuery = Statement.SelectQuery;
+			if (selectQuery != null)
 			{
 				if (NeedSkip(selectQuery) && selectQuery.OrderBy.IsEmpty)
 				{
@@ -44,9 +45,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildSql();
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectQuery, null);
+			BuildInsertOrUpdateQueryAsMerge(selectStatement, null);
 			StringBuilder.AppendLine(";");
 		}
 

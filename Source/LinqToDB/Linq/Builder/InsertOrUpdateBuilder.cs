@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 					sequence);
 			}
 
-			sequence.SelectQuery.ChangeQueryType(QueryType.InsertOrUpdate);
+			sequence.SelectQuery.QueryType = QueryType.InsertOrUpdate;
 
 			return new InsertOrUpdateContext(buildInfo.Parent, sequence);
 		}

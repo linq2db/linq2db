@@ -861,9 +861,9 @@ namespace Tests
 			throw new NotImplementedException();
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectQuery, null);
+			BuildInsertOrUpdateQueryAsMerge(selectStatement, null);
 		}
 	}
 

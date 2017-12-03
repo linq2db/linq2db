@@ -4,39 +4,79 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Mapping;
+
 	public class SqlDeleteStatement : SqlStatement
 	{
-		public override QueryType        QueryType   => QueryType.Delete;
-		public override QueryElementType ElementType => QueryElementType.DeleteStatement;
-
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public SqlDeleteStatement(SelectQuery selectQuery)
 		{
-			throw new NotImplementedException();
+			_selectQuery = selectQuery;
 		}
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		public SqlDeleteStatement()
 		{
-			throw new NotImplementedException();
+		}
+
+		public override QueryType          QueryType   => QueryType.Delete;
+		public override QueryElementType   ElementType => QueryElementType.DeleteStatement;
+		
+		public override bool               IsParameterDependent
+		{
+			get => SelectQuery.IsParameterDependent;
+			set => SelectQuery.IsParameterDependent = value;
+		}
+		
+		public override List<SqlParameter> Parameters  => SelectQuery.Parameters;
+
+		public SqlTable       Table { get; set; }
+		public ISqlExpression Top   { get; set; }
+
+		private SelectQuery        _selectQuery;
+		public override SelectQuery SelectQuery
+		{
+			get => _selectQuery ?? (_selectQuery = new SelectQuery());
+			set => _selectQuery = value;
+		}
+
+		public override SqlStatement ProcessParameters(MappingSchema mappingSchema)
+		{
+			var newQuery = SelectQuery.ProcessParameters(mappingSchema);
+			if (!ReferenceEquals(newQuery, _selectQuery))
+				return new SqlDeleteStatement(newQuery);
+			return this;
 		}
 
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
-			throw new NotImplementedException();
+			if (!doClone(this))
+				return this;
+
+			var clone = new SqlDeleteStatement();
+
+			if (Table != null)
+				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
+
+			objectTree.Add(this, clone);
+
+			return clone;
 		}
 
-		#region SelectClause
-		#endregion
-
-		#region DeleteClause
-
-		private SqlDeleteClause _delete;
-		public  SqlDeleteClause  Delete
+		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
-			get => _delete ?? (_delete = new SqlDeleteClause());
-			set => _delete = value;
+			((ISqlExpressionWalkable)Table)?.Walk(skipColumns, func);
+
+			return null;
 		}
 
-		#endregion
+		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		{
+			sb.Append("DELETE FROM ");
 
+			((IQueryElement)Table)?.ToString(sb, dic);
+
+			sb.AppendLine();
+
+			return sb;
+		}
 	}
 }

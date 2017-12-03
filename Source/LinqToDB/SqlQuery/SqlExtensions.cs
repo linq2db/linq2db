@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.SqlQuery
 {
 	public static class SqlExtensions
 	{
@@ -8,38 +12,23 @@
 			       statement.QueryType == QueryType.InsertOrUpdate;
 		}
 
+		public static bool IsUpdate(this SqlStatement statement)
+		{
+			return statement.QueryType == QueryType.Update;
+		}
+
 		public static bool IsInsertWithIdentity(this SqlStatement statement)
 		{
-			return statement.IsInsert() && ((SelectQuery)statement).Insert.WithIdentity;
+			return statement.IsInsert() && statement.SelectQuery.Insert.WithIdentity;
 		}
 
-		public static SqlSelectClause AsSelect(this SqlStatement statement)
+		public static SelectQuery EnsureQuery(this SqlStatement statement)
 		{
-			if (statement is SelectQuery selectQuery)
-				return selectQuery.Select;
-			throw new LinqToDBException($"Satetement {statement.QueryType} is not Select Statement");
+			var selectQuery = statement.SelectQuery;
+			if (selectQuery == null)
+				throw new LinqToDBException("Sqlect Query required");
+			return selectQuery;
 		}
 
-		public static SqlInsertClause AsInsert(this SqlStatement statement)
-		{
-			if (statement is SelectQuery selectQuery)
-				return selectQuery.Insert;
-			throw new LinqToDBException($"Satetement {statement.QueryType} is not Insert Statement");
-		}
-
-		public static SelectQuery AsQuery(this SqlStatement statement)
-		{
-			if (statement is SelectQuery selectQuery)
-				return selectQuery;
-			throw new LinqToDBException($"Satetement {statement.QueryType} is not SelectQuery");
-		}
-		
-		public static ISqlExpression AsExpression(this SqlStatement statement)
-		{
-			if (statement is ISqlExpression expression)
-				return expression;
-			throw new LinqToDBException($"Satetement {statement.QueryType} do not supports ISqlExpression interface");
-		}
-		
 	}
 }

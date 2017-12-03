@@ -8,15 +8,25 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlTable       Table           { get; set; }
 
-		public override QueryType QueryType          => QueryType.DropTable;
-		public override QueryElementType ElementType => QueryElementType.DropTableStatement;
+		public override QueryType          QueryType    => QueryType.DropTable;
+		public override QueryElementType   ElementType  => QueryElementType.DropTableStatement;
 
+		public override bool               IsParameterDependent
+		{
+			get => false;
+			set {}
+		}
+
+		private         List<SqlParameter> _parameters;
+		public override List<SqlParameter> Parameters => _parameters ?? (_parameters = new List<SqlParameter>());
+		
+		public override SelectQuery SelectQuery { get => null; set {}}
+		
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			sb.Append("DROP TABLE ");
 
-			if (Table != null)
-				((IQueryElement)Table).ToString(sb, dic);
+			((IQueryElement)Table)?.ToString(sb, dic);
 
 			sb.AppendLine();
 
@@ -25,8 +35,7 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
-			if (Table != null)
-				((ISqlExpressionWalkable)Table).Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Table)?.Walk(skipColumns, func);
 
 			return null;
 		}

@@ -20,12 +20,12 @@ namespace LinqToDB.DataProvider.SQLite
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					statement = GetAlternativeDelete((SelectQuery)statement);
-					((SelectQuery)statement).From.Tables[0].Alias = "$";
+					statement = GetAlternativeDelete((SqlDeleteStatement)statement);
+					statement.SelectQuery.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SelectQuery)statement);
+					statement = GetAlternativeUpdate((SqlSelectStatement)statement);
 					break;
 			}
 

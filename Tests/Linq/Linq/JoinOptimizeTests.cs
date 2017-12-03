@@ -18,7 +18,7 @@ namespace Tests.Linq
 			var eq = (IExpressionQuery)query;
 			var expression = eq.Expression;
 			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
-			return (SelectQuery)info.Queries.Single().Statement;
+			return info.Queries.Single().Statement.SelectQuery;
 		}
 
 		SqlSearchCondition GetWhere<T>(IQueryable<T> query)

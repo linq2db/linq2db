@@ -330,7 +330,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
-				if (!(e is SelectQuery sql) || sql.From.Tables.Count != 1 || !sql.IsSimple || sql.IsInsert || sql.IsUpdate || sql.IsDelete)
+				if (!(e is SelectQuery sql) || sql.From.Tables.Count != 1 || !sql.IsSimple || sql.IsInsert || sql.IsUpdate)
 					return;
 
 				var table = sql.From.Tables[0];
@@ -605,9 +605,6 @@ namespace LinqToDB.SqlQuery
 
 							if (_selectQuery.IsUpdate)
 								visitor.VisitAll(_selectQuery.Update, TableCollector);
-
-							if (_selectQuery.IsDelete)
-								visitor.VisitAll(_selectQuery.Delete, TableCollector);
 
 							visitor.VisitAll(_selectQuery.From, expr =>
 							{

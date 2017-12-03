@@ -271,7 +271,7 @@ namespace LinqToDB.DataProvider
 
 						var pq = DataConnection.QueryRunner.SetQuery(dataConnection, new QueryContext
 						{
-							Statement     = sql,
+							Statement     = new SqlSelectStatement(sql),
 							SqlParameters = sql.Parameters.ToArray(),
 						});
 
