@@ -144,7 +144,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			return
 			(
@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.DB2
 						B.COLSEQ")
 				let   otherColumn = _primaryKeys.Where(pk => pk.TableID == fk.otherTable).ElementAtOrDefault(fk.ordinal - 1)
 				where otherColumn != null
-				select new ForeingKeyInfo
+				select new ForeignKeyInfo
 				{
 					Name = fk.name,
 					ThisTableID  = fk.thisTable,

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SchemaProvider
 {
-	public class ForeingKeyInfo
+	public class ForeignKeyInfo
 	{
 		public string Name;
 		public string ThisTableID;

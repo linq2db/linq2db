@@ -246,9 +246,9 @@ namespace LinqToDB.DataProvider.SapHana
 			return query.ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			return dataConnection.Query<ForeingKeyInfo>(@"
+			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
 					CONSTRAINT_NAME AS ""Name"",
 					SCHEMA_NAME || '.' || TABLE_NAME AS ""ThisTableID"",

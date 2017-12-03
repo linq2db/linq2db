@@ -173,14 +173,14 @@ namespace LinqToDB.DataProvider.MySql
 			return ret;
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			var fks = ((DbConnection)dataConnection.Connection).GetSchema("Foreign Key Columns");
 
 			return
 			(
 				from fk in fks.AsEnumerable()
-				select new ForeingKeyInfo
+				select new ForeignKeyInfo
 				{
 					Name         = fk.Field<string>("CONSTRAINT_NAME"),
 					ThisTableID  = fk.Field<string>("TABLE_SCHEMA")   + ".." + fk.Field<string>("TABLE_NAME"),
