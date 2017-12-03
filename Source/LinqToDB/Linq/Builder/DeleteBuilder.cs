@@ -45,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 						var tc = (TableBuilder.TableContext)res.Context;
 
 						if (deleteStatement.SelectQuery.From.Tables.Count == 0 || deleteStatement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
-							deleteStatement.Table = deleteStatement.SelectQuery.From.Tables[0].Source as SqlTable;
+							deleteStatement.Table = tc.SqlTable;
 					}
 				}
 			}
