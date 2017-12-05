@@ -866,6 +866,14 @@ namespace LinqToDB.SqlQuery
 			if (isApplySupported && !joinTable.CanConvertApply)
 				return;
 
+			bool ContainsTable(ISqlTableSource table, IQueryElement qe)
+			{
+				return null != QueryVisitor.Find(qe, e =>
+					e == table ||
+					e.ElementType == QueryElementType.SqlField && table == ((SqlField) e).Table ||
+					e.ElementType == QueryElementType.Column   && table == ((SqlColumn)e).Parent);
+			}
+
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
@@ -874,9 +882,34 @@ namespace LinqToDB.SqlQuery
 				if (isApplySupported && (isAgg || sql.Select.HasModifier))
 					return;
 
-				var searchCondition = new List<SqlCondition>(sql.Where.SearchCondition.Conditions);
+				var tableSources = new HashSet<ISqlTableSource>();
 
-				sql.Where.SearchCondition.Conditions.Clear();
+				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(false, e =>
+				{
+					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
+						tableSources.Add(ts);
+					return e;
+				});
+
+				var searchCondition = new List<SqlCondition>();
+
+				{
+					var conditions = sql.Where.SearchCondition.Conditions;
+
+					if (conditions.Count > 0)
+					{
+						for (var i = conditions.Count - 1; i >= 0; i--)
+						{
+							var condition = conditions[i];
+
+							if (!tableSources.Any(ts => ContainsTable(ts, condition)))
+							{
+								searchCondition.Insert(0, condition);
+								conditions.RemoveAt(i);
+							}
+						}
+					}
+				}
 
 				if (!ContainsTable(tableSource.Source, sql))
 				{
@@ -916,14 +949,6 @@ namespace LinqToDB.SqlQuery
 				if (!ContainsTable(tableSource.Source, joinSource.Source))
 					joinTable.JoinType = joinTable.JoinType == JoinType.CrossApply ? JoinType.Inner : JoinType.Left;
 			}
-		}
-
-		static bool ContainsTable(ISqlTableSource table, IQueryElement sql)
-		{
-			return null != QueryVisitor.Find(sql, e =>
-				e == table ||
-				e.ElementType == QueryElementType.SqlField && table == ((SqlField)e).Table ||
-				e.ElementType == QueryElementType.Column   && table == ((SqlColumn)  e).Parent);
 		}
 
 		static void ConcatSearchCondition(SqlWhereClause where1, SqlWhereClause where2)

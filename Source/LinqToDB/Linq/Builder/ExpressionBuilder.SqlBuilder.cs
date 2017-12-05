@@ -38,12 +38,11 @@ namespace LinqToDB.Linq.Builder
 				ctx = new ExpressionContext(parent, sequence, condition);
 			}
 
-			BuildSearchCondition(
-				ctx,
-				expr,
-				enforceHaving || makeHaving && !ctx.SelectQuery.GroupBy.IsEmpty?
-					ctx.SelectQuery.Having.SearchCondition.Conditions :
-					ctx.SelectQuery.Where. SearchCondition.Conditions);
+			var conditions = enforceHaving || makeHaving && !ctx.SelectQuery.GroupBy.IsEmpty?
+				ctx.SelectQuery.Having.SearchCondition.Conditions :
+				ctx.SelectQuery.Where. SearchCondition.Conditions;
+
+			BuildSearchCondition(ctx, expr, conditions);
 
 			ReplaceParent(ctx, prevParent);
 
@@ -246,43 +245,45 @@ namespace LinqToDB.Linq.Builder
 			var sequence = GetSubQuery(context, expression);
 			var subSql   = sequence.GetSubQuery(context);
 
-			if (subSql != null)
-				return subSql;
-
-			var query    = context.SelectQuery;
-			var subQuery = sequence.SelectQuery;
-
-			// This code should be moved to context.
-			//
-			if (!query.GroupBy.IsEmpty && !subQuery.Where.IsEmpty)
+			if (subSql == null)
 			{
-				var fromGroupBy = sequence.SelectQuery.Properties
-					.OfType<Tuple<string,SelectQuery>>()
-					.Any(p => p.Item1 == "from_group_by" && ReferenceEquals(p.Item2, context.SelectQuery));
+				var query    = context.SelectQuery;
+				var subQuery = sequence.SelectQuery;
 
-				if (fromGroupBy)
+				// This code should be moved to context.
+				//
+				if (!query.GroupBy.IsEmpty && !subQuery.Where.IsEmpty)
 				{
-					if (subQuery.Select.Columns.Count == 1 &&
-						subQuery.Select.Columns[0].Expression.ElementType == QueryElementType.SqlFunction &&
-						subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasUnion &&
-						subQuery.Where.SearchCondition.Conditions.Count == 1)
+					var fromGroupBy = sequence.SelectQuery.Properties
+						.OfType<Tuple<string,SelectQuery>>()
+						.Any(p => p.Item1 == "from_group_by" && ReferenceEquals(p.Item2, context.SelectQuery));
+
+					if (fromGroupBy)
 					{
-						var cond = subQuery.Where.SearchCondition.Conditions[0];
-
-						if (cond.Predicate.ElementType == QueryElementType.ExprExprPredicate && query.GroupBy.Items.Count == 1 ||
-							cond.Predicate.ElementType == QueryElementType.SearchCondition &&
-							query.GroupBy.Items.Count == ((SqlSearchCondition)cond.Predicate).Conditions.Count)
+						if (subQuery.Select.Columns.Count == 1 &&
+							subQuery.Select.Columns[0].Expression.ElementType == QueryElementType.SqlFunction &&
+							subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasUnion &&
+							subQuery.Where.SearchCondition.Conditions.Count == 1)
 						{
-							var func = (SqlFunction)subQuery.Select.Columns[0].Expression;
+							var cond = subQuery.Where.SearchCondition.Conditions[0];
 
-							if (CountBuilder.MethodNames.Contains(func.Name))
-								return SqlFunction.CreateCount(func.SystemType, query);
+							if (cond.Predicate.ElementType == QueryElementType.ExprExprPredicate && query.GroupBy.Items.Count == 1 ||
+								cond.Predicate.ElementType == QueryElementType.SearchCondition &&
+								query.GroupBy.Items.Count == ((SqlSearchCondition)cond.Predicate).Conditions.Count)
+							{
+								var func = (SqlFunction)subQuery.Select.Columns[0].Expression;
+
+								if (CountBuilder.MethodNames.Contains(func.Name))
+									return SqlFunction.CreateCount(func.SystemType, query);
+							}
 						}
 					}
 				}
+
+				subSql = sequence.SelectQuery;
 			}
 
-			return sequence.SelectQuery;
+			return subSql;
 		}
 
 		#endregion
