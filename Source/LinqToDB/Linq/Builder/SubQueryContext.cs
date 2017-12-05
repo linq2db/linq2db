@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 			: base(subQuery)
 		{
 			if (selectQuery == subQuery.SelectQuery)
-				throw new ArgumentException("Wrong subQuery argument.", "subQuery");
+				throw new ArgumentException("Wrong subQuery argument.", nameof(subQuery));
 
 			SubQuery        = subQuery;
 			SubQuery.Parent = this;
