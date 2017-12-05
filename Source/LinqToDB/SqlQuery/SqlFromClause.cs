@@ -226,6 +226,9 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
+			if (sb.Length > 10240)
+				return sb;
+
 			sb.Append(" \nFROM \n");
 
 			if (Tables.Count > 0)
