@@ -1,7 +1,5 @@
 ﻿using System;
-using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
+
 using LinqToDB.Mapping;
 
 namespace Tests.DataProvider

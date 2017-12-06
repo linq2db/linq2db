@@ -4,7 +4,7 @@ open Tests.FSharp.Models
 
 open LinqToDB
 open LinqToDB.Mapping
-open Tests.Utils
+open Tests.Tools
 
 let Insert1 (db : IDataContext) =
     let cleanup = fun() ->

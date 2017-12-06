@@ -4,7 +4,7 @@ open Tests.FSharp.Models
 
 open LinqToDB
 open LinqToDB.Mapping
-open Tests.Utils
+open Tests.Tools
 
 let SelectField (db : IDataContext) =
     let persons = db.GetTable<Person>()

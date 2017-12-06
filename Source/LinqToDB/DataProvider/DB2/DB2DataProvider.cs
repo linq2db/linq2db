@@ -87,8 +87,8 @@ namespace LinqToDB.DataProvider.DB2
 			MappingSchema.AddScalarType(DB2Types.DB2Date,         GetNullValue(DB2Types.DB2Date),         true, DataType.Date);
 			MappingSchema.AddScalarType(DB2Types.DB2Time,         GetNullValue(DB2Types.DB2Time),         true, DataType.Time);
 			MappingSchema.AddScalarType(DB2Types.DB2TimeStamp,    GetNullValue(DB2Types.DB2TimeStamp),    true, DataType.DateTime2);
-			MappingSchema.AddScalarType(DB2Types.DB2Xml,          GetNullValue(DB2Types.DB2Xml),          true, DataType.Xml);
 			MappingSchema.AddScalarType(DB2Types.DB2RowId,        GetNullValue(DB2Types.DB2RowId),        true, DataType.VarBinary);
+			MappingSchema.AddScalarType(DB2Types.DB2Xml,          DB2Tools.IsCore ? null : GetNullValue(DB2Types.DB2Xml), true, DataType.Xml);
 
 			_setBlob = GetSetParameter(connectionType, "DB2Parameter", "DB2Type", "DB2Type", "Blob");
 
@@ -118,9 +118,9 @@ namespace LinqToDB.DataProvider.DB2
 			return getValue.Compile()();
 		}
 
-		public    override string ConnectionNamespace => "IBM.Data.DB2";
-		protected override string ConnectionTypeName  => "IBM.Data.DB2.DB2Connection, IBM.Data.DB2";
-		protected override string DataReaderTypeName  => "IBM.Data.DB2.DB2DataReader, IBM.Data.DB2";
+		public    override string ConnectionNamespace => DB2Tools.AssemblyName;
+		protected override string ConnectionTypeName  => DB2Tools.AssemblyName + ".DB2Connection, " + DB2Tools.AssemblyName;
+		protected override string DataReaderTypeName  => DB2Tools.AssemblyName + ".DB2DataReader, " + DB2Tools.AssemblyName;
 
 		public DB2Version Version { get; }
 

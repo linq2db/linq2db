@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.DB2
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			if (dataConnection.Transaction == null)
 			{

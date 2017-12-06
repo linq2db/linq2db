@@ -2,7 +2,7 @@
 
 using NUnit.Framework;
 
-namespace Tests.Utils
+namespace Tests.Tools
 {
 	public static class NUnitAssert
 	{

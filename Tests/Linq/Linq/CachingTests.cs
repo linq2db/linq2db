@@ -51,7 +51,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(ProviderName.SQLite))
 			{
-				var query = 
+				var query =
 					from t in db.GetTable<ALLTYPE>()
 					from c in db.GetTable<Child>()
 					select new
@@ -66,7 +66,7 @@ namespace Tests.Linq
 			}
 		}
 
-		static IQueryable<T> GetTestTable<T>(IDataContext context, 
+		static IQueryable<T> GetTestTable<T>(IDataContext context,
 			string tableName,
 			string databaseName,
 			string ownerName,
@@ -133,7 +133,7 @@ namespace Tests.Linq
 				Assert.That(CountOccurences(sql, schemaName),   Is.EqualTo(2));
 			}
 		}
-		
+
 		[Test]
 		public void TestInlined(
 			[Values("tableName1", "tableName2")] string tableName,
@@ -168,7 +168,7 @@ namespace Tests.Linq
 				Assert.That(CountOccurences(sql, schemaName),   Is.EqualTo(2));
 			}
 		}
-		
+
 		[Test]
 		public void TakeHint(
 			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint

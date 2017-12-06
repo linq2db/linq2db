@@ -7,9 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.ServiceModel;
 using System.ServiceModel.Description;
@@ -28,8 +25,6 @@ using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
-using NUnit.Framework.Internal;
-using NUnit.Framework.Internal.Builders;
 
 //[assembly: Parallelizable]
 
@@ -79,8 +74,6 @@ namespace Tests
 //			Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).AssemblyEx().GetPath();
 
-			ProjectPath = FindProjectPath(assemblyPath);
-
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			try
 			{
@@ -96,8 +89,8 @@ namespace Tests
 			Environment.CurrentDirectory = assemblyPath;
 #endif
 
-			var dataProvidersJsonFile     = Path.Combine(ProjectPath, @"DataProviders.json");
-			var userDataProvidersJsonFile = Path.Combine(ProjectPath, @"UserDataProviders.json");
+			var dataProvidersJsonFile     = GetFilePath(assemblyPath, @"DataProviders.json");
+			var userDataProvidersJsonFile = GetFilePath(assemblyPath, @"UserDataProviders.json");
 
 			var dataProvidersJson     = File.ReadAllText(dataProvidersJsonFile);
 			var userDataProvidersJson =
@@ -206,23 +199,25 @@ namespace Tests
 #endif
 		}
 
-		protected static readonly string ProjectPath;
-
-		protected static string FindProjectPath(string basePath)
+		protected static string GetFilePath(string basePath, string findFileName)
 		{
-			var fileName = Path.GetFullPath(Path.Combine(basePath, "DataProviders.json"));
+			var fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
 
 			while (!File.Exists(fileName))
 			{
 				Console.WriteLine($"File not found: {fileName}");
 
 				basePath = Path.GetDirectoryName(basePath);
-				fileName = Path.GetFullPath(Path.Combine(basePath, "DataProviders.json"));
+
+				if (basePath == null)
+					return null;
+
+				fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
 			}
 
-			Console.WriteLine($"Base path found: {basePath}");
+			Console.WriteLine($"Base path found: {fileName}");
 
-			return basePath;
+			return fileName;
 		}
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
@@ -268,9 +263,9 @@ namespace Tests
 			public string ProviderName;
 		}
 
-		internal static readonly HashSet<string> UserProviders;
+		public static readonly HashSet<string> UserProviders;
 
-		static readonly List<string> _providers = new List<string>
+		public static readonly List<string> Providers = new List<string>
 		{
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			ProviderName.Access,
@@ -297,200 +292,6 @@ namespace Tests
 			ProviderName.SQLiteMS,
 			TestProvName.Firebird3
 		};
-
-		[AttributeUsage(AttributeTargets.Method)]
-		public abstract class BaseDataContextSourceAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
-		{
-			protected BaseDataContextSourceAttribute(bool includeLinqService, string[] providers)
-			{
-				_includeLinqService = includeLinqService;
-				_providerNames      = providers;
-			}
-
-			public ParallelScope ParallelScope { get; set; } = ParallelScope.None;// ParallelScope.Children;
-			public int           Order         { get; set; }
-
-			readonly bool     _includeLinqService;
-			readonly string[] _providerNames;
-
-			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService, int caseNumber, string baseName)
-			{
-				var name = (baseName ?? method.Name) + "." + provider;
-
-				if (isLinqService)
-					name += ".LinqService";
-
-				// numerate cases starting from second case to preserve naming for most of tests
-				if (caseNumber > 0)
-				{
-					if (baseName == null)
-						name += "." + caseNumber;
-
-					test.FullName += "." + caseNumber;
-				}
-
-				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
-			}
-
-			int GetOrder(IMethodInfo method)
-			{
-				if (Order == 0)
-				{
-					if (method.Name.StartsWith("Tests._Create")) return 100;
-					if (method.Name.StartsWith("Tests.xUpdate")) return 2000;
-					return 1000;
-				}
-
-				return Order;
-			}
-
-			protected virtual IEnumerable<Tuple<object[], string>> GetParameters(string provider)
-			{
-				yield return Tuple.Create(new object[] {provider}, (string)null);
-			}
-
-			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
-			{
-				var explic = method.GetCustomAttributes<ExplicitAttribute>(true)
-					.Cast<IApplyToTest>()
-					.Union(method.GetCustomAttributes<IgnoreAttribute>(true))
-					.ToList();
-
-				var maxTime = method.GetCustomAttributes<MaxTimeAttribute>(true).FirstOrDefault();
-				explic.Add(maxTime ?? new MaxTimeAttribute(10000));
-
-//#if !NETSTANDARD1_6
-//				var timeout = method.GetCustomAttributes<TimeoutAttribute>(true).FirstOrDefault();
-//				explic.Add(timeout ?? new TimeoutAttribute(10000));
-//#endif
-
-				var builder = new NUnitTestCaseBuilder();
-
-				TestMethod test = null;
-				var hasTest = false;
-
-				foreach (var provider in _providerNames)
-				{
-					var isIgnore = !UserProviders.Contains(provider);
-
-					var caseNumber = 0;
-					foreach (var parameters in GetParameters(provider))
-					{
-						var data = new TestCaseParameters(parameters.Item1);
-
-						test = builder.BuildTestMethod(method, suite, data);
-
-						foreach (var attr in explic)
-							attr.ApplyToTest(test);
-
-						test.Properties.Set(PropertyNames.Order,         GetOrder(method));
-						//test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
-						test.Properties.Set(PropertyNames.Category,      provider);
-
-						SetName(test, method, provider, false, caseNumber++, parameters.Item2);
-
-						if (isIgnore)
-						{
-							if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
-								test.RunState = RunState.Ignored;
-
-#if !APPVEYOR && !TRAVIS
-							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.json or DataProviders.json");
-#endif
-							continue;
-						}
-
-						if (test.RunState != RunState.Runnable)
-							test.Properties.Set(PropertyNames.Category, "Ignored");
-
-						hasTest = true;
-						yield return test;
-
-					}
-
-#if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
-					if (!isIgnore && _includeLinqService)
-					{
-						var linqCaseNumber = 0;
-						foreach (var parameters in GetParameters(provider + ".LinqService"))
-						{
-
-							var data = new TestCaseParameters(parameters.Item1);
-							test = builder.BuildTestMethod(method, suite, data);
-
-							foreach (var attr in explic)
-								attr.ApplyToTest(test);
-
-							test.Properties.Set(PropertyNames.Order,         GetOrder(method));
-							test.Properties.Set(PropertyNames.ParallelScope, ParallelScope);
-							test.Properties.Set(PropertyNames.Category,      provider);
-
-							SetName(test, method, provider, true, linqCaseNumber++, parameters.Item2);
-
-							yield return test;
-						}
-					}
-#endif
-				}
-
-				if (!hasTest)
-				{
-					yield return test;
-				}
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Method)]
-		public class DataContextSourceAttribute : BaseDataContextSourceAttribute
-		{
-			public DataContextSourceAttribute()
-				: this(true, null)
-			{
-			}
-
-			public DataContextSourceAttribute(params string[] except)
-				: this(true, except)
-			{
-			}
-
-			public DataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(includeLinqService,
-					_providers.Where(providerName => /*UserProviders.Contains(providerName) &&*/ except == null || !except.Contains(providerName)).ToArray())
-			{
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Method)]
-		public class IncludeDataContextSourceAttribute : BaseDataContextSourceAttribute
-		{
-			public IncludeDataContextSourceAttribute(params string[] include)
-				: this(false, include)
-			{
-			}
-
-			public IncludeDataContextSourceAttribute(bool includeLinqService, params string[] include)
-				: base(includeLinqService, include)
-			{
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Method)]
-		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
-		{
-			public NorthwindDataContextAttribute(bool excludeSqlite, bool excludeSqliteMs = false)
-				: base(
-					excludeSqlite ?
-						new[] { TestProvName.Northwind } :
-					excludeSqliteMs ?
-						new[] { TestProvName.Northwind, TestProvName.NorthwindSQLite } :
-						new[] { TestProvName.Northwind, TestProvName.NorthwindSQLite, TestProvName.NorthwindSQLiteMS })
-			{
-			}
-
-			public NorthwindDataContextAttribute() : this(false)
-			{
-			}
-		}
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
 		{

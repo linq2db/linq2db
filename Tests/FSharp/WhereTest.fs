@@ -6,7 +6,7 @@ open Tests.FSharp.Models
 
 open LinqToDB
 open LinqToDB.Mapping
-open Tests.Utils
+open Tests.Tools
 
 let private TestOnePerson id firstName persons =
     let list = persons :> Person System.Linq.IQueryable |> Seq.toList
