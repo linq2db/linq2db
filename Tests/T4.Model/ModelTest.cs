@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace T4Model.Tests
+namespace Tests.T4.Model
 {
 	partial class TestClass1
 	{

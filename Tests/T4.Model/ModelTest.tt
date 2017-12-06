@@ -1,20 +1,20 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"        #>
-<#@ output extension=".generated.cs"                               #>
-<#@ include file="..\..\Templates\T4Model.ttinclude"               #>
-<#@ include file="..\..\Templates\EditableObject.ttinclude"        #>
-<#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
-<#@ include file="..\..\Templates\Validation.ttinclude"            #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                        #>
+<#@ output extension=".generated.cs"                                               #>
+<#@ include file="..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               #>
+<#@ include file="..\..\Source\LinqToDB.Templates\EditableObject.ttinclude"        #>
+<#@ include file="..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" #>
+<#@ include file="..\..\Source\LinqToDB.Templates\Validation.ttinclude"            #>
 <#
-	Model.Namespaces[0].Name = "T4Model.Tests";
+	Model.Namespaces[0].Name = "Tests.T4.Model";
 
 	Model.Usings.Add("System.ComponentModel");
 	Model.Usings.Add("System.Collections.Generic");
 	Model.Usings.Add("System.Xml.Serialization");
-	Model.Usings.Add("T4Model.Tests");
+	Model.Usings.Add("Tests.T4.Model");
 	Model.Usings.Add("System.ComponentModel");
-	
+
 	ImplementNotifyPropertyChanging = true;
-	
+
 	Model.Namespaces[0].Types.Add(new Class
 	{
 		Name    = "TestClass1",
@@ -192,6 +192,6 @@
 			new Attribute("DisplayName", "\"TestClass\""),
 		}
 	});
-	
+
 	GenerateModel();
 #>
