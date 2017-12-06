@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Windows;
 
-namespace T4Model.Wpf
+namespace Tests.T4.Wpf
 {
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml

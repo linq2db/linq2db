@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 
-namespace T4Model.Wpf
+namespace Tests.T4.Wpf
 {
 	/// <summary>
 	/// Interaction logic for App.xaml

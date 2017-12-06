@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Windows.Media;
 
-namespace T4Model.Wpf
+namespace Tests.T4.Wpf
 {
 	partial class ViewModel
 	{
-		readonly static Brush _normalBrushes   = new SolidColorBrush(Colors.Black);
-		readonly static Brush _negativeBrushes = new SolidColorBrush(Colors.Red);
+		static readonly Brush _normalBrushes   = new SolidColorBrush(Colors.Black);
+		static readonly Brush _negativeBrushes = new SolidColorBrush(Colors.Red);
 
 		Brush GetBrush()
 		{

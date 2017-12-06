@@ -1,10 +1,10 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"        #>
-<#@ output extension=".generated.cs"                               #>
-<#@ include file="..\..\Templates\T4Model.ttinclude"               #>
-<#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                        #>
+<#@ output extension=".generated.cs"                                               #>
+<#@ include file="..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               #>
+<#@ include file="..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" #>
 <#
 	Model.Usings.Add("System.Windows.Media");
-	Model.Namespace.Name = "T4Model.Wpf";
+	Model.Namespace.Name = "Tests.T4.Wpf";
 	Model.Types.Add(
 		new Class("ViewModel",
 			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1"),
