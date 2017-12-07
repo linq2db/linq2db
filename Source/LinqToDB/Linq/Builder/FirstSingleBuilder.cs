@@ -199,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					_isJoinCreated = true;
 
-					var join = SelectQuery.OuterApply(SelectQuery);
+					var join = SelectQuery.OuterApply();
 
 					Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}

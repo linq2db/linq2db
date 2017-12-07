@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var join = SelectQuery.OuterApply(sql);
+					var join = sql.OuterApply();
 					sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 

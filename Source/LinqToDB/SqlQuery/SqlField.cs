@@ -55,8 +55,8 @@ namespace LinqToDB.SqlQuery
 		private string _physicalName;
 		public  string  PhysicalName
 		{
-			get { return _physicalName ?? Name; }
-			set { _physicalName = value; }
+			get => _physicalName ?? Name;
+			set => _physicalName = value;
 		}
 
 		#region Overrides
@@ -81,10 +81,7 @@ namespace LinqToDB.SqlQuery
 			return this == other;
 		}
 
-		public int Precedence
-		{
-			get { return SqlQuery.Precedence.Primary; }
-		}
+		public int Precedence => SqlQuery.Precedence.Primary;
 
 		#endregion
 
@@ -114,6 +111,7 @@ namespace LinqToDB.SqlQuery
 				return this;
 
 			Table.Clone(objectTree, doClone);
+
 			return objectTree[this];
 		}
 
@@ -121,7 +119,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlField; } }
+		public QueryElementType ElementType => QueryElementType.SqlField;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
