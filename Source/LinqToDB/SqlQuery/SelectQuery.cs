@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 	using LinqToDB.Extensions;
 	using Mapping;
 
-	[DebuggerDisplay("SQL = {SqlText}")]
+	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public class SelectQuery : SqlStatement, ISqlTableSource
 	{
 		#region Init
@@ -20,12 +20,12 @@ namespace LinqToDB.SqlQuery
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
 
-			Select   = new SqlSelectClause (this);
-			From     = new SqlFromClause   (this);
-			Where    = new SqlWhereClause  (this);
-			_groupBy = new SqlGroupByClause(this);
-			_having  = new SqlWhereClause  (this);
-			_orderBy = new SqlOrderByClause(this);
+			Select  = new SqlSelectClause (this);
+			From    = new SqlFromClause   (this);
+			Where   = new SqlWhereClause  (this);
+			GroupBy = new SqlGroupByClause(this);
+			Having  = new SqlWhereClause  (this);
+			OrderBy = new SqlOrderByClause(this);
 		}
 
 		internal SelectQuery(int id)
@@ -54,9 +54,9 @@ namespace LinqToDB.SqlQuery
 			Select               = select;
 			From                 = from;
 			Where                = where;
-			_groupBy             = groupBy;
-			_having              = having;
-			_orderBy             = orderBy;
+			GroupBy              = groupBy;
+			Having               = having;
+			OrderBy              = orderBy;
 			_unions              = unions;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
@@ -66,13 +66,20 @@ namespace LinqToDB.SqlQuery
 			foreach (var col in select.Columns)
 				col.Parent = this;
 
-			Select.  SetSqlQuery(this);
-			From.    SetSqlQuery(this);
-			Where.   SetSqlQuery(this);
-			_groupBy.SetSqlQuery(this);
-			_having. SetSqlQuery(this);
-			_orderBy.SetSqlQuery(this);
+			Select. SetSqlQuery(this);
+			From.   SetSqlQuery(this);
+			Where.  SetSqlQuery(this);
+			GroupBy.SetSqlQuery(this);
+			Having. SetSqlQuery(this);
+			OrderBy.SetSqlQuery(this);
 		}
+
+		public SqlSelectClause  Select  { get; private set; }
+		public SqlFromClause    From    { get; private set; }
+		public SqlWhereClause   Where   { get; private set; }
+		public SqlGroupByClause GroupBy { get; private set; }
+		public SqlWhereClause   Having  { get; private set; }
+		public SqlOrderByClause OrderBy { get; private set; }
 
 		private List<object> _properties;
 		public  List<object>  Properties => _properties ?? (_properties = new List<object>());
@@ -110,12 +117,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region SelectClause
-
-		public SqlSelectClause  Select { get; set; }
-
-		#endregion
-
 		#region InsertClause
 
 		private SqlInsertClause _insert;
@@ -146,66 +147,21 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region FromClause
-
-		public  SqlFromClause  From { get; set; }
-
-		#endregion
-
-		#region WhereClause
-
-		public  SqlWhereClause  Where { get; set; }
-
-		#endregion
-
-#region GroupByClause
-
-		private SqlGroupByClause _groupBy;
-		public  SqlGroupByClause  GroupBy
-		{
-			get { return _groupBy; }
-		}
-
-#endregion
-
-#region HavingClause
-
-		private SqlWhereClause _having;
-		public  SqlWhereClause  Having
-		{
-			get { return _having; }
-		}
-
-#endregion
-
-#region OrderByClause
-
-		private SqlOrderByClause _orderBy;
-		public  SqlOrderByClause  OrderBy
-		{
-			get { return _orderBy; }
-		}
-
-#endregion
-
-#region Union
+		#region Union
 
 		private List<SqlUnion> _unions;
-		public  List<SqlUnion>  Unions
-		{
-			get { return _unions ?? (_unions = new List<SqlUnion>()); }
-		}
+		public  List<SqlUnion>  Unions   => _unions ?? (_unions = new List<SqlUnion>());
 
-		public bool HasUnion { get { return _unions != null && _unions.Count > 0; } }
+		public  bool            HasUnion => _unions != null && _unions.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
 		{
 			Unions.Add(new SqlUnion(union, isAll));
 		}
 
-#endregion
+		#endregion
 
-#region ProcessParameters
+		#region ProcessParameters
 
 		public override SqlStatement ProcessParameters(MappingSchema mappingSchema)
 		{
@@ -431,9 +387,9 @@ namespace LinqToDB.SqlQuery
 			throw new InvalidOperationException();
 		}
 
-#endregion
+		#endregion
 
-#region Clone
+		#region Clone
 
 		SelectQuery(SelectQuery clone, Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
@@ -456,9 +412,9 @@ namespace LinqToDB.SqlQuery
 			Select  = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
 			From    = new SqlFromClause   (this, clone.From,    objectTree, doClone);
 			Where   = new SqlWhereClause  (this, clone.Where,   objectTree, doClone);
-			_groupBy = new SqlGroupByClause(this, clone._groupBy, objectTree, doClone);
-			_having  = new SqlWhereClause  (this, clone._having,  objectTree, doClone);
-			_orderBy = new SqlOrderByClause(this, clone._orderBy, objectTree, doClone);
+			GroupBy = new SqlGroupByClause(this, clone.GroupBy, objectTree, doClone);
+			Having  = new SqlWhereClause  (this, clone.Having,  objectTree, doClone);
+			OrderBy = new SqlOrderByClause(this, clone.OrderBy, objectTree, doClone);
 
 			Parameters.AddRange(clone.Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 			IsParameterDependent = clone.IsParameterDependent;
@@ -482,9 +438,9 @@ namespace LinqToDB.SqlQuery
 			return (SelectQuery)Clone(new Dictionary<ICloneableElement,ICloneableElement>(), doClone);
 		}
 
-#endregion
+		#endregion
 
-#region Helpers
+		#region Helpers
 
 		public void ForEachTable(Action<SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
@@ -532,9 +488,9 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-#endregion
+		#endregion
 
-#region Overrides
+		#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -545,23 +501,17 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-#endregion
+		#endregion
 
-#region ISqlExpression Members
+		#region ISqlExpression Members
 
-		public bool CanBeNull
-		{
-			get { return true; }
-		}
+		public bool CanBeNull => true;
+		public int Precedence => SqlQuery.Precedence.Unknown;
+
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
-		}
-
-		public int Precedence
-		{
-			get { return SqlQuery.Precedence.Unknown; }
 		}
 
 		public Type SystemType
@@ -578,39 +528,37 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-#endregion
+		#endregion
 
-#region ICloneableElement Members
+		#region ICloneableElement Members
 
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 				clone = new SelectQuery(this, objectTree, doClone);
 
 			return clone;
 		}
 
-#endregion
+		#endregion
 
-#region ISqlExpressionWalkable Members
+		#region ISqlExpressionWalkable Members
 
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
-			if (_insert != null) ((ISqlExpressionWalkable)_insert).Walk(skipColumns, func);
-			if (_update != null) ((ISqlExpressionWalkable)_update).Walk(skipColumns, func);
-			if (_delete != null) ((ISqlExpressionWalkable)_delete).Walk(skipColumns, func);
+			((ISqlExpressionWalkable)_insert)?.Walk(skipColumns, func);
+			((ISqlExpressionWalkable)_update)?.Walk(skipColumns, func);
+			((ISqlExpressionWalkable)_delete)?.Walk(skipColumns, func);
 
-			((ISqlExpressionWalkable)Select) .Walk(skipColumns, func);
-			((ISqlExpressionWalkable)From)   .Walk(skipColumns, func);
-			((ISqlExpressionWalkable)Where)  .Walk(skipColumns, func);
-			((ISqlExpressionWalkable)GroupBy).Walk(skipColumns, func);
-			((ISqlExpressionWalkable)Having) .Walk(skipColumns, func);
-			((ISqlExpressionWalkable)OrderBy).Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Select) . Walk(skipColumns, func);
+			((ISqlExpressionWalkable)From)   . Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Where)  . Walk(skipColumns, func);
+			((ISqlExpressionWalkable)GroupBy). Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Having) . Walk(skipColumns, func);
+			((ISqlExpressionWalkable)OrderBy). Walk(skipColumns, func);
 
 			if (HasUnion)
 				foreach (var union in Unions)
@@ -619,28 +567,28 @@ namespace LinqToDB.SqlQuery
 			return func(this);
 		}
 
-#endregion
+		#endregion
 
-#region IEquatable<ISqlExpression> Members
+		#region IEquatable<ISqlExpression> Members
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
 		{
 			return this == other;
 		}
 
-#endregion
+		#endregion
 
-#region ISqlTableSource Members
+		#region ISqlTableSource Members
 
 		public static int SourceIDCounter;
 
-		public int           SourceID     { get; private set; }
-		public SqlTableType  SqlTableType { get { return SqlTableType.Table; } }
+		public int           SourceID { get; }
+		public SqlTableType  SqlTableType => SqlTableType.Table;
 
 		private SqlField _all;
 		public  SqlField  All
 		{
-			get { return _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this }); }
+			get => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
 
 			internal set
 			{
@@ -671,9 +619,9 @@ namespace LinqToDB.SqlQuery
 			return _keys;
 		}
 
-#endregion
+		#endregion
 
-#region IQueryElement Members
+		#region IQueryElement Members
 
 		public override QueryElementType ElementType => QueryElementType.SqlQuery;
 
@@ -705,6 +653,6 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-#endregion
+		#endregion
 	}
 }
