@@ -1039,7 +1039,7 @@ namespace LinqToDB.SqlProvider
 					var v1 = func.Parameters[1] as SqlValue;
 					var v2 = func.Parameters[2] as SqlValue;
 
-					if (c1 != null && c1.Conditions.Count == 1 && v1 != null && v1.Value is bool && v2 != null && v2.Value is bool)
+					if (c1 != null && c1.Conditions.Count == 1 && v1?.Value is bool && v2?.Value is bool)
 					{
 						var bv  = (bool)value.Value;
 						var bv1 = (bool)v1.Value;
@@ -1248,7 +1248,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent  };
+					var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent };
 					sql.ChangeQueryType(QueryType.Update);
 
 					selectQuery.ParentSelect = sql;
@@ -1340,9 +1340,9 @@ namespace LinqToDB.SqlProvider
 			{
 				switch (e.ElementType)
 				{
-					case QueryElementType.SqlField     : ((SqlField)               e).Alias = SetAlias(((SqlField)               e).Alias, maxLen); break;
-					case QueryElementType.SqlParameter : ((SqlParameter)           e).Name  = SetAlias(((SqlParameter)           e).Name,  maxLen); break;
-					case QueryElementType.SqlTable     : ((SqlTable)               e).Alias = SetAlias(((SqlTable)               e).Alias, maxLen); break;
+					case QueryElementType.SqlField     : ((SqlField)      e).Alias = SetAlias(((SqlField)      e).Alias, maxLen); break;
+					case QueryElementType.SqlParameter : ((SqlParameter)  e).Name  = SetAlias(((SqlParameter)  e).Name,  maxLen); break;
+					case QueryElementType.SqlTable     : ((SqlTable)      e).Alias = SetAlias(((SqlTable)      e).Alias, maxLen); break;
 					case QueryElementType.Column       : ((SqlColumn)     e).Alias = SetAlias(((SqlColumn)     e).Alias, maxLen); break;
 					case QueryElementType.TableSource  : ((SqlTableSource)e).Alias = SetAlias(((SqlTableSource)e).Alias, maxLen); break;
 				}

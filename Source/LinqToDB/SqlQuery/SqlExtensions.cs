@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
 	public static class SqlExtensions
 	{
@@ -33,13 +35,12 @@
 				return selectQuery;
 			throw new LinqToDBException($"Satetement {statement.QueryType} is not SelectQuery");
 		}
-		
+
 		public static ISqlExpression AsExpression(this SqlStatement statement)
 		{
 			if (statement is ISqlExpression expression)
 				return expression;
 			throw new LinqToDBException($"Satetement {statement.QueryType} do not supports ISqlExpression interface");
 		}
-		
 	}
 }

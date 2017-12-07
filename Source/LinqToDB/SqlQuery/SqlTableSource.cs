@@ -39,7 +39,7 @@ namespace LinqToDB.SqlQuery
 		{
 			get
 			{
-				if (String.IsNullOrEmpty(_alias))
+				if (string.IsNullOrEmpty(_alias))
 				{
 					if (Source is SqlTableSource)
 						return (Source as SqlTableSource).Alias;
@@ -79,8 +79,8 @@ namespace LinqToDB.SqlQuery
 			foreach (var join in Joins)
 				join.Table.ForEach(action, visitedQueries);
 
-			if (Source is SelectQuery && visitedQueries.Contains((SelectQuery)Source))
-				((SelectQuery)Source).ForEachTable(action, visitedQueries);
+			if (Source is SelectQuery query && visitedQueries.Contains(query))
+				query.ForEachTable(action, visitedQueries);
 		}
 
 		public IEnumerable<ISqlTableSource> GetTables()
@@ -88,8 +88,8 @@ namespace LinqToDB.SqlQuery
 			yield return Source;
 
 			foreach (var join in Joins)
-			foreach (var table in join.Table.GetTables())
-				yield return table;
+				foreach (var table in join.Table.GetTables())
+					yield return table;
 		}
 
 		public int GetJoinNumber()
@@ -104,10 +104,10 @@ namespace LinqToDB.SqlQuery
 
 #if OVERRIDETOSTRING
 
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
+		public override string ToString()
+		{
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+		}
 
 #endif
 
@@ -208,15 +208,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull => Source.CanBeNull;
+		public bool CanBeNull  => Source.CanBeNull;
+		public int  Precedence => Source.Precedence;
+		public Type SystemType => Source.SystemType;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
 		}
-
-		public int  Precedence => Source.Precedence;
-		public Type SystemType => Source.SystemType;
 
 		#endregion
 	}

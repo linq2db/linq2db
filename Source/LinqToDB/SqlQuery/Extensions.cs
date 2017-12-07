@@ -4,6 +4,8 @@ namespace LinqToDB.SqlQuery
 {
 	public static class Extensions
 	{
+		#region Join
+
 		public static SqlFromClause.Join InnerJoin(this ISqlTableSource table, params SqlFromClause.Join[] joins)
 		{
 			return new SqlFromClause.Join(JoinType.Inner, table, null,  false, joins);
@@ -103,5 +105,8 @@ namespace LinqToDB.SqlQuery
 		{
 			return new SqlFromClause.Join(JoinType.Full, table, alias, false, joins);
 		}
+
+		#endregion
+
 	}
 }

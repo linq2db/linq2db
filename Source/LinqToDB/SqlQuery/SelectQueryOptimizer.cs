@@ -318,10 +318,10 @@ namespace LinqToDB.SqlQuery
 		void OptimizeUnions()
 		{
 			var isAllUnion = QueryVisitor.Find(_selectQuery,
-				ne => ne is SqlUnion nu && nu.IsAll == true);
+				ne => ne is SqlUnion nu && nu.IsAll);
 
 			var isNotAllUnion = QueryVisitor.Find(_selectQuery,
-				ne => ne is SqlUnion nu && nu.IsAll == false);
+				ne => ne is SqlUnion nu && !nu.IsAll);
 
 			if (isNotAllUnion != null && isAllUnion != null)
 				return;
@@ -360,7 +360,7 @@ namespace LinqToDB.SqlQuery
 					var ucol = union.Select.Columns[i];
 
 					scol.Expression = ucol.Expression;
-					scol._alias     = ucol._alias;
+					scol.RawAlias   = ucol.RawAlias;
 
 					exprs.Add(ucol, scol);
 				}
@@ -378,7 +378,7 @@ namespace LinqToDB.SqlQuery
 				sql.Unions.InsertRange(0, union.Unions);
 			});
 
-			((ISqlExpressionWalkable)_selectQuery).Walk(
+			_selectQuery.Walk(
 				false, expr => exprs.TryGetValue(expr, out var e) ? e : expr);
 		}
 

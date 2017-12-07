@@ -16,7 +16,7 @@ namespace LinqToDB.SqlQuery
 			IsQueryParameter = true;
 			Name             = name;
 			SystemType       = systemType;
-			_value           = value;
+			Value            = value;
 			DataType         = DataType.Undefined;
 		}
 
@@ -42,9 +42,9 @@ namespace LinqToDB.SqlQuery
 			{
 				var value = _value;
 
-				if (ReplaceLike && value != null)
+				if (ReplaceLike)
 				{
-					value = value.ToString().Replace("[", "[[]");
+					value = value?.ToString().Replace("[", "[[]");
 				}
 
 				if (LikeStart != null)
@@ -61,13 +61,10 @@ namespace LinqToDB.SqlQuery
 				return valueConverter == null? value: valueConverter(value);
 			}
 
-			set { _value = value; }
+			set => _value = value;
 		}
 
-		internal object RawValue
-		{
-			get { return _value; }
-		}
+		internal object RawValue => _value;
 
 		#region Value Converter
 
@@ -85,7 +82,7 @@ namespace LinqToDB.SqlQuery
 				return _valueConverter;
 			}
 
-			set { _valueConverter = value; }
+			set => _valueConverter = value;
 		}
 
 		internal void SetTakeConverter(int take)
@@ -149,10 +146,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public int Precedence
-		{
-			get { return SqlQuery.Precedence.Primary; }
-		}
+		public int Precedence => SqlQuery.Precedence.Primary;
 
 		#endregion
 
@@ -188,7 +182,6 @@ namespace LinqToDB.SqlQuery
 					return true;
 
 				return SqlDataType.TypeCanBeNull(SystemType ?? _value.GetType());
-				
 			}
 		}
 
@@ -206,19 +199,17 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 			{
 				var p = new SqlParameter(SystemType, Name, _value, _valueConverter)
-					{
-						IsQueryParameter = IsQueryParameter,
-						DataType         = DataType,
-						DbSize           = DbSize,
-						LikeStart        = LikeStart,
-						LikeEnd          = LikeEnd,
-						ReplaceLike      = ReplaceLike,
-					};
+				{
+					IsQueryParameter = IsQueryParameter,
+					DataType         = DataType,
+					DbSize           = DbSize,
+					LikeStart        = LikeStart,
+					LikeEnd          = LikeEnd,
+					ReplaceLike      = ReplaceLike,
+				};
 
 				objectTree.Add(this, clone = p);
 			}
@@ -230,7 +221,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlParameter; } }
+		public QueryElementType ElementType => QueryElementType.SqlParameter;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

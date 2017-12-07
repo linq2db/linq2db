@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	[DebuggerDisplay("SQL = {SqlText}")]
+	using Mapping;
+
+	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public abstract class SqlStatement: IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
 		public string SqlText =>
@@ -192,6 +192,5 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
-
 	}
 }

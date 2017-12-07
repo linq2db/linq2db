@@ -428,18 +428,13 @@ namespace LinqToDB.SqlQuery
 				if (!doClone(this))
 					return this;
 
-				ICloneableElement clone;
-
-				if (!objectTree.TryGetValue(this, out clone))
+				if (!objectTree.TryGetValue(this, out var clone))
 					objectTree.Add(this, clone = new FuncLike((SqlFunction)Function.Clone(objectTree, doClone)));
 
 				return clone;
 			}
 
-			public override QueryElementType ElementType
-			{
-				get { return QueryElementType.FuncLikePredicate; }
-			}
+			public override QueryElementType ElementType => QueryElementType.FuncLikePredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 			{
@@ -451,10 +446,10 @@ namespace LinqToDB.SqlQuery
 
 #if OVERRIDETOSTRING
 
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
+		public override string ToString()
+		{
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+		}
 
 #endif
 

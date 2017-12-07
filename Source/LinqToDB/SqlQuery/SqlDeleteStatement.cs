@@ -24,9 +24,6 @@ namespace LinqToDB.SqlQuery
 			throw new NotImplementedException();
 		}
 
-		#region SelectClause
-		#endregion
-
 		#region DeleteClause
 
 		private SqlDeleteClause _delete;
@@ -37,6 +34,5 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
-
 	}
 }

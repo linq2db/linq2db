@@ -8,11 +8,9 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlColumn(SelectQuery parent, ISqlExpression expression, string alias)
 		{
-			if (expression == null) throw new ArgumentNullException("expression");
-
 			Parent     = parent;
-			Expression = expression;
-			_alias     = alias;
+			Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+			RawAlias     = alias;
 
 #if DEBUG
 			_columnNumber = ++_columnCounter;
@@ -29,35 +27,30 @@ namespace LinqToDB.SqlQuery
 		static   int _columnCounter;
 #endif
 
-		public ISqlExpression Expression { get; set; }
-		public SelectQuery    Parent     { get; set; }
+		public   ISqlExpression Expression { get; set; }
+		public   SelectQuery    Parent     { get; set; }
+		internal string         RawAlias   { get; set; }
 
-		internal string _alias;
-		public   string  Alias
+		public string Alias
 		{
 			get
 			{
-				if (_alias == null)
+				if (RawAlias == null)
 				{
-					if (Expression is SqlField)
+					switch (Expression)
 					{
-						var field = (SqlField)Expression;
-						return field.Alias ?? field.PhysicalName;
-					}
-
-					if (Expression is SqlColumn)
-					{
-						var col = (SqlColumn)Expression;
-						return col.Alias;
+						case SqlField  field  : return field.Alias ?? field.PhysicalName;
+						case SqlColumn column : return column.Alias;
 					}
 				}
 
-				return _alias;
+				return RawAlias;
 			}
-			set { _alias = value; }
+			set => RawAlias = value;
 		}
 
-		private bool   _underlyingColumnSet = false;
+		private bool   _underlyingColumnSet;
+
 		private SqlColumn _underlyingColumn;
 		public  SqlColumn  UnderlyingColumn
 		{
@@ -67,8 +60,7 @@ namespace LinqToDB.SqlQuery
 					return _underlyingColumn;
 
 				var columns = new List<SqlColumn>(10);
-
-				var column = Expression as SqlColumn;
+				var column  = Expression as SqlColumn;
 
 				while (column != null)
 				{
@@ -149,10 +141,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull
-		{
-			get { return Expression.CanBeNull; }
-		}
+		public bool CanBeNull => Expression.CanBeNull;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
@@ -187,30 +176,21 @@ namespace LinqToDB.SqlQuery
 				comparer(this, other);
 		}
 
-		public int Precedence
-		{
-			get { return SqlQuery.Precedence.Primary; }
-		}
-
-		public Type SystemType
-		{
-			get { return Expression.SystemType; }
-		}
+		public int  Precedence => SqlQuery.Precedence.Primary;
+		public Type SystemType => Expression.SystemType;
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
 			var parent = (SelectQuery)Parent.Clone(objectTree, doClone);
 
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 				objectTree.Add(this, clone = new SqlColumn(
 					parent,
 					(ISqlExpression)Expression.Clone(objectTree, doClone),
-					_alias));
+					RawAlias));
 
 			return clone;
 		}
@@ -243,7 +223,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.Column; } }
+		public QueryElementType ElementType => QueryElementType.Column;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

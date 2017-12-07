@@ -5,18 +5,14 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	[Serializable, DebuggerDisplay("SQL = {SqlText}")]
+	[Serializable, DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public class SqlBinaryExpression : ISqlExpression
 	{
 		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence)
 		{
-			if (expr1     == null) throw new ArgumentNullException("expr1");
-			if (operation == null) throw new ArgumentNullException("operation");
-			if (expr2     == null) throw new ArgumentNullException("expr2");
-
-			Expr1      = expr1;
-			Operation  = operation;
-			Expr2      = expr2;
+			Expr1      = expr1     ?? throw new ArgumentNullException(nameof(expr1));
+			Operation  = operation ?? throw new ArgumentNullException(nameof(operation));
+			Expr2      = expr2     ?? throw new ArgumentNullException(nameof(expr2));
 			SystemType = systemType;
 			Precedence = precedence;
 		}
@@ -27,14 +23,14 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public ISqlExpression Expr1      { get; internal set; }
-		public string         Operation  { get; private set;  }
+		public string         Operation  { get; }
 		public ISqlExpression Expr2      { get; internal set; }
-		public Type           SystemType { get; private set;  }
-		public int            Precedence { get; private set;  }
+		public Type           SystemType { get; }
+		public int            Precedence { get; }
 
 		#region Overrides
 
-		public string SqlText { get { return ToString(); } }
+		public string SqlText => ToString();
 
 #if OVERRIDETOSTRING
 
@@ -70,20 +66,15 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull
-		{
-			get { return Expr1.CanBeNull || Expr2.CanBeNull; }
-		}
+		public bool CanBeNull => Expr1.CanBeNull || Expr2.CanBeNull;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
 
-			var expr = other as SqlBinaryExpression;
-
 			return
-				expr        != null                &&
+				other is SqlBinaryExpression expr  &&
 				Operation  == expr.Operation       &&
 				SystemType == expr.SystemType      &&
 				Expr1.Equals(expr.Expr1, comparer) &&
@@ -100,9 +91,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 			{
 				objectTree.Add(this, clone = new SqlBinaryExpression(
 					SystemType,
@@ -119,7 +108,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlBinaryExpression; } }
+		public QueryElementType ElementType => QueryElementType.SqlBinaryExpression;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
