@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net45</TargetFramework>
+		<NoWarn>1701;1702;1705;0219</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -19,27 +20,27 @@
 			<LastGenOutput>EditableModelTest.generated.cs</LastGenOutput>
 		</None>
 
-		<None Update="ModelTest.tt">
-			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>ModelTest.generated.cs</LastGenOutput>
-		</None>
-
-		<None Update="MultipleFiles.tt">
-			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>MultipleFiles.generated.cs</LastGenOutput>
-		</None>
-
 		<Compile Update="EditableModelTest.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>EditableModelTest.tt</DependentUpon>
 		</Compile>
 
+		<None Update="ModelTest.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>ModelTest.generated.cs</LastGenOutput>
+		</None>
+
 		<Compile Update="ModelTest.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>ModelTest.tt</DependentUpon>
 		</Compile>
+
+		<None Update="MultipleFiles.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MultipleFiles.generated.cs</LastGenOutput>
+		</None>
 
 		<Compile Update="MultipleFiles.generated.cs">
 			<DesignTime>True</DesignTime>

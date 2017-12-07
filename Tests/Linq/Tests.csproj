@@ -74,6 +74,7 @@
 		<PackageReference Include="Npgsql" Version="3.2.5" />
 		<PackageReference Include="Mono.Cecil" Version="0.10.0-beta6" />
 		<PackageReference Include="MySql.Data" Version="6.10.4" />
+		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
 	</ItemGroup>
 
 
@@ -114,6 +115,7 @@
 		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+
 		<None Update="x64\**\*">
 			<Link>x64/%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
