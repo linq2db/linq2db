@@ -4,7 +4,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
-		<AssemblyName>Model</AssemblyName>
+		<AssemblyName>linq2db.Model</AssemblyName>
 		<Configurations>Debug;Release;Travis</Configurations>
 	</PropertyGroup>
 

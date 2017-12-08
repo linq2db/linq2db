@@ -92,6 +92,5 @@ namespace LinqToDB.SqlQuery
 					where.SearchCondition.Conditions.AddRange(search.Conditions);
 			}
 		}
-
 	}
 }

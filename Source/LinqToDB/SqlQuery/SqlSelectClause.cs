@@ -14,7 +14,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlSelectClause(
-			SelectQuery  selectQuery,
+			SelectQuery     selectQuery,
 			SqlSelectClause clone,
 			Dictionary<ICloneableElement,ICloneableElement> objectTree,
 			Predicate<ICloneableElement> doClone)
@@ -285,10 +285,10 @@ namespace LinqToDB.SqlQuery
 
 #if OVERRIDETOSTRING
 
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
+		public override string ToString()
+		{
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+		}
 
 #endif
 
@@ -319,7 +319,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SelectClause; } }
+		public QueryElementType ElementType => QueryElementType.SelectClause;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

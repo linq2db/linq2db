@@ -50,7 +50,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Utils\Tests.Utils.csproj"/>
+		<ProjectReference Include="..\Base\Tests.Base.csproj"/>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 	<!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

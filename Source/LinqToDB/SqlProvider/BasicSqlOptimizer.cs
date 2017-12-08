@@ -107,28 +107,29 @@ namespace LinqToDB.SqlProvider
 
 					new QueryVisitor().Visit(subQuery, e =>
 					{
-						if (e is ISqlTableSource)
-							allTables.Add((ISqlTableSource)e);
+						if (e is ISqlTableSource source)
+							allTables.Add(source);
 					});
 
 					new QueryVisitor().Visit(subQuery, e =>
 					{
-						if (e is ISqlTableSource)
-							if (subQuery.From.IsChild((ISqlTableSource)e))
-								levelTables.Add((ISqlTableSource)e);
+						if (e is ISqlTableSource source)
+							if (subQuery.From.IsChild(source))
+								levelTables.Add(source);
 					});
 
-					Func<IQueryElement,bool> checkTable = e =>
+					bool CheckTable(IQueryElement e)
 					{
 						switch (e.ElementType)
 						{
 							case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table);
 							case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent);
 						}
-						return false;
-					};
 
-					var join = SelectQuery.LeftJoin(subQuery);
+						return false;
+					}
+
+					var join = subQuery.LeftJoin();
 
 					query.From.Tables[0].Joins.Add(join.JoinedTable);
 
@@ -136,7 +137,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-						if (QueryVisitor.Find(cond, checkTable) == null)
+						if (QueryVisitor.Find(cond, CheckTable) == null)
 							continue;
 
 						var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -229,35 +230,36 @@ namespace LinqToDB.SqlProvider
 						var allTables   = new HashSet<ISqlTableSource>();
 						var levelTables = new HashSet<ISqlTableSource>();
 
-						Func<IQueryElement,bool> checkTable = e =>
+						bool CheckTable(IQueryElement e)
 						{
 							switch (e.ElementType)
 							{
-								case QueryElementType.SqlField : return !allTables.Contains(((SqlField)e).Table);
+								case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table);
 								case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent);
 							}
+
 							return false;
-						};
+						}
 
 						new QueryVisitor().Visit(subQuery, e =>
 						{
-							if (e is ISqlTableSource)
-								allTables.Add((ISqlTableSource)e);
+							if (e is ISqlTableSource source)
+								allTables.Add(source);
 						});
 
 						new QueryVisitor().Visit(subQuery, e =>
 						{
-							if (e is ISqlTableSource && subQuery.From.IsChild((ISqlTableSource)e))
-								levelTables.Add((ISqlTableSource)e);
+							if (e is ISqlTableSource source && subQuery.From.IsChild(source))
+								levelTables.Add(source);
 						});
 
-						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, checkTable) == null)
+						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, CheckTable) == null)
 							continue;
 
 						// Join should not have ParentSelect, while SubQuery has
 						subQuery.ParentSelect = null;
 
-						var join = SelectQuery.LeftJoin(subQuery);
+						var join = subQuery.LeftJoin();
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
@@ -303,7 +305,7 @@ namespace LinqToDB.SqlProvider
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-							if (QueryVisitor.Find(cond, checkTable) == null)
+							if (QueryVisitor.Find(cond, CheckTable) == null)
 								continue;
 
 							var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -393,14 +395,7 @@ namespace LinqToDB.SqlProvider
 				}
 			});
 
-			selectQuery = new QueryVisitor().Convert(selectQuery, e =>
-			{
-				IQueryElement ne;
-				if (dic.TryGetValue(e, out ne))
-					return ne;
-
-				return null;
-			});
+			selectQuery = new QueryVisitor().Convert(selectQuery, e => dic.TryGetValue(e, out var ne) ? ne : null);
 
 			return selectQuery;
 		}
@@ -1044,7 +1039,7 @@ namespace LinqToDB.SqlProvider
 					var v1 = func.Parameters[1] as SqlValue;
 					var v2 = func.Parameters[2] as SqlValue;
 
-					if (c1 != null && c1.Conditions.Count == 1 && v1 != null && v1.Value is bool && v2 != null && v2.Value is bool)
+					if (c1 != null && c1.Conditions.Count == 1 && v1?.Value is bool && v2?.Value is bool)
 					{
 						var bv  = (bool)value.Value;
 						var bv1 = (bool)v1.Value;
@@ -1253,7 +1248,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent  };
+					var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent };
 					sql.ChangeQueryType(QueryType.Update);
 
 					selectQuery.ParentSelect = sql;
@@ -1345,9 +1340,9 @@ namespace LinqToDB.SqlProvider
 			{
 				switch (e.ElementType)
 				{
-					case QueryElementType.SqlField     : ((SqlField)               e).Alias = SetAlias(((SqlField)               e).Alias, maxLen); break;
-					case QueryElementType.SqlParameter : ((SqlParameter)           e).Name  = SetAlias(((SqlParameter)           e).Name,  maxLen); break;
-					case QueryElementType.SqlTable     : ((SqlTable)               e).Alias = SetAlias(((SqlTable)               e).Alias, maxLen); break;
+					case QueryElementType.SqlField     : ((SqlField)      e).Alias = SetAlias(((SqlField)      e).Alias, maxLen); break;
+					case QueryElementType.SqlParameter : ((SqlParameter)  e).Name  = SetAlias(((SqlParameter)  e).Name,  maxLen); break;
+					case QueryElementType.SqlTable     : ((SqlTable)      e).Alias = SetAlias(((SqlTable)      e).Alias, maxLen); break;
 					case QueryElementType.Column       : ((SqlColumn)     e).Alias = SetAlias(((SqlColumn)     e).Alias, maxLen); break;
 					case QueryElementType.TableSource  : ((SqlTableSource)e).Alias = SetAlias(((SqlTableSource)e).Alias, maxLen); break;
 				}

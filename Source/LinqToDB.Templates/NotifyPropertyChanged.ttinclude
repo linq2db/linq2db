@@ -22,9 +22,9 @@ void NotifyPropertyChangedImpl()
 	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsNotifying).ToList())
 	{
 		List<IClassMember> parentMembers;
-		
+
 		MemberGroup gr = null;
-		
+
 		if (prop.Parent is Class)
 		{
 			var parent = (Class)prop.Parent;
@@ -41,7 +41,7 @@ void NotifyPropertyChangedImpl()
 			if (parent.IsPropertyGroup)
 				gr = parent;
 		}
-		
+
 		var name = prop.Name.Trim();
 		var type = prop.Type.Trim();
 
@@ -67,16 +67,16 @@ void NotifyPropertyChangedImpl()
 				AccessModifier       = AccessModifier.Private,
 				InsertBlankLineAfter = false,
 			};
-			
+
 			if (prop.InitValue != null)
 				field.InitValue = prop.InitValue;
-			
+
 			gr.Members.Insert(0, field);
-			
+
 			prop.Name   = " " + name;
 			prop.Type   = " " + type;
 			prop.IsAuto = false;
-			
+
 			if (prop.HasGetter) prop.GetBody.Add("return " + field.Name + ";");
 			if (prop.HasSetter) prop.SetBody.Add(field.Name + " = value;");
 		}
@@ -105,7 +105,7 @@ void NotifyPropertyChangedImpl()
 				}
 			}
 		};
-		
+
 		gr.Members.Add(methods);
 
 		if (prop.Dependents.Count == 0)
@@ -137,9 +137,9 @@ void NotifyPropertyChangedImpl()
 		if (prop.HasSetter)
 		{
 			prop.SetBody = prop.SetBody.Select(s => "\t" + s).ToList();
-			
+
 			string getValue;
-			
+
 			if (prop.GetBody.Count == 1 && prop.GetBody[0].StartsWith("return"))
 			{
 				getValue = prop.GetBody[0].Substring("return".Length).Trim(' ', '\t', ';');
@@ -148,34 +148,34 @@ void NotifyPropertyChangedImpl()
 			{
 				getValue = name;
 			}
-			
+
 			var insSpaces = prop.SetBody.Count > 1;
 			var n = 0;
-			
+
 			prop.SetBody.Insert(n++, "if (" + getValue + " != value)");
 			prop.SetBody.Insert(n++, "{");
-			
+
 			if (ImplementNotifyPropertyChanging)
 			{
 				foreach (var dp in prop.Dependents)
 					prop.SetBody.Insert(n++, "\tOn" + dp + "Changing();");
 				prop.SetBody.Insert(n++, "");
 			}
-			
+
 			prop.SetBody.Insert(n++, "\tBefore" + name + "Changed(value);");
-			
+
 			if (insSpaces)
 			{
 				prop.SetBody.Insert(3, "");
 				prop.SetBody.Add("");
 			}
-			
+
 			prop.SetBody.Add("\tAfter" + name + "Changed();");
 			prop.SetBody.Add("");
-			
+
 			foreach (var dp in prop.Dependents)
 				prop.SetBody.Add("\tOn" + dp + "Changed();");
-			
+
 			prop.SetBody.Add("}");
 
 			methods.Members.Insert(0, new MemberGroup
@@ -188,23 +188,23 @@ void NotifyPropertyChangedImpl()
 				}
 			});
 		}
-		
+
 		prop.Parent.SetTree();
-		
+
 		ITree p = prop.Parent;
-		
+
 		while (!(p is Class) && p != null)
 			p = p.Parent;
-		
+
 		if (p != null)
 		{
 			var cl = (Class)p;
-			
+
 			if (!SkipNotifyPropertyChangedImplementation && !cl.Interfaces.Contains("INotifyPropertyChanged"))
 			{
 				if (!Model.Usings.Contains("System.ComponentModel"))
 					Model.Usings.Add("System.ComponentModel");
-				
+
 				cl.Interfaces.Add("INotifyPropertyChanged");
 
 				cl.Members.Add(new MemberGroup
@@ -228,12 +228,12 @@ void NotifyPropertyChangedImpl()
 					}
 				});
 			}
-			
+
 			if (ImplementNotifyPropertyChanging && !cl.Interfaces.Contains("INotifyPropertyChanging"))
 			{
 				if (!Model.Usings.Contains("System.ComponentModel"))
 					Model.Usings.Add("System.ComponentModel");
-				
+
 				cl.Interfaces.Add("INotifyPropertyChanging");
 
 				cl.Members.Add(new MemberGroup
@@ -365,7 +365,7 @@ class NotifyingProperty : Property
 	{
 		IsNotifying = true;
 	}
-	
+
 	public NotifyingProperty(string type, string name, params string[] dependents)
 		: base(type, name, null, null)
 	{

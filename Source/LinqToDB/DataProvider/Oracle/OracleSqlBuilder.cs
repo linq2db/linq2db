@@ -96,7 +96,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildSql()
 		{
-			var selectQuery = (SelectQuery) Statement;
+			if (!(Statement is SelectQuery selectQuery))
+			{
+				base.BuildSql();
+				return;
+			}
 
 			if (NeedSkip(selectQuery))
 			{

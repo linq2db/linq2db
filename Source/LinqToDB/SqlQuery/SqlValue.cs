@@ -45,10 +45,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public int Precedence
-		{
-			get { return SqlQuery.Precedence.Primary; }
-		}
+		public int Precedence => SqlQuery.Precedence.Primary;
 
 		#endregion
 
@@ -68,9 +65,8 @@ namespace LinqToDB.SqlQuery
 			if (this == other)
 				return true;
 
-			var value = other as SqlValue;
 			return
-				value       != null              &&
+				other is SqlValue value        &&
 				SystemType == value.SystemType &&
 				(Value == null && value.Value == null || Value != null && Value.Equals(value.Value));
 		}
@@ -79,10 +75,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull
-		{
-			get { return Value == null; }
-		}
+		public bool CanBeNull => Value == null;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
@@ -98,9 +91,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 				objectTree.Add(this, clone = new SqlValue(SystemType, Value));
 
 			return clone;
@@ -110,7 +101,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlValue; } }
+		public QueryElementType ElementType => QueryElementType.SqlValue;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

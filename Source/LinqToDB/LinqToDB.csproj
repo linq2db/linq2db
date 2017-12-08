@@ -3,7 +3,7 @@
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net451;netcoreapp2.0;netstandard1.6;net40;netstandard2.0;net45</TargetFrameworks>
+		<TargetFrameworks>net45;netcoreapp2.0;netstandard1.6;netstandard2.0</TargetFrameworks>
 		<AssemblyName>linq2db</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
@@ -15,6 +15,10 @@
 
 		<Configurations>Debug;Release</Configurations>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>OVERRIDETOSTRING1;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

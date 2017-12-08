@@ -9,10 +9,10 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlExpression(Type systemType, string expr, int precedence, bool isAggregate, params ISqlExpression[] parameters)
 		{
-			if (parameters == null) throw new ArgumentNullException("parameters");
+			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)
-				if (value == null) throw new ArgumentNullException("parameters");
+				if (value == null) throw new ArgumentNullException(nameof(parameters));
 
 			SystemType  = systemType;
 			Expr        = expr;
@@ -41,11 +41,11 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public Type             SystemType  { get; private set; }
-		public string           Expr        { get; private set; }
-		public int              Precedence  { get; private set; }
-		public ISqlExpression[] Parameters  { get; private set; }
-		public bool             IsAggregate { get; private set; }
+		public Type             SystemType  { get; }
+		public string           Expr        { get; }
+		public int              Precedence  { get; }
+		public ISqlExpression[] Parameters  { get; }
+		public bool             IsAggregate { get; }
 
 		#region Overrides
 
@@ -98,7 +98,7 @@ namespace LinqToDB.SqlQuery
 				return false;
 			}
 
-			set { _canBeNull = value; }
+			set => _canBeNull = value;
 		}
 
 		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
@@ -129,9 +129,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 			{
 				objectTree.Add(this, clone = new SqlExpression(
 					SystemType,
@@ -147,7 +145,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlExpression; } }
+		public QueryElementType ElementType => QueryElementType.SqlExpression;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

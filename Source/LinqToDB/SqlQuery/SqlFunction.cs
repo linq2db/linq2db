@@ -21,10 +21,10 @@ namespace LinqToDB.SqlQuery
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
 
-			if (parameters == null) throw new ArgumentNullException("parameters");
+			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var p in parameters)
-				if (p == null) throw new ArgumentNullException("parameters");
+				if (p == null) throw new ArgumentNullException(nameof(parameters));
 
 			SystemType  = systemType;
 			Name        = name;
@@ -33,11 +33,11 @@ namespace LinqToDB.SqlQuery
 			Parameters  = parameters;
 		}
 
-		public Type             SystemType  { get; private set; }
-		public string           Name        { get; private set; }
-		public int              Precedence  { get; private set; }
-		public bool             IsAggregate { get; private set; }
-		public ISqlExpression[] Parameters  { get; private set; }
+		public Type             SystemType  { get; }
+		public string           Name        { get; }
+		public int              Precedence  { get; }
+		public bool             IsAggregate { get; }
+		public ISqlExpression[] Parameters  { get; }
 
 		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*")); }
 
@@ -85,8 +85,8 @@ namespace LinqToDB.SqlQuery
 		private bool? _canBeNull;
 		public  bool   CanBeNull
 		{
-			get { return _canBeNull ?? true; }
-			set { _canBeNull = value;        }
+			get => _canBeNull ?? true;
+			set => _canBeNull = value;
 		}
 
 		#endregion
@@ -98,9 +98,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 			{
 				objectTree.Add(this, clone = new SqlFunction(
 					SystemType,
@@ -134,7 +132,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlFunction; } }
+		public QueryElementType ElementType => QueryElementType.SqlFunction;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
