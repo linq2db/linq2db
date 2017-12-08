@@ -18,19 +18,19 @@ namespace LinqToDB.DataProvider.SapHana
 		
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			var selectQuery = Statement.SelectQuery;
-			if (selectQuery != null)
+			var insertClause = Statement.GetInsertClause();
+			if (insertClause != null)
 			{
-				var identityField = selectQuery.Insert.Into.GetIdentityField();
-				var table = selectQuery.Insert.Into;
+				var identityField = insertClause.Into.GetIdentityField();
+				var table = insertClause.Into;
 
 				if (identityField == null || table == null)
-					throw new SqlException("Identity field must be defined for '{0}'.", selectQuery.Insert.Into.Name);
+					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 				StringBuilder.Append("SELECT MAX(");
 				BuildExpression(identityField, false, true);
@@ -77,9 +77,9 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(selectStatement);
+			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType)
@@ -125,10 +125,10 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 			if (selectQuery.From.Tables.Count == 0)
 				StringBuilder.Append("FROM DUMMY");
 		}

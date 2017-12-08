@@ -58,13 +58,14 @@ namespace LinqToDB.DataProvider.Firebird
 
 			if (statement.QueryType == QueryType.InsertOrUpdate)
 			{
-				foreach (var key in statement.SelectQuery.Insert.Items)
+				var insertOrUpdate = (SqlInsertOrUpdateStatement)statement;
+				foreach (var key in insertOrUpdate.Insert.Items)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 
-				foreach (var key in statement.SelectQuery.Update.Items)
+				foreach (var key in insertOrUpdate.Update.Items)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 
-				foreach (var key in statement.SelectQuery.Update.Keys)
+				foreach (var key in insertOrUpdate.Update.Keys)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 			}
 
@@ -73,7 +74,7 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
-				case QueryType.Update : return GetAlternativeUpdate((SqlSelectStatement)statement);
+				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
 				default               : return statement;
 			}
 		}

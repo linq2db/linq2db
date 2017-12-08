@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -322,17 +322,17 @@ namespace LinqToDB.DataProvider.Access
 			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
 		}
 
-		protected override void BuildUpdateClause(SelectQuery selectQuery)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			base.BuildFromClause(selectQuery);
+			base.BuildFromClause(statement, selectQuery);
 			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet(selectQuery);
+			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType)

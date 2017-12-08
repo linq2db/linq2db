@@ -36,17 +36,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			return StringBuilder;
 		}
 
-		protected override void BuildInsertQuery(SqlSelectStatement selectStatement)
+		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClasuse)
 		{
-			if (selectStatement.SelectQuery.Insert.WithIdentity)
+			if (insertClasuse.WithIdentity)
 			{
-				var identityField = selectStatement.SelectQuery.Insert.Into.GetIdentityField();
+				var identityField = insertClasuse.Into.GetIdentityField();
 
 				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
-					AppendOutputTableVariable(selectStatement.SelectQuery.Insert.Into)
+					AppendOutputTableVariable(insertClasuse.Into)
 						.Append(" TABLE (")
 						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
 						.Append(" ");
@@ -57,14 +57,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 			}
 
-			base.BuildInsertQuery(selectStatement);
+			base.BuildInsertQuery(statement, insertClasuse);
 		}
 
-		protected override void BuildOutputSubclause(SelectQuery selectQuery)
+		protected override void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
 		{
-			if (selectQuery.Insert.WithIdentity)
+			if (insertClause.WithIdentity)
 			{
-				var identityField = selectQuery.Insert.Into.GetIdentityField();
+				var identityField = insertClause.Into.GetIdentityField();
 
 				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
@@ -74,15 +74,15 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 					AppendIndent()
 						.Append("INTO ");
-					AppendOutputTableVariable(selectQuery.Insert.Into)
+					AppendOutputTableVariable(insertClause.Into)
 						.AppendLine();
 				}
 			}
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = selectQuery.Insert.Into.GetIdentityField();
+			var identityField = insertClause.Into.GetIdentityField();
 
 			if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 			{
@@ -92,7 +92,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					.Append("SELECT ")
 					.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
 					.Append(" FROM ");
-				AppendOutputTableVariable(selectQuery.Insert.Into)
+				AppendOutputTableVariable(insertClause.Into)
 					.AppendLine();
 			}
 			else
@@ -133,10 +133,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				.AppendLine();
 		}
 
-		protected override void BuildUpdateTableName(SelectQuery selectQuery)
+		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			var table = selectQuery.Update.Table != null ?
-				(selectQuery.From.FindTableSource(selectQuery.Update.Table) ?? selectQuery.Update.Table) :
+			var table = updateClause.Table != null ?
+				(selectQuery.From.FindTableSource(updateClause.Table) ?? updateClause.Table) :
 				selectQuery.From.Tables[0];
 
 			if (table is SqlTable)
@@ -240,9 +240,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(selectStatement);
+			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)

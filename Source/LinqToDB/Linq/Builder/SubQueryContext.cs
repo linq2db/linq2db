@@ -19,6 +19,7 @@ namespace LinqToDB.Linq.Builder
 			SubQuery        = subQuery;
 			SubQuery.Parent = this;
 			SelectQuery     = selectQuery;
+			Statement       = subQuery.Statement;
 
 			if (addToSql)
 				selectQuery.From.Table(SubQuery.SelectQuery);
@@ -27,6 +28,7 @@ namespace LinqToDB.Linq.Builder
 		public SubQueryContext(IBuildContext subQuery, bool addToSql = true)
 			: this(subQuery, new SelectQuery { ParentSelect = subQuery.SelectQuery.ParentSelect }, addToSql)
 		{
+			Statement = subQuery.Statement;
 		}
 
 		public          IBuildContext SubQuery    { get; private set; }

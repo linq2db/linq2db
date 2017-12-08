@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -67,10 +67,10 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildOrderByClause(SelectQuery selectQuery)

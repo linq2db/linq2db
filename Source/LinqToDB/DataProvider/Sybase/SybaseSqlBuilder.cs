@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			StringBuilder
 				.AppendLine()
@@ -135,10 +135,10 @@ namespace LinqToDB.DataProvider.Sybase
 			base.BuildLikePredicate(predicate);
 		}
 
-		protected override void BuildUpdateTableName(SelectQuery selectQuery)
+		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			if (selectQuery.Update.Table != null && selectQuery.Update.Table != selectQuery.From.Tables[0].Source)
-				BuildPhysicalTable(selectQuery.Update.Table, null);
+			if (updateClause.Table != null && updateClause.Table != selectQuery.From.Tables[0].Source)
+				BuildPhysicalTable(updateClause.Table, null);
 			else
 				BuildTableName(selectQuery.From.Tables[0], true, false);
 		}
@@ -202,12 +202,12 @@ namespace LinqToDB.DataProvider.Sybase
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(selectStatement);
+			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
-		protected override void BuildEmptyInsert(SelectQuery selectQuery)
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.AppendLine("VALUES ()");
 		}

@@ -20,13 +20,13 @@ namespace LinqToDB.Linq
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 				var sqlQuery = new SelectQuery();
-				sqlQuery.QueryType = QueryType.Update;
+				var updateStatement = new SqlUpdateStatement(sqlQuery);
 
 				sqlQuery.From.Table(sqlTable);
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { Statement = new SqlUpdateStatement(sqlQuery), } }
+					Queries = { new QueryInfo { Statement = updateStatement, } }
 				};
 
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
@@ -49,7 +49,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].Parameters.Add(param);
 
-					sqlQuery.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
+					updateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 				}
 
 				foreach (var field in keys)

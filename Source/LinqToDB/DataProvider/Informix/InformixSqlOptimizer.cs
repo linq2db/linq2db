@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider.Informix
 						break;
 
 					case QueryType.Update:
-						statement = GetAlternativeUpdate((SqlSelectStatement)statement);
+						statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
 						break;
 				}
 			}

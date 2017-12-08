@@ -61,6 +61,11 @@ namespace LinqToDB.SqlQuery
 			return clone;
 		}
 
+		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		{
+			return null;
+		}
+
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
 			((ISqlExpressionWalkable)Table)?.Walk(skipColumns, func);

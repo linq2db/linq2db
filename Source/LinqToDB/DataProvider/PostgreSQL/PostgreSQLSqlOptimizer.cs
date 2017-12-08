@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
-				case QueryType.Update : return GetAlternativeUpdate((SqlSelectStatement)statement);
+				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
 				default               : return statement;
 			}
 		}

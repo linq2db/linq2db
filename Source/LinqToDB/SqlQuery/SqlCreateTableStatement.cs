@@ -58,5 +58,9 @@ namespace LinqToDB.SqlQuery
 			return clone;
 		}
 
+		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		{
+			return null;
+		}
 	}
 }

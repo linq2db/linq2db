@@ -18,15 +18,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			var selectQuery = Statement.SelectQuery;
-			if (selectQuery != null)
+			var insertClause = Statement.GetInsertClause();
+			if (insertClause != null)
 			{
-				var into = selectQuery.Insert.Into;
+				var into = insertClause.Into;
 				var attr = GetSequenceNameAttribute(into, false);
 				var name =
 					attr != null
@@ -93,10 +93,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected sealed override bool IsReserved(string word)

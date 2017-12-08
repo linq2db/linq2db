@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SqlSelectStatement) statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
 					break;
 			}
 

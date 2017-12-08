@@ -57,12 +57,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return "FIRST {0}";
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = selectQuery.Insert.Into.GetIdentityField();
+			var identityField = insertClause.Into.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", selectQuery.Insert.Into.Name);
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append("\t");
@@ -145,10 +145,10 @@ namespace LinqToDB.DataProvider.Firebird
 //			base.BuildDataType(type, createDbType);
 //		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
@@ -219,9 +219,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectStatement, "FROM rdb$database");
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM rdb$database");
 		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)

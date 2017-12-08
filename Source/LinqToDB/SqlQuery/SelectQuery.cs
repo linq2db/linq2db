@@ -34,8 +34,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void Init(
-			SqlInsertClause         insert,
-			SqlUpdateClause         update,
 			SqlSelectClause         select,
 			SqlFromClause           from,
 			SqlWhereClause          where,
@@ -47,8 +45,6 @@ namespace LinqToDB.SqlQuery
 			bool                 parameterDependent,
 			List<SqlParameter>   parameters)
 		{
-			_insert              = insert;
-			_update              = update;
 			Select               = select;
 			_from                = from;
 			_where               = where;
@@ -79,159 +75,8 @@ namespace LinqToDB.SqlQuery
 
 		public bool IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
 
-		public QueryType QueryType { get; set; } = QueryType.Select;
-
-		public bool IsSelect         => QueryType == QueryType.Select;
-		public bool IsInsertOrUpdate => QueryType == QueryType.InsertOrUpdate;
-		public bool IsInsert         => QueryType == QueryType.Insert || QueryType == QueryType.InsertOrUpdate;
-		public bool IsUpdate         => QueryType == QueryType.Update || QueryType == QueryType.InsertOrUpdate;
-
 		public List<SqlParameter> Parameters           { get;      } = new List<SqlParameter>();
 		public bool               IsParameterDependent { get; set; }
-
-		#endregion
-
-		#region Aliases
-
-		IDictionary<string,object> _aliases;
-
-		public void RemoveAlias(string alias)
-		{
-			if (_aliases != null)
-			{
-				alias = alias.ToUpper();
-				if (_aliases.ContainsKey(alias))
-					_aliases.Remove(alias);
-			}
-		}
-
-		public string GetAlias(string desiredAlias, string defaultAlias)
-		{
-			if (_aliases == null)
-				_aliases = new Dictionary<string,object>();
-
-			var alias = desiredAlias;
-
-			if (string.IsNullOrEmpty(desiredAlias) || desiredAlias.Length > 25)
-			{
-				desiredAlias = defaultAlias;
-				alias        = defaultAlias + "1";
-			}
-
-			for (var i = 1; ; i++)
-			{
-				var s = alias.ToUpper();
-
-				if (!_aliases.ContainsKey(s) && !ReservedWords.IsReserved(s))
-				{
-					_aliases.Add(s, s);
-					break;
-				}
-
-				alias = desiredAlias + i;
-			}
-
-			return alias;
-		}
-
-		public string[] GetTempAliases(int n, string defaultAlias)
-		{
-			var aliases = new string[n];
-
-			for (var i = 0; i < aliases.Length; i++)
-				aliases[i] = GetAlias(defaultAlias, defaultAlias);
-
-			foreach (var t in aliases)
-				RemoveAlias(t);
-
-			return aliases;
-		}
-
-		internal void SetAliases()
-		{
-			_aliases = null;
-
-			var objs = new Dictionary<object,object>();
-
-			Parameters.Clear();
-
-			new QueryVisitor().VisitAll(this, expr =>
-			{
-				switch (expr.ElementType)
-				{
-					case QueryElementType.SqlParameter:
-						{
-							var p = (SqlParameter)expr;
-
-							if (p.IsQueryParameter)
-							{
-								if (!objs.ContainsKey(expr))
-								{
-									objs.Add(expr, expr);
-									p.Name = GetAlias(p.Name, "p");
-									Parameters.Add(p);
-								}
-							}
-							else
-								IsParameterDependent = true;
-						}
-
-						break;
-
-					case QueryElementType.Column:
-						{
-							if (!objs.ContainsKey(expr))
-							{
-								objs.Add(expr, expr);
-
-								var c = (SqlColumn)expr;
-
-								if (c.Alias != "*")
-									c.Alias = GetAlias(c.Alias, "c");
-							}
-						}
-
-						break;
-
-					case QueryElementType.TableSource:
-						{
-							var table = (SqlTableSource)expr;
-
-							if (!objs.ContainsKey(table))
-							{
-								objs.Add(table, table);
-								table.Alias = GetAlias(table.Alias, "t");
-							}
-						}
-
-						break;
-
-					case QueryElementType.SqlQuery:
-						{
-							var sql = (SelectQuery)expr;
-
-							if (sql.HasUnion)
-							{
-								for (var i = 0; i < sql.Select.Columns.Count; i++)
-								{
-									var col = sql.Select.Columns[i];
-
-									foreach (var t in sql.Unions)
-									{
-										var union = t.SelectQuery.Select;
-
-										objs.Remove(union.Columns[i].Alias);
-
-										union.Columns[i].Alias = col.Alias;
-									}
-								}
-							}
-						}
-
-						break;
-				}
-			});
-		}
 
 		#endregion
 
@@ -241,32 +86,20 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region InsertClause
-
-		private SqlInsertClause _insert;
-		public  SqlInsertClause  Insert => _insert ?? (_insert = new SqlInsertClause());
-
-		public void ClearInsert()
-		{
-			_insert = null;
-		}
-
-		#endregion
-
-		#region UpdateClause
-
-		private SqlUpdateClause _update;
-		public  SqlUpdateClause  Update
-		{
-			get { return _update ?? (_update = new SqlUpdateClause()); }
-		}
-
-		public void ClearUpdate()
-		{
-			_update = null;
-		}
-
-		#endregion
+//		#region UpdateClause
+//
+//		private SqlUpdateClause _update;
+//		public  SqlUpdateClause  Update
+//		{
+//			get { return _update ?? (_update = new SqlUpdateClause()); }
+//		}
+//
+//		public void ClearUpdate()
+//		{
+//			_update = null;
+//		}
+//
+//		#endregion
 
 		#region FromClause
 
@@ -599,11 +432,6 @@ namespace LinqToDB.SqlQuery
 			if (clone.ParentSelect != null)
 				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
 
-			QueryType = clone.QueryType;
-
-			if (IsInsert) _insert = (SqlInsertClause)clone._insert.Clone(objectTree, doClone);
-			if (IsUpdate) _update = (SqlUpdateClause)clone._update.Clone(objectTree, doClone);
-
 			Select   = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
 			_from    = new SqlFromClause   (this, clone._from,    objectTree, doClone);
 			_where   = new SqlWhereClause  (this, clone._where,   objectTree, doClone);
@@ -621,16 +449,6 @@ namespace LinqToDB.SqlQuery
 				if (sb != null && sb.ParentSelect == clone)
 					sb.ParentSelect = this;
 			});
-		}
-
-		public SelectQuery Clone()
-		{
-			return (SelectQuery)Clone(new Dictionary<ICloneableElement,ICloneableElement>(), _ => true);
-		}
-
-		public SelectQuery Clone(Predicate<ICloneableElement> doClone)
-		{
-			return (SelectQuery)Clone(new Dictionary<ICloneableElement,ICloneableElement>(), doClone);
 		}
 
 #endregion
@@ -752,9 +570,6 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
-			if (_insert != null) ((ISqlExpressionWalkable)_insert).Walk(skipColumns, func);
-			if (_update != null) ((ISqlExpressionWalkable)_update).Walk(skipColumns, func);
-
 			((ISqlExpressionWalkable)Select) .Walk(skipColumns, func);
 			((ISqlExpressionWalkable)From)   .Walk(skipColumns, func);
 			((ISqlExpressionWalkable)Where)  .Walk(skipColumns, func);

@@ -692,24 +692,20 @@ namespace LinqToDB.DataProvider
 
 			var qry   = Query<int>.GetQuery(DataContext, ref insertExpression);
 			var query = qry.Queries[0].Statement.SelectQuery;
-
-			query.Insert.Into.Alias = _targetAlias;
-
-			// we need Insert type for proper query cloning (maybe this is a bug in clone function?)
-			query.QueryType = QueryType.Insert;
+			
+			// we need InsertOrUpdate for sql builder to generate values clause
+			var newInsert = new SqlInsertOrUpdateStatement(query);
+			newInsert.Insert.Into.Alias = _targetAlias;
 
 			var tables = MoveJoinsToSubqueries(query, SourceAlias, null, QueryElement.InsertSetter);
-			SetSourceColumnAliases(query.Insert, tables.Item1.Source);
-
-			// we need InsertOrUpdate for sql builder to generate values clause
-			query.QueryType = QueryType.InsertOrUpdate;
+			SetSourceColumnAliases(newInsert, tables.Item1.Source);
 
 			QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
 
 			SaveParameters(query.Parameters);
 
 			if (IsIdentityInsertSupported
-				&& query.Insert.Items.Any(_ => _.Column is SqlField && ((SqlField)_.Column).IsIdentity))
+				&& newInsert.Insert.Items.Any(_ => _.Column is SqlField && ((SqlField)_.Column).IsIdentity))
 				OnInsertWithIdentity();
 
 			SqlBuilder.BuildInsertClauseHelper(new SqlInsertStatement(query), Command);
@@ -821,24 +817,25 @@ namespace LinqToDB.DataProvider
 				new[] { updateQuery.Expression, target.Expression, Expression.Quote(predicate) });
 
 			var qry   = Query<int>.GetQuery(DataContext, ref updateExpression);
-			var query = qry.Queries[0].Statement.SelectQuery;
+			var statement = qry.Queries[0].Statement;
 
 			if (ProviderUsesAlternativeUpdate)
-				BuildAlternativeUpdateQuery(query);
+				BuildAlternativeUpdateQuery(statement);
 			else
 			{
-				var tables = MoveJoinsToSubqueries(query, _targetAlias, SourceAlias, QueryElement.UpdateSetter);
-				SetSourceColumnAliases(query.Update, tables.Item2.Source);
+				var tables = MoveJoinsToSubqueries(statement.SelectQuery, _targetAlias, SourceAlias, QueryElement.UpdateSetter);
+				SetSourceColumnAliases(statement.RequireUpdateClause(), tables.Item2.Source);
 			}
 
 			QueryRunner.SetParameters(qry, DataContext, updateExpression, null, 0);
-			SaveParameters(query.Parameters);
+			SaveParameters(statement.Parameters);
 
-			SqlBuilder.BuildUpdateSetHelper(new SqlUpdateStatement(query), Command);
+			SqlBuilder.BuildUpdateSetHelper((SqlUpdateStatement)statement, Command);
 		}
 
-		private void BuildAlternativeUpdateQuery(SelectQuery query)
+		private void BuildAlternativeUpdateQuery(SqlStatement statement)
 		{
+			var query    = statement.EnsureQuery();
 			var subQuery = (SelectQuery)QueryVisitor.Find(query.Where.SearchCondition, e => e.ElementType == QueryElementType.SqlQuery);
 			var target   = query.From.Tables[0];
 			target.Alias = _targetAlias;
@@ -871,12 +868,14 @@ namespace LinqToDB.DataProvider
 					}
 				});
 
-				((ISqlExpressionWalkable)query.Update).Walk(true, element => ConvertToSubquery(subQuery, element, tableSet, tables, (SqlTable)target.Source, (SqlTable)source.Source));
+				((ISqlExpressionWalkable)statement.RequireUpdateClause()).Walk(true,
+					element => ConvertToSubquery(subQuery, element, tableSet, tables, (SqlTable)target.Source,
+						(SqlTable)source.Source));
 			}
 
 			source.Alias = SourceAlias;
 
-			SetSourceColumnAliases(query.Update, source.Source);
+			SetSourceColumnAliases(statement.RequireUpdateClause(), source.Source);
 		}
 
 		protected void BuildDefaultUpdate()
@@ -957,7 +956,6 @@ namespace LinqToDB.DataProvider
 				if (tbl != firstTable && (secondTable == null || tbl != secondTable) && tableSet.Contains(tbl))
 				{
 					var tempCopy = sql.Clone();
-					tempCopy.QueryType = QueryType.Select;
 					var tempTables = new List<SqlTableSource>();
 
 					// create copy of tables from main FROM clause for subquery clause
@@ -1036,10 +1034,14 @@ namespace LinqToDB.DataProvider
 						queryPart = sql.Where;
 						break;
 					case QueryElement.InsertSetter:
-						queryPart = sql.Insert;
+						//TODO:
+						throw new NotImplementedException();
+//						queryPart = sql.Insert;
 						break;
 					case QueryElement.UpdateSetter:
-						queryPart = sql.Update;
+						//TODO:
+						throw new NotImplementedException();
+//						queryPart = sql.Update;
 						break;
 					default:
 						throw new InvalidOperationException();

@@ -21,18 +21,18 @@ namespace LinqToDB.Linq
 				var fieldDic = new Dictionary<SqlField,ParameterAccessor>();
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 				var sqlQuery = new SelectQuery();
-				sqlQuery.QueryType = QueryType.InsertOrUpdate;
 
 				ParameterAccessor param;
 
-				sqlQuery.Insert.Into  = sqlTable;
-				sqlQuery.Update.Table = sqlTable;
+				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
+				insertOrUpdateStatement.Insert.Into  = sqlTable;
+				insertOrUpdateStatement.Update.Table = sqlTable;
 
 				sqlQuery.From.Table(sqlTable);
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { Statement = new SqlSelectStatement(sqlQuery), } }
+					Queries = { new QueryInfo { Statement = insertOrUpdateStatement, } }
 				};
 
 				var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
@@ -52,7 +52,7 @@ namespace LinqToDB.Linq
 								fieldDic.Add(field, param);
 						}
 
-						sqlQuery.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
+						insertOrUpdateStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
 					else if (field.IsIdentity)
 					{
@@ -71,7 +71,7 @@ namespace LinqToDB.Linq
 				var q =
 				(
 					from k in keys
-					join i in sqlQuery.Insert.Items on k equals i.Column
+					join i in insertOrUpdateStatement.Insert.Items on k equals i.Column
 					select new { k, i }
 				).ToList();
 
@@ -96,17 +96,17 @@ namespace LinqToDB.Linq
 							fieldDic.Add(field, param = GetParameter(typeof(T), dataContext, field));
 					}
 
-					sqlQuery.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
+					insertOrUpdateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 				}
 
-				sqlQuery.Update.Keys.AddRange(q.Select(i => i.i));
+				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 
 				// Set the query.
 				//
 				if (ei.SqlProviderFlags.IsInsertOrUpdateSupported)
 					SetNonQueryQuery(ei);
 				else
-					MakeAlternativeInsertOrUpdate(ei, sqlQuery);
+					MakeAlternativeInsertOrUpdate(ei);
 
 				return ei;
 			}
@@ -136,19 +136,19 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public static void MakeAlternativeInsertOrUpdate(Query query, SelectQuery selectQuery)
+		public static void MakeAlternativeInsertOrUpdate(Query query)
 		{
 			var dic = new Dictionary<ICloneableElement, ICloneableElement>();
 
-			var insertQuery = (SelectQuery)selectQuery.Clone(dic, _ => true);
+			var firstStatement = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
+			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, _ => true);
 
-			insertQuery.QueryType = QueryType.Insert;
-			insertQuery.ClearUpdate();
-			insertQuery.From.Tables.Clear();
+			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert};
+			insertStatement.SelectQuery.From.Tables.Clear();
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement   = new SqlSelectStatement(insertQuery),
+				Statement   = insertStatement,
 				Parameters  = query.Queries[0].Parameters
 					.Select(p => new ParameterAccessor
 						(
@@ -161,30 +161,28 @@ namespace LinqToDB.Linq
 					.ToList(),
 			});
 
-			var keys = selectQuery.Update.Keys;
+			var keys = firstStatement.Update.Keys;
 
 			foreach (var key in keys)
-				selectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression);
-
-			selectQuery.ClearInsert();
+				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression);
 
 			//TODO! looks not working solution
-			if (selectQuery.Update.Items.Count > 0)
+			if (firstStatement.Update.Items.Count > 0)
 			{
-				selectQuery.QueryType = QueryType.Update;
+				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery) {Update = firstStatement.Update};
 				SetNonQueryQuery2(query);
 			}
 			else
 			{
-				selectQuery.QueryType = QueryType.Select;
-				selectQuery.Select.Columns.Clear();
-				selectQuery.Select.Columns.Add(new SqlColumn(selectQuery, new SqlExpression("1")));
+				firstStatement.SelectQuery.Select.Columns.Clear();
+				firstStatement.SelectQuery.Select.Columns.Add(new SqlColumn(firstStatement.SelectQuery, new SqlExpression("1")));
+				query.Queries[0].Statement = new SqlSelectStatement(firstStatement.SelectQuery);
 				SetQueryQuery2(query);
 			}
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement = new SqlSelectStatement(insertQuery),
+				Statement = new SqlSelectStatement(firstStatement.SelectQuery),
 				Parameters  = query.Queries[0].Parameters.ToList(),
 			});
 		}

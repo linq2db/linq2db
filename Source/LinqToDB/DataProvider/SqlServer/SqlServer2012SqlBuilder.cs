@@ -45,9 +45,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildSql();
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectStatement, null);
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, null);
 			StringBuilder.AppendLine(";");
 		}
 

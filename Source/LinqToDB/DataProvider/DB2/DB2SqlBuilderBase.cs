@@ -22,9 +22,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (Version == DB2Version.LUW && statement.IsInsertWithIdentity())
+			if (Version == DB2Version.LUW && statement is SqlInsertStatement insertStatement && insertStatement.Insert.WithIdentity == true)
 			{
-				_identityField = statement.SelectQuery.Insert.Into.GetIdentityField();
+				_identityField = insertStatement.Insert.Into.GetIdentityField();
 
 				if (_identityField == null)
 					return 2;
@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine("\t)");
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			if (Version == DB2Version.zOS)
 			{
@@ -102,10 +102,10 @@ namespace LinqToDB.DataProvider.DB2
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
@@ -183,16 +183,16 @@ namespace LinqToDB.DataProvider.DB2
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectStatement, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 		}
 
-		protected override void BuildEmptyInsert(SelectQuery selectQuery)
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in selectQuery.Insert.Into.Fields)
+			foreach (var col in insertClause.Into.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();

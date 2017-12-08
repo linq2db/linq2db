@@ -28,12 +28,12 @@ namespace LinqToDB.DataProvider.Oracle
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = selectQuery.Insert.Into.GetIdentityField();
+			var identityField = insertClause.Into.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", selectQuery.Insert.Into.Name);
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append("\t");
@@ -229,10 +229,10 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
@@ -266,9 +266,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectStatement, "FROM SYS.DUAL");
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYS.DUAL");
 		}
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
@@ -276,11 +276,11 @@ namespace LinqToDB.DataProvider.Oracle
 			return "SELECT " + sequenceName + ".nextval ID from DUAL connect by level <= " + count;
 		}
 
-		protected override void BuildEmptyInsert(SelectQuery selectQuery)
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in selectQuery.Insert.Into.Fields)
+			foreach (var col in insertClause.Into.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();

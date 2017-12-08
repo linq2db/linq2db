@@ -854,45 +854,15 @@ namespace LinqToDB.ServiceModel
 							var elem = (SelectQuery)e;
 
 							Append(elem.SourceID);
-							Append((int)elem.QueryType);
 							Append(elem.From);
 
-							var appendInsert      = false;
-							var appendUpdate      = false;
-							var appendSelect      = false;
-
-							switch (elem.QueryType)
-							{
-								case QueryType.InsertOrUpdate :
-									appendUpdate = true;
-									appendInsert = true;
-									break;
-
-								case QueryType.Update         :
-									appendUpdate = true;
-									appendSelect = elem.Select.SkipValue != null || elem.Select.TakeValue != null;
-									break;
-
-								case QueryType.Insert         :
-									appendInsert = true;
-									if (elem.From.Tables.Count != 0)
-										appendSelect = true;
-									break;
-
-								default                       :
-									appendSelect = true;
-									break;
-							}
-
-							Append(appendInsert);      if (appendInsert)      Append(elem.Insert);
-							Append(appendUpdate);      if (appendUpdate)      Append(elem.Update);
-							Append(appendSelect);      if (appendSelect)      Append(elem.Select);
+							Append(elem.Select);
 
 							Append(elem.Where);
 							Append(elem.GroupBy);
 							Append(elem.Having);
 							Append(elem.OrderBy);
-							Append(elem.ParentSelect == null ? 0 : elem.ParentSelect.SourceID);
+							Append(elem.ParentSelect?.SourceID ?? 0);
 							Append(elem.IsParameterDependent);
 
 							if (!elem.HasUnion)
@@ -1006,6 +976,17 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.InsertStatement :
 						{
 							var elem = (SqlInsertStatement)e;
+							Append(elem.Insert);
+							Append(elem.SelectQuery);
+
+							break;
+						}
+
+					case QueryElementType.InsertOrUpdateStatement :
+						{
+							var elem = (SqlInsertOrUpdateStatement)e;
+							Append(elem.Insert);
+							Append(elem.Update);
 							Append(elem.SelectQuery);
 
 							break;
@@ -1014,6 +995,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.UpdateStatement :
 						{
 							var elem = (SqlUpdateStatement)e;
+							Append(elem.Update);
 							Append(elem.SelectQuery);
 
 							break;
@@ -1432,14 +1414,8 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlQuery :
 						{
 							var sid                = ReadInt();
-							var queryType          = (QueryType)ReadInt();
 							var from               = Read<SqlFromClause>();
-							var readInsert         = ReadBool();
-							var insert             = readInsert ? Read<SqlInsertClause>() : null;
-							var readUpdate         = ReadBool();
-							var update             = readUpdate ? Read<SqlUpdateClause>() : null;
-							var readSelect         = ReadBool();
-							var select             = readSelect ? Read<SqlSelectClause>() : new SqlSelectClause(null);
+							var select             = Read<SqlSelectClause>();
 							var where              = Read<SqlWhereClause>();
 							var groupBy            = Read<SqlGroupByClause>();
 							var having             = Read<SqlWhereClause>();
@@ -1449,12 +1425,10 @@ namespace LinqToDB.ServiceModel
 							var unions             = ReadArray<SqlUnion>();
 							var parameters         = ReadArray<SqlParameter>();
 
-							var query = new SelectQuery(sid) {QueryType = queryType};
+							var query = new SelectQuery(sid);
 							_statement = new SqlSelectStatement(query);
 
 							query.Init(
-								insert,
-								update,
 								select,
 								from,
 								where,
@@ -1578,15 +1552,29 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.InsertStatement :
 						{
+							var insert      = Read<SqlInsertClause>();
 							var selectQuery = Read<SelectQuery>();
-							obj = _statement = new SqlInsertStatement(selectQuery);
+
+							obj = _statement = new SqlInsertStatement(selectQuery) {Insert = insert};
 							break;
 						}
 
 					case QueryElementType.UpdateStatement :
 						{
-							var selectQuery = Read<SelectQuery>();
-							obj = _statement = new SqlUpdateStatement(selectQuery);
+							var update       = Read<SqlUpdateClause>();
+							var selectQuery  = Read<SelectQuery>();
+
+							obj = _statement = new SqlUpdateStatement(selectQuery) {Update = update};
+							break;
+						}
+
+					case QueryElementType.InsertOrUpdateStatement :
+						{
+							var insert       = Read<SqlInsertClause>();
+							var update       = Read<SqlUpdateClause>();
+							var selectQuery  = Read<SelectQuery>();
+
+							obj = _statement = new SqlInsertOrUpdateStatement(selectQuery) {Insert = insert, Update = update};
 							break;
 						}
 

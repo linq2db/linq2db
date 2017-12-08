@@ -179,13 +179,23 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertStatement:
 					{
+						Visit1(((SqlInsertStatement)element).Insert);
 						Visit1(((SqlInsertStatement)element).SelectQuery);
 						break;
 					}
 
 				case QueryElementType.UpdateStatement:
 					{
+						Visit1(((SqlUpdateStatement)element).Update);
 						Visit1(((SqlUpdateStatement)element).SelectQuery);
+						break;
+					}
+
+				case QueryElementType.InsertOrUpdateStatement:
+					{
+						Visit1(((SqlInsertOrUpdateStatement)element).Insert);
+						Visit1(((SqlInsertOrUpdateStatement)element).Update);
+						Visit1(((SqlInsertOrUpdateStatement)element).SelectQuery);
 						break;
 					}
 
@@ -270,35 +280,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(SelectQuery q)
 		{
-			switch (q.QueryType)
-			{
-				case QueryType.InsertOrUpdate:
-					Visit1(q.Insert);
-					Visit1(q.Update);
-
-					if (q.From.Tables.Count == 0)
-						break;
-
-					goto default;
-
-				case QueryType.Update:
-					Visit1(q.Update);
-					Visit1(q.Select);
-					break;
-
-				case QueryType.Insert:
-					Visit1(q.Insert);
-
-					if (q.From.Tables.Count != 0)
-						Visit1(q.Select);
-
-					break;
-
-				default:
-					Visit1(q.Select);
-					break;
-			}
-
+			Visit1(q.Select);
 			Visit1(q.From);
 			Visit1(q.Where);
 			Visit1(q.GroupBy);
@@ -559,13 +541,23 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertStatement:
 					{
+						Visit2(((SqlInsertStatement)element).Insert);
 						Visit2(((SqlInsertStatement)element).SelectQuery);
 						break;
 					}
 
 				case QueryElementType.UpdateStatement:
 					{
+						Visit2(((SqlUpdateStatement)element).Update);
 						Visit2(((SqlUpdateStatement)element).SelectQuery);
+						break;
+					}
+
+				case QueryElementType.InsertOrUpdateStatement:
+					{
+						Visit2(((SqlInsertOrUpdateStatement)element).Insert);
+						Visit2(((SqlInsertOrUpdateStatement)element).Update);
+						Visit2(((SqlInsertOrUpdateStatement)element).SelectQuery);
 						break;
 					}
 
@@ -654,34 +646,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(SelectQuery q)
 		{
-			switch (q.QueryType)
-			{
-				case QueryType.InsertOrUpdate:
-					Visit2(q.Insert);
-					Visit2(q.Update);
-
-					if (q.From.Tables.Count == 0)
-						break;
-
-					goto default;
-
-				case QueryType.Update:
-					Visit2(q.Update);
-					Visit2(q.Select);
-					break;
-
-				case QueryType.Insert:
-					Visit2(q.Insert);
-
-					if (q.From.Tables.Count != 0)
-						Visit2(q.Select);
-
-					break;
-
-				default:
-					Visit2(q.Select);
-					break;
-			}
+			Visit2(q.Select);
 
 			// Visit2(q.From);
 			//
@@ -979,8 +944,6 @@ namespace LinqToDB.SqlQuery
 					{
 						return
 							Find(((SelectQuery)element).Select,  find) ??
-							(((SelectQuery)element).IsInsert ? Find(((SelectQuery)element).Insert, find) : null) ??
-							(((SelectQuery)element).IsUpdate ? Find(((SelectQuery)element).Update, find) : null) ??
 							Find(((SelectQuery)element).From,    find) ??
 							Find(((SelectQuery)element).Where,   find) ??
 							Find(((SelectQuery)element).GroupBy, find) ??
@@ -1310,6 +1273,53 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.InsertStatement:
+					{
+						var s = (SqlInsertStatement)element;
+						var insert      = s.Insert      != null ? (SqlInsertClause) ConvertInternal(s.Insert, action) : null;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)     ConvertInternal(s.SelectQuery, action) : null;
+
+						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
+						{
+							newElement = new SqlInsertStatement(selectQuery) { Insert = insert };
+						}
+
+						break;
+					}
+
+				case QueryElementType.UpdateStatement:
+					{
+						var s = (SqlUpdateStatement)element;
+						var update      = s.Update      != null ? (SqlUpdateClause) ConvertInternal(s.Update, action) : null;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)     ConvertInternal(s.SelectQuery, action) : null;
+
+						if (update      != null && !ReferenceEquals(s.Update,      update)       ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
+						{
+							newElement = new SqlUpdateStatement(selectQuery) { Update = update };
+						}
+
+						break;
+					}
+
+				case QueryElementType.InsertOrUpdateStatement:
+					{
+						var s = (SqlInsertOrUpdateStatement)element;
+						var insert      = s.Insert      != null ? (SqlInsertClause) ConvertInternal(s.Insert, action) : null;
+						var update      = s.Update      != null ? (SqlUpdateClause) ConvertInternal(s.Update, action) : null;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)     ConvertInternal(s.SelectQuery, action) : null;
+
+						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
+							update      != null && !ReferenceEquals(s.Update,      update)       ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
+						{
+							newElement = new SqlInsertOrUpdateStatement(selectQuery) { Insert = insert, Update = update };
+						}
+
+						break;
+					}
+
 				case QueryElementType.DeleteStatement:
 					{
 						var s = (SqlDeleteStatement)element;
@@ -1502,15 +1512,12 @@ namespace LinqToDB.SqlQuery
 							break;
 
 						var nq = new SelectQuery();
-						nq.QueryType = q.QueryType;
 
 						_visitedElements.Add(q,     nq);
 						_visitedElements.Add(q.All, nq.All);
 
 						var fc = (SqlFromClause)   ConvertInternal(q.From,    action) ?? q.From;
 						var sc = (SqlSelectClause) ConvertInternal(q.Select,  action) ?? q.Select;
-						var ic = q.IsInsert ? ((SqlInsertClause)ConvertInternal(q.Insert, action) ?? q.Insert) : null;
-						var uc = q.IsUpdate ? ((SqlUpdateClause)ConvertInternal(q.Update, action) ?? q.Update) : null;
 						var wc = (SqlWhereClause)  ConvertInternal(q.Where,   action) ?? q.Where;
 						var gc = (SqlGroupByClause)ConvertInternal(q.GroupBy, action) ?? q.GroupBy;
 						var hc = (SqlWhereClause)  ConvertInternal(q.Having,  action) ?? q.Having;
@@ -1531,7 +1538,7 @@ namespace LinqToDB.SqlQuery
 								ps.Add((SqlParameter)e);
 						}
 
-						nq.Init(ic, uc, sc, fc, wc, gc, hc, oc, us,
+						nq.Init(sc, fc, wc, gc, hc, oc, us,
 							(SelectQuery)parent,
 							q.IsParameterDependent,
 							ps);

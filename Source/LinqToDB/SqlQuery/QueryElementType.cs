@@ -43,6 +43,7 @@ namespace LinqToDB.SqlQuery
 
 		SelectStatement,
 		InsertStatement,
+		InsertOrUpdateStatement,
 		UpdateStatement,
 		DeleteStatement,
 

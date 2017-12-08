@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.DB2
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
-				case QueryType.Update : return GetAlternativeUpdate(statement);
+				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
 				default               : return statement;
 			}
 		}

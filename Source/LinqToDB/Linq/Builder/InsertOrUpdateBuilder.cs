@@ -20,12 +20,15 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
+			var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sequence.SelectQuery);
+			sequence.Statement = insertOrUpdateStatement;
+
 			UpdateBuilder.BuildSetter(
 				builder,
 				buildInfo,
 				(LambdaExpression)methodCall.Arguments[1].Unwrap(),
 				sequence,
-				sequence.SelectQuery.Insert.Items,
+				insertOrUpdateStatement.Insert.Items,
 				sequence);
 
 			UpdateBuilder.BuildSetter(
@@ -33,17 +36,17 @@ namespace LinqToDB.Linq.Builder
 				buildInfo,
 				(LambdaExpression)methodCall.Arguments[2].Unwrap(),
 				sequence,
-				sequence.SelectQuery.Update.Items,
+				insertOrUpdateStatement.Update.Items,
 				sequence);
 
-			sequence.SelectQuery.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
-			sequence.SelectQuery.Update.Table = ((TableBuilder.TableContext)sequence).SqlTable;
-			sequence.SelectQuery.From.Tables.Clear();
-			sequence.SelectQuery.From.Table(sequence.SelectQuery.Update.Table);
+			insertOrUpdateStatement.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
+			insertOrUpdateStatement.Update.Table = ((TableBuilder.TableContext)sequence).SqlTable;
+			insertOrUpdateStatement.SelectQuery.From.Tables.Clear();
+			insertOrUpdateStatement.SelectQuery.From.Table(insertOrUpdateStatement.Update.Table);
 
 			if (methodCall.Arguments.Count == 3)
 			{
-				var table = sequence.SelectQuery.Insert.Into;
+				var table = insertOrUpdateStatement.Insert.Into;
 				var keys  = table.GetKeys(false);
 
 				if (keys.Count == 0)
@@ -52,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 				var q =
 				(
 					from k in keys
-					join i in sequence.SelectQuery.Insert.Items on k equals i.Column
+					join i in insertOrUpdateStatement.Insert.Items on k equals i.Column
 					select new { k, i }
 				).ToList();
 
@@ -63,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 						table.Name,
 						((SqlField)missedKey).Name);
 
-				sequence.SelectQuery.Update.Keys.AddRange(q.Select(i => i.i));
+				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 			}
 			else
 			{
@@ -72,11 +75,9 @@ namespace LinqToDB.Linq.Builder
 					buildInfo,
 					(LambdaExpression)methodCall.Arguments[3].Unwrap(),
 					sequence,
-					sequence.SelectQuery.Update.Keys,
+					insertOrUpdateStatement.Update.Keys,
 					sequence);
 			}
-
-			sequence.SelectQuery.QueryType = QueryType.InsertOrUpdate;
 
 			return new InsertOrUpdateContext(buildInfo.Parent, sequence);
 		}
@@ -103,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 				if (Builder.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
 					QueryRunner.SetNonQueryQuery(query);
 				else
-					QueryRunner.MakeAlternativeInsertOrUpdate(query, SelectQuery);
+					QueryRunner.MakeAlternativeInsertOrUpdate(query);
 			}
 
 			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)

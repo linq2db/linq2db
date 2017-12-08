@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.SQLite
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SqlSelectStatement)statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
 					break;
 			}
 

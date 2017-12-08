@@ -29,14 +29,14 @@ namespace LinqToDB.SqlProvider
 			if (selectQuery == null) 
 				return statement;
 			
-			new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
+			new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
 				SqlProviderFlags.IsApplyJoinSupported,
 				SqlProviderFlags.IsGroupByExpressionSupported);
 			if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
 			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-				new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
+				new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -1205,7 +1205,6 @@ namespace LinqToDB.SqlProvider
 				var sql = new SelectQuery { IsParameterDependent = deleteStatement.IsParameterDependent };
 
 				deleteStatement.SelectQuery.ParentSelect = sql;
-				deleteStatement.SelectQuery.QueryType = QueryType.Select;
 
 				var table = (SqlTable)deleteStatement.SelectQuery.From.Tables[0].Source;
 				var copy  = new SqlTable(table) { Alias = null };
@@ -1246,23 +1245,22 @@ namespace LinqToDB.SqlProvider
 			return deleteStatement;
 		}
 
-		protected SqlStatement GetAlternativeUpdate(SqlStatement statement)
+		protected SqlStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
-			if (statement.IsUpdate() && (statement.SelectQuery.From.Tables[0].Source is SqlTable || statement.SelectQuery.Update.Table != null))
+			if (updateStatement.SelectQuery.From.Tables[0].Source is SqlTable || updateStatement.Update.Table != null)
 			{
-				if (statement.SelectQuery.From.Tables.Count > 1 || statement.SelectQuery.From.Tables[0].Joins.Count > 0)
+				if (updateStatement.SelectQuery.From.Tables.Count > 1 || updateStatement.SelectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SelectQuery { IsParameterDependent = statement.IsParameterDependent  };
-					sql.QueryType = QueryType.Update;
+					var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
 
-					statement.SelectQuery.ParentSelect = sql;
-					statement.SelectQuery.QueryType = QueryType.Select;
+					var newUpdateStatement = new SqlUpdateStatement(sql);
+					updateStatement.SelectQuery.ParentSelect = sql;
 
-					var table = statement.SelectQuery.Update.Table ?? (SqlTable)statement.SelectQuery.From.Tables[0].Source;
+					var table = updateStatement.Update.Table ?? (SqlTable)updateStatement.SelectQuery.From.Tables[0].Source;
 
-					if (statement.SelectQuery.Update.Table != null)
-						if (QueryVisitor.Find(statement.SelectQuery.From, t => t == table) == null)
-							table = (SqlTable)QueryVisitor.Find(statement.SelectQuery.From,
+					if (updateStatement.Update.Table != null)
+						if (QueryVisitor.Find(updateStatement.SelectQuery.From, t => t == table) == null)
+							table = (SqlTable)QueryVisitor.Find(updateStatement.SelectQuery.From,
 								ex => ex is SqlTable && ((SqlTable)ex).ObjectType == table.ObjectType) ?? table;
 
 					var copy = new SqlTable(table);
@@ -1271,17 +1269,17 @@ namespace LinqToDB.SqlProvider
 					var copyKeys  = copy. GetKeys(true);
 
 					for (var i = 0; i < tableKeys.Count; i++)
-						statement.SelectQuery.Where
+						updateStatement.SelectQuery.Where
 							.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
 
-					sql.From.Table(copy).Where.Exists(statement.SelectQuery);
+					newUpdateStatement.SelectQuery.From.Table(copy).Where.Exists(updateStatement.SelectQuery);
 
 					var map = new Dictionary<SqlField,SqlField>(table.Fields.Count);
 
 					foreach (var field in table.Fields.Values)
 						map.Add(field, copy[field.Name]);
 
-					foreach (var item in statement.SelectQuery.Update.Items)
+					foreach (var item in updateStatement.Update.Items)
 					{
 						var ex = new QueryVisitor().Convert(item, expr =>
 						{
@@ -1289,22 +1287,22 @@ namespace LinqToDB.SqlProvider
 							return fld != null && map.TryGetValue(fld, out fld) ? fld : expr;
 						});
 
-						sql.Update.Items.Add(ex);
+						newUpdateStatement.Update.Items.Add(ex);
 					}
 
-					sql.Parameters.AddRange(statement.Parameters);
-					sql.Update.Table = statement.SelectQuery.Update.Table;
+					newUpdateStatement.SelectQuery.Parameters.AddRange(updateStatement.Parameters);
+					newUpdateStatement.Update.Table = updateStatement.Update.Table;
 
-					statement.Parameters.Clear();
-					statement.SelectQuery.Update.Items.Clear();
+					updateStatement.Parameters.Clear();
+					updateStatement.Update.Items.Clear();
 
-					statement = new SqlSelectStatement(sql);
+					updateStatement = newUpdateStatement; 
 				}
 
-				statement.SelectQuery.From.Tables[0].Alias = "$";
+				updateStatement.SelectQuery.From.Tables[0].Alias = "$";
 			}
 
-			return statement;
+			return updateStatement;
 		}
 
 		#endregion

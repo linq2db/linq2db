@@ -22,11 +22,10 @@ namespace Tests.Exceptions
 
 			protected override SqlStatement ProcessQuery(SqlStatement statement)
 			{
-				if (statement.IsInsert() && statement.SelectQuery.Insert.Into.Name == "Parent")
+				if (statement.IsInsert() && statement.RequireInsertClause().Into.Name == "Parent")
 				{
-					var selectQuery = statement.SelectQuery;
 					var expr =
-						QueryVisitor.Find(statement.SelectQuery.Insert, e =>
+						QueryVisitor.Find(statement.RequireInsertClause(), e =>
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
@@ -46,7 +45,7 @@ namespace Tests.Exceptions
 							var tableName = "Parent1";
 							var dic       = new Dictionary<IQueryElement,IQueryElement>();
 
-							selectQuery = new QueryVisitor().Convert(statement.SelectQuery, e =>
+							statement = new QueryVisitor().Convert(statement, e =>
 							{
 								if (e.ElementType == QueryElementType.SqlTable)
 								{
@@ -69,7 +68,7 @@ namespace Tests.Exceptions
 						}
 					}
 
-					return new SqlInsertStatement(selectQuery);
+					return statement;
 				}
 
 				return statement;

@@ -8,22 +8,20 @@ namespace LinqToDB.SqlQuery
 
 	class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, SelectQuery selectQuery)
+		public SelectQueryOptimizer(SqlProviderFlags flags, SqlStatement statement, SelectQuery selectQuery)
 		{
 			_flags       = flags;
 			_selectQuery = selectQuery;
+			_statement   = statement;
 		}
 
 		readonly SqlProviderFlags _flags;
 		readonly SelectQuery      _selectQuery;
+		readonly SqlStatement     _statement;
 
 		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
 		{
 #if DEBUG
-			if (_selectQuery.IsUpdate)
-			{
-			}
-
 			var sqlText = _selectQuery.SqlText;
 
 			var dic = new Dictionary<SelectQuery,SelectQuery>();
@@ -43,7 +41,8 @@ namespace LinqToDB.SqlQuery
 			OptimizeUnions();
 			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>());
 			ResolveFields();
-			_selectQuery.SetAliases();
+
+			_statement?.SetAliases();
 
 #if DEBUG
 			sqlText = _selectQuery.SqlText;
@@ -59,16 +58,16 @@ namespace LinqToDB.SqlQuery
 
 		void ResolveFields()
 		{
-			var root = GetQueryData(_selectQuery);
+			var root = GetQueryData(_statement, _selectQuery);
 
 			ResolveFields(root);
 		}
 
-		static QueryData GetQueryData(SelectQuery selectQuery)
+		static QueryData GetQueryData(SqlStatement statement, SelectQuery selectQuery)
 		{
 			var data = new QueryData { Query = selectQuery };
 
-			new QueryVisitor().VisitParentFirst(selectQuery, e =>
+			new QueryVisitor().VisitParentFirst(statement as IQueryElement ?? selectQuery, e =>
 			{
 				switch (e.ElementType)
 				{
@@ -86,7 +85,7 @@ namespace LinqToDB.SqlQuery
 						{
 							if (e != selectQuery)
 							{
-								data.Queries.Add(GetQueryData((SelectQuery)e));
+								data.Queries.Add(GetQueryData(null, (SelectQuery)e));
 								return false;
 							}
 
@@ -330,7 +329,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
-				if (!(e is SelectQuery sql) || sql.From.Tables.Count != 1 || !sql.IsSimple || sql.IsInsert || sql.IsUpdate)
+				if (!(e is SelectQuery sql) || sql.From.Tables.Count != 1 || !sql.IsSimple)
 					return;
 
 				var table = sql.From.Tables[0];
@@ -398,7 +397,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql && sql != _selectQuery)
 				{
 					sql.ParentSelect = _selectQuery;
-					new SelectQueryOptimizer(_flags, sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
+					new SelectQueryOptimizer(_flags, null, sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
 
 					if (sql.IsParameterDependent)
 						_selectQuery.IsParameterDependent = true;
@@ -600,11 +599,13 @@ namespace LinqToDB.SqlQuery
 							visitor.VisitAll(_selectQuery.Having,  TableCollector);
 							visitor.VisitAll(_selectQuery.OrderBy, TableCollector);
 
-							if (_selectQuery.IsInsert)
-								visitor.VisitAll(_selectQuery.Insert, TableCollector);
-
-							if (_selectQuery.IsUpdate)
-								visitor.VisitAll(_selectQuery.Update, TableCollector);
+							if (_statement != null)
+							{
+								foreach (var clause in _statement.EnumClauses())
+								{
+									visitor.VisitAll(clause, TableCollector);
+								}
+							}
 
 							visitor.VisitAll(_selectQuery.From, expr =>
 							{

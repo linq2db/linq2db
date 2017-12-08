@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -107,17 +107,17 @@ namespace LinqToDB.DataProvider.MySql
 				.AppendLine();
 		}
 
-		protected override void BuildUpdateClause(SelectQuery selectQuery)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			base.BuildFromClause(selectQuery);
+			base.BuildFromClause(statement, selectQuery);
 			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet(selectQuery);
+			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		public static char ParameterSymbol           { get; set; }
@@ -229,13 +229,13 @@ namespace LinqToDB.DataProvider.MySql
 				throwExceptionIfTableNotFound);
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SqlSelectStatement selectStatement)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			var position = StringBuilder.Length;
 
-			BuildInsertQuery(selectStatement);
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert);
 
-			if (selectStatement.SelectQuery.Update.Items.Count > 0)
+			if (insertOrUpdate.Update.Items.Count > 0)
 			{
 				AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
@@ -243,7 +243,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				var first = true;
 
-				foreach (var expr in selectStatement.SelectQuery.Update.Items)
+				foreach (var expr in insertOrUpdate.Update.Items)
 				{
 					if (!first)
 						StringBuilder.Append(',').AppendLine();
@@ -271,7 +271,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildEmptyInsert(SelectQuery selectQuery)
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.AppendLine("() VALUES ()");
 		}
