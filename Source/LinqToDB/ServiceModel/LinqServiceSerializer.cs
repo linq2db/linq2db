@@ -886,7 +886,7 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.Parent.SourceID);
 							Append(elem.Expression);
-							Append(elem._alias);
+							Append(elem.RawAlias);
 
 							break;
 						}

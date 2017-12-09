@@ -20,12 +20,12 @@ namespace LinqToDB.SqlQuery
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
 
-			Select   = new SqlSelectClause (this);
-			_from    = new SqlFromClause   (this);
-			_where   = new SqlWhereClause  (this);
-			_groupBy = new SqlGroupByClause(this);
-			_having  = new SqlWhereClause  (this);
-			_orderBy = new SqlOrderByClause(this);
+			Select  = new SqlSelectClause (this);
+			From    = new SqlFromClause   (this);
+			Where   = new SqlWhereClause  (this);
+			GroupBy = new SqlGroupByClause(this);
+			Having  = new SqlWhereClause  (this);
+			OrderBy = new SqlOrderByClause(this);
 		}
 
 		internal SelectQuery(int id)
@@ -46,11 +46,11 @@ namespace LinqToDB.SqlQuery
 			List<SqlParameter>   parameters)
 		{
 			Select               = select;
-			_from                = from;
-			_where               = where;
-			_groupBy             = groupBy;
-			_having              = having;
-			_orderBy             = orderBy;
+			From                 = from;
+			Where                = where;
+			GroupBy              = groupBy;
+			Having               = having;
+			OrderBy              = orderBy;
 			_unions              = unions;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
@@ -60,13 +60,20 @@ namespace LinqToDB.SqlQuery
 			foreach (var col in select.Columns)
 				col.Parent = this;
 
-			Select.  SetSqlQuery(this);
-			_from.   SetSqlQuery(this);
-			_where.  SetSqlQuery(this);
-			_groupBy.SetSqlQuery(this);
-			_having. SetSqlQuery(this);
-			_orderBy.SetSqlQuery(this);
+			Select. SetSqlQuery(this);
+			From.   SetSqlQuery(this);
+			Where.  SetSqlQuery(this);
+			GroupBy.SetSqlQuery(this);
+			Having. SetSqlQuery(this);
+			OrderBy.SetSqlQuery(this);
 		}
+
+		public SqlSelectClause  Select  { get; private set; }
+		public SqlFromClause    From    { get; private set; }
+		public SqlWhereClause   Where   { get; private set; }
+		public SqlGroupByClause GroupBy { get; private set; }
+		public SqlWhereClause   Having  { get; private set; }
+		public SqlOrderByClause OrderBy { get; private set; }
 
 		private List<object> _properties;
 		public  List<object>  Properties => _properties ?? (_properties = new List<object>());
@@ -80,117 +87,21 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region SelectClause
-
-		public  SqlSelectClause  Select { get; set; }
-
-		#endregion
-
-//		#region UpdateClause
-//
-//		private SqlUpdateClause _update;
-//		public  SqlUpdateClause  Update
-//		{
-//			get { return _update ?? (_update = new SqlUpdateClause()); }
-//		}
-//
-//		public void ClearUpdate()
-//		{
-//			_update = null;
-//		}
-//
-//		#endregion
-
-		#region FromClause
-
-		public static SqlFromClause.Join InnerJoin    (ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Inner,      table, null,  false, joins); }
-		public static SqlFromClause.Join InnerJoin    (ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Inner,      table, alias, false, joins); }
-		public static SqlFromClause.Join LeftJoin     (ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Left,       table, null,  false, joins); }
-		public static SqlFromClause.Join LeftJoin     (ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Left,       table, alias, false, joins); }
-		public static SqlFromClause.Join RightJoin    (ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Right,      table, null,  false, joins); }
-		public static SqlFromClause.Join RightJoin    (ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Right,      table, alias, false, joins); }
-		public static SqlFromClause.Join FullJoin     (ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Full,       table, null,  false, joins); }
-		public static SqlFromClause.Join FullJoin     (ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Full,       table, alias, false, joins); }
-		public static SqlFromClause.Join Join         (ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Auto,       table, null,  false, joins); }
-		public static SqlFromClause.Join Join         (ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Auto,       table, alias, false, joins); }
-		public static SqlFromClause.Join CrossApply   (ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.CrossApply, table, null,  false, joins); }
-		public static SqlFromClause.Join CrossApply   (ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.CrossApply, table, alias, false, joins); }
-		public static SqlFromClause.Join OuterApply   (ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.OuterApply, table, null,  false, joins); }
-		public static SqlFromClause.Join OuterApply   (ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.OuterApply, table, alias, false, joins); }
-
-		public static SqlFromClause.Join WeakInnerJoin(ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Inner,      table, null,  true,  joins); }
-		public static SqlFromClause.Join WeakInnerJoin(ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Inner,      table, alias, true,  joins); }
-		public static SqlFromClause.Join WeakLeftJoin (ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Left,       table, null,  true,  joins); }
-		public static SqlFromClause.Join WeakLeftJoin (ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Left,       table, alias, true,  joins); }
-		public static SqlFromClause.Join WeakJoin     (ISqlTableSource table,               params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Auto,       table, null,  true,  joins); }
-		public static SqlFromClause.Join WeakJoin     (ISqlTableSource table, string alias, params SqlFromClause.Join[] joins) { return new SqlFromClause.Join(JoinType.Auto,       table, alias, true,  joins); }
-
-		private SqlFromClause _from;
-		public  SqlFromClause  From
-		{
-			get { return _from; }
-		}
-
-#endregion
-
-#region WhereClause
-
-		private SqlWhereClause _where;
-		public  SqlWhereClause  Where
-		{
-			get { return _where; }
-		}
-
-#endregion
-
-#region GroupByClause
-
-		private SqlGroupByClause _groupBy;
-		public  SqlGroupByClause  GroupBy
-		{
-			get { return _groupBy; }
-		}
-
-#endregion
-
-#region HavingClause
-
-		private SqlWhereClause _having;
-		public  SqlWhereClause  Having
-		{
-			get { return _having; }
-		}
-
-#endregion
-
-#region OrderByClause
-
-		private SqlOrderByClause _orderBy;
-		public  SqlOrderByClause  OrderBy
-		{
-			get { return _orderBy; }
-		}
-
-#endregion
-
-#region Union
+		#region Union
 
 		private List<SqlUnion> _unions;
-		public  List<SqlUnion>  Unions
-		{
-			get { return _unions ?? (_unions = new List<SqlUnion>()); }
-		}
+		public  List<SqlUnion>  Unions   => _unions ?? (_unions = new List<SqlUnion>());
 
-		public bool HasUnion { get { return _unions != null && _unions.Count > 0; } }
+		public  bool            HasUnion => _unions != null && _unions.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
 		{
 			Unions.Add(new SqlUnion(union, isAll));
 		}
 
-#endregion
+		#endregion
 
-#region ProcessParameters
+		#region ProcessParameters
 
 		public SelectQuery ProcessParameters(MappingSchema mappingSchema)
 		{
@@ -416,9 +327,9 @@ namespace LinqToDB.SqlQuery
 			throw new InvalidOperationException();
 		}
 
-#endregion
+		#endregion
 
-#region Clone
+		#region Clone
 
 		SelectQuery(SelectQuery clone, Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
@@ -432,12 +343,12 @@ namespace LinqToDB.SqlQuery
 			if (clone.ParentSelect != null)
 				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
 
-			Select   = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
-			_from    = new SqlFromClause   (this, clone._from,    objectTree, doClone);
-			_where   = new SqlWhereClause  (this, clone._where,   objectTree, doClone);
-			_groupBy = new SqlGroupByClause(this, clone._groupBy, objectTree, doClone);
-			_having  = new SqlWhereClause  (this, clone._having,  objectTree, doClone);
-			_orderBy = new SqlOrderByClause(this, clone._orderBy, objectTree, doClone);
+			Select  = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
+			From    = new SqlFromClause   (this, clone.From,    objectTree, doClone);
+			Where   = new SqlWhereClause  (this, clone.Where,   objectTree, doClone);
+			GroupBy = new SqlGroupByClause(this, clone.GroupBy, objectTree, doClone);
+			Having  = new SqlWhereClause  (this, clone.Having,  objectTree, doClone);
+			OrderBy = new SqlOrderByClause(this, clone.OrderBy, objectTree, doClone);
 
 			Parameters.AddRange(clone.Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 			IsParameterDependent = clone.IsParameterDependent;
@@ -451,9 +362,19 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
+		public SelectQuery Clone()
+		{
+			return (SelectQuery)Clone(new Dictionary<ICloneableElement,ICloneableElement>(), _ => true);
+		}
+
+		public SelectQuery Clone(Predicate<ICloneableElement> doClone)
+		{
+			return (SelectQuery)Clone(new Dictionary<ICloneableElement,ICloneableElement>(), doClone);
+		}
+
 #endregion
 
-#region Helpers
+		#region Helpers
 
 		public void ForEachTable(Action<SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
@@ -501,9 +422,9 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-#endregion
-		
-#region Overrides
+		#endregion
+
+		#region Overrides
 
 #if OVERRIDETOSTRING
 
@@ -514,23 +435,17 @@ namespace LinqToDB.SqlQuery
 
 #endif
 
-#endregion
+		#endregion
 
-#region ISqlExpression Members
+		#region ISqlExpression Members
 
-		public bool CanBeNull
-		{
-			get { return true; }
-		}
+		public bool CanBeNull => true;
+		public int Precedence => SqlQuery.Precedence.Unknown;
+
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
-		}
-
-		public int Precedence
-		{
-			get { return SqlQuery.Precedence.Unknown; }
 		}
 
 		public Type SystemType
@@ -547,26 +462,24 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-#endregion
+		#endregion
 
-#region ICloneableElement Members
+		#region ICloneableElement Members
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 				clone = new SelectQuery(this, objectTree, doClone);
 
 			return clone;
 		}
 
-#endregion
+		#endregion
 
-#region ISqlExpressionWalkable Members
+		#region ISqlExpressionWalkable Members
 
 		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
@@ -584,28 +497,28 @@ namespace LinqToDB.SqlQuery
 			return func(this);
 		}
 
-#endregion
+		#endregion
 
-#region IEquatable<ISqlExpression> Members
+		#region IEquatable<ISqlExpression> Members
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
 		{
 			return this == other;
 		}
 
-#endregion
+		#endregion
 
-#region ISqlTableSource Members
+		#region ISqlTableSource Members
 
 		public static int SourceIDCounter;
 
-		public int           SourceID     { get; private set; }
-		public SqlTableType  SqlTableType { get { return SqlTableType.Table; } }
+		public int           SourceID { get; }
+		public SqlTableType  SqlTableType => SqlTableType.Table;
 
 		private SqlField _all;
 		public  SqlField  All
 		{
-			get { return _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this }); }
+			get => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
 
 			internal set
 			{
@@ -636,9 +549,9 @@ namespace LinqToDB.SqlQuery
 			return _keys;
 		}
 
-#endregion
+		#endregion
 
-#region IQueryElement Members
+		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlQuery;
 
@@ -674,6 +587,6 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-#endregion
+		#endregion
 	}
 }

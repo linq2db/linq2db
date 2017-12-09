@@ -52,7 +52,7 @@ Func<string, bool, string> ToValidName
 }
 
 private Func<string, bool, string> _convertToCompilabl;
-Func<string, bool, string> ConvertToCompilable 
+Func<string, bool, string> ConvertToCompilable
 {
 	get { return _convertToCompilabl ?? ConvertToCompilableDefault; }
 	set { _convertToCompilabl = value; }
@@ -307,11 +307,11 @@ string CheckType(Type type, string typeName)
 
 string CheckColumnName(string memberName)
 {
-    if (string.IsNullOrEmpty(memberName))
-        memberName = "Empty";
-    else
-    {
-        memberName = memberName
+	if (string.IsNullOrEmpty(memberName))
+		memberName = "Empty";
+	else
+	{
+		memberName = memberName
 			.Replace("%", "Percent")
 			.Replace(">", "Greater")
 			.Replace("<", "Lower")
@@ -325,25 +325,25 @@ string CheckColumnName(string memberName)
 			.Replace("'", "_")
 			.Replace(".", "_")
 			.Replace("\u00A3", "Pound");
-	
+
 		if (memberName == "new")
 			memberName = "@new";
-    }
-    return memberName;
+	}
+	return memberName;
 }
 
 string CheckParameterName(string parameterName)
 {
-    var invalidParameterNames = new List<string>
-    {
-        "@DataType"
-    };
+	var invalidParameterNames = new List<string>
+	{
+		"@DataType"
+	};
 
-    var result = parameterName;
-    while (invalidParameterNames.Contains(result))
-    {
-        result = result + "_";
-    }
+	var result = parameterName;
+	while (invalidParameterNames.Contains(result))
+	{
+		result = result + "_";
+	}
 	return result;
 }
 
@@ -397,28 +397,28 @@ void LoadMetadata(DataConnection dataConnection)
 				col.MemberName += "_Column";
 		}
 
-	    var duplicates = t.Columns.Values.ToLookup(c => c.MemberName).Where(g => g.Count() > 1);
-	    foreach (var d in duplicates)
-	    {
+		var duplicates = t.Columns.Values.ToLookup(c => c.MemberName).Where(g => g.Count() > 1);
+		foreach (var d in duplicates)
+		{
 			var alreadyNamed = new HashSet<string>();
-	        foreach (var col in d)
-	        {
-	            col.MemberName = col.ColumnName;
-	            if (keyWords.Contains(col.MemberName))
-	                col.MemberName = "@" + col.MemberName;
+			foreach (var col in d)
+			{
+				col.MemberName = col.ColumnName;
+				if (keyWords.Contains(col.MemberName))
+					col.MemberName = "@" + col.MemberName;
 
-	            col.MemberName = ConvertToCompilable(col.MemberName, false);
+				col.MemberName = ConvertToCompilable(col.MemberName, false);
 
-	            if (col.MemberName == t.TypeName)
-	                col.MemberName += "_Column";
+				if (col.MemberName == t.TypeName)
+					col.MemberName += "_Column";
 
-	            while (alreadyNamed.Contains(col.MemberName))
-	            {
-	                col.MemberName += "_";
-	            }
-	            alreadyNamed.Add(col.MemberName);
-	        }
-	    }
+				while (alreadyNamed.Contains(col.MemberName))
+				{
+					col.MemberName += "_";
+				}
+				alreadyNamed.Add(col.MemberName);
+			}
+		}
 	}
 
 	AfterLoadMetadata();
@@ -716,13 +716,13 @@ string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 	if (NormalizeNames && mayRemoveUnderscore && name.Contains("_"))
 	{
 		name = SplitAndJoin(name, "", '_');
-	}	
+	}
 
 	if (name.Contains("."))
 	{
 		name = SplitAndJoin(name, "", '.');
 	}
-		
+
 	if (name.Length > 0 && char.IsDigit(name[0]))
 		name = "_" + name;
 

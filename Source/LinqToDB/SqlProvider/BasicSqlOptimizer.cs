@@ -30,18 +30,18 @@ namespace LinqToDB.SqlProvider
 				return statement;
 			
 			new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
-				SqlProviderFlags.IsApplyJoinSupported,
-				SqlProviderFlags.IsGroupByExpressionSupported);
-			if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
-			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
-
-			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-				new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
+				if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
+				if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
-			if (Common.Configuration.Linq.OptimizeJoins)
-				OptimizeJoins(selectQuery);
+				if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
+				new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+						SqlProviderFlags.IsApplyJoinSupported,
+						SqlProviderFlags.IsGroupByExpressionSupported);
+
+				if (Common.Configuration.Linq.OptimizeJoins)
+					OptimizeJoins(selectQuery);
 
 			statement.SelectQuery = selectQuery;
 			return statement;
@@ -108,28 +108,29 @@ namespace LinqToDB.SqlProvider
 
 					new QueryVisitor().Visit(subQuery, e =>
 					{
-						if (e is ISqlTableSource)
-							allTables.Add((ISqlTableSource)e);
+						if (e is ISqlTableSource source)
+							allTables.Add(source);
 					});
 
 					new QueryVisitor().Visit(subQuery, e =>
 					{
-						if (e is ISqlTableSource)
-							if (subQuery.From.IsChild((ISqlTableSource)e))
-								levelTables.Add((ISqlTableSource)e);
+						if (e is ISqlTableSource source)
+							if (subQuery.From.IsChild(source))
+								levelTables.Add(source);
 					});
 
-					Func<IQueryElement,bool> checkTable = e =>
+					bool CheckTable(IQueryElement e)
 					{
 						switch (e.ElementType)
 						{
 							case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table);
 							case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent);
 						}
-						return false;
-					};
 
-					var join = SelectQuery.LeftJoin(subQuery);
+						return false;
+					}
+
+					var join = subQuery.LeftJoin();
 
 					query.From.Tables[0].Joins.Add(join.JoinedTable);
 
@@ -137,7 +138,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-						if (QueryVisitor.Find(cond, checkTable) == null)
+						if (QueryVisitor.Find(cond, CheckTable) == null)
 							continue;
 
 						var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -230,35 +231,36 @@ namespace LinqToDB.SqlProvider
 						var allTables   = new HashSet<ISqlTableSource>();
 						var levelTables = new HashSet<ISqlTableSource>();
 
-						Func<IQueryElement,bool> checkTable = e =>
+						bool CheckTable(IQueryElement e)
 						{
 							switch (e.ElementType)
 							{
-								case QueryElementType.SqlField : return !allTables.Contains(((SqlField)e).Table);
+								case QueryElementType.SqlField : return !allTables.Contains(((SqlField) e).Table);
 								case QueryElementType.Column   : return !allTables.Contains(((SqlColumn)e).Parent);
 							}
+
 							return false;
-						};
+						}
 
 						new QueryVisitor().Visit(subQuery, e =>
 						{
-							if (e is ISqlTableSource)
-								allTables.Add((ISqlTableSource)e);
+							if (e is ISqlTableSource source)
+								allTables.Add(source);
 						});
 
 						new QueryVisitor().Visit(subQuery, e =>
 						{
-							if (e is ISqlTableSource && subQuery.From.IsChild((ISqlTableSource)e))
-								levelTables.Add((ISqlTableSource)e);
+							if (e is ISqlTableSource source && subQuery.From.IsChild(source))
+								levelTables.Add(source);
 						});
 
-						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, checkTable) == null)
+						if (SqlProviderFlags.IsSubQueryColumnSupported && QueryVisitor.Find(subQuery, CheckTable) == null)
 							continue;
 
 						// Join should not have ParentSelect, while SubQuery has
 						subQuery.ParentSelect = null;
 
-						var join = SelectQuery.LeftJoin(subQuery);
+						var join = subQuery.LeftJoin();
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
@@ -304,7 +306,7 @@ namespace LinqToDB.SqlProvider
 						{
 							var cond = subQuery.Where.SearchCondition.Conditions[j];
 
-							if (QueryVisitor.Find(cond, checkTable) == null)
+							if (QueryVisitor.Find(cond, CheckTable) == null)
 								continue;
 
 							var replaced = new Dictionary<IQueryElement,IQueryElement>();
@@ -394,14 +396,7 @@ namespace LinqToDB.SqlProvider
 				}
 			});
 
-			selectQuery = new QueryVisitor().Convert(selectQuery, e =>
-			{
-				IQueryElement ne;
-				if (dic.TryGetValue(e, out ne))
-					return ne;
-
-				return null;
-			});
+			selectQuery = new QueryVisitor().Convert(selectQuery, e => dic.TryGetValue(e, out var ne) ? ne : null);
 
 			return selectQuery;
 		}
@@ -1045,7 +1040,7 @@ namespace LinqToDB.SqlProvider
 					var v1 = func.Parameters[1] as SqlValue;
 					var v2 = func.Parameters[2] as SqlValue;
 
-					if (c1 != null && c1.Conditions.Count == 1 && v1 != null && v1.Value is bool && v2 != null && v2.Value is bool)
+					if (c1 != null && c1.Conditions.Count == 1 && v1?.Value is bool && v2?.Value is bool)
 					{
 						var bv  = (bool)value.Value;
 						var bv1 = (bool)v1.Value;

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
+	using Mapping;
+
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public abstract class SqlStatement: IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
@@ -19,7 +19,7 @@ namespace LinqToDB.SqlQuery
 		public abstract List<SqlParameter> Parameters { get; }
 
 		public abstract bool IsParameterDependent { get; set; }
-		
+
 		public virtual SqlStatement ProcessParameters(MappingSchema mappingSchema)
 		{
 			return this;

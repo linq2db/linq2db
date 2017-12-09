@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlException(string message)
-			: base(message) 
+			: base(message)
 		{
 		}
 

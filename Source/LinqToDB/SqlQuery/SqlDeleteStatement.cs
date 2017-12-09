@@ -17,9 +17,9 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public override QueryType          QueryType   => QueryType.Delete;
-		public override QueryElementType   ElementType => QueryElementType.DeleteStatement;
-		
+		public override QueryType        QueryType   => QueryType.Delete;
+		public override QueryElementType ElementType => QueryElementType.DeleteStatement;
+
 		public override bool               IsParameterDependent
 		{
 			get => SelectQuery.IsParameterDependent;

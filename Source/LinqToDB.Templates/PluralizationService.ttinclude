@@ -76,9 +76,9 @@ static class Pluralization
 			_service = PluralizationService.CreateService(System.Globalization.CultureInfo.GetCultureInfo(CultureInfo));
 
 		var word = GetLastWord(str);
-	 
+
 		string newWord;
-	 
+
 		if (!Dictionary.TryGetValue(word.ToLower(), out newWord))
 			newWord = _service.IsPlural(word) ? word : _service.Pluralize(word);
 

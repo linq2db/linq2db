@@ -14,7 +14,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTable()
 		{
-			_sourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 			Fields    = new Dictionary<string,SqlField>();
 		}
 
@@ -25,7 +25,7 @@ namespace LinqToDB.SqlQuery
 			SqlTableType            sqlTableType,
 			ISqlExpression[]        tableArguments)
 		{
-			_sourceID          = id;
+			SourceID          = id;
 			Name               = name;
 			Alias              = alias;
 			Database           = database;
@@ -59,7 +59,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTable([JetBrains.Annotations.NotNull] MappingSchema mappingSchema, Type objectType) : this()
 		{
-			if (mappingSchema == null) throw new ArgumentNullException("mappingSchema");
+			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
@@ -191,8 +191,7 @@ namespace LinqToDB.SqlQuery
 		{
 			get
 			{
-				SqlField field;
-				Fields.TryGetValue(fieldName, out field);
+				Fields.TryGetValue(fieldName, out var field);
 				return field;
 			}
 		}
@@ -206,15 +205,12 @@ namespace LinqToDB.SqlQuery
 		public SqlTableType     SqlTableType   { get; set; }
 		public ISqlExpression[] TableArguments { get; set; }
 
-		public Dictionary<string,SqlField> Fields { get; private set; }
+		public Dictionary<string,SqlField> Fields { get; }
 
 		public SequenceNameAttribute[] SequenceAttributes { get; private set; }
 
 		private SqlField _all;
-		public  SqlField  All
-		{
-			get { return _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this }); }
-		}
+		public  SqlField  All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
 
 		public SqlField GetIdentityField()
 		{
@@ -249,8 +245,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlTableSource Members
 
-		readonly int _sourceID;
-		public   int  SourceID { get { return _sourceID; } }
+		public   int  SourceID { get; }
 
 		List<ISqlExpression> _keyFields;
 
@@ -281,9 +276,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 			{
 				var table = new SqlTable
 				{
@@ -307,8 +300,7 @@ namespace LinqToDB.SqlQuery
 					table.     Add(fc);
 				}
 
-				if (TableArguments != null)
-					TableArguments = TableArguments.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray();
+				TableArguments = TableArguments?.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray();
 
 				objectTree.Add(this, table);
 				objectTree.Add(All,  table.All);
@@ -323,7 +315,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlTable; } }
+		public QueryElementType ElementType => QueryElementType.SqlTable;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
@@ -334,24 +326,13 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		bool ISqlExpression.CanBeNull
-		{
-			get { return true; }
-		}
+		bool ISqlExpression.CanBeNull  => true;
+		int  ISqlExpression.Precedence => Precedence.Primary;
+		Type ISqlExpression.SystemType => ObjectType;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
-		}
-
-		int ISqlExpression.Precedence
-		{
-			get { return Precedence.Primary; }
-		}
-
-		Type ISqlExpression.SystemType
-		{
-			get { return ObjectType; }
 		}
 
 		#endregion

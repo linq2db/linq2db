@@ -2,23 +2,27 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
+
+using LinqToDB.Common;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Linq;
-	using System.Linq.Expressions;
-
 	using Configuration;
-
 	using Data;
 
 	[PublicAPI]
 	public static class DB2Tools
 	{
+		public static string AssemblyName;
+		public static bool   IsCore;
+
 		static readonly DB2DataProvider _db2DataProviderzOS = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
 		static readonly DB2DataProvider _db2DataProviderLUW = new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW);
 
@@ -26,6 +30,19 @@ namespace LinqToDB.DataProvider.DB2
 
 		static DB2Tools()
 		{
+			try
+			{
+				var path = typeof(DB2Tools).AssemblyEx().GetPath();
+
+				IsCore = File.Exists(Path.Combine(path, (AssemblyName = "IBM.Data.DB2.Core") + ".dll"));
+
+				if (!IsCore)
+					AssemblyName = "IBM.Data.DB2";
+			}
+			catch (Exception)
+			{
+			}
+
 			AutoDetectProvider = true;
 
 			DataConnection.AddDataProvider(ProviderName.DB2, _db2DataProviderLUW);
@@ -49,8 +66,14 @@ namespace LinqToDB.DataProvider.DB2
 						goto case "DB2";
 					break;
 
-				case "DB2"          :
-				case "IBM.Data.DB2" :
+				case "IBM.Data.DB2.Core" :
+					IsCore       = true;
+					AssemblyName = "IBM.Data.DB2.Core";
+
+					goto case "DB2";
+
+				case "DB2"               :
+				case "IBM.Data.DB2"      :
 
 					if (css.Name.Contains("LUW") || css.Name.Contains("z/OS") || css.Name.Contains("zOS"))
 						break;
@@ -59,7 +82,7 @@ namespace LinqToDB.DataProvider.DB2
 					{
 						try
 						{
-							var connectionType = Type.GetType("IBM.Data.DB2.DB2Connection, IBM.Data.DB2", true);
+							var connectionType = Type.GetType(AssemblyName + ".DB2Connection, " + AssemblyName, true);
 							var serverTypeProp = connectionType
 								.GetPropertiesEx (BindingFlags.NonPublic | BindingFlags.Instance)
 								.FirstOrDefault(p => p.Name == "eServerType");
@@ -108,12 +131,12 @@ namespace LinqToDB.DataProvider.DB2
 
 		public static void ResolveDB2(string path)
 		{
-			new AssemblyResolver(path, "IBM.Data.DB2");
+			new AssemblyResolver(path, AssemblyName);
 		}
 
 		public static void ResolveDB2(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, "IBM.Data.DB2");
+			new AssemblyResolver(assembly, AssemblyName);
 		}
 
 		#region OnInitialized

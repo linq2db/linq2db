@@ -25,20 +25,18 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public JoinType        JoinType        { get; set; }
+		public JoinType           JoinType        { get; set; }
 		public SqlTableSource     Table           { get; set; }
 		public SqlSearchCondition Condition       { get; private set; }
-		public bool            IsWeak          { get; set; }
-		public bool            CanConvertApply { get; set; }
+		public bool               IsWeak          { get; set; }
+		public bool               CanConvertApply { get; set; }
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 				objectTree.Add(this, clone = new SqlJoinedTable(
 					JoinType,
 					(SqlTableSource)Table.Clone(objectTree, doClone),
@@ -72,7 +70,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.JoinedTable; } }
+		public QueryElementType ElementType => QueryElementType.JoinedTable;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

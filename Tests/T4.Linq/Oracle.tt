@@ -1,0 +1,26 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                                #>
+<#@ output extension=".generated.cs"                                                       #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.Oracle.ttinclude"               #>
+<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"          #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\Oracle.ManagedDataAccess.dll" #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"                  #>
+<#
+	NamespaceName = "OracleDataContext";
+
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
+//	GenerateDataTypeProperty = false;
+
+//	GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };
+
+	LoadOracleMetadata("DBHost", "1521", "TestData", "TestUser", "TestPassword");
+
+//	foreach (var t in Tables.Values)
+//		if (t.IsView)
+//		{
+//			t.TypeName                += "_VIEW";
+//			t.DataContextPropertyName += "_VIEW";
+//		}
+
+	GenerateModel();
+#>

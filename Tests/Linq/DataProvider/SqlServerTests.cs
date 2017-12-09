@@ -33,7 +33,7 @@ namespace Tests.DataProvider
 		protected void InitializeFixture()
 		{
 			// load spatial types support
-			Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
+			//Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
 		}
 #endif
 

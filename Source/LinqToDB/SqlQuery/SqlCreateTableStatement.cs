@@ -11,8 +11,8 @@ namespace LinqToDB.SqlQuery
 		public string         StatementFooter { get; set; }
 		public DefaulNullable DefaulNullable  { get; set; }
 
-		public override QueryType          QueryType   => QueryType.CreateTable;
-		public override QueryElementType   ElementType => QueryElementType.CreateTableStatement;
+		public override QueryType QueryType          => QueryType.CreateTable;
+		public override QueryElementType ElementType => QueryElementType.CreateTableStatement;
 
 		public override bool               IsParameterDependent
 		{

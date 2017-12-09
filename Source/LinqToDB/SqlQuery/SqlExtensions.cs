@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -17,7 +16,7 @@ namespace LinqToDB.SqlQuery
 			return statement.QueryType == QueryType.Insert && ((SqlInsertStatement)statement).Insert.WithIdentity ||
 			       statement.QueryType == QueryType.InsertOrUpdate;
 		}
-		
+
 		public static bool IsUpdate(this SqlStatement statement)
 		{
 			return statement.QueryType == QueryType.Update;
@@ -51,7 +50,7 @@ namespace LinqToDB.SqlQuery
 		public static SqlUpdateClause GetUpdateClause(this SqlStatement statement)
 		{
 			switch (statement)
-			{
+		{
 				case SqlUpdateStatement update:
 					return update.Update;
 				case SqlInsertOrUpdateStatement insertOrUpdate:
@@ -73,9 +72,9 @@ namespace LinqToDB.SqlQuery
 			var selectQuery = statement.SelectQuery;
 			if (selectQuery == null)
 				throw new LinqToDBException("Sqlect Query required");
-			return selectQuery;
+				return selectQuery;
 		}
-
+		
 		public static T Clone<T>(this T cloneable)
 			where T: ICloneableElement
 		{
@@ -87,6 +86,5 @@ namespace LinqToDB.SqlQuery
 		{
 			return (T)cloneable.Clone(new Dictionary<ICloneableElement,ICloneableElement>(), doClone);
 		}
-
 	}
 }

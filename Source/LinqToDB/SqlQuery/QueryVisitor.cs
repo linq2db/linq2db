@@ -8,10 +8,7 @@ namespace LinqToDB.SqlQuery
 		#region Visit
 
 		readonly Dictionary<IQueryElement,IQueryElement> _visitedElements = new Dictionary<IQueryElement, IQueryElement>();
-		public   Dictionary<IQueryElement,IQueryElement>  VisitedElements
-		{
-			get { return _visitedElements; }
-		}
+		public   Dictionary<IQueryElement,IQueryElement>  VisitedElements => _visitedElements;
 
 		bool                     _all;
 		Func<IQueryElement,bool> _action1;
@@ -280,7 +277,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit1X(SelectQuery q)
 		{
-			Visit1(q.Select);
+					Visit1(q.Select);
 			Visit1(q.From);
 			Visit1(q.Where);
 			Visit1(q.GroupBy);
@@ -646,7 +643,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(SelectQuery q)
 		{
-			Visit2(q.Select);
+					Visit2(q.Select);
 
 			// Visit2(q.From);
 			//
@@ -972,9 +969,9 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			IQueryElement newElement;
+			IQueryElement parent;
 
-			if (_visitedElements.TryGetValue(element, out newElement))
+			if (_visitedElements.TryGetValue(element, out var newElement))
 				return newElement;
 
 			switch (element.ElementType)
@@ -1053,11 +1050,10 @@ namespace LinqToDB.SqlQuery
 						var col  = (SqlColumn)element;
 						var expr = (ISqlExpression)ConvertInternal(col.Expression, action);
 
-						IQueryElement parent;
 						_visitedElements.TryGetValue(col.Parent, out parent);
 
 						if (parent != null || expr != null && !ReferenceEquals(expr, col.Expression))
-							newElement = new SqlColumn(parent == null ? col.Parent : (SelectQuery)parent, expr ?? col.Expression, col._alias);
+							newElement = new SqlColumn(parent == null ? col.Parent : (SelectQuery)parent, expr ?? col.Expression, col.RawAlias);
 
 						break;
 					}
@@ -1281,7 +1277,7 @@ namespace LinqToDB.SqlQuery
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
-						{
+					{
 							newElement = new SqlInsertStatement(selectQuery) { Insert = insert };
 						}
 
@@ -1370,7 +1366,6 @@ namespace LinqToDB.SqlQuery
 						var take = (ISqlExpression)ConvertInternal(sc.TakeValue, action);
 						var skip = (ISqlExpression)ConvertInternal(sc.SkipValue, action);
 
-						IQueryElement parent;
 						_visitedElements.TryGetValue(sc.SelectQuery, out parent);
 
 						if (parent != null ||
@@ -1390,9 +1385,12 @@ namespace LinqToDB.SqlQuery
 						var fc   = (SqlFromClause)element;
 						var ts = Convert(fc.Tables, action);
 
-						if (ts != null && !ReferenceEquals(fc.Tables, ts))
+						_visitedElements.TryGetValue(fc.SelectQuery, out parent);
+
+						if (parent != null || ts != null && !ReferenceEquals(fc.Tables, ts))
 						{
 							newElement = new SqlFromClause(ts ?? fc.Tables);
+							((SqlFromClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
 						break;
@@ -1403,7 +1401,6 @@ namespace LinqToDB.SqlQuery
 						var wc   = (SqlWhereClause)element;
 						var cond = (SqlSearchCondition)ConvertInternal(wc.SearchCondition, action);
 
-						IQueryElement parent;
 						_visitedElements.TryGetValue(wc.SelectQuery, out parent);
 
 						if (parent != null || cond != null && !ReferenceEquals(wc.SearchCondition, cond))
@@ -1420,7 +1417,6 @@ namespace LinqToDB.SqlQuery
 						var gc = (SqlGroupByClause)element;
 						var es = Convert(gc.Items, action);
 
-						IQueryElement parent;
 						_visitedElements.TryGetValue(gc.SelectQuery, out parent);
 
 						if (parent != null || es != null && !ReferenceEquals(gc.Items, es))
@@ -1437,7 +1433,6 @@ namespace LinqToDB.SqlQuery
 						var oc = (SqlOrderByClause)element;
 						var es = Convert(oc.Items, action);
 
-						IQueryElement parent;
 						_visitedElements.TryGetValue(oc.SelectQuery, out parent);
 
 						if (parent != null || es != null && !ReferenceEquals(oc.Items, es))
@@ -1474,7 +1469,8 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlQuery:
 					{
 						var q = (SelectQuery)element;
-						IQueryElement parent = null;
+
+						parent = null;
 
 						var doConvert = false;
 
@@ -1632,8 +1628,8 @@ namespace LinqToDB.SqlQuery
 
 					list2.Add(elem2);
 				}
-				else if (list2 != null)
-					list2.Add(clone == null ? elem1 : clone(elem1));
+				else
+					list2?.Add(clone == null ? elem1 : clone(elem1));
 			}
 
 			return list2;

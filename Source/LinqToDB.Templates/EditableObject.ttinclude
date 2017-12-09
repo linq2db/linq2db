@@ -22,9 +22,9 @@ void EditableObjectImpl()
 		SetPropertyValue(prop, "IsNotifying", true);
 
 		List<IClassMember> parentMembers;
-		
+
 		MemberGroup gr = null;
-		
+
 		if (prop.Parent is Class)
 		{
 			var parent = (Class)prop.Parent;
@@ -172,12 +172,12 @@ void EditableObjectImpl()
 					id
 				},
 			});
-			
+
 			if (!cl.Interfaces.Contains("IEditableObject"))
 			{
 				if (!Model.Usings.Contains("System.ComponentModel"))
 					Model.Usings.Add("System.ComponentModel");
-				
+
 				cl.Interfaces.Add("IEditableObject");
 
 				cl.Members.Add(new MemberGroup
@@ -225,7 +225,7 @@ class EditableProperty : Property
 	{
 		IsEditable = true;
 	}
-	
+
 	public EditableProperty(string type, string name)
 		: base(type, name, null, null)
 	{

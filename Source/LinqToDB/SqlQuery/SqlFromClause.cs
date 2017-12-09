@@ -222,10 +222,13 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.FromClause; } }
+		public QueryElementType ElementType => QueryElementType.FromClause;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
+			if (sb.Length > 10240)
+				return sb;
+
 			sb.Append(" \nFROM \n");
 
 			if (Tables.Count > 0)

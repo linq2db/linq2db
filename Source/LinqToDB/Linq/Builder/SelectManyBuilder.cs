@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -46,9 +47,9 @@ namespace LinqToDB.Linq.Builder
 				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table) ||
 				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SqlColumn)e).Parent));
 
-			if (collection is JoinBuilder.GroupJoinSubQueryContext)
+			if (collection is JoinBuilder.GroupJoinSubQueryContext queryContext)
 			{
-				var groupJoin = ((JoinBuilder.GroupJoinSubQueryContext)collection).GroupJoin;
+				var groupJoin = queryContext.GroupJoin;
 
 				groupJoin.SelectQuery.From.Tables[0].Joins[0].JoinType = JoinType.Inner;
 				groupJoin.SelectQuery.From.Tables[0].Joins[0].IsWeak   = false;
@@ -67,10 +68,9 @@ namespace LinqToDB.Linq.Builder
 
 							collection.SelectQuery.Where.ConcatSearchCondition(foundJoin.Condition);
 
-							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(false, e =>
+							((ISqlExpressionWalkable)collection.SelectQuery.Where).Walk(false, e =>
 							{
-								var column = e as SqlColumn;
-								if (column != null)
+								if (e is SqlColumn column)
 								{
 									if (column.Parent == collection.SelectQuery)
 										return column.UnderlyingColumn;
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var join = SelectQuery.OuterApply(sql);
+					var join = sql.OuterApply();
 					sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 
@@ -104,9 +104,45 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			void MoveSearchConditionsToJoin(SqlFromClause.Join join)
+			{
+				var tableSources = new HashSet<ISqlTableSource>();
+
+				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(false, e =>
+				{
+					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
+						tableSources.Add(ts);
+					return e;
+				});
+
+				bool ContainsTable(ISqlTableSource tbl, IQueryElement qe)
+				{
+					return null != QueryVisitor.Find(qe, e =>
+						e == tbl ||
+						e.ElementType == QueryElementType.SqlField && tbl == ((SqlField) e).Table ||
+						e.ElementType == QueryElementType.Column   && tbl == ((SqlColumn)e).Parent);
+				}
+
+				var conditions = sql.Where.SearchCondition.Conditions;
+
+				if (conditions.Count > 0)
+				{
+					for (var i = conditions.Count - 1; i >= 0; i--)
+					{
+						var condition = conditions[i];
+
+						if (!tableSources.Any(ts => ContainsTable(ts, condition)))
+						{
+							join.JoinedTable.Condition.Conditions.Insert(0, condition);
+							conditions.RemoveAt(i);
+						}
+					}
+				}
+			}
+
 			var joinType = collectionInfo.JoinType;
 
-			if (collection is TableBuilder.TableContext)
+			if (collection is TableBuilder.TableContext table)
 			{
 //				if (collectionInfo.IsAssociationBuilt)
 //				{
@@ -116,9 +152,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (joinType == JoinType.Auto)
 				{
-					var table = (TableBuilder.TableContext)collection;
-					var isApplyJoin = collection.SelectQuery.Select.HasModifier ||
-					                  table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
+					var isApplyJoin =
+						collection.SelectQuery.Select.HasModifier ||
+						table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
 
 					joinType = isApplyJoin
 						? (leftJoin ? JoinType.OuterApply : JoinType.CrossApply)
@@ -130,15 +166,13 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(joinType == JoinType.CrossApply || joinType == JoinType.OuterApply))
 				{
-					join.JoinedTable.Condition.Conditions.AddRange(sql.Where.SearchCondition.Conditions);
-					sql.Where.SearchCondition.Conditions.Clear();
+					MoveSearchConditionsToJoin(join);
 				}
-
-				var collectionParent = collection.Parent as TableBuilder.TableContext;
 
 				// Association.
 				//
-				if (collectionParent != null && collectionInfo.IsAssociationBuilt)
+				if (collection.Parent is TableBuilder.TableContext collectionParent &&
+					collectionInfo.IsAssociationBuilt)
 				{
 					var ts = (SqlTableSource)QueryVisitor.Find(sequence.SelectQuery.From, e =>
 					{
@@ -165,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
+				context.Collection = new SubQueryContext(table, sequence.SelectQuery, false);
 				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 			}
 			else
@@ -177,8 +211,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(joinType == JoinType.CrossApply || joinType == JoinType.OuterApply))
 				{
-					join.JoinedTable.Condition.Conditions.AddRange(sql.Where.SearchCondition.Conditions);
-					sql.Where.SearchCondition.Conditions.Clear();
+					MoveSearchConditionsToJoin(join);
 				}
 
 				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);

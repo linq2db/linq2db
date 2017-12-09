@@ -1,0 +1,16 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.PostgreSQL.ttinclude"  #>
+<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\Npgsql.dll"          #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"         #>
+<#
+	NamespaceName = "PostreSQLDataContext";
+
+	LoadPostgreSQLMetadata("DBHost", "5432", "TestData", "postgres", "TestPassword");
+
+	GetTable("testsamename").TypeName = "_testsamename";
+	GetTable("testsamename").DataContextPropertyName = "_testsamename";
+
+	GenerateModel();
+#>

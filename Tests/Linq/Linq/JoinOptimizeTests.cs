@@ -57,12 +57,12 @@ namespace Tests.Linq
 					join od2 in db.OrderDetail on new {od1.OrderID, od.ProductID} equals new {od2.OrderID, od2.ProductID}
 					join od3 in db.OrderDetail on new {od1.OrderID, od2.ProductID} equals new {od3.OrderID, od3.ProductID}
 					orderby od.OrderID, od.ProductID
-					select new 
+					select new
 					{
 						OrderID = od.OrderID,
 						ProductID = od.ProductID,
-						OrderID1 = od3.OrderID, 
-						OrderID2 = od2.OrderID, 
+						OrderID1 = od3.OrderID,
+						OrderID2 = od2.OrderID,
 					};
 
 				var q2 = from od in dd.OrderDetail
@@ -73,12 +73,12 @@ namespace Tests.Linq
 					join od2 in dd.OrderDetail on new {od1.OrderID, od.ProductID} equals new {od2.OrderID, od2.ProductID}
 					join od3 in dd.OrderDetail on new {od1.OrderID, od2.ProductID} equals new {od3.OrderID, od3.ProductID}
 					orderby od.OrderID, od.ProductID
-					select new 
+					select new
 					{
 						OrderID = od.OrderID,
 						ProductID = od.ProductID,
-						OrderID1 = od3.OrderID, 
-						OrderID2 = od2.OrderID, 
+						OrderID1 = od3.OrderID,
+						OrderID2 = od2.OrderID,
 					};
 
 				Assert.AreEqual(q, q2);
@@ -101,14 +101,14 @@ namespace Tests.Linq
 					join o3 in db.Order on od.OrderID equals o3.OrderID
 					join od2 in db.OrderDetail on new {od.OrderID, od.ProductID} equals new {od2.OrderID, od2.ProductID}
 					join od3 in db.OrderDetail on new {od2.OrderID, od2.ProductID} equals new {od3.OrderID, od3.ProductID}
-					select new 
+					select new
 					{
 						OrderID = od.OrderID,
 						OrderDate = o3.OrderDate,
 						ProductID = od3.ProductID,
-						OrderID1 = o1.OrderID, 
-						OrderID2 = o2.OrderID, 
-						OrderID3 = o3.OrderID, 
+						OrderID1 = o1.OrderID,
+						OrderID2 = o2.OrderID,
+						OrderID3 = o3.OrderID,
 					};
 
 
@@ -120,14 +120,14 @@ namespace Tests.Linq
 					join o3 in dd.Order on od.OrderID equals o3.OrderID
 					join od2 in dd.OrderDetail on new {od.OrderID, od.ProductID} equals new {od2.OrderID, od2.ProductID}
 					join od3 in dd.OrderDetail on new {od2.OrderID, od2.ProductID} equals new {od3.OrderID, od3.ProductID}
-					select new 
+					select new
 					{
 						OrderID = od.OrderID,
 						OrderDate = o3.OrderDate,
 						ProductID = od3.ProductID,
-						OrderID1 = o1.OrderID, 
-						OrderID2 = o2.OrderID, 
-						OrderID3 = o3.OrderID, 
+						OrderID1 = o1.OrderID,
+						OrderID2 = o2.OrderID,
+						OrderID3 = o3.OrderID,
 					};
 
 				Assert.AreEqual(q, q2);
@@ -161,13 +161,13 @@ namespace Tests.Linq
 					join o1 in db.Order on od.OrderID equals o1.OrderID
 					join od1 in db.OrderDetail on new { o1.OrderID, od.ProductID } equals new { od1.OrderID, od1.ProductID }
 					join od2 in db.OrderDetail on new { od.OrderID, od.ProductID } equals new { od2.OrderID, od2.ProductID }
-					orderby o1.OrderID, od.ProductID 
-					select new 
+					orderby o1.OrderID, od.ProductID
+					select new
 					{
 						OrderID = od.OrderID,
 						ProductID = od.ProductID,
-						OrderID1 = o1.OrderID, 
-						OrderID2 = od2.OrderID, 
+						OrderID1 = o1.OrderID,
+						OrderID2 = od2.OrderID,
 					};
 
 				var str = q.ToString();
@@ -176,13 +176,13 @@ namespace Tests.Linq
 					join o1 in dd.Order on od.OrderID equals o1.OrderID
 					join od1 in dd.OrderDetail on new { o1.OrderID, od.ProductID } equals new { od1.OrderID, od1.ProductID }
 					join od2 in dd.OrderDetail on new { o1.OrderID, od.ProductID } equals new { od2.OrderID, od2.ProductID }
-					orderby o1.OrderID, od.ProductID 
-					select new 
+					orderby o1.OrderID, od.ProductID
+					select new
 					{
 						OrderID = od.OrderID,
 						ProductID = od.ProductID,
-						OrderID1 = o1.OrderID, 
-						OrderID2 = od2.OrderID, 
+						OrderID1 = o1.OrderID,
+						OrderID2 = od2.OrderID,
 					};
 
 				Assert.AreEqual(q, q2);
@@ -202,7 +202,7 @@ namespace Tests.Linq
 
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on new {od.OrderID, od.ProductID} equals new {o1.OrderID, ProductID = 39}
-					join e1 in db.Employee on o1.EmployeeID equals e1.EmployeeID 
+					join e1 in db.Employee on o1.EmployeeID equals e1.EmployeeID
 					from o2 in db.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
 					from o3 in db.Order.Where(o => o.OrderID == od.OrderID && od.ProductID == 1).DefaultIfEmpty()
 					from o4 in db.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
@@ -210,7 +210,7 @@ namespace Tests.Linq
 					from o6 in db.Order.Where(o => o.OrderID == od.OrderID && od.ProductID == 1).DefaultIfEmpty()
 					from o7 in db.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
 					join o8 in db.Order on od.OrderID equals o8.OrderID
-					join e2 in db.Employee on o8.EmployeeID equals e2.EmployeeID 
+					join e2 in db.Employee on o8.EmployeeID equals e2.EmployeeID
 					from o9 in db.OrderDetail.Where(d => d.OrderID == od.OrderID && d.ProductID == od.ProductID).DefaultIfEmpty()
 					from o10 in db.OrderDetail.Where(d => d.OrderID == od.OrderID && d.ProductID == od.ProductID).DefaultIfEmpty()
 					where o5 != null && o5.OrderID > 1000
