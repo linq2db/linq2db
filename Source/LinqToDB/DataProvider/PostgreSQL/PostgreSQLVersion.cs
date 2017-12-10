@@ -6,5 +6,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 		v92,
 		v93,
+		v95,
 	}
 }

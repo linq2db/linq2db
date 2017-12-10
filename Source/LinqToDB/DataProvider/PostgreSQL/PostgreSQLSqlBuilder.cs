@@ -152,6 +152,61 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return value;
 		}
 
+		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		{
+			BuildInsertQuery(selectQuery);
+
+			AppendIndent();
+			StringBuilder.Append("ON CONFLICT (");
+
+			var firstKey = true;
+			foreach (var expr in selectQuery.Update.Keys)
+			{
+				if (!firstKey)
+					StringBuilder.Append(',');
+				firstKey = false;
+
+				BuildExpression(expr.Column, false, true);
+			}
+
+			if (selectQuery.Update.Items.Count > 0)
+			{
+				StringBuilder.AppendLine(") DO UPDATE SET");
+
+				Indent++;
+
+				var tableName    = selectQuery.Insert.Into.Name;
+				var ts           = (SqlTableSource)selectQuery.GetTableSource(selectQuery.Update.Table);
+				var aliasBackup  = ts.Alias;
+
+				ts.Alias         = (string)Convert(tableName, ConvertType.NameToQueryTable);
+
+				var first = true;
+
+				foreach (var expr in selectQuery.Update.Items)
+				{
+					if (!first)
+						StringBuilder.Append(',').AppendLine();
+					first = false;
+
+					AppendIndent();
+					BuildExpression(expr.Column, false, true);
+					StringBuilder.Append(" = ");
+					BuildExpression(expr.Expression, true, true);
+				}
+
+				ts.Alias = aliasBackup;
+
+				Indent--;
+
+				StringBuilder.AppendLine();
+			}
+			else
+			{
+				StringBuilder.AppendLine(") DO NOTHING");
+			}
+		}
+
 		public override ISqlExpression GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())

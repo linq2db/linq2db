@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 		public PostgreSQLDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92)
 			: this(
-				version == PostgreSQLVersion.v92 ? ProviderName.PostgreSQL92 : ProviderName.PostgreSQL93,
+				GetProviderName(version),
 				new PostgreSQLMappingSchema(),
 				version)
 		{
@@ -32,10 +32,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			Version = version;
 
-			if (version == PostgreSQLVersion.v93)
-				SqlProviderFlags.IsApplyJoinSupported = true;
-
-			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
+			SqlProviderFlags.IsApplyJoinSupported           = version != PostgreSQLVersion.v92;
+			SqlProviderFlags.IsInsertOrUpdateSupported      = version == PostgreSQLVersion.v95;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
 
 			SetCharFieldToType<char>("bpchar", (r, i) => DataTools.GetChar(r, i));
@@ -66,6 +64,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		Type _npgsqlDateTime;
 
 		CommandBehavior _commandBehavior = CommandBehavior.Default;
+
+		private static string GetProviderName(PostgreSQLVersion version)
+		{
+			switch (version)
+			{
+				case PostgreSQLVersion.v92:
+					return ProviderName.PostgreSQL92;
+				case PostgreSQLVersion.v93:
+					return ProviderName.PostgreSQL93;
+				default:
+					return ProviderName.PostgreSQL95;
+			}
+		}
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
