@@ -98,6 +98,12 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var selectQuery = Statement.SelectQuery;
 
+			if (selectQuery == null)
+			{
+				base.BuildSql();
+				return;
+			}
+
 			if (NeedSkip(selectQuery))
 			{
 				var aliases = GetTempAliases(2, "t");
