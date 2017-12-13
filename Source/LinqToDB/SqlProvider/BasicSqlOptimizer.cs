@@ -40,10 +40,11 @@ namespace LinqToDB.SqlProvider
 						SqlProviderFlags.IsApplyJoinSupported,
 						SqlProviderFlags.IsGroupByExpressionSupported);
 
-				if (Common.Configuration.Linq.OptimizeJoins)
-					OptimizeJoins(selectQuery);
-
 			statement.SelectQuery = selectQuery;
+
+			if (Common.Configuration.Linq.OptimizeJoins)
+				OptimizeJoins(statement);
+
 			return statement;
 		}
 
@@ -1199,6 +1200,8 @@ namespace LinqToDB.SqlProvider
 			{
 				var sql = new SelectQuery { IsParameterDependent = deleteStatement.IsParameterDependent };
 
+				var newDeleteStatement = new SqlDeleteStatement(sql);
+
 				deleteStatement.SelectQuery.ParentSelect = sql;
 
 				var table = (SqlTable)deleteStatement.SelectQuery.From.Tables[0].Source;
@@ -1229,12 +1232,12 @@ namespace LinqToDB.SqlProvider
 						deleteStatement.SelectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
 				}
 
-				sql.From.Table(copy).Where.Exists(deleteStatement.SelectQuery);
-				sql.Parameters.AddRange(deleteStatement.Parameters);
+				newDeleteStatement.SelectQuery.From.Table(copy).Where.Exists(deleteStatement.SelectQuery);
+				newDeleteStatement.Parameters.AddRange(deleteStatement.Parameters);
 
 				deleteStatement.Parameters.Clear();
 
-				deleteStatement = new SqlDeleteStatement(sql);
+				deleteStatement = newDeleteStatement;
 			}
 
 			return deleteStatement;
@@ -1285,7 +1288,7 @@ namespace LinqToDB.SqlProvider
 						newUpdateStatement.Update.Items.Add(ex);
 					}
 
-					newUpdateStatement.SelectQuery.Parameters.AddRange(updateStatement.Parameters);
+					newUpdateStatement.Parameters.AddRange(updateStatement.Parameters);
 					newUpdateStatement.Update.Table = updateStatement.Update.Table;
 
 					updateStatement.Parameters.Clear();
@@ -1420,15 +1423,15 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Joins
 
-		public void OptimizeJoins(SelectQuery selectQuery)
+		public void OptimizeJoins(SqlStatement statement)
 		{
-			((ISqlExpressionWalkable) selectQuery).Walk(false, element =>
+			((ISqlExpressionWalkable) statement).Walk(false, element =>
 			{
 				var query = element as SelectQuery;
 				if (query != null)
 				{
 					var optimizer = new JoinOptimizer();
-					optimizer.OptimizeJoins(query);
+					optimizer.OptimizeJoins(statement, query);
 				}
 				return element;
 			});

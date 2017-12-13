@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -26,8 +27,6 @@ namespace LinqToDB.SqlQuery
 			set => SelectQuery.IsParameterDependent = value;
 		}
 		
-		public override List<SqlParameter> Parameters  => SelectQuery.Parameters;
-
 		public SqlTable       Table { get; set; }
 		public ISqlExpression Top   { get; set; }
 
@@ -36,14 +35,6 @@ namespace LinqToDB.SqlQuery
 		{
 			get => _selectQuery ?? (_selectQuery = new SelectQuery());
 			set => _selectQuery = value;
-		}
-
-		public override SqlStatement ProcessParameters(MappingSchema mappingSchema)
-		{
-			var newQuery = SelectQuery.ProcessParameters(mappingSchema);
-			if (!ReferenceEquals(newQuery, _selectQuery))
-				return new SqlDeleteStatement(newQuery);
-			return this;
 		}
 
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -56,6 +47,8 @@ namespace LinqToDB.SqlQuery
 			if (Table != null)
 				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
 
+			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
+
 			objectTree.Add(this, clone);
 
 			return clone;
@@ -63,12 +56,13 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
-			return null;
+			return SelectQuery.GetTableSource(table);
 		}
 
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Table)?.Walk(skipColumns, func);
+			Table = ((ISqlExpressionWalkable)Table)?.Walk(skipColumns, func) as SqlTable;
+			SelectQuery = (SelectQuery)SelectQuery.Walk(skipColumns, func);
 
 			return null;
 		}

@@ -412,11 +412,11 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
-		internal virtual void BuildInsertClauseHelper(SqlInsertStatement insertSatetemt, StringBuilder sb)
+		internal virtual void BuildInsertClauseHelper(SqlStatement statement, StringBuilder sb)
 		{
-			Statement     = insertSatetemt;
+			Statement     = statement;
 			StringBuilder = sb;
-			BuildInsertClause(insertSatetemt, insertSatetemt.Insert, null, false);
+			BuildInsertClause(statement, statement.RequireInsertClause(), null, false);
 		}
 
 		protected virtual void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, string insertText, bool appendTableName)
@@ -585,20 +585,20 @@ namespace LinqToDB.SqlProvider
 				insertOrUpdate.Parameters.Clear();
 
 				for (var i = 0; i < keys.Count; i++)
-					ExtractParameters(insertOrUpdate.SelectQuery, keys[i].Expression);
+					ExtractParameters(insertOrUpdate, keys[i].Expression);
 
 				foreach (var expr in insertOrUpdate.Update.Items)
-					ExtractParameters(insertOrUpdate.SelectQuery, expr.Expression);
+					ExtractParameters(insertOrUpdate, expr.Expression);
 
 				foreach (var expr in insertOrUpdate.Insert.Items)
-					ExtractParameters(insertOrUpdate.SelectQuery, expr.Expression);
+					ExtractParameters(insertOrUpdate, expr.Expression);
 
 				if (insertOrUpdate.Parameters.Count > 0)
 					insertOrUpdate.IsParameterDependent = true;
 			}
 		}
 
-		private void ExtractParameters(SelectQuery selectQuery, ISqlExpression expression)
+		private void ExtractParameters(SqlStatement statement, ISqlExpression expression)
 		{
 			new QueryVisitor().Visit(expression, e =>
 			{
@@ -609,7 +609,7 @@ namespace LinqToDB.SqlProvider
 							var p = (SqlParameter)e;
 
 							if (p.IsQueryParameter)
-								selectQuery.Parameters.Add(p);
+								statement.Parameters.Add(p);
 						}
 
 						break;
@@ -1897,7 +1897,10 @@ namespace LinqToDB.SqlProvider
 
 						if (buildTableName)
 						{
+							//TODO: looks like SqlBuilder is trying to fix issue with bad table mapping from Builder. Merge Tests fails.
 							var ts = Statement.SelectQuery?.GetTableSource(field.Table);
+							if (ts == null && throwExceptionIfTableNotFound)
+								ts = Statement.GetTableSource(field.Table);
 
 							if (ts == null)
 							{

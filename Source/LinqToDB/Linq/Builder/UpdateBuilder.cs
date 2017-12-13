@@ -69,11 +69,10 @@ namespace LinqToDB.Linq.Builder
 							sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
 
 							if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
-							{
 								sequence = new SubQueryContext(sequence);
-								updateStatement.SelectQuery = sequence.SelectQuery;
-								sequence.Statement = updateStatement;
-							}
+
+							updateStatement.SelectQuery = sequence.SelectQuery;
+							sequence.Statement = updateStatement;
 
 							BuildSetter(
 								builder,
@@ -108,9 +107,9 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, null, sequence.SelectQuery)
+							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery)
 								.ResolveWeakJoins(new List<ISqlTableSource>());
-							sequence.SelectQuery.Select.Columns.Clear();
+							updateStatement.SelectQuery.Select.Columns.Clear();
 
 							BuildSetter(
 								builder,

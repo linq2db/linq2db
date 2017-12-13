@@ -20,9 +20,6 @@ namespace LinqToDB.SqlQuery
 			set {}
 		}
 		
-		private         List<SqlParameter> _parameters;
-		public override List<SqlParameter> Parameters => _parameters ?? (_parameters = new List<SqlParameter>());
-		
 		public override SelectQuery SelectQuery { get => null; set {}}
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)

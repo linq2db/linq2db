@@ -1269,16 +1269,42 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.SelectStatement:
+					{
+						var s = (SqlSelectStatement)element;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery) ConvertInternal(s.SelectQuery, action) : null;
+						var ps          = ConvertSafe(s.Parameters, action);
+
+						if (ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
+							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
+					{
+							newElement = new SqlSelectStatement(selectQuery ?? s.SelectQuery);
+							if (ps != null)
+								((SqlSelectStatement)newElement).Parameters.AddRange(ps);
+							else
+								((SqlSelectStatement)newElement).Parameters.AddRange(s.Parameters);
+						}
+
+						break;
+					}
+
+
 				case QueryElementType.InsertStatement:
 					{
 						var s = (SqlInsertStatement)element;
 						var insert      = s.Insert      != null ? (SqlInsertClause) ConvertInternal(s.Insert, action) : null;
 						var selectQuery = s.SelectQuery != null ? (SelectQuery)     ConvertInternal(s.SelectQuery, action) : null;
+						var ps          = ConvertSafe(s.Parameters, action);
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
+							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
 							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
 					{
-							newElement = new SqlInsertStatement(selectQuery) { Insert = insert };
+							newElement = new SqlInsertStatement(selectQuery ?? s.SelectQuery) { Insert = insert ?? s.Insert };
+							if (ps != null)
+								((SqlInsertStatement)newElement).Parameters.AddRange(ps);
+							else
+								((SqlInsertStatement)newElement).Parameters.AddRange(s.Parameters);
 						}
 
 						break;
@@ -1289,11 +1315,17 @@ namespace LinqToDB.SqlQuery
 						var s = (SqlUpdateStatement)element;
 						var update      = s.Update      != null ? (SqlUpdateClause) ConvertInternal(s.Update, action) : null;
 						var selectQuery = s.SelectQuery != null ? (SelectQuery)     ConvertInternal(s.SelectQuery, action) : null;
+						var ps          = ConvertSafe(s.Parameters, action);
 
 						if (update      != null && !ReferenceEquals(s.Update,      update)       ||
+							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
 							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
 						{
-							newElement = new SqlUpdateStatement(selectQuery) { Update = update };
+							newElement = new SqlUpdateStatement(selectQuery ?? s.SelectQuery) { Update = update ?? s.Update };
+							if (ps != null)
+								((SqlUpdateStatement)newElement).Parameters.AddRange(ps);
+							else
+								((SqlUpdateStatement)newElement).Parameters.AddRange(s.Parameters);
 						}
 
 						break;
@@ -1305,12 +1337,18 @@ namespace LinqToDB.SqlQuery
 						var insert      = s.Insert      != null ? (SqlInsertClause) ConvertInternal(s.Insert, action) : null;
 						var update      = s.Update      != null ? (SqlUpdateClause) ConvertInternal(s.Update, action) : null;
 						var selectQuery = s.SelectQuery != null ? (SelectQuery)     ConvertInternal(s.SelectQuery, action) : null;
+						var ps          = ConvertSafe(s.Parameters, action);
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
 							update      != null && !ReferenceEquals(s.Update,      update)       ||
+							ps          != null && !ReferenceEquals(s.Parameters,  ps)           ||
 							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
 						{
-							newElement = new SqlInsertOrUpdateStatement(selectQuery) { Insert = insert, Update = update };
+							newElement = new SqlInsertOrUpdateStatement(selectQuery ?? s.SelectQuery) { Insert = insert ?? s.Insert, Update = update ?? s.Update };
+							if (ps != null)
+								((SqlInsertOrUpdateStatement)newElement).Parameters.AddRange(ps);
+							else
+								((SqlInsertOrUpdateStatement)newElement).Parameters.AddRange(s.Parameters);
 						}
 
 						break;
@@ -1322,12 +1360,24 @@ namespace LinqToDB.SqlQuery
 						var table       = s.Table != null ? (SqlTable)         ConvertInternal(s.Table, action) : null;
 						var top         = s.Top   != null ? (ISqlExpression)   ConvertInternal(s.Top,  action) : null;
 						var selectQuery = s.SelectQuery != null ? (SelectQuery)ConvertInternal(s.SelectQuery, action) : null;
+						var ps          = ConvertSafe(s.Parameters, action);
 
 						if (table       != null && !ReferenceEquals(s.Table,       table)       ||
 							top         != null && !ReferenceEquals(s.Top,         top)         ||
+							ps          != null && !ReferenceEquals(s.Parameters,  ps)          ||
 							selectQuery != null && !ReferenceEquals(s.SelectQuery, selectQuery))
 						{
-							newElement = new SqlDeleteStatement { Table = table, SelectQuery = selectQuery, Top = top, IsParameterDependent = s.IsParameterDependent};
+							newElement = new SqlDeleteStatement
+							{
+								Table                = table       ?? s.Table,
+								SelectQuery          = selectQuery ?? s.SelectQuery,
+								Top                  = top         ?? s.Top,
+								IsParameterDependent = s.IsParameterDependent
+							};
+							if (ps != null)
+								((SqlDeleteStatement)newElement).Parameters.AddRange(ps);
+							else
+								((SqlDeleteStatement)newElement).Parameters.AddRange(s.Parameters);
 						}
 
 						break;
@@ -1335,12 +1385,18 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CreateTableStatement:
 					{
-						var s = (SqlCreateTableStatement)element;
-						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
+						var s  = (SqlCreateTableStatement)element;
+						var t  = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
+						var ps = ConvertSafe(s.Parameters, action);
 
-						if (t != null && !ReferenceEquals(s.Table, t))
+						if (t  != null && !ReferenceEquals(s.Table, t) ||
+							ps != null && !ReferenceEquals(s.Parameters,  ps))
 						{
-							newElement = new SqlCreateTableStatement { Table = t };
+							newElement = new SqlCreateTableStatement { Table = t ?? s.Table };
+							if (ps != null)
+								((SqlCreateTableStatement)newElement).Parameters.AddRange(ps);
+							else
+								((SqlCreateTableStatement)newElement).Parameters.AddRange(s.Parameters);
 						}
 
 						break;
@@ -1348,12 +1404,18 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.DropTableStatement:
 					{
-						var s = (SqlCreateTableStatement)element;
-						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
+						var s  = (SqlCreateTableStatement)element;
+						var t  = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
+						var ps = ConvertSafe(s.Parameters, action);
 
-						if (t != null && !ReferenceEquals(s.Table, t))
+						if (t  != null && !ReferenceEquals(s.Table, t) ||
+							ps != null && !ReferenceEquals(s.Parameters,  ps))
 						{
-							newElement = new SqlDropTableStatement { Table = t };
+							newElement = new SqlDropTableStatement { Table = t ?? s.Table };
+							if (ps != null)
+								((SqlDropTableStatement)newElement).Parameters.AddRange(ps);
+							else
+								((SqlDropTableStatement)newElement).Parameters.AddRange(s.Parameters);
 						}
 
 						break;
@@ -1520,24 +1582,9 @@ namespace LinqToDB.SqlQuery
 						var oc = (SqlOrderByClause)ConvertInternal(q.OrderBy, action) ?? q.OrderBy;
 						var us = q.HasUnion ? Convert(q.Unions, action) : q.Unions;
 
-						var ps = new List<SqlParameter>(q.Parameters.Count);
-
-						foreach (var p in q.Parameters)
-						{
-							// ConvertInternal checks for _visitedElements so we would not 
-							// visit one element twice
-							IQueryElement e = ConvertInternal(p, action);
-
-							if (e == null)
-								ps.Add(p);
-							else if (e is SqlParameter)
-								ps.Add((SqlParameter)e);
-						}
-
 						nq.Init(sc, fc, wc, gc, hc, oc, us,
 							(SelectQuery)parent,
-							q.IsParameterDependent,
-							ps);
+							q.IsParameterDependent);
 
 						_visitedElements[q] = action(nq) ?? nq;
 
@@ -1598,6 +1645,41 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return arr2;
+		}
+
+		List<T> ConvertSafe<T>(List<T> list, Func<IQueryElement, IQueryElement> action)
+			where T : class, IQueryElement
+		{
+			return ConvertSafe(list, action, null);
+		}
+
+		List<T> ConvertSafe<T>(List<T> list1, Func<IQueryElement, IQueryElement> action, Clone<T> clone)
+			where T : class, IQueryElement
+		{
+			List<T> list2 = null;
+
+			for (var i = 0; i < list1.Count; i++)
+			{
+				var elem1 = list1[i];
+				var elem2 = ConvertInternal(elem1, action) as T;
+
+				if (elem2 != null && !ReferenceEquals(elem1, elem2))
+				{
+					if (list2 == null)
+					{
+						list2 = new List<T>(list1.Count);
+
+						for (var j = 0; j < i; j++)
+							list2.Add(clone == null ? list1[j] : clone(list1[j]));
+					}
+
+					list2.Add(elem2);
+				}
+				else
+					list2?.Add(clone == null ? elem1 : clone(elem1));
+			}
+
+			return list2;
 		}
 
 		List<T> Convert<T>(List<T> list, Func<IQueryElement, IQueryElement> action)

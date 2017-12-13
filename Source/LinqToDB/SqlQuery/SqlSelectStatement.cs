@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Mapping;
-
 	public class SqlSelectStatement : SqlStatementWithQueryBase
 	{
 		public SqlSelectStatement(SelectQuery selectQuery) : base(selectQuery)
@@ -40,6 +39,8 @@ namespace LinqToDB.SqlQuery
 			if (SelectQuery != null)
 				clone.SelectQuery = (SelectQuery)SelectQuery.Clone(objectTree, doClone);
 
+			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
+
 			objectTree.Add(this, clone);
 			
 			return clone;
@@ -48,14 +49,6 @@ namespace LinqToDB.SqlQuery
 		public override ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
 			return SelectQuery.GetTableSource(table);
-		}
-
-		public override SqlStatement ProcessParameters(MappingSchema mappingSchema)
-		{
-			var newQuery = SelectQuery.ProcessParameters(mappingSchema);
-			if (!ReferenceEquals(newQuery, SelectQuery))
-				return new SqlSelectStatement(newQuery);
-			return this;
 		}
 
 	}

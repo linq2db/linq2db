@@ -230,7 +230,7 @@ namespace Tests.Linq
 
 				var q =
 					from e in db.Employee
-					from o in db.Order
+					from o in e.Orders
 					where arr.Contains(o)
 					select new
 					{

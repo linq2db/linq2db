@@ -397,7 +397,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql && sql != _selectQuery)
 				{
 					sql.ParentSelect = _selectQuery;
-					new SelectQueryOptimizer(_flags, null, sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
+					new SelectQueryOptimizer(_flags, _statement, sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
 
 					if (sql.IsParameterDependent)
 						_selectQuery.IsParameterDependent = true;
@@ -803,10 +803,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var c in query.Select.Columns)
 				map.Add(c, c.Expression);
 
-			var top = _selectQuery;
-
-			while (top.ParentSelect != null)
-				top = top.ParentSelect;
+			var top = (IQueryElement)_statement ?? (IQueryElement)_selectQuery.RootQuery();
 
 			((ISqlExpressionWalkable)top).Walk(
 				false, expr => map.TryGetValue(expr, out var fld) ? fld : expr);

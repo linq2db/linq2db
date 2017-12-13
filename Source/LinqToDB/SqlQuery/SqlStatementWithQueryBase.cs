@@ -1,11 +1,7 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public abstract class SqlStatementWithQueryBase : SqlStatement
 	{
-		public override List<SqlParameter> Parameters => SelectQuery.Parameters;
-
 		public override bool               IsParameterDependent
 		{
 			get => SelectQuery.IsParameterDependent;

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlInsertOrUpdateStatement: SqlStatementWithQueryBase
-
 	{
 		public override QueryType QueryType          => QueryType.InsertOrUpdate;
 		public override QueryElementType ElementType => QueryElementType.InsertOrUpdateStatement;
@@ -56,6 +55,8 @@ namespace LinqToDB.SqlQuery
 			if (_update != null)
 				clone._update = (SqlUpdateClause)_update.Clone(objectTree, doClone);
 			
+			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
+
 			objectTree.Add(this, clone);
 
 			return clone;
@@ -79,12 +80,5 @@ namespace LinqToDB.SqlQuery
 			return SelectQuery.GetTableSource(table);
 		}
 
-		public override SqlStatement ProcessParameters(MappingSchema mappingSchema)
-		{
-			var newQuery = SelectQuery.ProcessParameters(mappingSchema);
-			if (!ReferenceEquals(newQuery, SelectQuery))
-				return new SqlInsertOrUpdateStatement(newQuery);
-			return this;
-		}
 	}
 }

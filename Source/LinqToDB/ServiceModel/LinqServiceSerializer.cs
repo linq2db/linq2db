@@ -870,8 +870,6 @@ namespace LinqToDB.ServiceModel
 							else
 								Append(elem.Unions);
 
-							Append(elem.Parameters);
-
 							if (Dic.ContainsKey(elem.All))
 								Append(Dic[elem.All]);
 							else
@@ -969,6 +967,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var elem = (SqlSelectStatement)e;
 							Append(elem.SelectQuery);
+							Append(elem.Parameters);
 
 							break;
 						}
@@ -978,6 +977,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlInsertStatement)e;
 							Append(elem.Insert);
 							Append(elem.SelectQuery);
+							Append(elem.Parameters);
 
 							break;
 						}
@@ -988,6 +988,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Insert);
 							Append(elem.Update);
 							Append(elem.SelectQuery);
+							Append(elem.Parameters);
 
 							break;
 						}
@@ -997,6 +998,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlUpdateStatement)e;
 							Append(elem.Update);
 							Append(elem.SelectQuery);
+							Append(elem.Parameters);
 
 							break;
 						}
@@ -1008,6 +1010,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Table);
 							Append(elem.Top);
 							Append(elem.SelectQuery);
+							Append(elem.Parameters);
 
 							break;
 						}
@@ -1027,6 +1030,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlCreateTableStatement)e;
 
 							Append(elem.Table);
+							Append(elem.Parameters);
 							Append(elem.StatementHeader);
 							Append(elem.StatementFooter);
 							Append((int)elem.DefaulNullable);
@@ -1039,6 +1043,7 @@ namespace LinqToDB.ServiceModel
 						var elem = (SqlDropTableStatement)e;
 
 						Append(elem.Table);
+						Append(elem.Parameters);
 
 						break;
 					}
@@ -1423,7 +1428,6 @@ namespace LinqToDB.ServiceModel
 							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
 							var unions             = ReadArray<SqlUnion>();
-							var parameters         = ReadArray<SqlParameter>();
 
 							var query = new SelectQuery(sid);
 							_statement = new SqlSelectStatement(query);
@@ -1437,8 +1441,7 @@ namespace LinqToDB.ServiceModel
 								orderBy,
 								unions?.ToList(),
 								null,
-								parameterDependent,
-								parameters.ToList());
+								parameterDependent);
 
 							_queries.Add(sid, query);
 
@@ -1546,7 +1549,11 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SelectStatement :
 						{
 							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
+
 							obj = _statement = new SqlSelectStatement(selectQuery);
+							_statement.Parameters.AddRange(parameters);
+
 							break;
 						}
 
@@ -1554,27 +1561,36 @@ namespace LinqToDB.ServiceModel
 						{
 							var insert      = Read<SqlInsertClause>();
 							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
 
 							obj = _statement = new SqlInsertStatement(selectQuery) {Insert = insert};
+							_statement.Parameters.AddRange(parameters);
+
 							break;
 						}
 
 					case QueryElementType.UpdateStatement :
 						{
-							var update       = Read<SqlUpdateClause>();
-							var selectQuery  = Read<SelectQuery>();
+							var update      = Read<SqlUpdateClause>();
+							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
 
 							obj = _statement = new SqlUpdateStatement(selectQuery) {Update = update};
+							_statement.Parameters.AddRange(parameters);
+
 							break;
 						}
 
 					case QueryElementType.InsertOrUpdateStatement :
 						{
-							var insert       = Read<SqlInsertClause>();
-							var update       = Read<SqlUpdateClause>();
-							var selectQuery  = Read<SelectQuery>();
+							var insert      = Read<SqlInsertClause>();
+							var update      = Read<SqlUpdateClause>();
+							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
 
 							obj = _statement = new SqlInsertOrUpdateStatement(selectQuery) {Insert = insert, Update = update};
+							_statement.Parameters.AddRange(parameters);
+
 							break;
 						}
 
@@ -1583,14 +1599,18 @@ namespace LinqToDB.ServiceModel
 							var table       = Read<SqlTable>();
 							var top         = Read<ISqlExpression>();
 							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
 
 							obj = _statement = new SqlDeleteStatement { Table = table, Top = top, SelectQuery = selectQuery };
+							_statement.Parameters.AddRange(parameters);
+
 							break;
 						}
 
 					case QueryElementType.CreateTableStatement :
 						{
 							var table           = Read<SqlTable>();
+							var parameters      = ReadArray<SqlParameter>();
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
 							var defaultNullable = (DefaulNullable)ReadInt();
@@ -1602,18 +1622,21 @@ namespace LinqToDB.ServiceModel
 								StatementFooter = statementFooter,
 								DefaulNullable  = defaultNullable,
 							};
+							_statement.Parameters.AddRange(parameters);
 
 							break;
 						}
 
 					case QueryElementType.DropTableStatement :
 					{
-						var table = Read<SqlTable>();
+						var table      = Read<SqlTable>();
+						var parameters = ReadArray<SqlParameter>();
 
 						obj = _statement = new SqlDropTableStatement
 						{
 							Table = table,
 						};
+						_statement.Parameters.AddRange(parameters);
 
 						break;
 					}

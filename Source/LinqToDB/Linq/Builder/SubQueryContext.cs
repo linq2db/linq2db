@@ -168,7 +168,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlStatement GetResultStatement()
 		{
-			return Statement ?? new SqlSelectStatement(SelectQuery);
+			return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 		}
 	}
 }

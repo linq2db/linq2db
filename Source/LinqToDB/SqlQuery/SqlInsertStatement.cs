@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Mapping;
-	
 	public class SqlInsertStatement : SqlStatementWithQueryBase
 	{
 
@@ -57,6 +56,8 @@ namespace LinqToDB.SqlQuery
 			if (_insert != null)
 				clone._insert = (SqlInsertClause)_insert.Clone(objectTree, doClone);
 
+			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
+
 			objectTree.Add(this, clone);
 
 			return clone;
@@ -76,12 +77,5 @@ namespace LinqToDB.SqlQuery
 			return SelectQuery.GetTableSource(table);
 		}
 
-		public override SqlStatement ProcessParameters(MappingSchema mappingSchema)
-		{
-			var newQuery = SelectQuery.ProcessParameters(mappingSchema);
-			if (!ReferenceEquals(newQuery, SelectQuery))
-				return new SqlInsertStatement(newQuery);
-			return this;
-		}
 	}
 }

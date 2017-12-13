@@ -1001,7 +1001,7 @@ namespace LinqToDB.Linq.Builder
 
 			public SqlStatement GetResultStatement()
 			{
-				return Statement ?? new SqlSelectStatement(SelectQuery);
+				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 			}
 
 			#endregion

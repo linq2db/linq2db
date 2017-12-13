@@ -19,6 +19,7 @@ namespace LinqToDB.SqlProvider
 		HashSet<int>                                                                             _removedSources;
 		Dictionary<VirtualField, VirtualField>                                                   _replaceMap;
 		SelectQuery                                                                              _selectQuery;
+		SqlStatement                                                                             _statement;
 
 		static bool IsEqualTables(SqlTable table1, SqlTable table2)
 		{
@@ -80,7 +81,7 @@ namespace LinqToDB.SqlProvider
 
 			var dependent = false;
 
-			new QueryVisitor().VisitParentFirst(_selectQuery, e =>
+			new QueryVisitor().VisitParentFirst(_statement, e =>
 			{
 				if (dependent)
 					return false;
@@ -125,7 +126,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var dependent = false;
 
-			new QueryVisitor().VisitParentFirst(_selectQuery, e =>
+			bool CheckDependency(IQueryElement e)
 			{
 				if (dependent)
 					return false;
@@ -148,7 +149,12 @@ namespace LinqToDB.SqlProvider
 				}
 
 				return !dependent;
-			});
+			}
+
+			//TODO: review dependency checking
+			new QueryVisitor().VisitParentFirst(_selectQuery, CheckDependency);
+			if (!dependent && _selectQuery.ParentSelect == null)
+				new QueryVisitor().VisitParentFirst(_statement, CheckDependency);
 
 			return dependent;
 		}
@@ -597,7 +603,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if (_replaceMap != null && _replaceMap.Count > 0 || _removedSources != null)
 			{
-				((ISqlExpressionWalkable) _selectQuery)
+				((ISqlExpressionWalkable) _statement)
 					.Walk(false, element =>
 					{
 						var field = element as SqlField;
@@ -711,9 +717,10 @@ namespace LinqToDB.SqlProvider
 			return keys;
 		}
 
-		public void OptimizeJoins(SelectQuery selectQuery)
+		public void OptimizeJoins(SqlStatement statement, SelectQuery selectQuery)
 		{
 			_selectQuery = selectQuery;
+			_statement   = statement;
 
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
