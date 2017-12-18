@@ -528,7 +528,7 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
-		internal static string ToValidName(string name)
+		protected static string ToValidName(string name)
 		{
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
