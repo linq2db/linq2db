@@ -1125,7 +1125,7 @@ namespace LinqToDB.SqlProvider
 					AppendIndent().Append(")");
 					break;
 
-				case QueryElementType.CteClause  :
+				case QueryElementType.CteTable  :
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
@@ -2816,8 +2816,8 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.TableSource:
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
 
-				case QueryElementType.CteClause:
-					return ((SqlCteClause)table).Name;
+				case QueryElementType.CteTable:
+					return ((CteTable)table).Name;
 
 				default:
 					throw new InvalidOperationException();

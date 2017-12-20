@@ -8,23 +8,22 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCteClause : ISqlTableSource
+	public class CteTable : ISqlTableSource
 	{
 		public Dictionary<string, SqlField> Fields { get; } = new Dictionary<string, SqlField>();
 
-		public string      Name       { get; set; }
-		public SelectQuery Body       { get; set; }
-		public Type        ObjectType { get; set; }
+		readonly CteClause _cte;
 
-		public SqlCteClause(
+
+		public CteClause CTE        => _cte;
+		public string    Name       => _cte.Name;
+		public Type      ObjectType => _cte.ObjectType;
+
+		public CteTable(
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
-			[JetBrains.Annotations.NotNull] SelectQuery   body,
-			[JetBrains.Annotations.NotNull] Type          objectType, 
-			string name)
+			[JetBrains.Annotations.NotNull] CteClause cte)
 		{
-			ObjectType = objectType ?? throw new ArgumentNullException(nameof(objectType));
-			Body       = body ?? throw new ArgumentNullException(nameof(body));
-			Name       = name;
+			_cte = cte ?? throw new ArgumentNullException(nameof(cte));
 
 			var table = new SqlTable(mappingSchema, ObjectType);
 
@@ -41,17 +40,17 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTableSource TableSource => _tableSource ?? (_tableSource = new SqlTableSource(this, Name));
 
-		public QueryElementType ElementType => QueryElementType.CteClause;
+		public QueryElementType ElementType => QueryElementType.CteTable;
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			return sb.Append("CTE");
+			return sb.Append(Name);
 		}
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull => true;
-		public int Precedence => SqlQuery.Precedence.Unknown;
+		public bool CanBeNull  => true;
+		public int Precedence  => SqlQuery.Precedence.Unknown;
 		public Type SystemType => ObjectType;
 
 
@@ -75,7 +74,7 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
 		{
-			Body = Body?.Walk(skipColumns, func) as SelectQuery;
+			_cte.Walk(skipColumns, func);
 
 			return this;
 		}

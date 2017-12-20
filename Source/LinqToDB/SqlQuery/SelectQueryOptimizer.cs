@@ -42,8 +42,6 @@ namespace LinqToDB.SqlQuery
 			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>());
 			ResolveFields();
 
-			_statement?.SetAliases();
-
 #if DEBUG
 			sqlText = _selectQuery.SqlText;
 #endif

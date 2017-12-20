@@ -2798,9 +2798,9 @@ namespace LinqToDB.Linq.Builder
 
 		#region CTE
 
-		readonly Dictionary<Expression,CteContext> _ctes = new Dictionary<Expression,CteContext>();
+		readonly Dictionary<Expression,CteClause> _ctes = new Dictionary<Expression,CteClause>();
 
-		public CteContext BuildCte(BuildInfo buildInfo, Func<CteContext> buildFunc)
+		public CteClause BuildCte(BuildInfo buildInfo, Func<CteClause> buildFunc)
 		{
 			if (_ctes.TryGetValue(buildInfo.Expression, out var value))
 				return value;

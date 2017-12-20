@@ -21,17 +21,19 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var context = builder.BuildCte(buildInfo,
+			var cte = builder.BuildCte(buildInfo,
 				() =>
 				{
 					var methodCall = (MethodCallExpression) buildInfo.Expression;
-					var info = new BuildInfo(buildInfo, methodCall.Arguments[0]);
-					var sequence  = builder.BuildSequence(info);
-
-					return new CteContext(builder, info, buildInfo.Expression.Type.GetGenericArgumentsEx()[0]);
+					var name       = methodCall.Arguments[1].EvaluateExpression() as string;
+					var info       = new BuildInfo(buildInfo, methodCall.Arguments[0]);
+					var sequence   = builder.BuildSequence(info);
+					return new CteClause(info.SelectQuery, info.Expression.Type.GetGenericArgumentsEx()[0], name);
 
 				}
 			);
+
+			var context = new CteContext(builder, buildInfo, cte);
 
 			return context;
 		}
@@ -55,13 +57,13 @@ namespace LinqToDB.Linq.Builder
 	{
 		private readonly Dictionary<ISqlExpression, SqlInfo> _indexes = new Dictionary<ISqlExpression, SqlInfo>();
 
-		public CteContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType) : base(builder, buildInfo,
-			originalType)
+		public CteContext(
+			ExpressionBuilder builder,
+			BuildInfo buildInfo,
+			[JetBrains.Annotations.NotNull] CteClause cteTable
+		) : base(builder, buildInfo, new CteTable(builder.MappingSchema, cteTable))
 		{
-		}
-
-		public CteContext(ExpressionBuilder builder, BuildInfo buildInfo) : base(builder, buildInfo)
-		{
+			if (cteTable == null) throw new ArgumentNullException(nameof(cteTable));
 		}
 
 		public string Name { get; set; }
@@ -144,7 +146,7 @@ namespace LinqToDB.Linq.Builder
 				expr.Index = SelectQuery.Select.Add(field, field.Alias);
 			else
 				expr.Index = SelectQuery.Select.Add(expr.Sql);
-
+			
 			expr.Query = SelectQuery;
 
 			_indexes.Add(expr.Sql, expr);
@@ -437,38 +439,17 @@ namespace LinqToDB.Linq.Builder
 		public EntityDescriptor EntityDescriptor;
 		public Type ObjectType;
 		public Type OriginalType;
-		public SqlCteClause SqlTable;
+		public CteTable SqlTable;
 		public List<InheritanceMapping> InheritanceMapping;
 
-		public BaseRowsetContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
+		public BaseRowsetContext(ExpressionBuilder builder, BuildInfo buildInfo, CteTable cteTable)
 		{
 			Builder = builder;
 			Parent = buildInfo.Parent;
 			Expression = buildInfo.Expression;
 
-			OriginalType = originalType;
-			ObjectType = GetObjectType();
-			SqlTable = new SqlCteClause(builder.MappingSchema, buildInfo.SelectQuery, ObjectType, "TEST_CTE");
-			EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
-			InheritanceMapping = EntityDescriptor.InheritanceMapping;
-
-			SelectQuery = new SelectQuery();
-			SelectQuery.From.Table(SqlTable);
-
-			Init();
-		}
-
-		public BaseRowsetContext(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			Builder = builder;
-			Parent = buildInfo.Parent;
-			Expression = buildInfo.Expression;
-
-			var mc = (MethodCallExpression) Expression;
-
-			OriginalType = mc.Method.ReturnType.GetGenericArgumentsEx()[0];
-			ObjectType = GetObjectType();
-			SqlTable = new SqlCteClause(builder.MappingSchema, buildInfo.SelectQuery, ObjectType, "TEST_CTE");
+			ObjectType = cteTable.ObjectType;
+			SqlTable = cteTable;
 			EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 			InheritanceMapping = EntityDescriptor.InheritanceMapping;
 

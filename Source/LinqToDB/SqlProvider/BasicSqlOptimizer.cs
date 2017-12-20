@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlProvider
 {
@@ -55,6 +56,7 @@ namespace LinqToDB.SqlProvider
 				}
 			);
 
+			statement.SetAliases();
 			FinalizeCte(statement);
 
 			return statement;
@@ -64,20 +66,22 @@ namespace LinqToDB.SqlProvider
 		{
 			if (statement is SqlSelectStatement select)
 			{
-				var foundCTE = new HashSet<SqlCteClause>();
+				var foundCte = new HashSet<CteClause>();
 				new QueryVisitor().VisitAll(select.SelectQuery, e =>
 					{
 						if (e.ElementType == QueryElementType.CteClause)
-							foundCTE.Add((SqlCteClause) e);
+							foundCte.Add((CteClause) e);
 					}
 				);
-
-				if (foundCTE.Count == 0)
+				
+				if (foundCte.Count == 0)
 					select.With = null;
 				else
 				{
+					Utils.MakeUniqueNames(foundCte, c => c.Name, (c, n) => c.Name = n, "CTE_1");
+					
 					select.With = new SqlWithClause();
-					select.With.Clauses.AddRange(foundCTE);
+					select.With.Clauses.AddRange(foundCte);
 				}
 			}
 		}

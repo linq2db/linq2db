@@ -170,9 +170,15 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CteClause:
 					{
-						Visit1(((SqlCteClause)element).All);
-						Visit1X(((SqlCteClause)element).Fields.Values);
-						Visit1X(((SqlCteClause)element).Body);
+						Visit1(((CteClause)element).Body);
+						break;
+					}
+
+				case QueryElementType.CteTable:
+					{
+						Visit1(((CteTable)element).All);
+						Visit1X(((CteTable)element).Fields.Values);
+						Visit1(((CteTable)element).CTE);
 						break;
 					}
 
@@ -556,9 +562,15 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CteClause:
 					{
-						Visit2(((SqlCteClause)element).All);
-						Visit2X(((SqlCteClause)element).Fields.Values);
-						Visit2X(((SqlCteClause)element).Body);
+						Visit2(((CteClause)element).Body);
+						break;
+					}
+
+				case QueryElementType.CteTable:
+					{
+						Visit2(((CteTable)element).All);
+						Visit2X(((CteTable)element).Fields.Values);
+						Visit2(((CteTable)element).CTE);
 						break;
 					}
 

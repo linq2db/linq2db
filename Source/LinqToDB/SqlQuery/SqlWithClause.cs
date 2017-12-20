@@ -13,15 +13,13 @@ namespace LinqToDB.SqlQuery
 			return sb.Append(";WITH ");
 		}
 
-		public List<SqlCteClause> Clauses { get; set; } = new List<SqlCteClause>();
+		public List<CteClause> Clauses { get; set; } = new List<CteClause>();
 
 		public ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
 			foreach (var cte in Clauses)
 			{
 				var ts = cte.Body.GetTableSource(table);
-				if (ts == null)
-					ts = cte == table ? cte : null;
 				if (ts != null)
 					return ts;
 			}
@@ -33,7 +31,7 @@ namespace LinqToDB.SqlQuery
 		{
 			for (var index = 0; index < Clauses.Count; index++)
 			{
-				Clauses[index] = (SqlCteClause)Clauses[index].Walk(skipColumns, func);
+				Clauses[index].Walk(skipColumns, func);
 			}
 
 			return null;
