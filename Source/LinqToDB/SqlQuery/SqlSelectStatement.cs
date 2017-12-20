@@ -26,6 +26,7 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
 		{
+			With?.Walk(skipColumns, func);
 			var newQuery = SelectQuery.Walk(skipColumns, func);
 			if (!ReferenceEquals(newQuery, SelectQuery))
 				SelectQuery = (SelectQuery)newQuery;
@@ -48,8 +49,14 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
-			return SelectQuery.GetTableSource(table);
+			var ts = SelectQuery.GetTableSource(table);
+			if (ts == null)
+				ts = With?.GetTableSource(table);
+			return ts;
 		}
+
+		public SqlWithClause With { get; set; }
+
 
 	}
 }

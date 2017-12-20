@@ -25,27 +25,61 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement Finalize(SqlStatement statement)
 		{
-			var selectQuery = statement.SelectQuery;
-			if (selectQuery == null) 
-				return statement;
-			
-			new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
-					SqlProviderFlags.IsApplyJoinSupported,
-					SqlProviderFlags.IsGroupByExpressionSupported);
-				if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
-				if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
+			statement.Walk(false,
+				e =>
+				{
+					if (e is SelectQuery selectQuery)
+					{
+						// run only for root
+						if (selectQuery.ParentSelect == null)
+						{
+							new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+								SqlProviderFlags.IsApplyJoinSupported,
+								SqlProviderFlags.IsGroupByExpressionSupported);
+							if (!SqlProviderFlags.IsCountSubQuerySupported) selectQuery = MoveCountSubQuery(selectQuery);
+							if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
-				if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-				new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
-						SqlProviderFlags.IsApplyJoinSupported,
-						SqlProviderFlags.IsGroupByExpressionSupported);
+							if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
+								new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+									SqlProviderFlags.IsApplyJoinSupported,
+									SqlProviderFlags.IsGroupByExpressionSupported);
+						}
 
-			statement.SelectQuery = selectQuery;
+						if (Common.Configuration.Linq.OptimizeJoins)
+							OptimizeJoins(statement, selectQuery);
 
-			if (Common.Configuration.Linq.OptimizeJoins)
-				OptimizeJoins(statement);
+						return selectQuery;
+					}
+
+					return e;
+				}
+			);
+
+			FinalizeCte(statement);
 
 			return statement;
+		}
+
+		private void FinalizeCte(SqlStatement statement)
+		{
+			if (statement is SqlSelectStatement select)
+			{
+				var foundCTE = new HashSet<SqlCteClause>();
+				new QueryVisitor().VisitAll(select.SelectQuery, e =>
+					{
+						if (e.ElementType == QueryElementType.CteClause)
+							foundCTE.Add((SqlCteClause) e);
+					}
+				);
+
+				if (foundCTE.Count == 0)
+					select.With = null;
+				else
+				{
+					select.With = new SqlWithClause();
+					select.With.Clauses.AddRange(foundCTE);
+				}
+			}
 		}
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery)
@@ -1423,18 +1457,10 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Joins
 
-		public void OptimizeJoins(SqlStatement statement)
+		public void OptimizeJoins(SqlStatement statement, SelectQuery selectQuery)
 		{
-			((ISqlExpressionWalkable) statement).Walk(false, element =>
-			{
-				var query = element as SelectQuery;
-				if (query != null)
-				{
-					var optimizer = new JoinOptimizer();
-					optimizer.OptimizeJoins(statement, query);
-				}
-				return element;
-			});
+			var optimizer = new JoinOptimizer();
+			optimizer.OptimizeJoins(statement, selectQuery);
 		}
 
 		#endregion

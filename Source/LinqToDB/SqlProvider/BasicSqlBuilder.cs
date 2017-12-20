@@ -185,6 +185,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
 		{
+			BuildStep = Step.WithClause;    BuildWithClause(selectStatement.With);
 			BuildStep = Step.SelectClause;  BuildSelectClause(selectStatement.SelectQuery);
 			BuildStep = Step.FromClause;    BuildFromClause(selectStatement, selectStatement.SelectQuery);
 			BuildStep = Step.WhereClause;   BuildWhereClause(selectStatement.SelectQuery);
@@ -192,6 +193,17 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.HavingClause;  BuildHavingClause(selectStatement.SelectQuery);
 			BuildStep = Step.OrderByClause; BuildOrderByClause(selectStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(selectStatement.SelectQuery);
+		}
+
+		protected virtual void BuildCteBody(SelectQuery selectQuery)
+		{
+			BuildStep = Step.SelectClause;  BuildSelectClause(selectQuery);
+			BuildStep = Step.FromClause;    BuildFromClause(null, selectQuery);
+			BuildStep = Step.WhereClause;   BuildWhereClause(selectQuery);
+			BuildStep = Step.GroupByClause; BuildGroupByClause(selectQuery);
+			BuildStep = Step.HavingClause;  BuildHavingClause(selectQuery);
+			BuildStep = Step.OrderByClause; BuildOrderByClause(selectQuery);
+			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(selectQuery);
 		}
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClasuse)
@@ -250,6 +262,60 @@ namespace LinqToDB.SqlProvider
 		public virtual object Convert(object value, ConvertType convertType)
 		{
 			return value;
+		}
+
+		#endregion
+
+		#region Build CTE
+
+		protected virtual void BuildWithClause(SqlWithClause with)
+		{
+			if (with == null || with.Clauses.Count == 0)
+				return;
+
+			AppendIndent();
+			StringBuilder.AppendLine("WITH");
+			Indent++;
+
+			var first = true;
+
+			foreach (var cte in with.Clauses)
+			{
+				if (!first)
+					StringBuilder.Append(',').AppendLine();
+				first = false;
+
+				AppendIndent();
+				StringBuilder
+					.Append(cte.Name)
+					.Append(" (");
+
+				var firstField = true;
+				foreach (var field in cte.Fields.Values)
+				{
+					if (!firstField)
+						StringBuilder.Append(", ");
+					firstField = false;
+					StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+				}
+
+				StringBuilder.AppendLine(")");
+				AppendIndent();
+				StringBuilder.AppendLine("AS");
+				AppendIndent();
+				StringBuilder.AppendLine("(");
+
+				Indent++;
+
+				BuildCteBody(cte.Body);
+
+				Indent--;
+
+				AppendIndent();
+				StringBuilder.AppendLine(")");
+			}
+
+			Indent--;
 		}
 
 		#endregion
@@ -1057,7 +1123,10 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append("(").AppendLine();
 					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
 					AppendIndent().Append(")");
+					break;
 
+				case QueryElementType.CteClause  :
+					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
 				default                          :
@@ -2281,6 +2350,7 @@ namespace LinqToDB.SqlProvider
 
 		protected enum Step
 		{
+			WithClause,
 			SelectClause,
 			DeleteClause,
 			UpdateClause,
@@ -2745,6 +2815,9 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.TableSource:
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
+
+				case QueryElementType.CteClause:
+					return ((SqlCteClause)table).Name;
 
 				default:
 					throw new InvalidOperationException();

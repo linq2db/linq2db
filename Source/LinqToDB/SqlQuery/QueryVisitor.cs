@@ -168,8 +168,23 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.CteClause:
+					{
+						Visit1(((SqlCteClause)element).All);
+						Visit1X(((SqlCteClause)element).Fields.Values);
+						Visit1X(((SqlCteClause)element).Body);
+						break;
+					}
+
+				case QueryElementType.WithClause:
+					{
+						Visit1X(((SqlWithClause)element).Clauses);
+						break;
+					}
+
 				case QueryElementType.SelectStatement:
 					{
+						Visit1(((SqlSelectStatement)element).With);
 						Visit1(((SqlSelectStatement)element).SelectQuery);
 						break;
 					}
@@ -273,6 +288,15 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 			}
+		}
+
+		void Visit1X<T>(IEnumerable<T> elements)
+			where T : IQueryElement
+		{
+			if (elements == null)
+				return;
+			foreach (var element in elements)
+				_action1(element);
 		}
 
 		void Visit1X(SelectQuery q)
@@ -530,8 +554,23 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.CteClause:
+					{
+						Visit2(((SqlCteClause)element).All);
+						Visit2X(((SqlCteClause)element).Fields.Values);
+						Visit2X(((SqlCteClause)element).Body);
+						break;
+					}
+
+				case QueryElementType.WithClause:
+					{
+						Visit2X(((SqlWithClause)element).Clauses);
+						break;
+					}
+
 				case QueryElementType.SelectStatement:
 					{
+						Visit2(((SqlSelectStatement)element).With);
 						Visit2(((SqlSelectStatement)element).SelectQuery);
 						break;
 					}
@@ -640,6 +679,16 @@ namespace LinqToDB.SqlQuery
 			if (!_all)
 				_visitedElements.Add(element, element);
 		}
+
+		void Visit2X<T>(IEnumerable<T> elements)
+			where T : IQueryElement
+		{
+			if (elements == null)
+				return;
+			foreach (var element in elements)
+				_action2(element);
+		}
+
 
 		void Visit2X(SelectQuery q)
 		{

@@ -2795,5 +2795,21 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
+
+		#region CTE
+
+		readonly Dictionary<Expression,CteContext> _ctes = new Dictionary<Expression,CteContext>();
+
+		public CteContext BuildCte(BuildInfo buildInfo, Func<CteContext> buildFunc)
+		{
+			if (_ctes.TryGetValue(buildInfo.Expression, out var value))
+				return value;
+
+			value = buildFunc();
+			_ctes.Add(buildInfo.Expression, value);
+			return value;
+		}
+
+		#endregion
 	}
 }

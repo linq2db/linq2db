@@ -2683,6 +2683,25 @@ namespace LinqToDB
 
 		#endregion
 
+		#region CTE
+
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> AsCTE<TSource>(
+			[NotNull]   this IQueryable<TSource> source,
+			[CanBeNull] string                   name = null)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsCTE, source, name),
+					new[] {source.Expression, Expression.Constant(name ?? string.Empty)}));
+		}
+
+		#endregion
+
 		#region Tests
 
 		/// <summary>

@@ -41,6 +41,9 @@ namespace LinqToDB.SqlQuery
 				OrderByItem,
 			Union,
 
+		WithClause,
+		CteClause,
+
 		SelectStatement,
 		InsertStatement,
 		InsertOrUpdateStatement,
