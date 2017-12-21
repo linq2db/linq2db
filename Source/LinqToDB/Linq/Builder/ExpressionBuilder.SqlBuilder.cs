@@ -2798,16 +2798,48 @@ namespace LinqToDB.Linq.Builder
 
 		#region CTE
 
-		readonly Dictionary<Expression,CteClause> _ctes = new Dictionary<Expression,CteClause>();
+		readonly Dictionary<Expression, Tuple<CteClause,IBuildContext>> _ctes = new Dictionary<Expression, Tuple<CteClause,IBuildContext>>(new ExpressionEqualityComparer());
+		readonly Dictionary<IQueryable, Expression> _ctesObjectMapping = new Dictionary<IQueryable, Expression>();
 
-		public CteClause BuildCte(BuildInfo buildInfo, Func<CteClause> buildFunc)
+		public Tuple<CteClause, IBuildContext, Expression> RegisterCte(IQueryable queryable, Expression cteExpression, Func<CteClause> buildFunc)
 		{
-			if (_ctes.TryGetValue(buildInfo.Expression, out var value))
-				return value;
+			if (cteExpression != null && queryable != null && !_ctesObjectMapping.ContainsKey(queryable))
+			{
+				_ctesObjectMapping.Add(queryable, cteExpression);
+			}
 
-			value = buildFunc();
-			_ctes.Add(buildInfo.Expression, value);
+			if (cteExpression == null)
+			{
+				cteExpression = _ctesObjectMapping[queryable];
+			}
+
+			if (!_ctes.TryGetValue(cteExpression, out var value))
+			{
+				var cte = buildFunc();
+				value = Tuple.Create<CteClause, IBuildContext>(cte, null);
+				_ctes.Add(cteExpression, value);
+			}
+
+			return Tuple.Create(value.Item1, value.Item2, cteExpression);
+		}
+
+		public Tuple<CteClause, IBuildContext> BuildCte(Expression cteExpression, Func<CteClause, Tuple<CteClause, IBuildContext>> buildFunc)
+		{
+			if (_ctes.TryGetValue(cteExpression, out var value))
+				if (value.Item2 != null)
+					return value;
+
+			value = buildFunc(value?.Item1);
+			_ctes.Remove(cteExpression);
+			_ctes.Add(cteExpression, value);
 			return value;
+		}
+
+		public IBuildContext GetCteContext(Expression cteExpression)
+		{
+			if (_ctes.TryGetValue(cteExpression, out var value))
+				return value.Item2;
+			return null;
 		}
 
 		#endregion

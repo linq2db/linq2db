@@ -95,6 +95,9 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlTable :
 						return false;
+
+					case QueryElementType.SqlCteTable :
+						return false;
 				}
 
 				return true;

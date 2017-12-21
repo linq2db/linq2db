@@ -440,5 +440,7 @@ namespace LinqToDB.SqlQuery
 
 		public abstract ISqlTableSource GetTableSource(ISqlTableSource table);
 
+		public abstract void WalkQueries(Func<SelectQuery, SelectQuery> func);
+
 	}
 }

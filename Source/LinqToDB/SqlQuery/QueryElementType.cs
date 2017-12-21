@@ -43,7 +43,7 @@ namespace LinqToDB.SqlQuery
 
 		WithClause,
 		CteClause,
-		CteTable,
+		SqlCteTable,
 
 		SelectStatement,
 		InsertStatement,

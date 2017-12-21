@@ -79,6 +79,5 @@ namespace LinqToDB.SqlQuery
 
 			return SelectQuery.GetTableSource(table);
 		}
-
 	}
 }

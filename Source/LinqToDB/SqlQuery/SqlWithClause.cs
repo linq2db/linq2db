@@ -27,6 +27,15 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		{
+			foreach (var c in Clauses)
+			{
+				if (c.Body != null)
+					c.Body = func(c.Body);
+			}
+		}
+
 		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
 		{
 			for (var index = 0; index < Clauses.Count; index++)

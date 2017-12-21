@@ -29,7 +29,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 						if (c.Value is IQueryable)
+						{
+							if (typeof(CteTable<>).IsSameOrParentOf(c.Value.GetType()))
+								return action(7, null);
+
 							return action(1, null);
+						}
 
 						break;
 					}
@@ -38,9 +43,19 @@ namespace LinqToDB.Linq.Builder
 					{
 						var mc = (MethodCallExpression)expression;
 
-						if (mc.Method.Name == "GetTable")
-							if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
-								return action(2, null);
+						switch (mc.Method.Name)
+						{
+							case "GetTable":
+								{
+									if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
+										return action(2, null);
+									break;
+								}
+							case "AsCTE":
+								{
+									return action(6, null);
+								}
+						}
 
 						var attr = builder.GetTableFunctionAttribute(mc.Method);
 
@@ -106,10 +121,77 @@ namespace LinqToDB.Linq.Builder
 					case 3 : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArgumentsEx()[0]);
 					case 4 : return ctx.GetContext(buildInfo.Expression, 0, buildInfo);
 					case 5 : return new TableContext(builder, buildInfo);
+					case 6:  return BuildCteContext(builder, buildInfo);
+					case 7:  return BuildCteContextTable(builder, buildInfo);
 				}
 
 				throw new InvalidOperationException();
 			});
+		}
+
+		private static IBuildContext BuildCteContext(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			var methodCall = (MethodCallExpression) buildInfo.Expression;
+			IQueryable query    = null;
+			Expression bodyExpr = null;
+			string name         = null;
+
+			switch (methodCall.Arguments.Count)
+			{
+					case 1 : 
+						bodyExpr = methodCall.Arguments[0].Unwrap();
+						break;
+					case 2 :
+						bodyExpr = methodCall.Arguments[0].Unwrap();
+						name     = methodCall.Arguments[1].EvaluateExpression() as string;
+						break;
+					case 3 :
+						query    = methodCall.Arguments[0].EvaluateExpression() as IQueryable;
+						bodyExpr = methodCall.Arguments[1].Unwrap();
+						name     = methodCall.Arguments[2].EvaluateExpression() as string;
+						break;
+			}
+
+			builder.RegisterCte(query, bodyExpr, () =>
+			{
+				return new CteClause(null, bodyExpr.Type.GetGenericArgumentsEx()[0], name);
+			});
+
+			var cte = builder.BuildCte(bodyExpr,
+				cteClause =>
+				{
+					var info      = new BuildInfo(buildInfo, bodyExpr, new SelectQuery());
+					var sequence  = builder.BuildSequence(info);
+
+					if (cteClause == null)
+						cteClause = new CteClause(sequence.SelectQuery, bodyExpr.Type.GetGenericArgumentsEx()[0], name);
+					else
+					{
+						cteClause.Body = sequence.SelectQuery;
+						cteClause.Name = name;
+					}
+
+					return Tuple.Create(cteClause, sequence);
+				} 
+			);
+
+			var cteBuildInfo = new BuildInfo(buildInfo, bodyExpr, buildInfo.SelectQuery);
+			var cteContext   = new CteTableContext(builder, cteBuildInfo, cte.Item1, bodyExpr);
+			return cteContext;
+		}
+
+		private static CteTableContext BuildCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			var queryable = (IQueryable)buildInfo.Expression.EvaluateExpression();
+
+			var cteInfo = builder.RegisterCte(queryable, null, () =>
+			{
+				return new CteClause(null, queryable.ElementType, "");
+			});
+
+			var cteBuildInfo = new BuildInfo(buildInfo, cteInfo.Item3, buildInfo.SelectQuery);
+			var cteContext   = new CteTableContext(builder, cteBuildInfo, cteInfo.Item1, cteInfo.Item3);
+			return cteContext;
 		}
 
 		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)
@@ -163,6 +245,23 @@ namespace LinqToDB.Linq.Builder
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+
+				SelectQuery.From.Table(SqlTable);
+
+				Init();
+			}
+
+			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
+			{
+				Builder          = builder;
+				Parent           = buildInfo.Parent;
+				Expression       = buildInfo.Expression;
+				SelectQuery      = buildInfo.SelectQuery;
+				 
+				OriginalType     = table.ObjectType;
+				ObjectType       = GetObjectType();
+				SqlTable         = table;
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
 				SelectQuery.From.Table(SqlTable);
@@ -325,9 +424,9 @@ namespace LinqToDB.Linq.Builder
 
 				Expression expr = Expression.MemberInit(
 					Expression.New(objectType),
-					members
-						.Where (m => !m.Column.MemberAccessor.IsComplex)
-						.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
+						members
+							.Where (m => !m.Column.MemberAccessor.IsComplex)
+							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
 				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
 				var loadWith   = GetLoadWith();
@@ -611,7 +710,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildQuery(typeof(T), this, null);
 				var mapper = Builder.BuildMapper<T>(expr);
@@ -623,7 +722,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region BuildExpression
 
-			public Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+			public virtual Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
 				return BuildExpression(expression, level, null);
 			}
@@ -664,7 +763,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToSql
 
-			public SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public virtual SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
@@ -729,7 +828,7 @@ namespace LinqToDB.Linq.Builder
 
 			readonly Dictionary<ISqlExpression,SqlInfo> _indexes = new Dictionary<ISqlExpression,SqlInfo>();
 
-			protected SqlInfo GetIndex(SqlInfo expr)
+			protected virtual SqlInfo GetIndex(SqlInfo expr)
 			{
 				if (_indexes.TryGetValue(expr.Sql, out var n))
 					return n;
@@ -1589,5 +1688,71 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
+	}
+
+	class CteTableContext : TableBuilder.TableContext
+	{
+		private readonly CteClause     _cte;
+		private readonly Expression    _cteExpression;
+		private          IBuildContext _cteQueryContext;
+
+		private bool     _calculatingIndex;
+
+		public CteTableContext(ExpressionBuilder builder, BuildInfo buildInfo, CteClause cte, Expression cteExpression) 
+			: base(builder, buildInfo, new SqlCteTable(builder.MappingSchema, cte))
+		{
+			_cte             = cte;
+			_cteExpression   = cteExpression;
+		}
+
+		IBuildContext GetQueryContext()
+		{
+			return _cteQueryContext ?? (_cteQueryContext = Builder.GetCteContext(_cteExpression));
+		}
+
+		public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
+		{
+			var queryContext = GetQueryContext();
+			if (queryContext == null)
+				return base.BuildExpression(expression, level, enforceServerSide);
+			return queryContext.BuildExpression(expression, level, enforceServerSide);
+		}
+
+		public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+		{
+			var queryContext = GetQueryContext();
+			if (queryContext == null)
+				base.BuildQuery(query, queryParameter);
+			else
+				queryContext.BuildQuery(query, queryParameter);
+		}
+
+		public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+		{
+			var infos = base.ConvertToSql(expression, level, flags);
+
+			if (!_calculatingIndex)
+			{
+				_calculatingIndex = true;
+
+				var queryContext = GetQueryContext();
+				// If Field is needed we have to populate it in CTE
+				if (queryContext != null)
+				{
+					var subInfos = queryContext.ConvertToSql(expression, level, flags);
+					if (subInfos.Any(si => si.Index < 0))
+						subInfos = queryContext.ConvertToIndex(expression, level, flags);
+
+					for (int i = 0; i < infos.Length; i++)
+					{
+						_cte.RegisterFieldMapping((SqlField)infos[i].Sql, subInfos[i].Index);
+					}
+				}
+
+				_calculatingIndex = false;
+			}
+
+			return infos;
+		}
 	}
 }

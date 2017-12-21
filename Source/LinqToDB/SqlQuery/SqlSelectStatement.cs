@@ -16,7 +16,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public override QueryType          QueryType  => QueryType.Select;
-
 		public override QueryElementType   ElementType => QueryElementType.SelectStatement;
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -46,17 +45,5 @@ namespace LinqToDB.SqlQuery
 			
 			return clone;
 		}
-
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
-		{
-			var ts = SelectQuery.GetTableSource(table);
-			if (ts == null)
-				ts = With?.GetTableSource(table);
-			return ts;
-		}
-
-		public SqlWithClause With { get; set; }
-
-
 	}
 }

@@ -1210,7 +1210,7 @@ namespace LinqToDB.SqlProvider
 
 			public int SourceID
 			{
-				get { return Field == null ? Column.Parent.SourceID : Field.Table.SourceID; }
+				get { return Field == null ? Column.Parent.SourceID : Field.Table?.SourceID ?? -1; }
 			}
 
 			public bool CanBeNull

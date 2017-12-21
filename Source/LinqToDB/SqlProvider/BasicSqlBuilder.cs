@@ -312,9 +312,10 @@ namespace LinqToDB.SqlProvider
 				Indent--;
 
 				AppendIndent();
-				StringBuilder.AppendLine(")");
+				StringBuilder.Append(")");
 			}
 
+			StringBuilder.AppendLine();
 			Indent--;
 		}
 
@@ -1125,7 +1126,7 @@ namespace LinqToDB.SqlProvider
 					AppendIndent().Append(")");
 					break;
 
-				case QueryElementType.CteTable  :
+				case QueryElementType.SqlCteTable  :
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
@@ -2728,6 +2729,9 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlTable:
 					return ((SqlTable)table).Alias;
 
+				case QueryElementType.SqlCteTable:
+					return ((SqlTable)table).Alias;
+
 				default:
 					throw new InvalidOperationException();
 			}
@@ -2816,8 +2820,8 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.TableSource:
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
 
-				case QueryElementType.CteTable:
-					return ((CteTable)table).Name;
+				case QueryElementType.SqlCteTable:
+					return ((SqlCteTable)table).Name;
 
 				default:
 					throw new InvalidOperationException();

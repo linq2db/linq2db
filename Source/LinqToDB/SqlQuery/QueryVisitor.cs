@@ -58,6 +58,12 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.SqlCteTable:
+					{
+						Visit1X((SqlCteTable)element);
+						break;
+					}
+
 				case QueryElementType.Column:
 					{
 						Visit1(((SqlColumn)element).Expression);
@@ -170,21 +176,13 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CteClause:
 					{
-						Visit1(((CteClause)element).Body);
-						break;
-					}
-
-				case QueryElementType.CteTable:
-					{
-						Visit1(((CteTable)element).All);
-						Visit1X(((CteTable)element).Fields.Values);
-						Visit1(((CteTable)element).CTE);
+						Visit1X((CteClause)element);
 						break;
 					}
 
 				case QueryElementType.WithClause:
 					{
-						Visit1X(((SqlWithClause)element).Clauses);
+						Visit1X(((SqlWithClause)element));
 						break;
 					}
 
@@ -197,6 +195,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertStatement:
 					{
+						Visit1(((SqlInsertStatement)element).With);
 						Visit1(((SqlInsertStatement)element).Insert);
 						Visit1(((SqlInsertStatement)element).SelectQuery);
 						break;
@@ -204,6 +203,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.UpdateStatement:
 					{
+						Visit1(((SqlUpdateStatement)element).With);
 						Visit1(((SqlUpdateStatement)element).Update);
 						Visit1(((SqlUpdateStatement)element).SelectQuery);
 						break;
@@ -211,6 +211,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertOrUpdateStatement:
 					{
+						Visit1(((SqlInsertOrUpdateStatement)element).With);
 						Visit1(((SqlInsertOrUpdateStatement)element).Insert);
 						Visit1(((SqlInsertOrUpdateStatement)element).Update);
 						Visit1(((SqlInsertOrUpdateStatement)element).SelectQuery);
@@ -219,6 +220,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.DeleteStatement:
 					{
+						Visit1(((SqlDeleteStatement)element).With);
 						Visit1(((SqlDeleteStatement)element).Table);
 						Visit1(((SqlDeleteStatement)element).Top);
 						Visit1(((SqlDeleteStatement)element).SelectQuery);
@@ -358,6 +360,12 @@ namespace LinqToDB.SqlQuery
 			foreach (var c in sc.Keys. ToArray()) Visit1(c);
 		}
 
+		void Visit1X(CteClause sc)
+		{
+			foreach (var c in sc.Fields.Values) Visit1(c);
+			Visit1(sc.Body);
+		}
+
 		void Visit1X(SqlInsertClause sc)
 		{
 			if (sc.Into != null)
@@ -390,6 +398,22 @@ namespace LinqToDB.SqlQuery
 
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit1(a);
+		}
+
+		void Visit1X(SqlWithClause element)
+		{
+			foreach (var clause in element.Clauses) Visit1(clause);
+		}
+
+		void Visit1X(SqlCteTable table)
+		{
+			Visit1(table.All);
+			foreach (var field in table.Fields.Values) Visit1(field);
+
+			if (table.TableArguments != null)
+				foreach (var a in table.TableArguments) Visit1(a);
+
+//			Visit1(table.CTE);
 		}
 
 		void Visit1X(SqlExpression element)
@@ -447,6 +471,16 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlTable:
 					{
 						Visit2X((SqlTable)element);
+						break;
+					}
+
+				case QueryElementType.SqlCteTable:
+					{
+						if (_visitedElements.ContainsKey(element))
+							return;
+						_visitedElements.Add(element, element);
+
+						Visit2X((SqlCteTable)element);
 						break;
 					}
 
@@ -562,21 +596,13 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.CteClause:
 					{
-						Visit2(((CteClause)element).Body);
-						break;
-					}
-
-				case QueryElementType.CteTable:
-					{
-						Visit2(((CteTable)element).All);
-						Visit2X(((CteTable)element).Fields.Values);
-						Visit2(((CteTable)element).CTE);
+						Visit2X((CteClause)element);
 						break;
 					}
 
 				case QueryElementType.WithClause:
 					{
-						Visit2X(((SqlWithClause)element).Clauses);
+						Visit2X((SqlWithClause)element);
 						break;
 					}
 
@@ -589,6 +615,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertStatement:
 					{
+						Visit2(((SqlInsertStatement)element).With);
 						Visit2(((SqlInsertStatement)element).Insert);
 						Visit2(((SqlInsertStatement)element).SelectQuery);
 						break;
@@ -596,6 +623,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.UpdateStatement:
 					{
+						Visit2(((SqlUpdateStatement)element).With);
 						Visit2(((SqlUpdateStatement)element).Update);
 						Visit2(((SqlUpdateStatement)element).SelectQuery);
 						break;
@@ -603,6 +631,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.InsertOrUpdateStatement:
 					{
+						Visit2(((SqlInsertOrUpdateStatement)element).With);
 						Visit2(((SqlInsertOrUpdateStatement)element).Insert);
 						Visit2(((SqlInsertOrUpdateStatement)element).Update);
 						Visit2(((SqlInsertOrUpdateStatement)element).SelectQuery);
@@ -611,6 +640,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.DeleteStatement:
 					{
+						Visit2(((SqlDeleteStatement)element).With);
 						Visit2(((SqlDeleteStatement)element).Table);
 						Visit2(((SqlDeleteStatement)element).Top);
 						Visit2(((SqlDeleteStatement)element).SelectQuery);
@@ -633,6 +663,10 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SelectClause:
 					{
+						if (_visitedElements.ContainsKey(element))
+							return;
+						_visitedElements.Add(element, element);
+
 						Visit2X((SqlSelectClause)element);
 						break;
 					}
@@ -688,7 +722,7 @@ namespace LinqToDB.SqlQuery
 
 			_action2(element);
 
-			if (!_all)
+			if (!_all && !_visitedElements.ContainsKey(element))
 				_visitedElements.Add(element, element);
 		}
 
@@ -722,12 +756,12 @@ namespace LinqToDB.SqlQuery
 							Visit2(j);
 
 						_action2(t);
-						if (!_all)
+						if (!_all && !_visitedElements.ContainsKey(t))
 							_visitedElements.Add(t, t);
 					}
 				}
 				_action2(q.From);
-				if (!_all)
+				if (!_all && !_visitedElements.ContainsKey(q.From))
 					_visitedElements.Add(q.From, q.From);
 			}
 
@@ -780,6 +814,12 @@ namespace LinqToDB.SqlQuery
 			foreach (var c in sc.Keys. ToArray()) Visit2(c);
 		}
 
+		void Visit2X(CteClause sc)
+		{
+			foreach (var c in sc.Fields.Values) Visit2(c);
+			Visit2(sc.Body);
+		}
+
 		void Visit2X(SqlInsertClause sc)
 		{
 			if (sc.Into != null)
@@ -812,6 +852,23 @@ namespace LinqToDB.SqlQuery
 
 			if (table.TableArguments != null)
 				foreach (var a in table.TableArguments) Visit2(a);
+		}
+
+		void Visit2X(SqlWithClause element)
+		{
+			foreach (var t in element.Clauses) Visit2(t);
+		}
+
+		void Visit2X(SqlCteTable table)
+		{
+			Visit2(table.All);
+			foreach (var field in table.Fields.Values) Visit2(field);
+
+			if (table.TableArguments != null)
+				foreach (var a in table.TableArguments) Visit2(a);
+
+			// do not visit it may fail by stack overflow
+			//Visit2(table.CTE);
 		}
 
 		void Visit2X(SqlExpression element)
@@ -895,6 +952,15 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlTable)element).All,            find) ??
 							Find(((SqlTable)element).Fields.Values,  find) ??
 							Find(((SqlTable)element).TableArguments, find);
+					}
+
+				case QueryElementType.SqlCteTable:
+					{
+						return
+							Find(((SqlCteTable)element).All,            find) ??
+							Find(((SqlCteTable)element).Fields.Values,  find) ??
+							Find(((SqlCteTable)element).TableArguments, find) ??
+							Find(((SqlCteTable)element).CTE, find);
 					}
 
 				case QueryElementType.TableSource:
@@ -1101,6 +1167,42 @@ namespace LinqToDB.SqlQuery
 							newElement = new SqlTable(table, fields2, targs ?? table.TableArguments);
 
 							_visitedElements[((SqlTable)newElement).All] = table.All;
+						}
+
+						break;
+					}
+
+				case QueryElementType.SqlCteTable:
+					{
+						var table   = (SqlCteTable)element;
+						var fields1 = ToArray(table.Fields);
+						var fields2 = Convert(fields1,     action, f => new SqlField(f));
+						var targs   = table.TableArguments == null ? null : Convert(table.TableArguments, action);
+						var cte     = Convert(table.CTE, action);
+
+						var fe = fields2 == null || ReferenceEquals(fields1, fields2);
+						var ta = ReferenceEquals(table.TableArguments, targs);
+						var ce = ReferenceEquals(table.CTE, cte);
+
+						if (!fe || !ta || !ce)
+						{
+							if (fe)
+							{
+								fields2 = fields1;
+
+								for (var i = 0; i < fields2.Length; i++)
+								{
+									var field = fields2[i];
+
+									fields2[i] = new SqlField(field);
+
+									_visitedElements[field] = fields2[i];
+								}
+							}
+
+							newElement = new SqlCteTable(table, fields2, cte);
+
+							_visitedElements[((SqlCteTable)newElement).All] = table.All;
 						}
 
 						break;

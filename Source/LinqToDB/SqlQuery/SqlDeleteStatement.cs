@@ -5,16 +5,13 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Mapping;
-
-	public class SqlDeleteStatement : SqlStatement
+	public class SqlDeleteStatement : SqlStatementWithQueryBase
 	{
-		public SqlDeleteStatement(SelectQuery selectQuery)
+		public SqlDeleteStatement(SelectQuery selectQuery) : base(selectQuery)
 		{
-			_selectQuery = selectQuery;
 		}
 
-		public SqlDeleteStatement()
+		public SqlDeleteStatement() : this(null)
 		{
 		}
 
@@ -30,19 +27,15 @@ namespace LinqToDB.SqlQuery
 		public SqlTable       Table { get; set; }
 		public ISqlExpression Top   { get; set; }
 
-		private SelectQuery        _selectQuery;
-		public override SelectQuery SelectQuery
-		{
-			get => _selectQuery ?? (_selectQuery = new SelectQuery());
-			set => _selectQuery = value;
-		}
-
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;
 
 			var clone = new SqlDeleteStatement();
+
+			if (SelectQuery != null)
+				clone.SelectQuery = (SelectQuery)SelectQuery.Clone(objectTree, doClone);
 
 			if (Table != null)
 				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
@@ -52,11 +45,6 @@ namespace LinqToDB.SqlQuery
 			objectTree.Add(this, clone);
 
 			return clone;
-		}
-
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
-		{
-			return SelectQuery.GetTableSource(table);
 		}
 
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
@@ -77,5 +65,16 @@ namespace LinqToDB.SqlQuery
 
 			return sb;
 		}
+
+		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		{
+			if (SelectQuery != null)
+			{
+				var newQuery = func(SelectQuery);
+				if (!ReferenceEquals(newQuery, SelectQuery))
+					SelectQuery = newQuery;
+			}
+		}
+
 	}
 }

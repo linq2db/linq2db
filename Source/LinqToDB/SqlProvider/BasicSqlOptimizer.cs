@@ -1,11 +1,10 @@
 ﻿using System;
-using LinqToDB.Common;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace LinqToDB.SqlProvider
 {
-	using System.Collections.Generic;
-	using System.Linq;
-
+	using Common;
 	using Extensions;
 	using SqlQuery;
 
@@ -26,51 +25,63 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement Finalize(SqlStatement statement)
 		{
-			statement.Walk(false,
-				e =>
+			FinalizeCte(statement);
+
+			//TODO: We can use Walk here but OptimizeUnions fails with subqueris. Needs revising.
+			statement.WalkQueries(
+				selectQuery =>
 				{
-					if (e is SelectQuery selectQuery)
-					{
-						// run only for root
-						if (selectQuery.ParentSelect == null)
-						{
-							new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
-								SqlProviderFlags.IsApplyJoinSupported,
-								SqlProviderFlags.IsGroupByExpressionSupported);
-							if (!SqlProviderFlags.IsCountSubQuerySupported) selectQuery = MoveCountSubQuery(selectQuery);
-							if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
+					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+						SqlProviderFlags.IsApplyJoinSupported,
+						SqlProviderFlags.IsGroupByExpressionSupported);
+					if (!SqlProviderFlags.IsCountSubQuerySupported) selectQuery = MoveCountSubQuery(selectQuery);
+					if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
-							if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-								new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
-									SqlProviderFlags.IsApplyJoinSupported,
-									SqlProviderFlags.IsGroupByExpressionSupported);
-						}
+					if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
+						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+							SqlProviderFlags.IsApplyJoinSupported,
+							SqlProviderFlags.IsGroupByExpressionSupported);
 
-						if (Common.Configuration.Linq.OptimizeJoins)
-							OptimizeJoins(statement, selectQuery);
-
-						return selectQuery;
-					}
-
-					return e;
+					return selectQuery;
 				}
 			);
 
+			if (Common.Configuration.Linq.OptimizeJoins)
+				OptimizeJoins(statement);
+
 			statement.SetAliases();
-			FinalizeCte(statement);
 
 			return statement;
 		}
 
 		private void FinalizeCte(SqlStatement statement)
 		{
-			if (statement is SqlSelectStatement select)
+			if (statement is SqlStatementWithQueryBase select)
 			{
-				var foundCte = new HashSet<CteClause>();
-				new QueryVisitor().VisitAll(select.SelectQuery, e =>
+				var foundCte  = new Dictionary<CteClause, HashSet<CteClause>>();
+
+				new QueryVisitor().Visit(select.SelectQuery, e =>
 					{
-						if (e.ElementType == QueryElementType.CteClause)
-							foundCte.Add((CteClause) e);
+						if (e.ElementType == QueryElementType.SqlCteTable)
+						{
+							var cte = ((SqlCteTable) e).CTE;
+							if (!foundCte.ContainsKey(cte))
+							{
+								var dependsOn = new HashSet<CteClause>();
+								new QueryVisitor().Visit(cte.Body, ce =>
+								{
+									if (ce.ElementType == QueryElementType.SqlCteTable)
+									{
+										var subCte = ((SqlCteTable)ce).CTE;
+										dependsOn.Add(subCte);
+									}
+
+								});
+								// self-reference is allowed, so we do not need to add dependency
+								dependsOn.Remove(cte);
+								foundCte.Add(cte, dependsOn);
+							}
+						}
 					}
 				);
 				
@@ -78,10 +89,16 @@ namespace LinqToDB.SqlProvider
 					select.With = null;
 				else
 				{
-					Utils.MakeUniqueNames(foundCte, c => c.Name, (c, n) => c.Name = n, "CTE_1");
+					//TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
+					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
+						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
+
+					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
+
+					Utils.MakeUniqueNames(ordered, c => c.Name, (c, n) => c.Name = n, "CTE_1");
 					
 					select.With = new SqlWithClause();
-					select.With.Clauses.AddRange(foundCte);
+					select.With.Clauses.AddRange(ordered);
 				}
 			}
 		}
@@ -1461,10 +1478,18 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Joins
 
-		public void OptimizeJoins(SqlStatement statement, SelectQuery selectQuery)
+		public void OptimizeJoins(SqlStatement statement)
 		{
-			var optimizer = new JoinOptimizer();
-			optimizer.OptimizeJoins(statement, selectQuery);
+			((ISqlExpressionWalkable) statement).Walk(false, element =>
+			{
+				var query = element as SelectQuery;
+				if (query != null)
+				{
+					var optimizer = new JoinOptimizer();
+					optimizer.OptimizeJoins(statement, query);
+				}
+				return element;
+			});
 		}
 
 		#endregion

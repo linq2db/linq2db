@@ -196,18 +196,18 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public string           Name           { get; set; }
+		public virtual string   Name           { get; set; }
 		public string           Alias          { get; set; }
 		public string           Database       { get; set; }
 		public string           Owner          { get; set; }
 		public Type             ObjectType     { get; set; }
 		public string           PhysicalName   { get; set; }
-		public SqlTableType     SqlTableType   { get; set; }
+		public virtual SqlTableType     SqlTableType   { get; set; }
 		public ISqlExpression[] TableArguments { get; set; }
 
 		public Dictionary<string,SqlField> Fields { get; }
 
-		public SequenceNameAttribute[] SequenceAttributes { get; private set; }
+		public SequenceNameAttribute[] SequenceAttributes { get; protected set; }
 
 		private SqlField _all;
 		public  SqlField  All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
@@ -245,7 +245,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public   int  SourceID { get; }
+		public   int  SourceID { get; protected set; }
 
 		List<ISqlExpression> _keyFields;
 
@@ -315,7 +315,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.SqlTable;
+		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
@@ -348,7 +348,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public virtual ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (TableArguments != null)
 				for (var i = 0; i < TableArguments.Length; i++)

@@ -2685,11 +2685,30 @@ namespace LinqToDB
 
 		#region CTE
 
+		internal static IQueryable<T> AsCTE<T>(IQueryable<T> cteTable, IQueryable<T> cteBody, string tableName)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> AsCTE<TSource>(
+			[NotNull]   this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsCTE, source), 
+					source.Expression));
+		}
+
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsCTE<TSource>(
 			[NotNull]   this IQueryable<TSource> source,
-			[CanBeNull] string                   name = null)
+			[CanBeNull] string                   name)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 

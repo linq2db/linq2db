@@ -37,8 +37,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			else
 			{
-				SqlProviderFlags.IsApplyJoinSupported    = true;
-				SqlProviderFlags.TakeHintsSupported      = TakeHints.Percent | TakeHints.WithTies;
+				SqlProviderFlags.IsApplyJoinSupported              = true;
+				SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
+				SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
 			}
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));

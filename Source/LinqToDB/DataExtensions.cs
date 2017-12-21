@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -11,6 +12,8 @@ namespace LinqToDB
 {
 	using Extensions;
 	using Linq;
+	using Data;
+	using Expressions;
 
 	using SqlQuery;
 
@@ -671,5 +674,30 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		#region CTE
+
+		public static IQueryable<T> GetCTE<T>(
+			[NotNull]   this IDataContext                  dataContext,
+			[NotNull]   Func<IQueryable<T>, IQueryable<T>> cteBody, 
+			[CanBeNull] string                             tableName = null)
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
+
+			var cteTable = new CteTable<T>(dataContext);
+			var param    = MethodHelper.GetMethodInfo(cteBody, cteTable).GetParameters()[0];
+
+			var cteQuery = cteBody(cteTable);
+
+			return ((IQueryable<T>)cteTable).Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(LinqExtensions.AsCTE, cteQuery, cteQuery, tableName),
+					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(tableName ?? param.Name)}));
+		}
+
+		#endregion
+
 	}
 }

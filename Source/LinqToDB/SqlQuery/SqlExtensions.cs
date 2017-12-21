@@ -19,7 +19,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsUpdate(this SqlStatement statement)
 		{
-			return statement.QueryType == QueryType.Update;
+			return statement != null && statement.QueryType == QueryType.Update;
 		}
 
 		public static SqlField GetIdentityField(this SqlStatement statement)
