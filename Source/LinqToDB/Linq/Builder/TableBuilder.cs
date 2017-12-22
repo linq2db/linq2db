@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				Init();
+				Init(true);
 			}
 
 			protected TableContext(ExpressionBuilder builder, SelectQuery selectQuery)
@@ -200,7 +200,7 @@ namespace LinqToDB.Linq.Builder
 
 				attr.SetTable(Builder.MappingSchema, SqlTable, mc.Method, mc.Arguments, args);
 
-				Init();
+				Init(true);
 			}
 
 			protected Type GetObjectType()
@@ -218,7 +218,7 @@ namespace LinqToDB.Linq.Builder
 
 			public List<InheritanceMapping> InheritanceMapping;
 
-			protected void Init()
+			protected void Init(bool applyFilters)
 			{
 				Builder.Contexts.Add(this);
 
@@ -226,7 +226,7 @@ namespace LinqToDB.Linq.Builder
 
 				// Original table is a parent.
 				//
-				if (ObjectType != OriginalType)
+				if (applyFilters && ObjectType != OriginalType)
 				{
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 
@@ -1357,10 +1357,11 @@ namespace LinqToDB.Linq.Builder
 					IsList     = true;
 				}
 
-				OriginalType     = type;
-				ObjectType       = GetObjectType();
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
-				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
+				OriginalType       = type;
+				ObjectType         = GetObjectType();
+				EntityDescriptor   = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+				InheritanceMapping = EntityDescriptor.InheritanceMapping;
+				SqlTable           = new SqlTable(builder.MappingSchema, ObjectType);
 
 				var psrc = parent.SelectQuery.From[parent.SqlTable];
 				var join = left ? SqlTable.WeakLeftJoin() : SqlTable.WeakInnerJoin();
@@ -1389,6 +1390,14 @@ namespace LinqToDB.Linq.Builder
 					join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, predicate));
 				}
 
+				if (ObjectType != OriginalType)
+				{
+					var predicate = Builder.MakeIsPredicate(this, OriginalType);
+
+					if (predicate.GetType() != typeof(SqlPredicate.Expr))
+						join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, predicate));
+				}
+
 				RegularConditionCount = join.JoinedTable.Condition.Conditions.Count;
 				ExpressionPredicate   = Association.GetPredicate(parent.ObjectType, ObjectType);
 
@@ -1402,7 +1411,7 @@ namespace LinqToDB.Linq.Builder
 						join.JoinedTable.Condition.Conditions);
 				}
 
-				Init();
+				Init(false);
 			}
 
 			protected override Expression ProcessExpression(Expression expression)
