@@ -60,6 +60,7 @@ namespace LinqToDB.Linq.Builder
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),
 			new MergeContextParser         (),
+			new ArrayBuilder               ()
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)

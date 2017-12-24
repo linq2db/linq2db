@@ -28,8 +28,16 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Constant:
 					{
 						var c = (ConstantExpression)expression;
-						if (c.Value is IQueryable)
+
+						if (c.Value is IQueryable queryable)
+						{
+							if (typeof(EnumerableQuery<>).IsSameOrParentOf(c.Value.GetType()))
+								break;
+							if (queryable.Expression.NodeType == ExpressionType.NewArrayInit)
+								break;
+
 							return action(1, null);
+						}
 
 						break;
 					}
