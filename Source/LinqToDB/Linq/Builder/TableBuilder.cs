@@ -31,8 +31,11 @@ namespace LinqToDB.Linq.Builder
 
 						if (c.Value is IQueryable queryable)
 						{
-							if (typeof(EnumerableQuery<>).IsSameOrParentOf(c.Value.GetType()))
+							// Avoid collision with ArrayBuilder
+							var elementType = queryable.ElementType;
+							if (builder.MappingSchema.IsScalarType(elementType) && typeof(EnumerableQuery<>).IsSameOrParentOf(c.Value.GetType()))
 								break;
+
 							if (queryable.Expression.NodeType == ExpressionType.NewArrayInit)
 								break;
 

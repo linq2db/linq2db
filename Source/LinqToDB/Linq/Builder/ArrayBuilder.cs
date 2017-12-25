@@ -14,10 +14,10 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return Find(buildInfo, (i, t) => i) > 0;
+			return Find(builder, buildInfo, (i, t) => i) > 0;
 		}
 
-		static T Find<T>(BuildInfo buildInfo, Func<int, Type, T> action)
+		static T Find<T>(ExpressionBuilder builder, BuildInfo buildInfo, Func<int, Type, T> action)
 		{
 			var expression = buildInfo.Expression;
 
@@ -29,7 +29,15 @@ namespace LinqToDB.Linq.Builder
 
 						var type = c.Value.GetType();
 						if (typeof(EnumerableQuery<>).IsSameOrParentOf(type))
-							return action(1, type.GetGenericArguments(typeof(EnumerableQuery<>))[0]);
+						{
+							// Avoiding collision with TableBuilder
+							var elementType = type.GetGenericArguments(typeof(EnumerableQuery<>))[0];
+							if (!builder.MappingSchema.IsScalarType(elementType))
+								break;
+
+							return action(1, elementType);
+						}
+
 						if (typeof(Array).IsSameOrParentOf(type))
 							return action(2, type.GetElementType());
 
@@ -58,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 			foreach (var itemExpr in elements)
 			{
 				var ctx = builder.GetContext(buildInfo.Parent, itemExpr);
-				if (ctx == null) ;
+				if (ctx == null) 
 					ctx = buildInfo.Parent;
 
 				yield return ctx.ConvertToSql(itemExpr, 0, ConvertFlags.Field)[0].Sql;
@@ -72,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var sequence = Find(buildInfo, (index, type) =>
+			var sequence = Find(builder, buildInfo, (index, type) =>
 			{
 				var query      = buildInfo.SelectQuery;
 				var innerQuery = new SelectQuery();
