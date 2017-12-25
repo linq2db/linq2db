@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
@@ -205,7 +205,7 @@ namespace LinqToDB.Mapping
 		{
 			return (new PropertyMappingBuilder<T>(this, func)).IsColumn();
 		}
-
+		
 		/// <summary>
 		/// Adds association mapping to current entity.
 		/// </summary>
@@ -221,8 +221,8 @@ namespace LinqToDB.Mapping
 			Expression<Func<T, ID1>> thisKey,
 			Expression<Func<S, ID2>> otherKey )
 		{
-			var thisKeyName = ((MemberExpression)thisKey.Body).Member.Name;
-			var otherKeyName = ((MemberExpression)otherKey.Body).Member.Name;
+			var thisKeyName = MemberHelper.GetMemberInfo(thisKey).Name;
+			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
 			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
@@ -331,6 +331,21 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Sets dynamic columns store for current entity.
+		/// </summary>
+		/// <param name="func">Dynamic columns store getter.</param>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> HasDynamicColumnsStore(Expression<Func<T, object>> func)
+		{
+			return SetAttribute(
+				func,
+				false,
+				_ => new DynamicColumnsStoreAttribute(),
+				(_, a) => { },
+				a => a.Configuration);
+		}
+
+		/// <summary>
 		/// Adds inheritance mapping for specified discriminator value.
 		/// </summary>
 		/// <typeparam name="S">Discriminator value type.</typeparam>
@@ -421,10 +436,8 @@ namespace LinqToDB.Mapping
 
 			Action<Expression,bool> setAttr = (e,m) =>
 			{
-				var memberInfo =
-					e is MemberExpression     ? ((MemberExpression)    e).Member :
-					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
-
+				var memberInfo = MemberHelper.GetMemberInfo(e);
+					
 				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T))
 					memberInfo = typeof(T).GetMemberEx(memberInfo);
 

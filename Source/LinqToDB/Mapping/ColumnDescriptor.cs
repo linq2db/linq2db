@@ -38,6 +38,12 @@ namespace LinqToDB.Mapping
 				var propertyInfo = (PropertyInfo)MemberInfo;
 				MemberType = propertyInfo.PropertyType;
 			}
+#if !NETSTANDARD1_6
+			else if (MemberInfo is DynamicColumnInfo dynamicColumnInfo)
+			{
+				MemberType = dynamicColumnInfo.ColumnType;
+			}
+#endif
 
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
 			ColumnName      = columnAttribute.Name       ?? MemberInfo.Name;

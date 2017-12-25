@@ -168,5 +168,8 @@ namespace LinqToDB.Metadata
 
 			return Array<T>.Empty;
 		}
+
+		public MemberInfo[] GetDynamicColumns(Type type)
+			=> new MemberInfo[0];
 	}
 }

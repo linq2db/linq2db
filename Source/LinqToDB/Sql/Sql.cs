@@ -127,6 +127,11 @@ namespace LinqToDB
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
 		}
 
+		public static T Property<T>(object entity, string propertyName)
+		{
+			throw new LinqException("'Property' is only server-side method.");
+		}
+
 		#endregion
 
 		#region NoConvert

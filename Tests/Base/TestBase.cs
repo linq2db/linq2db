@@ -322,7 +322,7 @@ namespace Tests
 			return res;
 		}
 
-		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
+		protected void TestOnePerson(int id, string firstName, IQueryable<IPerson> persons)
 		{
 			var list = persons.ToList();
 
@@ -334,7 +334,7 @@ namespace Tests
 			Assert.AreEqual(firstName, person.FirstName);
 		}
 
-		protected void TestOneJohn(IQueryable<Person> persons)
+		protected void TestOneJohn(IQueryable<IPerson> persons)
 		{
 			TestOnePerson(1, "John", persons);
 		}

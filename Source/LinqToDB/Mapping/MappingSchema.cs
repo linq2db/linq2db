@@ -923,6 +923,14 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Gets the dynamic columns defined on given type.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		/// <returns>All dynamic columns defined on given type.</returns>
+		public MemberInfo[] GetDynamicColumns(Type type)
+			=> MetadataReaders.SelectMany(mr => mr.GetDynamicColumns(type)).ToArray();
+
+		/// <summary>
 		/// Gets fluent mapping builder for current schema.
 		/// </summary>
 		/// <returns>Fluent mapping builder.</returns>

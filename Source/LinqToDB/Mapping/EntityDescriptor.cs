@@ -65,6 +65,11 @@ namespace LinqToDB.Mapping
 		public bool                        IsColumnAttributeRequired { get; private set; }
 
 		/// <summary>
+		/// Gets the dynamic columns store descriptor.
+		/// </summary>
+		public ColumnDescriptor            DynamicColumnsStore       { get; private set; }
+
+		/// <summary>
 		/// Gets list of column descriptors for current entity.
 		/// </summary>
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
@@ -117,8 +122,10 @@ namespace LinqToDB.Mapping
 			}
 
 			var attrs = new List<ColumnAttribute>();
+			var members = TypeAccessor.Members.Concat(
+				mappingSchema.GetDynamicColumns(ObjectType).Select(dc => new MemberAccessor(TypeAccessor, dc)));
 
-			foreach (var member in TypeAccessor.Members)
+			foreach (var member in members)
 			{
 				var aa = mappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
@@ -168,8 +175,14 @@ namespace LinqToDB.Mapping
 						Aliases.Add(member.Name, caa.MemberName);
 					}
 				}
-			}
 
+				// dynamic columns store property
+				var dcsProp = mappingSchema.GetAttribute<DynamicColumnsStoreAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+
+				if (dcsProp != null)
+					DynamicColumnsStore = new ColumnDescriptor(mappingSchema, new ColumnAttribute(member.Name), member);
+			}
+			
 			var typeColumnAttrs = mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
 
 			foreach (var attr in typeColumnAttrs.Concat(attrs))
