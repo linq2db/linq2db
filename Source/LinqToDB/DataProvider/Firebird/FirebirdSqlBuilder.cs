@@ -241,6 +241,13 @@ namespace LinqToDB.DataProvider.Firebird
 				if (_identityField != null)
 					return 3;
 			}
+			else if (statement is SqlDropTableStatement dropTable)
+			{
+				_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+
+				if (_identityField != null)
+					return 3;
+			}
 
 			return base.CommandCount(statement);
 		}
