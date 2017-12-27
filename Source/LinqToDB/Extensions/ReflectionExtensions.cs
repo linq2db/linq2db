@@ -274,16 +274,32 @@ namespace LinqToDB.Extensions
 		private static readonly MemberInfo SQLPropertyMethod = MemberHelper.MethodOf(() => Sql.Property<string>(null, null)).GetGenericMethodDefinition();
 
 		/// <summary>
-		/// Determines whether given member info represent a Sql.Property method.
+		/// Determines whether member info represent a Sql.Property method.
 		/// </summary>
 		/// <param name="memberInfo">The member information.</param>
 		/// <returns>
-		///   <c>true</c> if given member info is Sql.Property method; otherwise, <c>false</c>.
+		///   <c>true</c> if member info is Sql.Property method; otherwise, <c>false</c>.
 		/// </returns>
 		public static bool IsSqlPropertyMethodEx(this MemberInfo memberInfo)
 		{
 			return memberInfo is MethodInfo methodCall && methodCall.IsGenericMethod &&
 			       methodCall.GetGenericMethodDefinition() == SQLPropertyMethod;
+		}
+
+		/// <summary>
+		/// Determines whether member info is dynamic column property.
+		/// </summary>
+		/// <param name="memberInfo">The member information.</param>
+		/// <returns>
+		///   <c>true</c> if member info is dynamic column property; otherwise, <c>false</c>.
+		/// </returns>
+		public static bool IsDynamicColumnPropertyEx(this MemberInfo memberInfo)
+		{
+#if !NETSTANDARD1_6
+			return memberInfo.MemberType == MemberTypes.Property && memberInfo is Mapping.DynamicColumnInfo;
+#else
+			return false;
+#endif
 		}
 
 		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, Type attributeType, bool inherit)
@@ -404,7 +420,7 @@ namespace LinqToDB.Extensions
 			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ConcurrentDictionary<Type,T[]>();
 		}
 
-		#region Attributes cache
+#region Attributes cache
 
 		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ConcurrentDictionary<Type, object[]>();
 
@@ -470,7 +486,7 @@ namespace LinqToDB.Extensions
 				GetAttributesTreeInternal(list, type.BaseTypeEx());
 		}
 
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Returns an array of custom attributes applied to a type.
@@ -909,9 +925,9 @@ namespace LinqToDB.Extensions
 			return type.GetEvent(eventName);
 		}
 		
-		#endregion
+#endregion
 
-		#region MethodInfo extensions
+#region MethodInfo extensions
 
 		public static PropertyInfo GetPropertyInfo(this MethodInfo method)
 		{
@@ -932,9 +948,9 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		#endregion
+#endregion
 
-		#region MemberInfo extensions
+#region MemberInfo extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
@@ -1074,7 +1090,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		#endregion
+#endregion
 
 	}
 }

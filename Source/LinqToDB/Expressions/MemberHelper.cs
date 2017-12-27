@@ -12,11 +12,11 @@ namespace LinqToDB.Expressions
 	public static class MemberHelper
 	{
 		/// <summary>
-		/// Gets the member information from given lambda expression. <seealso cref="GetMemberInfo(System.Linq.Expressions.Expression)"/>
+		/// Gets the member information from given lambda expression. <seealso cref="GetMemberInfo(Expression)" />
 		/// </summary>
 		/// <param name="func">The lambda expression.</param>
 		/// <returns></returns>
-		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x => Sql.Property(x, \"SomeProperty\")).</exception>
+		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
 		public static MemberInfo GetMemberInfo(LambdaExpression func)
 		{
 			return GetMemberInfo(func.Body);
@@ -28,15 +28,15 @@ namespace LinqToDB.Expressions
 		/// <remarks>
 		/// Returns member information for given expressions, e.g.:
 		/// <list type="bullet">
-		/// <item><description>For: x => x.SomeProperty, returns MemberInfo of SomeProperty.</description></item>
-		/// <item><description>For: x => x.SomeMethod(), returns MethodInfo of SomeMethod.</description></item>
-		/// <item><description>For: x => new { X = x.Name }, return ConstructorInfo of anonymous type.</description></item>
-		/// <item><description>For: x => Sql.Property&lt;int&gt;(x, "SomeProperty"), returns MemberInfo of "SomeProperty" if exists on type, otherwise returns DynamicColumnInfo for SomeProperty on given type.</description></item>
+		/// <item><description>For: x =&gt; x.SomeProperty, returns MemberInfo of SomeProperty.</description></item>
+		/// <item><description>For: x =&gt; x.SomeMethod(), returns MethodInfo of SomeMethod.</description></item>
+		/// <item><description>For: x =&gt; new { X = x.Name }, return ConstructorInfo of anonymous type.</description></item>
+		/// <item><description>For: x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty"), returns MemberInfo of "SomeProperty" if exists on type, otherwise returns DynamicColumnInfo for SomeProperty on given type.</description></item>
 		/// </list>
 		/// </remarks>
 		/// <param name="expr">The expression.</param>
 		/// <returns></returns>
-		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x => Sql.Property(x, \"SomeProperty\")).</exception>
+		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
 		public static MemberInfo GetMemberInfo(Expression expr)
 		{
 			while (expr.NodeType == ExpressionType.Convert)

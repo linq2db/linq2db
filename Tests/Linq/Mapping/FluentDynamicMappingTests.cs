@@ -21,19 +21,13 @@ namespace Tests.Mapping
 
 			public byte RowType { get; set; }
 
+		    [DynamicColumnsStore]
 			public IDictionary<string, object> ExtendedColumns { get; set; }
 	    }
 
 		[Table]
 		public class MyClass2 : MyClass { }
-
-		[Table]
-	    public class MyClass3
-	    {
-			[DynamicColumnsStore]
-		    public IDictionary<string, object> ExtendedColumns { get; set; }
-		}
-
+		
 	    [Test]
 		public void HasAttribute1()
 	    {
@@ -217,55 +211,18 @@ namespace Tests.Mapping
 
 		    Assert.IsNull(ed["ID"]);
 	    }
-
+		
 	    [Test]
-		public void HasDynamicColumnStore1()
-	    {
-		    var ms = new MappingSchema();
-		    var mb = ms.GetFluentMappingBuilder();
-
-		    mb.Entity<MyClass>()
-			    .HasDynamicColumnsStore(x => x.ExtendedColumns);
-
-		    var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-		    Assert.AreEqual(ed.DynamicColumnsStore.MemberName, "ExtendedColumns");
-	    }
-
-	    [Test]
-		public void HasDynamicColumnStore2()
-	    {
-		    var ms = new MappingSchema();
-		    var mb = ms.GetFluentMappingBuilder();
-
-		    mb.Entity<MyClass>()
-			    .HasDynamicColumnsStore(x => Sql.Property<IDictionary<string, object>>(x, "ExtendedColumns"));
-
-		    var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-		    Assert.AreEqual(ed.DynamicColumnsStore.MemberName, "ExtendedColumns");
-	    }
-
-	    [Test]
-	    public void HasDynamicColumnStore3()
+	    public void HasDynamicColumnStore1()
 	    {
 		    var ms = new MappingSchema();
 		    
-		    var ed = ms.GetEntityDescriptor(typeof(MyClass3));
+		    var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
 		    Assert.AreEqual(ed.DynamicColumnsStore.MemberName, "ExtendedColumns");
-	    }
-
-	    [Test]
-	    public void HasDynamicColumnStore4()
-	    {
-		    var ms = new MappingSchema();
-
-		    var ed = ms.GetEntityDescriptor(typeof(MyClass3));
-
 		    Assert.IsFalse(ed.Columns.Any(c => c.MemberName == "ExtendedColumns"));
-	    }
-
+		}
+		
 		[Test]
 		public void Inheritance1()
 	    {

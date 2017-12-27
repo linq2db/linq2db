@@ -329,22 +329,7 @@ namespace LinqToDB.Mapping
 		{
 			return SetTable(a => a.Database = databaseName);
 		}
-
-		/// <summary>
-		/// Sets dynamic columns store for current entity.
-		/// </summary>
-		/// <param name="func">Dynamic columns store getter.</param>
-		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> HasDynamicColumnsStore(Expression<Func<T, object>> func)
-		{
-			return SetAttribute(
-				func,
-				false,
-				_ => new DynamicColumnsStoreAttribute(),
-				(_, a) => { },
-				a => a.Configuration);
-		}
-
+		
 		/// <summary>
 		/// Adds inheritance mapping for specified discriminator value.
 		/// </summary>

@@ -55,10 +55,8 @@ namespace LinqToDB.Metadata
 		
 		public void AddAttribute(MemberInfo memberInfo, Attribute attribute)
 		{
-#if !NETSTANDARD1_6
-			if (memberInfo is DynamicColumnInfo)
+			if (memberInfo.IsDynamicColumnPropertyEx())
 				_dynamicColumns.GetOrAdd(memberInfo.DeclaringType, new ConcurrentDictionary<MemberInfo, byte>()).TryAdd(memberInfo, 0);
-#endif
 
 			_members.GetOrAdd(memberInfo, t => new List<Attribute>()).Add(attribute);
 		}

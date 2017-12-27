@@ -294,7 +294,7 @@ namespace Tests.Linq
 			    var result = db.GetTable<MyClass>()
 				    .LoadWith(x => Sql.Property<Patient>(x, "Patient"))
 				    .ToList()
-				    .Select(p => ((Patient)p.ExtendedProperties["Patient"]).Diagnosis)
+				    .Select(p => ((Patient)p.ExtendedProperties["Patient"])?.Diagnosis)
 				    .ToList();
 
 				Assert.IsTrue(result.SequenceEqual(expected));
@@ -306,7 +306,7 @@ namespace Tests.Linq
 		    var ms = new MappingSchema();
 
 		    ms.GetFluentMappingBuilder()
-			    .Entity<MyClass>().HasTableName("Person").HasDynamicColumnsStore(x => x.ExtendedProperties)
+			    .Entity<MyClass>().HasTableName("Person")
 			    .HasPrimaryKey(x => Sql.Property<int>(x, "ID"))
 			    .Property(x => Sql.Property<string>(x, "FirstName")).IsNullable(false)
 			    .Property(x => Sql.Property<string>(x, "LastName")).IsNullable(false)
@@ -316,40 +316,13 @@ namespace Tests.Linq
 		    return ms;
 	    }
 
-		public class MyClass : IPerson
+		public class MyClass
 	    {
 		    [Column("PersonID"), Identity]
 		    public int ID { get; set; }
 
+			[DynamicColumnsStore]
 		    public IDictionary<string, object> ExtendedProperties { get; set; }
-
-		    [NotColumn]
-		    Gender IPerson.Gender
-		    {
-			    get => (Gender)ExtendedProperties["Gender"];
-			    set => ExtendedProperties["Gender"] = value;
-		    }
-
-		    [NotColumn]
-		    string IPerson.FirstName
-		    {
-			    get => (string)ExtendedProperties["FirstName"];
-			    set => ExtendedProperties["FirstName"] = value;
-		    }
-
-		    [NotColumn]
-		    string IPerson.MiddleName
-		    {
-			    get => (string)ExtendedProperties["MiddleName"];
-			    set => ExtendedProperties["MiddleName"] = value;
-		    }
-
-		    [NotColumn]
-		    string IPerson.LastName
-		    {
-			    get => (string)ExtendedProperties["LastName"];
-			    set => ExtendedProperties["LastName"] = value;
-		    }
 	    }
 	}
 }

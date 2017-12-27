@@ -190,14 +190,6 @@ namespace LinqToDB.Reflection
 			MemberInfo = memberInfo;
 			Type = MemberInfo is PropertyInfo ? ((PropertyInfo)MemberInfo).PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
-#if !NETSTANDARD1_6
-			if (memberInfo is DynamicColumnInfo)
-			{
-				HasGetter = false;
-				HasSetter = false;
-			}
-			else
-#endif
 			if (memberInfo is PropertyInfo)
 			{
 				HasGetter = ((PropertyInfo)memberInfo).GetGetMethodEx(true) != null;
@@ -212,7 +204,28 @@ namespace LinqToDB.Reflection
 			var objParam   = Expression.Parameter(TypeAccessor.Type, "obj");
 			var valueParam = Expression.Parameter(Type, "value");
 
-			if (HasGetter)
+			if (HasGetter && memberInfo.IsDynamicColumnPropertyEx())
+			{
+				IsComplex = true;
+
+				if (TypeAccessor.DynamicColumnsStoreAccessor != null)
+					// get value via "Item" accessor; we're not null-checking
+					GetterExpression =
+						Expression.Lambda(
+							Expression.Property(
+								Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
+								"Item",
+								Expression.Constant(memberInfo.Name)),
+							objParam);
+				else
+					// dynamic columns store was not provided, throw exception when accessed
+					GetterExpression = Expression.Lambda(
+						Expression.Throw(
+							Expression.New(typeof(ArgumentException).GetConstructor(new[] {typeof(string)}),
+								Expression.Constant("Tried getting dynamic column value, without setting dynamic column store on type."))),
+						objParam);
+			}
+			else if (HasGetter)
 			{
 				GetterExpression = Expression.Lambda(Expression.MakeMemberAccess(objParam, memberInfo), objParam);
 			}
@@ -221,7 +234,41 @@ namespace LinqToDB.Reflection
 				GetterExpression = Expression.Lambda(new DefaultValueExpression(MappingSchema.Default, Type), objParam);
 			}
 
-			if (HasSetter)
+			if (HasSetter && memberInfo.IsDynamicColumnPropertyEx())
+			{
+				IsComplex = true;
+
+				if (TypeAccessor.DynamicColumnsStoreAccessor != null)
+					// if null, create new dictionary; then assign value
+					SetterExpression =
+						Expression.Lambda(
+							Expression.Block(
+								Expression.IfThen(
+									Expression.ReferenceEqual(
+										Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
+										Expression.Constant(null)),
+									Expression.Assign(
+										Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
+										Expression.New(typeof(Dictionary<string, object>)))),
+								Expression.Assign(
+									Expression.Property(
+										Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
+										"Item", 
+										Expression.Constant(memberInfo.Name)), 
+									Expression.Convert(valueParam, typeof(object)))), 
+							objParam,
+							valueParam);
+				else
+					// dynamic columns store was not provided, throw exception when accessed
+					GetterExpression = Expression.Lambda(
+						Expression.Throw(
+							Expression.New(typeof(ArgumentException).GetConstructor(new[] {typeof(string)}),
+								Expression.Constant("Tried setting dynamic column value, without setting dynamic column store on type."))),
+						objParam, 
+						valueParam);
+
+			}
+			else if (HasSetter)
 			{
 				SetterExpression = Expression.Lambda(
 					Expression.Assign(Expression.MakeMemberAccess(objParam, memberInfo), valueParam),
@@ -323,3 +370,4 @@ namespace LinqToDB.Reflection
 		#endregion
 	}
 }
+
