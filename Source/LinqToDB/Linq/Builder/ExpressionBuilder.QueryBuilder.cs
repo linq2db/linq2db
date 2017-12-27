@@ -235,6 +235,9 @@ namespace LinqToDB.Linq.Builder
 
 						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide))
 							return new TransformInfo(BuildSql(context, expr));
+
+						if (ce.Method.IsSqlPropertyMethodEx())
+							return new TransformInfo(BuildSql(context, expr));
 					}
 
 					break;

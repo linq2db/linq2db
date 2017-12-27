@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Reflection;
 
 namespace LinqToDB.Mapping
@@ -9,11 +10,13 @@ namespace LinqToDB.Mapping
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
 	/// </summary>
 	/// <seealso cref="System.Reflection.MemberInfo" />
-	public class DynamicColumnInfo : MemberInfo, IEquatable<DynamicColumnInfo>
+	public class DynamicColumnInfo : PropertyInfo, IEquatable<DynamicColumnInfo>
 	{
-		/// <inheritdoc cref="MemberInfo.MemberType"/>
-		public override MemberTypes MemberType => MemberTypes.Custom;
-		
+		private static readonly MethodInfo _dummyGetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummyGetter), BindingFlags.Instance | BindingFlags.NonPublic);
+		private static readonly MethodInfo _dummySetter = typeof(DynamicColumnInfo).GetMethod(nameof(DummySetter), BindingFlags.Instance | BindingFlags.NonPublic);
+		private readonly MethodInfo _typedDummyGetter;
+		private readonly MethodInfo _typedDummySetter;
+
 		/// <inheritdoc cref="MemberInfo.Name"/>
 		public override string Name { get; }
 
@@ -23,25 +26,17 @@ namespace LinqToDB.Mapping
 		/// <inheritdoc cref="MemberInfo.ReflectedType"/>
 		public override Type ReflectedType => DeclaringType;
 
-		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(bool)"/>
-		public override object[] GetCustomAttributes(bool inherit)
-			=> new object[0];
+		/// <inheritdoc cref="PropertyInfo.PropertyType"/>
+		public override Type PropertyType { get; }
 
-		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(Type, bool)"/>
-		public override object[] GetCustomAttributes(Type attributeType, bool inherit)
-			=> new object[0];
+		/// <inheritdoc cref="PropertyInfo.Attributes"/>
+		public override PropertyAttributes Attributes => PropertyAttributes.None;
 
-		/// <inheritdoc cref="MemberInfo.IsDefined"/>
-		public override bool IsDefined(Type attributeType, bool inherit)
-			=> false;
+		/// <inheritdoc cref="PropertyInfo.CanRead"/>
+		public override bool CanRead => true;
 
-		/// <summary>
-		/// Gets the type of the column.
-		/// </summary>
-		/// <value>
-		/// The type of the column.
-		/// </value>
-		public Type ColumnType { get; }
+		/// <inheritdoc cref="PropertyInfo.CanWrite"/>
+		public override bool CanWrite => true;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DynamicColumnInfo" /> class.
@@ -52,8 +47,11 @@ namespace LinqToDB.Mapping
 		public DynamicColumnInfo(Type declaringType, Type columnType, string memberName)
 		{
 			DeclaringType = declaringType ?? throw new ArgumentNullException(nameof(declaringType));
-			ColumnType = columnType ?? throw new ArgumentNullException(nameof(columnType));
+			PropertyType = columnType ?? throw new ArgumentNullException(nameof(columnType));
 			Name = !string.IsNullOrEmpty(memberName) ? memberName : throw new ArgumentNullException(nameof(memberName));
+
+			_typedDummyGetter = _dummyGetter.MakeGenericMethod(declaringType);
+			_typedDummySetter = _dummySetter.MakeGenericMethod(declaringType);
 		}
 
 		/// <inheritdoc cref="IEquatable{T}.Equals(T)"/>
@@ -99,6 +97,50 @@ namespace LinqToDB.Mapping
 		/// </returns>
 		public static bool operator !=(DynamicColumnInfo a, DynamicColumnInfo b)
 			=> !a?.Equals(b) ?? !ReferenceEquals(b, null);
+
+		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(bool)"/>
+		public override object[] GetCustomAttributes(bool inherit)
+			=> new object[0];
+
+		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(Type, bool)"/>
+		public override object[] GetCustomAttributes(Type attributeType, bool inherit)
+			=> new object[0];
+
+		/// <inheritdoc cref="MemberInfo.IsDefined"/>
+		public override bool IsDefined(Type attributeType, bool inherit)
+			=> false;
+
+		/// <inheritdoc cref="PropertyInfo.SetValue(Object, Object, BindingFlags, Binder, object[], CultureInfo)"/>
+		public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, object[] index, CultureInfo culture)
+			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
+
+		/// <inheritdoc cref="PropertyInfo.GetAccessors(bool)"/>
+		public override MethodInfo[] GetAccessors(bool nonPublic)
+			=> new[] {_typedDummyGetter, _typedDummyGetter};
+
+		/// <inheritdoc cref="PropertyInfo.GetGetMethod(bool)"/>
+		public override MethodInfo GetGetMethod(bool nonPublic)
+			// we're returning dummy method, so the rest of the stack can inspect it and correctly build expressions
+			=> _typedDummyGetter;
+
+		/// <inheritdoc cref="PropertyInfo.GetSetMethod(bool)"/>
+		public override MethodInfo GetSetMethod(bool nonPublic)
+			// we're returning dummy method, so the rest of the stack can inspect it and correctly build expressions
+			=> _typedDummySetter;
+
+		/// <inheritdoc cref="PropertyInfo.GetIndexParameters"/>
+		public override ParameterInfo[] GetIndexParameters()
+			=> new ParameterInfo[0];
+
+		/// <inheritdoc cref="PropertyInfo.GetValue(object, BindingFlags, Binder, object[], CultureInfo)"/>
+		public override object GetValue(object obj, BindingFlags invokeAttr, Binder binder, object[] index, CultureInfo culture)
+			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
+		
+		private T DummyGetter<T>()
+			=> throw new InvalidOperationException("Dynamic column getter is not to be called.");
+
+		private void DummySetter<T>(T value)
+			=> throw new InvalidOperationException("Dynamic column setter is not to be called.");
 	}
 	
 #endif

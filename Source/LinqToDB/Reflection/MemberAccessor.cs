@@ -188,25 +188,23 @@ namespace LinqToDB.Reflection
 		void SetSimple(MemberInfo memberInfo)
 		{
 			MemberInfo = memberInfo;
+			Type = MemberInfo is PropertyInfo ? ((PropertyInfo)MemberInfo).PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
-			if (memberInfo is PropertyInfo)
-			{
-				Type = ((PropertyInfo)memberInfo).PropertyType;
-				HasGetter = ((PropertyInfo)memberInfo).GetGetMethodEx(true) != null;
-				HasSetter = ((PropertyInfo)memberInfo).GetSetMethodEx(true) != null;
-			}
 #if !NETSTANDARD1_6
-			else if (memberInfo is DynamicColumnInfo dynamicColumnInfo)
+			if (memberInfo is DynamicColumnInfo)
 			{
-				Type = dynamicColumnInfo.ColumnType;
-				// TODO: create dictionary getters and setters (if DynamicColumnStore is defined)
 				HasGetter = false;
 				HasSetter = false;
 			}
+			else
 #endif
+			if (memberInfo is PropertyInfo)
+			{
+				HasGetter = ((PropertyInfo)memberInfo).GetGetMethodEx(true) != null;
+				HasSetter = ((PropertyInfo)memberInfo).GetSetMethodEx(true) != null;
+			}
 			else
 			{
-				Type = ((FieldInfo)memberInfo).FieldType;
 				HasGetter = true;
 				HasSetter = !((FieldInfo)memberInfo).IsInitOnly;
 			}

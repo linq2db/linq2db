@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Xml;
 
 using JetBrains.Annotations;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Extensions
 {
@@ -268,6 +269,21 @@ namespace LinqToDB.Extensions
 		public static bool IsMethodEx(this MemberInfo memberInfo)
 		{
 			return memberInfo.MemberType == MemberTypes.Method;
+		}
+
+		private static readonly MemberInfo SQLPropertyMethod = MemberHelper.MethodOf(() => Sql.Property<string>(null, null)).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// Determines whether given member info represent a Sql.Property method.
+		/// </summary>
+		/// <param name="memberInfo">The member information.</param>
+		/// <returns>
+		///   <c>true</c> if given member info is Sql.Property method; otherwise, <c>false</c>.
+		/// </returns>
+		public static bool IsSqlPropertyMethodEx(this MemberInfo memberInfo)
+		{
+			return memberInfo is MethodInfo methodCall && methodCall.IsGenericMethod &&
+			       methodCall.GetGenericMethodDefinition() == SQLPropertyMethod;
 		}
 
 		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, Type attributeType, bool inherit)

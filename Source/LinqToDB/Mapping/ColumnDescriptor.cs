@@ -27,7 +27,7 @@ namespace LinqToDB.Mapping
 		{
 			MemberAccessor = memberAccessor;
 			MemberInfo     = memberAccessor.MemberInfo;
-
+			
 			if (MemberInfo.IsFieldEx())
 			{
 				var fieldInfo = (FieldInfo)MemberInfo;
@@ -38,12 +38,6 @@ namespace LinqToDB.Mapping
 				var propertyInfo = (PropertyInfo)MemberInfo;
 				MemberType = propertyInfo.PropertyType;
 			}
-#if !NETSTANDARD1_6
-			else if (MemberInfo is DynamicColumnInfo dynamicColumnInfo)
-			{
-				MemberType = dynamicColumnInfo.ColumnType;
-			}
-#endif
 
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
 			ColumnName      = columnAttribute.Name       ?? MemberInfo.Name;

@@ -11,8 +11,6 @@ namespace LinqToDB.Expressions
 
 	public static class MemberHelper
 	{
-		private static readonly MemberInfo SQLPropertyMethod = MethodOf(() => Sql.Property<string>(null, null)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Gets the member information from given lambda expression. <seealso cref="GetMemberInfo(System.Linq.Expressions.Expression)"/>
 		/// </summary>
@@ -47,8 +45,7 @@ namespace LinqToDB.Expressions
 			if (expr.NodeType == ExpressionType.New)
 				return ((NewExpression)expr).Constructor;
 
-			if (expr is MethodCallExpression methodCall && methodCall.Method.IsGenericMethod &&
-			    methodCall.Method.GetGenericMethodDefinition() == SQLPropertyMethod)
+			if (expr is MethodCallExpression methodCall && methodCall.Method.IsSqlPropertyMethodEx())
 			{
 				// validate expression and get member name
 				var arg1 = methodCall.Arguments[0].NodeType == ExpressionType.Convert
