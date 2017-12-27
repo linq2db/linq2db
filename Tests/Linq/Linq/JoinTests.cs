@@ -1001,7 +1001,7 @@ namespace Tests.Linq
 
 				var result = q.ToList();
 
-				var expected = 
+				var expected =
 					from p in Person
 					from n in new[] {p.FirstName, p.LastName, "John", doe}
 					select n;
@@ -1010,7 +1010,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)]
 		public void InnerJoinArray(string context)
 		{
 			var doe = "Doe";
@@ -1023,7 +1023,7 @@ namespace Tests.Linq
 
 				var result = q.ToList();
 
-				var expected = 
+				var expected =
 					from p in Person
 					join n in new[] {"Janet", "Doe", "John", doe}.AsQueryable() on p.LastName equals n
 					select p;
@@ -1032,7 +1032,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)]
 		public void InnerJoinArray2(string context)
 		{
 			var doe = "Doe";
@@ -1045,12 +1045,42 @@ namespace Tests.Linq
 
 				var result = q.ToList();
 
-				var expected = 
+				var expected =
 					from p in Person
 					join n in new[] {"Janet", "Doe", "John", doe} on p.LastName equals n
 					select p;
 
 				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.Access, ProviderName.DB2, ProviderName.Informix)]
+		public void InnerJoinArray3(string context)
+		{
+			var doe = "Doe";
+			var arr = new[] {"Janet", "Doe", "John", doe};
+
+			using (var db = GetDataContext(context))
+			{
+				for (var i = 0; i < 2; i++)
+				{
+					if (i > 0)
+						arr[1] += i;
+
+					var q =
+						from p in db.Person
+						join n in arr on p.LastName equals n
+						select p;
+
+					var result = q.ToList();
+
+					var expected =
+						from p in Person
+						join n in arr on p.LastName equals n
+						select p;
+
+					AreEqual(expected, result);
+				}
 			}
 		}
 
