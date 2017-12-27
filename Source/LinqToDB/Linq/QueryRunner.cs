@@ -147,9 +147,7 @@ namespace LinqToDB.Linq
 			{
 				var value = p.Accessor(expression, parameters);
 
-				var vs = value as IEnumerable;
-
-				if (vs != null)
+				if (value is IEnumerable vs)
 				{
 					var type = vs.GetType();
 					var etype = type.GetItemType();
@@ -261,10 +259,9 @@ namespace LinqToDB.Linq
 			{
 				var q = queryFunc;
 
-				var value = select.SkipValue as SqlValue;
-				if (value != null)
+				if (select.SkipValue is SqlValue value)
 				{
-					var n = (int)((IValueContainer)select.SkipValue).Value;
+					var n = (int)((IValueContainer)value).Value;
 
 					if (n > 0)
 					{

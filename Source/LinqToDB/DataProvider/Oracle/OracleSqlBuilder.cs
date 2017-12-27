@@ -54,15 +54,15 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		private static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
+		static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
 		{
 			var sqlParameter = expr as SqlParameter;
 			var sqlValue     = expr as SqlValue;
 
-			if (sqlParameter != null && sqlParameter.Value is string && sqlParameter.Value.ToString() == "")
+			if (sqlParameter?.Value is string && sqlParameter.Value.ToString() == "")
 				sqlParameter.Value = null;
 
-			if (sqlValue != null && sqlValue.Value is string && sqlValue.Value.ToString() == "")
+			if (sqlValue?.Value is string && sqlValue.Value.ToString() == "")
 				sqlValue.Value = null;
 		}
 
@@ -83,8 +83,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			return base.BuildWhere(selectQuery) || !NeedSkip(selectQuery) && NeedTake(selectQuery) &&
-			       selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
+			return
+				base.BuildWhere(selectQuery) ||
+				!NeedSkip(selectQuery) &&
+				 NeedTake(selectQuery) &&
+				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
 		}
 
 		string _rowNumberAlias;
@@ -248,10 +251,11 @@ namespace LinqToDB.DataProvider.Oracle
 				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-				}
+					wrap =
+						expr is SqlExpression ex      &&
+						ex.Expr              == "{0}" &&
+						ex.Parameters.Length == 1     &&
+						ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
@@ -345,20 +349,22 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (Statement)
 			{
 				case SqlDropTableStatement dropTable:
+					if (commandNumber == 1)
 					{
-						if (commandNumber == 1)
-						{
-							StringBuilder
-								.Append("DROP SEQUENCE ")
-								.Append(GetSchemaPrefix(dropTable.Table))
-								.Append("SIDENTITY_")
-								.Append(dropTable.Table.PhysicalName)
-								.AppendLine();
-						}
-						else
-							base.BuildDropTableStatement(dropTable);
-						break;
+						StringBuilder
+							.Append("DROP SEQUENCE ")
+							.Append(GetSchemaPrefix(dropTable.Table))
+							.Append("SIDENTITY_")
+							.Append(dropTable.Table.PhysicalName)
+							.AppendLine();
 					}
+					else
+					{
+						base.BuildDropTableStatement(dropTable);
+					}
+
+					break;
+
 				case SqlCreateTableStatement createTable:
 				{
 					var schemaPrefix = GetSchemaPrefix(createTable.Table);
@@ -389,6 +395,7 @@ namespace LinqToDB.DataProvider.Oracle
 							.AppendLine  ()
 							.AppendLine  ("END;");
 					}
+
 					break;
 				}
 			}

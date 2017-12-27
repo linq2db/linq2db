@@ -49,8 +49,8 @@ namespace LinqToDB.DataProvider.Firebird
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override bool   SkipFirst   { get { return false;       } }
-		protected override string SkipFormat  { get { return "SKIP {0}";  } }
+		protected override bool   SkipFirst  => false;
+		protected override string SkipFormat => "SKIP {0}";
 
 		protected override string FirstFormat(SelectQuery selectQuery)
 		{
@@ -160,10 +160,11 @@ namespace LinqToDB.DataProvider.Firebird
 				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-				}
+					wrap =
+						expr is SqlExpression ex      &&
+						ex.Expr              == "{0}" &&
+						ex.Parameters.Length == 1     &&
+						ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");

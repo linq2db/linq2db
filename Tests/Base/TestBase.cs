@@ -1130,7 +1130,7 @@ namespace Tests
 
 	public class DeletePerson : IDisposable
 	{
-		private IDataContext _db;
+		IDataContext _db;
 
 		public DeletePerson(IDataContext db)
 		{
