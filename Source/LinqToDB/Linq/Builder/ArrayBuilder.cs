@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
+	using SqlQuery;
+
 	class ArrayBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
@@ -17,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 			return Find(builder, buildInfo, (i, t) => i) > 0;
 		}
 
-		static T Find<T>(ExpressionBuilder builder, BuildInfo buildInfo, Func<int, Type, T> action)
+		static T Find<T>(ExpressionBuilder builder, BuildInfo buildInfo, Func<int,Type,T> action)
 		{
 			var expression = buildInfo.Expression;
 
@@ -28,6 +29,7 @@ namespace LinqToDB.Linq.Builder
 						var c = (ConstantExpression)expression;
 
 						var type = c.Value.GetType();
+
 						if (typeof(EnumerableQuery<>).IsSameOrParentOf(type))
 						{
 							// Avoiding collision with TableBuilder
@@ -65,9 +67,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			foreach (var itemExpr in elements)
 			{
-				var ctx = builder.GetContext(buildInfo.Parent, itemExpr);
-				if (ctx == null) 
-					ctx = buildInfo.Parent;
+				var ctx = builder.GetContext(buildInfo.Parent, itemExpr) ?? buildInfo.Parent;
 
 				yield return ctx.ConvertToSql(itemExpr, 0, ConvertFlags.Field)[0].Sql;
 			}
@@ -83,11 +83,12 @@ namespace LinqToDB.Linq.Builder
 			var sequence = Find(builder, buildInfo, (index, type) =>
 			{
 				var query      = buildInfo.SelectQuery;
-				var innerQuery = new SelectQuery();
-				innerQuery.ParentSelect = query;
+				var innerQuery = new SelectQuery { ParentSelect = query };
+
 				query.Select.From.Table(innerQuery);
 
 				var array = new ArrayContext(builder, buildInfo, query, type);
+
 				IEnumerable<ISqlExpression> elements;
 
 				switch (index)
@@ -105,9 +106,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var isFirst = true;
+
 				foreach (var itemSql in elements)
 				{
 					var currentQuery = isFirst ? innerQuery : new SelectQuery();
+
 					currentQuery.Select.AddNew(itemSql);
 
 					if (!isFirst)
@@ -137,18 +140,18 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-
 		class ArrayContext : IBuildContext
 		{
-			private readonly Type _elementType;
+			readonly Type _elementType;
+
 #if DEBUG
 			public string _sqlQueryText { get; }
 #endif
-			public ExpressionBuilder Builder { get; }
-			public Expression Expression { get; }
-			public SelectQuery SelectQuery { get; set; }
-			public SqlStatement Statement { get; set; }
-			public IBuildContext Parent { get; set; }
+			public ExpressionBuilder Builder     { get; }
+			public Expression        Expression  { get; }
+			public SelectQuery       SelectQuery { get; set; }
+			public SqlStatement      Statement   { get; set; }
+			public IBuildContext     Parent      { get; set; }
 
 			public ArrayContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType)
 			{
@@ -234,8 +237,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				throw new NotImplementedException();
 			}
-
 		}
-
 	}
 }
