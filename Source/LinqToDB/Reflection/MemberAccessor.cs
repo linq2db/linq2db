@@ -188,7 +188,7 @@ namespace LinqToDB.Reflection
 		void SetSimple(MemberInfo memberInfo)
 		{
 			MemberInfo = memberInfo;
-			Type = MemberInfo is PropertyInfo ? ((PropertyInfo)MemberInfo).PropertyType : ((FieldInfo)MemberInfo).FieldType;
+			Type       = MemberInfo is PropertyInfo ? ((PropertyInfo)MemberInfo).PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
 			if (memberInfo is PropertyInfo)
 			{
@@ -370,4 +370,3 @@ namespace LinqToDB.Reflection
 		#endregion
 	}
 }
-

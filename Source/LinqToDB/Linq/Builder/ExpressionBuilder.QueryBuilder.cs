@@ -233,10 +233,7 @@ namespace LinqToDB.Linq.Builder
 							return new TransformInfo(GetSubQueryExpression(context, ce, enforceServerSide));
 						}
 
-						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide))
-							return new TransformInfo(BuildSql(context, expr));
-
-						if (ce.Method.IsSqlPropertyMethodEx())
+						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
 							return new TransformInfo(BuildSql(context, expr));
 					}
 

@@ -322,7 +322,7 @@ namespace Tests
 			return res;
 		}
 
-		protected void TestOnePerson(int id, string firstName, IQueryable<IPerson> persons)
+		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
 		{
 			var list = persons.ToList();
 
@@ -339,7 +339,7 @@ namespace Tests
 			TestOnePerson(1, "John", persons);
 		}
 
-		protected void TestPerson(int id, string firstName, IQueryable<IPerson> persons)
+		protected void TestPerson(int id, string firstName, IQueryable<Person> persons)
 		{
 			var person = persons.ToList().First(p => p.ID == id);
 

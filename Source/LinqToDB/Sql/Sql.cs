@@ -127,6 +127,14 @@ namespace LinqToDB
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
 		}
 
+		/// <summary>
+		/// Allows access to entity property via name. Property can be dynamic or non-dynamic.
+		/// </summary>
+		/// <typeparam name="T">Property type.</typeparam>
+		/// <param name="entity">The entity.</param>
+		/// <param name="propertyName">Name of the property.</param>
+		/// <returns></returns>
+		/// <exception cref="LinqException">'Property' is only server-side method.</exception>
 		public static T Property<T>(object entity, string propertyName)
 		{
 			throw new LinqException("'Property' is only server-side method.");

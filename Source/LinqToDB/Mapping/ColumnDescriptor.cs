@@ -27,7 +27,7 @@ namespace LinqToDB.Mapping
 		{
 			MemberAccessor = memberAccessor;
 			MemberInfo     = memberAccessor.MemberInfo;
-			
+
 			if (MemberInfo.IsFieldEx())
 			{
 				var fieldInfo = (FieldInfo)MemberInfo;

@@ -205,7 +205,7 @@ namespace LinqToDB.Mapping
 		{
 			return (new PropertyMappingBuilder<T>(this, func)).IsColumn();
 		}
-		
+
 		/// <summary>
 		/// Adds association mapping to current entity.
 		/// </summary>
@@ -329,7 +329,7 @@ namespace LinqToDB.Mapping
 		{
 			return SetTable(a => a.Database = databaseName);
 		}
-		
+
 		/// <summary>
 		/// Adds inheritance mapping for specified discriminator value.
 		/// </summary>
