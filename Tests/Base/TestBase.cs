@@ -334,12 +334,12 @@ namespace Tests
 			Assert.AreEqual(firstName, person.FirstName);
 		}
 
-		protected void TestOneJohn(IQueryable<IPerson> persons)
+		protected void TestOneJohn(IQueryable<Person> persons)
 		{
 			TestOnePerson(1, "John", persons);
 		}
 
-		protected void TestPerson(int id, string firstName, IQueryable<Person> persons)
+		protected void TestPerson(int id, string firstName, IQueryable<IPerson> persons)
 		{
 			var person = persons.ToList().First(p => p.ID == id);
 
