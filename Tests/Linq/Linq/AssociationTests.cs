@@ -333,6 +333,10 @@ namespace Tests.Linq
 			[Association(ExpressionPredicate = "MiddleGenericPredicate" , CanBeNull = true)]
 			public Middle MiddleGeneric { get; set; }
 
+			public Middle MiddleRuntime { get; set; }
+
+			public IEnumerable<Middle> MiddlesRuntime { get; set; }
+
 			[UsedImplicitly]
 			static Expression<Func<Top, Middle, bool>> MiddleGenericPredicate =>
 				(t, m) => t.ParentID == m.ParentID && m.ChildID > 1;
@@ -610,6 +614,58 @@ namespace Tests.Linq
 
 				Assert.NotNull(list[0]);
 				Assert.Null   (list[1]);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
+		public void TestGenericAssociationRuntime(string context)
+		{
+			var ids = new[] { 1, 5 };
+
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<Top>()
+				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 );
+
+			using (var db = GetDataContext(context, ms))
+			{
+				var q =
+					from t in db.GetTable<Top>()
+					where ids.Contains(t.ParentID)
+					orderby t.ParentID
+					select t.MiddleRuntime == null ? null : t.MiddleRuntime.Bottom;
+
+				var list = q.ToList();
+
+				Assert.NotNull(list[0]);
+				Assert.Null   (list[1]);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
+		public void TestGenericAssociationRuntimeMany(string context)
+		{
+			var ids = new[] { 1, 5 };
+
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<Top>()
+				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 );
+
+			using (var db = GetDataContext(context, ms))
+			{
+				var q =
+					from t in db.GetTable<Top>()
+					from m in t.MiddlesRuntime
+					where ids.Contains(t.ParentID)
+					orderby t.ParentID
+					select new {t, m};
+
+				var list = q.ToList();
+
+				Assert.AreEqual(1, list.Count());
 			}
 		}
 
