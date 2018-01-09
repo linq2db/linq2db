@@ -130,13 +130,13 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				SqlExpression e = (SqlExpression)expr;
 
-				if (e.Expr.StartsWith("Extract(Quarter"))
+				if (e.Expr.StartsWith("Cast(Floor(Extract(Quarter"))
 					return Inc(Div(Dec(new SqlExpression(e.SystemType, "Extract(Month from {0})", e.Parameters)), 3));
 
-				if (e.Expr.StartsWith("Extract(YearDay"))
+				if (e.Expr.StartsWith("Cast(Floor(Extract(YearDay"))
 					return Inc(new SqlExpression(e.SystemType, e.Expr.Replace("Extract(YearDay", "Extract(yearDay"), e.Parameters));
 
-				if (e.Expr.StartsWith("Extract(WeekDay"))
+				if (e.Expr.StartsWith("Cast(Floor(Extract(WeekDay"))
 					return Inc(new SqlExpression(e.SystemType, e.Expr.Replace("Extract(WeekDay", "Extract(weekDay"), e.Parameters));
 			}
 
