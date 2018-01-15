@@ -106,11 +106,26 @@ namespace LinqToDB.Linq
 			foreach (var sql in query.Queries)
 			{
 				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
-				sql.Parameters  = sql.Parameters
-					.Select (p => new { p, idx = sql.Statement.Parameters.IndexOf(p.SqlParameter) })
-					.OrderBy(p => p.idx)
-					.Select (p => p.p)
-					.ToList();
+				var parameters =
+					sql.Parameters
+						.Select(p => new {p, idx = sql.Statement.Parameters.IndexOf(p.SqlParameter)})
+						.OrderBy(p => p.idx)
+						.Select(p => p.p);
+
+				var alreadyAdded = new HashSet<SqlParameter>(sql.Parameters.Select(pp => pp.SqlParameter));
+
+				var runtime = sql.Statement.Parameters.Where(p => !alreadyAdded.Contains(p));
+
+				// combining with dynamically created parameters
+
+				parameters = parameters.Concat(
+					runtime.Select(p => new ParameterAccessor(Expression.Constant(p.Value), (e, o) => p.Value,
+						(e, o) => p.DataType != DataType.Undefined || p.Value == null
+							? p.DataType
+							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType, p))
+				);
+
+				sql.Parameters  = parameters.ToList();
 			}
 		}
 
