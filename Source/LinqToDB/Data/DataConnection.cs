@@ -854,6 +854,8 @@ namespace LinqToDB.Data
 		{
 			get
 			{
+				this.ThrowOnDisposed();
+
 				if (_connection == null)
 				{
 					_connection = DataProvider.CreateConnection(ConnectionString);
