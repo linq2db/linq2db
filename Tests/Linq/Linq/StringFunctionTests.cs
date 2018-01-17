@@ -311,7 +311,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.SQLiteMS)]
 		public void IndexOf11(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -321,7 +321,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.SQLiteMS)]
 		public void IndexOf12(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -331,7 +331,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.SQLiteMS)]
 		public void IndexOf2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -368,7 +368,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
 		public void LastIndexOf2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -379,7 +379,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, ProviderName.SQLiteMS)]
 		public void LastIndexOf3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -390,7 +390,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.SQLiteMS)]
 		public void CharIndex1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -400,7 +400,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, ProviderName.SQLiteMS)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.SQLiteMS)]
 		public void CharIndex2(string context)
 		{
 			using (var db = GetDataContext(context))

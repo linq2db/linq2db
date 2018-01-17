@@ -557,6 +557,16 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void MakeDateTimeParameters(string context)
+		{
+			var year = 2010;
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in from p in    Types select Sql.MakeDateTime(year, p.ID, 1) where t.Value.Year == 2010 select t,
+					from t in from p in db.Types select Sql.MakeDateTime(year, p.ID, 1) where t.Value.Year == 2010 select t);
+		}
+
+		[Test, DataContextSource]
 		public void NewDateTime1(string context)
 		{
 			using (var db = GetDataContext(context))

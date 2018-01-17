@@ -101,7 +101,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Deegrees1(string context)
+		public void Degrees1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -110,7 +110,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Deegrees2(string context)
+		public void Degrees2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -119,7 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(ProviderName.SQLiteMS)]
-		public void Deegrees3(string context)
+		public void Degrees3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

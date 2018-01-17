@@ -550,7 +550,7 @@ namespace LinqToDB.SchemaProvider
 				;
 		}
 
-		protected string ToTypeName(Type type, bool isNullable)
+		public static string ToTypeName(Type type, bool isNullable)
 		{
 			if (type == null)
 				type = typeof(object);
