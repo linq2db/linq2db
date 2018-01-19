@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 										return action(2, null);
 									break;
 								}
-							case "AsCTE":
+							case "AsCte":
 								{
 									return action(6, null);
 								}
@@ -138,7 +138,7 @@ namespace LinqToDB.Linq.Builder
 
 			switch (methodCall.Arguments.Count)
 			{
-					case 1 : 
+					case 1 :
 						bodyExpr = methodCall.Arguments[0].Unwrap();
 						break;
 					case 2 :
@@ -172,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					return Tuple.Create(cteClause, sequence);
-				} 
+				}
 			);
 
 			var cteBuildInfo = new BuildInfo(buildInfo, bodyExpr, buildInfo.SelectQuery);
@@ -258,7 +258,7 @@ namespace LinqToDB.Linq.Builder
 				Parent           = buildInfo.Parent;
 				Expression       = buildInfo.Expression;
 				SelectQuery      = buildInfo.SelectQuery;
-				 
+
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
@@ -1698,7 +1698,7 @@ namespace LinqToDB.Linq.Builder
 
 		private bool     _calculatingIndex;
 
-		public CteTableContext(ExpressionBuilder builder, BuildInfo buildInfo, CteClause cte, Expression cteExpression) 
+		public CteTableContext(ExpressionBuilder builder, BuildInfo buildInfo, CteClause cte, Expression cteExpression)
 			: base(builder, buildInfo, new SqlCteTable(builder.MappingSchema, cte))
 		{
 			_cte             = cte;

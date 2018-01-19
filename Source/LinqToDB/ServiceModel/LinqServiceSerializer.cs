@@ -762,7 +762,7 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.SourceID);
 							Append(elem.Alias);
-							Append(elem.CTE);
+							Append(elem.Cte);
 
 							Append(Dic[elem.All]);
 							Append(elem.Fields.Count);

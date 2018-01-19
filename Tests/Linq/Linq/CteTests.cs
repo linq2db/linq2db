@@ -18,12 +18,12 @@ namespace Tests.Linq
 			}
 
 			public CteContextSourceAttribute(bool includeLinqService) : base(includeLinqService,
-				ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, 
-				ProviderName.Firebird, 
+				ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.Firebird,
 				ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-				ProviderName.Informix,
-				ProviderName.MySql
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative
+				//ProviderName.Informix,
+				// Will be supported in SQL 8.0 - ProviderName.MySql
 				)
 			{
 			}
@@ -34,7 +34,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCTE();
+				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte();
 				var query = from p in db.Parent
 					join c in cte1 on p.ParentID equals c.ParentID
 					join c2 in cte1 on p.ParentID equals c2.ParentID
@@ -58,14 +58,14 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCTE("CTE1_");
-				var cte2 = db.Parent.Where(p => cte1.Any(c => c.ParentID == p.ParentID)).AsCTE("CTE2_");
-				var cte3 = db.Parent.Where(p => cte2.Any(c => c.ParentID == p.ParentID)).AsCTE("CTE3_");
+				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
+				var cte2 = db.Parent.Where(p => cte1.Any(c => c.ParentID == p.ParentID)).AsCte("CTE2_");
+				var cte3 = db.Parent.Where(p => cte2.Any(c => c.ParentID == p.ParentID)).AsCte("CTE3_");
 				var result = from p in cte2
 					join c in cte1 on p.ParentID equals c.ParentID
 					join c2 in cte2 on p.ParentID equals c2.ParentID
 					join c3 in cte3 on p.ParentID equals c3.ParentID
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCTE("LAST").InnerJoin(c4 => c4.ParentID == c3.ParentID)
+					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == c3.ParentID)
 					select c3;
 
 				var ncte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
@@ -77,7 +77,7 @@ namespace Tests.Linq
 					join c3 in ncte3 on p.ParentID equals c3.ParentID
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == c3.ParentID)
 					select c3;
-				
+
 				var expectedStr = expected.ToString();
 				var resultdStr  = result.ToString();
 
@@ -91,7 +91,7 @@ namespace Tests.Linq
 		{
 			var newExpr = source.Expression.Transform(e =>
 			{
-				if (e is MethodCallExpression methodCall && methodCall.Method.Name == "AsCTE")
+				if (e is MethodCallExpression methodCall && methodCall.Method.Name == "AsCte")
 					return methodCall.Arguments[0];
 				return e;
 			});
@@ -115,7 +115,7 @@ namespace Tests.Linq
 					};
 
 				var result =
-					from p in cteQuery.AsCTE("ProductAndCategoryNamesOverTenDollars")
+					from p in cteQuery.AsCte("ProductAndCategoryNamesOverTenDollars")
 					orderby p.CategoryName, p.UnitPrice, p.ProductName
 					select p;
 
@@ -126,7 +126,7 @@ namespace Tests.Linq
 
 				var expectedStr = expected.ToString();
 				var resultdStr  = result.ToString();
-				
+
 				AreEqual(expected, result);
 			}
 		}
@@ -151,8 +151,8 @@ namespace Tests.Linq
 					select p;
 
 				var result =
-					from p in productsOverTenDollars.AsCTE("ProductsOverTenDollars")
-					from c in categoryAndNumberOfProducts.AsCTE("CategoryAndNumberOfProducts").InnerJoin(c => c.CategoryID == p.CategoryID)
+					from p in productsOverTenDollars.AsCte("ProductsOverTenDollars")
+					from c in categoryAndNumberOfProducts.AsCte("CategoryAndNumberOfProducts").InnerJoin(c => c.CategoryID == p.CategoryID)
 					orderby p.ProductName
 					select new
 					{
@@ -198,7 +198,7 @@ namespace Tests.Linq
 						e.ReportsTo
 					};
 
-				var employeeSubordinatesReportCte = employeeSubordinatesReport.AsCTE("EmployeeSubordinatesReport");
+				var employeeSubordinatesReportCte = employeeSubordinatesReport.AsCte("EmployeeSubordinatesReport");
 
 				var result =
 					from employee in employeeSubordinatesReportCte
@@ -213,7 +213,7 @@ namespace Tests.Linq
 						ManagerNumberOfSubordinates = manager.NumberOfSubordinates
 					};
 
-				var expected = 
+				var expected =
 					from employee in employeeSubordinatesReport
 					from manager in employeeSubordinatesReport.LeftJoin(manager => employee.ReportsTo == manager.EmployeeID)
 					select new
@@ -295,9 +295,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCTE("CTE1_");
+				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
 				var query = from p in cte1
-					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCTE("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
+					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
 					select c4;
 
 				var str = query.ToString();

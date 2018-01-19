@@ -693,7 +693,7 @@ namespace LinqToDB
 			return ((IQueryable<T>)cteTable).Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(LinqExtensions.AsCTE, cteQuery, cteQuery, tableName),
+					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, tableName),
 					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(tableName ?? param.Name)}));
 		}
 

@@ -64,7 +64,7 @@ namespace LinqToDB.SqlProvider
 					{
 						if (e.ElementType == QueryElementType.SqlCteTable)
 						{
-							var cte = ((SqlCteTable) e).CTE;
+							var cte = ((SqlCteTable)e).Cte;
 							if (!foundCte.ContainsKey(cte))
 							{
 								var dependsOn = new HashSet<CteClause>();
@@ -72,7 +72,7 @@ namespace LinqToDB.SqlProvider
 								{
 									if (ce.ElementType == QueryElementType.SqlCteTable)
 									{
-										var subCte = ((SqlCteTable)ce).CTE;
+										var subCte = ((SqlCteTable)ce).Cte;
 										dependsOn.Add(subCte);
 									}
 
@@ -84,7 +84,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 				);
-				
+
 				if (foundCte.Count == 0)
 					select.With = null;
 				else
@@ -96,7 +96,7 @@ namespace LinqToDB.SqlProvider
 					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
 
 					Utils.MakeUniqueNames(ordered, c => c.Name, (c, n) => c.Name = n, "CTE_1");
-					
+
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
 				}
@@ -1349,7 +1349,7 @@ namespace LinqToDB.SqlProvider
 					updateStatement.Parameters.Clear();
 					updateStatement.Update.Items.Clear();
 
-					updateStatement = newUpdateStatement; 
+					updateStatement = newUpdateStatement;
 				}
 
 				updateStatement.SelectQuery.From.Tables[0].Alias = "$";

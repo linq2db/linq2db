@@ -300,6 +300,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				StringBuilder.AppendLine(")");
+				Indent--;
 				AppendIndent();
 				StringBuilder.AppendLine("AS");
 				AppendIndent();
@@ -312,11 +313,10 @@ namespace LinqToDB.SqlProvider
 				Indent--;
 
 				AppendIndent();
-				StringBuilder.Append(")");
+				StringBuilder.AppendLine(")");
 			}
 
 			StringBuilder.AppendLine();
-			Indent--;
 		}
 
 		#endregion

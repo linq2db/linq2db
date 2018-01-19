@@ -960,7 +960,7 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlCteTable)element).All,            find) ??
 							Find(((SqlCteTable)element).Fields.Values,  find) ??
 							Find(((SqlCteTable)element).TableArguments, find) ??
-							Find(((SqlCteTable)element).CTE, find);
+							Find(((SqlCteTable)element).Cte, find);
 					}
 
 				case QueryElementType.TableSource:
@@ -1178,11 +1178,11 @@ namespace LinqToDB.SqlQuery
 						var fields1 = ToArray(table.Fields);
 						var fields2 = Convert(fields1,     action, f => new SqlField(f));
 						var targs   = table.TableArguments == null ? null : Convert(table.TableArguments, action);
-						var cte     = Convert(table.CTE, action);
+						var cte     = Convert(table.Cte, action);
 
 						var fe = fields2 == null || ReferenceEquals(fields1, fields2);
 						var ta = ReferenceEquals(table.TableArguments, targs);
-						var ce = ReferenceEquals(table.CTE, cte);
+						var ce = ReferenceEquals(table.Cte, cte);
 
 						if (!fe || !ta || !ce)
 						{
