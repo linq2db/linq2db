@@ -1376,6 +1376,7 @@ namespace LinqToDB.Linq.Builder
 									aa.GetThisKeys(),
 									aa.GetOtherKeys(),
 									aa.ExpressionPredicate,
+									aa.Predicate,
 									aa.Storage,
 									aa.CanBeNull))
 							{ Parent = Parent };

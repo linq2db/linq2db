@@ -528,7 +528,7 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
-		internal static string ToValidName(string name)
+		public static string ToValidName(string name)
 		{
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
@@ -550,7 +550,7 @@ namespace LinqToDB.SchemaProvider
 				;
 		}
 
-		protected string ToTypeName(Type type, bool isNullable)
+		public static string ToTypeName(Type type, bool isNullable)
 		{
 			if (type == null)
 				type = typeof(object);

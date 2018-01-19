@@ -6,6 +6,6 @@ using System.Reflection;
 // associated with an assembly.
 [assembly: AssemblyTitle("UnitTests.Linq")]
 [assembly: AssemblyProduct("UnitTests.Linq")]
-[assembly: AssemblyCopyright("\xA9 2002-2017 www.LinqToDB.net")]
+[assembly: AssemblyCopyright("\xA9 2002-2018 www.LinqToDB.net")]
 [assembly: AssemblyCulture("")]
 

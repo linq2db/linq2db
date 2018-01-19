@@ -62,7 +62,7 @@ namespace Tests.UserTests
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Minute % 7));
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird)]
+		[Test, DataContextSource]
 		public void Second(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -71,7 +71,7 @@ namespace Tests.UserTests
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Second % 7));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void Millisecond(string context)
 		{
 			using (var db = GetDataContext(context))

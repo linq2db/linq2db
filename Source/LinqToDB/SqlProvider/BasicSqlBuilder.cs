@@ -760,7 +760,7 @@ namespace LinqToDB.SqlProvider
 		#region Build DDL
 
 		protected virtual void BuildDropTableStatement(SqlDropTableStatement dropTable)
-		{ 
+		{
 			var table = dropTable.Table;
 
 			AppendIndent().Append("DROP TABLE ");
@@ -818,13 +818,13 @@ namespace LinqToDB.SqlProvider
 			var fields = table.Fields.Select(f => new CreateFieldInfo { Field = f.Value, StringBuilder = new StringBuilder() }).ToList();
 			var maxlen = 0;
 
-			Action<bool> appendToMax = addCreateFormat =>
+			void AppendToMax(bool addCreateFormat)
 			{
 				foreach (var field in fields)
 					if (addCreateFormat || field.Field.CreateFormat == null)
 						while (maxlen > field.StringBuilder.Length)
 							field.StringBuilder.Append(' ');
-			};
+			}
 
 			var isAnyCreateFormat = false;
 
@@ -841,7 +841,7 @@ namespace LinqToDB.SqlProvider
 					isAnyCreateFormat = true;
 			}
 
-			appendToMax(true);
+			AppendToMax(true);
 
 			if (isAnyCreateFormat)
 				foreach (var field in fields)
@@ -870,7 +870,7 @@ namespace LinqToDB.SqlProvider
 					maxlen = field.StringBuilder.Length;
 			}
 
-			appendToMax(true);
+			AppendToMax(true);
 
 			if (isAnyCreateFormat)
 			{
@@ -915,7 +915,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				appendToMax(false);
+				AppendToMax(false);
 			}
 
 			// Build nullable attribute.
@@ -940,7 +940,7 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			appendToMax(false);
+			AppendToMax(false);
 
 			// Build identity attribute.
 			//
@@ -968,7 +968,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				appendToMax(false);
+				AppendToMax(false);
 			}
 
 			// Build fields.
@@ -2208,11 +2208,9 @@ namespace LinqToDB.SqlProvider
 
 		void BuildBinaryExpression(string op, SqlBinaryExpression expr)
 		{
-			if (expr.Operation == "*" && expr.Expr1 is SqlValue)
+			if (expr.Operation == "*" && expr.Expr1 is SqlValue value)
 			{
-				var value = (SqlValue)expr.Expr1;
-
-				if (value.Value is int && (int)value.Value == -1)
+				if (value.Value is int i && i == -1)
 				{
 					StringBuilder.Append('-');
 					BuildExpression(GetPrecedence(expr), expr.Expr2);
@@ -2455,7 +2453,7 @@ namespace LinqToDB.SqlProvider
 					var expr1 = Add(selectQuery.Select.SkipValue, 1);
 					var expr2 = Add<int>(selectQuery.Select.SkipValue, selectQuery.Select.TakeValue);
 
-					if (expr1 is SqlValue && expr2 is SqlValue && Equals(((SqlValue)expr1).Value, ((SqlValue)expr2).Value))
+					if (expr1 is SqlValue value1 && expr2 is SqlValue value2 && Equals(value1.Value, value2.Value))
 					{
 						AppendIndent().AppendFormat("{0}.{1} = ", aliases[1], rnaliase);
 						BuildExpression(expr1);
@@ -2505,10 +2503,10 @@ namespace LinqToDB.SqlProvider
 			{
 				AppendIndent().Append("SELECT TOP ");
 
-				var p = selectQuery.Select.SkipValue as SqlParameter;
-
-				if (p != null && !p.IsQueryParameter && selectQuery.Select.TakeValue is SqlValue)
-					BuildValue(null, (int)p.Value + (int)((SqlValue)(selectQuery.Select.TakeValue)).Value);
+				if (selectQuery.Select.SkipValue is SqlParameter p &&
+					!p.IsQueryParameter &&
+					selectQuery.Select.TakeValue is SqlValue v)
+					BuildValue(null, (int)p.Value + (int)v.Value);
 				else
 					BuildExpression(Add<int>(selectQuery.Select.SkipValue, selectQuery.Select.TakeValue));
 
@@ -2770,7 +2768,7 @@ namespace LinqToDB.SqlProvider
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
-							var values = new object[2 + (tbl.TableArguments == null ? 0 : tbl.TableArguments.Length)];
+							var values = new object[2 + (tbl.TableArguments?.Length ?? 0)];
 
 							values[0] = sb.ToString();
 
