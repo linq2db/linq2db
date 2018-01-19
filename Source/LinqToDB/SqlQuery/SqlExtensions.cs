@@ -3,18 +3,20 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public static class SqlExtensions
+	static class SqlExtensions
 	{
 		public static bool IsInsert(this SqlStatement statement)
 		{
-			return statement.QueryType == QueryType.Insert ||
-			       statement.QueryType == QueryType.InsertOrUpdate;
+			return
+				statement.QueryType == QueryType.Insert ||
+				statement.QueryType == QueryType.InsertOrUpdate;
 		}
 
 		public static bool NeedsIdentity(this SqlStatement statement)
 		{
-			return statement.QueryType == QueryType.Insert && ((SqlInsertStatement)statement).Insert.WithIdentity ||
-			       statement.QueryType == QueryType.InsertOrUpdate;
+			return
+				statement.QueryType == QueryType.Insert && ((SqlInsertStatement)statement).Insert.WithIdentity ||
+				statement.QueryType == QueryType.InsertOrUpdate;
 		}
 
 		public static bool IsUpdate(this SqlStatement statement)
@@ -38,7 +40,7 @@ namespace LinqToDB.SqlQuery
 			}
 			return null;
 		}
-		
+
 		public static SqlInsertClause RequireInsertClause(this SqlStatement statement)
 		{
 			var result = statement.GetInsertClause();
@@ -74,7 +76,7 @@ namespace LinqToDB.SqlQuery
 				throw new LinqToDBException("Sqlect Query required");
 				return selectQuery;
 		}
-		
+
 		public static T Clone<T>(this T cloneable)
 			where T: ICloneableElement
 		{

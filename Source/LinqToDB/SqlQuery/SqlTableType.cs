@@ -7,6 +7,6 @@ namespace LinqToDB.SqlQuery
 		Table = 0,
 		Function,
 		Expression,
-		CTE
+		Cte
 	}
 }

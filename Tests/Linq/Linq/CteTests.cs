@@ -1,9 +1,12 @@
 ﻿using System;
-using LinqToDB;
 using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB;
 using LinqToDB.Expressions;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -14,7 +17,6 @@ namespace Tests.Linq
 		{
 			public CteContextSourceAttribute() : this(true)
 			{
-
 			}
 
 			public CteContextSourceAttribute(bool includeLinqService) : base(includeLinqService,
@@ -51,7 +53,6 @@ namespace Tests.Linq
 				AreEqual(expected, query);
 			}
 		}
-
 
 		[Test, CteContextSource]
 		public void Test2(string context)
@@ -339,6 +340,5 @@ namespace Tests.Linq
 				var result = cteRecursive.ToArray();
 			}
 		}
-
 	}
 }

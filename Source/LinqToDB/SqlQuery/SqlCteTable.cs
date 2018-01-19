@@ -23,7 +23,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
-		   : base(id, cte.Name, alias, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.CTE, null)
+			: base(id, cte.Name, alias, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null)
 		{
 			Cte = cte;
 		}
@@ -44,7 +44,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlCteTable;
-		public override SqlTableType     SqlTableType => SqlTableType.CTE;
+		public override SqlTableType     SqlTableType => SqlTableType.Cte;
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
