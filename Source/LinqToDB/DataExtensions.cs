@@ -677,10 +677,10 @@ namespace LinqToDB
 
 		#region CTE
 
-		public static IQueryable<T> GetCTE<T>(
-			[NotNull]   this IDataContext                  dataContext,
-			[NotNull]   Func<IQueryable<T>, IQueryable<T>> cteBody, 
-			[CanBeNull] string                             tableName = null)
+		public static IQueryable<T> GetCte<T>(
+			[NotNull]   this IDataContext                 dataContext,
+			[NotNull]   Func<IQueryable<T>,IQueryable<T>> cteBody,
+			[CanBeNull] string                            cteTableName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
@@ -693,11 +693,10 @@ namespace LinqToDB
 			return ((IQueryable<T>)cteTable).Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, tableName),
-					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(tableName ?? param.Name)}));
+					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, cteTableName),
+					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)}));
 		}
 
 		#endregion
-
 	}
 }

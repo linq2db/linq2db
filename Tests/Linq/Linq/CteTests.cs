@@ -248,7 +248,7 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var employeeHierarchyCte = db.GetCTE<EmployeeHierarchyCTE>(employeeHierarchy =>
+				var employeeHierarchyCte = db.GetCte<EmployeeHierarchyCTE>(employeeHierarchy =>
 				{
 					return
 						(
@@ -317,26 +317,33 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cteRecursive = db.GetCTE<RecursiveCTE>(cte =>
-				{
-					return
-						(from gc1 in db.GrandChild
-						select new RecursiveCTE{ChildID = gc1.ChildID, GrandChildID = gc1.GrandChildID, ParentID = gc1.GrandChildID})
-						.Concat(
-						from gc in db.GrandChild
-						from p in db.Parent.InnerJoin(p => p.ParentID == gc.ParentID)
-						from ct in cte.InnerJoin(ct => ct.ChildID == gc.ChildID)
-						select new RecursiveCTE
-						{
-							ParentID = ct.ParentID,
-							ChildID = ct.ChildID,
-							GrandChildID = ct.ChildID + 1
-						});
-				}, "MY_CTE");
+				var cteRecursive = db.GetCte<RecursiveCTE>(cte =>
+				(
+					from gc1 in db.GrandChild
+					select new RecursiveCTE
+					{
+						ChildID      = gc1.ChildID,
+						GrandChildID = gc1.GrandChildID,
+						ParentID     = gc1.GrandChildID
+					}
+				)
+				.Concat
+				(
+					from gc in db.GrandChild
+					//from p  in db.Parent.InnerJoin(p => p.ParentID == gc.ParentID)
+					from ct in cte//.InnerJoin(ct => ct.ChildID == gc.ChildID)
+					select new RecursiveCTE
+					{
+						ParentID     = ct.ParentID,
+						ChildID      = ct.ChildID,
+						GrandChildID = ct.ChildID + 1
+					}
+				)
+				, "MY_CTE");
 
 				var str = cteRecursive.ToString();
 				// UNION otimized out
-				Assert.That(str, Contains.Substring( "UNION" ) );;
+				Assert.That(str, Contains.Substring( "UNION" ) );
 				var result = cteRecursive.ToArray();
 			}
 		}
