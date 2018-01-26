@@ -119,7 +119,7 @@ namespace LinqToDB.Mapping
 		{
 			var getter     = _memberGetter;
 			var memberName = null as string;
-			var me         = _memberGetter.Body as MemberExpression;
+			var me         = _memberGetter.Body.Unwrap() as MemberExpression;
 
 			if (me != null && me.Expression is MemberExpression)
 			{
