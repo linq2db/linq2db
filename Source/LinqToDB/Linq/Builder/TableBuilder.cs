@@ -4,9 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using Extensions;
 
 	partial class TableBuilder : ISequenceBuilder
 	{
@@ -131,68 +130,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			throw new InvalidOperationException();
-		}
-
-		static IBuildContext BuildCteContext(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			var methodCall = (MethodCallExpression)buildInfo.Expression;
-
-			Expression bodyExpr;
-			IQueryable query = null;
-			string     name  = null;
-
-			switch (methodCall.Arguments.Count)
-			{
-				case 1 :
-					bodyExpr = methodCall.Arguments[0].Unwrap();
-					break;
-				case 2 :
-					bodyExpr = methodCall.Arguments[0].Unwrap();
-					name     = methodCall.Arguments[1].EvaluateExpression() as string;
-					break;
-				case 3 :
-					query    = methodCall.Arguments[0].EvaluateExpression() as IQueryable;
-					bodyExpr = methodCall.Arguments[1].Unwrap();
-					name     = methodCall.Arguments[2].EvaluateExpression() as string;
-					break;
-				default:
-					throw new InvalidOperationException();
-			}
-
-			builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArgumentsEx()[0], name));
-
-			var cte = builder.BuildCte(bodyExpr,
-				cteClause =>
-				{
-					var info      = new BuildInfo(buildInfo, bodyExpr, new SelectQuery());
-					var sequence  = builder.BuildSequence(info);
-
-					if (cteClause == null)
-						cteClause = new CteClause(sequence.SelectQuery, bodyExpr.Type.GetGenericArgumentsEx()[0], name);
-					else
-					{
-						cteClause.Body = sequence.SelectQuery;
-						cteClause.Name = name;
-					}
-
-					return Tuple.Create(cteClause, sequence);
-				}
-			);
-
-			var cteBuildInfo = new BuildInfo(buildInfo, bodyExpr, buildInfo.SelectQuery);
-			var cteContext   = new CteTableContext(builder, cteBuildInfo, cte.Item1, bodyExpr);
-
-			return cteContext;
-		}
-
-		static CteTableContext BuildCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			var queryable    = (IQueryable)buildInfo.Expression.EvaluateExpression();
-			var cteInfo      = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, ""));
-			var cteBuildInfo = new BuildInfo(buildInfo, cteInfo.Item3, buildInfo.SelectQuery);
-			var cteContext   = new CteTableContext(builder, cteBuildInfo, cteInfo.Item1, cteInfo.Item3);
-
-			return cteContext;
 		}
 
 		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)

@@ -19,8 +19,8 @@ namespace LinqToDB.SqlQuery
 		public Type        ObjectType { get; set; }
 
 		public CteClause(
-			[JetBrains.Annotations.CanBeNull] SelectQuery   body,
-			[JetBrains.Annotations.NotNull]   Type          objectType,
+			[JetBrains.Annotations.CanBeNull] SelectQuery body,
+			[JetBrains.Annotations.NotNull]   Type        objectType,
 			string name)
 		{
 			ObjectType = objectType ?? throw new ArgumentNullException(nameof(objectType));
@@ -56,7 +56,7 @@ namespace LinqToDB.SqlQuery
 			return new CteClause((SelectQuery) Body.Clone(objectTree, doClone), ObjectType, Name);
 		}
 
-		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
 			Body = Body?.Walk(skipColumns, func) as SelectQuery;
 
@@ -73,6 +73,5 @@ namespace LinqToDB.SqlQuery
 				Fields.Add(field.PhysicalName, new SqlField(field));
 			}
 		}
-
 	}
 }

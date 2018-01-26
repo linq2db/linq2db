@@ -37,8 +37,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (typeof(IEnumerable).IsSameOrParentOf(type))
 				{
-					var etypes = type.GetGenericArguments(typeof(IEnumerable<>));
-					type       = etypes != null && etypes.Length > 0 ? etypes[0] : type.GetListItemType();
+					var eTypes = type.GetGenericArguments(typeof(IEnumerable<>));
+					type       = eTypes != null && eTypes.Length > 0 ? eTypes[0] : type.GetListItemType();
 					IsList     = true;
 				}
 
