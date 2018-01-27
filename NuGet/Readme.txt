@@ -1,5 +1,10 @@
 LINQ to DB 1.10.1  Release Notes
 ---------------------------------
+- fix mapping of simple types with subproperties (#983)
+
+
+LINQ to DB 1.10.1  Release Notes
+---------------------------------
 - fix async retry policy (#919)
 - fix connection management (#927)
 

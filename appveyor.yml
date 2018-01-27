@@ -1,7 +1,7 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.10.1
+  packageVersion: 1.10.2
   op_build_user: "ili"
   op_build_user_email: "docfx@linq2db.com"
   access_token:
@@ -28,7 +28,7 @@ init:
 - cmd: git config --global core.autocrlf true
 - ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
 - ps: |
-    if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
+    if ($env:APPVEYOR_REPO_BRANCH -eq "release1") 
     {
         $env:nugetVersion = "$env:packageVersion"
     }
@@ -106,7 +106,7 @@ after_build:
     {
        if ($env:buildConfiguration -eq "dotNetCore")
        {
-           if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
+           if ($env:APPVEYOR_REPO_BRANCH -eq "release1") 
            {
               dotnet pack --no-build Source/project.json -c=Release
            }
@@ -169,13 +169,13 @@ deploy:
     secure: LDw0jeA1Yo3R4/TKv2kmlgJR8dTT6Wun2MONq3uDvtVQJG4LOU9LjvVTAc7IgRfm
   skip_symbols: true
   on:
-    branch: master
+    branch: version1
 
 - provider: NuGet
   api_key:
     secure: oTYw2IwTnz4qMD8c/MR/6mo+Nx3wa5Pp8MYfsKBCKCVuU6QCHlj+6QMXpnQses8G
   on:
-    branch: release
+    branch: release1
 
 
 skip_commits:
