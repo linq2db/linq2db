@@ -1,4 +1,4 @@
-LINQ to DB 1.10.1  Release Notes
+LINQ to DB 1.10.2  Release Notes
 ---------------------------------
 - fix mapping of simple types with subproperties (#983)
 
