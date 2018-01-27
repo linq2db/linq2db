@@ -10,7 +10,7 @@ namespace LinqToDB.Metadata
 	/// <summary>
 	/// Aggregation metadata reader, that just delegates all calls to nested readers.
 	/// </summary>
-	public class MetadataReader : IMetadataReader
+	public class MetadataReader : IMetadataReader, ITypeListMetadataReader
 	{
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
@@ -52,5 +52,15 @@ namespace LinqToDB.Metadata
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
 			=> _readers.SelectMany(r => r.GetDynamicColumns(type)).ToArray();
+
+		/// <summary>
+		/// Returns list of types, mapped by metadata reader. Supported only by metadata providers that know their
+		/// types beforehand, like fluent metadata provider.
+		/// </summary>
+		/// <returns>List of mapped types.</returns>
+		public IEnumerable<Type> GetMappedTypes()
+		{
+			return _readers.OfType<ITypeListMetadataReader>().SelectMany(x => x.GetMappedTypes());
+		}
 	}
 }

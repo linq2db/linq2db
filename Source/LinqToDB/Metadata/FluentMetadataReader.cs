@@ -9,7 +9,7 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 
-	public class FluentMetadataReader : IMetadataReader
+	public class FluentMetadataReader : IMetadataReader, ITypeListMetadataReader
 	{
 		readonly ConcurrentDictionary<Type,List<Attribute>>                       _types          = new ConcurrentDictionary<Type,List<Attribute>>();
 		readonly ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>> _dynamicColumns = new ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>>();
@@ -75,6 +75,15 @@ namespace LinqToDB.Metadata
 			}
 
 			return Array<T>.Empty;
+		}
+
+		/// <summary>
+		/// Returns list of types, mapped by metadata reader.
+		/// </summary>
+		/// <returns>List of mapped types.</returns>
+		public IEnumerable<Type> GetMappedTypes()
+		{
+			return _types.Keys;
 		}
 
 		public void AddAttribute(MemberInfo memberInfo, Attribute attribute)
