@@ -14,19 +14,19 @@ namespace LinqToDB.Linq
 			public static ITable<T> Query(IDataContext dataContext,
 				string tableName, string databaseName, string schemaName,
 				string statementHeader, string statementFooter,
-				DefaulNullable defaulNullable)
+				DefaultNullable defaultNullable)
 			{
 				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Owner        = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
 				createTable.StatementFooter = statementFooter;
-				createTable.DefaulNullable  = defaulNullable;
+				createTable.DefaultNullable = defaultNullable;
 
 				var query = new Query<int>(dataContext, null)
 				{
@@ -48,7 +48,7 @@ namespace LinqToDB.Linq
 
 			public static async Task<ITable<T>> QueryAsync(IDataContext dataContext,
 				string tableName, string databaseName, string schemaName, string statementHeader,
-				string statementFooter, DefaulNullable defaulNullable,
+				string statementFooter, DefaultNullable defaultNullable,
 				CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -56,12 +56,12 @@ namespace LinqToDB.Linq
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Owner        = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
 				createTable.StatementFooter = statementFooter;
-				createTable.DefaulNullable  = defaulNullable;
+				createTable.DefaultNullable = defaultNullable;
 
 				var query = new Query<int>(dataContext, null)
 				{

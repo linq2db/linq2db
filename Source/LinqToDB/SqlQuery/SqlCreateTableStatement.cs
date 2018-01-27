@@ -6,20 +6,20 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlCreateTableStatement : SqlStatement
 	{
-		public SqlTable       Table           { get; set; }
-		public string         StatementHeader { get; set; }
-		public string         StatementFooter { get; set; }
-		public DefaulNullable DefaulNullable  { get; set; }
+		public SqlTable        Table           { get; set; }
+		public string          StatementHeader { get; set; }
+		public string          StatementFooter { get; set; }
+		public DefaultNullable DefaultNullable { get; set; }
 
-		public override QueryType QueryType          => QueryType.CreateTable;
+		public override QueryType        QueryType   => QueryType.CreateTable;
 		public override QueryElementType ElementType => QueryElementType.CreateTableStatement;
 
-		public override bool               IsParameterDependent
+		public override bool             IsParameterDependent
 		{
 			get => false;
 			set {}
 		}
-		
+
 		public override SelectQuery SelectQuery { get => null; set {}}
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -69,6 +69,5 @@ namespace LinqToDB.SqlQuery
 					SelectQuery = newQuery;
 			}
 		}
-
 	}
 }

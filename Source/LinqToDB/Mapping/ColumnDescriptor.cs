@@ -7,10 +7,9 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Data;
 	using Expressions;
-
 	using Extensions;
-
 	using Reflection;
+	using SqlQuery;
 
 	/// <summary>
 	/// Stores mapping entity column descriptor.
@@ -271,7 +270,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, SqlQuery.DefaulNullable)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;

@@ -15,21 +15,21 @@ namespace LinqToDB.SqlQuery
 		public SqlTable()
 		{
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
-			Fields    = new Dictionary<string,SqlField>();
+			Fields   = new Dictionary<string,SqlField>();
 		}
 
 		internal SqlTable(
-			int id, string name, string alias, string database, string owner, string physicalName, Type objectType,
+			int id, string name, string alias, string database, string schema, string physicalName, Type objectType,
 			SequenceNameAttribute[] sequenceAttributes,
 			SqlField[]              fields,
 			SqlTableType            sqlTableType,
 			ISqlExpression[]        tableArguments)
 		{
-			SourceID          = id;
+			SourceID           = id;
 			Name               = name;
 			Alias              = alias;
 			Database           = database;
-			Owner              = owner;
+			Schema             = schema;
 			PhysicalName       = physicalName;
 			ObjectType         = objectType;
 			SequenceAttributes = sequenceAttributes;
@@ -64,7 +64,7 @@ namespace LinqToDB.SqlQuery
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
 			Database     = ed.DatabaseName;
-			Owner        = ed.SchemaName;
+			Schema       = ed.SchemaName;
 			Name         = ed.TableName;
 			ObjectType   = objectType;
 			PhysicalName = Name;
@@ -141,7 +141,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
-			Owner              = table.Owner;
+			Schema             = table.Schema;
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
 			ObjectType         = table.ObjectType;
@@ -158,7 +158,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
-			Owner              = table.Owner;
+			Schema             = table.Schema;
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
 			ObjectType         = table.ObjectType;
@@ -196,14 +196,14 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public virtual string   Name           { get; set; }
-		public string           Alias          { get; set; }
-		public string           Database       { get; set; }
-		public string           Owner          { get; set; }
-		public Type             ObjectType     { get; set; }
-		public string           PhysicalName   { get; set; }
+		public virtual string           Name           { get; set; }
+		public         string           Alias          { get; set; }
+		public         string           Database       { get; set; }
+		public         string           Schema         { get; set; }
+		public         Type             ObjectType     { get; set; }
+		public         string           PhysicalName   { get; set; }
 		public virtual SqlTableType     SqlTableType   { get; set; }
-		public ISqlExpression[] TableArguments { get; set; }
+		public         ISqlExpression[] TableArguments { get; set; }
 
 		public Dictionary<string,SqlField> Fields { get; }
 
@@ -283,7 +283,7 @@ namespace LinqToDB.SqlQuery
 					Name               = Name,
 					Alias              = Alias,
 					Database           = Database,
-					Owner              = Owner,
+					Schema             = Schema,
 					PhysicalName       = PhysicalName,
 					ObjectType         = ObjectType,
 					SqlTableType       = SqlTableType,

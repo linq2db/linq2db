@@ -326,9 +326,9 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else
 			{
-			var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Owner)
+			var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Schema)
 				? string.Empty
-				: dropTable.Table.Owner + ".";
+				: dropTable.Table.Schema + ".";
 
 				StringBuilder
 					.Append("DROP TRIGGER ")
@@ -343,9 +343,9 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			string GetSchemaPrefix(SqlTable table)
 			{
-				return string.IsNullOrWhiteSpace(table.Owner)
+				return string.IsNullOrWhiteSpace(table.Schema)
 					? string.Empty
-					: table.Owner + ".";
+					: table.Schema + ".";
 			}
 
 			switch (Statement)
@@ -403,12 +403,12 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
-			if (owner != null && owner.Length == 0) owner = null;
+			if (schema != null && schema.Length == 0) schema = null;
 
-			if (owner != null)
-				sb.Append(owner).Append(".");
+			if (schema != null)
+				sb.Append(schema).Append(".");
 
 			return sb.Append(table);
 		}

@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.Sybase
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{

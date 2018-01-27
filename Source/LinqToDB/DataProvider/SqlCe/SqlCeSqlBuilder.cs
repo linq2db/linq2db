@@ -136,7 +136,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{
@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			StringBuilder.Append("IDENTITY");
 		}
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			return sb.Append(table);
 		}

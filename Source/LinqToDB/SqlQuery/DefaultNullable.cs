@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public enum DefaulNullable
+	public enum DefaultNullable
 	{
 		None,
 		Null,

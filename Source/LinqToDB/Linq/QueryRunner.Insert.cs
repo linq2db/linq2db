@@ -20,11 +20,10 @@ namespace LinqToDB.Linq
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Owner        = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
-				var insertStatement = new SqlInsertStatement();
-				insertStatement.Insert.Into = sqlTable;
-				
+				var insertStatement = new SqlInsertStatement { Insert = { Into = sqlTable } };
+
 				var ei = new Query<int>(dataContext, null)
 				{
 					Queries = { new QueryInfo { Statement = insertStatement } }

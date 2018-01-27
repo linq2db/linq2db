@@ -33,7 +33,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
-			Owner              = table.Owner;
+			Schema             = table.Schema;
 
 			PhysicalName       = table.PhysicalName;
 			ObjectType         = table.ObjectType;

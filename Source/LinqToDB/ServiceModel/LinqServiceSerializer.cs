@@ -715,7 +715,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.Alias);
 							Append(elem.Database);
-							Append(elem.Owner);
+							Append(elem.Schema);
 							Append(elem.PhysicalName);
 							Append(elem.ObjectType);
 
@@ -1078,7 +1078,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Parameters);
 							Append(elem.StatementHeader);
 							Append(elem.StatementFooter);
-							Append((int)elem.DefaulNullable);
+							Append((int)elem.DefaultNullable);
 
 							break;
 						}
@@ -1334,7 +1334,7 @@ namespace LinqToDB.ServiceModel
 							var name               = ReadString();
 							var alias              = ReadString();
 							var database           = ReadString();
-							var owner              = ReadString();
+							var schema             = ReadString();
 							var physicalName       = ReadString();
 							var objectType         = Read<Type>();
 							var sequenceAttributes = null as SequenceNameAttribute[];
@@ -1360,7 +1360,7 @@ namespace LinqToDB.ServiceModel
 							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
 
 							obj = new SqlTable(
-								sourceID, name, alias, database, owner, physicalName, objectType, sequenceAttributes, flds,
+								sourceID, name, alias, database, schema, physicalName, objectType, sequenceAttributes, flds,
 								sqlTableType, tableArgs);
 
 							break;
@@ -1712,14 +1712,14 @@ namespace LinqToDB.ServiceModel
 							var parameters      = ReadArray<SqlParameter>();
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
-							var defaultNullable = (DefaulNullable)ReadInt();
+							var defaultNullable = (DefaultNullable)ReadInt();
 
 							obj = _statement = new SqlCreateTableStatement
 							{
 								Table           = table,
 								StatementHeader = statementHeader,
 								StatementFooter = statementFooter,
-								DefaulNullable  = defaultNullable,
+								DefaultNullable = defaultNullable,
 							};
 							_statement.Parameters.AddRange(parameters);
 

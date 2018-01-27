@@ -365,8 +365,8 @@ namespace LinqToDB.DataProvider.Access
 
 					return "[" + value + "]";
 
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{
@@ -409,7 +409,7 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 

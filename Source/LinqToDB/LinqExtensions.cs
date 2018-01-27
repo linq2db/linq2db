@@ -79,8 +79,6 @@ namespace LinqToDB
 			return table;
 		}
 
-		static readonly MethodInfo _ownerNameMethodInfo = MemberHelper.MethodOf(() => OwnerName<int>(null, null)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
@@ -93,20 +91,10 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
 		[Pure]
+		[Obsolete("Use SchemaName instead.")]
 		public static ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-			if (name  == null) throw new ArgumentNullException(nameof(name));
-
-			table.Expression = Expression.Call(
-				null,
-				_ownerNameMethodInfo.MakeGenericMethod(typeof(T)),
-				new[] { table.Expression, Expression.Constant(name) });
-
-			if (table is Table<T> tbl)
-				tbl.SchemaName = name;
-
-			return table;
+			return SchemaName(table, name);
 		}
 
 		static readonly MethodInfo _schemaNameMethodInfo = MemberHelper.MethodOf(() => SchemaName<int>(null, null)).GetGenericMethodDefinition();
@@ -114,7 +102,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
-		/// <see cref="OwnerName{T}(ITable{T}, string)"/> method is a synonym of this method.
 		/// <para>Supported by: DB2, Oracle, PostgreSQL, SAP HANA, Informix, SQL Server, Sybase ASE.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>

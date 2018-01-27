@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider
 
 		protected virtual void AddFakeSourceTableName()
 		{
-			SqlBuilder.BuildTableName(Command, FakeSourceTableDatabase, FakeSourceTableOwner, FakeSourceTable);
+			SqlBuilder.BuildTableName(Command, FakeSourceTableDatabase, FakeSourceTableSchema, FakeSourceTable);
 		}
 
 		protected virtual void AddSourceValue(
@@ -331,7 +331,7 @@ namespace LinqToDB.DataProvider
 		{
 			Command.AppendLine("USING");
 
-			if (Merge.QueryableSource != null && SuportsSourceSubQuery)
+			if (Merge.QueryableSource != null && SupportsSourceSubQuery)
 				BuildSourceSubQuery(Merge.QueryableSource);
 			else
 			{
@@ -690,7 +690,7 @@ namespace LinqToDB.DataProvider
 
 			var qry       = Query<int>.GetQuery(DataContext, ref insertExpression);
 			var statement = qry.Queries[0].Statement;
-			
+
 			// we need InsertOrUpdate for sql builder to generate values clause
 			var newInsert = new SqlInsertOrUpdateStatement(statement.SelectQuery) { Insert = statement.GetInsertClause(), Update = statement.GetUpdateClause() };
 			newInsert.Parameters.AddRange(statement.Parameters);
@@ -1156,29 +1156,13 @@ namespace LinqToDB.DataProvider
 		#region Query Generation
 		protected readonly string SourceAlias = "Source";
 
-		private readonly string _targetAlias = "Target";
+		private readonly string           _targetAlias = "Target";
+		private          DataConnection   _connection;
+		private          EntityDescriptor _sourceDescriptor;
 
-		private StringBuilder _command = new StringBuilder();
+		protected StringBuilder Command { get; } = new StringBuilder();
 
-		private DataConnection _connection;
-
-		private EntityDescriptor _sourceDescriptor;
-
-		protected StringBuilder Command
-		{
-			get
-			{
-				return _command;
-			}
-		}
-
-		protected IDataContext DataContext
-		{
-			get
-			{
-				return Merge.Target.DataContext;
-			}
-		}
+		protected IDataContext  DataContext => Merge.Target.DataContext;
 
 		protected int EnumerableSourceSize { get; private set; }
 
@@ -1186,107 +1170,53 @@ namespace LinqToDB.DataProvider
 		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property should contain name of table with single record.
 		/// </summary>
-		protected virtual string FakeSourceTable
-		{
-			get
-			{
-				return null;
-			}
-		}
+		protected virtual string FakeSourceTable => null;
 
 		/// <summary>
 		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of database for table with single record.
 		/// </summary>
-		protected virtual string FakeSourceTableDatabase
-		{
-			get
-			{
-				return null;
-			}
-		}
+		protected virtual string FakeSourceTableDatabase => null;
 
 		/// <summary>
 		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of schema for table with single record.
 		/// </summary>
-		protected virtual string FakeSourceTableOwner
-		{
-			get
-			{
-				return null;
-			}
-		}
+		protected virtual string FakeSourceTableSchema => null;
 
 		/// <summary>
 		/// If true, provider allows to set values of identity columns on insert operation.
 		/// </summary>
-		protected virtual bool IsIdentityInsertSupported
-		{
-			get
-			{
-				return false;
-			}
-		}
+		protected virtual bool IsIdentityInsertSupported => false;
 
 		/// <summary>
 		/// If true, builder will generate command for empty enumerable source;
 		/// otherwise command generation will be interrupted and 0 result returned without request to database.
 		/// </summary>
-		protected virtual bool EmptySourceSupported
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool EmptySourceSupported => true;
 
 		protected BasicSqlBuilder SqlBuilder { get; private set; }
 
 		/// <summary>
 		/// If true, provider allows to generate subquery as a source element of merge command.
 		/// </summary>
-		protected virtual bool SuportsSourceSubQuery
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool SupportsSourceSubQuery => true;
 
 		/// <summary>
 		/// If true, provider supports column aliases specification after table alias.
 		/// E.g. as table_alias (column_alias1, column_alias2).
 		/// </summary>
-		protected virtual bool SupportsColumnAliasesInTableAlias
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool SupportsColumnAliasesInTableAlias => true;
 
 		/// <summary>
 		/// If true, provider supports list of VALUES as a source element of merge command.
 		/// </summary>
-		protected virtual bool SupportsSourceDirectValues
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool SupportsSourceDirectValues => true;
 
 		/// <summary>
 		/// If false, parameters in source subquery select list must have type.
 		/// </summary>
-		protected virtual bool SupportsParametersInSource
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool SupportsParametersInSource => true;
 
 		protected EntityDescriptor TargetDescriptor { get; private set; }
 
@@ -1529,7 +1459,7 @@ namespace LinqToDB.DataProvider
 
 		public static MergeContextParser.Context GetMergeContext<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return source.Provider.Execute<MergeContextParser.Context>(
 				Expression.Call(
@@ -1551,8 +1481,7 @@ namespace LinqToDB.DataProvider
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var call = buildInfo.Expression as MethodCallExpression;
-			return call != null && call.Method.Name == "GetMergeContext";
+			return buildInfo.Expression is MethodCallExpression call && call.Method.Name == "GetMergeContext";
 		}
 
 		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)

@@ -8,11 +8,11 @@ namespace LinqToDB.SqlQuery
 	public class SqlInsertStatement : SqlStatementWithQueryBase
 	{
 
-		public SqlInsertStatement() : base(null) 
+		public SqlInsertStatement() : base(null)
 		{
 		}
 
-		public SqlInsertStatement(SelectQuery selectQuery) : base(selectQuery) 
+		public SqlInsertStatement(SelectQuery selectQuery) : base(selectQuery)
 		{
 		}
 
@@ -22,14 +22,14 @@ namespace LinqToDB.SqlQuery
 		#region InsertClause
 
 		private SqlInsertClause _insert;
-		public  SqlInsertClause Insert
+		public  SqlInsertClause  Insert
 		{
 			get => _insert ?? (_insert = new SqlInsertClause());
 			set => _insert = value;
 		}
 
 		#endregion
-		
+
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			((IQueryElement)_insert)?.ToString(sb, dic);
@@ -44,7 +44,6 @@ namespace LinqToDB.SqlQuery
 
 			return null;
 		}
-
 
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
@@ -76,6 +75,5 @@ namespace LinqToDB.SqlQuery
 
 			return SelectQuery.GetTableSource(table);
 		}
-
 	}
 }

@@ -225,7 +225,7 @@ namespace LinqToDB.DataProvider.Firebird
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM rdb$database");
 		}
 
-		protected override void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
+		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
 		{
 			if (!field.CanBeNull)
 				StringBuilder.Append("NOT NULL");
@@ -311,7 +311,7 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			return sb.Append(table);
 		}

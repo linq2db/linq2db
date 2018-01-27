@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.SapHana
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
-		
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity() ? 2 : 1;
@@ -97,10 +97,10 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.Time:
 					StringBuilder.Append("Timestamp");
 					return;
-				case DataType.SmallDateTime : 
+				case DataType.SmallDateTime :
 					StringBuilder.Append("SecondDate");
 					return;
-				case DataType.Boolean       : 
+				case DataType.Boolean       :
 					StringBuilder.Append("TinyInt");
 					return;
 				case DataType.Image:
@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SapHana
 					}
 					break;
 			}
-			base.BuildDataType(type, createDbType); 
+			base.BuildDataType(type, createDbType);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.SapHana
 					}
 
 				case ConvertType.NameToDatabase   :
-				case ConvertType.NameToOwner      :
+				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :
 					if (value != null)
 					{
@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider.SapHana
 			func = ConvertFunctionParameters(func);
 			switch (func.Name)
 			{
-				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0); 
+				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0);
 					break;
 			}
 			base.BuildFunction(func);
@@ -248,8 +248,7 @@ namespace LinqToDB.DataProvider.SapHana
 		//this is for Tests.Linq.Common.CoalesceLike test
 		static SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
 		{
-			var len = parameters.Length - start;
-			const string name = "CASE";
+			var len  = parameters.Length - start;
 			var cond = parameters[start];
 
 			if (start == 0 && SqlExpression.NeedsEqual(cond))
@@ -260,6 +259,8 @@ namespace LinqToDB.DataProvider.SapHana
 						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1))));
 			}
 
+			const string name = "CASE";
+
 			if (len == 3)
 				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
 
@@ -269,17 +270,17 @@ namespace LinqToDB.DataProvider.SapHana
 				ConvertCase(systemType, parameters, start + 2));
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
-			if (owner    != null && owner.   Length == 0) owner    = null;
+			if (schema    != null && schema.   Length == 0) schema    = null;
 
 			// "db..table" syntax not supported:
 			// <table_name> ::= [[<database_name>.]<schema.name>.]<identifier>
-			if (database != null && owner == null)
+			if (database != null && schema == null)
 				throw new LinqToDBException("SAP HANA requires schema name if database name provided.");
 
-			return base.BuildTableName(sb, database, owner, table);
+			return base.BuildTableName(sb, database, schema, table);
 		}
 	}
 }

@@ -230,31 +230,31 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
 		}
 
-		public virtual StringBuilder ConvertTableName(StringBuilder sb, string database, string owner, string table)
+		public virtual StringBuilder ConvertTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null) database = Convert(database, ConvertType.NameToDatabase).  ToString();
-			if (owner    != null) owner    = Convert(owner,    ConvertType.NameToOwner).     ToString();
+			if (schema   != null) schema   = Convert(schema,   ConvertType.NameToSchema).    ToString();
 			if (table    != null) table    = Convert(table,    ConvertType.NameToQueryTable).ToString();
 
-			return BuildTableName(sb, database, owner, table);
+			return BuildTableName(sb, database, schema, table);
 		}
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb,
 			string database,
-			string owner,
+			string schema,
 			[JetBrains.Annotations.NotNull] string table)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
 			if (database != null && database.Length == 0) database = null;
-			if (owner    != null && owner.   Length == 0) owner    = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
 
 			if (database != null)
 			{
-				if (owner == null) sb.Append(database).Append("..");
-				else               sb.Append(database).Append(".").Append(owner).Append(".");
+				if (schema == null) sb.Append(database).Append("..");
+				else                sb.Append(database).Append(".").Append(schema).Append(".");
 			}
-			else if (owner != null) sb.Append(owner).Append(".");
+			else if (schema != null) sb.Append(schema).Append(".");
 
 			return sb.Append(table);
 		}
@@ -927,7 +927,7 @@ namespace LinqToDB.SqlProvider
 
 				WithStringBuilder(
 					field.StringBuilder,
-					() => BuildCreateTableNullAttribute(field.Field, createTable.DefaulNullable));
+					() => BuildCreateTableNullAttribute(field.Field, createTable.DefaultNullable));
 
 				if (field.Field.CreateFormat != null)
 				{
@@ -1036,12 +1036,12 @@ namespace LinqToDB.SqlProvider
 				true);
 		}
 
-		protected virtual void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
+		protected virtual void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
 		{
-			if (defaulNullable == DefaulNullable.Null && field.CanBeNull)
+			if (defaultNullable == DefaultNullable.Null && field.CanBeNull)
 				return;
 
-			if (defaulNullable == DefaulNullable.NotNull && !field.CanBeNull)
+			if (defaultNullable == DefaultNullable.NotNull && !field.CanBeNull)
 				return;
 
 			StringBuilder.Append(field.CanBeNull ? "    NULL" : "NOT NULL");
@@ -2740,9 +2740,15 @@ namespace LinqToDB.SqlProvider
 			return table.Database == null ? null : Convert(table.Database, ConvertType.NameToDatabase).ToString();
 		}
 
+		[Obsolete("Use GetTableSchemaName instead.")]
 		protected virtual string GetTableOwnerName(SqlTable table)
 		{
-			return table.Owner == null ? null : Convert(table.Owner, ConvertType.NameToOwner).ToString();
+			return GetTableSchemaName(table);
+		}
+
+		protected virtual string GetTableSchemaName(SqlTable table)
+		{
+			return table.Schema == null ? null : Convert(table.Schema, ConvertType.NameToSchema).ToString();
 		}
 
 		protected virtual string GetTablePhysicalName(SqlTable table)
@@ -2759,12 +2765,12 @@ namespace LinqToDB.SqlProvider
 						var tbl = (SqlTable)table;
 
 						var database     = GetTableDatabaseName(tbl);
-						var owner        = GetTableOwnerName   (tbl);
+						var schema       = GetTableSchemaName  (tbl);
 						var physicalName = GetTablePhysicalName(tbl);
 
 						var sb = new StringBuilder();
 
-						BuildTableName(sb, database, owner, physicalName);
+						BuildTableName(sb, database, schema, physicalName);
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
@@ -3016,25 +3022,22 @@ namespace LinqToDB.SqlProvider
 		{
 			var database = entity.DatabaseName;
 			var schema   = entity.SchemaName;
-			var table    =  entity.TableName;
+			var table    = entity.TableName;
 
 			var columnName = Convert(column.ColumnName, ConvertType.NameToQueryField);
 			var tableName  = BuildTableName(
 				new StringBuilder(),
 				database == null ? null : Convert(database, ConvertType.NameToDatabase).  ToString(),
-				schema   == null ? null : Convert(schema,   ConvertType.NameToOwner).     ToString(),
+				schema   == null ? null : Convert(schema,   ConvertType.NameToSchema).    ToString(),
 				table    == null ? null : Convert(table,    ConvertType.NameToQueryTable).ToString())
 			.ToString();
 
-			return string.Format("SELECT Max({0}) FROM {1}", columnName, tableName);
+			return $"SELECT Max({columnName}) FROM {tableName}";
 		}
 
 		private string _name;
 
-		public virtual string Name
-		{
-			get { return _name ?? (_name = GetType().Name.Replace("SqlBuilder", "")); }
-		}
+		public virtual string Name => _name ?? (_name = GetType().Name.Replace("SqlBuilder", ""));
 
 		#endregion
 	}
