@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -6,7 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Metadata
 {
-	public class MetadataReader : IMetadataReader
+	public class MetadataReader : IMetadataReader, ITypelistMetadataReader
 	{
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
@@ -35,6 +36,11 @@ namespace LinqToDB.Metadata
 			where T : Attribute
 		{
 			return _readers.SelectMany(r => r.GetAttributes<T>(type, memberInfo, inherit)).ToArray();
+		}
+
+		public IEnumerable<Type> GetMappedTypes()
+		{
+			return _readers.OfType<ITypelistMetadataReader>().SelectMany(x => x.GetMappedTypes());
 		}
 	}
 }
