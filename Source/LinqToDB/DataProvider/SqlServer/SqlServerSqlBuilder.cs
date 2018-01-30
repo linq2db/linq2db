@@ -78,6 +78,46 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 				}
 			}
+			else if (((SqlInsertStatement)statement).Output != null)
+			{
+				var output = ((SqlInsertStatement)statement).Output;
+				if (output.HasOutputItems)
+				{
+					StringBuilder
+						.AppendLine("OUTPUT");
+
+					if (output.InsertedTable != null)
+						output.InsertedTable.PhysicalName = "INSERTED";
+
+					if (output.DeletedTable != null)
+						output.DeletedTable.PhysicalName = "DELETED";
+
+					++Indent;
+
+					bool first = true;
+					foreach (var oi in output.OutputItems)
+					{
+						if (!first)
+							StringBuilder.Append(',').AppendLine();
+						first = false;
+
+						AppendIndent();
+
+						BuildExpression(oi);
+					}
+
+					StringBuilder
+						.AppendLine();
+
+					--Indent;
+
+					if (output.OutputTable != null)
+						AppendIndent()
+							.Append("INTO ")
+							.Append(GetTablePhysicalName(output.OutputTable))
+							.AppendLine();
+				}
+			}
 		}
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -1526,5 +1527,65 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void InsertWithOutputTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					db.Child.Delete(c => c.ChildID > 1000);
+
+					var output =
+						db.Child
+							.Where(c => c.ChildID == 11)
+							.InsertWithOutput(db.Child, c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = id
+							}, inserted =>
+								new
+								{
+									inserted.ChildID,
+									inserted.ParentID
+								}).ToArray();
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > 1000);
+				}
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void InsertWithOutputTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					db.Child.Delete(c => c.ChildID > 1000);
+
+					var output =
+						db.Child
+							.Where(c => c.ChildID == 11)
+							.InsertWithOutput(db.Child, c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = id
+							}).ToArray();
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > 1000);
+				}
+			}
+		}
+
 	}
 }

@@ -71,7 +71,8 @@ namespace LinqToDB.Linq.Builder
 				SqlTable         = table;
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
-				SelectQuery.From.Table(SqlTable);
+				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
+					SelectQuery.From.Table(SqlTable);
 
 				Init();
 			}

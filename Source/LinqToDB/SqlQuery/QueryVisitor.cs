@@ -64,6 +64,19 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.OutputClause:
+					{
+						Visit1X(((SqlOutputClause)element).SourceTable);
+						Visit1X(((SqlOutputClause)element).DeletedTable);
+						Visit1X(((SqlOutputClause)element).InsertedTable);
+						Visit1X(((SqlOutputClause)element).OutputTable);
+
+						if (((SqlOutputClause)element).HasOutputItems)
+							Visit1X(((SqlOutputClause)element).OutputItems);
+
+						break;
+					}
+
 				case QueryElementType.Column:
 					{
 						Visit1(((SqlColumn)element).Expression);
@@ -481,6 +494,19 @@ namespace LinqToDB.SqlQuery
 						_visitedElements.Add(element, element);
 
 						Visit2X((SqlCteTable)element);
+						break;
+					}
+
+				case QueryElementType.OutputClause:
+					{
+						Visit2X(((SqlOutputClause)element).SourceTable);
+						Visit2X(((SqlOutputClause)element).DeletedTable);
+						Visit2X(((SqlOutputClause)element).InsertedTable);
+						Visit2X(((SqlOutputClause)element).OutputTable);
+
+						if (((SqlOutputClause)element).HasOutputItems)
+							Visit2X(((SqlOutputClause)element).OutputItems);
+
 						break;
 					}
 
@@ -963,6 +989,16 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlCteTable)element).Cte, find);
 					}
 
+				case QueryElementType.OutputClause:
+					{
+						return
+							Find(((SqlOutputClause)element).SourceTable, find)   ??
+							Find(((SqlOutputClause)element).DeletedTable, find)  ??
+							Find(((SqlOutputClause)element).InsertedTable, find) ??
+							Find(((SqlOutputClause)element).OutputTable, find)   ??
+							(((SqlOutputClause)element).HasOutputItems ? Find(((SqlOutputClause)element).OutputItems, find) : null);
+					}
+
 				case QueryElementType.TableSource:
 					{
 						return
@@ -1203,6 +1239,39 @@ namespace LinqToDB.SqlQuery
 							newElement = new SqlCteTable(table, fields2, cte);
 
 							_visitedElements[((SqlCteTable)newElement).All] = table.All;
+						}
+
+						break;
+					}
+
+				case QueryElementType.OutputClause:
+					{
+						var output = (SqlOutputClause)element;
+
+						var sourceTable   = ConvertInternal(output.SourceTable, action); 
+						var deletedTable  = ConvertInternal(output.DeletedTable, action); 
+						var insertedTable = ConvertInternal(output.InsertedTable, action); 
+						var outputTable   = ConvertInternal(output.OutputTable, action);
+
+						var outputItems   = !output.HasOutputItems ? null : Convert(output.OutputItems, action);
+
+						if (!ReferenceEquals(output.SourceTable, sourceTable)   ||
+						    !ReferenceEquals(output.SourceTable, deletedTable)  ||
+						    !ReferenceEquals(output.SourceTable, insertedTable) ||
+						    !ReferenceEquals(output.SourceTable, outputTable)   ||
+						    outputItems != null
+						)
+						{
+							newElement = output = new SqlOutputClause
+							{
+								SourceTable   = sourceTable   as SqlTable, 
+								DeletedTable  = deletedTable  as SqlTable,
+								InsertedTable = insertedTable as SqlTable,
+								OutputTable   = outputTable   as SqlTable
+							};
+
+							if (outputItems != null)
+								output.OutputItems.AddRange(outputItems);
 						}
 
 						break;

@@ -30,6 +30,12 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
+		#region Output
+
+		public  SqlOutputClause  Output { get; set; }
+
+		#endregion
+
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			((IQueryElement)_insert)?.ToString(sb, dic);
