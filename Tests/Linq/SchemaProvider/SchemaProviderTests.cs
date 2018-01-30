@@ -1,16 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
-using LinqToDB.Data;
-using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.SchemaProvider
 {
-	using System.Collections.Generic;
-
 	using LinqToDB;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider.SqlServer;
+	using LinqToDB.Mapping;
 	using LinqToDB.SchemaProvider;
 
 	[TestFixture]
@@ -33,10 +32,8 @@ namespace Tests.SchemaProvider
 				var tableNames = new HashSet<string>();
 				foreach (var schemaTable in dbSchema.Tables)
 				{
-					var tableName = schemaTable.CatalogName + "."
-									+ (schemaTable.IsDefaultSchema
-										? schemaTable.TableName
-										: schemaTable.SchemaName + "." + schemaTable.TableName);
+					var tableName = schemaTable.CatalogName + "." +
+						(schemaTable.IsDefaultSchema ? schemaTable.TableName : schemaTable.SchemaName + "." + schemaTable.TableName);
 
 					if (tableNames.Contains(tableName))
 						Assert.Fail("Not unique table " + tableName);
@@ -335,6 +332,64 @@ namespace Tests.SchemaProvider
 				Assert.AreEqual(2, fkCountPerson);
 				Assert.AreEqual(1, pkCountPerson);
 			}
+		}
+
+		[Test]
+		public void SetForeignKeyMemberNameTest()
+		{
+			var thisTable  = new TableSchema { TableName = "Xxx", };
+			var otherTable = new TableSchema  { TableName = "Zzz", };
+
+			var key = new ForeignKeySchema
+			{
+				KeyName      = "FK_Xxx_YyyZzz",
+				MemberName   = "FK_Xxx_YyyZzz",
+				ThisColumns  = new List<ColumnSchema>
+				{
+					new ColumnSchema { MemberName = "XxxID", IsPrimaryKey = true },
+					new ColumnSchema { MemberName = "YyyZzzID" },
+				},
+				OtherColumns = new List<ColumnSchema>
+				{
+					new ColumnSchema { MemberName = "ZzzID" },
+				},
+				ThisTable    = thisTable,
+				OtherTable   = otherTable,
+			};
+
+			var key1 = new ForeignKeySchema
+			{
+				KeyName      = "FK_Xxx_Zzz",
+				MemberName   = "FK_Xxx_Zzz",
+				ThisColumns  = new List<ColumnSchema>
+				{
+					new ColumnSchema { MemberName = "XxxID", IsPrimaryKey = true },
+					new ColumnSchema { MemberName = "ZzzID" },
+				},
+				OtherColumns = new List<ColumnSchema>
+				{
+					new ColumnSchema { MemberName = "ZzzID" },
+				},
+				ThisTable    = thisTable,
+				OtherTable   = otherTable,
+			};
+
+			key.ThisTable.ForeignKeys = new List<ForeignKeySchema> { key, key1 };
+			key.ThisTable.Columns     = key.ThisColumns;
+
+			key.BackReference = new ForeignKeySchema
+			{
+				KeyName         = key.KeyName    + "_BackReference",
+				MemberName      = key.MemberName + "_BackReference",
+				AssociationType = AssociationType.Auto,
+				OtherTable      = key.ThisTable,
+				ThisColumns     = key.OtherColumns,
+				OtherColumns    = key.ThisColumns,
+			};
+
+			SchemaProviderBase.SetForeignKeyMemberName(new GetSchemaOptions {}, key.ThisTable, key);
+
+			Assert.That(key.MemberName, Is.EqualTo("YyyZzz"));
 		}
 	}
 }

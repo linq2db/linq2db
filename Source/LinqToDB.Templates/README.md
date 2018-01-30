@@ -18,7 +18,7 @@ This also will install needed linq2db packages:
 
 But **not** data provider packages (install them only if needed to compile your project, T4 models ships it's own data provider assemblies).
 
-### .Net Core specific 
+### .Net Core specific
 
 Because of .Net Core projects do not support NuGet content files all stuff is not copied into project's folder, so to run T4 templates you'll need:
 * open `$(SolutionDir).tools\linq2db.t4models` in Explorer 
@@ -77,7 +77,7 @@ GenerateDbTypes                     = false;   // If true, generates the DbType 
 GenerateObsoleteAttributeForAliases = false;   // If true, generates [Obsolete] attribute for aliases.
 IsCompactColumnAliases              = true;    // If true, column alias compact view.
 
-NormalizeNames                      = true;    // convert some_name to SomeName for types and members
+NormalizeNames                      = false;   // convert some_name to SomeName for types and members
 
 GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" }; // Defines excluded schemas.
 GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines only included schemas.

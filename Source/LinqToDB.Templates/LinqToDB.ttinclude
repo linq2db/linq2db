@@ -874,7 +874,9 @@ void GenerateTypesFromMetadata()
 
 string NormalizeStringName(string name)
 {
-	return @"@""" + name.Replace(@"""", @"""""") + @"""";
+	if (name.Contains("\"") || name.Contains("\\"))
+		return @"@""" + name.Replace(@"""", @"""""") + @"""";
+	return "\"" + name + "\"";
 }
 
 #>
