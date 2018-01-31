@@ -693,7 +693,7 @@ namespace LinqToDB.SchemaProvider
 				}
 
 				if (string.IsNullOrEmpty(name))
-					name = key.OtherTable.TableName;
+					name = key.OtherTable != key.ThisTable ? key.OtherTable.TableName : key.KeyName;
 
 				if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
 					table.Columns.    Select(_ => _.MemberName)).Concat(
