@@ -177,16 +177,16 @@ namespace LinqToDB.Linq.Builder
 			BuildInfo                       buildInfo,
 			LambdaExpression                setter,
 			IBuildContext                   into,
-			List<SqlSetExpression> items,
-			IBuildContext                   sequence)
+			List<SqlSetExpression>          items,
+			params IBuildContext[]          sequences)
 		{
 			var path = Expression.Parameter(setter.Body.Type, "p");
-			var ctx  = new ExpressionContext(buildInfo.Parent, sequence, setter);
+			var ctx  = new ExpressionContext(buildInfo.Parent, sequences, setter);
 
 			if (setter.Body.NodeType == ExpressionType.MemberInit)
 			{
 				var ex  = (MemberInitExpression)setter.Body;
-				var p   = sequence.Parent;
+				var p   = sequences[0].Parent;
 
 				BuildSetter(builder, into, items, ctx, ex, path);
 

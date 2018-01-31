@@ -136,21 +136,20 @@ namespace LinqToDB.Linq.Builder
 
 					insertStatement.Output.InsertedTable = table;
 
-					OutputHelpers.BuildOutput(
+					UpdateBuilder.BuildSetter(
 						builder,
 						buildInfo,
 						outputExpression,
 						into,
 						insertStatement.Output.OutputItems,
-						insertedContext,
-						null);
+						insertedContext);
 				}
 
 				if (insertType == InsertContext.InsertType.InsertOutputInto)
 				{
-					//TODO:
 					var outputTable = GetArgumentByName("outputTable");
-					into = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
+					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
+					insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 				}
 			}
 

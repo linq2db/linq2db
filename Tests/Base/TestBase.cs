@@ -995,6 +995,34 @@ namespace Tests
 		{
 			return DataCache<LinqDataTypes>.Get(context);
 		}
+
+		public static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
+		{
+			return TempTable.Create<T>(db, GetTempTableName(tableName, context));
+		}
+
+		public static string GetTempTableName(string tableName, string context)
+		{
+			var finalTableName = tableName;
+			switch (context)
+			{
+				case ProviderName.SqlServer:
+				case ProviderName.SqlServer2000:
+				case ProviderName.SqlServer2005:
+				case ProviderName.SqlServer2008:
+				case ProviderName.SqlServer2012:
+				case ProviderName.SqlServer2014:
+					{
+						if (!tableName.StartsWith("#"))
+							finalTableName = "#" + tableName;
+						break;
+					}
+				default:
+					throw new NotImplementedException();
+			}
+
+			return finalTableName;
+		}
 	}
 
 	static class DataCache<T>
