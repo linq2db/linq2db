@@ -133,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 						if (IsSubQuery() && IsExpression(null, 0, RequestFor.Expression).Result)
 						{
 							var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
-							var idx = Parent == null ? info.Index : Parent.ConvertToParentIndex(info.Index, this);
+							var idx  = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
 
 							return Builder.BuildSql(expression.Type, idx);
 						}

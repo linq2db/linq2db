@@ -1581,7 +1581,7 @@ namespace LinqToDB
 			return source.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter), 
+					MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter),
 					source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter)));
 		}
 
@@ -1612,7 +1612,7 @@ namespace LinqToDB
 			return source.Provider.CreateQuery<TOutput>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter, outputExpression), 
+					MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter, outputExpression),
 					source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter), Expression.Quote(outputExpression)));
 		}
 
@@ -1642,7 +1642,7 @@ namespace LinqToDB
 			return source.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable), 
+					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable),
 					source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression));
 		}
 

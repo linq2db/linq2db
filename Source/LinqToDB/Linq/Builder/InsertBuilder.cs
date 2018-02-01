@@ -40,22 +40,22 @@ namespace LinqToDB.Linq.Builder
 			{
 				case "Insert"               : insertType = InsertContext.InsertType.Insert;             break;
 				case "InsertWithIdentity"   : insertType = InsertContext.InsertType.InsertWithIdentity; break;
-				case "InsertWithOutput"     : insertType = InsertContext.InsertType.InsertOutput;       break; 
-				case "InsertWithOutputInto"	: insertType = InsertContext.InsertType.InsertOutputInto;   break;
+				case "InsertWithOutput"     : insertType = InsertContext.InsertType.InsertOutput;       break;
+				case "InsertWithOutputInto" : insertType = InsertContext.InsertType.InsertOutputInto;   break;
 			}
 
-			var indexedParamaters
+			var indexedParameters
 				= methodCall.Method.GetParameters().Select((p, i) => Tuple.Create(p, i)).ToDictionary(t => t.Item1.Name, t => t.Item2);
 
 			Expression GetArgumentByName(string name)
 			{
-				return methodCall.Arguments[indexedParamaters[name]];
+				return methodCall.Arguments[indexedParameters[name]];
 			}
 
 			LambdaExpression GetOutputExpression(Type outputType)
 			{
 				int index;
-				if (!indexedParamaters.TryGetValue("outputExpression", out index))
+				if (!indexedParameters.TryGetValue("outputExpression", out index))
 				{
 					var param = Expression.Parameter(methodCall.Method.GetGenericArguments()[1]);
 					return Expression.Lambda(param, param);
@@ -132,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 					table.PhysicalName = table.Name;
 					table.SqlTableType = SqlTableType.SystemTable;
 
-					var insertedContext = new TableBuilder.TableContext(builder, buildInfo, table);
+					var insertedContext = sequence = new TableBuilder.TableContext(builder, buildInfo, table);
 
 					insertStatement.Output.InsertedTable = table;
 
@@ -157,7 +157,7 @@ namespace LinqToDB.Linq.Builder
 /*
 			switch (methodCall.Arguments.Count)
 			{
-				case 1 : 
+				case 1 :
 					// static int Insert<T>              (this IValueInsertable<T> source)
 					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 					{
@@ -265,7 +265,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			insertStatement.Insert.WithIdentity = insertType == InsertContext.InsertType.InsertWithIdentity; 
+			insertStatement.Insert.WithIdentity = insertType == InsertContext.InsertType.InsertWithIdentity;
 			sequence.Statement = insertStatement;
 
 			return new InsertContext(buildInfo.Parent, sequence, insertType, outputExpression);
@@ -281,7 +281,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region InsertContext
 
-		class InsertContext : SequenceContextBase
+		class InsertContext : SelectContext // SequenceContextBase
 		{
 			public enum InsertType
 			{
@@ -292,9 +292,9 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public InsertContext(IBuildContext parent, IBuildContext sequence, InsertType insertType, LambdaExpression outputExpression)
-				: base(parent, sequence, null)
+				: base(parent, outputExpression, sequence)
 			{
-				_insertType = insertType;
+				_insertType       = insertType;
 				_outputExpression = outputExpression;
 			}
 
@@ -313,8 +313,9 @@ namespace LinqToDB.Linq.Builder
 						break;
 					case InsertType.InsertOutput:
 						//TODO:
-						var mapper = Builder.BuildMapper<T>(_outputExpression.Body.Unwrap());
-						QueryRunner.SetRunQuery(query, mapper);
+						base.BuildQuery(query, queryParameter);
+						//var mapper = Builder.BuildMapper<T>(_outputExpression.Body.Unwrap());
+						//QueryRunner.SetRunQuery(query, mapper);
 						break;
 					case InsertType.InsertOutputInto:
 						QueryRunner.SetNonQueryQuery(query);
@@ -326,26 +327,36 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
+				if (_insertType == InsertType.InsertOutput)
+					return base.BuildExpression(expression, level, enforceServerSide);
 				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 			{
+				if (_insertType == InsertType.InsertOutput)
+					return base.ConvertToSql(expression, level, flags);
 				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
 			{
+				if (_insertType == InsertType.InsertOutput)
+					return base.ConvertToIndex(expression, level, flags);
 				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
 			{
+				if (_insertType == InsertType.InsertOutput)
+					return base.IsExpression(expression, level, requestFlag);
 				throw new NotImplementedException();
 			}
 
 			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
 			{
+				if (_insertType == InsertType.InsertOutput)
+					return base.GetContext(expression, level, buildInfo);
 				throw new NotImplementedException();
 			}
 		}
@@ -392,7 +403,7 @@ namespace LinqToDB.Linq.Builder
 						sequence = new SubQueryContext(sequence);
 
 					insertStatement = new SqlInsertStatement(sequence.SelectQuery);
-					
+
 					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SelectQuery()));
 					insertStatement.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
 				}

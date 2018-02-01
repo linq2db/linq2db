@@ -417,7 +417,7 @@ namespace Tests.xUpdate
 					db.Parent.Delete(p => p.ParentID > 1000);
 
 					db.Insert(new Parent { ParentID = id, Value1 = id });
-		
+
 					Assert.AreEqual(1,
 						db.Parent
 							.Where(p => p.ParentID == id)
@@ -1539,19 +1539,21 @@ namespace Tests.xUpdate
 
 					db.Child.Delete(c => c.ChildID > 1000);
 
-					var output =
-						db.Child
-							.Where(c => c.ChildID == 11)
-							.InsertWithOutput(db.Child, c => new Child
+					var output = db.Child
+						.Where(c => c.ChildID == 11)
+						.InsertWithOutput(
+							db.Child,
+							c => new Child
 							{
 								ParentID = c.ParentID,
 								ChildID  = id
-							}, inserted =>
-								new
-								{
-									inserted.ChildID,
-									inserted.ParentID
-								}).ToArray();
+							},
+							inserted => new
+							{
+								inserted.ChildID,
+								inserted.ParentID
+							})
+						.ToArray();
 				}
 				finally
 				{
@@ -1587,5 +1589,37 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void InsertWithOutputTest3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					db.Child.Delete(c => c.ChildID > 1000);
+
+					var output = db.Child
+						.Where(c => c.ChildID == 11)
+						.InsertWithOutput(
+							db.Child,
+							c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = id
+							},
+							inserted => new
+							{
+								ID = inserted.ChildID + inserted.ParentID
+							})
+						.ToArray();
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > 1000);
+				}
+			}
+		}
 	}
 }
