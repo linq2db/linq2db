@@ -225,6 +225,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					case SqlDbType.VarChar:
 					case SqlDbType.NVarChar:
 						{
+							// Setting for NVarchar and Varchar (max) size. It reduces count of cached plans.
 							param.Size = -1;
 							break;
 						}
