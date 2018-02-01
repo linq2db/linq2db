@@ -216,6 +216,20 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
+
+			var param = parameter as SqlParameter;
+			if (param != null)
+			{
+				switch (param.SqlDbType)
+				{
+					case SqlDbType.VarChar:
+					case SqlDbType.NVarChar:
+						{
+							param.Size = -1;
+							break;
+						}
+				}
+			}
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
