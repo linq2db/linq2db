@@ -24,11 +24,12 @@ namespace LinqToDB.DataProvider.Informix
 		protected InformixDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsParameterOrderDependent    = true;
-			SqlProviderFlags.IsSubQueryTakeSupported      = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported    = false;
-			SqlProviderFlags.IsGroupByExpressionSupported = false;
-			SqlProviderFlags.IsCrossJoinSupported         = false;
+			SqlProviderFlags.IsParameterOrderDependent         = true;
+			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.IsGroupByExpressionSupported      = false;
+			SqlProviderFlags.IsCrossJoinSupported              = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));

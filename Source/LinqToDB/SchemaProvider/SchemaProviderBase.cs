@@ -550,7 +550,7 @@ namespace LinqToDB.SchemaProvider
 				;
 		}
 
-		protected string ToTypeName(Type type, bool isNullable)
+		public static string ToTypeName(Type type, bool isNullable)
 		{
 			if (type == null)
 				type = typeof(object);
@@ -626,77 +626,86 @@ namespace LinqToDB.SchemaProvider
 					}
 				}
 
+if (t.TableName == "Employees")
+{
+}
+
 				foreach (var key in t.ForeignKeys)
 				{
-					string name = null;
-
-					if (schemaOptions.GetAssociationMemberName != null)
-					{
-						name = schemaOptions.GetAssociationMemberName(key);
-
-						if (name != null)
-							key.MemberName = ToValidName(name);
-					}
-
-					if (name == null)
-					{
-						name = key.MemberName;
-
-						if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
-						{
-							name = key.ThisColumns[0].MemberName;
-							name = name.Substring(0, name.Length - "id".Length);
-
-							if (t.ForeignKeys.Select(_ => _.MemberName). Concat(
-								t.Columns.    Select(_ => _.MemberName)).Concat(
-								new[] { t.TypeName }).All(_ => _ != name))
-							{
-								name = key.MemberName;
-							}
-						}
-			
-						if (name == key.MemberName)
-						{
-							if (name.StartsWith("FK_"))
-								name = name.Substring(3);
-
-							if (name.EndsWith("_BackReference"))
-								name = name.Substring(0, name.Length - "_BackReference".Length);
-
-							name = string.Join("", name
-								.Split('_')
-								.Where(_ =>
-									_.Length > 0 && _ != t.TableName &&
-									(t.SchemaName == null || t.IsDefaultSchema || _ != t.SchemaName))
-								.ToArray());
-
-							var digitEnd = 0;
-							for (var i = name.Length - 1; i >= 0; i--)
-							{
-								if (char.IsDigit(name[i]))
-									digitEnd++;
-								else
-									break;
-							}
-
-							if (digitEnd > 0)
-								name = name.Substring(0, name.Length - digitEnd);
-						}
-
-						if (string.IsNullOrEmpty(name))
-							name = key.OtherTable.TableName;
-
-						if (t.ForeignKeys.Select(_ => _.MemberName). Concat(
-							t.Columns.    Select(_ => _.MemberName)).Concat(
-								new[] { t.TypeName }).All(_ => _ != name))
-						{
-							key.MemberName = ToValidName(name);
-						}
-					}
+					SetForeignKeyMemberName(schemaOptions, t, key);
 				}
 			}
 
 			return databaseSchema;
+		}
+
+		internal static void SetForeignKeyMemberName(GetSchemaOptions schemaOptions, TableSchema table, ForeignKeySchema key)
+		{
+			string name = null;
+
+			if (schemaOptions.GetAssociationMemberName != null)
+			{
+				name = schemaOptions.GetAssociationMemberName(key);
+
+				if (name != null)
+					key.MemberName = ToValidName(name);
+			}
+
+			if (name == null)
+			{
+				name = key.MemberName;
+
+				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+				{
+					name = key.ThisColumns[0].MemberName;
+					name = name.Substring(0, name.Length - "id".Length);
+
+					if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
+						table.Columns.    Select(_ => _.MemberName)).Concat(
+						new[] { table.TypeName }).Any(_ => _ == name))
+					{
+						name = key.MemberName;
+					}
+				}
+
+				if (name == key.MemberName)
+				{
+					if (name.StartsWith("FK_"))
+						name = name.Substring(3);
+
+					if (name.EndsWith("_BackReference"))
+						name = name.Substring(0, name.Length - "_BackReference".Length);
+
+					name = string.Join("", name
+						.Split('_')
+						.Where(_ =>
+							_.Length > 0 && _ != table.TableName &&
+							(table.SchemaName == null || table.IsDefaultSchema || _ != table.SchemaName))
+						.ToArray());
+
+					var digitEnd = 0;
+					for (var i = name.Length - 1; i >= 0; i--)
+					{
+						if (char.IsDigit(name[i]))
+							digitEnd++;
+						else
+							break;
+					}
+
+					if (digitEnd > 0)
+						name = name.Substring(0, name.Length - digitEnd);
+				}
+
+				if (string.IsNullOrEmpty(name))
+					name = key.OtherTable != key.ThisTable ? key.OtherTable.TableName : key.KeyName;
+
+				if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
+					table.Columns.    Select(_ => _.MemberName)).Concat(
+					new[] { table.TypeName }).All(_ => _ != name))
+				{
+					key.MemberName = ToValidName(name);
+				}
+			}
 		}
 	}
 }

@@ -37,8 +37,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			else
 			{
-				SqlProviderFlags.IsApplyJoinSupported    = true;
-				SqlProviderFlags.TakeHintsSupported      = TakeHints.Percent | TakeHints.WithTies;
+				SqlProviderFlags.IsApplyJoinSupported              = true;
+				SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
+				SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
 			}
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
@@ -215,6 +216,32 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
+
+			if (parameter is SqlParameter param)
+			{
+				// Setting for NVarChar and VarChar constant size. It reduces count of cached plans.
+				switch (param.SqlDbType)
+				{
+					case SqlDbType.VarChar:
+						{
+							if (value is string strValue && strValue.Length > 8000)
+								param.Size = -1;
+							else
+								param.Size = 8000;
+
+							break;
+						}
+					case SqlDbType.NVarChar:
+						{
+							if (value is string strValue && strValue.Length > 4000)
+								param.Size = -1;
+							else
+								param.Size = 4000;
+
+							break;
+						}
+				}
+			}
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)

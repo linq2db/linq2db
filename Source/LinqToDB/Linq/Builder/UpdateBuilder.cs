@@ -23,25 +23,35 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
+			var updateStatement = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
+			sequence.Statement  = updateStatement;
+
 			switch (methodCall.Arguments.Count)
 			{
-				case 1 : // int Update<T>(this IUpdateable<T> source)
-					CheckAssociation(sequence);
-					break;
+				case 1: // int Update<T>(this IUpdateable<T> source)
+					{
+						CheckAssociation(sequence);
+
+						break;
+					}
 
 				case 2 : // int Update<T>(this IQueryable<T> source, Expression<Func<T,T>> setter)
 					{
 						CheckAssociation(sequence);
 
 						if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
+						{
 							sequence = new SubQueryContext(sequence);
+							updateStatement.SelectQuery = sequence.SelectQuery;
+							sequence.Statement = updateStatement;
+						}
 
 						BuildSetter(
 							builder,
 							buildInfo,
 							(LambdaExpression)methodCall.Arguments[1].Unwrap(),
 							sequence,
-							sequence.SelectQuery.Update.Items,
+							updateStatement.Update.Items,
 							sequence);
 						break;
 					}
@@ -61,12 +71,15 @@ namespace LinqToDB.Linq.Builder
 							if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
 								sequence = new SubQueryContext(sequence);
 
+							updateStatement.SelectQuery = sequence.SelectQuery;
+							sequence.Statement = updateStatement;
+
 							BuildSetter(
 								builder,
 								buildInfo,
 								(LambdaExpression)methodCall.Arguments[2].Unwrap(),
 								sequence,
-								sequence.SelectQuery.Update.Items,
+								updateStatement.Update.Items,
 								sequence);
 						}
 						else
@@ -94,33 +107,29 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, sequence.SelectQuery)
+							new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery)
 								.ResolveWeakJoins(new List<ISqlTableSource>());
-							sequence.SelectQuery.Select.Columns.Clear();
+							updateStatement.SelectQuery.Select.Columns.Clear();
 
 							BuildSetter(
 								builder,
 								buildInfo,
 								(LambdaExpression)methodCall.Arguments[2].Unwrap(),
 								into,
-								sequence.SelectQuery.Update.Items,
+								updateStatement.Update.Items,
 								sequence);
 
-							var sql = sequence.SelectQuery;
+							updateStatement.SelectQuery.Select.Columns.Clear();
 
-							sql.Select.Columns.Clear();
+							foreach (var item in updateStatement.Update.Items)
+								updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression));
 
-							foreach (var item in sql.Update.Items)
-								sql.Select.Columns.Add(new SqlColumn(sql, item.Expression));
-
-							sql.Update.Table = ((TableBuilder.TableContext)into).SqlTable;
+							updateStatement.Update.Table = ((TableBuilder.TableContext)into).SqlTable;
 						}
 
 						break;
 					}
 			}
-
-			sequence.SelectQuery.ChangeQueryType(QueryType.Update);
 
 			return new UpdateContext(buildInfo.Parent, sequence);
 		}
@@ -136,7 +145,7 @@ namespace LinqToDB.Linq.Builder
 				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
 				{
 					var atc = (TableBuilder.AssociatedTableContext)res.Context;
-					sequence.SelectQuery.Update.Table = atc.SqlTable;
+					sequence.Statement.RequireUpdateClause().Table = atc.SqlTable;
 				}
 				else
 				{
@@ -146,8 +155,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var tc = (TableBuilder.TableContext)res.Context;
 
-						if (sequence.SelectQuery.From.Tables.Count == 0 || sequence.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
-							sequence.SelectQuery.Update.Table = tc.SqlTable;
+						if (sequence.Statement.SelectQuery.From.Tables.Count == 0 || sequence.Statement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
+							sequence.Statement.RequireUpdateClause().Table = tc.SqlTable;
 					}
 				}
 			}
@@ -417,6 +426,9 @@ namespace LinqToDB.Linq.Builder
 				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var update   =                   methodCall.Arguments[2].Unwrap();
 
+				var updateStatement = new SqlUpdateStatement(sequence.SelectQuery);
+				sequence.Statement = updateStatement;
+
 				if (update.NodeType == ExpressionType.Lambda)
 					ParseSet(
 						builder,
@@ -424,8 +436,8 @@ namespace LinqToDB.Linq.Builder
 						extract,
 						(LambdaExpression)update,
 						sequence,
-						sequence.SelectQuery.Update.Table,
-						sequence.SelectQuery.Update.Items);
+						updateStatement.Update.Table,
+						updateStatement.Update.Items);
 				else
 					ParseSet(
 						builder,
@@ -433,7 +445,7 @@ namespace LinqToDB.Linq.Builder
 						extract,
 						update,
 						sequence,
-						sequence.SelectQuery.Update.Items);
+						updateStatement.Update.Items);
 
 				return sequence;
 			}

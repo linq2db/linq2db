@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlQuery;
@@ -887,7 +885,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual SqlStatement GetResultStatement()
 		{
-			return SelectQuery;
+			return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 		}
 
 		#region Helpers

@@ -17,18 +17,16 @@ namespace LinqToDB.Linq
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery();
-				sqlQuery.ChangeQueryType(QueryType.Insert);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Owner        = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
-				sqlQuery.Insert.Into = sqlTable;
+				var insertStatement = new SqlInsertStatement { Insert = { Into = sqlTable } };
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { Statement = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = insertStatement } }
 				};
 
 				foreach (var field in sqlTable.Fields)
@@ -39,7 +37,7 @@ namespace LinqToDB.Linq
 
 						ei.Queries[0].Parameters.Add(param);
 
-						sqlQuery.Insert.Items.Add(new SqlSetExpression(field.Value, param.SqlParameter));
+						insertStatement.Insert.Items.Add(new SqlSetExpression(field.Value, param.SqlParameter));
 					}
 					else if (field.Value.IsIdentity)
 					{
@@ -47,7 +45,7 @@ namespace LinqToDB.Linq
 						var expr = sqlb.GetIdentityExpression(sqlTable);
 
 						if (expr != null)
-							sqlQuery.Insert.Items.Add(new SqlSetExpression(field.Value, expr));
+							insertStatement.Insert.Items.Add(new SqlSetExpression(field.Value, expr));
 					}
 				}
 

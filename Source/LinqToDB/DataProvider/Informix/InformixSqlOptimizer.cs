@@ -26,22 +26,22 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			var query = statement as SelectQuery;
-			if (query != null)
+			var selectQuery = statement.SelectQuery;
+			if (selectQuery != null)
 			{
-				new QueryVisitor().Visit(query.Select, SetQueryParameter);
+				new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
 
 				statement = base.Finalize(statement);
 
 				switch (statement.QueryType)
 				{
 					case QueryType.Delete:
-						statement = GetAlternativeDelete((SelectQuery)statement);
-						query.From.Tables[0].Alias = "$";
+						statement = GetAlternativeDelete((SqlDeleteStatement)statement);
+						selectQuery.From.Tables[0].Alias = "$";
 						break;
 
 					case QueryType.Update:
-						statement = GetAlternativeUpdate((SelectQuery)statement);
+						statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
 						break;
 				}
 			}

@@ -375,7 +375,7 @@ namespace LinqToDB
 		#region String Functions
 
 		[Sql.Function  (                                                   PreferServerSide = true)]
-		[Sql.Function  (ProviderName.Access,    "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.Access,    "Len",                               PreferServerSide = true)]
 		[Sql.Function  (PN.Firebird,  "Char_Length",                       PreferServerSide = true)]
 		[Sql.Function  (PN.SqlServer, "Len",                               PreferServerSide = true)]
 		[Sql.Function  (PN.SqlCe,     "Len",                               PreferServerSide = true)]
@@ -594,15 +594,15 @@ namespace LinqToDB
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.Access, "LCase")]
+		[Sql.Function(ServerSideOnly = true)]
+		[Sql.Function(PN.Access, "LCase", ServerSideOnly = true)]
 		public static string Lower(string str)
 		{
 			return str == null ? null : str.ToLower();
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.Access, "UCase")]
+		[Sql.Function(ServerSideOnly = true)]
+		[Sql.Function(PN.Access, "UCase", ServerSideOnly = true)]
 		public static string Upper(string str)
 		{
 			return str == null ? null : str.ToUpper();
@@ -830,7 +830,7 @@ namespace LinqToDB
 		[Sql.DatePart(PN.Informix,   "{0}",                                                0, 1)]
 		[Sql.DatePart(PN.MySql,      "Extract({0} from {{0}})",                     true,  0, 1)]
 		[Sql.DatePart(PN.PostgreSQL, "Cast(Floor(Extract({0} from {{0}})) as int)", true,  new[] { null,     null,  null,   "DOY",     null,   null,   "DOW",      null,     null,   null,   null   }, 0, 1)]
-		[Sql.DatePart(PN.Firebird,   "Extract({0} from {{0}})",                     true,  new[] { null,     null,  null,   "YearDay", null,   null,   null,       null,     null,   null,   null   }, 0, 1)]
+		[Sql.DatePart(PN.Firebird,   "Cast(Floor(Extract({0} from {{0}})) as int)", true,  new[] { null,     null,  null,   "YearDay", null,   null,   null,       null,     null,   null,   null   }, 0, 1)]
 		[Sql.DatePart(PN.SQLite,     "Cast(StrFTime({0}, {{0}}) as int)",           true,  new[] { "'%Y'",   null,  "'%m'", "'%j'",    "'%d'", "'%W'", "'%w'",     "'%H'",   "'%M'", "'%S'", "'%f'" }, 0, 1)]
 		[Sql.DatePart(PN.Access,     "DatePart({0}, {{0}})",                        true,  new[] { "'yyyy'", "'q'", "'m'",  "'y'",     "'d'",  "'ww'", "'w'",      "'h'",    "'n'", "'s'",   null   }, 0, 1)]
 		[Sql.DatePart(PN.SapHana,    "{0}",                                         true,  new[] { "Year({0})",                       "Floor((Month({0})-1) / 3) + 1", "Month({0})",                     "DayOfYear({0})",                "DayOfMonth({0})",               "Week({0})",                     "MOD(Weekday({0}) + 1, 7) + 1",                  "Hour({0})",                       "Minute({0})",                   "Second({0})",                   null },                            0, 1)]

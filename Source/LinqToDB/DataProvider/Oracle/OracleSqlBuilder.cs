@@ -28,12 +28,12 @@ namespace LinqToDB.DataProvider.Oracle
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = selectQuery.Insert.Into.GetIdentityField();
+			var identityField = insertClause.Into.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", selectQuery.Insert.Into.Name);
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append("\t");
@@ -54,15 +54,15 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		private static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
+		static void ConvertEmptyStringToNullIfNeeded(ISqlExpression expr)
 		{
 			var sqlParameter = expr as SqlParameter;
 			var sqlValue     = expr as SqlValue;
 
-			if (sqlParameter != null && sqlParameter.Value is string && sqlParameter.Value.ToString() == "")
+			if (sqlParameter?.Value is string && sqlParameter.Value.ToString() == "")
 				sqlParameter.Value = null;
 
-			if (sqlValue != null && sqlValue.Value is string && sqlValue.Value.ToString() == "")
+			if (sqlValue?.Value is string && sqlValue.Value.ToString() == "")
 				sqlValue.Value = null;
 		}
 
@@ -83,8 +83,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			return base.BuildWhere(selectQuery) || !NeedSkip(selectQuery) && NeedTake(selectQuery) &&
-			       selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
+			return
+				base.BuildWhere(selectQuery) ||
+				!NeedSkip(selectQuery) &&
+				 NeedTake(selectQuery) &&
+				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
 		}
 
 		string _rowNumberAlias;
@@ -96,7 +99,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildSql()
 		{
-			if (!(Statement is SelectQuery selectQuery))
+			var selectQuery = Statement.SelectQuery;
+
+			if (selectQuery == null)
 			{
 				base.BuildSql();
 				return;
@@ -233,10 +238,10 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
@@ -248,10 +253,11 @@ namespace LinqToDB.DataProvider.Oracle
 				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-				}
+					wrap =
+						expr is SqlExpression ex      &&
+						ex.Expr              == "{0}" &&
+						ex.Parameters.Length == 1     &&
+						ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
@@ -270,9 +276,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectQuery, "FROM SYS.DUAL");
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYS.DUAL");
 		}
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
@@ -280,11 +286,11 @@ namespace LinqToDB.DataProvider.Oracle
 			return "SELECT " + sequenceName + ".nextval ID from DUAL connect by level <= " + count;
 		}
 
-		protected override void BuildEmptyInsert(SelectQuery selectQuery)
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in selectQuery.Insert.Into.Fields)
+			foreach (var col in insertClause.Into.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();
@@ -301,6 +307,13 @@ namespace LinqToDB.DataProvider.Oracle
 				if (_identityField != null)
 					return 3;
 			}
+			else if (statement is SqlDropTableStatement dropTable)
+			{
+				_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+
+				if (_identityField != null)
+					return 3;
+			}
 
 			return base.CommandCount(statement);
 		}
@@ -313,9 +326,9 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else
 			{
-			var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Owner)
+			var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Schema)
 				? string.Empty
-				: dropTable.Table.Owner + ".";
+				: dropTable.Table.Schema + ".";
 
 				StringBuilder
 					.Append("DROP TRIGGER ")
@@ -330,28 +343,30 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			string GetSchemaPrefix(SqlTable table)
 			{
-				return string.IsNullOrWhiteSpace(table.Owner)
+				return string.IsNullOrWhiteSpace(table.Schema)
 					? string.Empty
-					: table.Owner + ".";
+					: table.Schema + ".";
 			}
 
 			switch (Statement)
 			{
 				case SqlDropTableStatement dropTable:
+					if (commandNumber == 1)
 					{
-						if (commandNumber == 1)
-						{
-							StringBuilder
-								.Append("DROP SEQUENCE ")
-								.Append(GetSchemaPrefix(dropTable.Table))
-								.Append("SIDENTITY_")
-								.Append(dropTable.Table.PhysicalName)
-								.AppendLine();
-						}
-						else
-							base.BuildDropTableStatement(dropTable);
-						break;
+						StringBuilder
+							.Append("DROP SEQUENCE ")
+							.Append(GetSchemaPrefix(dropTable.Table))
+							.Append("SIDENTITY_")
+							.Append(dropTable.Table.PhysicalName)
+							.AppendLine();
 					}
+					else
+					{
+						base.BuildDropTableStatement(dropTable);
+					}
+
+					break;
+
 				case SqlCreateTableStatement createTable:
 				{
 					var schemaPrefix = GetSchemaPrefix(createTable.Table);
@@ -382,17 +397,18 @@ namespace LinqToDB.DataProvider.Oracle
 							.AppendLine  ()
 							.AppendLine  ("END;");
 					}
+
 					break;
 				}
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
-			if (owner != null && owner.Length == 0) owner = null;
+			if (schema != null && schema.Length == 0) schema = null;
 
-			if (owner != null)
-				sb.Append(owner).Append(".");
+			if (schema != null)
+				sb.Append(schema).Append(".");
 
 			return sb.Append(table);
 		}

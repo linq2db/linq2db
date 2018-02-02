@@ -22,7 +22,8 @@ namespace LinqToDB.DataProvider.Firebird
 		protected FirebirdDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsIdentityParameterRequired = true;
+			SqlProviderFlags.IsIdentityParameterRequired       = true;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));

@@ -334,35 +334,31 @@ namespace LinqToDB.Data
 
 			static object ExecuteScalarImpl(DataConnection dataConnection, PreparedQuery preparedQuery)
 			{
-				IDbDataParameter idparam = null;
+				IDbDataParameter idParam = null;
 
 				if (dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
-					var sql = preparedQuery.Statement;
-
-					if ((sql.QueryType == QueryType.Insert ||
-					    sql.QueryType == QueryType.InsertOrUpdate)
-						&& ((SelectQuery)sql).Insert.WithIdentity)
+					if (preparedQuery.Statement.NeedsIdentity())
 					{
-						idparam = dataConnection.Command.CreateParameter();
+						idParam = dataConnection.Command.CreateParameter();
 
-						idparam.ParameterName = "IDENTITY_PARAMETER";
-						idparam.Direction     = ParameterDirection.Output;
-						idparam.DbType        = DbType.Decimal;
+						idParam.ParameterName = "IDENTITY_PARAMETER";
+						idParam.Direction     = ParameterDirection.Output;
+						idParam.DbType        = DbType.Decimal;
 
-						dataConnection.Command.Parameters.Add(idparam);
+						dataConnection.Command.Parameters.Add(idParam);
 					}
 				}
 
 				if (preparedQuery.Commands.Length == 1)
 				{
-					if (idparam != null)
+					if (idParam != null)
 					{
 						// This is because the firebird provider does not return any parameters via ExecuteReader
 						// the rest of the providers must support this mode
 						dataConnection.ExecuteNonQuery();
 
-						return idparam.Value;
+						return idParam.Value;
 					}
 
 					return dataConnection.ExecuteScalar();
@@ -532,11 +528,7 @@ namespace LinqToDB.Data
 
 				if (_dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
-					var sql = _preparedQuery.Statement;
-
-					if ((sql.QueryType == QueryType.Insert ||
-					    sql.QueryType == QueryType.InsertOrUpdate)
-						&& ((SelectQuery)sql).Insert.WithIdentity)
+					if (_preparedQuery.Statement.NeedsIdentity())
 					{
 						idparam = _dataConnection.Command.CreateParameter();
 

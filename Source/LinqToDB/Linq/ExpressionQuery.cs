@@ -41,7 +41,7 @@ namespace LinqToDB.Linq
 		// This property is helpful in Debug Mode.
 		//
 		[UsedImplicitly]
-		private string _sqlText { get { return SqlText; }}
+		private string _sqlText => SqlText;
 // ReSharper restore InconsistentNaming
 
 		public  string  SqlText

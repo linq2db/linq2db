@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 				case "TableName"    : table.SqlTable.PhysicalName = value; break;
 				case "DatabaseName" : table.SqlTable.Database     = value; break;
 				case "SchemaName"   :
-				case "OwnerName"    : table.SqlTable.Owner        = value; break;
+				case "OwnerName"    : table.SqlTable.Schema       = value; break;
 			}
 
 			return sequence;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -11,7 +12,6 @@ namespace LinqToDB
 {
 	using Extensions;
 	using Linq;
-
 	using SqlQuery;
 
 	/// <summary>
@@ -454,24 +454,24 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
 		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
-		/// <param name="defaulNullable">Defines how columns nullability flag should be generated:
-		/// <para> - <see cref="DefaulNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
-		/// <para> - <see cref="DefaulNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
-		/// <para> - <see cref="DefaulNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
-		/// Default value: <see cref="DefaulNullable.None"/>.
+		/// <param name="defaultNullable">Defines how columns nullability flag should be generated:
+		/// <para> - <see cref="DefaultNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
+		/// <para> - <see cref="DefaultNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
+		/// <para> - <see cref="DefaultNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
+		/// Default value: <see cref="DefaultNullable.None"/>.
 		/// </param>
 		/// <returns>Created table as queryable source.</returns>
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
-			string         tableName       = null,
-			string         databaseName    = null,
-			string         schemaName      = null,
-			string         statementHeader = null,
-			string         statementFooter = null,
-			DefaulNullable defaulNullable  = DefaulNullable.None)
+			string          tableName       = null,
+			string          databaseName    = null,
+			string          schemaName      = null,
+			string          statementHeader = null,
+			string          statementFooter = null,
+			DefaultNullable defaultNullable  = DefaultNullable.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.Query(dataContext,
-				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable);
+				tableName, databaseName, schemaName, statementHeader, statementFooter, defaultNullable);
 		}
 
 		/// <summary>
@@ -485,26 +485,26 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
 		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
-		/// <param name="defaulNullable">Defines how columns nullability flag should be generated:
-		/// <para> - <see cref="DefaulNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
-		/// <para> - <see cref="DefaulNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
-		/// <para> - <see cref="DefaulNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
-		/// Default value: <see cref="DefaulNullable.None"/>.
+		/// <param name="defaultNullable">Defines how columns nullability flag should be generated:
+		/// <para> - <see cref="DefaultNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
+		/// <para> - <see cref="DefaultNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
+		/// <para> - <see cref="DefaultNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
+		/// Default value: <see cref="DefaultNullable.None"/>.
 		/// </param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
 		public static Task<ITable<T>> CreateTableAsync<T>([NotNull] this IDataContext dataContext,
-			string              tableName       = null,
-			string              databaseName    = null,
-			string              schemaName      = null,
-			string              statementHeader = null,
-			string              statementFooter = null,
-			DefaulNullable      defaulNullable  = DefaulNullable.None,
-			CancellationToken   token           = default)
+			string            tableName       = null,
+			string            databaseName    = null,
+			string            schemaName      = null,
+			string            statementHeader = null,
+			string            statementFooter = null,
+			DefaultNullable   defaultNullable = DefaultNullable.None,
+			CancellationToken token           = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
-				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable, token);
+				tableName, databaseName, schemaName, statementHeader, statementFooter, defaultNullable, token);
 		}
 
 		#endregion
@@ -668,6 +668,30 @@ namespace LinqToDB
 			catch
 			{
 			}
+		}
+
+		#endregion
+
+		#region CTE
+
+		public static IQueryable<T> GetCte<T>(
+			[NotNull]   this IDataContext                 dataContext,
+			[NotNull]   Func<IQueryable<T>,IQueryable<T>> cteBody,
+			[CanBeNull] string                            cteTableName = null)
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
+
+			var cteTable = new CteTable<T>(dataContext);
+			var param    = MethodHelper.GetMethodInfo(cteBody, cteTable).GetParameters()[0];
+
+			var cteQuery = cteBody(cteTable);
+
+			return ((IQueryable<T>)cteTable).Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, cteTableName),
+					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)}));
 		}
 
 		#endregion

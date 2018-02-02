@@ -24,15 +24,15 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			if (statement is SelectQuery selectQuery)
-				new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
+			if (statement.SelectQuery != null)
+				new QueryVisitor().Visit(statement.SelectQuery, SetQueryParameter);
 
 			statement = base.Finalize(statement);
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete((SelectQuery)statement);
-				case QueryType.Update : return GetAlternativeUpdate((SelectQuery)statement);
+				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
+				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
 				default               : return statement;
 			}
 		}

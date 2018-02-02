@@ -399,7 +399,7 @@ namespace LinqToDB.Expressions
 					if (!Equals(expr1.Arguments[i].EvaluateExpression(), expr2.Arguments[i].EvaluateExpression()))
 						return false;
 				}
-				else 
+				else
 					if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
 						return false;
 			}
@@ -990,7 +990,7 @@ namespace LinqToDB.Expressions
 
 		public static object EvaluateExpression(this Expression expr)
 		{
-			switch (expr.NodeType) 
+			switch (expr.NodeType)
 			{
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;
