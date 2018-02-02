@@ -375,7 +375,7 @@ namespace LinqToDB
 		#region String Functions
 
 		[Sql.Function  (                                                   PreferServerSide = true)]
-		[Sql.Function  (ProviderName.Access,    "Len",                               PreferServerSide = true)]
+		[Sql.Function  (PN.Access,    "Len",                               PreferServerSide = true)]
 		[Sql.Function  (PN.Firebird,  "Char_Length",                       PreferServerSide = true)]
 		[Sql.Function  (PN.SqlServer, "Len",                               PreferServerSide = true)]
 		[Sql.Function  (PN.SqlCe,     "Len",                               PreferServerSide = true)]
@@ -594,15 +594,15 @@ namespace LinqToDB
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.Access, "LCase")]
+		[Sql.Function(ServerSideOnly = true)]
+		[Sql.Function(PN.Access, "LCase", ServerSideOnly = true)]
 		public static string Lower(string str)
 		{
 			return str == null ? null : str.ToLower();
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.Access, "UCase")]
+		[Sql.Function(ServerSideOnly = true)]
+		[Sql.Function(PN.Access, "UCase", ServerSideOnly = true)]
 		public static string Upper(string str)
 		{
 			return str == null ? null : str.ToUpper();
