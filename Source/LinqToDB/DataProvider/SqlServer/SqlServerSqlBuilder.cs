@@ -78,12 +78,12 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 				}
 			}
-			else if (((SqlInsertStatement)statement).Output != null)
+			else 
 			{
-				var output = ((SqlInsertStatement)statement).Output;
-				if (output.HasOutputItems)
+				var output = statement.GetOutputClause();
+				if (output != null && output.HasOutputItems)
 				{
-					StringBuilder
+					AppendIndent()
 						.AppendLine("OUTPUT");
 
 					if (output.InsertedTable != null)

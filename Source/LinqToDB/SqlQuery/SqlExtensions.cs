@@ -69,6 +69,20 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
+		public static SqlOutputClause GetOutputClause(this SqlStatement statement)
+		{
+			switch (statement)
+			{
+				case SqlInsertStatement insert:
+					return insert.Output;
+				//case SqlUpdateStatement update:
+				//	throw new NotImplementedException();
+				//case SqlDeleteStatement delete:
+				//	throw new NotImplementedException();
+			}
+			return null;
+		}
+
 		public static SelectQuery EnsureQuery(this SqlStatement statement)
 		{
 			var selectQuery = statement.SelectQuery;
