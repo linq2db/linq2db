@@ -237,15 +237,6 @@ void LoadServerMetadata(DataConnection dataConnection)
 
 	foreach (var key in keys)
 	{
-//		var keyName = key.k.OtherTable.IsDefaultSchema ? key.KeyName : key.k.OtherTable.SchemaName + "." + key.KeyName;
-//		ForeignKey foundKey;
-//		if (key.t.table.ForeignKeys.TryGetValue(keyName, out foundKey))
-//		{
-//			key.t.table.ForeignKeys.Remove(keyName);
-//			key.t.table.ForeignKeys.Add(foundKey.OtherTable.TableName + "." + keyName, foundKey);
-//			keyName = key.k.OtherTable.TableName + "." + keyName;
-//		}
-
 		key.t.table.ForeignKeys.Add(
 			key.k.OtherTable.IsDefaultSchema ? key.KeyName : key.k.OtherTable.SchemaName + "." + key.KeyName,
 			key.key);
@@ -253,7 +244,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 		if (key.k.BackReference != null)
 			key.key.BackReference = keys.First(k => k.k == key.k.BackReference).key;
 
-		key.key.MemberName = key.key.MemberName.Replace(".", String.Empty);
+		key.key.MemberName = key.key.MemberName.Replace(".", string.Empty);
 
 		key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany ?
 			ToPlural(key.key.MemberName) : ToSingular(key.key.MemberName);
@@ -444,19 +435,6 @@ void LoadMetadata(DataConnection dataConnection)
 
 			if (col.MemberName == t.TypeName)
 				col.MemberName += "_Column";
-		}
-	}
-
-	foreach (var t in Tables.Values)
-	{
-		foreach (var fk in t.ForeignKeys.Values)
-		{
-			var memberName = fk.OtherTable.TypeName;
-
-			memberName = fk.AssociationType == AssociationType.OneToMany ?
-				ToPlural(memberName) : ToSingular(memberName);
-
-			fk.MemberName = memberName;
 		}
 	}
 

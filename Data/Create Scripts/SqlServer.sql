@@ -447,7 +447,7 @@ GO
 INSERT INTO AllTypes
 (
 	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType, smallmoneyDataType,
-	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
 
 	datetimeDataType, smalldatetimeDataType,
 
@@ -564,7 +564,7 @@ GO
 CREATE FUNCTION GetParentByID(@id int)
 RETURNS TABLE
 AS
-RETURN 
+RETURN
 (
 	SELECT * FROM Parent WHERE ParentID = @id
 )
@@ -865,4 +865,63 @@ CREATE TABLE TestMerge2
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL
 )
+GO
+
+
+-- Generate schema
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchemaY') AND type in (N'U'))
+BEGIN DROP TABLE TestSchemaY END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchemaX') AND type in (N'U'))
+BEGIN DROP TABLE TestSchemaX END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.TestSchemaB') AND type in (N'U'))
+BEGIN DROP TABLE TestSchema.TestSchemaB END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.TestSchemaA') AND type in (N'U'))
+BEGIN
+	DROP TABLE TestSchema.TestSchemaA
+	DROP SCHEMA [TestSchema]
+END
+GO
+
+EXEC('CREATE SCHEMA [TestSchema] AUTHORIZATION [dbo]');
+
+CREATE TABLE [dbo].[TestSchemaX]
+(
+	[TestSchemaXID] int NOT NULL CONSTRAINT [PK_TestSchemaX] PRIMARY KEY,
+	[Field1]        int NOT NULL
+);
+GO
+
+CREATE TABLE [dbo].[TestSchemaY]
+(
+	[TestSchemaXID]       INT NOT NULL,
+	[ParentTestSchemaXID] INT NOT NULL,
+	[OtherID]             INT NOT NULL,
+	CONSTRAINT [FK_TestSchemaY_TestSchemaX]       FOREIGN KEY (TestSchemaXID)       REFERENCES [TestSchemaX] ([TestSchemaXID]),
+	CONSTRAINT [FK_TestSchemaY_ParentTestSchemaX] FOREIGN KEY (ParentTestSchemaXID) REFERENCES [TestSchemaX] ([TestSchemaXID]),
+	CONSTRAINT [FK_TestSchemaY_OtherID]           FOREIGN KEY (TestSchemaXID)       REFERENCES [TestSchemaX] ([TestSchemaXID])
+);
+GO
+
+CREATE TABLE [TestSchema].[TestSchemaA]
+(
+	[TestSchemaAID] int NOT NULL CONSTRAINT [PK_TestSchema_TestSchemaA] PRIMARY KEY,
+	[Field1]        int NOT NULL
+);
+GO
+
+CREATE TABLE [TestSchema].[TestSchemaB]
+(
+	[TestSchemaBID]       INT NOT NULL,
+	[OriginTestSchemaAID] INT NOT NULL,
+	[TargetTestSchemaAID] INT NOT NULL,
+	CONSTRAINT [PK_TestSchema_TestSchemaB] PRIMARY KEY (TestSchemaBID),
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_OriginTestSchemaA] FOREIGN KEY (OriginTestSchemaAID) REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID]),
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_TargetTestSchemaA] FOREIGN KEY (TargetTestSchemaAID) REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID])
+);
 GO

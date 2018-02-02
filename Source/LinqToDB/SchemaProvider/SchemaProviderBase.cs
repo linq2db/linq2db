@@ -626,6 +626,10 @@ namespace LinqToDB.SchemaProvider
 					}
 				}
 
+if (t.TableName == "Employees")
+{
+}
+
 				foreach (var key in t.ForeignKeys)
 				{
 					SetForeignKeyMemberName(schemaOptions, t, key);
@@ -658,7 +662,7 @@ namespace LinqToDB.SchemaProvider
 
 					if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
 						table.Columns.    Select(_ => _.MemberName)).Concat(
-						new[] { table.TypeName }).All(_ => _ != name))
+						new[] { table.TypeName }).Any(_ => _ == name))
 					{
 						name = key.MemberName;
 					}
@@ -697,7 +701,7 @@ namespace LinqToDB.SchemaProvider
 
 				if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
 					table.Columns.    Select(_ => _.MemberName)).Concat(
-						new[] { table.TypeName }).All(_ => _ != name))
+					new[] { table.TypeName }).All(_ => _ != name))
 				{
 					key.MemberName = ToValidName(name);
 				}

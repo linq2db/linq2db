@@ -10,7 +10,7 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.0.0
+  assemblyVersion: 2.0.0-beta
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
 ##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit

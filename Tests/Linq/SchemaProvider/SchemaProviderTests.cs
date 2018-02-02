@@ -334,11 +334,47 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		[Test, IncludeDataContextSource(false,
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void ForeignKeyMemberNameTest1(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var p = db.DataProvider.GetSchemaProvider();
+				var s = p.GetSchema(db);
+
+				var table = s.Tables.Single(t => t.TableName == "TestSchemaY");
+				var fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
+
+				Assert.That(fks, Is.EqualTo(new[] { "TestSchemaX", "ParentTestSchemaX", "FK_TestSchemaY_OtherID" }));
+
+				table = s.Tables.Single(t => t.TableName == "TestSchemaB");
+				fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
+
+				Assert.That(fks, Is.EqualTo(new[] { "OriginTestSchemaA", "TargetTestSchemaA" }));
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, TestProvName.Northwind)]
+		public void ForeignKeyMemberNameTest2(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var p = db.DataProvider.GetSchemaProvider();
+				var s = p.GetSchema(db);
+
+				var table = s.Tables.Single(t => t.TableName == "Employees");
+				var fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
+
+				Assert.That(fks, Is.EqualTo(new[] { "FK_Employees_Employees", "FK_Employees_Employees_BackReference", "Orders", "EmployeeTerritories" }));
+			}
+		}
+
 		[Test]
 		public void SetForeignKeyMemberNameTest()
 		{
 			var thisTable  = new TableSchema { TableName = "Xxx", };
-			var otherTable = new TableSchema  { TableName = "Zzz", };
+			var otherTable = new TableSchema { TableName = "Zzz", };
 
 			var key = new ForeignKeySchema
 			{
