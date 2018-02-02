@@ -133,7 +133,7 @@ namespace Tests.Linq
 
 				Console.WriteLine(sql);
 
-				Assert.That(sql, Contains.Substring("(3)"));
+				Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
 			}
 		}
 
