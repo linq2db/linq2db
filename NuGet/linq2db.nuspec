@@ -16,8 +16,7 @@
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
 		<dependencies>
-			<group targetFramework=".NETFramework4.0">
-				<dependency id="Microsoft.Bcl.Async" version="1.0.168" />
+			<group targetFramework=".NETFramework4.5">
 			</group>
 			<group targetFramework=".NETStandard1.6">
 				<dependency id="Microsoft.CSharp"                     version="4.3.0" />
