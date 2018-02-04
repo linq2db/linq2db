@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						AppendIndent();
 
-						BuildExpression(oi);
+						BuildExpression(oi.Expression);
 					}
 
 					StringBuilder
@@ -112,10 +112,37 @@ namespace LinqToDB.DataProvider.SqlServer
 					--Indent;
 
 					if (output.OutputTable != null)
+					{
 						AppendIndent()
 							.Append("INTO ")
 							.Append(GetTablePhysicalName(output.OutputTable))
 							.AppendLine();
+
+						AppendIndent()
+							.AppendLine("(");
+
+						++Indent;
+
+						var firstColumn = true;
+						foreach (var oi in output.OutputItems)
+						{
+							if (!firstColumn)
+								StringBuilder.Append(',').AppendLine();
+							firstColumn = false;
+
+							AppendIndent();
+
+							BuildExpression(oi.Column, false, true);
+						}
+
+						StringBuilder
+							.AppendLine();
+
+						--Indent;
+
+						AppendIndent()
+							.AppendLine(")");
+					}
 				}
 			}
 		}

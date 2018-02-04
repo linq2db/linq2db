@@ -9,7 +9,7 @@ namespace LinqToDB.SqlQuery
 
 	public class SqlOutputClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
-		private List<ISqlExpression> _outputItems;
+		private List<SqlSetExpression> _outputItems;
 
 		public SqlTable SourceTable   { get; set; }
 		public SqlTable InsertedTable { get; set; }
@@ -17,8 +17,8 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTable OutputTable   { get; set; }
 
-		public bool                 HasOutputItems => _outputItems != null && _outputItems.Count > 0;
-		public List<ISqlExpression> OutputItems    => _outputItems ?? (_outputItems = new List<ISqlExpression>());
+		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0;
+		public List<SqlSetExpression> OutputItems    => _outputItems ?? (_outputItems = new List<SqlSetExpression>());
 
 
 		#region Overrides
@@ -51,7 +51,7 @@ namespace LinqToDB.SqlQuery
 
 			if (HasOutputItems)
 			{
-				clone.OutputItems.AddRange(OutputItems.Select(i => (ISqlExpression)i.Clone(objectTree, doClone)));
+				clone.OutputItems.AddRange(OutputItems.Select(i => (SqlSetExpression)i.Clone(objectTree, doClone)));
 			}
 
 			objectTree.Add(this, clone);
@@ -72,7 +72,7 @@ namespace LinqToDB.SqlQuery
 
 			if (HasOutputItems)
 				foreach (var t in OutputItems)
-					t.Walk(skipColumns, func);
+					((ISqlExpressionWalkable)t).Walk(skipColumns, func);
 
 			return null;
 		}

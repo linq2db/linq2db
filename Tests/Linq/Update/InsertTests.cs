@@ -10,6 +10,7 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Tools;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -1621,5 +1622,79 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void InsertWithOutputIntoTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					db.Child.Delete(c => c.ChildID > 1000);
+
+					using (var t = CreateTempTable<Child>(db, "TInserted", context))
+					{
+						var output =
+							db.Child
+								.Where(c => c.ChildID == 11)
+								.InsertWithOutputInto(db.Child, c => new Child
+									{
+										ParentID = c.ParentID,
+										ChildID = id
+									},
+									t.Table,
+									inserted =>
+										new Child
+										{
+											ChildID = inserted.ChildID,
+											ParentID = inserted.ParentID
+										}
+								);
+					}
+
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > 1000);
+				}
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void InsertWithOutputIntoTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 1001;
+
+					db.Child.Delete(c => c.ChildID > 1000);
+
+					using (var t = CreateTempTable<Child>(db, "TInserted", context))
+					{
+
+						var output =
+							db.Child
+								.Where(c => c.ChildID == 11)
+								.InsertWithOutputInto(db.Child, c => new Child
+									{
+										ParentID = c.ParentID,
+										ChildID = id
+									},
+									t.Table);
+
+						var zz = t.Table.ToArray();
+					}
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > 1000);
+				}
+			}
+		}
+
 	}
 }
