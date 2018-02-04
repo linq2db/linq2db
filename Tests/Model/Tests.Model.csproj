@@ -38,7 +38,7 @@
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
 		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
 		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
 		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />

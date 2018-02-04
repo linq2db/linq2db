@@ -15,7 +15,7 @@
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
 		<PackageReference Include="NUnit" Version="3.9.0" />
 		<PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
@@ -51,7 +51,7 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />

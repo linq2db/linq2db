@@ -94,7 +94,7 @@
 	<!-- .NET Standard -->
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
@@ -117,7 +117,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
 
