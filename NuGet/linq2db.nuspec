@@ -21,22 +21,22 @@
 				<dependency id="Microsoft.CSharp"                     version="4.3.0" />
 				<dependency id="System.Diagnostics.TraceSource"       version="4.3.0" />
 				<dependency id="Microsoft.Extensions.DependencyModel" version="1.1.0" />
-				<dependency id="System.ComponentModel.Annotations"    version="4.3.0" />
+				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
 				<dependency id="System.ComponentModel.TypeConverter"  version="4.3.0" />
 				<dependency id="System.Linq.Queryable"                version="4.3.0" />
 				<dependency id="System.Runtime.Loader"                version="4.3.0" />
 				<dependency id="System.Xml.XmlDocument"               version="4.3.0" />
-				<dependency id="System.Data.SqlClient"                version="4.4.0" />
+				<dependency id="System.Data.SqlClient"                version="4.4.2" />
 				<dependency id="System.Net.NetworkInformation"        version="4.3.0" />
 			</group>
 			<group targetFramework=".NETStandard2.0">
-				<dependency id="Microsoft.CSharp"                  version="4.4.0" />
-				<dependency id="System.ComponentModel.Annotations" version="4.4.0" />
-				<dependency id="System.Data.SqlClient"             version="4.4.0" />
+				<dependency id="Microsoft.CSharp"                     version="4.4.0" />
+				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
+				<dependency id="System.Data.SqlClient"                version="4.4.2" />
 			</group>
 			<group targetFramework=".NETCoreApp2.0">
-				<dependency id="System.ComponentModel.Annotations" version="4.4.0" />
-				<dependency id="System.Data.SqlClient"             version="4.4.0" />
+				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
+				<dependency id="System.Data.SqlClient"                version="4.4.2" />
 			</group>
 		</dependencies>
 	</metadata>
