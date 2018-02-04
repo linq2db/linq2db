@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.0
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
@@ -49,6 +49,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LinqToDB.Templates", "LinqT
 		Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude = Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude
 		Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude = Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude
 		Source\LinqToDB.Templates\PluralizationService.ttinclude = Source\LinqToDB.Templates\PluralizationService.ttinclude
+		Source\LinqToDB.Templates\README.md = Source\LinqToDB.Templates\README.md
 		Source\LinqToDB.Templates\T4Model.ttinclude = Source\LinqToDB.Templates\T4Model.ttinclude
 		Source\LinqToDB.Templates\Validation.ttinclude = Source\LinqToDB.Templates\Validation.ttinclude
 	EndProjectSection
@@ -73,8 +74,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\Icon_dialog.png = NuGet\Icon_dialog.png
 		NuGet\Icon_list.png = NuGet\Icon_list.png
 		NuGet\Init.ps1 = NuGet\Init.ps1
+		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
+		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
+		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
+		NuGet\linq2db.Informix.nuspec = NuGet\linq2db.Informix.nuspec
+		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
 		NuGet\linq2db.nuspec = NuGet\linq2db.nuspec
+		NuGet\linq2db.Oracle.Managed.nuspec = NuGet\linq2db.Oracle.Managed.nuspec
+		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
 		NuGet\linq2db.png = NuGet\linq2db.png
+		NuGet\linq2db.PostgreSQL.nuspec = NuGet\linq2db.PostgreSQL.nuspec
+		NuGet\linq2db.SapHana.nuspec = NuGet\linq2db.SapHana.nuspec
+		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
+		NuGet\linq2db.SQLite.nuspec = NuGet\linq2db.SQLite.nuspec
+		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
+		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
+		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\PackAV.bat = NuGet\PackAV.bat
 		NuGet\Push.bat = NuGet\Push.bat

@@ -681,11 +681,33 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void ToLowerParameter(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var param = "JOHN";
+				var q = from p in db.Person where p.FirstName.ToLower() == param.ToLower() && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test, DataContextSource]
 		public void ToUpper(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.ToUpper() == "JOHN" && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void ToUpperParam(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var param = "john";
+				var q = from p in db.Person where p.FirstName.ToUpper() == param.ToUpper() && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}

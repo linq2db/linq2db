@@ -8,9 +8,8 @@ To use this extension you should:
 #>
 <#@ import namespace="Humanizer" #>
 <#
-	{
-		ToPlural    = s => s.Pluralize  (inputIsKnownToBeSingular: false);
-		ToSingular  = s => s.Singularize(inputIsKnownToBePlural:   false);
-		ToValidName = (s, r) => s.Pascalize();
-	}
+	NormalizeNames = true;
+	ToPlural       = s => s.Pluralize  (inputIsKnownToBeSingular: false);
+	ToSingular     = s => s.Singularize(inputIsKnownToBePlural:   false);
+	ToValidName    = (s, r) => s.Pascalize();
 #>

@@ -24,6 +24,6 @@
 	<files>
 		<file src="Init.ps1"                                                        target="tools" />
 		<file src="..\Tests\Linq\bin\AppVeyor\net452\Microsoft.SqlServer.Types.dll" target="tools" />
-		<file src="SqlCe\*.*"                                                       target="content\LinqToDB.Templates" />
+		<file src="SqlServer\*.*"                                                   target="content\LinqToDB.Templates" />
 	</files>
 </package>

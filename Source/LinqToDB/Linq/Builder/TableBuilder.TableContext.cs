@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				Init();
+				Init(true);
 			}
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
@@ -74,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
 
-				Init();
+				Init(true);
 			}
 
 			protected TableContext(ExpressionBuilder builder, SelectQuery selectQuery)
@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 
 				attr.SetTable(Builder.MappingSchema, SqlTable, mc.Method, mc.Arguments, args);
 
-				Init();
+				Init(true);
 			}
 
 			protected Type GetObjectType()
@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 
 			public List<InheritanceMapping> InheritanceMapping;
 
-			protected void Init()
+			protected void Init(bool applyFilters)
 			{
 				Builder.Contexts.Add(this);
 
@@ -133,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 
 				// Original table is a parent.
 				//
-				if (ObjectType != OriginalType)
+				if (applyFilters && ObjectType != OriginalType)
 				{
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 

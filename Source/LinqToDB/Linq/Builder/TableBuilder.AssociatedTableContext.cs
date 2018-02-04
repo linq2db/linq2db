@@ -42,10 +42,11 @@ namespace LinqToDB.Linq.Builder
 					IsList     = true;
 				}
 
-				OriginalType     = type;
-				ObjectType       = GetObjectType();
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
-				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
+				OriginalType       = type;
+ 				ObjectType         = GetObjectType();
+ 				EntityDescriptor   = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+ 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
+ 				SqlTable           = new SqlTable(builder.MappingSchema, ObjectType);
 
 				var psrc = parent.SelectQuery.From[parent.SqlTable];
 				var join = left ? SqlTable.WeakLeftJoin() : SqlTable.WeakInnerJoin();
@@ -74,6 +75,14 @@ namespace LinqToDB.Linq.Builder
 					join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, predicate));
 				}
 
+				if (ObjectType != OriginalType)
+				{
+					var predicate = Builder.MakeIsPredicate(this, OriginalType);
+ 
+					if (predicate.GetType() != typeof(SqlPredicate.Expr))
+						join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, predicate));
+				}
+
 				RegularConditionCount = join.JoinedTable.Condition.Conditions.Count;
 				ExpressionPredicate   = Association.GetPredicate(parent.ObjectType, ObjectType);
 
@@ -87,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 						join.JoinedTable.Condition.Conditions);
 				}
 
-				Init();
+				Init(false);
 			}
 
 			protected override Expression ProcessExpression(Expression expression)
