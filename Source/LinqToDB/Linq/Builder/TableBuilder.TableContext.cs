@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 			#region Properties
 
 #if DEBUG
-			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+			public string _sqlQueryText => SelectQuery?.SqlText ?? "";
 #endif
 
 			public ExpressionBuilder  Builder     { get; }
@@ -65,6 +65,24 @@ namespace LinqToDB.Linq.Builder
 				Parent           = buildInfo.Parent;
 				Expression       = buildInfo.Expression;
 				SelectQuery      = buildInfo.SelectQuery;
+
+				OriginalType     = table.ObjectType;
+				ObjectType       = GetObjectType();
+				SqlTable         = table;
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+
+				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
+					SelectQuery.From.Table(SqlTable);
+
+				Init(true);
+			}
+
+			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table)
+			{
+				Builder          = builder;
+				Parent           = null;
+				Expression       = null;
+				SelectQuery      = selectQuery;
 
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();

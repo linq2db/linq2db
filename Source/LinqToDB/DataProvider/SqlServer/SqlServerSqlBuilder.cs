@@ -106,10 +106,15 @@ namespace LinqToDB.DataProvider.SqlServer
 						BuildExpression(oi.Expression);
 					}
 
-					StringBuilder
-						.AppendLine();
+//					StringBuilder
+//						.AppendLine();
 
 					--Indent;
+
+					if (output.OutputQuery != null)
+					{
+						BuildColumns(output.OutputQuery);
+					}
 
 					if (output.OutputTable != null)
 					{

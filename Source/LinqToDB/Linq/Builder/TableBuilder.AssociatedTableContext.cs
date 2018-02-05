@@ -43,10 +43,10 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				OriginalType       = type;
- 				ObjectType         = GetObjectType();
- 				EntityDescriptor   = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
- 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
- 				SqlTable           = new SqlTable(builder.MappingSchema, ObjectType);
+				ObjectType         = GetObjectType();
+				EntityDescriptor   = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+				InheritanceMapping = EntityDescriptor.InheritanceMapping;
+				SqlTable           = new SqlTable(builder.MappingSchema, ObjectType);
 
 				var psrc = parent.SelectQuery.From[parent.SqlTable];
 				var join = left ? SqlTable.WeakLeftJoin() : SqlTable.WeakInnerJoin();

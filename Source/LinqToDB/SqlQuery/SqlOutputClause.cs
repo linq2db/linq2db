@@ -11,15 +11,14 @@ namespace LinqToDB.SqlQuery
 	{
 		private List<SqlSetExpression> _outputItems;
 
-		public SqlTable SourceTable   { get; set; }
-		public SqlTable InsertedTable { get; set; }
-		public SqlTable DeletedTable  { get; set; }
+		public SqlTable    SourceTable    { get; set; }
+		public SqlTable    InsertedTable  { get; set; }
+		public SqlTable    DeletedTable   { get; set; }
+		public SqlTable    OutputTable    { get; set; }
+		public SelectQuery OutputQuery    { get; set; }
 
-		public SqlTable OutputTable   { get; set; }
-
-		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0;
+		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0 || OutputQuery != null;
 		public List<SqlSetExpression> OutputItems    => _outputItems ?? (_outputItems = new List<SqlSetExpression>());
-
 
 		#region Overrides
 
@@ -91,6 +90,5 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
-
 	}
 }

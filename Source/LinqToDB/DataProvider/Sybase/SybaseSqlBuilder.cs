@@ -88,7 +88,7 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var selectQuery = deleteStatement.SelectQuery;
-			
+
 			AppendIndent();
 			StringBuilder.Append("DELETE");
 			BuildSkipFirst(selectQuery);
@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			var alias = GetTableAlias(table);
 			BuildPhysicalTable(source, alias);
-	
+
 			StringBuilder.AppendLine();
 		}
 

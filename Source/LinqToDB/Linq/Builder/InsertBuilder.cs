@@ -32,8 +32,6 @@ namespace LinqToDB.Linq.Builder
 				sequence.Statement = insertStatement;
 			}
 
-			IBuildContext into = null;
-
 			var insertType = InsertContext.InsertType.Insert;
 
 			switch (methodCall.Method.Name)
@@ -64,6 +62,7 @@ namespace LinqToDB.Linq.Builder
 				return (LambdaExpression)methodCall.Arguments[index].Unwrap();
 			}
 
+			IBuildContext    outputContext    = null;
 			LambdaExpression outputExpression = null;
 
 			if (methodCall.Arguments.Count > 0)
@@ -101,8 +100,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// static int Insert<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
 
-					into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
-
+					var into   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 					var setter = (LambdaExpression)GetArgumentByName("setter").Unwrap();
 
 					UpdateBuilder.BuildSetter(
@@ -127,22 +125,28 @@ namespace LinqToDB.Linq.Builder
 
 					insertStatement.Output = new SqlOutputClause();
 
-					var table          = new SqlTable(outputExpression.Parameters[0].Type);
-					table.Name         = "INSERTED";
-					table.PhysicalName = table.Name;
-					table.SqlTableType = SqlTableType.SystemTable;
+					var table = new SqlTable(outputExpression.Parameters[0].Type)
+					{
+						Name         = "INSERTED",
+						PhysicalName = "INSERTED",
+						SqlTableType = SqlTableType.SystemTable,
+					};
 
-					var insertedContext = sequence = new TableBuilder.TableContext(builder, buildInfo, table);
+					var selectQuery = new SelectQuery();
+
+					selectQuery.From.Table(table);
+
+					outputContext = new TableBuilder.TableContext(builder, selectQuery, table);
 
 					insertStatement.Output.InsertedTable = table;
 
-					UpdateBuilder.BuildSetter(
-						builder,
-						buildInfo,
-						outputExpression,
-						into,
-						insertStatement.Output.OutputItems,
-						insertedContext);
+//					UpdateBuilder.BuildSetter(
+//						builder,
+//						buildInfo,
+//						outputExpression,
+//						into,
+//						insertStatement.Output.OutputItems,
+//						insertedContext);
 				}
 
 				if (insertType == InsertContext.InsertType.InsertOutputInto)
@@ -267,6 +271,9 @@ namespace LinqToDB.Linq.Builder
 			insertStatement.Insert.WithIdentity = insertType == InsertContext.InsertType.InsertWithIdentity;
 			sequence.Statement = insertStatement;
 
+			if (insertType == InsertContext.InsertType.InsertOutput)
+				return new InsertWithOutputContext(buildInfo.Parent, sequence, outputContext, outputExpression);
+
 			return new InsertContext(buildInfo.Parent, sequence, insertType, outputExpression);
 		}
 
@@ -280,7 +287,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region InsertContext
 
-		class InsertContext : SelectContext // SequenceContextBase
+		class InsertContext : SequenceContextBase
 		{
 			public enum InsertType
 			{
@@ -291,14 +298,14 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public InsertContext(IBuildContext parent, IBuildContext sequence, InsertType insertType, LambdaExpression outputExpression)
-				: base(parent, outputExpression, sequence)
+				: base(parent, sequence, outputExpression)
 			{
 				_insertType       = insertType;
 				_outputExpression = outputExpression;
 			}
 
-			readonly InsertType _insertType;
-			private readonly LambdaExpression _outputExpression;
+			readonly InsertType       _insertType;
+			readonly LambdaExpression _outputExpression;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -312,9 +319,8 @@ namespace LinqToDB.Linq.Builder
 						break;
 					case InsertType.InsertOutput:
 						//TODO:
-						base.BuildQuery(query, queryParameter);
-						//var mapper = Builder.BuildMapper<T>(_outputExpression.Body.Unwrap());
-						//QueryRunner.SetRunQuery(query, mapper);
+						var mapper = Builder.BuildMapper<T>(_outputExpression.Body.Unwrap());
+						QueryRunner.SetRunQuery(query, mapper);
 						break;
 					case InsertType.InsertOutputInto:
 						QueryRunner.SetNonQueryQuery(query);
@@ -326,37 +332,53 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
 			{
-				if (_insertType == InsertType.InsertOutput)
-					return base.BuildExpression(expression, level, enforceServerSide);
 				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 			{
-				if (_insertType == InsertType.InsertOutput)
-					return base.ConvertToSql(expression, level, flags);
 				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
 			{
-				if (_insertType == InsertType.InsertOutput)
-					return base.ConvertToIndex(expression, level, flags);
 				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
 			{
-				if (_insertType == InsertType.InsertOutput)
-					return base.IsExpression(expression, level, requestFlag);
 				throw new NotImplementedException();
 			}
 
 			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
 			{
-				if (_insertType == InsertType.InsertOutput)
-					return base.GetContext(expression, level, buildInfo);
 				throw new NotImplementedException();
+			}
+		}
+
+		#endregion
+
+		#region InsertWithOutputContext
+
+		class InsertWithOutputContext : SelectContext
+		{
+			public InsertWithOutputContext(IBuildContext parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
+				: base(parent, outputExpression,  outputContext)
+			{
+				Statement = sequence.Statement;
+			}
+
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			{
+				var expr   = BuildExpression(null, 0, false);
+				var mapper = Builder.BuildMapper<T>(expr);
+
+				var insertStatement = (SqlInsertStatement)Statement;
+				var outputQuery     = Sequence[0].SelectQuery;
+
+				insertStatement.Output.OutputQuery = outputQuery;
+
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 		}
 

@@ -93,11 +93,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				var key = Tuple.Create(expression, level, ConvertFlags.Field);
 
-				SqlInfo[] info;
-
-				if (_expressionIndex.TryGetValue(key, out info))
+				if (_expressionIndex.TryGetValue(key, out var info))
 				{
-					var idx  = Parent == null ? info[0].Index : Parent.ConvertToParentIndex(info[0].Index, this);
+					var idx  = Parent?.ConvertToParentIndex(info[0].Index, this) ?? info[0].Index;
 
 					var expr = (expression ?? Body);
 					if (IsExpression(expr, level, RequestFor.Object).Result)
@@ -186,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 																	!sequence.IsExpression(e, 0, RequestFor.Field). Result)
 																{
 																	var info = ConvertToIndex(e, 0, ConvertFlags.Field).Single();
-																	var idx  = Parent == null ? info.Index : Parent.ConvertToParentIndex(info.Index, this);
+																	var idx  = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
 
 																	return Builder.BuildSql(e.Type, idx);
 																}
@@ -209,7 +207,7 @@ namespace LinqToDB.Linq.Builder
 										!IsExpression(me, 0, RequestFor.Field). Result)
 									{
 										var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
-										var idx  = Parent == null ? info.Index : Parent.ConvertToParentIndex(info.Index, this);
+										var idx  = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
 
 										return Builder.BuildSql(expression.Type, idx);
 									}
@@ -231,14 +229,13 @@ namespace LinqToDB.Linq.Builder
 												return sequence.BuildExpression(expression, level + 1, enforceServerSide);
 
 											break;
-
 										}
 
 									case ExpressionType.New        :
 									case ExpressionType.MemberInit :
 										{
-											var mmExpresion = GetMemberExpression(memberExpression, expression, level + 1);
-											return Builder.BuildExpression(this, mmExpresion, enforceServerSide);
+											var mmExpression = GetMemberExpression(memberExpression, expression, level + 1);
+											return Builder.BuildExpression(this, mmExpression, enforceServerSide);
 										}
 								}
 

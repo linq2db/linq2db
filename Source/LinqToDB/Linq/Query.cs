@@ -158,7 +158,7 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public          bool            DoNotCache;
+		public bool DoNotCache;
 
 		public Func<IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
 		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
