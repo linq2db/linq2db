@@ -2232,6 +2232,58 @@ namespace LinqToDB
 
 		#endregion
 
+		#region Truncate
+
+		static readonly MethodInfo _truncateMethodInfo = MemberHelper.MethodOf(() => Truncate<int>(null)).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// Truncates database table.
+		/// </summary>
+		/// <typeparam name="T">Table record type.</typeparam>
+		/// <param name="target">Truncated table.</param>
+		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
+		public static int Truncate<T>([NotNull] this ITable<T> target)
+		{
+			if (target == null) throw new ArgumentNullException(nameof(target));
+
+			IQueryable<T> query = target;
+
+			var expr = Expression.Call(
+				null,
+				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
+				new[] { query.Expression });
+
+			return query.Provider.Execute<int>(expr);
+		}
+
+		/// <summary>
+		/// Truncates database table asynchronously.
+		/// </summary>
+		/// <typeparam name="T">Table record type.</typeparam>
+		/// <param name="target">Truncated table.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
+		public static async Task<int> TruncateAsync<T>(
+			[NotNull] this ITable<T> target,
+			CancellationToken        token = default)
+		{
+			if (target == null) throw new ArgumentNullException(nameof(target));
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
+				null,
+				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
+				new[] { source.Expression });
+
+			if (source is IQueryProviderAsync query)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+		#endregion
+
 		#region Take / Skip / ElementAt
 
 		static readonly MethodInfo _takeMethodInfo = MemberHelper.MethodOf(() => Take<int>(null,null)).GetGenericMethodDefinition();

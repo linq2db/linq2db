@@ -241,6 +241,13 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.TruncateTableStatement:
+					{
+						if (((SqlTruncateTableStatement)element).Table != null)
+							Visit1(((SqlTruncateTableStatement)element).Table);
+						break;
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						Visit1X((SqlSelectClause)element);
@@ -661,6 +668,13 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.TruncateTableStatement:
+					{
+						if (((SqlTruncateTableStatement)element).Table != null)
+							Visit2(((SqlTruncateTableStatement)element).Table);
+						break;
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						if (_visitedElements.ContainsKey(element))
@@ -1038,7 +1052,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.DeleteStatement:
 					{
-						return 
+						return
 							Find(((SqlDeleteStatement)element).Table, find) ??
 							Find(((SqlDeleteStatement)element).Top,   find) ??
 							Find(((SqlDeleteStatement)element).SelectQuery, find);
@@ -1706,7 +1720,7 @@ namespace LinqToDB.SqlQuery
 								doConvert = true;
 								parent    = q.ParentSelect; // TODO why not ConvertInternal(q.ParentSelect, action)??
 							}
-							else 
+							else
 								doConvert = !ReferenceEquals(q.ParentSelect, parent);
 						}
 

@@ -150,14 +150,15 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (Statement.QueryType)
 			{
-				case QueryType.Select        : BuildSelectQuery((SqlSelectStatement)Statement);                                 break;
-				case QueryType.Delete        : BuildDeleteQuery((SqlDeleteStatement)Statement);                                 break;
-				case QueryType.Update        : BuildUpdateQuery(Statement, Statement.SelectQuery, ((SqlUpdateStatement)Statement).Update); break;
-				case QueryType.Insert        : BuildInsertQuery(Statement, ((SqlInsertStatement)Statement).Insert);             break;
-				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery((SqlInsertOrUpdateStatement)Statement);                 break;
-				case QueryType.CreateTable   : BuildCreateTableStatement((SqlCreateTableStatement)Statement);                   break;
-				case QueryType.DropTable     : BuildDropTableStatement((SqlDropTableStatement)Statement);                       break;
-				default                      : BuildUnknownQuery();                                                             break;
+				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                     break;
+				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                     break;
+				case QueryType.Update        : BuildUpdateQuery           (Statement, Statement.SelectQuery, ((SqlUpdateStatement)Statement).Update); break;
+				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert); break;
+				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);             break;
+				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                break;
+				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                  break;
+				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);              break;
+				default                      : BuildUnknownQuery();                                                            break;
 			}
 		}
 
@@ -758,6 +759,15 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region Build DDL
+
+		protected virtual void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
+		{
+			var table = truncateTable.Table;
+
+			AppendIndent().Append("TRUN TABLE ");
+			BuildPhysicalTable(table, null);
+			StringBuilder.AppendLine();
+		}
 
 		protected virtual void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{

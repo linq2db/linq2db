@@ -39,9 +39,9 @@ namespace LinqToDB.Linq
 
 				ITable<T> table = new Table<T>(dataContext);
 
-				if (tableName    != null) table = table.TableName   (tableName);
-				if (databaseName != null) table = table.DatabaseName(databaseName);
-				if (schemaName   != null) table = table.SchemaName  (schemaName);
+				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
+				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
+				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
 
 				return table;
 			}
@@ -74,9 +74,9 @@ namespace LinqToDB.Linq
 
 				ITable<T> table = new Table<T>(dataContext);
 
-				if (tableName    != null) table = table.TableName   (tableName);
-				if (databaseName != null) table = table.DatabaseName(databaseName);
-				if (schemaName   != null) table = table.SchemaName  (schemaName);
+				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
+				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
+				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
 
 				return table;
 			}
