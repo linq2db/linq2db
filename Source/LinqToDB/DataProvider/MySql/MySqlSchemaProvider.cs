@@ -232,6 +232,50 @@ namespace LinqToDB.DataProvider.MySql
 			return DataType.Undefined;
 		}
 
+		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		{
+			var ps = ((DbConnection)dataConnection.Connection).GetSchema("PROCEDURES");
+
+			return
+			(
+				from p in ps.AsEnumerable()
+				let catalog  = p.Field<string>("ROUTINE_SCHEMA")
+				let name     = p.Field<string>("ROUTINE_NAME")
+				select new ProcedureInfo
+				{
+					ProcedureID         = catalog + "." + name,
+					CatalogName         = catalog,
+					ProcedureName       = name,
+					IsDefaultSchema     = false
+				}
+			).ToList();
+		}
+
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		{
+			var ps = ((DbConnection)dataConnection.Connection).GetSchema("PROCEDURE PARAMETERS");
+
+			return
+			(
+				from p in ps.AsEnumerable()
+				let catalog = p.Field<string>("SPECIFIC_SCHEMA")
+				let name    = p.Field<string>("SPECIFIC_NAME")
+				let mode    = p.Field<string>("PARAMETER_MODE")
+				select new ProcedureParameterInfo
+				{
+					ProcedureID   = catalog + "." + name,
+					ParameterName = p.Field<string>("PARAMETER_NAME"),
+					IsIn          = mode == "IN"  || mode == "INOUT",
+					IsOut         = mode == "OUT" || mode == "INOUT",
+					Precision     = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_PRECISION")),
+					Scale         = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_SCALE")),
+					Ordinal       = Converter.ChangeTypeTo<int>(p.Field<object>("ORDINAL_POSITION")),
+					IsResult      = mode == null,
+					DataType      = p.Field<string>("DATA_TYPE"),
+				}
+			).ToList();
+		}
+
 		protected override string GetProviderSpecificTypeNamespace()
 		{
 			return "MySql.Data.Types";
