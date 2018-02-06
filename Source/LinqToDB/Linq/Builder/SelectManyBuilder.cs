@@ -242,7 +242,7 @@ namespace LinqToDB.Linq.Builder
 			private IBuildContext _collection;
 			public  IBuildContext  Collection
 			{
-				get { return _collection; }
+				get => _collection;
 				set
 				{
 					_collection = value;

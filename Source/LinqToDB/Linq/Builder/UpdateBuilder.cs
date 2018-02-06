@@ -173,20 +173,20 @@ namespace LinqToDB.Linq.Builder
 		#region Helpers
 
 		internal static void BuildSetter(
-			ExpressionBuilder               builder,
-			BuildInfo                       buildInfo,
-			LambdaExpression                setter,
-			IBuildContext                   into,
+			ExpressionBuilder      builder,
+			BuildInfo              buildInfo,
+			LambdaExpression       setter,
+			IBuildContext          into,
 			List<SqlSetExpression> items,
-			IBuildContext                   sequence)
+			IBuildContext          sequence)
 		{
 			var path = Expression.Parameter(setter.Body.Type, "p");
 			var ctx  = new ExpressionContext(buildInfo.Parent, sequence, setter);
 
 			if (setter.Body.NodeType == ExpressionType.MemberInit)
 			{
-				var ex  = (MemberInitExpression)setter.Body;
-				var p   = sequence.Parent;
+				var ex = (MemberInitExpression)setter.Body;
+				var p  = sequence.Parent;
 
 				BuildSetter(builder, into, items, ctx, ex, path);
 
