@@ -1244,22 +1244,15 @@ namespace Tests.Linq
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					from g in db.GrandChild
-						.Where(t => t.GrandChildID > 0)
 						.Where(t =>
-							t.ParentID >= 0 &&
 							db.Person
-								.Where (r => r.FirstName == null)
 								.Select(r => r.ID)
 								.Contains(c.ChildID))
 						.DefaultIfEmpty()
-					select new { p.ParentID, g }
+					select new { p.ParentID }
 					;
 
-				var list = q
-					.Where (t => t.g == null)
-					.Select(t => t.ParentID)
-					.Distinct()
-					.Insert(db.Parent, t => new Parent { ParentID = t });
+				var list = q.ToList();
 			}
 		}
 	}

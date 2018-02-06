@@ -880,12 +880,12 @@ namespace LinqToDB.SqlQuery
 
 				var tableSources = new HashSet<ISqlTableSource>();
 
-				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(false, e =>
-				{
-					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
-						tableSources.Add(ts);
-					return e;
-				});
+//				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(false, e =>
+//				{
+//					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
+//						tableSources.Add(ts);
+//					return e;
+//				});
 
 				var searchCondition = new List<SqlCondition>();
 
