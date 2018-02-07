@@ -20,6 +20,24 @@ namespace LinqToDB.Linq.Builder
 		readonly HashSet<Expression>                    _skippedExpressions   = new HashSet<Expression>();
 		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new Dictionary<Expression,UnaryExpression>();
 
+		public void UpdateConvertedExpression(Expression oldExpression, Expression newExpression)
+		{
+			if (_convertedExpressions.TryGetValue(oldExpression, out var conversion))
+			{
+				UnaryExpression newConversion;
+				if (conversion.NodeType == ExpressionType.Convert)
+				{
+					newConversion = Expression.Convert(newExpression, conversion.Type);
+				}
+				else
+				{
+					newConversion = Expression.ConvertChecked(newExpression, conversion.Type);
+				}
+
+				_convertedExpressions.Add(newExpression, newConversion);
+			}
+		}
+
 		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide)
 		{
 			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide));
