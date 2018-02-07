@@ -295,9 +295,7 @@ namespace LinqToDB.Linq.Builder
 				.Skip(1)
 				.Select(ex =>
 				{
-					var me = ex as MemberExpression;
-
-					if (me == null)
+					if (!(ex is MemberExpression me))
 						return null;
 
 					var m = me.Member;
@@ -312,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 				.Aggregate((s1,s2) => s1 + "." + s2);
 
 			if (table != null && !table.Fields.ContainsKey(name))
-				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType.Name, name);
+				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, name);
 
 			var column = table != null ?
 				table.Fields[name] :
@@ -356,7 +354,7 @@ namespace LinqToDB.Linq.Builder
 			var column = select.ConvertToSql(body, 1, ConvertFlags.Field);
 
 			if (column.Length == 0)
-				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType.Name, member.Name);
+				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, member.Name);
 
 			var expr = builder.ConvertToSql(select, update);
 
@@ -413,7 +411,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				return methodCall.IsQueryable("Set");
+				return methodCall.IsQueryable(nameof(LinqExtensions.Set));
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
