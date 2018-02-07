@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -71,12 +71,54 @@ namespace LinqToDB.DataProvider.Firebird
 
 			statement = base.Finalize(statement);
 
+			if (FirebirdConfiguration.ConvertInnerJoinsToLeftJoins)
+			{
+				ConvertInnerJoinsToLeftJoins(statement);
+			}
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
 				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
 				default               : return statement;
 			}
+		}
+
+		private void ConvertInnerJoinsToLeftJoins(SqlStatement statement)
+		{
+			statement.WalkQueries(query =>
+			{
+				new QueryVisitor().Visit(query, e =>
+				{
+					if (e.ElementType != QueryElementType.SqlQuery)
+						return;
+
+					var q = (SelectQuery)e;
+
+					foreach (var join in q.From.Tables.SelectMany(t => t.Joins))
+					{
+						if (join.JoinType == JoinType.Inner)
+						{
+							var keys = join.Table.Source.GetKeys(true);
+
+							var useOr       = true;
+							var notNullable = keys.Where(w => e is SqlField field && !field.CanBeNull).ToList();
+							if (notNullable.Count > 0)
+							{
+								useOr = false;
+								keys  = notNullable;
+							}
+
+							join.JoinType  = JoinType.Left;
+							var conditions = keys.Select(f => new SqlCondition(false, new SqlPredicate.IsNull(f, true), useOr));
+							var sc         = new SqlSearchCondition(conditions);
+
+							q.Select.Where.ConcatSearchCondition(sc);
+						}
+					}
+				});
+				return query;
+			});
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
