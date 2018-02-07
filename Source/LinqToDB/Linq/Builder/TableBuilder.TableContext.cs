@@ -468,6 +468,8 @@ namespace LinqToDB.Linq.Builder
 								Expression.Constant(dindex)),
 							Expression.Constant(ObjectType)),
 						ObjectType);
+
+					//expr = Expression.Constant(null, ObjectType);
 				}
 
 				foreach (var mapping in InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
