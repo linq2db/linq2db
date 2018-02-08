@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Update");
+			return methodCall.IsQueryable(nameof(LinqExtensions.Update));
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -31,7 +31,6 @@ namespace LinqToDB.Linq.Builder
 				case 1: // int Update<T>(this IUpdateable<T> source)
 					{
 						CheckAssociation(sequence);
-
 						break;
 					}
 
@@ -60,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr = methodCall.Arguments[1].Unwrap();
 
-						if (expr is LambdaExpression && ((LambdaExpression)expr).ReturnType == typeof(bool))
+						if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
 						{
 							CheckAssociation(sequence);
 
@@ -86,16 +85,16 @@ namespace LinqToDB.Linq.Builder
 						{
 							IBuildContext into;
 
-							if (expr is LambdaExpression)
+							if (expr is LambdaExpression expression)
 							{
 								// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
 								//
-								var body      = ((LambdaExpression)expr).Body;
-								int level     = body.GetLevel();
+								var body      = expression.Body;
+								var level     = body.GetLevel();
 								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
 
 								if (tableInfo.Result == false)
-									throw new LinqException("Expression '{0}' must be a table.");
+									throw new LinqException("Expression '{0}' must be a table.", body);
 
 								into = tableInfo.Context;
 							}
@@ -136,9 +135,7 @@ namespace LinqToDB.Linq.Builder
 
 		static void CheckAssociation(IBuildContext sequence)
 		{
-			var ctx = sequence as SelectContext;
-
-			if (ctx != null && ctx.IsScalar)
+			if (sequence is SelectContext ctx && ctx.IsScalar)
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
@@ -251,8 +248,8 @@ namespace LinqToDB.Linq.Builder
 						if (expr.ElementType == QueryElementType.SqlParameter)
 						{
 							var parm  = (SqlParameter)expr;
-							var field = column[0].Sql is SqlField
-								? (SqlField)column[0].Sql
+							var field = column[0].Sql is SqlField sqlField
+								? sqlField
 								: (SqlField)((SqlColumn)column[0].Sql).Expression;
 
 							if (parm.DataType == DataType.Undefined)
@@ -424,8 +421,8 @@ namespace LinqToDB.Linq.Builder
 				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var update   =                   methodCall.Arguments[2].Unwrap();
 
-				var updateStatement = new SqlUpdateStatement(sequence.SelectQuery);
-				sequence.Statement = updateStatement;
+				var updateStatement = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
+				sequence.Statement  = updateStatement;
 
 				if (update.NodeType == ExpressionType.Lambda)
 					ParseSet(

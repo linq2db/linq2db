@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 
 			switch (methodCall.Arguments.Count)
 			{
-				case 1 : 
+				case 1 :
 					// static int Insert<T>              (this IValueInsertable<T> source)
 					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 					{
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			insertStatement.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity"; 
+			insertStatement.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
 			sequence.Statement = insertStatement;
 
 			return new InsertContext(buildInfo.Parent, sequence, insertStatement.Insert.WithIdentity);
@@ -203,7 +203,7 @@ namespace LinqToDB.Linq.Builder
 						sequence = new SubQueryContext(sequence);
 
 					insertStatement = new SqlInsertStatement(sequence.SelectQuery);
-					
+
 					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SelectQuery()));
 					insertStatement.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
 				}
