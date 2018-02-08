@@ -153,6 +153,7 @@ namespace LinqToDB.Linq.Builder
 				if (joinType == JoinType.Auto)
 				{
 					var isApplyJoin =
+						//Common.Configuration.Linq.PrefereApply    ||
 						collection.SelectQuery.Select.HasModifier ||
 						table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
 

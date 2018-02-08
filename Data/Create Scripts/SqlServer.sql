@@ -599,7 +599,7 @@ GO
 -- SKIP SqlServer.2005 BEGIN
 CREATE TABLE LinqDataTypes
 (
-	_ID            int IDENTITY  PRIMARY KEY,
+	_ID            int IDENTITY PRIMARY KEY,
 	ID             int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime,

@@ -1097,7 +1097,7 @@ namespace LinqToDB.Data
 		{
 			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				using (DataProvider.ExecuteScope())
-				return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
+					return Command.ExecuteReader(GetCommandBehavior(commandBehavior));
 
 			if (TraceSwitch.TraceInfo)
 			{

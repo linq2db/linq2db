@@ -22,6 +22,7 @@ namespace LinqToDB.SqlQuery
 		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
 		{
 #if DEBUG
+			// ReSharper disable once NotAccessedVariable
 			var sqlText = _selectQuery.SqlText;
 
 			var dic = new Dictionary<SelectQuery,SelectQuery>();
@@ -43,6 +44,7 @@ namespace LinqToDB.SqlQuery
 			ResolveFields();
 
 #if DEBUG
+			// ReSharper disable once RedundantAssignment
 			sqlText = _selectQuery.SqlText;
 #endif
 		}
@@ -156,8 +158,10 @@ namespace LinqToDB.SqlQuery
 
 			var dic = new Dictionary<ISqlExpression,ISqlExpression>();
 
-			foreach (SqlField field in data.Fields)
+			foreach (var sqlExpression in data.Fields)
 			{
+				var field = (SqlField)sqlExpression;
+
 				if (dic.ContainsKey(field))
 					continue;
 
@@ -804,7 +808,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var c in query.Select.Columns)
 				map.Add(c, c.Expression);
 
-			var top = (IQueryElement)_statement ?? (IQueryElement)_selectQuery.RootQuery();
+			var top = _statement ?? (IQueryElement)_selectQuery.RootQuery();
 
 			((ISqlExpressionWalkable)top).Walk(
 				false, expr => map.TryGetValue(expr, out var fld) ? fld : expr);
@@ -875,17 +879,17 @@ namespace LinqToDB.SqlQuery
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(c => IsAggregationFunction(c.Expression));
 
-				if (isApplySupported && (isAgg || sql.Select.HasModifier))
+				if (isApplySupported  && (isAgg || sql.Select.HasModifier || Common.Configuration.Linq.PrefereApply))
 					return;
 
 				var tableSources = new HashSet<ISqlTableSource>();
 
-//				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(false, e =>
-//				{
-//					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
-//						tableSources.Add(ts);
-//					return e;
-//				});
+				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(false, e =>
+				{
+					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
+						tableSources.Add(ts);
+					return e;
+				});
 
 				var searchCondition = new List<SqlCondition>();
 

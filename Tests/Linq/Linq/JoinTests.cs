@@ -56,8 +56,8 @@ namespace Tests.Linq
 			Func<TFirst, TSecond, TResult> resultSelector,
 			SqlJoinType joinType)
 		{
-			if (first == null) throw new ArgumentNullException("first");
-			if (second == null) throw new ArgumentNullException("second");
+			if (first  == null) throw new ArgumentNullException(nameof(first));
+			if (second == null) throw new ArgumentNullException(nameof(second));
 
 			switch (joinType)
 			{
@@ -96,7 +96,7 @@ namespace Tests.Linq
 
 					return res;
 				default:
-					throw new ArgumentOutOfRangeException("joinType", joinType, null);
+					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
 			}
 		}
 	}
