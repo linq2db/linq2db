@@ -53,7 +53,7 @@ public class Issue996Tests : TestBase
 	}
 
 	[Test]
-	public void LinqToDbIssue()
+	public void TestIssue()
 	{
 		SetMappings();
 
@@ -62,7 +62,7 @@ public class Issue996Tests : TestBase
 		// we can load all rows from A - everything is fine
 		var listA = LoadA();
 
-		// exception
+		// should not throw an exception
 		var listTest = LoadTest();
 	}
 

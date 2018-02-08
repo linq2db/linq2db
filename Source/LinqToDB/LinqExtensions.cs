@@ -235,6 +235,36 @@ namespace LinqToDB
 			return table;
 		}
 
+		/// <summary>
+		/// Specifies associations, that should be loaded for each loaded record from current table.
+		/// You need to use this method, if you use inheritance and need to specify wich data should be loaded from derived entities.
+		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
+		/// Take into account that use of this method could require multiple queries to load all requested associations.
+		/// Some usage examples:
+		/// <code>
+		/// // loads records from Table1 with Reference association loaded for each Table1 record
+		/// db.Table1.LoadWithDerived&lt;BaseT, DerivedT&gt;(r => r.Reference);
+		///
+		/// // loads records from Table1 with Reference1 association loaded for each Table1 record
+		/// // loads records from Reference2 association for each loaded Reference1 record
+		/// db.Table1.LoadWithDerived&lt;BaseT, DerivedT&gt;(r => r.Reference1.Reference2);
+		///
+		/// // loads records from Table1 with References collection association loaded for each Table1 record
+		/// db.Table1.LoadWithDerived&lt;BaseT, DerivedT&gt;(r => r.References);
+		///
+		/// // loads records from Table1 with Reference1 collection association loaded for each Table1 record
+		/// // loads records from Reference2 collection association for each loaded Reference1 record
+		/// // loads records from Reference3 association for each loaded Reference2 record
+		/// // note that a way you access collection association record (by index, using First() method) doesn't affect
+		/// // query results and allways select all records
+		/// db.Table1.LoadWithDerived&lt;BaseT, DerivedT&gt;(r => r.References1[0].References2.First().Reference3);
+		/// </code>
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <typeparam name="Tr">Derived record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="selector">Association selection expression.</param>
+		/// <returns>Table-like query source.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> LoadWithDerived<T, Tr>(
