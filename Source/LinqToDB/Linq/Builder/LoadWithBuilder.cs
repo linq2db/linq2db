@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("LoadWith") || methodCall.IsQueryable("LoadWithDerived");
+			return methodCall.IsQueryable("LoadWith");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
