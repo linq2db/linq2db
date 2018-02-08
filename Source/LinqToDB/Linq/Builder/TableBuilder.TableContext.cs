@@ -161,24 +161,28 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in members)
 				{
-					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
-
-					if (member.NextLoadWith.Count > 0)
+					if (member.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
 					{
-						var table = FindTable(ma, 1, false, true);
-						table.Table.LoadWith = member.NextLoadWith;
+						var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
+
+						if (member.NextLoadWith.Count > 0)
+						{
+							var table = FindTable(ma, 1, false, true);
+							table.Table.LoadWith = member.NextLoadWith;
+						}
+
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(),
+							member.MemberInfo);
+
+						var ex = BuildExpression(ma, 1, parentObject);
+						var ax = Expression.Assign(
+							attr?.Storage != null
+								? Expression.PropertyOrField(parentObject, attr.Storage)
+								: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
+							ex);
+
+						exprs.Add(ax);
 					}
-
-					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
-
-					var ex = BuildExpression(ma, 1, parentObject);
-					var ax = Expression.Assign(
-						attr?.Storage != null ?
-							Expression.PropertyOrField (parentObject, attr.Storage) :
-							Expression.MakeMemberAccess(parentObject, member.MemberInfo),
-						ex);
-
-					exprs.Add(ax);
 				}
 			}
 
