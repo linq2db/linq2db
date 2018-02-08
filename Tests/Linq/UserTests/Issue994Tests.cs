@@ -81,7 +81,8 @@ public class Issue994Tests : TestBase
 
 		var listTest3 = LoadTest3();
 
-		//Assert.NotNull(((Dog)listTest2.First()).Bla);
+		Assert.Null(listTest3.First().TestAnimal);
+		Assert.NotNull(((Dog)listTest3.Skip(1).First().TestAnimal).Bla);
 	}
 
 	private void InsertData()
@@ -119,7 +120,7 @@ public class Issue994Tests : TestBase
 			db.SetCommand("DROP TABLE IF EXISTS `Test`").Execute();
 			db.SetCommand("CREATE TABLE `Animals` ( `Id` INTEGER NOT NULL PRIMARY KEY, `Name` TEXT,`Discriminator` TEXT, `EyeId` INTEGER )").Execute();
 			db.SetCommand("CREATE TABLE `Eyes` ( `Id` INTEGER NOT NULL PRIMARY KEY, `Xy` TEXT )").Execute();
-			db.SetCommand("CREATE TABLE `Test` ( `Id` INTEGER NOT NULL PRIMARY KEY, `TestAnimalId` INTEGER )").Execute();
+			db.SetCommand("CREATE TABLE `Test` ( `Id` INTEGER NOT NULL PRIMARY KEY, `TestAnimalId` INTEGER NULL )").Execute();
 		}
 
 		using (var db = new TestDataConnection())
@@ -146,7 +147,7 @@ public class Issue994Tests : TestBase
 	{
 		using (var db = new TestDataConnection())
 		{
-			return db.GetTable<Animal>().LoadWithDerived<Animal, Dog>(x => x.Bla).ToList();
+			return db.GetTable<Animal>().LoadWith(x => ((Dog)x).Bla).ToList();
 		}
 	}
 
@@ -173,6 +174,7 @@ public class Issue994Tests : TestBase
 		mappingBuilder.Entity<Dog>()
 			.HasTableName("Animals")
 			.Property(x => x.Bla).IsNotColumn()
+			.Property(x => x.EyeId).IsColumn().IsNullable().HasColumnName("EyeId")
 			.Association(x => x.Bla, x => x.EyeId, x => x.Id);
 
 		mappingBuilder.Entity<WildAnimal>()
@@ -183,7 +185,7 @@ public class Issue994Tests : TestBase
 
 		mappingBuilder.Entity<Eye>()
 			.HasTableName("Eyes")
-			.Property(x => x.Id).IsColumn().HasColumnName("Xy")
+			.Property(x => x.Id).IsColumn().HasColumnName("Id")
 			.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy");
 
 		mappingBuilder.Entity<Test>()
