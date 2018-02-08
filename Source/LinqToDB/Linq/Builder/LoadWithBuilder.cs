@@ -109,6 +109,17 @@ namespace LinqToDB.Linq.Builder
 							goto default;
 						}
 
+					case ExpressionType.Convert:
+						{
+							if (expression is UnaryExpression)
+							{
+								expression = ((UnaryExpression)expression).Operand;
+								break;
+							}
+
+							goto default;
+						}
+
 					default :
 						{
 							throw new LinqToDBException(
