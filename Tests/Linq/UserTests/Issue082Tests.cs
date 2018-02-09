@@ -16,7 +16,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 
-				var resultQuery = 
+				var resultQuery =
 							from o in db.Parent
 							join od in db.Child on o.ParentID equals od.ParentID into irc
 							select new
@@ -26,7 +26,7 @@ namespace Tests.UserTests
 								SumResult   = irc.Sum(x => x.ParentID)
 							};
 
-				var expectedQuery = 
+				var expectedQuery =
 							from o in Parent
 							join od in Child on o.ParentID equals od.ParentID into irc
 							select new
@@ -51,7 +51,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 
-				var resultQuery = 
+				var resultQuery =
 							from o in db.Parent
 							select new
 							{
@@ -60,7 +60,7 @@ namespace Tests.UserTests
 								SumResult   = o.Children.Sum(x => x.ParentID)
 							};
 
-				var expectedQuery = 
+				var expectedQuery =
 							from o in Parent
 							select new
 							{

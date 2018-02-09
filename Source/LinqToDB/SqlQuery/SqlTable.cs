@@ -174,14 +174,10 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
-
 		public override string ToString()
 		{
 			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
 		}
-
-#endif
 
 		#endregion
 
@@ -319,7 +315,9 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			return sb.Append(Name);
+			if (Database != null) sb.Append($"[{Database}].");
+			if (Schema   != null) sb.Append($"[{Schema}].");
+			return sb.Append($"[{Name}]");
 		}
 
 		#endregion
