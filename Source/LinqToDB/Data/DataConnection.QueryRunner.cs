@@ -286,6 +286,8 @@ namespace LinqToDB.Data
 					return dataConnection.ExecuteNonQuery();
 				}
 
+				var rowsAffected = -1;
+
 				for (var i = 0; i < preparedQuery.Commands.Length; i++)
 				{
 					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[i], null, i == 0 ? preparedQuery.QueryHints : null);
@@ -306,11 +308,14 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						dataConnection.ExecuteNonQuery();
+						var n = dataConnection.ExecuteNonQuery();
+
+						if (i == 0)
+							rowsAffected = n;
 					}
 				}
 
-				return -1;
+				return rowsAffected;
 			}
 
 			public override int ExecuteNonQuery()

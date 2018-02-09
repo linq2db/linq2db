@@ -416,7 +416,7 @@ namespace Tests.xUpdate
 					db.Parent.Delete(p => p.ParentID > 1000);
 
 					db.Insert(new Parent { ParentID = id, Value1 = id });
-		
+
 					Assert.AreEqual(1,
 						db.Parent
 							.Where(p => p.ParentID == id)
@@ -1009,7 +1009,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource(ProviderName.OracleNative)]
 		public void InsertOrUpdate2(string context)
 		{
 			using (var db = GetDataContext(context))
