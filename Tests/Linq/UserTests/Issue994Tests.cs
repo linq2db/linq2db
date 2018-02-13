@@ -91,8 +91,12 @@ public class Issue994Tests : TestBase
 
 		Assert.Null(listTest3.First().TestAnimal);
 		Assert.NotNull(((Dog)listTest3.Skip(1).First().TestAnimal).Bla);
+		Assert.NotNull(((Dog)listTest3.Skip(1).First().TestAnimal).DogName.First);
+		Assert.NotNull(((Dog)listTest3.Skip(1).First().TestAnimal).DogName.Second);
 
 		var listTest4 = LoadTest4();
+		Assert.NotNull(listTest4[0].DogName.First);
+		Assert.NotNull(listTest4[0].DogName.Second);
 	}
 
 	private void InsertData()
@@ -174,9 +178,7 @@ public class Issue994Tests : TestBase
 	{
 		using (var db = new TestDataConnection())
 		{
-			var a = db.GetTable<Dog>().ToList();
-			var sql = db.LastQuery;
-			return a;
+			return db.GetTable<Dog>().ToList();
 		}
 	}
 

@@ -129,21 +129,24 @@ namespace LinqToDB.Mapping
 					continue;
 				}
 
-				var ca = mappingSchema.GetAttribute<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var cas = mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 
-				if (ca != null)
+				if (cas != null && cas.Length > 0)
 				{
-					if (ca.IsColumn)
+					foreach (var ca in cas)
 					{
-						if (ca.MemberName != null)
+						if (ca.IsColumn)
 						{
-							attrs.Add(new ColumnAttribute(member.Name, ca));
-						}
-						else
-						{
-							var cd = new ColumnDescriptor(mappingSchema, ca, member);
-							Columns.Add(cd);
-							_columnNames.Add(member.Name, cd);
+							if (ca.MemberName != null)
+							{
+								attrs.Add(new ColumnAttribute(member.Name, ca));
+							}
+							else
+							{
+								var cd = new ColumnDescriptor(mappingSchema, ca, member);
+								Columns.Add(cd);
+								_columnNames.Add(member.Name, cd);
+							}
 						}
 					}
 				}
