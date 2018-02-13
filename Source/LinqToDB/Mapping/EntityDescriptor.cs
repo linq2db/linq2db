@@ -144,8 +144,11 @@ namespace LinqToDB.Mapping
 							else
 							{
 								var cd = new ColumnDescriptor(mappingSchema, ca, member);
-								Columns.Add(cd);
-								_columnNames.Add(member.Name, cd);
+								if (!_columnNames.ContainsKey(member.Name))
+								{
+									Columns.Add(cd);
+									_columnNames.Add(member.Name, cd);
+								}
 							}
 						}
 					}
