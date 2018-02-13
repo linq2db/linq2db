@@ -10,7 +10,7 @@ namespace Tests.UserTests
 	public class Issue998Tests : TestBase
 	{
 		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
-		public void AddDaysFromColumnPosative(string context)
+		public void AddDaysFromColumnPositive(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
