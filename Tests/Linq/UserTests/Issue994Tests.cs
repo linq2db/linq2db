@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -14,6 +15,12 @@ using Tests.Model;
 [TestFixture]
 public class Issue994Tests : TestBase
 {
+	public enum AnimalType
+	{
+		Small,
+		Big
+	}
+
 	public class Eye
 	{
 		public int Id { get; set; }
@@ -28,6 +35,8 @@ public class Issue994Tests : TestBase
 
 	public class Animal
 	{
+		public AnimalType AnimalType { get; set; }
+
 		public int Id { get; set; }
 
 		public string Name { get; set; }
@@ -97,6 +106,8 @@ public class Issue994Tests : TestBase
 		var listTest4 = LoadTest4();
 		Assert.NotNull(listTest4[0].DogName.First);
 		Assert.NotNull(listTest4[0].DogName.Second);
+
+		var l5 = LoadTest5();
 	}
 
 	private void InsertData()
@@ -113,7 +124,8 @@ public class Issue994Tests : TestBase
 			Discriminator = "Dog",
 			EyeId = 1,
 			Name = "FirstDog",
-			DogName = new Name {First = "a", Second = "b"}
+			DogName = new Name {First = "a", Second = "b"},
+			AnimalType = AnimalType.Big
 		};
 
 		var test = new Test
@@ -133,7 +145,7 @@ public class Issue994Tests : TestBase
 			db.SetCommand("DROP TABLE IF EXISTS `Animals`").Execute();
 			db.SetCommand("DROP TABLE IF EXISTS `Eyes`").Execute();
 			db.SetCommand("DROP TABLE IF EXISTS `Test`").Execute();
-			db.SetCommand("CREATE TABLE `Animals` ( `Id` INTEGER NOT NULL PRIMARY KEY, `Name` TEXT,`Discriminator` TEXT, `EyeId` INTEGER, `First` TEXT, `Second` TEXT )").Execute();
+			db.SetCommand("CREATE TABLE `Animals` ( `Id` INTEGER NOT NULL PRIMARY KEY, `AnimalType` TEXT, `Name` TEXT, `Discriminator` TEXT, `EyeId` INTEGER, `First` TEXT, `Second` TEXT )").Execute();
 			db.SetCommand("CREATE TABLE `Eyes` ( `Id` INTEGER NOT NULL PRIMARY KEY, `Xy` TEXT )").Execute();
 			db.SetCommand("CREATE TABLE `Test` ( `Id` INTEGER NOT NULL PRIMARY KEY, `TestAnimalId` INTEGER NULL )").Execute();
 		}
@@ -181,9 +193,32 @@ public class Issue994Tests : TestBase
 			return db.GetTable<Dog>().ToList();
 		}
 	}
+	private Dog LoadTest5()
+	{
+		using (var db = new TestDataConnection())
+		{
+			var test1 =  db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big);
+			var d = new Dog() {AnimalType = AnimalType.Big};
+			var test2 = db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType);
+			return test1;
+		}
+	}
 
 	private void SetMappings()
 	{
+		MappingSchema.Default.SetConverter<AnimalType, string>((obj) =>
+		{
+			return obj.ToString();
+		});
+		MappingSchema.Default.SetConverter<AnimalType, DataParameter>((obj) =>
+		{
+			return new DataParameter { Value = obj.ToString() };
+		});
+		MappingSchema.Default.SetConverter<string, AnimalType>((txt) =>
+		{
+			return (AnimalType)Enum.Parse(typeof(AnimalType), txt, true);
+		});
+
 		var mappingBuilder = MappingSchema.Default.GetFluentMappingBuilder();
 		mappingBuilder.Entity<Animal>()
 			.HasTableName("Animals")
@@ -191,6 +226,7 @@ public class Issue994Tests : TestBase
 			.Inheritance(x => x.Discriminator, "WildAnimal", typeof(WildAnimal))
 			.Inheritance(x => x.Discriminator, "SuperWildAnimal", typeof(SuperWildAnimal))
 			.Property(x => x.Name).IsColumn().IsNullable().HasColumnName("Name")
+			.Property(x => x.AnimalType).IsColumn().HasColumnName("AnimalType")
 			.Property(x => x.Discriminator).IsDiscriminator().IsColumn().IsNullable(false).HasColumnName("Discriminator")
 			.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id");
 
