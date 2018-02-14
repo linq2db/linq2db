@@ -175,7 +175,7 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDbConnection connection)
 			: this(dataProvider, connection, false)
 		{
-			
+
 		}
 
 		/// <summary>
@@ -1327,11 +1327,12 @@ namespace LinqToDB.Data
 
 		#region System.IDisposable Members
 
-		protected bool Disposed { get; private set; }
+		protected bool  Disposed        { get; private set; }
+		public    bool? ThrowOnDisposed { get; set; }
 
-		protected void ThrowOnDisposed()
+		protected void CheckAndThrowOnDisposed()
 		{
-			if (Disposed)
+			if (Disposed && (ThrowOnDisposed ?? Configuration.Data.ThrowOnDisposed))
 				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 

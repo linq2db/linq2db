@@ -27,6 +27,11 @@ namespace LinqToDB.Common
 		/// </summary>
 		public static bool AvoidSpecificDataProviderAPI;
 
+		public static class Data
+		{
+			public static bool ThrowOnDisposed = true;
+		}
+
 		/// <summary>
 		/// LINQ query settings.
 		/// </summary>

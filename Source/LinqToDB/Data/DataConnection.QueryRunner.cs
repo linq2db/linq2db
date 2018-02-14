@@ -18,7 +18,7 @@ namespace LinqToDB.Data
 	{
 		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
 		{
-			ThrowOnDisposed();
+			CheckAndThrowOnDisposed();
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
 		}
 
