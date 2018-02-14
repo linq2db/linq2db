@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -1524,6 +1525,26 @@ namespace Tests.xUpdate
 				{
 					tbl.Delete(r => r.ID >= 1000);
 				}
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void InsertWith(string context)
+		{
+			var n = 1;
+
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = true;
+
+				(
+					from c in db.Child.With("INDEX(IX_ChildIndex)")
+					where c.ChildID <= -n
+					join id in db.GrandChild on c.ParentID equals id.ParentID
+					select c.ChildID
+				)
+				.Distinct()
+				.Insert(db.Parent, t => new Parent { ParentID = t });
 			}
 		}
 	}

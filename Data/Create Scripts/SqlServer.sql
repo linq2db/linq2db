@@ -544,11 +544,13 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('GrandChild') A
 BEGIN DROP TABLE GrandChild END
 GO
 
-CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
+CREATE TABLE Parent     (ParentID int, Value1 int,  _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE Child       (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
+CREATE TABLE Child      (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
+CREATE INDEX IX_ChildIndex ON Child (ParentID)
+GO
+CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
 
 -- SKIP SqlAzure.2012 BEGIN
