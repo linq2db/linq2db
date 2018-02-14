@@ -21,6 +21,12 @@ public class Issue994Tests : TestBase
 		Big
 	}
 
+	public enum AnimalType2
+	{
+		Small,
+		Big
+	}
+
 	public class Eye
 	{
 		public int Id { get; set; }
@@ -36,6 +42,8 @@ public class Issue994Tests : TestBase
 	public class Animal
 	{
 		public AnimalType AnimalType { get; set; }
+
+		public AnimalType2 AnimalType2 { get; set; }
 
 		public int Id { get; set; }
 
@@ -107,7 +115,7 @@ public class Issue994Tests : TestBase
 		Assert.NotNull(listTest4[0].DogName.First);
 		Assert.NotNull(listTest4[0].DogName.Second);
 
-		var l5 = LoadTest5();
+		LoadTest5();
 	}
 
 	private void InsertData()
@@ -125,7 +133,8 @@ public class Issue994Tests : TestBase
 			EyeId = 1,
 			Name = "FirstDog",
 			DogName = new Name {First = "a", Second = "b"},
-			AnimalType = AnimalType.Big
+			AnimalType = AnimalType.Big,
+			AnimalType2 = AnimalType2.Big
 		};
 
 		var test = new Test
@@ -145,7 +154,7 @@ public class Issue994Tests : TestBase
 			db.SetCommand("DROP TABLE IF EXISTS `Animals`").Execute();
 			db.SetCommand("DROP TABLE IF EXISTS `Eyes`").Execute();
 			db.SetCommand("DROP TABLE IF EXISTS `Test`").Execute();
-			db.SetCommand("CREATE TABLE `Animals` ( `Id` INTEGER NOT NULL PRIMARY KEY, `AnimalType` TEXT, `Name` TEXT, `Discriminator` TEXT, `EyeId` INTEGER, `First` TEXT, `Second` TEXT )").Execute();
+			db.SetCommand("CREATE TABLE `Animals` ( `Id` INTEGER NOT NULL PRIMARY KEY, `AnimalType` TEXT, `AnimalType2` TEXT, `Name` TEXT, `Discriminator` TEXT, `EyeId` INTEGER, `First` TEXT, `Second` TEXT )").Execute();
 			db.SetCommand("CREATE TABLE `Eyes` ( `Id` INTEGER NOT NULL PRIMARY KEY, `Xy` TEXT )").Execute();
 			db.SetCommand("CREATE TABLE `Test` ( `Id` INTEGER NOT NULL PRIMARY KEY, `TestAnimalId` INTEGER NULL )").Execute();
 		}
@@ -193,14 +202,17 @@ public class Issue994Tests : TestBase
 			return db.GetTable<Dog>().ToList();
 		}
 	}
-	private Dog LoadTest5()
+	private void LoadTest5()
 	{
 		using (var db = new TestDataConnection())
 		{
+			var d = new Dog() { AnimalType = AnimalType.Big, AnimalType2 = AnimalType2.Big };
+
 			var test1 =  db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big);
-			var d = new Dog() {AnimalType = AnimalType.Big};
 			var test2 = db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType);
-			return test1;
+
+			var test3 = db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big);
+			var test4 = db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2);
 		}
 	}
 
@@ -218,6 +230,8 @@ public class Issue994Tests : TestBase
 		{
 			return (AnimalType)Enum.Parse(typeof(AnimalType), txt, true);
 		});
+		MappingSchema.Default.SetDefaultFromEnumType(typeof(AnimalType2), typeof(string));
+
 
 		var mappingBuilder = MappingSchema.Default.GetFluentMappingBuilder();
 		mappingBuilder.Entity<Animal>()
