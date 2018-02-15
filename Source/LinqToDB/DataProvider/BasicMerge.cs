@@ -8,11 +8,12 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Data;
 	using Linq;
 	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
 	/// <summary>
 	/// Basic MERGE operation implementation for all providers.
