@@ -9,7 +9,7 @@ namespace Tests.UserTests
 {
 	public class Issue998Tests : TestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void AddDaysFromColumnPositive(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -27,7 +27,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void AddDaysFromColumnNegative(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -45,7 +45,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void AddDaysFromColumn(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -55,7 +55,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void AddWeekFromColumn(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -66,7 +66,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void AddQuarterFromColumn(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -77,7 +77,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void AddYearFromColumn(string context)
 		{
 			using (var db = GetDataContext(context))
