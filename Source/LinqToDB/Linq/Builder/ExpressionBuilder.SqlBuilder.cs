@@ -2345,7 +2345,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return Convert(table, new SqlPredicate.Expr(new SqlValue(true)));
 
-			var mapping = table.InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m.Type == typeOperand && !m.m.IsDefault).ToList();
+			var mapping = table.InheritanceMapping.Select((m,i) => new { m, i }).Where(m => typeOperand.IsAssignableFrom(m.m.Type) && !m.m.IsDefault).ToList();
 			var isEqual = true;
 
 			if (mapping.Count == 0)
@@ -2377,7 +2377,7 @@ namespace LinqToDB.Linq.Builder
 
 				var e = isEqual ? Expression.Equal(left, right) : Expression.NotEqual(left, right);
 
-				expr = expr != null ? Expression.AndAlso(expr, e) : e;
+				expr = expr != null ? Expression.OrElse(expr, e) : e;
 			}
 
 			return ConvertPredicate(context, expr);

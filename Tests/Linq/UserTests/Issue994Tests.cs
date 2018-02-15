@@ -213,6 +213,11 @@ public class Issue994Tests : TestBase
 
 			var test3 = db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big);
 			var test4 = db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2);
+
+			var test6 = db.GetTable<Animal>().First(x => x is SuperWildAnimal);
+
+			var test7 = db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1);
+			var sql = db.LastQuery;
 		}
 	}
 
