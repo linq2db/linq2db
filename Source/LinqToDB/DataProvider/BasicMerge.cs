@@ -8,12 +8,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
 	using Data;
 	using Linq;
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
 	/// <summary>
 	/// Basic MERGE operation implementation for all providers.
@@ -122,7 +121,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine(")")
 				;
 
-			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey && (IsIdentitySupported && c.Column.IsIdentity || !c.Column.SkipOnUpdate)).ToList();
+			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey && (IsIdentitySupported && !c.Column.IsIdentity || !c.Column.SkipOnUpdate)).ToList();
 
 			if (updateColumns.Count > 0)
 			{
