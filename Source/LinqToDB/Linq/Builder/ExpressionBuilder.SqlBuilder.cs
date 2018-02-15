@@ -1676,6 +1676,10 @@ namespace LinqToDB.Linq.Builder
 						var ce = MappingSchema.GetConverter(type, typeof(DataParameter), false);
 						if (ce != null)
 						{
+							var p = Expression.Parameter(typeof(object));
+							var a = Expression.Lambda<Func<object, DataParameter>>(Expression.Invoke(ce.Lambda, Expression.Convert(p, type)), p);
+							var tr = a.Compile();
+							var tt = tr(origValue);
 							mapValue = ((DataParameter) ce.Lambda.Compile().DynamicInvoke(origValue)).Value;
 							sqlvalue = new SqlValue(mapValue);
 						}
