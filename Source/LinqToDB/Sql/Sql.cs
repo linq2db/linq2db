@@ -798,7 +798,7 @@ namespace LinqToDB
 		[Sql.DatePart(PN.Informix,   "{{1}} + Interval({0}",                Precedence.Additive, true, new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null }, 0, 1, 2)]
 		[Sql.DatePart(PN.PostgreSQL, "{{1}} + {{0}} * Interval '1 {0}",     Precedence.Additive, true, new[] { "Year'", "Month' * 3", "Month'", "Day'", "Day'", "Day' * 7", "Day'", "Hour'", "Minute'", "Second'", "Millisecond'" }, 0, 1, 2)]
 		[Sql.DatePart(PN.MySql,      "Date_Add({{1}}, Interval {{0}} {0})", true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
-		[Sql.DatePart(PN.SQLite,     "DateTime({{1}}, '{{0}} {0}')",        true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
+		[Sql.DatePart(PN.SQLite,     "DateTime({{1}}, {{0}} || ' {0}')",    true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
 		[Sql.DatePart(PN.Access,     "DateAdd({0}, {{0}}, {{1}})",          true, new[] { "'yyyy'", "'q'", "'m'", "'y'", "'d'", "'ww'", "'w'", "'h'", "'n'", "'s'", null }, 0, 1, 2)]
 		[Sql.DatePart(PN.SapHana,    "Add_{0}",                             true, new[] { "Years({1}, {0})", "Months({1}, {0} * 3)", "Months({1}, {0})", "Days({1}, {0})", "Days({1}, {0})", "Days({1}, {0} * 7)", "Days({1}, {0})", "Seconds({1}, {0} * 3600)", "Seconds({1}, {0} * 60)", "Seconds({1}, {0})", null }, 0, 1, 2)]
 		public static DateTime? DateAdd(DateParts part, double? number, DateTime? date)
