@@ -7,6 +7,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
@@ -27,6 +29,22 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp };
 				Assert.AreEqual(DateTime.Now.Year, q.ToList().First().Now.Year);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void CurrentTimestampUpdate(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from p in db.Types where p.ID == 100000 select p
+				)
+				.Update(t => new LinqDataTypes
+				{
+					BoolValue     = true,
+					DateTimeValue = Sql.CurrentTimestamp
+				});
 			}
 		}
 
