@@ -122,7 +122,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine(")")
 				;
 
-			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey && (IsIdentitySupported && c.Column.IsIdentity || !c.Column.SkipOnUpdate)).ToList();
+			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey && (IsIdentitySupported && !c.Column.IsIdentity || !c.Column.SkipOnUpdate)).ToList();
 
 			if (updateColumns.Count > 0)
 			{
