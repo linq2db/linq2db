@@ -692,20 +692,14 @@ namespace LinqToDB
 		[Sql.Property(PN.Access,   "Now",               ServerSideOnly = true)]
 		[Sql.Function(PN.SqlCe,    "GetDate",           ServerSideOnly = true)]
 		[Sql.Function(PN.Sybase,   "GetDate",           ServerSideOnly = true)]
-		public static DateTime CurrentTimestamp
-		{
-			get { throw new LinqException("The 'CurrentTimestamp' is server side only property."); }
-		}
+		public static DateTime CurrentTimestamp => throw new LinqException("The 'CurrentTimestamp' is server side only property.");
 
 		[Sql.Property(             "CURRENT_TIMESTAMP")]
 		[Sql.Property(PN.Informix, "CURRENT")]
 		[Sql.Property(PN.Access,   "Now")]
 		[Sql.Function(PN.SqlCe,    "GetDate")]
 		[Sql.Function(PN.Sybase,   "GetDate")]
-		public static DateTime CurrentTimestamp2
-		{
-			get { return DateTime.Now; }
-		}
+		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Sql.Function]
 		public static DateTime? ToDate(int? year, int? month, int? day, int? hour, int? minute, int? second, int? millisecond)

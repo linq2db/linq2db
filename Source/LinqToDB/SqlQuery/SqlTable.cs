@@ -137,7 +137,8 @@ namespace LinqToDB.SqlQuery
 
 		#region Init from Table
 
-		public SqlTable(SqlTable table) : this()
+		public SqlTable(SqlTable table)
+			: this()
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
@@ -154,7 +155,8 @@ namespace LinqToDB.SqlQuery
 			TableArguments = table.TableArguments;
 		}
 
-		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments) : this()
+		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
+			: this()
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;

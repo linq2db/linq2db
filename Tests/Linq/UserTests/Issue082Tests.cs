@@ -3,8 +3,6 @@ using System.Linq;
 
 using NUnit.Framework;
 
-using Tests.Model;
-
 namespace Tests.UserTests
 {
 	[TestFixture]
@@ -15,26 +13,25 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-
 				var resultQuery =
-							from o in db.Parent
-							join od in db.Child on o.ParentID equals od.ParentID into irc
-							select new
-							{
-								ParentID    = o.ParentID,
-								CountResult = irc.Count(),
-								SumResult   = irc.Sum(x => x.ParentID)
-							};
+					from o in db.Parent
+					join od in db.Child on o.ParentID equals od.ParentID into irc
+					select new
+					{
+						ParentID    = o.ParentID,
+						CountResult = irc.Count(),
+						SumResult   = irc.Sum(x => x.ParentID)
+					};
 
 				var expectedQuery =
-							from o in Parent
-							join od in Child on o.ParentID equals od.ParentID into irc
-							select new
-							{
-								ParentID    = o.ParentID,
-								CountResult = irc.Count(),
-								SumResult   = irc.Sum(x => x.ParentID)
-							};
+					from o in Parent
+					join od in Child on o.ParentID equals od.ParentID into irc
+					select new
+					{
+						ParentID    = o.ParentID,
+						CountResult = irc.Count(),
+						SumResult   = irc.Sum(x => x.ParentID)
+					};
 
 				AreEqual(expectedQuery, resultQuery);
 

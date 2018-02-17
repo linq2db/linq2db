@@ -49,17 +49,17 @@ namespace LinqToDB.SqlQuery
 									object value1;
 									object value2;
 
-									if (ee.Expr1 is SqlValue)
-										value1 = ((SqlValue)ee.Expr1).Value;
-									else if (ee.Expr1 is SqlParameter)
-										value1 = ((SqlParameter)ee.Expr1).Value;
+									if (ee.Expr1 is SqlValue v1)
+										value1 = v1.Value;
+									else if (ee.Expr1 is SqlParameter p1)
+										value1 = p1.Value;
 									else
 										break;
 
-									if (ee.Expr2 is SqlValue)
-										value2 = ((SqlValue)ee.Expr2).Value;
-									else if (ee.Expr2 is SqlParameter)
-										value2 = ((SqlParameter)ee.Expr2).Value;
+									if (ee.Expr2 is SqlValue v2)
+										value2 = v2.Value;
+									else if (ee.Expr2 is SqlParameter p2)
+										value2 = p2.Value;
 									else
 										break;
 
@@ -68,7 +68,7 @@ namespace LinqToDB.SqlQuery
 									if (ee.Operator == SqlPredicate.Operator.NotEqual)
 										value = !value;
 
-									return new SqlPredicate.Expr(new SqlValue(value), SqlQuery.Precedence.Comparison);
+									return new SqlPredicate.Expr(new SqlValue(value), Precedence.Comparison);
 								}
 							}
 
