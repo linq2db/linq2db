@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -453,6 +454,81 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				(from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(221))).ToList();
+		}
+
+		[Test, DataContextSource]
+		public void AddDaysFromColumnPositive(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = 2, DateTimeValue = new DateTime(2018, 01, 03) });
+
+				var result = db.Types
+					.Count(t => t.ID == 5000 && t.DateTimeValue.AddDays(t.SmallIntValue) > new DateTime(2018, 01, 02));
+
+				db.Types.Delete(t => t.ID == 5000);
+
+				Assert.AreEqual(1, result);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void AddDaysFromColumnNegative(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = -2, DateTimeValue = new DateTime(2018, 01, 03) });
+
+				var result = db.Types
+					.Count(t => t.ID == 5000 && t.DateTimeValue.AddDays(t.SmallIntValue) < new DateTime(2018, 01, 02));
+
+				Assert.AreEqual(1, result);
+
+				db.Types.Delete(t => t.ID == 5000);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void AddDaysFromColumn(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(Types.Select(t => t.DateTimeValue.AddDays(t.SmallIntValue)),
+					db.Types.Select(t => t.DateTimeValue.AddDays(t.SmallIntValue)));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void AddWeekFromColumn(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Week, t.SmallIntValue, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, t.SmallIntValue, t.DateTimeValue)).Value.Date);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void AddQuarterFromColumn(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Quarter, t.SmallIntValue, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, t.SmallIntValue, t.DateTimeValue)).Value.Date);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void AddYearFromColumn(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types select Sql.DateAdd(Sql.DateParts.Year, t.SmallIntValue, t.DateTimeValue).Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, t.SmallIntValue, t.DateTimeValue)).Value.Date);
+			}
 		}
 
 		#endregion
