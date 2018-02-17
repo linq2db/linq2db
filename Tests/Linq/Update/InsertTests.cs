@@ -1531,16 +1531,14 @@ namespace Tests.xUpdate
 		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void InsertWith(string context)
 		{
-			var n = 1;
+			var m = null as int?;
 
 			using (var db = GetDataContext(context))
 			{
-				db.InlineParameters = true;
-
 				(
 					from c in db.Child.With("INDEX(IX_ChildIndex)")
-					where c.ChildID <= -n
 					join id in db.GrandChild on c.ParentID equals id.ParentID
+					where id.ChildID == m
 					select c.ChildID
 				)
 				.Distinct()

@@ -1947,6 +1947,20 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildExpression
 
+		internal static void EnsureFindTables(SqlStatement statement)
+		{
+			new QueryVisitor().Visit(statement, e =>
+			{
+				if (e is SqlField f)
+				{
+					var ts = statement.SelectQuery?.GetTableSource(f.Table) ?? statement.GetTableSource(f.Table);
+
+					if (ts == null && f != f.Table.All)
+						throw new SqlException("Table '{0}' not found.", f.Table);
+				}
+			});
+		}
+
 		protected virtual StringBuilder BuildExpression(
 			ISqlExpression expr,
 			bool           buildTableName,
