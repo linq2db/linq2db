@@ -557,6 +557,19 @@ namespace Tests.Linq
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
 			public Parent170 Parent;
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+			public List<Child170> Children;
+		}
+
+		[Table("Child")]
+		class Child170
+		{
+			[Column] public int ParentID;
+			[Column] public int ChildID;
+
+			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
+			public Parent170 Parent;
 		}
 
 		[Test, DataContextSource]
@@ -565,6 +578,21 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var value = db.GetTable<Parent170>().Where(x => x.Value1 == null).Select(x => (int?)x.Parent.Value1).First();
+
+				Assert.That(value, Is.Null);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue170SelectManyTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var value = db.GetTable<Parent170>()
+					.SelectMany(x => x.Children)
+					.Where(x => x.Parent.Value1 == null)
+					.Select(x => (int?)x.Parent.Value1)
+					.First();
 
 				Assert.That(value, Is.Null);
 			}
