@@ -66,11 +66,9 @@ namespace Tests.xUpdate
 				Assert.AreEqual(2, cnt);
 				Assert.AreEqual(2, result.Length);
 
-				Assert.AreEqual(testData[0].ID, result[0].ID);
 				Assert.AreEqual(testData[0].datetime2DataType, result[0].datetime2DataType);
 				Assert.AreEqual(testData[0].datetimeoffsetDataType, result[0].datetimeoffsetDataType);
 
-				Assert.AreEqual(testData[1].ID, result[1].ID);
 				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
 				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
 			}
@@ -91,13 +89,11 @@ namespace Tests.xUpdate
 				{
 					new AllTypes2()
 					{
-						ID = 1,
 						datetimeoffsetDataType = dto,
 						datetime2DataType = dt
 					},
 					new AllTypes2()
 					{
-						ID = 2,
 						datetimeoffsetDataType = dto.AddTicks(1),
 						datetime2DataType = dt.AddTicks(1)
 					}
@@ -115,11 +111,9 @@ namespace Tests.xUpdate
 				Assert.AreEqual(2, cnt);
 				Assert.AreEqual(2, result.Length);
 
-				Assert.AreEqual(testData[0].ID, result[0].ID);
 				Assert.AreEqual(testData[0].datetime2DataType, result[0].datetime2DataType);
 				Assert.AreEqual(testData[0].datetimeoffsetDataType, result[0].datetimeoffsetDataType);
 
-				Assert.AreEqual(testData[1].ID, result[1].ID);
 				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
 				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
 			}
@@ -164,11 +158,9 @@ namespace Tests.xUpdate
 				Assert.AreEqual(2, cnt);
 				Assert.AreEqual(2, result.Length);
 
-				Assert.AreEqual(testData[0].ID, result[0].ID);
 				Assert.AreEqual(testData[0].datetime2DataType, result[0].datetime2DataType);
 				Assert.AreEqual(testData[0].datetimeoffsetDataType, result[0].datetimeoffsetDataType);
 
-				Assert.AreEqual(testData[1].ID, result[1].ID);
 				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
 				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
 			}
@@ -246,13 +238,11 @@ namespace Tests.xUpdate
 				{
 					new AllTypes2()
 					{
-						ID = 1,
 						datetimeoffsetDataType = dto,
 						datetime2DataType = dt
 					},
 					new AllTypes2()
 					{
-						ID = 2,
 						datetimeoffsetDataType = dto.AddTicks(1),
 						datetime2DataType = dt.AddTicks(1)
 					}
@@ -286,11 +276,9 @@ namespace Tests.xUpdate
 				Assert.AreEqual(1, cnt);
 				Assert.AreEqual(2, result.Length);
 
-				Assert.AreEqual(testData[0].ID, result[0].ID);
 				Assert.AreEqual(dt2, result[0].datetime2DataType);
 				Assert.AreEqual(dto2, result[0].datetimeoffsetDataType);
 
-				Assert.AreEqual(testData[1].ID, result[1].ID);
 				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
 				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
 			}
