@@ -65,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 
 						var ma = (MemberExpression)expr;
 
-						var l  = Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member);
+						var l  = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
 						if (l != null)
 						{
 							// In Grouping KeyContext we have to perform calculation on server side
@@ -120,10 +120,8 @@ namespace LinqToDB.Linq.Builder
 						while (ex is MemberExpression)
 							ex = ((MemberExpression)ex).Expression;
 
-						if (ex is MethodCallExpression)
+						if (ex is MethodCallExpression ce)
 						{
-							var ce = (MethodCallExpression)ex;
-
 							if (IsSubQuery(context, ce))
 							{
 								if (!IsMultipleQuery(ce))
@@ -275,9 +273,7 @@ namespace LinqToDB.Linq.Builder
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
-			List<SubQueryContextInfo> sbi;
-
-			if (!_buildContextCache.TryGetValue(context, out sbi))
+			if (!_buildContextCache.TryGetValue(context, out var sbi))
 				_buildContextCache[context] = sbi = new List<SubQueryContextInfo>();
 
 			foreach (var item in sbi)
@@ -324,11 +320,9 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Expression expression, int idx)
 		{
-			UnaryExpression cex;
-
 			var type = expression.Type;
 
-			if (_convertedExpressions.TryGetValue(expression, out cex))
+			if (_convertedExpressions.TryGetValue(expression, out var cex))
 			{
 				if (cex.Type.IsNullable() && !type.IsNullable() && type.IsSameOrParentOf(cex.Type.ToNullableUnderlying()))
 					type = cex.Type;
@@ -378,7 +372,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						var pi = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, pi.Expression == null ? null : pi.Expression.Type, pi.Member);
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Expression?.Type, pi.Member);
 
 						if (l != null)
 						{
@@ -397,7 +391,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Call:
 					{
 						var pi = (MethodCallExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, pi.Object == null ? null : pi.Object.Type, pi.Method);
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 						if (l != null)
 							return l.Body.Unwrap().Find(e => PreferServerSide(e, enforceServerSide)) != null;

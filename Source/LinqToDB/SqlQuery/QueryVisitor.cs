@@ -738,7 +738,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(SelectQuery q)
 		{
-					Visit2(q.Select);
+			Visit2(q.Select);
 
 			// Visit2(q.From);
 			//

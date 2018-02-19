@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,9 +7,6 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-	using Mapping;
-
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public class SelectQuery : ISqlTableSource
 	{
@@ -153,8 +149,8 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(this, e =>
 			{
-				if (e is SelectQuery && e != this)
-					((SelectQuery)e).ForEachTable(action, visitedQueries);
+				if (e is SelectQuery query && e != this)
+					query.ForEachTable(action, visitedQueries);
 			});
 		}
 
