@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -14,7 +15,7 @@ namespace LinqToDB.Linq
 		{
 			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
-			static Query<int> CreateQuery(IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
+			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
@@ -38,7 +39,7 @@ namespace LinqToDB.Linq
 
 				foreach (var field in keys)
 				{
-					var param = GetParameter(typeof(T), dataContext, field);
+					var param = GetParameter(type, dataContext, field);
 
 					ei.Queries[0].Parameters.Add(param);
 
@@ -58,8 +59,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
+                var type = obj.GetType();
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
+				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -70,8 +72,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
+				var type = obj.GetType();
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
+				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 
