@@ -257,7 +257,8 @@ public class Issue994Tests : TestBase
 			.Inheritance(x => x.Discriminator, "WildAnimal", typeof(WildAnimal))
 			.Inheritance(x => x.Discriminator, "SuperWildAnimal", typeof(SuperWildAnimal))
 			.Property(x => x.Name).IsColumn().IsNullable().HasColumnName("Name")
-			.Property(x => x.AnimalType).IsColumn().HasColumnName("AnimalType")
+			.Property(x => x.AnimalType).IsColumn().HasColumnName("AnimalType").HasDataType(DataType.NVarChar)
+			.Property(x => x.AnimalType2).IsColumn().HasColumnName("AnimalType2").HasDataType(DataType.NVarChar)
 			.Property(x => x.Discriminator).IsDiscriminator().IsColumn().IsNullable(false).HasColumnName("Discriminator")
 			.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
 
