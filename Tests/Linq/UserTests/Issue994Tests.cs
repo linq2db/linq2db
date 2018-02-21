@@ -116,6 +116,8 @@ public class Issue994Tests : TestBase
 		Assert.NotNull(listTest4[0].DogName.Second);
 
 		LoadTest5();
+
+		Test6();
 	}
 
 	private void InsertData()
@@ -221,6 +223,16 @@ public class Issue994Tests : TestBase
 		}
 	}
 
+	private void Test6()
+	{
+		using (var db = new TestDataConnection())
+		{
+			var dog = db.GetTable<Dog>().First();
+			db.Update(dog);
+			db.Update((Animal)dog);
+		}
+	}
+
 	private void SetMappings()
 	{
 		MappingSchema.Default.SetConverter<AnimalType, string>((obj) =>
@@ -247,7 +259,7 @@ public class Issue994Tests : TestBase
 			.Property(x => x.Name).IsColumn().IsNullable().HasColumnName("Name")
 			.Property(x => x.AnimalType).IsColumn().HasColumnName("AnimalType")
 			.Property(x => x.Discriminator).IsDiscriminator().IsColumn().IsNullable(false).HasColumnName("Discriminator")
-			.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id");
+			.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
 
 		mappingBuilder.Entity<Dog>()
 			.HasTableName("Animals")
