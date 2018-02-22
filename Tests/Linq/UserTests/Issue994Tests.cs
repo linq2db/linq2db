@@ -82,6 +82,14 @@ public class Issue994Tests : TestBase
 		public Name DogName { get; set; }
 	}
 
+	public class BadDog : Dog
+	{
+	}
+
+	public class SuperBadDog : BadDog
+	{
+	}
+
 	public class Test
 	{
 		public int Id { get; set; }
@@ -230,6 +238,9 @@ public class Issue994Tests : TestBase
 			var dog = db.GetTable<Dog>().First();
 			db.Update(dog);
 			db.Update((Animal)dog);
+
+			//var bdog = new SuperBadDog();
+			//db.Insert((Dog)bdog);   //this is not possible with my change -> ;-( should it be?
 		}
 	}
 
