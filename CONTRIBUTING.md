@@ -115,7 +115,7 @@ The `[User]DataProviders.json` is a regular JSON file:
 
 #### UserDataProviders.json example (with description)
 
-```json
+```js
 {
     // .net framework 4.5 test configuration
     "NET45" :
