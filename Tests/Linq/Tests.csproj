@@ -171,6 +171,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<Compile Remove="SchemaProvider\SchemaProviderTests.cs" />
+		<Compile Remove="DataProvider\OracleTests.cs" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<None Update="x64\**\*">
 			<Link>x64/%(FileName)%(Extension)</Link>
@@ -214,7 +215,6 @@
 		<Compile Remove="DataProvider\SybaseTests.cs" />
 		<Compile Remove="DataProvider\SapHanaTests.cs" />
 		<Compile Remove="DataProvider\InformixTests.cs" />
-		<Compile Remove="DataProvider\OracleTests.cs" />
 		<Compile Remove="DataProvider\SqlServerTypesTests.cs" />
 		<Compile Remove="Data\MiniProfilerTests.cs" />
 		<Compile Remove="Linq\DataServiceTests.cs" />
@@ -222,5 +222,11 @@
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
 		<Compile Remove="**\PartialTrust*.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="Oracle.ManagedDataAccess">
+	    <HintPath>..\..\Redist\Oracle\Oracle.Core\Oracle.ManagedDataAccess.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 </Project>
