@@ -717,7 +717,7 @@ namespace LinqToDB.SqlQuery
 
 				query.Select.From.Tables.Clear();
 
-				var sources = new HashSet<ISqlTableSource>(tables.Select(t => t.Source));
+				var sources     = new HashSet<ISqlTableSource>(tables.Select(t => t.Source));
 				var foundFields = new HashSet<ISqlExpression>();
 
 				QueryHelper.CollectDependencies(query.RootQuery(), sources, foundFields);
@@ -731,7 +731,7 @@ namespace LinqToDB.SqlQuery
 					return toReplace.TryGetValue(e, out var newValue) ? newValue : e;
 				}
 
-				((ISqlExpressionWalkable) query.RootQuery()).Walk(false, TransformFunc);
+				((ISqlExpressionWalkable)query.RootQuery()).Walk(false, TransformFunc);
 				foreach (var j in joins)
 				{
 					((ISqlExpressionWalkable) j).Walk(false, TransformFunc);
@@ -785,7 +785,7 @@ namespace LinqToDB.SqlQuery
 			bool optimizeValues,
 			bool optimizeColumns)
 		{
-			var query = (SelectQuery)childSource. Source;
+			var query = (SelectQuery)childSource.Source;
 
 			var isQueryOK = query.From.Tables.Count == 1;
 
