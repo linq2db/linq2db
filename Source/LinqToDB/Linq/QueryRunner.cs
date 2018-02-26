@@ -7,7 +7,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Linq
 {
@@ -126,7 +125,7 @@ namespace LinqToDB.Linq
 							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType, p))
 				);
 
-				sql.Parameters  = parameters.ToList();
+				sql.Parameters = parameters.ToList();
 			}
 		}
 

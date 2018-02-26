@@ -442,5 +442,18 @@ namespace LinqToDB.SqlQuery
 
 		public abstract void WalkQueries(Func<SelectQuery, SelectQuery> func);
 
+		internal void EnsureFindTables()
+		{
+			new QueryVisitor().Visit(this, e =>
+			{
+				if (e is SqlField f)
+				{
+					var ts = SelectQuery?.GetTableSource(f.Table) ?? GetTableSource(f.Table);
+
+					if (ts == null && f != f.Table.All)
+						throw new SqlException("Table '{0}' not found.", f.Table);
+				}
+			});
+		}
 	}
 }

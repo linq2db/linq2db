@@ -760,6 +760,7 @@ namespace LinqToDB.SqlQuery
 							_visitedElements.Add(t, t);
 					}
 				}
+
 				_action2(q.From);
 				if (!_all && !_visitedElements.ContainsKey(q.From))
 					_visitedElements.Add(q.From, q.From);

@@ -27,6 +27,7 @@ namespace LinqToDB.SqlProvider
 		{
 			FinalizeCte(statement);
 
+//statement.EnsureFindTables();
 			//TODO: We can use Walk here but OptimizeUnions fails with subqueris. Needs revising.
 			statement.WalkQueries(
 				selectQuery =>
@@ -34,7 +35,8 @@ namespace LinqToDB.SqlProvider
 					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
 						SqlProviderFlags.IsApplyJoinSupported,
 						SqlProviderFlags.IsGroupByExpressionSupported);
-					if (!SqlProviderFlags.IsCountSubQuerySupported) selectQuery = MoveCountSubQuery(selectQuery);
+
+					if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
 					if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
 					if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
@@ -46,9 +48,11 @@ namespace LinqToDB.SqlProvider
 				}
 			);
 
-			if (Common.Configuration.Linq.OptimizeJoins)
+//statement.EnsureFindTables();
+			if (Configuration.Linq.OptimizeJoins)
 				OptimizeJoins(statement);
 
+//statement.EnsureFindTables();
 			statement.SetAliases();
 
 			return statement;

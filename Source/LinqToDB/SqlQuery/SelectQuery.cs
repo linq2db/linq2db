@@ -351,5 +351,23 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		#region Debug
+
+		internal void EnsureFindTables()
+		{
+			new QueryVisitor().Visit(this, e =>
+			{
+				if (e is SqlField f)
+				{
+					var ts = GetTableSource(f.Table);
+
+					if (ts == null && f != f.Table.All)
+						throw new SqlException("Table '{0}' not found.", f.Table);
+				}
+			});
+		}
+
+		#endregion
 	}
 }

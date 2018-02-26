@@ -37,8 +37,9 @@ namespace Tests.UserTests
 
 				Assert.That(expectedQuery.Count(), Is.EqualTo(resultQuery.Count()));
 
-				AreEqual(expectedQuery.Where(x => x.CountResult > 0),
-					     resultQuery  .Where(x => x.CountResult > 0));
+				AreEqual(
+					expectedQuery.Where(x => x.CountResult > 0),
+					resultQuery  .Where(x => x.CountResult > 0));
 			}
 		}
 
