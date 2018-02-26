@@ -1,3 +1,6 @@
+---
+uid: contributing
+---
 # Contributing guide
 
 ## Development rules and regulations, code style
