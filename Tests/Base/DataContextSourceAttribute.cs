@@ -18,7 +18,7 @@ namespace Tests
 
 		public DataContextSourceAttribute(bool includeLinqService, params string[] except)
 			: base(includeLinqService,
-				TestBase.Providers.Where(providerName => /*UserProviders.Contains(providerName) &&*/ except == null || !except.Contains(providerName)).ToArray())
+				TestBase.Providers.Where(providerName => TestBase.UserProviders.Contains(providerName) && except == null || !except.Contains(providerName)).ToArray())
 		{
 		}
 	}

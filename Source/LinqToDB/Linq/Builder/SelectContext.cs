@@ -924,7 +924,13 @@ namespace LinqToDB.Linq.Builder
 					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
 					var newExpression   = GetExpression(expression, levelExpression, Body);
 
-					return action(this, newExpression, 0);
+					Builder.UpdateConvertedExpression(expression, newExpression);
+
+					var result = action(this, newExpression, 0);
+
+					Builder.RemoveConvertedExpression(newExpression);
+
+					return result;
 				}
 			}
 
