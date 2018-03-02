@@ -102,7 +102,7 @@ namespace Tests
 
 					if (isIgnore)
 					{
-						if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
+						// if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
 							test.RunState = RunState.Ignored;
 
 #if !APPVEYOR && !TRAVIS

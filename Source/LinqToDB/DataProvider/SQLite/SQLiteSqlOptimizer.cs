@@ -94,10 +94,10 @@ namespace LinqToDB.DataProvider.SQLite
 				if (e.Expr.StartsWith("DateTime"))
 				{
 					if (e.Expr.EndsWith("Quarter')"))
-						return new SqlExpression(e.SystemType, "DateTime({1}, '{0} Month')", Precedence.Primary, Mul(e.Parameters[0], 3), e.Parameters[1]);
+						return new SqlExpression(e.SystemType, "DateTime({1}, {0} || ' Month')", Precedence.Primary, Mul(e.Parameters[0], 3), e.Parameters[1]);
 
 					if (e.Expr.EndsWith("Week')"))
-						return new SqlExpression(e.SystemType, "DateTime({1}, '{0} Day')",   Precedence.Primary, Mul(e.Parameters[0], 7), e.Parameters[1]);
+						return new SqlExpression(e.SystemType, "DateTime({1}, {0} || ' Day')",   Precedence.Primary, Mul(e.Parameters[0], 7), e.Parameters[1]);
 				}
 			}
 

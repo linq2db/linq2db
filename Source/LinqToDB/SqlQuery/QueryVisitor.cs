@@ -752,7 +752,7 @@ namespace LinqToDB.SqlQuery
 
 		void Visit2X(SelectQuery q)
 		{
-					Visit2(q.Select);
+			Visit2(q.Select);
 
 			// Visit2(q.From);
 			//
@@ -774,6 +774,7 @@ namespace LinqToDB.SqlQuery
 							_visitedElements.Add(t, t);
 					}
 				}
+
 				_action2(q.From);
 				if (!_all && !_visitedElements.ContainsKey(q.From))
 					_visitedElements.Add(q.From, q.From);
@@ -937,8 +938,8 @@ namespace LinqToDB.SqlQuery
 
 			switch (element.ElementType)
 			{
-				case QueryElementType.SqlFunction       : return Find(((SqlFunction)                   element).Parameters,      find);
-				case QueryElementType.SqlExpression     : return Find(((SqlExpression)                 element).Parameters,      find);
+				case QueryElementType.SqlFunction       : return Find(((SqlFunction)          element).Parameters,      find);
+				case QueryElementType.SqlExpression     : return Find(((SqlExpression)        element).Parameters,      find);
 				case QueryElementType.Column            : return Find(((SqlColumn)            element).Expression,      find);
 				case QueryElementType.SearchCondition   : return FindX((SqlSearchCondition)   element,                  find);
 				case QueryElementType.Condition         : return Find(((SqlCondition)         element).Predicate,       find);
@@ -1156,15 +1157,16 @@ namespace LinqToDB.SqlQuery
 					{
 						var table   = (SqlTable)element;
 						var fields1 = ToArray(table.Fields);
-						var fields2 = Convert(fields1,     action, f => new SqlField(f));
-						var targs   = table.TableArguments == null ? null : Convert(table.TableArguments, action);
+						var fields2 = Convert(fields1, action, f => new SqlField(f));
+						var targs   = table.TableArguments == null || table.TableArguments.Length == 0 ?
+							null : Convert(table.TableArguments, action);
 
-						var fe = fields2 == null || ReferenceEquals(fields1, fields2);
-						var ta = ReferenceEquals(table.TableArguments, targs);
+						var fe = fields2 != null && !ReferenceEquals(fields1, fields2);
+						var ta = targs   != null && !ReferenceEquals(table.TableArguments, targs);
 
-						if (!fe || !ta)
+						if (fe || ta)
 						{
-							if (fe)
+							if (!fe)
 							{
 								fields2 = fields1;
 
@@ -1191,16 +1193,17 @@ namespace LinqToDB.SqlQuery
 						var table   = (SqlCteTable)element;
 						var fields1 = ToArray(table.Fields);
 						var fields2 = Convert(fields1,     action, f => new SqlField(f));
-						var targs   = table.TableArguments == null ? null : Convert(table.TableArguments, action);
+						var targs   = table.TableArguments == null || table.TableArguments.Length == 0 ?
+							null : Convert(table.TableArguments, action);
 						var cte     = Convert(table.Cte, action);
 
-						var fe = fields2 == null || ReferenceEquals(fields1, fields2);
-						var ta = ReferenceEquals(table.TableArguments, targs);
-						var ce = ReferenceEquals(table.Cte, cte);
+						var fe = fields2 != null && !ReferenceEquals(fields1, fields2);
+						var ta = targs   != null && !ReferenceEquals(table.TableArguments, targs);
+						var ce = cte     != null && !ReferenceEquals(table.Cte, cte);
 
-						if (!fe || !ta || !ce)
+						if (fe || ta || ce)
 						{
-							if (fe)
+							if (!fe)
 							{
 								fields2 = fields1;
 
@@ -1465,12 +1468,11 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-
 				case QueryElementType.InsertStatement:
 					{
 						var s = (SqlInsertStatement)element;
-						var insert      = s.Insert      != null ? (SqlInsertClause) ConvertInternal(s.Insert, action) : null;
-						var selectQuery = s.SelectQuery != null ? (SelectQuery)     ConvertInternal(s.SelectQuery, action) : null;
+						var insert      = s.Insert      != null ? (SqlInsertClause)ConvertInternal(s.Insert,      action) : null;
+						var selectQuery = s.SelectQuery != null ? (SelectQuery)    ConvertInternal(s.SelectQuery, action) : null;
 						var ps          = ConvertSafe(s.Parameters, action);
 
 						if (insert      != null && !ReferenceEquals(s.Insert,      insert)       ||
@@ -1728,7 +1730,7 @@ namespace LinqToDB.SqlQuery
 						{
 							doConvert = null != Find(q, e =>
 							{
-								if (_visitedElements.ContainsKey(e) && _visitedElements[e] != e)
+								if (_visitedElements.TryGetValue(e, out var ve) && ve != null && ve != e)
 									return true;
 
 								var ret = action(e);

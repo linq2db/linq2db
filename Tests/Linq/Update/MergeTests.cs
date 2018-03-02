@@ -56,6 +56,23 @@ namespace Tests.xUpdate
 			}
 		}
 
+		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		{
+			static string[] Supported = new[]
+			{
+				ProviderName.Sybase,
+					  ProviderName.SqlServer2008,
+					  ProviderName.SqlServer2012,
+					  ProviderName.SqlServer2014
+			};
+
+			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
+				: base(false, Supported.Except(except).ToArray())
+			{
+				ParallelScope = ParallelScope.None;
+			}
+		}
+
 		[Table("merge1")]
 		class TestMapping1
 		{
@@ -80,6 +97,17 @@ namespace Tests.xUpdate
 
 			[Column("fake", Configuration = "Other")]
 			public int Fake;
+		}
+
+		[Table("TestMergeIdentity", Configuration = ProviderName.Sybase)]
+		[Table("TestMergeIdentity", Configuration = ProviderName.SqlServer)]
+		class TestMappingWithIdentity
+		{
+			[Column("Id", SkipOnInsert = true, IsIdentity = true)]
+			public int Id;
+
+			[Column("Field")]
+			public int? Field;
 		}
 
 		[Table("merge2")]

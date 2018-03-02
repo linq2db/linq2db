@@ -713,11 +713,14 @@ namespace LinqToDB.DataProvider
 
 		protected void BuildDefaultInsert()
 		{
+			// insert identity field values only if it is supported by database and field is not excluded from
+			// implicit insert operation by SkipOnInsert attribute
+			// see https://github.com/linq2db/linq2db/issues/914 for more details
 			var insertColumns = TargetDescriptor.Columns
-				.Where(c => IsIdentityInsertSupported && c.IsIdentity || !c.SkipOnInsert)
+				.Where(c => (IsIdentityInsertSupported && c.IsIdentity && !c.SkipOnInsert) || !c.SkipOnInsert)
 				.ToList();
 
-			if (IsIdentityInsertSupported && TargetDescriptor.Columns.Any(c => c.IsIdentity))
+			if (IsIdentityInsertSupported && insertColumns.Any(c => c.IsIdentity))
 				OnInsertWithIdentity();
 
 			Command.AppendLine("(");

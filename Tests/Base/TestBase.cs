@@ -132,7 +132,7 @@ namespace Tests
 				File.Copy(file, destination, true);
 			}
 
-			UserProviders = new HashSet<string>(testSettings.Providers);
+			UserProviders = new HashSet<string>(testSettings.Providers, StringComparer.OrdinalIgnoreCase);
 
 			var logLevel   = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
