@@ -91,11 +91,11 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				BuildCommand(commandNumber);
+				BuildCommand(statement, commandNumber);
 			}
 		}
 
-		protected virtual void BuildCommand(int commandNumber)
+		protected virtual void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 		}
 
@@ -764,9 +764,18 @@ namespace LinqToDB.SqlProvider
 		{
 			var table = truncateTable.Table;
 
-			AppendIndent().Append("TRUN TABLE ");
+			AppendIndent();
+
+			BuildTruncateTable(truncateTable);
+
 			BuildPhysicalTable(table, null);
 			StringBuilder.AppendLine();
+		}
+
+		protected virtual void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			//StringBuilder.Append("TRUNCATE TABLE ");
+			StringBuilder.Append("DELETE FROM ");
 		}
 
 		protected virtual void BuildDropTableStatement(SqlDropTableStatement dropTable)

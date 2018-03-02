@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -323,6 +324,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).SqlDbType.ToString();
+		}
+
+		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			if (truncateTable.ResetIdentity || truncateTable.Table.Fields.Values.All(f => !f.IsIdentity))
+				StringBuilder.Append("TRUNCATE TABLE ");
+			else
+				StringBuilder.Append("DELETE FROM ");
 		}
 	}
 }

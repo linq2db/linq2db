@@ -19,7 +19,13 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			sequence.Statement = new SqlTruncateTableStatement { Table = sequence.SqlTable };
+			var reset = true;
+			var arg   = methodCall.Arguments[1].Unwrap();
+
+			if (arg is ConstantExpression c)
+				reset = (bool)c.Value;
+
+			sequence.Statement = new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset };
 
 			return new TruncateContext(buildInfo.Parent, sequence);
 		}

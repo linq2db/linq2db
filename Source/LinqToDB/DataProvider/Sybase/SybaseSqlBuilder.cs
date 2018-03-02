@@ -88,7 +88,7 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var selectQuery = deleteStatement.SelectQuery;
-			
+
 			AppendIndent();
 			StringBuilder.Append("DELETE");
 			BuildSkipFirst(selectQuery);
@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			var alias = GetTableAlias(table);
 			BuildPhysicalTable(source, alias);
-	
+
 			StringBuilder.AppendLine();
 		}
 
@@ -229,6 +229,29 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			dynamic p = parameter;
 			return p.AseDbType.ToString();
+		}
+
+		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			StringBuilder.Append("TRUNCATE TABLE ");
+		}
+
+		public override int CommandCount(SqlStatement statement)
+		{
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity && trun.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+
+			return 1;
+		}
+
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
+		{
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				StringBuilder.Append("sp_chgattribute ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
+			}
 		}
 	}
 }

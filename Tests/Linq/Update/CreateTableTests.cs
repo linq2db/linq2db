@@ -326,24 +326,5 @@ namespace Tests.xUpdate
 				table.DropTable();
 			}
 		}
-
-		[Test, DataContextSource]
-		public void TruncateTableTest(string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				try
-				{
-					db.DropTable<Person>("temptbl");
-				}
-				catch
-				{
-				}
-
-				var table = db.CreateTable<Person>("temptbl");
-				table.Truncate();
-				table.Drop();
-			}
-		}
 	}
 }

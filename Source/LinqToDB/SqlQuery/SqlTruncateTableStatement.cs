@@ -6,7 +6,8 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlTruncateTableStatement : SqlStatement
 	{
-		public SqlTable       Table           { get; set; }
+		public SqlTable Table         { get; set; }
+		public bool     ResetIdentity { get; set; }
 
 		public override QueryType          QueryType    => QueryType.TruncateTable;
 		public override QueryElementType   ElementType  => QueryElementType.TruncateTableStatement;

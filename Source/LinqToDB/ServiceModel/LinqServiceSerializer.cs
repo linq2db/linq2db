@@ -1098,6 +1098,7 @@ namespace LinqToDB.ServiceModel
 						var elem = (SqlTruncateTableStatement)e;
 
 						Append(elem.Table);
+						Append(elem.ResetIdentity);
 						Append(elem.Parameters);
 
 						break;
@@ -1753,11 +1754,13 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.TruncateTableStatement :
 					{
 						var table      = Read<SqlTable>();
+						var reset      = ReadBool();
 						var parameters = ReadArray<SqlParameter>();
 
 						obj = _statement = new SqlTruncateTableStatement
 						{
-							Table = table,
+							Table         = table,
+							ResetIdentity = reset
 						};
 						_statement.Parameters.AddRange(parameters);
 
