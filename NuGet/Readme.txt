@@ -35,6 +35,7 @@ LINQ to DB 2.0.0  Release Notes
 - for developers: migrated to latest C# version
 - for developers: moved methods SchemaProviderBase.ToTypeName(), SchemaProviderBase.ToValidName() to public API (#944, #963)
 - for developers: dual owner/schema naming replaced with schema name in code
+- for developers: ActiveIssue attribute added for tests
 
 
 LINQ to DB 1.10.1  Release Notes
