@@ -415,7 +415,39 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// temporary test
+		[Test, MergeDataContextSource]
+		public void InsertFromCrossJoinedSourceQuery2Workaround(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+							 select new TestMapping1()
+							 {
+								 Id = t1.Id,
+								 // this is workaround
+								 //Fake = t2.Fake,
+								 Field1 = t1.Field1,
+								 Field2 = t2.Field2,
+								 Field3 = t1.Field3,
+								 Field4 = t2.Field4,
+								 Field5 = t1.Field5
+							 };
+
+				var results = source.ToList();
+
+				// 5 commas after selected columns and 1 comma in join
+				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+
+				Assert.AreEqual(16, results.Count);
+			}
+		}
+
+		[ActiveIssue(896, Details = "Selects 10 columns instead of 6. Also see InsertFromCrossJoinedSourceQuery2Workaround for workaround")]
 		[Test, MergeDataContextSource]
 		public void InsertFromCrossJoinedSourceQuery2(string context)
 		{
@@ -438,10 +470,16 @@ namespace Tests.xUpdate
 								 Field5 = t1.Field5
 							 };
 
-				source.ToList();
+				var results = source.ToList();
+
+				// 5 commas after selected columns and 1 comma in join
+				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+
+				Assert.AreEqual(16, results.Count);
 			}
 		}
 
+		[ActiveIssue(896, Details = "Table not found for 't18.[3]t19.Field2'.")]
 		[Test, MergeDataContextSource]
 		public void InsertFromCrossJoinedSourceQuery(string context)
 		{
@@ -456,6 +494,7 @@ namespace Tests.xUpdate
 							 select new TestMapping1()
 							 {
 								 Id = t1.Id,
+								 // commented to skip error from InsertFromCrossJoinedSourceQuery3
 								 //Fake = t2.Fake,
 								 Field1 = t1.Field1,
 								 Field2 = t2.Field2,
@@ -473,17 +512,47 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				// TODO: asserts
-				//AssertRowCount(2, rows, context);
+				Assert.Fail("Almost done, uncomment and fix asserts below");
 
-				//Assert.AreEqual(6, result.Count);
+				AssertRowCount(0, rows, context);
+			}
+		}
 
-				//AssertRow(InitialTargetData[0], result[0], null, null);
-				//AssertRow(InitialTargetData[1], result[1], null, null);
-				//AssertRow(InitialTargetData[2], result[2], null, 203);
-				//AssertRow(InitialTargetData[3], result[3], null, null);
-				//AssertRow(InitialSourceData[2], result[4], null, null);
-				//AssertRow(InitialSourceData[3], result[5], null, 216);
+		[ActiveIssue(896, Details = "Regression from 1.x: Member 'TestMapping1.Fake' is not a table column.")]
+		[Test, MergeDataContextSource]
+		public void InsertFromCrossJoinedSourceQuery3(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+							 select new TestMapping1()
+							 {
+								 Id = t1.Id,
+								 Fake = t2.Fake,
+								 Field1 = t1.Field1,
+								 Field2 = t2.Field2,
+								 Field3 = t1.Field3,
+								 Field4 = t2.Field4,
+								 Field5 = t1.Field5
+							 };
+
+				var rows = table
+					.Merge()
+					.Using(source)
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.Fail("Almost done, uncomment and fix asserts below");
+
+				AssertRowCount(0, rows, context);
 			}
 		}
 		#endregion
