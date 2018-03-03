@@ -821,6 +821,7 @@ namespace Tests.Linq
 					select new { p, ch });
 		}
 
+		[ActiveIssue(577)]
 		[Test, DataContextSource]
 		public void MultipleLeftJoin(string context)
 		{
