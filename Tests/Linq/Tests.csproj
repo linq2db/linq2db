@@ -65,12 +65,12 @@
 
 		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
 		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" Condition=" '$(TargetFramework)' != 'net40' " />
+		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
 		<PackageReference Include="NUnit" Version="3.9.0" />
 		<PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.1" />
-		<PackageReference Include="Npgsql" Version="3.2.7" />
+		<PackageReference Include="Npgsql" Version="3.2.6" />
 		<PackageReference Include="Mono.Cecil" Version="0.10.0-beta6" />
 		<PackageReference Include="MySql.Data" Version="6.10.6" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
