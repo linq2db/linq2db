@@ -6,6 +6,7 @@ using System.Linq;
 
 namespace Tests.UserTests
 {
+#if !NETSTANDARD1_6
 	[ActiveIssue(792, Details = "It cannot be tested as it is server/provider bug. See referenced issue for proper fix")]
 	[TestFixture]
 	public class Issue792Tests : TestBase
@@ -40,4 +41,5 @@ namespace Tests.UserTests
 			}
 		}
 	}
+#endif
 }
