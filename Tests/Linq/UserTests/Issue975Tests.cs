@@ -8,6 +8,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
+	[ActiveIssue(975)]
 	public class Issue975Tests : TestBase
 	{
 		public static class SqlServer
