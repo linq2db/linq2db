@@ -1,22 +1,18 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
 
-namespace Tests.Merge
+using LinqToDB;
+using LinqToDB.Data;
+
+using NUnit.Framework;
+
+namespace Tests.xUpdate
 {
+	using Model;
+
 	public partial class MergeTests
 	{
-		[MergeDataContextSource(ProviderName.SapHana)]
+		[Test, MergeDataContextSource(ProviderName.SapHana)]
 		public void InsertUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -35,7 +31,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -48,7 +44,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.SapHana, ProviderName.Firebird)]
 		public void InsertDelete(string context)
 		{
@@ -80,7 +76,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void UpdateWithConditionDelete(string context)
 		{
@@ -110,10 +106,10 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(
+		[Test, MergeDataContextSource(
 			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Informix,
-			ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.SapHana, ProviderName.Firebird, ProviderName.Sybase)]
 		public void UpdateWithConditionDeleteWithConditionUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -152,7 +148,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void InsertUpdateBySourceWithConditionDeleteBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -192,7 +188,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void InsertDeleteUpdateBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -235,7 +231,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(
+		[Test, MergeDataContextSource(
 			TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
@@ -262,16 +258,19 @@ namespace Tests.Merge
 
 				AssertRowCount(5, rows, context);
 
-				Assert.AreEqual(4, result.Count);
+				if (context != ProviderName.Sybase)
+				{
+					Assert.AreEqual(4, result.Count);
 
-				AssertRow(InitialTargetData[1], result[0], null, null);
-				AssertRow(InitialTargetData[2], result[1], null, 203);
-				AssertRow(InitialSourceData[2], result[2], null, null);
-				AssertRow(InitialSourceData[3], result[3], null, 216);
+					AssertRow(InitialTargetData[1], result[0], null, null);
+					AssertRow(InitialTargetData[2], result[1], null, 203);
+					AssertRow(InitialSourceData[2], result[2], null, null);
+					AssertRow(InitialSourceData[3], result[3], null, 216);
+				}
 			}
 		}
 
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void UpdateInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -290,7 +289,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(6, result.Count);
 
@@ -303,7 +302,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 			TestProvName.SqlAzure, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void UpdateWithConditionUpdate(string context)
@@ -335,7 +334,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteInsert(string context)
 		{
@@ -367,7 +366,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteWithConditionUpdate(string context)
 		{
@@ -397,7 +396,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[Test, MergeUpdateWithDeleteDataContextSourceAttribute]
 		public void UpdateWithDeleteWithDeleteCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -415,7 +414,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(2, rows);
+				AssertRowCount(2, rows, context);
 
 				Assert.AreEqual(3, result.Count);
 
@@ -426,7 +425,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void InsertUpdateWithConditionDeleteWithCondition(string context)
 		{
@@ -459,7 +458,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSource]
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void InsertUpdateWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -478,7 +477,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 
@@ -491,7 +490,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void InsertDeleteWithConditionUpdate(string context)
 		{
@@ -525,7 +524,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void UpdateWithConditionInsertDeleteWithCondition(string context)
 		{
@@ -559,7 +558,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void UpdateWithConditionDeleteWithConditionInsert(string context)
 		{
@@ -593,7 +592,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteWithConditionUpdateWithConditionInsert(string context)
 		{
@@ -627,7 +626,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteWithConditionInsertUpdateWithCondition(string context)
 		{
@@ -660,7 +659,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeUpdateWithDeleteDataContextSourceAttribute]
+		[Test, MergeUpdateWithDeleteDataContextSourceAttribute]
 		public void UpdateWithDeleteInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -679,7 +678,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(5, result.Count);
 

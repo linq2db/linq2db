@@ -10,12 +10,12 @@ namespace Tests.UserTests
 		class TestDataContextSourceAttribute : DataContextSourceAttribute
 		{
 			public TestDataContextSourceAttribute() : base(
-				ProviderName.Access, ProviderName.SQLite, ProviderName.Oracle,
-				ProviderName.MySql, ProviderName.Sybase, 
+				ProviderName.Access, ProviderName.SQLiteClassic, ProviderName.Oracle,
+				ProviderName.MySql, ProviderName.Sybase,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.DB2,
 				TestProvName.MySql57,
-				TestProvName.SQLiteMs, ProviderName.SqlServer2000, TestProvName.MariaDB)
+				ProviderName.SQLiteMS, ProviderName.SqlServer2000, TestProvName.MariaDB)
 			{
 			}
 		}
@@ -39,7 +39,7 @@ namespace Tests.UserTests
 						.OrderByDescending(per => per.FirstName)
 						.Select(c => c.Patient.Diagnosis)
 						.Take(1)
-						.Any(_ => _.Contains("with"))); 
+						.Any(_ => _.Contains("with")));
 
 				AreEqual(e, q);
 			}

@@ -1,5 +1,6 @@
 ﻿using System;
-#if !NETSTANDARD
+
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.Data.Linq.Mapping;
 #else
 using System.Data;
@@ -14,7 +15,7 @@ namespace Tests.Linq
 {
 	using Model;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 	[System.Data.Linq.Mapping.Table(Name = "Person")]
 #else
 	[System.ComponentModel.DataAnnotations.Schema.Table("Person")]
@@ -23,7 +24,7 @@ namespace Tests.Linq
 	{
 		private int _personID;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[System.Data.Linq.Mapping.Column(
 			Storage       = "_personID",
 			Name          = "PersonID",
@@ -41,28 +42,28 @@ namespace Tests.Linq
 			get { return _personID;  }
 			set { _personID = value; }
 		}
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
 		public string FirstName { get; set; }
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
 		public string LastName;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
 #endif
 		public string MiddleName;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[System.Data.Linq.Mapping.Column]
 #else
 		[System.ComponentModel.DataAnnotations.Schema.Column]
@@ -73,7 +74,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class L2SAttributeTests : TestBase
 	{
-		[Test, IncludeDataContextSource(false, ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(false, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void IsDbGeneratedTest(string context)
 		{
 			using (var db = GetDataContext(context))

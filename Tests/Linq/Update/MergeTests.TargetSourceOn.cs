@@ -1,23 +1,18 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
 
-namespace Tests.Merge
+using LinqToDB.Data;
+
+using NUnit.Framework;
+
+namespace Tests.xUpdate
 {
+	using Model;
+
 	// tests for target/source/match condition configuration methods, not covered by other tests
 	public partial class MergeTests
 	{
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void MergeInto(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -47,7 +42,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void UsingTarget(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -68,7 +63,7 @@ namespace Tests.Merge
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
-				Assert.AreEqual(4, rows);
+				AssertRowCount(4, rows, context);
 
 				Assert.AreEqual(4, result.Count);
 
@@ -102,7 +97,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void OnKeysSingleField(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -148,7 +143,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void OnKeysMultipleFields(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -194,7 +189,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource]
+		[Test, MergeDataContextSource]
 		public void OnKeysFieldAndConstant(string context)
 		{
 			using (var db = new TestDataConnection(context))

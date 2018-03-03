@@ -16,5 +16,7 @@
   href: Join-Operators.md
 - name: Window Functions (Analytic Functions)
   href: Window-Functions-(Analytic-Functions).md
+- name: MERGE support
+  href: Merge-API.md
 - name: Videos
   href: video.md

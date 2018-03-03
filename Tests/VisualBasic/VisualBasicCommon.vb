@@ -1,4 +1,8 @@
-﻿Imports Tests.Model
+﻿Imports System
+Imports System.Collections.Generic
+Imports System.Linq
+
+Imports Tests.Model
 
 Public Module VisualBasicCommon
 

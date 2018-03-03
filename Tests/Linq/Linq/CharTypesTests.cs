@@ -1,14 +1,10 @@
-﻿using LinqToDB;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Data.Linq;
-using System.Globalization;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -108,7 +104,7 @@ namespace Tests.Linq
 		};
 
 		// TODO: MySql57 disabled due to encoding issues on CI
-		[DataContextSource(false, TestProvName.MySql57)]
+		[Test, DataContextSource(false, TestProvName.MySql57, ProviderName.Informix)]
 		public void StringTrimming(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -202,22 +198,22 @@ namespace Tests.Linq
 		{
 			// filter out null-character test cases for servers/providers without support
 			if (   context == ProviderName.PostgreSQL
-				|| context == ProviderName.PostgreSQL + ".LinqService"
+				|| context == ProviderName.PostgreSQL    + ".LinqService"
 				|| context == ProviderName.DB2
-				|| context == ProviderName.DB2        + ".LinqService"
-				|| context == ProviderName.SQLite
-				|| context == ProviderName.SQLite     + ".LinqService"
-				|| context == TestProvName.SQLiteMs
-				|| context == TestProvName.SQLiteMs   + ".LinqService"
+				|| context == ProviderName.DB2           + ".LinqService"
+				|| context == ProviderName.SQLiteClassic
+				|| context == ProviderName.SQLiteClassic + ".LinqService"
+				|| context == ProviderName.SQLiteMS
+				|| context == ProviderName.SQLiteMS      + ".LinqService"
 				|| context == ProviderName.SqlCe
-				|| context == ProviderName.SqlCe      + ".LinqService"
+				|| context == ProviderName.SqlCe         + ".LinqService"
 				|| context == ProviderName.SapHana
-				|| context == ProviderName.SapHana    + ".LinqService")
+				|| context == ProviderName.SapHana       + ".LinqService")
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")).ToArray();
 
 			// I wonder why
 			if (   context == ProviderName.Firebird
-				|| context == ProviderName.Firebird + ".LinqService"
+				|| context == ProviderName.Firebird  + ".LinqService"
 				|| context == TestProvName.Firebird3
 				|| context == TestProvName.Firebird3 + ".LinqService")
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\xA0")).ToArray();
@@ -257,7 +253,7 @@ namespace Tests.Linq
 		};
 
 		// TODO: MySql57 disabled due to encoding issues on CI
-		[DataContextSource(false, TestProvName.MySql57)]
+		[Test, DataContextSource(false, TestProvName.MySql57, ProviderName.Informix)]
 		public void CharTrimming(string context)
 		{
 			using (var db = GetDataContext(context))

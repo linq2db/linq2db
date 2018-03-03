@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net45</TargetFramework>
+		<NoWarn>1701;1702;1705;0219</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<None Remove="bbb.txt" />
+		<Content Include="bbb.txt" />
+
+		<None Update="EditableModelTest.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>EditableModelTest.generated.cs</LastGenOutput>
+		</None>
+
+		<Compile Update="EditableModelTest.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>EditableModelTest.tt</DependentUpon>
+		</Compile>
+
+		<None Update="ModelTest.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>ModelTest.generated.cs</LastGenOutput>
+		</None>
+
+		<Compile Update="ModelTest.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ModelTest.tt</DependentUpon>
+		</Compile>
+
+		<None Update="MultipleFiles.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MultipleFiles.generated.cs</LastGenOutput>
+		</None>
+
+		<Compile Update="MultipleFiles.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MultipleFiles.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+</Project>

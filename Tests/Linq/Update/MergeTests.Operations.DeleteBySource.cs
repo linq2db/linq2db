@@ -1,22 +1,17 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
 
-namespace Tests.Merge
+using LinqToDB.Data;
+
+using NUnit.Framework;
+
+namespace Tests.xUpdate
 {
+	using Model;
+
 	public partial class MergeTests
 	{
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void SameSourceDeleteBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -43,7 +38,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void SameSourceDeleteBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -71,7 +66,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void OtherSourceDeleteBySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -97,7 +92,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void OtherSourceDeleteBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -125,7 +120,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void AnonymousSourceDeleteBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -156,7 +151,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void AnonymousListSourceDeleteBySourceWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -187,7 +182,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void DeleteBySourceReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -219,7 +214,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void DeleteBySourceReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))

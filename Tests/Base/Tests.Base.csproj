@@ -1,0 +1,115 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Default.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net45;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
+		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
+		<AssemblyName>linq2db.Tests.Base</AssemblyName>
+		<Configurations>Debug;Release;AppVeyor;Travis</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
+		<DefineConstants>RELEASE;APPVEYOR</DefineConstants>
+		<DebugSymbols>false</DebugSymbols>
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Travis' ">
+		<DefineConstants>RELEASE;TRAVIS</DefineConstants>
+		<DebugSymbols>false</DebugSymbols>
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\Model\Tests.Model.csproj" />
+
+		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+		<PackageReference Include="NUnit" Version="3.9.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
+	</ItemGroup>
+
+
+	<!-- .NET Framework -->
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net45' ">
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System" />
+		<Reference Include="System.Configuration" />
+		<Reference Include="System.Core" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="System.Data.Linq" />
+		<Reference Include="System.Data.Services" />
+		<Reference Include="System.Threading.Tasks" />
+		<Reference Include="System.ServiceModel" />
+		<Reference Include="System.Web.Services" />
+		<Reference Include="System.Xml.Linq" />
+		<Reference Include="System.Data" />
+		<Reference Include="System.Xml" />
+		<Reference Include="System.Runtime.Serialization" />
+		<Reference Include="System.Windows.Forms" />
+
+		<None Update="SqlServerTypes\x64\msvcr120.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x86\msvcr120.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
+	</ItemGroup>
+
+
+	<!-- .NET Standard -->
+
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
+		<DefineConstants>$(DefineConstants);NETSTANDARD1_6</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
+		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+		<PackageReference Include="System.Data.Common" Version="4.3.0" />
+		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
+		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+		<PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0" />
+		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
+		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+
+		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
+
+		<Compile Remove="DataProvider\AccessTests.cs" />
+		<Compile Remove="DataProvider\DB2Tests.cs" />
+		<Compile Remove="DataProvider\SybaseTests.cs" />
+		<Compile Remove="DataProvider\SapHanaTests.cs" />
+		<Compile Remove="DataProvider\InformixTests.cs" />
+		<Compile Remove="DataProvider\OracleTests.cs" />
+		<Compile Remove="DataProvider\SqlServerTypesTests.cs" />
+		<Compile Remove="Data\MiniProfilerTests.cs" />
+		<Compile Remove="Linq\DataServiceTests.cs" />
+		<Compile Remove="Metadata\AttributeReaderTests.cs" />
+		<Compile Remove="Metadata\XmlReaderTests.cs" />
+		<Compile Remove="**\PartialTrust*.cs" />
+		<Compile Remove="Linq\FSharpTests.cs" />
+	</ItemGroup>
+</Project>

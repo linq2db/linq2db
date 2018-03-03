@@ -1,0 +1,29 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.Oracle.OracleTools.AssemblyName = "Oracle.ManagedDataAccess";
+	LinqToDB.DataProvider.Oracle.OracleTools.ResolveOracle(
+		typeof(Oracle.ManagedDataAccess.Client.OracleConnection).Assembly);
+#><#+
+LinqToDB.Data.DataConnection GetOracleConnection(string connectionString)
+{
+	//return LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(connectionString);
+	return new LinqToDB.Data.DataConnection(new LinqToDB.DataProvider.Oracle.OracleDataProvider("OracleManaged"), connectionString);
+}
+
+LinqToDB.Data.DataConnection GetOracleConnection(string server, string port, string database, string uid, string password)
+{
+	return GetOracleConnection(string.Format("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={0})(PORT={1}))(CONNECT_DATA=(SERVICE_NAME={2})));User Id={3};Password={4};", server, port, database, uid, password));
+}
+
+void LoadOracleMetadata(string connectionString)
+{
+	var dataConnection = GetOracleConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadOracleMetadata(string server, string port, string database, string uid, string password)
+{
+	var dataConnection = GetOracleConnection(server, port, database, uid, password);
+	LoadMetadata(dataConnection);
+}
+#>

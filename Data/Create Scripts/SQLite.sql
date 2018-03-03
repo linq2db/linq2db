@@ -21,9 +21,12 @@ CREATE TABLE InheritanceChild
 	TypeDiscriminator   integer          NULL,
 	Name                nvarchar(50)     NULL
 );
+
 --
 -- Person Table
 --
+DROP TABLE IF EXISTS Doctor;
+DROP TABLE IF EXISTS Patient;
 DROP TABLE IF EXISTS Person;
 CREATE TABLE Person
 (
@@ -42,7 +45,6 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',   
 --
 -- Doctor Table Extension
 --
-DROP TABLE IF EXISTS Doctor;
 CREATE TABLE Doctor
 (
 	PersonID integer      NOT NULL CONSTRAINT PK_Doctor PRIMARY KEY,
@@ -55,7 +57,6 @@ INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
 --
 -- Patient Table Extension
 --
-DROP TABLE IF EXISTS Patient;
 CREATE TABLE Patient
 (
 	PersonID  integer       NOT NULL CONSTRAINT PK_Patient PRIMARY KEY,

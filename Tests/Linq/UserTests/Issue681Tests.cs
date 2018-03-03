@@ -1,14 +1,17 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
-using Tests.Model;
 
-#if !NETFX_CORE && !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.ServiceModel;
 #endif
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -59,7 +62,7 @@ namespace Tests.UserTests
 				if (   context == ProviderName.SapHana
 					|| context == ProviderName.DB2)
 					Assert.Throws<LinqToDBException>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
-#if !NETFX_CORE && !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 				else if (context == ProviderName.SapHana + ".LinqService"
 					||   context == ProviderName.DB2     + ".LinqService")
 					Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<TestTable>().DatabaseName(dbName).ToList());
@@ -124,8 +127,8 @@ namespace Tests.UserTests
 		{
 			switch (context)
 			{
-				case ProviderName.SQLite:
-				case TestProvName.SQLiteMs:
+				case ProviderName.SQLiteClassic:
+				case ProviderName.SQLiteMS:
 					return "main";
 				case ProviderName.Access:
 					return "Database\\TestData";

@@ -2,6 +2,7 @@
 using System.Data.Linq;
 
 using LinqToDB.Mapping;
+using LinqToDB;
 
 namespace Tests.Model
 {
@@ -73,8 +74,10 @@ namespace Tests.Model
 	{
 		[PrimaryKey]                                    public int       ID;
 		[Column]                                        public decimal   MoneyValue;
-		// type it explicitly, because SQL Server 2005+ provider maps DateTime .Net type to DataType.DateTime2 by default
-		[Column(DataType = LinqToDB.DataType.DateTime)] public DateTime? DateTimeValue;
+		// type it explicitly for sql server, because SQL Server 2005+ provider maps DateTime .Net type to DataType.DateTime2 by default
+		[Column(DataType = DataType.DateTime,  Configuration = ProviderName.SqlServer)]
+		[Column(DataType = DataType.DateTime2, Configuration = ProviderName.Oracle)]
+		[Column]                                        public DateTime? DateTimeValue;
 		[Column]                                        public DateTime? DateTimeValue2;
 		[Column]                                        public bool?     BoolValue;
 		[Column]                                        public Guid?     GuidValue;

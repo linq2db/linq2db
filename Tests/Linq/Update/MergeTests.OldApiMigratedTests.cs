@@ -1,24 +1,22 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Linq;
-using Tests.Model;
-using LinqToDB.Linq;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using LinqToDB.DataProvider;
 
-namespace Tests.Merge
+using NUnit.Framework;
+
+namespace Tests.xUpdate
 {
+	using Model;
+
 	// Regression tests converted from tests for previous version of Merge API to new API.
 	public partial class MergeTests
 	{
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Sybase)]
+		[Test, MergeDataContextSource(ProviderName.Sybase)]
 		public void Merge(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -34,7 +32,7 @@ namespace Tests.Merge
 		}
 
 		// ASE: just fails
-		[MergeDataContextSource(ProviderName.Sybase)]
+		[Test, MergeDataContextSource(ProviderName.Sybase)]
 		public void MergeWithEmptySource(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -49,7 +47,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void MergeWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -66,7 +64,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void MergeWithDeletePredicate1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -83,7 +81,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void MergeWithDeletePredicate3(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -117,7 +115,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void MergeWithDeletePredicate4(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -153,7 +151,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeBySourceDataContextSource]
+		[Test, MergeBySourceDataContextSource]
 		public void MergeWithDeletePredicate5(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -186,7 +184,8 @@ namespace Tests.Merge
 
 		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
+		// Informix: install the latest server
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
 		public void MergeChar1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -194,7 +193,7 @@ namespace Tests.Merge
 			{
 				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
 				{
-					charDataType = '\x0',
+					charDataType  = '\x0',
 					ncharDataType = "\x0"
 				}));
 
@@ -210,7 +209,8 @@ namespace Tests.Merge
 
 		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase)]
+		// Informix: install the latest server
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
 		public void MergeChar2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -238,7 +238,7 @@ namespace Tests.Merge
 		// ASE: AllTypes table must be fixed
 		// DB2: ncharDataType and nvarcharDataType fields missing in AllTypes
 		// Informix, SAP: looks like \0 terminates string
-		[MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
 		public void MergeString(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -262,7 +262,7 @@ namespace Tests.Merge
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, rows);
+				AssertRowCount(1, rows, context);
 
 				var row = db.GetTable<AllType>().OrderByDescending(_ => _.ID).Take(1).Single();
 

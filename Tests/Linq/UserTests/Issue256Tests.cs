@@ -43,8 +43,14 @@ namespace Tests.UserTests
 		}
 
 		[AttributeUsage(AttributeTargets.Method)]
-		class Issue256TestSourceAttribute : DataContextSourceAttribute
+		class Issue256TestSourceAttribute : IncludeDataContextSourceAttribute
 		{
+			// tests are provider-agnostic
+			public Issue256TestSourceAttribute()
+				: base(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)
+			{
+			}
+
 			protected override IEnumerable<Tuple<object[], string>> GetParameters(string provider)
 			{
 				yield return Tuple.Create(new object[] { provider, (Action<ITestDataContext, byte[], int>)Unused }, (string)null);
@@ -70,14 +76,16 @@ namespace Tests.UserTests
 			}
 		}
 
-#if !MONO
-		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+#if !MONO && !NETSTANDARD1_6
+		[Test, Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Category("Explicit")]
 		public void SimpleTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
 			Test(context, action, 1);
 		}
 
-		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Test, Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Category("Explicit")]
 		public void RetryTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
 			Test(context, action, 3);
@@ -114,6 +122,8 @@ namespace Tests.UserTests
 		{
 			var value = RunTest(db, test, calls);
 
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
 			GC.Collect();
 
 			Assert.False(value.IsAlive);

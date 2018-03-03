@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.Windows.Forms;
 #endif
 
@@ -215,7 +215,9 @@ namespace Tests.Linq
 					.Select(p4 => new Person { ID = p4.p11.ID, FirstName = p4.p3.p1.FirstName }));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana, ParallelScope = ParallelScope.None)]
+		// ProviderName.SqlServer2014 disabled due to:
+		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana, ParallelScope = ParallelScope.None)]
 		public void MultipleSelect11(string context)
 		{
 			var dt = DateTime.Now;
@@ -453,7 +455,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, DataContextSource]
 		public void ConstractClass(string context)
 		{
@@ -531,14 +533,14 @@ namespace Tests.Linq
 		{
 			public class Factory : IObjectFactory
 			{
-#region IObjectFactory Members
+				#region IObjectFactory Members
 
 				public object CreateInstance(TypeAccessor typeAccessor)
 				{
 					return typeAccessor.CreateInstance();
 				}
 
-#endregion
+				#endregion
 			}
 
 			public int    PersonID;

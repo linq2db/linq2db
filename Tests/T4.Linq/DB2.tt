@@ -1,0 +1,23 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude"         #>
+<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\IBM.Data.DB2.dll"    #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"         #>
+<#
+	NamespaceName = "DB2DataContext";
+
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
+
+	//GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" };
+
+	LoadDB2Metadata("DBHost", "50000", "TESTDATA", "Administrator", "TestPassword");
+
+	//GetProcedure("ADMINISTRATOR.PERSON_SELECTBYKEY").ResultTable = GetTable("ADMINISTRATOR.Person");
+
+	//GetColumn("ADMINISTRATOR.Person", "PersonID").MemberName = "122";
+	//GetFK    ("ADMINISTRATOR.Person", "ID1").MemberName = "122";
+
+	GenerateModel();
+#>

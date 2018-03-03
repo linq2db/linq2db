@@ -1,19 +1,16 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
 
-namespace Tests.Merge
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
+
+namespace Tests.xUpdate
 {
+	using Model;
+
 	[TestFixture]
 	public partial class MergeTests : TestBase
 	{
@@ -30,17 +27,18 @@ namespace Tests.Merge
 			public MergeBySourceDataContextSourceAttribute()
 				: base(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)
 			{
+				ParallelScope = ParallelScope.None;
 			}
 		}
 
 		public class MergeDataContextSourceAttribute : DataContextSourceAttribute
 		{
-			private static string[] Unsupported = new []
+			static string[] Unsupported = new []
 			{
 				ProviderName.Access,
 				ProviderName.SqlCe,
-				ProviderName.SQLite,
-				TestProvName.SQLiteMs,
+				ProviderName.SQLiteClassic,
+				ProviderName.SQLiteMS,
 				ProviderName.SqlServer2000,
 				ProviderName.SqlServer2005,
 				ProviderName.PostgreSQL,
@@ -54,6 +52,24 @@ namespace Tests.Merge
 			public MergeDataContextSourceAttribute(params string[] except)
 				: base(false, Unsupported.Concat(except).ToArray())
 			{
+				ParallelScope = ParallelScope.None;
+			}
+		}
+
+		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		{
+			static string[] Supported = new[]
+			{
+				ProviderName.Sybase,
+					  ProviderName.SqlServer2008,
+					  ProviderName.SqlServer2012,
+					  ProviderName.SqlServer2014
+			};
+
+			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
+				: base(false, Supported.Except(except).ToArray())
+			{
+				ParallelScope = ParallelScope.None;
 			}
 		}
 
@@ -81,6 +97,17 @@ namespace Tests.Merge
 
 			[Column("fake", Configuration = "Other")]
 			public int Fake;
+		}
+
+		[Table("TestMergeIdentity", Configuration = ProviderName.Sybase)]
+		[Table("TestMergeIdentity", Configuration = ProviderName.SqlServer)]
+		class TestMappingWithIdentity
+		{
+			[Column("Id", SkipOnInsert = true, IsIdentity = true)]
+			public int Id;
+
+			[Column("Field")]
+			public int? Field;
 		}
 
 		[Table("merge2")]
@@ -185,11 +212,11 @@ namespace Tests.Merge
 						}
 				}
 
-		[DataContextSource(false)]
+		[Test, DataContextSource(false)]
 		public void TestDataGenerationTest(string context)
 		{
 			using (var db = new TestDataConnection(context))
-				{
+			{
 				PrepareData(db);
 
 				var result1 = GetTarget(db).OrderBy(_ => _.Id).ToList();
@@ -207,14 +234,16 @@ namespace Tests.Merge
 				AssertRow(InitialSourceData[1], result2[1], null, 214);
 				AssertRow(InitialSourceData[2], result2[2], null, null);
 				AssertRow(InitialSourceData[3], result2[3], null, 216);
-				}
 			}
+		}
 
 		private void AssertRowCount(int expected, int actual, string context)
 		{
 			// another sybase quirk, nothing surprising
 			if (context == ProviderName.Sybase)
 				Assert.LessOrEqual(expected, actual);
+			else if (context == ProviderName.OracleNative && actual == -1)
+			{ }
 			else
 				Assert.AreEqual(expected, actual);
 		}

@@ -1,22 +1,18 @@
-﻿using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using Tests.Model;
 
-namespace Tests.Merge
+using LinqToDB;
+using LinqToDB.Data;
+
+using NUnit.Framework;
+
+namespace Tests.xUpdate
 {
+	using Model;
+
 	public partial class MergeTests
 	{
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.SapHana, ProviderName.Firebird, ProviderName.Firebird)]
 		public void SameSourceDelete(string context)
 		{
@@ -44,7 +40,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceDeleteWithPredicate(string context)
 		{
@@ -73,7 +69,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 			TestProvName.SqlAzure, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void SameSourceDeleteWithPredicateDelete(string context)
@@ -103,7 +99,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.SapHana, ProviderName.Firebird)]
 		public void OtherSourceDelete(string context)
 		{
@@ -132,7 +128,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void OtherSourceDeleteWithPredicate(string context)
 		{
@@ -161,7 +157,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void AnonymousSourceDeleteWithPredicate(string context)
 		{
@@ -199,7 +195,7 @@ namespace Tests.Merge
 		}
 
 		// Oracle: implicit Delete to UpdateWithDelete conversion failed here
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void AnonymousListSourceDeleteWithPredicate(string context)
 		{
@@ -236,7 +232,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteReservedAndCaseNames(string context)
 		{
@@ -273,7 +269,7 @@ namespace Tests.Merge
 			}
 		}
 
-		[MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteReservedAndCaseNamesFromList(string context)
 		{

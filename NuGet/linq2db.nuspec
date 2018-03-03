@@ -2,10 +2,10 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db</id>
-		<version>1.0.7.4</version>
+		<version>2.0.0-rc</version>
 		<title>LINQ to DB</title>
-		<authors>Igor Tkachev</authors>
-		<owners />
+		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
+		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
 		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
 		<projectUrl>http://linq2db.com</projectUrl>
 		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
@@ -15,20 +15,38 @@
 		<tags>
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+		<dependencies>
+			<group targetFramework=".NETFramework4.5" />
+			<group targetFramework=".NETStandard1.6">
+				<dependency id="Microsoft.CSharp"                     version="4.3.0" />
+				<dependency id="System.Diagnostics.TraceSource"       version="4.3.0" />
+				<dependency id="Microsoft.Extensions.DependencyModel" version="1.1.0" />
+				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
+				<dependency id="System.ComponentModel.TypeConverter"  version="4.3.0" />
+				<dependency id="System.Linq.Queryable"                version="4.3.0" />
+				<dependency id="System.Runtime.Loader"                version="4.3.0" />
+				<dependency id="System.Xml.XmlDocument"               version="4.3.0" />
+				<dependency id="System.Data.SqlClient"                version="4.4.2" />
+				<dependency id="System.Net.NetworkInformation"        version="4.3.0" />
+			</group>
+			<group targetFramework=".NETStandard2.0">
+				<dependency id="Microsoft.CSharp"                     version="4.4.0" />
+				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
+				<dependency id="System.Data.SqlClient"                version="4.4.2" />
+			</group>
+			<group targetFramework=".NETCoreApp2.0">
+				<dependency id="System.ComponentModel.Annotations"    version="4.4.1" />
+				<dependency id="System.Data.SqlClient"                version="4.4.2" />
+			</group>
+		</dependencies>
 	</metadata>
+
 	<files>
-		<file src="Readme.txt"                                                  target="" />
-		<file src="..\Source\bin\Release.4.0\linq2db.dll"                       target="lib\net40" />
-		<file src="..\Source\bin\Release.4.0\linq2db.pdb"                       target="lib\net40" />
-		<file src="..\Source\bin\Release.4.5\linq2db.dll"                       target="lib\net45" />
-		<file src="..\Source\bin\Release.4.5\linq2db.pdb"                       target="lib\net45" />
-		<file src="..\Source\bin\Release.Silverlight.4\linq2db.Silverlight.dll" target="lib\sl4" />
-		<file src="..\Source\bin\Release.Silverlight.4\linq2db.Silverlight.pdb" target="lib\sl4" />
-		<file src="..\Source\bin\Release.Silverlight.5\linq2db.Silverlight.dll" target="lib\sl5" />
-		<file src="..\Source\bin\Release.Silverlight.5\linq2db.Silverlight.pdb" target="lib\sl5" />
-		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.dll" target="lib\netcore45" />
-		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.pdb" target="lib\netcore45" />
-		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.dll" target="lib\windows8" />
-		<file src="..\Source\bin\Release.WindowsStore\linq2db.WindowsStore.pdb" target="lib\windows8" />
+		<file src="Readme.txt"         />
+		<file src="..\MIT-LICENSE.txt" />
+
+		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.pdb" target="lib\" />
+		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.xml" target="lib\" />
+		<file src="..\Source\LinqToDB\bin\Release\**\linq2db.dll" target="lib\" />
 	</files>
 </package>
