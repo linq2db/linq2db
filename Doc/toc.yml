@@ -1,0 +1,10 @@
+- name:
+  homepage: ../readme.md
+- name: Articles
+  href: articles/
+- name: Api Documentation
+  href: api/
+- name: Blog
+  href: http://blog.linq2db.com
+- name: GitHub
+  href: https://github.com/linq2db

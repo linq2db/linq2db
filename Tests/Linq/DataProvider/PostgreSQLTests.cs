@@ -22,12 +22,12 @@ using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
 
-using Tests.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Tests.DataProvider
 {
+	using Model;
 
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
@@ -105,7 +105,7 @@ namespace Tests.DataProvider
 
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
 			{
-				var tests = UserProviders.ContainsKey(_providerName) ?
+				var tests = UserProviders.Contains(_providerName) ?
 					new[]
 					{
 						new TypeTestData("bigintDataType", 0,   (n,t,c) => t.TestTypeEx<long?>             (c, n, DataType.Int64),   1000000),
@@ -190,10 +190,10 @@ namespace Tests.DataProvider
 
 					test.Properties.Set(PropertyNames.Category, _providerName);
 
-					if (!UserProviders.ContainsKey(_providerName))
+					if (!UserProviders.Contains(_providerName))
 					{
 						test.RunState = RunState.Ignored;
-						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See DataProviders.json");
 					}
 
 					yield return test;
@@ -324,7 +324,7 @@ namespace Tests.DataProvider
 		}
 
 		/// <summary>
-		/// Ensure we can pass data as Json parameter type and get 
+		/// Ensure we can pass data as Json parameter type and get
 		/// same value back out equivalent in value
 		/// </summary>
 		[Test, IncludeDataContextSource(CurrentProvider)]
@@ -707,12 +707,40 @@ namespace Tests.DataProvider
 			}
 		}
 
+		public class CreateTableTestClass
+		{
+			public DateTimeOffset TimeOffset;
+			public Guid           Guid;
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void CreateTableTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new LocalTable<CreateTableTestClass>(db))
+			{
+				var e = new CreateTableTestClass
+				{
+					Guid = Guid.NewGuid(),
+					TimeOffset = new DateTimeOffset(2017, 06, 17, 16, 40, 33, 0, TimeSpan.FromHours(-3))
+				};
+				db.Insert(e);
+
+				var e2 = db.GetTable<CreateTableTestClass>()
+					.FirstOrDefault(_ => _.Guid == e.Guid);
+
+				Assert.IsNotNull(e2);
+				Assert.AreEqual(e.Guid,       e2.Guid);
+				Assert.AreEqual(e.TimeOffset, e2.TimeOffset);
+			}
+		}
+
 #if !NPGSQL226
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void NpgsqlDateTimeTest(string context)
 		{
 			PostgreSQLTools.GetDataProvider().CreateConnection(DataConnection.GetConnectionString(context));
-				
+
 			var d  = new NpgsqlDateTime(DateTime.Today);
 			var o  = new DateTimeOffset(DateTime.Today);
 			var c1 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset>();

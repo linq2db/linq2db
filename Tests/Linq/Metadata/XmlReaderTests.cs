@@ -2,6 +2,7 @@
 using System.Data.Linq.Mapping;
 using System.IO;
 using System.Text;
+
 using LinqToDB.Expressions;
 using LinqToDB.Metadata;
 
@@ -67,7 +68,7 @@ namespace Tests.Metadata
 		public void FieldAttribute()
 		{
 			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes<ColumnAttribute>(MemberHelper.MemberOf<XmlReaderTests>(a => a.Field1));
+			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Field1));
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
@@ -80,7 +81,7 @@ namespace Tests.Metadata
 		public void PropertyAttribute()
 		{
 			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes<ColumnAttribute>(MemberHelper.MemberOf<XmlReaderTests>(a => a.Property1));
+			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Property1));
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);

@@ -8,6 +8,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -16,6 +17,7 @@ using MySql.Data.Types;
 namespace Tests.DataProvider
 {
 	using Model;
+	using System.Diagnostics;
 
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
@@ -330,10 +332,22 @@ namespace Tests.DataProvider
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
 		}
 
+		[Test, MySqlDataContext, Explicit("It works too long.")]
+		public void BulkCopyRetrieveSequencesMultipleRows(string context)
+		{
+			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
+		}
+
 		[Test, MySqlDataContextAttribute, Ignore("It works too long.")]
 		public void BulkCopyProviderSpecific(string context)
 		{
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[Test, MySqlDataContext, Explicit("It works too long.")]
+		public void BulkCopyRetrieveSequencesProviderSpecific(string context)
+		{
+			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
 		}
 
 		[Test, MySqlDataContextAttribute]
@@ -346,19 +360,46 @@ namespace Tests.DataProvider
 					db.BulkCopy(
 						new BulkCopyOptions { BulkCopyType = bulkCopyType },
 						Enumerable.Range(0, 10).Select(n =>
-							new LinqDataTypes
-							{
-								ID            = 4000 + n,
-								MoneyValue    = 1000m + n,
-								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
-								SmallIntValue = (short)n
-							}
-						));
-
+						new LinqDataTypes
+						{
+							ID = 4000 + n,
+							MoneyValue = 1000m + n,
+							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+							BoolValue = true,
+							GuidValue = Guid.NewGuid(),
+							SmallIntValue = (short)n
+						}));
 					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
+			}
+		}
+
+		static void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType)
+		{
+			var data = new[]
+			{
+				new Doctor { Taxonomy = "Neurologist"},
+				new Doctor { Taxonomy = "Sports Medicine"},
+				new Doctor { Taxonomy = "Optometrist"},
+				new Doctor { Taxonomy = "Pediatrics" },
+				new Doctor { Taxonomy = "Psychiatry" }
+			};
+
+			using (var db = new TestDataConnection(context))
+			{
+				var options = new BulkCopyOptions
+				{
+					MaxBatchSize = 5,
+					//RetrieveSequence = true,
+					KeepIdentity = true,
+					BulkCopyType = bulkCopyType,
+					NotifyAfter  = 3,
+					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+				};
+				db.BulkCopy(options, data.RetrieveIdentity(db));
+
+				foreach (var d in data)
+					Assert.That(d.PersonID, Is.GreaterThan(0));
 			}
 		}
 
@@ -401,7 +442,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, MySqlDataContext(false)]
 		public void SchemaProviderTest(string context)
 		{

@@ -67,7 +67,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void CompiledTest5(string context)
 		{
-			var query = CompiledQuery.Compile((ITestDataContext db, object[] ps) => 
+			var query = CompiledQuery.Compile((ITestDataContext db, object[] ps) =>
 				db.Parent.Where(p => p.ParentID == (int)ps[0] && p.Value1 == (int?)ps[1]));
 
 			using (var db = GetDataContext(context))
@@ -97,7 +97,7 @@ namespace Tests.Linq
 				query(db).ToList().Count();
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void ConcurentTest1(string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
@@ -133,7 +133,7 @@ namespace Tests.Linq
 				Assert.AreEqual(results[i,0], results[i,1]);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void ConcurentTest2(string context)
 		{
 			var threads = new Thread[100];

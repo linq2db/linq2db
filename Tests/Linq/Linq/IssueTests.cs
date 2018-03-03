@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Tests.Model;
-
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class IssueTests : TestBase
 	{
@@ -57,7 +59,7 @@ namespace Tests.Linq
 				db.Update(t1);
 			}
 		}
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test, IncludeDataContextSource(
@@ -109,13 +111,13 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource()]
- 		public void Issue75Test(string context)
- 		{
- 			using (var db = GetDataContext(context))
- 			{
- 				var result = db.Child.Select(c => new
+		public void Issue75Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Child.Select(c => new
 				{
- 					c.ChildID,
+					c.ChildID,
 					c.ParentID,
 					CountChildren  = db.Child.Count(c2 => c2.ParentID == c.ParentID),
 					CountChildren2 = db.Child.Count(c2 => c2.ParentID == c.ParentID),
@@ -123,17 +125,17 @@ namespace Tests.Linq
 					HasChildren2   = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
 					AllChildren    = db.Child.All  (c2 => c2.ParentID == c.ParentID),
 					AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
- 				});
+				});
 
- 				result =
- 					from child in result
- 					join parent in db.Parent on child.ParentID equals parent.ParentID
- 					where parent.Value1 < 7
- 					select child;
+				result =
+					from child in result
+					join parent in db.Parent on child.ParentID equals parent.ParentID
+					where parent.Value1 < 7
+					select child;
 
- 				var expected = Child.Select(c => new
+				var expected = Child.Select(c => new
 				{
- 					c.ChildID,
+					c.ChildID,
 					c.ParentID,
 					CountChildren  = Child.Count(c2 => c2.ParentID == c.ParentID),
 					CountChildren2 = Child.Count(c2 => c2.ParentID == c.ParentID),
@@ -141,16 +143,16 @@ namespace Tests.Linq
 					HasChildren2   = Child.Any  (c2 => c2.ParentID == c.ParentID),
 					AllChildren    = Child.All  (c2 => c2.ParentID == c.ParentID),
 					AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID)
- 				});
+				});
 
- 				expected =
- 					from child in expected
- 					join parent in Parent on child.ParentID equals parent.ParentID
- 					where parent.Value1 < 7
- 					select child;
+				expected =
+					from child in expected
+					join parent in Parent on child.ParentID equals parent.ParentID
+					where parent.Value1 < 7
+					select child;
 
 				AreEqual(expected, result);
- 			}
+			}
 		}
 
 		[Test, DataContextSource]
@@ -206,6 +208,18 @@ namespace Tests.Linq
 					   Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1),
 					db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1)
 					);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue424Test3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1),
+					db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1)
+				);
 			}
 		}
 
@@ -327,5 +341,244 @@ namespace Tests.Linq
 				AreEqual(expected, query);
 			}
 		}
+
+		public class PersonWrapper
+		{
+			public int    ID;
+			public string FirstName;
+			public string SecondName;
+		}
+
+		[Test, DataContextSource]
+		public void Issue535Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person
+						where p.FirstName.StartsWith("J")
+						select new PersonWrapper
+						{
+							ID         = p.ID,
+							FirstName  = p.FirstName,
+							SecondName = p.LastName
+						};
+
+				q = from p in q
+					where p.ID == 1 || p.SecondName == "fail"
+					select p;
+
+				Assert.IsNotNull(q.FirstOrDefault());
+			}
+		}
+
+		[Table(Name = "Person")]
+		public class Person376 //: Person
+		{
+			[SequenceName(ProviderName.Firebird, "PersonID")]
+			[Column("PersonID"), Identity, PrimaryKey]
+			public int ID;
+			[NotNull] public string FirstName { get; set; }
+			[NotNull] public string LastName;
+			[Nullable] public string MiddleName;
+
+
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(Model.Doctor.PersonID), CanBeNull = true)]
+			public Doctor Doctor { get; set; }
+		}
+
+		public class PersonDto
+		{
+			public int    Id;
+			public string Name;
+
+			public DoctorDto Doc;
+		}
+
+		public class DoctorDto
+		{
+			public int    PersonId;
+			public string Taxonomy;
+		}
+
+		[ExpressionMethod("MapToDtoExpr1")]
+		public static PersonDto MapToDto(Person376 person)
+		{
+			return MapToDtoExpr1().Compile()(person);
+		}
+
+		[ExpressionMethod("MapToDtoExpr2")]
+		public static DoctorDto MapToDto(Doctor doctor)
+		{
+			return MapToDtoExpr2().Compile()(doctor);
+		}
+
+		private static Expression<Func<Person376, PersonDto>> MapToDtoExpr1()
+		{
+			return x => new PersonDto
+			{
+
+				Id   = x.ID,
+				Name = x.FirstName,
+				Doc  = x.Doctor != null ? MapToDto(x.Doctor) : null
+			};
+		}
+
+		private static Expression<Func<Doctor, DoctorDto>> MapToDtoExpr2()
+		{
+			return x => new DoctorDto
+			{
+				PersonId = x.PersonID,
+				Taxonomy = x.Taxonomy
+			};
+		}
+
+		[Test, DataContextSource]
+		public void Issue376(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var l = db
+					.GetTable<Person376>()
+					.Where(_ => _.Doctor.Taxonomy.Length >= 0 || _.Doctor.Taxonomy == null)
+					.Select(_ => MapToDto(_)).ToList();
+
+				Assert.IsNotEmpty(l);
+				Assert.IsNotEmpty(l.Where(_ => _.Doc == null));
+				Assert.IsNotEmpty(l.Where(_ => _.Doc != null));
+			}
+		}
+
+
+		[Table("Person", IsColumnAttributeRequired = false)]
+		public class Person88
+		{
+			[SequenceName(ProviderName.Firebird, "PersonID")]
+			[Column("PersonID"), Identity, PrimaryKey] public int    ID;
+			[NotNull]                                  public string FirstName { get; set; }
+			[NotNull]                                  public string LastName;
+			[Nullable]                                 public string MiddleName;
+			                                           public char   Gender;
+		}
+
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
+		public void Issue88(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var llc = db
+					.GetTable<Person88>()
+					.Where(_ => _.ID == 1 && _.Gender == 'M');
+
+				var lrc = db
+					.GetTable<Person88>()
+					.Where(_ => _.ID == 1 && 'M' == _.Gender);
+
+				var gender = 'M';
+				var llp = db
+					.GetTable<Person88>()
+					.Where(_ => _.ID == 1 && _.Gender == gender);
+
+				var lrp = db
+					.GetTable<Person88>()
+					.Where(_ => _.ID == 1 && gender == _.Gender);
+
+				Assert.IsNotEmpty(llc);
+				Assert.IsNotEmpty(lrc);
+				Assert.IsNotEmpty(llp);
+				Assert.IsNotEmpty(lrp);
+			}
+
+		}
+
+
+		[Test, DataContextSource]
+		public void Issue173(string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new AllowMultipleQuery())
+			{
+				var result =
+					from r in db.GetTable<Parent>()
+					select new
+					{
+						id = r.ParentID,
+					};
+				result = result.Where(_ => _.id == 1);
+
+				var expected =
+					from r in Parent
+					select new
+					{
+						id = r.ParentID,
+					};
+				expected = expected.Where(_ => _.id == 1);
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue909(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = new int?[] { 123 };
+
+				var expected = from p in Parent
+					where !values.Contains(p.Value1)
+					select p;
+
+				var actual = from p in db.GetTable<Parent>()
+						where !values.Contains(p.Value1)
+						select p;
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue909Join(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = new int?[] { 123 };
+
+				var expected = from c in Child
+					from p in Parent
+					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
+					select c;
+
+				var actual = from c in db.GetTable<Child>()
+					from p in db.GetTable<Parent>()
+					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
+					select c;
+
+				AreEqual(expected, actual);
+			}
+		}
+		[Test, DataContextSource]
+		public void Issue909Subquery(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = new int[] { 123 };
+
+				var expected = from c in Child
+					where (from p in Parent
+						where p.ParentID == c.ParentID && (p.Value1 == null || !values.Contains(p.Value1.Value))
+						select p).Any()
+					select c;
+
+				var actual = from c in db.GetTable<Child>()
+					where (from p in db.GetTable<Parent>()
+						where p.ParentID == c.ParentID && !values.Contains(p.Value1.Value)
+						select p).Any()
+					select c;
+
+				AreEqual(expected, actual);
+			}
+		}
+
 	}
+
 }

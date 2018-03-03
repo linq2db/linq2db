@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
+using Tests.UserTests;
 
 namespace Tests.Linq
 {
@@ -107,6 +109,45 @@ namespace Tests.Linq
 
 					Assert.That(list[0], Is.EqualTo("John"));
 				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task FirstAsyncTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var person = await db.Person.FirstAsync(p => p.ID == 1);
+
+				Assert.That(person.ID, Is.EqualTo(1));
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task ContainsAsyncTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var p = new Person { ID = 1 };
+
+				var r = await db.Person.ContainsAsync(p);
+
+				Assert.That(r, Is.True);
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task TestFirstOrDefault(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var param = 4;
+				var resultQuery =
+						from o in db.Parent
+						where Sql.Ext.In(o.ParentID, 1, 2, 3, (int?)null) || o.ParentID == param
+						select o;
+
+				var zz = await resultQuery.FirstOrDefaultAsync();
 			}
 		}
 	}

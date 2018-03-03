@@ -783,6 +783,30 @@ namespace Tests.Linq
 					});
 		}
 
+		[Test, DataContextSource(ProviderName.SqlCe)]
+		public void Aggregates5(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from ch in Child
+					group ch by ch.ParentID into g
+					select new
+					{
+						Count1 = g.Count(c => c.ChildID > 30),
+						Count2 = g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
+						Count3 = g.Count()
+					},
+					from ch in db.Child
+					group ch by ch.ParentID into g
+					select new
+					{
+						Count1 = g.Count(c => c.ChildID > 30),
+						Count2 = g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
+						Count3 = g.Count()
+					});
+		}
+
+
 		[Test, DataContextSource]
 		public void SelectMax(string context)
 		{
@@ -1609,7 +1633,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: [Test, DataContextSource]
+		[Test, DataContextSource]
 		public void GroupByDate1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1634,7 +1658,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: [Test, DataContextSource]
+		[Test, DataContextSource]
 		public void GroupByDate2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1655,6 +1679,31 @@ namespace Tests.Linq
 						Total = grp.Sum(_ => _.MoneyValue),
 						year  = grp.Key.Year,
 						month = grp.Key.Month
+					});
+			}
+		}
+
+		[Test, DataContextSource]
+		public void GroupByDate3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types2
+					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue.Value.Year, t.DateTimeValue.Value.Month, 1) }   into grp
+					select new
+					{
+						Total = grp.Sum(_ => _.MoneyValue),
+						year  = grp.Key.Date.Value.Year,
+						month = grp.Key.Date.Value.Month
+					},
+					from t in db.Types2
+					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue.Value.Year, t.DateTimeValue.Value.Month, 1) } into grp
+					select new
+					{
+						Total = grp.Sum(_ => _.MoneyValue),
+						year  = grp.Key.Date.Value.Year,
+						month = grp.Key.Date.Value.Month
 					});
 			}
 		}
@@ -1822,6 +1871,59 @@ namespace Tests.Linq
 					group g by g.ParentID into gc
 					select gc.Key
 				);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void GroupByGuard(string context)
+		{
+			using(new AllowMultipleQuery())
+			using(new GuardGrouping())
+			using (var db = GetDataContext(context))
+			{
+				// group on client
+				var dictionary1 = db.Person
+					.AsEnumerable()
+					.GroupBy(_ => _.Gender)
+					.ToDictionary(_ => _.Key, _ => _.ToList());
+
+				var dictionary2 = Person
+					.AsEnumerable()
+					.GroupBy(_ => _.Gender)
+					.ToDictionary(_ => _.Key, _ => _.ToList());
+
+				Assert.AreEqual(dictionary2.Count,               dictionary1.Count);
+				Assert.AreEqual(dictionary2.First().Value.Count, dictionary1.First().Value.Count);
+
+				var list =
+				(
+					from p in db.Person
+					group p by p.Gender into gr
+					select new { gr.Key, Count = gr.Count() }
+				)
+				.ToDictionary(_ => _.Key);
+
+				Assert.Throws<LinqToDBException>(() =>
+				{
+					// group on server
+					db.Person
+						.GroupBy(_ => _.Gender)
+						.ToDictionary(_ => _.Key, _ => _.ToList());
+				});
+
+				Assert.Throws<LinqToDBException>(() =>
+				{
+					db.Person
+						.GroupBy(_ => _)
+						.ToDictionary(_ => _.Key, _ => _.ToList());
+				});
+
+				Assert.Throws<LinqToDBException>(() =>
+				{
+					db.Person
+						.GroupBy(_ => _)
+						.ToList();
+				});
 			}
 		}
 	}

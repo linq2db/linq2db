@@ -13,7 +13,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TableFunctionTests : TestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
 		public void Func1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -26,7 +26,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
 		public void Func2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -40,7 +40,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void Func3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -57,7 +57,7 @@ namespace Tests.Linq
 		readonly Func<DataConnection,int,IQueryable<Parent>> _f1 = CompiledQuery.Compile(
 			(DataConnection db, int id) => from p in new Model.Functions(db).GetParentByID(id) select p);
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
 		public void CompiledFunc1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -70,7 +70,7 @@ namespace Tests.Linq
 		readonly Func<TestDataConnection,int,IQueryable<Parent>> _f2 = CompiledQuery.Compile(
 			(TestDataConnection db, int id) => from c in db.Child from p in db.GetParentByID(id) select p);
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SapHana)]
 		public void CompiledFunc2(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -80,7 +80,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void WithTabLock(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -93,7 +93,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void WithTabLock1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -106,7 +106,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void WithTabLock2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -119,7 +119,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void WithTabLock3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -132,7 +132,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void WithTest(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -145,7 +145,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void WithTableExpressionTest(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -158,7 +158,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind), Category("FreeText")]
 		public void FreeTextTable1(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -173,7 +173,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind), Category("FreeText")]
 		public void FreeTextTable2(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -188,7 +188,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind), Category("FreeText")]
 		public void FreeTextTable3(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -203,7 +203,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind), Category("FreeText")]
 		public void FreeText1(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -219,7 +219,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind), Category("FreeText")]
 		public void FreeText2(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -235,7 +235,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind), Category("FreeText")]
 		public void FreeText3(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -251,7 +251,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind), Category("FreeText")]
 		public void FreeText4(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -267,7 +267,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind)]
 		public void WithUpdateLock(string context)
 		{
 			using (var db = new NorthwindDB(context))

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -20,7 +21,7 @@ namespace Tests.xUpdate
 			public DateTime? CreatedOn;
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.OracleNative)]
 		public void CreateTable1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -33,13 +34,7 @@ namespace Tests.xUpdate
 						.Property(t => t.Field1)
 							.HasLength(50);
 
-				try
-				{
-					db.DropTable<TestTable>();
-				}
-				catch (Exception)
-				{
-				}
+				db.DropTable<TestTable>(throwExceptionIfNotExists:false);
 
 				var table = db.CreateTable<TestTable>();
 				var list = table.ToList();
@@ -48,7 +43,29 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008 /*, ProviderName.DB2*/)]
+		[Test, DataContextSource(ProviderName.OracleNative)]
+		public async Task CreateTable1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<TestTable>()
+						.Property(t => t.ID)
+							.IsIdentity()
+							.IsPrimaryKey()
+						.Property(t => t.Field1)
+							.HasLength(50);
+
+				await db.DropTableAsync<TestTable>(throwExceptionIfNotExists:false);
+
+				var table = await db.CreateTableAsync<TestTable>();
+				var list  = await table.ToListAsync();
+
+				await db.DropTableAsync<TestTable>();
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
 		public void CreateLocalTempTable1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -64,11 +81,13 @@ namespace Tests.xUpdate
 				{
 					switch (context)
 					{
-						case ProviderName.SqlServer2008 : db.DropTable<TestTable>("#" + tableName); break;
+						case ProviderName.SqlServer2008 :
+						case ProviderName.SqlServer2012 :
+						case ProviderName.SqlServer2014 : db.DropTable<TestTable>("#" + tableName); break;
 						default                         : db.DropTable<TestTable>(tableName);       break;
 					}
 				}
-				catch (Exception)
+				catch
 				{
 				}
 
@@ -77,6 +96,8 @@ namespace Tests.xUpdate
 				switch (context)
 				{
 					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
+					case ProviderName.SqlServer2014 :
 						table = db.CreateTable<TestTable>("#" + tableName);
 						break;
 					case ProviderName.DB2 :
@@ -89,6 +110,55 @@ namespace Tests.xUpdate
 				var list = table.ToList();
 
 				table.Drop();
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
+		public async Task CreateLocalTempTable1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<TestTable>()
+						.Property(t => t.Field1)
+							.HasLength(50);
+
+				const string tableName = "TestTable";
+
+				try
+				{
+					switch (context)
+					{
+						case ProviderName.SqlServer2008 :
+						case ProviderName.SqlServer2012 :
+						case ProviderName.SqlServer2014 : await db.DropTableAsync<TestTable>("#" + tableName); break;
+						default                         : await db.DropTableAsync<TestTable>(tableName);       break;
+					}
+				}
+				catch
+				{
+				}
+
+				ITable<TestTable> table;
+
+				switch (context)
+				{
+					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
+					case ProviderName.SqlServer2014 :
+						table = await db.CreateTableAsync<TestTable>("#" + tableName);
+						break;
+					case ProviderName.DB2 :
+						table = await db.CreateTableAsync<TestTable>(statementHeader:"DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}");
+						break;
+					default:
+						table = await db.CreateTableAsync<TestTable>(tableName);       
+						break;
+				}
+
+				var list = await table.ToListAsync();
+
+				await table.DropAsync();
 			}
 		}
 
@@ -165,7 +235,7 @@ namespace Tests.xUpdate
 			public int    bb { get; set; }
 			public string cc { get; set; }
 		}
-		
+
 		public class qq
 		{
 			public int bb { get; set; }
@@ -183,7 +253,7 @@ namespace Tests.xUpdate
 						.Property(t => t.bb).IsPrimaryKey()
 						.Property(t => t.cc)
 						.Property(t => t.dd).IsNotColumn()
-					
+
 					.Entity<qq>()
 						.HasTableName("aa")
 						.Property(t => t.bb).IsPrimaryKey()

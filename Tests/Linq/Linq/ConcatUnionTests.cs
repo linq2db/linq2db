@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 
 using NUnit.Framework;
@@ -22,6 +22,20 @@ namespace Tests.Linq
 					,
 					(from p in db.Parent where p.ParentID == 1 select p).Concat(
 					(from p in db.Parent where p.ParentID == 2 select p)));
+		}
+
+		[Test, DataContextSource]
+		public async Task Concat1Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from p in Parent where p.ParentID == 1 select p).Concat(
+					(from p in Parent where p.ParentID == 2 select p))
+					,
+					await
+					(from p in db.Parent where p.ParentID == 1 select p).Concat(
+					(from p in db.Parent where p.ParentID == 2 select p))
+					.ToListAsync());
 		}
 
 		[Test, DataContextSource]
@@ -692,6 +706,135 @@ namespace Tests.Linq
 						)
 					)
 				);
+		}
+
+		[Test, DataContextSource]
+		public void UnionWithObjects(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q1 =
+					from p in db.Parent
+					from p2 in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var q2 =
+					from p in db.Parent
+					from p2 in db.Parent
+					join c in db.Child on p2.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var q = q1.Union(q2);
+
+				var qe1 =
+					from p in Parent
+					from p2 in Parent
+					join c in Child on p.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var qe2 =
+					from p in Parent
+					from p2 in Parent
+					join c in Child on p2.ParentID equals c.ParentID
+					select new
+					{
+						P1 = p,
+						P2 = p2,
+						C = c
+					};
+
+				var qe = qe1.Union(qe2);
+
+				AreEqual(qe, q);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void UnionGroupByTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var actual =
+					db.Types
+						.GroupBy(_ => new { month = _.DateTimeValue.Month, year = _.DateTimeValue.Year })
+						.Select(_ => _.Key)
+						.Select(_ => new { _.month, _.year, @int = 1 })
+					.Union(
+						db.Types.Select(_ => new { month = (int)_.SmallIntValue, year = (int)_.SmallIntValue, @int = 3 }))
+					.Union(
+						db.Types.Select(_ => new { month = _.DateTimeValue.Year, year = _.DateTimeValue.Year, @int = 2 }))
+//					.AsEnumerable()
+//					.OrderBy(_ => _.month)
+//					.ThenBy (_ => _.year)
+//					.ThenBy (_ => _.@int)
+					.ToList();
+
+				var expected =
+					GetTypes(context)
+						.GroupBy(_ => new { month = _.DateTimeValue.Month, year = _.DateTimeValue.Year })
+						.Select(_ => _.Key)
+						.Select(_ => new { _.month, _.year, @int = 1 })
+					.Union(
+						GetTypes(context).Select(_ => new { month = (int)_.SmallIntValue, year = (int)_.SmallIntValue, @int = 3 }))
+					.Union(
+						GetTypes(context).Select(_ => new { month = _.DateTimeValue.Year, year = _.DateTimeValue.Year, @int = 2 }))
+//					.AsEnumerable()
+//					.OrderBy(_ => _.month)
+//					.ThenBy (_ => _.year)
+//					.ThenBy (_ => _.@int)
+					.ToList();
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test, DataContextSource, Ignore("Failed")]
+		public void UnionGroupByTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var actual =
+					db.Types.Select(_ => new { month = (int)_.SmallIntValue, year = (int)_.SmallIntValue, @int = 3 })
+					.Union(
+						db.Types
+							.GroupBy(_ => new { month = _.DateTimeValue.Month, year = _.DateTimeValue.Year })
+							.Select(_ => _.Key)
+							.Select(_ => new { _.month, _.year, @int = 1 }))
+					.Union(
+						db.Types.Select(_ => new { month = _.DateTimeValue.Year, year = _.DateTimeValue.Year, @int = 2 })
+					)
+					.ToList();
+
+				var expected =
+					Types.Select(_ => new { month = (int)_.SmallIntValue, year = (int)_.SmallIntValue, @int = 3 })
+					.Union(
+						Types
+							.GroupBy(_ => new { month = _.DateTimeValue.Month, year = _.DateTimeValue.Year })
+							.Select(_ => _.Key)
+							.Select(_ => new { _.month, _.year, @int = 1 }))
+					.Union(
+						Types.Select(_ => new { month = _.DateTimeValue.Year, year = _.DateTimeValue.Year, @int = 2 })
+					)
+					.ToList();
+
+				AreEqual(expected, actual);
+			}
 		}
 	}
 }

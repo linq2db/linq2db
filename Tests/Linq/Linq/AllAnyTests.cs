@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using LinqToDB;
 
@@ -220,6 +221,16 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					   Child.All(c => c.ParentID > 3),
 					db.Child.All(c => c.ParentID > 3));
+
+		}
+
+		[Test, DataContextSource]
+		public async Task All4Async(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					         Child.All     (c => c.ParentID > 3),
+					await db.Child.AllAsync(c => c.ParentID > 3));
 		}
 
 		[Test, DataContextSource]

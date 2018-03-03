@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 
@@ -7,6 +8,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]
@@ -150,7 +152,7 @@ namespace Tests.Linq
 				AreEqual(Child.Skip(n), db.Child.Skip(() => n));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void SkipCount(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -192,7 +194,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)]
 		public void SkipTake4(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -242,7 +244,7 @@ namespace Tests.Linq
 			AreEqual(q4, q2);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void SkipTake6(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -252,7 +254,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void SkipTakeCount(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -295,6 +297,16 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public async Task ElementAt2Async(string context)
+		{
+			var n = 3;
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					      (from p in    Parent where p.ParentID > 1 select p).ElementAt(n),
+					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtAsync(() => n));
+		}
+
+		[Test, DataContextSource]
 		public void ElementAtDefault1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -321,6 +333,16 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public async Task ElementAtDefault3Async(string context)
+		{
+			var n = 3;
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					      (from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(n),
+					await (from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefaultAsync(() => n));
+		}
+
+		[Test, DataContextSource]
 		public void ElementAtDefault4(string context)
 		{
 			var n = 300000;
@@ -333,8 +355,109 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					   Person.ElementAtOrDefault(3),
-					db.Person.ElementAtOrDefault(3));
+					Person.   OrderBy(p => p.LastName).ElementAtOrDefault(3),
+					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(3));
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void TakeWithPercent(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.Person.Take(50, TakeHints.Percent).Select(_ => _);
+
+				Assert.IsNotEmpty(q);
+
+				var qry = q.ToString();
+				Assert.That(qry.Contains("PERCENT"));
+			}
+
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.Access, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void TakeWithPercent1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.Person.Take(() => 50, TakeHints.Percent).Select(_ => _);
+
+				Assert.IsNotEmpty(q);
+
+				var qry = q.ToString();
+				Assert.That(qry.Contains("PERCENT"));
+			}
+
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void TakeWithTies(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.Person.OrderBy(_ => _.FirstName).Take(50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
+
+				Assert.IsNotEmpty(q);
+
+				var qry = q.ToString();
+				Assert.That(qry.Contains("PERCENT"));
+				Assert.That(qry.Contains("WITH"));
+			}
+
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void TakeWithTies2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.Person.OrderBy(_ => _.FirstName).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
+
+				Assert.IsNotEmpty(q);
+
+				var qry = q.ToString();
+				Assert.That(qry.Contains("PERCENT"));
+				Assert.That(qry.Contains("WITH"));
+			}
+
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void SkipTakeWithTies(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.Throws<LinqException>(() => db.Person.Skip(1).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _).ToList());
+
+				Assert.Throws<LinqException>(() => db.Person.Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Skip(1).Select(_ => _).ToList());
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SqlCe, ProviderName.SQLiteMS)]
+		public void TakeWithHintsFails(string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
+		}
+
+		[Test, DataContextSource(ProviderName.Sybase)]
+		public void TakeSkipJoin(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var types = db.Types.ToList();
+
+				var q1 =    types.Concat(   types).Take(15);
+				var q2 = db.Types.Concat(db.Types).Take(15);
+
+				AreEqual(
+					from e in q1
+					from p in q1.Where(_ => _.ID == e.ID).DefaultIfEmpty()
+					select new {e.ID, p.SmallIntValue},
+					from e in q2
+					from p in q2.Where(_ => _.ID == e.ID).DefaultIfEmpty()
+					select new { e.ID, p.SmallIntValue }
+					);
+			}
 		}
 	}
 }

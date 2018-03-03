@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -300,7 +301,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+			ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void NewGuid1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -309,7 +310,7 @@ namespace Tests.Linq
 					from p in db.Types where p.GuidValue != Sql.NewGuid() select p.GuidValue);
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void NewGuid2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -367,8 +368,8 @@ namespace Tests.Linq
 					db.Parent.Select(p => ChildCount(p)));
 		}
 
-		//////[Test, DataContextSource]
-		public void Aggregate1(string context)
+		[Test, DataContextSource]
+		public void CustomAggregate(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -376,15 +377,15 @@ namespace Tests.Linq
 					group p by p.ParentID into g
 					select new
 					{
-						sum1 = g.Sum  (i => i.Value1),
-						sum2 = g.MySum(i => i.Value1),
+						sum1 = g.Sum  (i => i.Value1) ?? 0,
+						sum2 = g.Sum  (i => i.Value1) ?? 0,
 					},
 					from p in db.Parent
 					group p by p.ParentID into g
 					select new
 					{
-						sum1 = g.Sum  (i => i.Value1),
-						sum2 = g.MySum(i => i.Value1),
+						sum1 = g.Sum  (i => i.Value1) ?? 0,
+						sum2 = g.MySum(i => i.Value1) ?? 0,
 					});
 		}
 
@@ -452,6 +453,48 @@ namespace Tests.Linq
 					where p.ParentID.Between(1, 10)
 					select p);
 		}
+
+		[Test, IncludeDataContextSource(true, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+		public void MatchFtsTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from c in db.Types
+					where SqlLite.MatchFts(c, "some*")
+					select c;
+
+				var str = q.ToString();
+				Assert.True(str.Contains(" matches "));
+			}
+		}
+	}
+
+	public static class SqlLite
+	{
+		class MatchBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				if (!(builder.GetExpression("src") is SqlField field))
+					throw new InvalidOperationException("Can not get table");
+
+				var sqlTable = (SqlTable)field.Table;
+
+				var newField = new SqlField
+				{
+					Name  = sqlTable.PhysicalName,
+					Table = sqlTable
+				};
+
+				builder.AddParameter("table_field", newField);
+			}
+		}
+
+		[Sql.Extension("{table_field} matches {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
+		public static bool MatchFts<TEntity>(TEntity src, [ExprParameter]string match)
+		{
+			throw new InvalidOperationException();
+		}
 	}
 
 	public static class FunctionExtension
@@ -461,10 +504,12 @@ namespace Tests.Linq
 			return person.LastName + ", " + person.FirstName;
 		}
 
-		[Sql.Function("SUM", ServerSideOnly = true)]
+		[Sql.Function("SUM", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[]{0})]
 		public static TItem MySum<TSource,TItem>(this IEnumerable<TSource> src, Expression<Func<TSource,TItem>> value)
 		{
 			throw new InvalidOperationException();
 		}
+
 	}
+
 }

@@ -1,0 +1,15 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                                       #>
+<#@ output extension=".generated.cs"                                                              #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude"                    #>
+<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"                 #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\FirebirdSql.Data.FirebirdClient.dll" #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"                         #>
+<#
+	NamespaceName = "FirebirdDataContext";
+
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
+
+	LoadFirebirdMetadata("DBHost", @"C:\Data\TestData.fdb");
+	GenerateModel();
+#>

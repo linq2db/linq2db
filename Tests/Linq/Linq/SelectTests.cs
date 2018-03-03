@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.Windows.Forms;
 #endif
 
@@ -215,7 +215,9 @@ namespace Tests.Linq
 					.Select(p4 => new Person { ID = p4.p11.ID, FirstName = p4.p3.p1.FirstName }));
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
+		// ProviderName.SqlServer2014 disabled due to:
+		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SapHana, ParallelScope = ParallelScope.None)]
 		public void MultipleSelect11(string context)
 		{
 			var dt = DateTime.Now;
@@ -453,7 +455,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, DataContextSource]
 		public void ConstractClass(string context)
 		{
@@ -488,7 +490,9 @@ namespace Tests.Linq
 						(m, i) =>
 							ConvertString(m.Parent.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
 
-				Assert.AreEqual("7.77.True.0", lines[0]);
+				Assert.AreEqual("7.77.True.0",  lines[0]);
+				Assert.AreEqual("6.66.False.1", lines[1]);
+				Assert.AreEqual("6.65.True.2",  lines[2]);
 
 				q =
 					db.Child
@@ -529,14 +533,14 @@ namespace Tests.Linq
 		{
 			public class Factory : IObjectFactory
 			{
-#region IObjectFactory Members
+				#region IObjectFactory Members
 
 				public object CreateInstance(TypeAccessor typeAccessor)
 				{
 					return typeAccessor.CreateInstance();
 				}
 
-#endregion
+				#endregion
 			}
 
 			public int    PersonID;
@@ -667,5 +671,50 @@ namespace Tests.Linq
 				Assert.IsNotEmpty(r.Name.LastName);
 			}
 		}
+
+		[Test, DataContextSource]
+		public void SelectNullableTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var e = new LinqDataTypes2() { ID = 1000, BoolValue = false };
+					db.Insert(e);
+
+					var e2 = db.Types2.First(_ => _.ID == 1000);
+
+					Assert.AreEqual(e, e2);
+				}
+				finally
+				{
+					db.Types2.Where(_ => _.ID == 1000).Delete();
+				}
+			}
+		}
+
+		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
+		public void SelectNullableTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var en = new LinqDataTypes2() { ID = 1000, BoolValue = false };
+					db.Insert(en);
+
+					var e  = new LinqDataTypes()  { ID = 1000, BoolValue = false };
+
+					var e2 = db.Types.First(_ => _.ID == 1000);
+
+					Assert.AreEqual(e, e2);
+				}
+				finally
+				{
+					db.Types2.Where(_ => _.ID == 1000).Delete();
+				}
+			}
+		}
+
 	}
 }

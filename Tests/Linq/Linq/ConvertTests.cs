@@ -1,16 +1,18 @@
 ﻿using System;
+using System.Data.SqlTypes;
 using System.Linq;
 
 using LinqToDB;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
 	[TestFixture]
 	public class ConvertTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -55,7 +57,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (Int64)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(ProviderName.MySql, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.SQLiteMS)]
 		public void ConvertToInt64(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -82,7 +84,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (Int32)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void ConvertToInt32(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -109,7 +111,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (Int16)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void ConvertToInt16(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -136,7 +138,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (sbyte)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void ConvertToSByte(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -176,7 +178,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (UInt64)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(ProviderName.MySql, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.SQLiteMS)]
 		public void ConvertToUInt64(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -194,7 +196,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (UInt32)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(ProviderName.MySql, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.MySql, ProviderName.SQLiteMS)]
 		public void ConvertToUInt32(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -212,7 +214,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (UInt16)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void ConvertToUInt16(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -230,7 +232,7 @@ namespace Tests.Linq
 					from p in from t in db.Types select (byte)t.MoneyValue where p > 0 select p);
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void ConvertToByte(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -400,7 +402,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.Date, t.DateTimeValue.Year + "-01-01"));
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS
 			, ProviderName.Access, ProviderName.Sybase ///////// TODO
 			)]
 		public void ToSqlTime(string context)
@@ -456,7 +458,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.Char(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.PostgreSQL)]
+		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL)]
 		public void ToDefaultChar(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -474,7 +476,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.VarChar(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.PostgreSQL)]
+		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL)]
 		public void ToDefaultVarChar(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -492,7 +494,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.NChar(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.PostgreSQL)]
+		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, TestProvName.Firebird3, ProviderName.PostgreSQL)]
 		public void ToDefaultNChar(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -510,7 +512,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.NVarChar(20), t.MoneyValue).ToInvariantString());
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, ProviderName.PostgreSQL)]
+		[Test, DataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.PostgreSQL)]
 		public void ToDefaultNVarChar(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -555,8 +557,16 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from t in    Types where Sql.Convert(Sql.Bit, t.MoneyValue) select t select t,
-					from t in from t in db.Types where Sql.Convert(Sql.Bit, t.MoneyValue) select t select t);
+					from t in
+						from t in GetTypes(context)
+						where Sql.Convert(Sql.Bit, t.MoneyValue)
+						select t
+					select t,
+					from t in
+						from t in db.Types
+						where Sql.Convert(Sql.Bit, t.MoneyValue)
+						select t
+					select t);
 		}
 
 		[Test, DataContextSource]
@@ -564,8 +574,17 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from t in    Types where !Sql.Convert(Sql.Bit, t.MoneyValue - 4.5m) select t select t,
-					from t in from t in db.Types where !Sql.Convert(Sql.Bit, t.MoneyValue - 4.5m) select t select t);
+					from t in
+						from t in GetTypes(context)
+						where !Sql.Convert(Sql.Bit, t.MoneyValue - 4.5m)
+						select t
+					select t
+					,
+					from t in
+						from t in db.Types
+						where !Sql.Convert(Sql.Bit, t.MoneyValue - 4.5m)
+						select t
+					select t);
 		}
 
 		[Test, DataContextSource]
@@ -587,5 +606,102 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Test, DataContextSource]
+		public void ConvertFromOneToAnother(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var decimalValue = 6579.64648m;
+				var floatValue   = 6579.64648f;
+				var doubleValue  = 6579.64648d;
+
+				AssertConvert(db, decimalValue, decimalValue);
+				AssertConvert(db, decimalValue, floatValue);
+				AssertConvert(db, decimalValue, doubleValue);
+
+				AssertConvert(db, floatValue, decimalValue);
+				AssertConvert(db, floatValue, floatValue);
+				AssertConvert(db, floatValue, doubleValue);
+
+				AssertConvert(db, doubleValue, decimalValue);
+				AssertConvert(db, doubleValue, floatValue);
+				AssertConvert(db, doubleValue, doubleValue);
+			}
+		}
+
+		static void AssertConvert<TTo, TFrom>(Model.ITestDataContext db, TTo expected, TFrom value)
+		{
+			var r = db.Types.Select(_ => ServerConvert<TTo, TFrom>(value)).First();
+
+#if !APPVEYOR
+			Console.WriteLine($"Expected {expected} result {r}");
+#endif
+
+			Assert.GreaterOrEqual(0.01m,
+				Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)));
+		}
+
+		//[CLSCompliant(false)]
+		[Sql.Function("$Convert$", 1, 2, 0, ServerSideOnly = true)]
+		public static TTo ServerConvert<TTo, TFrom>(TFrom obj)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Test, NorthwindDataContext]
+		public void ConvertDataToDecimal(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var actual = (from od in db.OrderDetail
+							  select
+							  Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount))).ToArray();
+
+				var expected = (from od in db.OrderDetail
+								select
+								od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount)).ToArray();
+
+				Assert.AreEqual(actual.Length, expected.Length);
+
+				for (var i = 0; i < actual.Length; i++)
+				{
+					Assert.GreaterOrEqual(0.01m, Math.Abs(actual[i] - expected[i]));
+				}
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void ConvertDataToDecimalNoConvert(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var qActual =
+					from od in db.OrderDetail
+					select
+						Sql.NoConvert(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount));
+
+				var qExpected =
+					from od in db.OrderDetail
+					select
+						Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount));
+
+				var sqlActual   = qActual.  ToString();
+				var sqlExpected = qExpected.ToString();
+
+				Assert.That(sqlActual,   Is.Not.Contains   ("Convert").Or.Contains("Cast"));
+				Assert.That(sqlExpected, Contains.Substring("Convert").Or.Contains("Cast"));
+
+				var actual   = qActual.  ToArray();
+				var expected = qExpected.ToArray();
+
+				Assert.AreEqual(actual.Length, expected.Length);
+
+				for (var i = 0; i < actual.Length; i++)
+				{
+					Assert.GreaterOrEqual(0.01m, Math.Abs(actual[i] - expected[i]));
+				}
+			}
+		}
 	}
 }

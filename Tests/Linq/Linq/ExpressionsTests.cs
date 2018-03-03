@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Linq;
 
@@ -158,7 +158,7 @@ namespace Tests.Linq
 				select p;
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void MethodExpression8(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -177,7 +177,7 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void MethodExpression9(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -196,7 +196,7 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void MethodExpression10(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -319,6 +319,24 @@ namespace Tests.Linq
 					select GrandChildren(p).Count());
 		}
 
+		[Test, DataContextSource]
+		public async Task AssociationMethodExpressionAsync(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var list = await db.Parent.ToListAsync();
+
+				AreEqual(
+					from p in Parent
+					select p.Children.SelectMany(gc => gc.GrandChildren).Count()
+					,
+					await (
+						from p in db.Parent
+						select GrandChildren(p).Count()
+					).ToListAsync());
+			}
+		}
+
 		[Test]
 		public void ParameterlessExpression()
 		{
@@ -420,6 +438,7 @@ namespace Tests.Linq
 					db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
 			}
 		}
+
 		/*
 		[Test, DataContextSource]
 		public void LeftJoinTest3(string context)
@@ -434,6 +453,28 @@ namespace Tests.Linq
 			}
 		}
 		*/
+
+		[Test, DataContextSource]
+		public void AssociationTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Parent.SelectMany(p => p.Children.SelectMany(c => c.GrandChildren)),
+					db.Parent.SelectMany(p => p.GrandChildren2));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void AssociationTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Parent.SelectMany(p => p.Children.Where(c => c.ChildID == 22).SelectMany(c => c.GrandChildren)),
+					db.Parent.SelectMany(p => p.GrandChildrenByID(22)));
+			}
+		}
 	}
 
 	static class ExpressionTestExtensions

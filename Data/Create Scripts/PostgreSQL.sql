@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS "Doctor"
+﻿DROP TABLE IF EXISTS "Doctor"
 GO
 
 DROP TABLE IF EXISTS "Patient"
@@ -48,11 +48,13 @@ INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Tester', 'Test
 GO
 INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jane',   'Doe',       'F')
 GO
+INSERT INTO "Person" ("FirstName", "LastName", "Gender") VALUES ('Jürgen', 'König',     'M')
+GO
 -- Doctor Table Extension
 
 CREATE TABLE "Doctor"
 (
-	"PersonID" INTEGER     references "Person"("PersonID") NOT NULL,
+	"PersonID" INTEGER     primary key references "Person"("PersonID") NOT NULL,
 	"Taxonomy" VARCHAR(50) NOT NULL
 )
 GO
@@ -64,7 +66,7 @@ GO
 
 CREATE TABLE "Patient"
 (
-	"PersonID"  INTEGER      references "Person"("PersonID") NOT NULL,
+	"PersonID"  INTEGER      primary key references "Person"("PersonID") NOT NULL,
 	"Diagnosis" VARCHAR(256) NOT NULL
 )
 GO
@@ -116,10 +118,11 @@ CREATE TABLE "LinqDataTypes"
 	"DateTimeValue2" timestamp,
 	"BoolValue"      boolean,
 	"GuidValue"      uuid,
-	"BinaryValue"    bytea  NULL,
+	"BinaryValue"    bytea       NULL,
 	"SmallIntValue"  smallint,
-	"IntValue"       int    NULL,
-	"BigIntValue"    bigint NULL
+	"IntValue"       int         NULL,
+	"BigIntValue"    bigint      NULL,
+	"StringValue"    varchar(50) NULL
 )
 GO
 
@@ -241,6 +244,7 @@ CREATE TABLE AllTypes
 	intervalDataType    interval                 NULL,
 
 	charDataType        char(1)                  NULL,
+	char20DataType      char(20)                 NULL,
 	varcharDataType     varchar(20)              NULL,
 	textDataType        text                     NULL,
 
@@ -435,5 +439,69 @@ GO
 CREATE TABLE TestSameName
 (
 	ID serial NOT NULL PRIMARY KEY
+)
+GO
+
+DROP TABLE IF EXISTS "TestMerge1"
+GO
+
+DROP TABLE IF EXISTS "TestMerge2"
+GO
+
+CREATE TABLE "TestMerge1"
+(
+	"Id"		INTEGER	PRIMARY KEY,
+	"Field1"	INTEGER	NULL,
+	"Field2"	INTEGER	NULL,
+	"Field3"	INTEGER	NULL,
+	"Field4"	INTEGER	NULL,
+	"Field5"	INTEGER	NULL,
+
+	"FieldInt64"      BIGINT                   NULL,
+	"FieldBoolean"    BOOLEAN                  NULL,
+	"FieldString"     VARCHAR(20)              NULL,
+	"FieldNString"    VARCHAR(20)              NULL,
+	"FieldChar"       CHAR(1)                  NULL,
+	"FieldNChar"      CHAR(1)                  NULL,
+	"FieldFloat"      FLOAT(24)                NULL,
+	"FieldDouble"     FLOAT(53)                NULL,
+	"FieldDateTime"   TIMESTAMP                NULL,
+	"FieldDateTime2"  TIMESTAMP WITH TIME ZONE NULL,
+	"FieldBinary"     BYTEA                    NULL,
+	"FieldGuid"       UUID                     NULL,
+	"FieldDecimal"    DECIMAL(24, 10)          NULL,
+	"FieldDate"       DATE                     NULL,
+	"FieldTime"       TIME(7)                  NULL,
+	"FieldEnumString" VARCHAR(20)              NULL,
+	"FieldEnumNumber" INT                      NULL
+)
+GO
+
+CREATE TABLE "TestMerge2"
+(
+	"Id"		INTEGER	PRIMARY KEY,
+	"Field1"	INTEGER	NULL,
+	"Field2"	INTEGER	NULL,
+	"Field3"	INTEGER	NULL,
+	"Field4"	INTEGER	NULL,
+	"Field5"	INTEGER	NULL,
+
+	"FieldInt64"      BIGINT                   NULL,
+	"FieldBoolean"    BOOLEAN                  NULL,
+	"FieldString"     VARCHAR(20)              NULL,
+	"FieldNString"    VARCHAR(20)              NULL,
+	"FieldChar"       CHAR(1)                  NULL,
+	"FieldNChar"      CHAR(1)                  NULL,
+	"FieldFloat"      FLOAT(24)                NULL,
+	"FieldDouble"     FLOAT(53)                NULL,
+	"FieldDateTime"   TIMESTAMP                NULL,
+	"FieldDateTime2"  TIMESTAMP WITH TIME ZONE NULL,
+	"FieldBinary"     BYTEA                    NULL,
+	"FieldGuid"       UUID                     NULL,
+	"FieldDecimal"    DECIMAL(24, 10)          NULL,
+	"FieldDate"       DATE                     NULL,
+	"FieldTime"       TIME(7)                  NULL,
+	"FieldEnumString" VARCHAR(20)              NULL,
+	"FieldEnumNumber" INT                      NULL
 )
 GO

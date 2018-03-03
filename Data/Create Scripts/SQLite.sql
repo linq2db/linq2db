@@ -1,4 +1,4 @@
---
+﻿--
 -- Helper table
 --
 DROP TABLE IF EXISTS Dual;
@@ -21,9 +21,12 @@ CREATE TABLE InheritanceChild
 	TypeDiscriminator   integer          NULL,
 	Name                nvarchar(50)     NULL
 );
+
 --
 -- Person Table
 --
+DROP TABLE IF EXISTS Doctor;
+DROP TABLE IF EXISTS Patient;
 DROP TABLE IF EXISTS Person;
 CREATE TABLE Person
 (
@@ -37,11 +40,11 @@ CREATE TABLE Person
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M');
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M');
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
+INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',     'M');
 
 --
 -- Doctor Table Extension
 --
-DROP TABLE IF EXISTS Doctor;
 CREATE TABLE Doctor
 (
 	PersonID integer      NOT NULL CONSTRAINT PK_Doctor PRIMARY KEY,
@@ -54,11 +57,12 @@ INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
 --
 -- Patient Table Extension
 --
-DROP TABLE IF EXISTS Patient;
 CREATE TABLE Patient
 (
 	PersonID  integer       NOT NULL CONSTRAINT PK_Patient PRIMARY KEY,
-	Diagnosis nvarchar(256) NOT NULL
+	Diagnosis nvarchar(256) NOT NULL,
+
+	CONSTRAINT FK_Patient_Person FOREIGN KEY(PersonID) REFERENCES Person(PersonID)
 );
 INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution');
 
@@ -85,7 +89,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    binary(5000) NULL,
 	SmallIntValue  smallint,
 	IntValue       int          NULL,
-	BigIntValue    bigint       NULL
+	BigIntValue    bigint       NULL,
+	StringValue    nvarchar(50) NULL
 );
 
 
@@ -118,6 +123,7 @@ CREATE TABLE AllTypes
 	datetimeDataType         datetime         NULL,
 
 	charDataType             char(1)          NULL,
+	char20DataType           char(20)         NULL,
 	varcharDataType          varchar(20)      NULL,
 	textDataType             text             NULL,
 	ncharDataType            nchar(20)        NULL,
@@ -154,3 +160,105 @@ SELECT
 	       10
 
 GO
+
+
+--
+-- Demonstration Tables for Issue #784
+--
+
+-- Parent table
+DROP TABLE IF EXISTS PrimaryKeyTable
+GO
+
+CREATE TABLE PrimaryKeyTable
+(
+	ID           integer      NOT NULL PRIMARY KEY,
+	Name         nvarchar(50) NOT NULL
+)
+GO
+
+-- Child table
+DROP TABLE IF EXISTS ForeignKeyTable
+GO
+
+CREATE TABLE ForeignKeyTable
+(
+	PrimaryKeyTableID integer      NOT NULL,
+	Name              nvarchar(50) NOT NULL,
+	-- Test: the foreign key targets the parent table without a column 
+	-- reference.  This should automatically match against the primary key
+	-- of the target table.
+	CONSTRAINT FK_ForeignKeyTable_PrimaryKeyTable FOREIGN KEY(PrimaryKeyTableID) REFERENCES PrimaryKeyTable ON DELETE CASCADE
+)
+GO
+
+-- Second-level child table, alternate semantics
+DROP TABLE IF EXISTS FKTestPosition
+GO
+
+CREATE TABLE FKTestPosition
+(
+    Company      integer      NOT NULL,
+    Department   integer      NOT NULL,
+    PositionID   integer      NOT NULL,
+    Name         nvarchar(50) NOT NULL,
+    PRIMARY KEY(Company, Department, PositionID),
+    -- Test: one level deeper, this should link to both fields in the 
+    -- primary key of the FKTestDepartment table
+    CONSTRAINT FK_Position_Department FOREIGN KEY(Company, Department) REFERENCES FKTestDepartment ON DELETE CASCADE
+	-- A simpler foreign key for the above would be:
+	--    FOREIGN KEY(Department) REFERENCES FKTestDepartment(DepartmentID) ON DELETE CASCADE
+)
+GO
+
+-- merge test tables
+DROP TABLE IF EXISTS TestMerge1;
+DROP TABLE IF EXISTS TestMerge2;
+CREATE TABLE TestMerge1
+(
+	Id              INTEGER       NOT NULL CONSTRAINT PK_TestMerge1,
+	Field1          INTEGER           NULL,
+	Field2          INTEGER           NULL,
+	Field3          INTEGER           NULL,
+	Field4          INTEGER           NULL,
+	Field5          INTEGER           NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDate       DATE              NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+);
+CREATE TABLE TestMerge2
+(
+	Id              INTEGER       NOT NULL CONSTRAINT PK_TestMerge2,
+	Field1          INTEGER           NULL,
+	Field2          INTEGER           NULL,
+	Field3          INTEGER           NULL,
+	Field4          INTEGER           NULL,
+	Field5          INTEGER           NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDate       DATE              NULL,
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+);

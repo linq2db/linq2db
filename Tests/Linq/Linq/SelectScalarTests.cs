@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 
@@ -18,6 +19,14 @@ namespace Tests.Linq
 			var p = 1;
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(p, db.Select(() => p));
+		}
+
+		[Test, DataContextSource]
+		public async Task Parameter1Async(string context)
+		{
+			var p = 1;
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(p, await db.SelectAsync(() => p));
 		}
 
 		[Test, DataContextSource]

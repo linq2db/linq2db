@@ -1,109 +1,101 @@
+image: Visual Studio 2017
 configuration: Release
+skip_tags: true
+
+branches:
+  only:
+    - master
+    - /version.*/
+    - /release.*/
+    - /dev.*/
 
 environment:
-  packageVersion: 1.7.7
-  matrix:
-    - buildConfiguration: dotNet
-      solutionName: linq2db.4.5.sln
-    - buildConfiguration: dotNetCore
-      solutionName: linq2db.core.sln
-
-
-version: $(packageVersion).{build}
+  assemblyVersion: 2.0.0
+  packageVersion: 2.0.0-beta4
+  access_token:
+    secure: IlfmHXRdUK6v8dX/WqieXQ==
+##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
+##  #testFilter: TestCategory=Create
+##  testRunner: dotnet
+##  testLogger: trx
+##  testConfiguration: AppVeyor
+##  matrix:
+##    - target: Default
+##      testTargetFramework: net452
+##    - target: Core1
+##      testTargetFramework: netcoreapp1.0
+##      testRunner: dotnet
+##      testFilter: TestCategory != Ignored
+##    - target: Core2
+##      testTargetFramework: netcoreapp2.0
+##      testRunner: dotnet
+##      testFilter: TestCategory != Ignored
+##    - target: DocFx
 
 cache:
-- packages -> **\packages.config
+- packages -> appveyor.yml
+
+version: $(assemblyVersion).{build}
 
 services:
-- mssql2012sp1
+- mssql2014
 - mysql
-- postgresql
+- postgresql95
 
 init:
 - cmd: git config --global core.autocrlf true
-- ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
-- ps: |
-    if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
-    {
-        $env:nugetVersion = "$env:packageVersion"
-    }
-    else
-    {
-        $env:nugetVersion = "$env:packageVersion-rc$env:appveyor_build_number"
-    }
-- ps: Update-AppveyorBuild -Version $env:buildVersion
-
-assembly_info:
-  patch: false
-  file: '**\AssemblyInfo.*'
-  assembly_version: '$(buildVersion)'
-  assembly_file_version: '$(buildVersion)'
-  assembly_informational_version: '$(nugetVersion)'
+- ps: $env:buildVersion = "$env:assemblyVersion.$env:appveyor_build_number"
 
 nuget:
   account_feed: false
   project_feed: false
 
-before_build:
-- cmd: nuget restore linq2db.4.5.sln
-- cmd: dotnet restore 
-
 build_script:
-  - msbuild %solutionName%  /property:Configuration=Release
+  msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
+##- ps: .\build.ps1
 
+before_build:
+- ps: |
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
+    {
+        $env:packageVersion = "$env:assemblyVersion-rc$env:appveyor_build_number"
+    }
+
+    .\Build\AppVeyor.FixVersionProps.ps1  -path Build\linq2db.Default.props -buildVersion $env:assemblyVersion -nugetVersion $env:packageVersion
+    .\Build\AppVeyor.FixVersionNugets.ps1 -path NuGet\*.nuspec -nugetVersion $env:packageVersion
+
+    $startPath = "$($env:appveyor_build_folder)\Data"
+    $sqlInstance = "(local)\SQL2014"
+    $dbName = "TestData"
+
+    # create database
+    sqlcmd -S "$sqlInstance" -Q "Use [master]; CREATE DATABASE [$dbName]"
+
+    # MySql
+    $env:MYSQL_PWD="Password12!"
+    $cmd = '"C:\Program Files\MySql\MySQL Server 5.7\bin\mysql" -e "create database $dbName;" --user=root'
+    iex "& $cmd"
+
+    # PgSql
+    $env:PGUSER="postgres"
+    $env:PGPASSWORD="Password12!"
+    $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
+    iex "& $cmd"
+- ps: Update-AppveyorBuild -Version $env:buildVersion
+- cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
 
 after_build:
-- ps: |
-    if ($env:buildConfiguration -eq "dotNetCore")
-    {
-        if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
-        {
-           dotnet pack --no-build Source/project.json -c=Release
-        }
-        else
-        {
-           dotnet pack --no-build Source/project.json --version-suffix="rc$env:APPVEYOR_BUILD_NUMBER" -c=Release
-        }
-    }
-    else
-    {
-       cd Source
-       .\Compile.bat
-       cd ..
-       nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
-    }
+- cmd: |
+    cd NuGet
+    PackAV
+    cd ..
+
+test_script:
+  - ps: .\Build\AppVeyor.NUnit.Tests.ps1
 
 artifacts:
 - path: \**\linq2db*.nupkg
-
-test_script:
-- ps: |
-    if ($env:buildConfiguration -eq "dotNetCore")
-    {
-        dotnet test tests\linq -c Release -f netcoreapp1.0 
-        $test1res = $LASTEXITCODE 
-        # upload results to AppVeyor
-        $wc = New-Object 'System.Net.WebClient'
-        $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
-        Push-AppveyorArtifact (Resolve-Path .\TestResult.xml)
-        # try nunit3 
-        # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net40\win7-x64\linq2db.Tests.dll) --x86
-        # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net45\win7-x64\linq2db.Tests.dll) --x86
-        IF ($test1res -ne 0) { exit -1 }
-    }
-    else
-    {
-        nunit3-console .\Tests\Linq\bin\Release\linq2db.Tests.dll --result="TestResult.xml;format=AppVeyor" --x86
-    }
-
-before_test:
-- ps: |
-      Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
-      cd $env:appveyor_build_folder
-      . ".\Av-InitDatabases.ps1"
-
-after_test:
-- ps: Pop-Location
+- path: \**\*.trx
 
 deploy:
 - provider: NuGet
@@ -119,3 +111,14 @@ deploy:
     secure: oTYw2IwTnz4qMD8c/MR/6mo+Nx3wa5Pp8MYfsKBCKCVuU6QCHlj+6QMXpnQses8G
   on:
     branch: release
+
+- provider: NuGet
+  server: https://www.myget.org/F/linq2db/api/v2
+  api_key:
+    secure: LDw0jeA1Yo3R4/TKv2kmlgJR8dTT6Wun2MONq3uDvtVQJG4LOU9LjvVTAc7IgRfm
+  skip_symbols: true
+  on:
+    branch: release1
+
+skip_commits:
+  message: /ci skip/      # Regex for matching commit message

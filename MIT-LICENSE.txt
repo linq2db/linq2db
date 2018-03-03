@@ -1,4 +1,4 @@
-Copyright (c) 2016 Igor Tkachev <it@bltoolkit.net>
+Copyright (c) 2018 Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

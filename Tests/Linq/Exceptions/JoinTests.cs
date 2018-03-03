@@ -10,7 +10,6 @@ using NUnit.Framework;
 
 namespace Tests.Exceptions
 {
-
 	using Model;
 
 	[TestFixture]
@@ -38,6 +37,16 @@ namespace Tests.Exceptions
 			public Parents Parent;
 		}
 
+		[Table("GrandChild", IsColumnAttributeRequired = false)]
+		public class GrandChilds
+		{
+			public int? ChildID;
+			public int? ParentID;
+			public int? GrandChildID;
+
+			[Association(ThisKey = "ChildID", OtherKey = "ChildID")]
+			public Child Child;
+		}
 		[Test, DataContextSource]
 		public void InnerJoin(string context)
 		{
@@ -78,7 +87,6 @@ namespace Tests.Exceptions
 
 				AreEqual(expected, result);
 			}
-			
 		}
 
 		[Test, DataContextSource]
@@ -131,5 +139,51 @@ namespace Tests.Exceptions
 			}
 		}
 
+		[Test, IncludeDataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void Issue589(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result =
+					from grandChild in db.GetTable<GrandChilds>()
+					join child      in db.GetTable<Childs>() on grandChild.ChildID equals child.ChildID
+					from pf in
+						(
+							from child1      in db.GetTable<Childs>()
+							join parent1     in db.GetTable<Parents>()     on child1.ParentID  equals parent1.ParentID
+							join grandChild1 in db.GetTable<GrandChilds>() on parent1.ParentID equals grandChild1.Child.ParentID
+							where grandChild1.ParentID == child.Parent.ParentID
+							select grandChild1
+					).Take(1).DefaultIfEmpty()
+					select new
+					{
+						GrandChildID   = grandChild.GrandChildID,
+						ChildID        = child.ChildID,
+						ParentParentId = child.Parent.ParentID,
+						Tmp            = pf.GrandChildID
+					};
+
+				var expected =
+					from grandChild in GrandChild
+					join child      in Child on grandChild.ChildID equals child.ChildID
+					from pf in
+						(
+							from child1      in Child
+							join parent1     in Parent     on child1.ParentID  equals parent1.ParentID
+							join grandChild1 in GrandChild on parent1.ParentID equals grandChild1.Child.ParentID
+							where grandChild1.ParentID == child.Parent.ParentID
+							select grandChild1
+					).Take(1).DefaultIfEmpty()
+					select new
+					{
+						GrandChildID   = grandChild.GrandChildID,
+						ChildID        = child.ChildID,
+						ParentParentId = child.Parent.ParentID,
+						Tmp            = pf.GrandChildID
+					};
+
+				AreEqual(expected, result);
+			}
+		}
 	}
 }

@@ -1,4 +1,4 @@
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Doctor') AND type in (N'U'))
+﻿IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Doctor') AND type in (N'U'))
 BEGIN DROP TABLE Doctor END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Patient') AND type in (N'U'))
@@ -51,6 +51,8 @@ GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 'M')
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F')
+GO
+INSERT INTO Person (FirstName, LastName, Gender) VALUES (N'Jürgen', N'König',   'M')
 GO
 -- Doctor Table Extension
 
@@ -379,11 +381,15 @@ CREATE TABLE AllTypes
 	smalldatetimeDataType    smalldatetime     NULL,
 
 	charDataType             char(1)           NULL,
+	char20DataType           char(20)          NULL,
 	varcharDataType          varchar(20)       NULL,
-	textDataType             text              NULL,
+	-- explicit collation set for legacy text types as they doesn't support *_SC collations and this script will
+	-- fail if database has such collation
+	textDataType             text  COLLATE Latin1_General_CI_AS NULL,
 	ncharDataType            nchar(20)         NULL,
 	nvarcharDataType         nvarchar(20)      NULL,
-	ntextDataType            ntext             NULL,
+	-- see textDataType column notes
+	ntextDataType            ntext COLLATE Latin1_General_CI_AS NULL,
 
 	binaryDataType           binary            NULL,
 	varbinaryDataType        varbinary         NULL,
@@ -441,7 +447,7 @@ GO
 INSERT INTO AllTypes
 (
 	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType, smallmoneyDataType,
-	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
 
 	datetimeDataType, smalldatetimeDataType,
 
@@ -538,11 +544,13 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('GrandChild') A
 BEGIN DROP TABLE GrandChild END
 GO
 
-CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
+CREATE TABLE Parent     (ParentID int, Value1 int,  _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE Child       (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
+CREATE TABLE Child      (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
+CREATE INDEX IX_ChildIndex ON Child (ParentID)
+GO
+CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
 
 -- SKIP SqlAzure.2012 BEGIN
@@ -558,7 +566,7 @@ GO
 CREATE FUNCTION GetParentByID(@id int)
 RETURNS TABLE
 AS
-RETURN 
+RETURN
 (
 	SELECT * FROM Parent WHERE ParentID = @id
 )
@@ -593,7 +601,7 @@ GO
 -- SKIP SqlServer.2005 BEGIN
 CREATE TABLE LinqDataTypes
 (
-	_ID            int IDENTITY  PRIMARY KEY,
+	_ID            int IDENTITY PRIMARY KEY,
 	ID             int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime,
@@ -603,7 +611,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    varbinary(5000),
 	SmallIntValue  smallint,
 	IntValue       int NULL,
-	BigIntValue    bigint NULL
+	BigIntValue    bigint NULL,
+	StringValue    nvarchar(50) NULL
 )
 GO
 -- SKIP SqlServer.2005 END
@@ -623,7 +632,8 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    varbinary(5000) NULL,
 	SmallIntValue  smallint,
 	IntValue       int             NULL,
-	BigIntValue    bigint          NULL
+	BigIntValue    bigint          NULL,
+	StringValue    nvarchar(50)    NULL
 )
 GO
 -- SKIP SqlAzure.2012 END
@@ -785,3 +795,143 @@ GO
 
 -- SKIP SqlServer.2005 END
 
+
+-- merge test tables
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestMerge1') AND type in (N'U'))
+BEGIN DROP TABLE TestMerge1 END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestMerge2') AND type in (N'U'))
+BEGIN DROP TABLE TestMerge2 END
+GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestMergeIdentity') AND type in (N'U'))
+BEGIN DROP TABLE TestMergeIdentity END
+GO
+CREATE TABLE TestMerge1
+(
+	Id     int NOT NULL CONSTRAINT PK_TestMerge1 PRIMARY KEY CLUSTERED,
+	Field1 int NULL,
+	Field2 int NULL,
+	Field3 int NULL,
+	Field4 int NULL,
+	Field5 int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+-- SKIP SqlServer.2005 BEGIN
+	FieldDateTime2  DATETIMEOFFSET(7) NULL,
+-- SKIP SqlServer.2005 END
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+-- SKIP SqlServer.2005 BEGIN
+	FieldDate       DATE              NULL,
+	FieldTime       TIME(7)           NULL,
+-- SKIP SqlServer.2005 END
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+)
+GO
+
+CREATE TABLE TestMerge2
+(
+	Id     int NOT NULL CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED,
+	Field1 int NULL,
+	Field2 int NULL,
+	Field3 int NULL,
+	Field4 int NULL,
+	Field5 int NULL,
+
+	FieldInt64      BIGINT            NULL,
+	FieldBoolean    BIT               NULL,
+	FieldString     VARCHAR(20)       NULL,
+	FieldNString    NVARCHAR(20)      NULL,
+	FieldChar       CHAR(1)           NULL,
+	FieldNChar      NCHAR(1)          NULL,
+	FieldFloat      FLOAT(24)         NULL,
+	FieldDouble     FLOAT(53)         NULL,
+	FieldDateTime   DATETIME          NULL,
+-- SKIP SqlServer.2005 BEGIN
+	FieldDateTime2  DATETIMEOFFSET(7) NULL,
+-- SKIP SqlServer.2005 END
+	FieldBinary     VARBINARY(20)     NULL,
+	FieldGuid       UNIQUEIDENTIFIER  NULL,
+	FieldDecimal    DECIMAL(24, 10)   NULL,
+-- SKIP SqlServer.2005 BEGIN
+	FieldDate       DATE              NULL,
+	FieldTime       TIME(7)           NULL,
+-- SKIP SqlServer.2005 END
+	FieldEnumString VARCHAR(20)       NULL,
+	FieldEnumNumber INT               NULL
+)
+GO
+CREATE TABLE TestMergeIdentity
+(
+	Id     int NOT NULL IDENTITY(1,1) CONSTRAINT PK_TestMergeIdentity PRIMARY KEY CLUSTERED,
+	Field  int NULL
+)
+GO
+
+-- Generate schema
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchemaY') AND type in (N'U'))
+BEGIN DROP TABLE TestSchemaY END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchemaX') AND type in (N'U'))
+BEGIN DROP TABLE TestSchemaX END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.TestSchemaB') AND type in (N'U'))
+BEGIN DROP TABLE TestSchema.TestSchemaB END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchema.TestSchemaA') AND type in (N'U'))
+BEGIN
+	DROP TABLE TestSchema.TestSchemaA
+	DROP SCHEMA [TestSchema]
+END
+GO
+
+EXEC('CREATE SCHEMA [TestSchema] AUTHORIZATION [dbo]');
+
+CREATE TABLE [dbo].[TestSchemaX]
+(
+	[TestSchemaXID] int NOT NULL CONSTRAINT [PK_TestSchemaX] PRIMARY KEY,
+	[Field1]        int NOT NULL
+);
+GO
+
+CREATE TABLE [dbo].[TestSchemaY]
+(
+	[TestSchemaXID]       INT NOT NULL,
+	[ParentTestSchemaXID] INT NOT NULL,
+	[OtherID]             INT NOT NULL,
+	CONSTRAINT [FK_TestSchemaY_TestSchemaX]       FOREIGN KEY (TestSchemaXID)       REFERENCES [TestSchemaX] ([TestSchemaXID]),
+	CONSTRAINT [FK_TestSchemaY_ParentTestSchemaX] FOREIGN KEY (ParentTestSchemaXID) REFERENCES [TestSchemaX] ([TestSchemaXID]),
+	CONSTRAINT [FK_TestSchemaY_OtherID]           FOREIGN KEY (TestSchemaXID)       REFERENCES [TestSchemaX] ([TestSchemaXID])
+);
+GO
+
+CREATE TABLE [TestSchema].[TestSchemaA]
+(
+	[TestSchemaAID] int NOT NULL CONSTRAINT [PK_TestSchema_TestSchemaA] PRIMARY KEY,
+	[Field1]        int NOT NULL
+);
+GO
+
+CREATE TABLE [TestSchema].[TestSchemaB]
+(
+	[TestSchemaBID]       INT NOT NULL,
+	[OriginTestSchemaAID] INT NOT NULL,
+	[TargetTestSchemaAID] INT NOT NULL,
+	CONSTRAINT [PK_TestSchema_TestSchemaB] PRIMARY KEY (TestSchemaBID),
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_OriginTestSchemaA] FOREIGN KEY (OriginTestSchemaAID) REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID]),
+	CONSTRAINT [FK_TestSchema_TestSchemaBY_TargetTestSchemaA] FOREIGN KEY (TargetTestSchemaAID) REFERENCES [TestSchema].[TestSchemaA] ([TestSchemaAID])
+);
+GO
