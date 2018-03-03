@@ -1,10 +1,10 @@
-﻿using System.Linq;
+﻿using LinqToDB;
 using NUnit.Framework;
-using Tests.Model;
-using LinqToDB;
+using System.Linq;
 
 namespace Tests.UserTests
 {
+	[ActiveIssue(873, Details = "Also check WCF test error for Access")]
 	public class Issue873Tests : TestBase
 	{
 		[Test, DataContextSource]
