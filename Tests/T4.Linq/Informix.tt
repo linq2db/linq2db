@@ -1,0 +1,12 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                         #>
+<#@ output extension=".generated.cs"                                                #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.Informix.ttinclude"      #>
+<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"   #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\IBM.Data.Informix.dll" #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"           #>
+<#
+	NamespaceName = "InformixDataContext";
+
+	LoadInformixMetadata("DBHost", "9088", "ol_informix1170", "TestData", "informix", "TestPassword");
+	GenerateModel();
+#>

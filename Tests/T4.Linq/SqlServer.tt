@@ -1,0 +1,52 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                                 #>
+<#@ output extension=".generated.cs"                                                        #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"             #>
+<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"           #>
+<#@ include file="..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"             #>
+<#@ include file="SqlServer.ttinclude"                                                      #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\Microsoft.SqlServer.Types.dll" #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"                   #>
+<#
+//	NamespaceName   = "DataContext";
+//	DataContextName = "NorthwindDB";
+	DatabaseName    = null;//"Northwind";
+	GenerateDatabaseName = true;
+	OneToManyAssociationType = "List<{0}>";
+
+//	BaseEntityClass = "object";
+
+//	GenerateBackReferences = false;
+//	GenerateAssociations = true;
+
+//	GetSchemaOptions.GetProcedures = false;
+
+	IncludeDefaultSchema = false;
+	GenerateObsoleteAttributeForAliases = true;
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
+
+	GenerateSchemaAsType = true;
+
+	SchemaNameMapping.Add("TestSchema", "MySchema");
+
+	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword");
+
+	Tables["Order Details"].Columns["OrderID"]. MemberName = "ID";
+
+	GetTable("Categories").   AliasPropertyName = "CATEG";
+	GetTable("Categories").   AliasTypeName     = "CATEG";
+	GetTable("Order Details").AliasPropertyName = "Order_Details";
+	GetTable("Order Details").AliasTypeName     = "ORD_DET";
+
+	GenerateTypesFromMetadata();
+
+	DataContextName   = null;
+	DataContextObject = null;
+
+	DatabaseName = null;//"TestData";
+
+	//GenerateConstructors = false;
+
+	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
+	GenerateModel();
+#>

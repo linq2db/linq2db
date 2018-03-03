@@ -198,7 +198,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentAssociation()
+		public void FluentAssociation1()
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -207,6 +207,34 @@ namespace Tests.Mapping
 				.Association( e => e.Parent, e => e.ID, o => o.ID1 );
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+		}
+
+		[Test]
+		public void FluentAssociation2()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyClass>()
+				.Association( e => e.Parent, (e, o) => e.ID == o.ID1 );
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+		}
+
+		[Test]
+		public void FluentAssociation3()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyInheritedClass>()
+				.Association( e => e.Assosiations, (e, o) => e.Id == o.ID1 );
+
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
 
 			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
 		}

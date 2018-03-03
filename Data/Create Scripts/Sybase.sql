@@ -244,3 +244,13 @@ CREATE TABLE TestMerge2
 
 	CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED (Id)
 )
+
+GO
+CREATE TABLE TestMergeIdentity
+(
+	Id     int IDENTITY,
+	Field  int NULL,
+
+	CONSTRAINT PK_TestMergeIdentity PRIMARY KEY CLUSTERED (Id)
+)
+

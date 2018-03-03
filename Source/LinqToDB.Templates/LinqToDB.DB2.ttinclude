@@ -1,0 +1,28 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.DB2.DB2Tools.ResolveDB2(
+		typeof(IBM.Data.DB2.DB2Connection).Assembly);
+#><#+
+LinqToDB.Data.DataConnection GetDB2Connection(string connectionString)
+{
+	var conn = new IBM.Data.DB2.DB2Connection(connectionString);
+	return LinqToDB.DataProvider.DB2.DB2Tools.CreateDataConnection(conn);
+}
+
+LinqToDB.Data.DataConnection GetDB2Connection(string server, string port, string database, string uid, string password)
+{
+	return GetDB2Connection(string.Format("Server={0}:{1};Database={2};UID={3};PWD={4};", server, port, database, uid, password));
+}
+
+void LoadDB2Metadata(string connectionString)
+{
+	var dataConnection = GetDB2Connection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadDB2Metadata(string server, string port, string database, string uid, string password)
+{
+	var dataConnection = GetDB2Connection(server, port, database, uid, password);
+	LoadMetadata(dataConnection);
+}
+#>

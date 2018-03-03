@@ -19,7 +19,9 @@ namespace Tests.UserTests
 					db.DataProvider.SqlProviderFlags.MaxInListValuesCount = 1;
 
 					var ids = new[] {1, 2};
-					AreEqual(Types.Where(_ => !ids.Contains(_.ID)), db.Types.Where(_ => !ids.Contains(_.ID)));
+					AreEqual(
+						GetTypes(context).Where(_ => !ids.Contains(_.ID)),
+						db.Types.         Where(_ => !ids.Contains(_.ID)));
 
 				}
 				finally

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>linq2db.t4models</id>
+		<version>2.0.0-rc</version>
+		<title>LINQ to DB T4 Models</title>
+		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
+		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
+		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
+		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
+		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>T4 templates to generate data models for LINQ to DB SQL</description>
+		<summary />
+		<tags>
+			linq linq2db LinqToDB ORM database DB T4 datamodel SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
+			Oracle ODP PostgreSQL DB2 Informix SapHana
+		</tags>
+		<dependencies>
+			<dependency id="linq2db" version="2.0.0-rc"/>
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="Init.ps1"                                         target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll" target="tools" />
+
+		<file src="..\Source\LinqToDB.Templates\*.*"                 target="content\LinqToDB.Templates" />
+		<file src="t4models\*.*"                                     target="content\LinqToDB.Templates" />
+	</files>
+</package>

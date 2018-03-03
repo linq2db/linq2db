@@ -188,8 +188,6 @@ namespace Tests.Linq
 					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task GroupBy2Async(string context)
 		{
@@ -198,8 +196,6 @@ namespace Tests.Linq
 					       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
 					(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void GroupBy3(string context)
@@ -337,6 +333,10 @@ namespace Tests.Linq
 			[Association(ExpressionPredicate = "MiddleGenericPredicate" , CanBeNull = true)]
 			public Middle MiddleGeneric { get; set; }
 
+			public Middle MiddleRuntime { get; set; }
+
+			public IEnumerable<Middle> MiddlesRuntime { get; set; }
+
 			[UsedImplicitly]
 			static Expression<Func<Top, Middle, bool>> MiddleGenericPredicate =>
 				(t, m) => t.ParentID == m.ParentID && m.ChildID > 1;
@@ -363,7 +363,7 @@ namespace Tests.Linq
 			public int GrandChildID;
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
 		public void TestTernary1(string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -383,7 +383,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
 		public void TestTernary2(string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -557,6 +557,19 @@ namespace Tests.Linq
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
 			public Parent170 Parent;
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+			public List<Child170> Children;
+		}
+
+		[Table("Child")]
+		class Child170
+		{
+			[Column] public int ParentID;
+			[Column] public int ChildID;
+
+			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
+			public Parent170 Parent;
 		}
 
 		[Test, DataContextSource]
@@ -565,6 +578,21 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var value = db.GetTable<Parent170>().Where(x => x.Value1 == null).Select(x => (int?)x.Parent.Value1).First();
+
+				Assert.That(value, Is.Null);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue170SelectManyTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var value = db.GetTable<Parent170>()
+					.SelectMany(x => x.Children)
+					.Where(x => x.Parent.Value1 == null)
+					.Select(x => (int?)x.Parent.Value1)
+					.First();
 
 				Assert.That(value, Is.Null);
 			}
@@ -597,7 +625,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
 		public void TestGenericAssociation1(string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -614,6 +642,58 @@ namespace Tests.Linq
 
 				Assert.NotNull(list[0]);
 				Assert.Null   (list[1]);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
+		public void TestGenericAssociationRuntime(string context)
+		{
+			var ids = new[] { 1, 5 };
+
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<Top>()
+				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 );
+
+			using (var db = GetDataContext(context, ms))
+			{
+				var q =
+					from t in db.GetTable<Top>()
+					where ids.Contains(t.ParentID)
+					orderby t.ParentID
+					select t.MiddleRuntime == null ? null : t.MiddleRuntime.Bottom;
+
+				var list = q.ToList();
+
+				Assert.NotNull(list[0]);
+				Assert.Null   (list[1]);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.Access, ProviderName.SQLiteMS)]
+		public void TestGenericAssociationRuntimeMany(string context)
+		{
+			var ids = new[] { 1, 5 };
+
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<Top>()
+				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 );
+
+			using (var db = GetDataContext(context, ms))
+			{
+				var q =
+					from t in db.GetTable<Top>()
+					from m in t.MiddlesRuntime
+					where ids.Contains(t.ParentID)
+					orderby t.ParentID
+					select new {t, m};
+
+				var list = q.ToList();
+
+				Assert.AreEqual(1, list.Count());
 			}
 		}
 

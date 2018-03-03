@@ -1,0 +1,4 @@
+<#@ assembly name="$(SolutionDir).tools\linq2db.t4models\Npgsql.dll" #>
+<#@ assembly name="$(SolutionDir).tools\linq2db.t4models\System.Threading.Tasks.Extensions.dll" #>
+<#@ include file="LinqToDB.Tools.ttinclude" #>
+<#@ include file="LinqToDB.PostgreSQL.ttinclude" #>

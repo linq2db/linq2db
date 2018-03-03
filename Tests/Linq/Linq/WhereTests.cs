@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Tools;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -269,6 +269,34 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == 1 && null != p.FirstName select p);
+		}
+
+		[Test, DataContextSource]
+		public void ComparasionNullCheckOn1(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.Where(p => p.Value1 != 1),
+					db.Parent.Where(p => p.Value1 != 1));
+		}
+
+		[Test, DataContextSource]
+		public void ComparasionNullCheckOn2(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.Where(p => 1 != p.Value1),
+					db.Parent.Where(p => 1 != p.Value1));
+		}
+
+		[Test, DataContextSource]
+		public void ComparasionNullCheckOff(string context)
+		{
+			using (new WithoutComparasionNullCheck())
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.Where(p => p.Value1 != 1 && p.Value1 != null),
+					db.Parent.Where(p => p.Value1 != 1));
 		}
 
 		[Test, DataContextSource]
@@ -616,7 +644,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in 
+						join ch in
 							from c in GrandChild
 							where c.ParentID > 0
 							select new { ParentID = 1 + c.ParentID, c.ChildID }
@@ -626,7 +654,7 @@ namespace Tests.Linq
 					select p
 					,
 					from p in db.Parent
-						join ch in 
+						join ch in
 							from c in db.GrandChild
 							where c.ParentID > 0
 							select new { ParentID = 1 + c.ParentID, c.ChildID }
@@ -642,7 +670,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in 
+						join ch in
 							from c in Child
 							where c.ParentID > 0
 							select new { c.ParentID, c.ChildID }
@@ -652,7 +680,7 @@ namespace Tests.Linq
 					select p
 					,
 					from p in db.Parent
-						join ch in 
+						join ch in
 							from c in db.Child
 							where c.ParentID > 0
 							select new { c.ParentID, c.ChildID }
@@ -1063,6 +1091,23 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void GroupBySubQquery2In(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var p1    = Child;
+				var qry1  = p1.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
+				var qry12 = p1.Where(x => x.ChildID.In(qry1));
+
+				var p2    = db.Child;
+				var qry2  = p2.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
+				var qry22 = p2.Where(x => x.ChildID.In(qry2));
+
+				AreEqual(qry12, qry22);
+			}
+		}
+
+		[Test, DataContextSource]
 		public void HavingTest1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1153,7 +1198,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
-					   Types
+					GetTypes(context)
 						.Where(_ => _.DateTimeValue == new DateTime(2009, 9, 27))
 						.Select(_ => _),
 					db.Types
@@ -1183,7 +1228,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				AreEqual(
-					   Types
+					GetTypes(context)
 						.Where(_ => _.DateTimeValue.Date == new DateTime(2009, 9, 20).Date)
 						.Select(_ => _),
 					db.Types
