@@ -17,7 +17,7 @@ namespace LinqToDB.SchemaProvider
 		private AssociationType _associationType = AssociationType.Auto;
 		public  AssociationType  AssociationType
 		{
-			get { return _associationType; }
+			get => _associationType;
 			set
 			{
 				_associationType = value;

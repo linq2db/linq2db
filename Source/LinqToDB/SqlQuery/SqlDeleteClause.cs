@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlDeleteClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlDeleteClause2 : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
 		public SqlTable Table { get; set; }
 
@@ -28,7 +28,7 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			var clone = new SqlDeleteClause();
+			var clone = new SqlDeleteClause2();
 
 			if (Table != null)
 				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
@@ -55,7 +55,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.DeleteClause;
+		public QueryElementType ElementType => QueryElementType.Column;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

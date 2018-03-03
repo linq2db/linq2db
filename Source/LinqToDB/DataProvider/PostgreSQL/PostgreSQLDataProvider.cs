@@ -35,8 +35,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (version == PostgreSQLVersion.v93)
 				SqlProviderFlags.IsApplyJoinSupported = true;
 
-			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
-			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 
 			SetCharFieldToType<char>("bpchar", (r, i) => DataTools.GetChar(r, i));
 

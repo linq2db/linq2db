@@ -6,6 +6,7 @@ using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
+using Tests.UserTests;
 
 namespace Tests.Linq
 {
@@ -132,6 +133,21 @@ namespace Tests.Linq
 				var r = await db.Person.ContainsAsync(p);
 
 				Assert.That(r, Is.True);
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task TestFirstOrDefault(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var param = 4;
+				var resultQuery =
+						from o in db.Parent
+						where Sql.Ext.In(o.ParentID, 1, 2, 3, (int?)null) || o.ParentID == param
+						select o;
+
+				var zz = await resultQuery.FirstOrDefaultAsync();
 			}
 		}
 	}

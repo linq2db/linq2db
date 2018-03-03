@@ -86,7 +86,7 @@ namespace LinqToDB
 				table.PhysicalName   = Name ?? member.Name;
 				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
 
-				if (Schema   != null) table.Owner    = Schema;
+				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;
 			}
 		}

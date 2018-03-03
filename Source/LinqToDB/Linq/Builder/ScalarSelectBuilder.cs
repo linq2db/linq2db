@@ -133,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual SqlStatement GetResultStatement()
 			{
-				return SelectQuery;
+				return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 			}
 		}
 	}

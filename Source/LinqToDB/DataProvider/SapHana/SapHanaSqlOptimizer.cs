@@ -20,10 +20,10 @@ namespace LinqToDB.DataProvider.SapHana
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
-					statement = GetAlternativeDelete((SelectQuery) statement);
+					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
 					break;
 				case QueryType.Update:
-					statement = GetAlternativeUpdate((SelectQuery) statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
 					break;
 			}
 

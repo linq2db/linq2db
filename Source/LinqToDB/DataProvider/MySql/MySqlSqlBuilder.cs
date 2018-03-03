@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
@@ -95,11 +95,11 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDeleteClause(SelectQuery selectQuery)
+		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
-			var table = selectQuery.Delete.Table != null ?
-				(selectQuery.From.FindTableSource(selectQuery.Delete.Table) ?? selectQuery.Delete.Table) :
-				selectQuery.From.Tables[0];
+			var table = deleteStatement.Table != null ?
+				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
+				deleteStatement.SelectQuery.From.Tables[0];
 
 			AppendIndent()
 				.Append("DELETE ")
@@ -107,17 +107,17 @@ namespace LinqToDB.DataProvider.MySql
 				.AppendLine();
 		}
 
-		protected override void BuildUpdateClause(SelectQuery selectQuery)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			base.BuildFromClause(selectQuery);
+			base.BuildFromClause(statement, selectQuery);
 			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet(selectQuery);
+			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		public static char ParameterSymbol           { get; set; }
@@ -192,7 +192,7 @@ namespace LinqToDB.DataProvider.MySql
 					}
 
 				case ConvertType.NameToDatabase   :
-				case ConvertType.NameToOwner      :
+				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :
 					if (value != null)
 					{
@@ -229,13 +229,13 @@ namespace LinqToDB.DataProvider.MySql
 				throwExceptionIfTableNotFound);
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			var position = StringBuilder.Length;
 
-			BuildInsertQuery(selectQuery);
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert);
 
-			if (selectQuery.Update.Items.Count > 0)
+			if (insertOrUpdate.Update.Items.Count > 0)
 			{
 				AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
@@ -243,7 +243,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				var first = true;
 
-				foreach (var expr in selectQuery.Update.Items)
+				foreach (var expr in insertOrUpdate.Update.Items)
 				{
 					if (!first)
 						StringBuilder.Append(',').AppendLine();
@@ -271,7 +271,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildEmptyInsert(SelectQuery selectQuery)
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.AppendLine("() VALUES ()");
 		}
@@ -289,7 +289,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 

@@ -2,16 +2,14 @@
 /*
 To use this extension you should:
 1) Reference Humanizer NuGet package into your project
-2) Iclude Humanizer.ttinclude
-3) Reference assembly like aassembly name="$(SolutionDir)\packages\Humanizer.Core.2.2.0\lib\netstandard1.0\Humanizer.dll"
+2) Include Humanizer.ttinclude
+3) Reference assembly like <_#@ assembly name="$(SolutionDir)\packages\Humanizer.Core.2.2.0\lib\netstandard1.0\Humanizer.dll" #_>
 */
-
 #>
 <#@ import namespace="Humanizer" #>
 <#
-	{
-		ToPlural    = s => s.Pluralize  (inputIsKnownToBeSingular: false);
-		ToSingular  = s => s.Singularize(inputIsKnownToBePlural:   false);
-		ToValidName = (s, r) => s.Pascalize();
-	}
+	NormalizeNames = true;
+	ToPlural       = s => s.Pluralize  (inputIsKnownToBeSingular: false);
+	ToSingular     = s => s.Singularize(inputIsKnownToBePlural:   false);
+	ToValidName    = (s, r) => s.Pascalize();
 #>

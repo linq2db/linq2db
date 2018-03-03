@@ -16,7 +16,8 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			CheckAliases(statement, 30);
 
-			if (statement is SelectQuery selectQuery)
+			var selectQuery = statement.SelectQuery;
+			if (selectQuery != null)
 			{
 				new QueryVisitor().Visit(selectQuery.Select, element =>
 				{
@@ -33,8 +34,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete((SelectQuery) statement);
-				case QueryType.Update : return GetAlternativeUpdate((SelectQuery) statement);
+				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement) statement);
+				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement) statement);
 				default               : return statement;
 			}
 		}

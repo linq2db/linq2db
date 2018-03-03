@@ -18,14 +18,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			if (Statement is SelectQuery selectQuery)
+			var insertClause = Statement.GetInsertClause();
+			if (insertClause != null)
 			{
-				var into = selectQuery.Insert.Into;
+				var into = insertClause.Into;
 				var attr = GetSequenceNameAttribute(into, false);
 				var name =
 					attr != null
@@ -37,12 +38,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				name = Convert(name, ConvertType.NameToQueryTable);
 
 				var database = GetTableDatabaseName(into);
-				var owner = GetTableOwnerName(into);
+				var schema   = GetTableSchemaName(into);
 
 				AppendIndent()
 					.Append("SELECT currval('");
 
-				BuildTableName(StringBuilder, database, owner, name.ToString());
+				BuildTableName(StringBuilder, database, schema, name.ToString());
 
 				StringBuilder.AppendLine("')");
 			}
@@ -92,10 +93,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected sealed override bool IsReserved(string word)
@@ -114,7 +115,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToQueryTableAlias:
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 					if (value != null && IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						var name = value.ToString();
@@ -127,7 +128,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 						if (IsReserved(name))
 							return '"' + name + '"';
-						
+
 						if (name.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
 							return '"' + name + '"';
 					}
@@ -162,11 +163,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
 					var database = GetTableDatabaseName(table);
-					var owner    = GetTableOwnerName   (table);
+					var schema   = GetTableSchemaName  (table);
 
-					var sb = BuildTableName(new StringBuilder(), database, owner, name);
+					var sb = BuildTableName(new StringBuilder(), database, schema, name);
 
-					return new SqlExpression("nextval('" + sb + "')", Precedence.Primary);
+					return new SqlExpression($"nextval('{sb}')", Precedence.Primary);
 				}
 			}
 
@@ -204,17 +205,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
-			if (owner    != null && owner.   Length == 0) owner    = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
 
 			// "db..table" syntax not supported and postgresql doesn't support database name, if it is not current database
 			// so we can clear database name to avoid error from server
-			if (database != null && owner == null)
+			if (database != null && schema == null)
 				database = null;
 
-			return base.BuildTableName(sb, database, owner, table);
+			return base.BuildTableName(sb, database, schema, table);
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

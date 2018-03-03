@@ -1,3 +1,43 @@
+LINQ to DB 2.0.0  Release Notes
+---------------------------------
+*IMPORTANT: LINQ to DB 2.0 is not released yet*
+- breaking change: dropped support for .NET 4.0, Silverlight 4-5 and Windows 8 Store frameworks. New target frameworks list is netcoreapp2.0, netstandard1.6, netstandard2.0 and net45
+
+- feature: predicate expression support added for associations configuration using fluent mapping (#961)
+- feature: support creation of query parameters in extension builders (#964)
+- feature: new configuration flag LinqToDB.Common.Configuration.PrefereApply
+- feature: new In/NotIn extension methods added to LinqToDB.Tools.Extensions
+- feature: [Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, MS SQL] CTE (common table expressions) support implemented including WCF support (see DataExtensions.GetCte(),  LinqExtensions.AsCte() methods)
+- feature: IBM.Data.DB2.Core provider support
+- feature: Oracle Data Provider for .NET Core provider support
+
+- improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
+- improvement: [Oracle] corrected date literal generation (#969)
+
+- fix: fixed another case of defect #170, where default(T) value could be selected for non-nullable field instead of NULL from left join, if SelectMany() call used in source (#1012)
+- fix: [MS SQL, Sybase] updated Merge insert operation to respect SkipOnInsert mapping flag for identity fields when no custom insert expression specified. With this fix merge operation will allow database to generate identity value instead of use of value from source (#914)
+- fix: [MS SQL] fixed old(!) Merge API to not try to update identity fields during update operation (#1007)
+- fix: [SQLite] fixed incorrect SQL generation for DateTime.AddDays() method (#998)
+- fix: fixed issue where incorrect query filter generated for left join association to an entity with inheritance mapping (#956)
+- fix: fixed exception during sql generation for some queries when joins optimization enabled and table hints used (#956)
+- fix: fixed regression in sql generation for complex subqueries containing joins, goup by and contains expressions (#928)
+- fix: rare conversion error for binary data selection over WCF (#925)
+- fix: [DB2, MS SQL, SQL CE]fixed invalid sql generation for queries with empty select list and Take()/Skip() calls (#817)
+- fix: name spelling fix: ForeingKeyInfo -> ForeignKeyInfo (#941)
+- fix: Sql.Lower/Sql.Upper functions should be evaluated on server when possible (#819)
+- fix: [Firebird] fixed Sql.DatePart function support for seconds and milliseconds (#967)
+- fix: async query could be blocked by Connection.Open used internally instead of Connection.OpenAsync (#1023)
+
+- other changes: t4models repository moved to main repository
+
+- for developers: SelectQuery class refactoring (#936, #938)
+- for developers: *DataProviders.txt tests configuration file replaced with JSON-based *DataProviders.json files (TODO: add link to readme when it is updated)
+- for developers: migrated to latest C# version
+- for developers: moved methods SchemaProviderBase.ToTypeName(), SchemaProviderBase.ToValidName() to public API (#944, #963)
+- for developers: dual owner/schema naming replaced with schema name in code
+- for developers: ActiveIssue attribute added for tests
+
+
 LINQ to DB 1.10.1  Release Notes
 ---------------------------------
 - fix async retry policy (#919)

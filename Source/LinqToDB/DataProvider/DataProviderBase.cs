@@ -476,11 +476,8 @@ namespace LinqToDB.DataProvider
 			where TTarget : class
 			where TSource : class
 		{
-			if (dataConnection == null)
-				throw new ArgumentNullException("dataConnection");
-
-			if (merge == null)
-				throw new ArgumentNullException("merge");
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (merge          == null) throw new ArgumentNullException(nameof(merge));
 
 			var builder = GetMergeBuilder(dataConnection, merge);
 
@@ -498,11 +495,8 @@ namespace LinqToDB.DataProvider
 			where TTarget : class
 			where TSource : class
 		{
-			if (dataConnection == null)
-				throw new ArgumentNullException("dataConnection");
-
-			if (merge == null)
-				throw new ArgumentNullException("merge");
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (merge          == null) throw new ArgumentNullException(nameof(merge));
 
 			var builder = GetMergeBuilder(dataConnection, merge);
 

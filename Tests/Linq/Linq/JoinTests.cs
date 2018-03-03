@@ -56,8 +56,8 @@ namespace Tests.Linq
 			Func<TFirst, TSecond, TResult> resultSelector,
 			SqlJoinType joinType)
 		{
-			if (first == null) throw new ArgumentNullException("first");
-			if (second == null) throw new ArgumentNullException("second");
+			if (first  == null) throw new ArgumentNullException(nameof(first));
+			if (second == null) throw new ArgumentNullException(nameof(second));
 
 			switch (joinType)
 			{
@@ -96,7 +96,7 @@ namespace Tests.Linq
 
 					return res;
 				default:
-					throw new ArgumentOutOfRangeException("joinType", joinType, null);
+					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
 			}
 		}
 	}
@@ -951,7 +951,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
+		[Test, Explicit, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
 		public void StackOverflow(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1232,6 +1232,27 @@ namespace Tests.Linq
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
+			}
+		}
+
+		[Test, IncludeDataContextSource(true, ProviderName.SqlServer2012)]
+		public void FromLeftJoinTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					from g in db.GrandChild
+						.Where(t =>
+							db.Person
+								.Select(r => r.ID)
+								.Contains(c.ChildID))
+						.DefaultIfEmpty()
+					select new { p.ParentID }
+					;
+
+				var list = q.ToList();
 			}
 		}
 	}

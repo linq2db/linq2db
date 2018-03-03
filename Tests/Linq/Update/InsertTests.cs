@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -416,7 +417,7 @@ namespace Tests.xUpdate
 					db.Parent.Delete(p => p.ParentID > 1000);
 
 					db.Insert(new Parent { ParentID = id, Value1 = id });
-		
+
 					Assert.AreEqual(1,
 						db.Parent
 							.Where(p => p.ParentID == id)
@@ -1009,7 +1010,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource(ProviderName.OracleNative)]
 		public void InsertOrUpdate2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1524,6 +1525,24 @@ namespace Tests.xUpdate
 				{
 					tbl.Delete(r => r.ID >= 1000);
 				}
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void InsertWith(string context)
+		{
+			var m = null as int?;
+
+			using (var db = GetDataContext(context))
+			{
+				(
+					from c in db.Child.With("INDEX(IX_ChildIndex)")
+					join id in db.GrandChild on c.ParentID equals id.ParentID
+					where id.ChildID == m
+					select c.ChildID
+				)
+				.Distinct()
+				.Insert(db.Parent, t => new Parent { ParentID = t });
 			}
 		}
 	}

@@ -8,22 +8,21 @@ namespace LinqToDB.SqlQuery
 
 	class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, SelectQuery selectQuery)
+		public SelectQueryOptimizer(SqlProviderFlags flags, SqlStatement statement, SelectQuery selectQuery)
 		{
 			_flags       = flags;
 			_selectQuery = selectQuery;
+			_statement   = statement;
 		}
 
 		readonly SqlProviderFlags _flags;
 		readonly SelectQuery      _selectQuery;
+		readonly SqlStatement     _statement;
 
 		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
 		{
 #if DEBUG
-			if (_selectQuery.IsUpdate)
-			{
-			}
-
+			// ReSharper disable once NotAccessedVariable
 			var sqlText = _selectQuery.SqlText;
 
 			var dic = new Dictionary<SelectQuery,SelectQuery>();
@@ -43,9 +42,9 @@ namespace LinqToDB.SqlQuery
 			OptimizeUnions();
 			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>());
 			ResolveFields();
-			_selectQuery.SetAliases();
 
 #if DEBUG
+			// ReSharper disable once RedundantAssignment
 			sqlText = _selectQuery.SqlText;
 #endif
 		}
@@ -59,16 +58,16 @@ namespace LinqToDB.SqlQuery
 
 		void ResolveFields()
 		{
-			var root = GetQueryData(_selectQuery);
+			var root = GetQueryData(_statement, _selectQuery);
 
 			ResolveFields(root);
 		}
 
-		static QueryData GetQueryData(SelectQuery selectQuery)
+		static QueryData GetQueryData(SqlStatement statement, SelectQuery selectQuery)
 		{
 			var data = new QueryData { Query = selectQuery };
 
-			new QueryVisitor().VisitParentFirst(selectQuery, e =>
+			new QueryVisitor().VisitParentFirst(statement as IQueryElement ?? selectQuery, e =>
 			{
 				switch (e.ElementType)
 				{
@@ -86,7 +85,7 @@ namespace LinqToDB.SqlQuery
 						{
 							if (e != selectQuery)
 							{
-								data.Queries.Add(GetQueryData((SelectQuery)e));
+								data.Queries.Add(GetQueryData(null, (SelectQuery)e));
 								return false;
 							}
 
@@ -97,6 +96,9 @@ namespace LinqToDB.SqlQuery
 						return ((SqlColumn)e).Parent == selectQuery;
 
 					case QueryElementType.SqlTable :
+						return false;
+
+					case QueryElementType.SqlCteTable :
 						return false;
 				}
 
@@ -156,8 +158,10 @@ namespace LinqToDB.SqlQuery
 
 			var dic = new Dictionary<ISqlExpression,ISqlExpression>();
 
-			foreach (SqlField field in data.Fields)
+			foreach (var sqlExpression in data.Fields)
 			{
+				var field = (SqlField)sqlExpression;
+
 				if (dic.ContainsKey(field))
 					continue;
 
@@ -330,7 +334,7 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(_selectQuery, e =>
 			{
-				if (!(e is SelectQuery sql) || sql.From.Tables.Count != 1 || !sql.IsSimple || sql.IsInsert || sql.IsUpdate || sql.IsDelete)
+				if (!(e is SelectQuery sql) || sql.From.Tables.Count != 1 || !sql.IsSimple)
 					return;
 
 				var table = sql.From.Tables[0];
@@ -398,7 +402,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql && sql != _selectQuery)
 				{
 					sql.ParentSelect = _selectQuery;
-					new SelectQueryOptimizer(_flags, sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
+					new SelectQueryOptimizer(_flags, _statement, sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
 
 					if (sql.IsParameterDependent)
 						_selectQuery.IsParameterDependent = true;
@@ -600,14 +604,13 @@ namespace LinqToDB.SqlQuery
 							visitor.VisitAll(_selectQuery.Having,  TableCollector);
 							visitor.VisitAll(_selectQuery.OrderBy, TableCollector);
 
-							if (_selectQuery.IsInsert)
-								visitor.VisitAll(_selectQuery.Insert, TableCollector);
-
-							if (_selectQuery.IsUpdate)
-								visitor.VisitAll(_selectQuery.Update, TableCollector);
-
-							if (_selectQuery.IsDelete)
-								visitor.VisitAll(_selectQuery.Delete, TableCollector);
+							if (_statement != null)
+							{
+								foreach (var clause in _statement.EnumClauses())
+								{
+									visitor.VisitAll(clause, TableCollector);
+								}
+							}
 
 							visitor.VisitAll(_selectQuery.From, expr =>
 							{
@@ -714,7 +717,7 @@ namespace LinqToDB.SqlQuery
 
 				query.Select.From.Tables.Clear();
 
-				var sources = new HashSet<ISqlTableSource>(tables.Select(t => t.Source));
+				var sources     = new HashSet<ISqlTableSource>(tables.Select(t => t.Source));
 				var foundFields = new HashSet<ISqlExpression>();
 
 				QueryHelper.CollectDependencies(query.RootQuery(), sources, foundFields);
@@ -728,7 +731,7 @@ namespace LinqToDB.SqlQuery
 					return toReplace.TryGetValue(e, out var newValue) ? newValue : e;
 				}
 
-				((ISqlExpressionWalkable) query.RootQuery()).Walk(false, TransformFunc);
+				((ISqlExpressionWalkable)query.RootQuery()).Walk(false, TransformFunc);
 				foreach (var j in joins)
 				{
 					((ISqlExpressionWalkable) j).Walk(false, TransformFunc);
@@ -782,7 +785,7 @@ namespace LinqToDB.SqlQuery
 			bool optimizeValues,
 			bool optimizeColumns)
 		{
-			var query = (SelectQuery)childSource. Source;
+			var query = (SelectQuery)childSource.Source;
 
 			var isQueryOK = query.From.Tables.Count == 1;
 
@@ -805,10 +808,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var c in query.Select.Columns)
 				map.Add(c, c.Expression);
 
-			var top = _selectQuery;
-
-			while (top.ParentSelect != null)
-				top = top.ParentSelect;
+			var top = _statement ?? (IQueryElement)_selectQuery.RootQuery();
 
 			((ISqlExpressionWalkable)top).Walk(
 				false, expr => map.TryGetValue(expr, out var fld) ? fld : expr);
@@ -855,13 +855,13 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		void OptimizeApply(SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported, bool optimizeColumns)
+		void OptimizeApply(HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported, bool optimizeColumns)
 		{
 			var joinSource = joinTable.Table;
 
 			foreach (var join in joinSource.Joins)
 				if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
-					OptimizeApply(joinSource, join, isApplySupported, optimizeColumns);
+					OptimizeApply(parentTableSources, joinSource, join, isApplySupported, optimizeColumns);
 
 			if (isApplySupported && !joinTable.CanConvertApply)
 				return;
@@ -879,7 +879,7 @@ namespace LinqToDB.SqlQuery
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(c => IsAggregationFunction(c.Expression));
 
-				if (isApplySupported && (isAgg || sql.Select.HasModifier))
+				if (isApplySupported  && (isAgg || sql.Select.HasModifier))
 					return;
 
 				var tableSources = new HashSet<ISqlTableSource>();
@@ -904,6 +904,14 @@ namespace LinqToDB.SqlQuery
 
 							if (!tableSources.Any(ts => ContainsTable(ts, condition)))
 							{
+								searchCondition.Insert(0, condition);
+								conditions.RemoveAt(i);
+							}
+							else if (parentTableSources.Any(ts => ContainsTable(ts, condition)))
+							{
+								if (isApplySupported && Common.Configuration.Linq.PrefereApply)
+									return;
+
 								searchCondition.Insert(0, condition);
 								conditions.RemoveAt(i);
 							}
@@ -940,7 +948,7 @@ namespace LinqToDB.SqlQuery
 
 						joinTable.Table = table;
 
-						OptimizeApply(tableSource, joinTable, isApplySupported, optimizeColumns);
+						OptimizeApply(parentTableSources, tableSource, joinTable, isApplySupported, optimizeColumns);
 					}
 				}
 			}
@@ -1006,10 +1014,25 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeApplies(bool isApplySupported, bool optimizeColumns)
 		{
+			var tableSources = new HashSet<ISqlTableSource>();
+
 			foreach (var table in _selectQuery.From.Tables)
+			{
+				tableSources.Add(table);
+
 				foreach (var join in table.Joins)
+				{
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
-						OptimizeApply(table, join, isApplySupported, optimizeColumns);
+						OptimizeApply(tableSources, table, join, isApplySupported, optimizeColumns);
+
+					join.Walk(false, e =>
+					{
+						if (e is ISqlTableSource ts && !tableSources.Contains(ts))
+							tableSources.Add(ts);
+						return e;
+					});
+				}
+			}
 		}
 
 		void OptimizeColumns()

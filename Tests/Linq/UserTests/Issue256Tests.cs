@@ -77,14 +77,14 @@ namespace Tests.UserTests
 		}
 
 #if !MONO && !NETSTANDARD1_6
-		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Test, Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
 		[Category("Explicit")]
 		public void SimpleTest(string context, Action<ITestDataContext, byte[], int> action)
 		{
 			Test(context, action, 1);
 		}
 
-		[Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
+		[Test, Issue256TestSource, Explicit("Demonstrates memory leak when fails")]
 		[Category("Explicit")]
 		public void RetryTest(string context, Action<ITestDataContext, byte[], int> action)
 		{

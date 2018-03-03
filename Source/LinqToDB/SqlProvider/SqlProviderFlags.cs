@@ -37,6 +37,12 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public bool IsInnerJoinAsCrossSupported           { get; set; }
 
+		/// <summary>
+		/// Indicates that provider supports CTE expressions.
+		/// If provider does not support CTE, unsuported exception will be thrown when using CTE.
+		/// </summary>
+		public bool IsCommonTableExpressionsSupported     { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;

@@ -2,11 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlTableSource : ISqlTableSource
 	{
+#if DEBUG
+		int id = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+#endif
+
 		public SqlTableSource(ISqlTableSource source, string alias)
 			: this(source, alias, null)
 		{

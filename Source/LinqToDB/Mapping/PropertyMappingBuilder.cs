@@ -1,14 +1,13 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
 {
-	using System.Linq;
-
 	using Expressions;
+	using Extensions;
+	using SqlQuery;
 
 	/// <summary>
 	/// Column or association fluent mapping builder.
@@ -119,7 +118,7 @@ namespace LinqToDB.Mapping
 		{
 			var getter     = _memberGetter;
 			var memberName = null as string;
-			var me         = _memberGetter.Body as MemberExpression;
+			var me         = _memberGetter.Body.Unwrap() as MemberExpression;
 
 			if (me != null && me.Expression is MemberExpression)
 			{
@@ -187,7 +186,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="format">
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, SqlQuery.DefaulNullable)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;

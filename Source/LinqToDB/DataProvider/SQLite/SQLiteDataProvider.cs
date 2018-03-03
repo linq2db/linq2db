@@ -27,10 +27,11 @@ namespace LinqToDB.DataProvider.SQLite
 		protected SQLiteDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsSkipSupported                = false;
-			SqlProviderFlags.IsSkipSupportedIfTake          = true;
-			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
-			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
+			SqlProviderFlags.IsSkipSupported                   = false;
+			SqlProviderFlags.IsSkipSupportedIfTake             = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));

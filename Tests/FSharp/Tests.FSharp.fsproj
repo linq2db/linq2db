@@ -50,14 +50,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Base\Tests.Base.csproj"/>
+		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
-	<!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-			 Other similar extension points exist, see Microsoft.Common.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
-	-->
+
+	<ItemGroup>
+	  <PackageReference Update="FSharp.Core" Version="4.3.4" />
+	</ItemGroup>
 </Project>

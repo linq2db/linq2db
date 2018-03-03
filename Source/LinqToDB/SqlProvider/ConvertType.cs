@@ -72,7 +72,10 @@ namespace LinqToDB.SqlProvider
 		///     SELECT * FROM [ dbo ].[Person]
 		///                   ^ and ^
 		/// </summary>
-		NameToOwner,
+		NameToSchema,
+
+		[Obsolete("Use NameToSchema instead.")]
+		NameToOwner = NameToSchema,
 
 		/// <summary>
 		/// Provided name should be converted to query table name.

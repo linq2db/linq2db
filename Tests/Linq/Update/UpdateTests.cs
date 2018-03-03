@@ -1139,5 +1139,46 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+		[Test, DataContextSource()]
+		public void UpdateMultipleColumns(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ldt = new LinqDataTypes
+				{
+					ID            = 1001,
+					MoneyValue    = 1000,
+					SmallIntValue = 100,
+				};
+
+				try
+				{
+					db.Types.Delete(c => c.ID == ldt.ID);
+					db.Types
+						.Value (t => t.ID,            ldt.ID)
+						.Value (t => t.MoneyValue,    () => ldt.MoneyValue)
+						.Value (t => t.SmallIntValue, () => ldt.SmallIntValue)
+						.Insert()
+						;
+
+					db.Types
+						.Where (t => t.ID == ldt.ID)
+						.Set   (t => t.MoneyValue,    () => 2000)
+						.Set   (t => t.SmallIntValue, () => 200)
+						.Update()
+						;
+
+					var udt = db.Types.Single(t => t.ID == ldt.ID);
+
+					Assert.That(udt.MoneyValue,    Is.Not.EqualTo(ldt.MoneyValue));
+					Assert.That(udt.SmallIntValue, Is.Not.EqualTo(ldt.SmallIntValue));
+				}
+				finally
+				{
+					db.Types.Delete(t => t.ID == ldt.ID);
+				}
+			}
+		}
 	}
 }
