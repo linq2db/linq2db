@@ -8,7 +8,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class InterfaceTests : TestBase
 	{
-		[Test, DataContextSource, Parallelizable(ParallelScope.Children)]
+		[Test, DataContextSource]
 		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))

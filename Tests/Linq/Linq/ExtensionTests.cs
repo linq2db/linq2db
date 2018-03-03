@@ -45,7 +45,7 @@ namespace Tests.Linq
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void OwnerName(string context)
+		public void SchemaName(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().SchemaName("dbo").ToList();

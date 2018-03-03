@@ -77,10 +77,10 @@ namespace Tests.DataProvider
 
 		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 		{
-			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
+			Assert.That(connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 1"),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
 
-			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
+			object actualValue   = connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 2");
 			object expectedValue = value;
 
 			if (convertToString)
@@ -437,13 +437,13 @@ namespace Tests.DataProvider
 			{
 				var arr = new byte[] { 0x30, 0x39 };
 
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleBinary>   ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleBlob>     ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleDecimal>  ("SELECT Cast(1        as decimal) FROM sys.dual").     Value, Is.EqualTo(1));
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleString>   ("SELECT Cast('12345' as char(6))  FROM sys.dual").     Value, Is.EqualTo("12345 "));
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				Assert.That(conn.Execute<Oracle.DataAccess.Types.OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<OracleBinary>   ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<OracleBlob>     ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<OracleDecimal>  ("SELECT Cast(1        as decimal) FROM sys.dual").     Value, Is.EqualTo(1));
+				Assert.That(conn.Execute<OracleString>   ("SELECT Cast('12345' as char(6))  FROM sys.dual").     Value, Is.EqualTo("12345 "));
+				Assert.That(conn.Execute<OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
+				Assert.That(conn.Execute<OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 			}
 		}
 
@@ -962,7 +962,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[System.Data.Linq.Mapping.Table(Name = "stg_trade_information")]
+		[Table(Name = "stg_trade_information")]
 		public class Trade
 		{
 			[Column("STG_TRADE_ID")]          public int       ID             { get; set; }
@@ -1548,8 +1548,8 @@ namespace Tests.DataProvider
 			}
 			else
 			{
-				var value  = ((Oracle.DataAccess.Client.OracleDataReader)rd).GetOracleDecimal(idx);
-				var newval = Oracle.DataAccess.Types.OracleDecimal.SetPrecision(value, value > 0 ? ClrPrecision : (ClrPrecision - 1));
+				var value  = ((OracleDataReader)rd).GetOracleDecimal(idx);
+				var newval = OracleDecimal.SetPrecision(value, value > 0 ? ClrPrecision : (ClrPrecision - 1));
 
 				return newval.Value;
 			}
@@ -1558,9 +1558,9 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow2
 		{
-			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal1;
-			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal2;
-			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal3;
+			[Column] public OracleDecimal Decimal1;
+			[Column] public OracleDecimal Decimal2;
+			[Column] public OracleDecimal Decimal3;
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]
@@ -1706,7 +1706,6 @@ namespace Tests.DataProvider
 				{
 					db.DropTable<ClobEntity>();
 				}
-
 			}
 		}
 
@@ -1839,7 +1838,6 @@ namespace Tests.DataProvider
 			[Column,             Nullable] public byte[]  GUIDDATATYPE   { get; set; } // RAW(16)
 		}
 
-
 		[Test, OracleDataContext]
 		public void Issue539(string context)
 		{
@@ -1900,7 +1898,7 @@ namespace Tests.DataProvider
 				{
 
 					var tableSpace = db.Execute<string>("SELECT default_tablespace FROM sys.dba_users WHERE username = 'ISSUE723SCHEMA'");
-					db.Execute("ALTER USER Issue723Schema quota unlimited on {0}".Args(tableSpace));
+					db.Execute($"ALTER USER Issue723Schema quota unlimited on {tableSpace}");
 
 					db.CreateTable<Issue723Table>(schemaName: "Issue723Schema");
 					Assert.That(db.LastQuery.Contains("Issue723Schema.Issue723Table"));
@@ -2045,7 +2043,7 @@ namespace Tests.DataProvider
 			{
 				var value = v as MyDate;
 				if (value == null) sb.Append("NULL");
-				else               sb.AppendFormat("DATE '{0}-{1}-{2}'", value.Year, value.Month, value.Day);
+				else               sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
 			});
 
 			// Converts object property value to SQL.
@@ -2054,7 +2052,7 @@ namespace Tests.DataProvider
 			{
 				var value = (OracleTimeStampTZ)v;
 				if (value.IsNull) sb.Append("NULL");
-				else              sb.AppendFormat("DATE '{0}-{1}-{2}'", value.Year, value.Month, value.Day);
+				else              sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
 			});
 
 			// Maps OracleTimeStampTZ to MyDate and the other way around.

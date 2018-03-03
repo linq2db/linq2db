@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
+
 using Tests.Model;
 
 using LinqToDB;
@@ -7,9 +9,6 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-#if !NOASYNC
-using System.Threading.Tasks;
-#endif
 
 namespace Tests.xUpdate
 {
@@ -1158,7 +1157,6 @@ namespace Tests.xUpdate
 		}
 		#endregion
 
-#if !NOASYNC
 		#region Async
 		[Test, MergeDataContextSource]
 		public async Task SameSourceInsertFromTableAsyn(string context)
@@ -1221,6 +1219,5 @@ namespace Tests.xUpdate
 			}
 		}
 		#endregion
-#endif
 	}
 }

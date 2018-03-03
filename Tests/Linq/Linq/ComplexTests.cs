@@ -117,7 +117,7 @@ namespace Tests.Linq
 			return value ?? 777;
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void Contains3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -160,7 +160,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void Contains4(string context)
 		{
 			using (var db = GetDataContext(context))

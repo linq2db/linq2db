@@ -23,65 +23,29 @@ namespace Tests.Samples
 	{
 		public class DataContextDecorator : IDataContext
 		{
-			IDataContext  _context;
-			MappingSchema _mappingSchema;
+			readonly IDataContext _context;
 
 			public DataContextDecorator(IDataContext context, MappingSchema mappingSchema)
 			{
-				_context       = context;
-				_mappingSchema = mappingSchema;
+				_context      = context;
+				MappingSchema = mappingSchema;
 			}
 
-			public string ContextID
-			{
-				get
-				{
-					return _context.ContextID;
-				}
-			}
-
-			public Func<ISqlBuilder> CreateSqlProvider
-			{
-				get
-				{
-					return _context.CreateSqlProvider;
-				}
-			}
-
-			public Type                DataReaderType  { get { return _context.DataReaderType; } }
-			public Func<ISqlOptimizer> GetSqlOptimizer { get { return _context.GetSqlOptimizer; } }
+			public string              ContextID         => _context.ContextID;
+			public Func<ISqlOptimizer> GetSqlOptimizer   => _context.GetSqlOptimizer;
+			public Type                DataReaderType    => _context.DataReaderType;
+			public Func<ISqlBuilder>   CreateSqlProvider => _context.CreateSqlProvider;
+			public List<string>        NextQueryHints    => _context.NextQueryHints;
+			public List<string>        QueryHints        => _context.QueryHints;
+			public SqlProviderFlags    SqlProviderFlags  => _context.SqlProviderFlags;
+			
+			public MappingSchema       MappingSchema { get; }
+			public bool                CloseAfterUse { get; set; }
 
 			public bool InlineParameters
 			{
-				get
-				{
-					return _context.InlineParameters;
-				}
-
-				set
-				{
-					_context.InlineParameters = value;
-				}
-			}
-
-			public MappingSchema MappingSchema { get { return _mappingSchema; } }
-			public List<string> NextQueryHints { get { return _context.NextQueryHints; } }
-			public bool         CloseAfterUse  { get; set; }
-
-			public List<string> QueryHints
-			{
-				get
-				{
-					return _context.QueryHints;
-				}
-			}
-
-			public SqlProviderFlags SqlProviderFlags
-			{
-				get
-				{
-					return _context.SqlProviderFlags;
-				}
+				get => _context.InlineParameters;
+				set => _context.InlineParameters = value;
 			}
 
 #pragma warning disable 0067
@@ -144,7 +108,6 @@ namespace Tests.Samples
 				Assert.AreNotEqual(q1, q2);
 				Assert.That(q2.Contains("EntityId"));
 				Assert.That(q2.Contains("EntityName"));
-
 			}
 		}
 	}

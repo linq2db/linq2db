@@ -8,15 +8,15 @@
 	[TestFixture]
 	public class AnalyticTests : TestBase
 	{
-		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, 
+		[Test, IncludeDataContextSource(true, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
 			ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.PostgreSQL)]
 		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Rank1       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
@@ -37,7 +37,7 @@
 						Count12     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 						Count14     = Sql.Ext.Count().Over().ToValue(),
 
-						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() + 
+						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() +
 									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
 									  Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue() +
 									  Sql.Ext.Count().Over().ToValue(),
@@ -77,9 +77,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Rank1       = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID, Sql.NullsPosition.First).ToValue(),
@@ -102,7 +102,7 @@
 						Count13     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1, Sql.NullsPosition.First).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 						Count14     = Sql.Ext.Count().Over().ToValue(),
 
-						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() + 
+						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() +
 									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
 									  Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue() +
 									  Sql.Ext.Count().Over().ToValue(),
@@ -144,9 +144,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						AvgNoOrder          = Sql.Ext.Average<double>(p.Value1, Sql.AggregateModifier.None).Over().ToValue(),
@@ -223,9 +223,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						// type conversion tests
@@ -265,9 +265,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Count1    = Sql.Ext.Count().Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -323,9 +323,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						CovarPop1    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -359,9 +359,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						CovarSamp1    = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -395,9 +395,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						CumeDist1     = Sql.Ext.CumeDist<decimal>().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -405,9 +405,9 @@
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						CumeDist1     = Sql.Ext.CumeDist<decimal>(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
@@ -422,9 +422,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						DenseRank1     = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -432,9 +432,9 @@
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
@@ -448,9 +448,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						FirstValue1     = Sql.Ext.FirstValue(p.Value1, Sql.Nulls.Ignore).Over().ToValue(),
@@ -468,9 +468,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						LastValue1     = Sql.Ext.LastValue(p.Value1, Sql.Nulls.Ignore).Over().ToValue(),
@@ -488,9 +488,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Lag1     = Sql.Ext.Lag(p.Value1, Sql.Nulls.Respect, 1, 0).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -507,9 +507,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Lead1     = Sql.Ext.Lead(p.Value1, Sql.Nulls.Ignore).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -527,9 +527,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						ListAgg1  = Sql.Ext.ListAgg(c.ChildID).WithinGroup.OrderBy(p.Value1).ThenBy(p.ParentTest.Value1).ThenByDesc(c.ParentID).ToValue(),
@@ -551,9 +551,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Max1   = Sql.Ext.Max(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -572,9 +572,9 @@
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Max11  = Sql.Ext.Max(p.Value1, Sql.AggregateModifier.All).ToValue(),
@@ -616,9 +616,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Median1   = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -649,9 +649,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Min1   = Sql.Ext.Min(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -704,9 +704,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						NthValue1   = Sql.Ext.NthValue(c.ChildID, 1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -731,9 +731,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						NTile1     = Sql.Ext.NTile(p.Value1.Value).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -749,9 +749,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentileCont1  = Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderBy(p.Value1).Over().PartitionBy(p.Value1, p.ParentID).ToValue(),
@@ -760,9 +760,9 @@
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentileCont1  = Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderByDesc(p.Value1).ToValue(),
@@ -779,9 +779,9 @@
 		{
 			using (var db = GetDataContext(Discext))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentileDisc1  = Sql.Ext.PercentileDisc<double>(0.5).WithinGroup.OrderBy(p.Value1).Over().PartitionBy(p.Value1, p.ParentID).ToValue(),
@@ -790,9 +790,9 @@
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentileDisc1  = Sql.Ext.PercentileDisc<double>(0.5).WithinGroup.OrderByDesc(p.Value1).ToValue(),
@@ -809,9 +809,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentRank1     = Sql.Ext.PercentRank<double>().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -819,9 +819,9 @@
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentRank3     = Sql.Ext.PercentRank<double>(2, 3).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
@@ -835,9 +835,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						RatioToReport1     = Sql.Ext.RatioToReport<double>(1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -852,9 +852,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						RowNumber1     = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -869,9 +869,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Rank1     = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
@@ -879,9 +879,9 @@
 					};
 				Assert.IsNotEmpty(q.ToArray());
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Rank1     = Sql.Ext.Rank(1000).WithinGroup.OrderBy(p.Value1).ToValue(),
@@ -896,9 +896,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						// type conversion tests
@@ -922,9 +922,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						StdDev1    = Sql.Ext.StdDev<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -977,9 +977,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						StdDevPop1   = Sql.Ext.StdDevPop<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1012,9 +1012,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						StdDevSamp1   = Sql.Ext.StdDevSamp<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1047,9 +1047,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Sum1   = Sql.Ext.Sum(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1060,9 +1060,9 @@
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Sum1   = Sql.Ext.Sum(p.Value1).ToValue(),
@@ -1077,9 +1077,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						VarPop1   = Sql.Ext.VarPop<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1112,9 +1112,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						VarSamp1   = Sql.Ext.VarSamp<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1143,14 +1143,14 @@
 		}
 
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+		[Test, IncludeDataContextSource(ProviderName.OracleManaged, ProviderName.OracleNative)]
 		public void TestVarianceOracle(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Variance1    = Sql.Ext.Variance<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1195,9 +1195,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Min         = Sql.Ext.Min(p.Value1).KeepFirst().OrderBy(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
@@ -1215,9 +1215,9 @@
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = 
+				var q =
 					from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ParentID 
+					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Min         = Sql.Ext.Min(p.Value1).KeepLast().OrderBy(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),

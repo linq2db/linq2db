@@ -60,9 +60,9 @@ namespace Tests.Model
 
 			//provider.SqlQuery = sql;
 
-			query = optimizer.Finalize(query);
+			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
 
-			var cc = provider.CommandCount(query);
+			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();
 
 			var commands = new string[cc];
@@ -71,7 +71,7 @@ namespace Tests.Model
 			{
 				sb.Length = 0;
 
-				provider.BuildSql(i, query, sb);
+				provider.BuildSql(i, statement, sb);
 				commands[i] = sb.ToString();
 			}
 

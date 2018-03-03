@@ -22,7 +22,11 @@ namespace Tests.Samples
 					select c;
 
 				foreach (var category in query)
+				{
+#if !APPVEYOR
 					Console.WriteLine(category.CategoryID);
+#endif
+				}
 			}
 		}
 
@@ -43,8 +47,8 @@ namespace Tests.Samples
 						o.OrderID,
 					};
 
-				foreach (var item in query)
-					Console.WriteLine(item);
+				var data = query.ToArray();
+				Assert.IsNotEmpty(data);
 			}
 		}
 	}
