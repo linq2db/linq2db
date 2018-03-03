@@ -443,7 +443,7 @@ namespace LinqToDB.DataProvider
 
 				SaveParameters(statement.Parameters);
 
-				var queryContext = new QueryContext
+				var queryContext = new QueryContext()
 				{
 					Statement     = new SqlSelectStatement(statement.SelectQuery),
 					SqlParameters = statement.Parameters.ToArray()
@@ -1526,7 +1526,7 @@ namespace LinqToDB.DataProvider
 
 			public SqlInfo[] FixSelectList()
 			{
-				var columns = base.ConvertToIndex(null, 1, ConvertFlags.All);
+				var columns = ConvertToIndex(null, 1, ConvertFlags.All);
 
 				UpdateParameters();
 
