@@ -9,7 +9,7 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 
-	public class FluentMetadataReader : IMetadataReader, ITypelistMetadataReader
+	public class FluentMetadataReader : IMetadataReader, ITypeListMetadataReader
 	{
 		readonly ConcurrentDictionary<Type,List<Attribute>> _types = new ConcurrentDictionary<Type,List<Attribute>>();
 

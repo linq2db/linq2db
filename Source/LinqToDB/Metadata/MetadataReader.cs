@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Metadata
 {
-	public class MetadataReader : IMetadataReader, ITypelistMetadataReader
+	public class MetadataReader : IMetadataReader, ITypeListMetadataReader
 	{
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
@@ -40,7 +40,7 @@ namespace LinqToDB.Metadata
 
 		public IEnumerable<Type> GetMappedTypes()
 		{
-			return _readers.OfType<ITypelistMetadataReader>().SelectMany(x => x.GetMappedTypes());
+			return _readers.OfType<ITypeListMetadataReader>().SelectMany(x => x.GetMappedTypes());
 		}
 	}
 }

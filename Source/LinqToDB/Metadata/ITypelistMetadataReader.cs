@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Metadata
 {
-	public interface ITypelistMetadataReader
+	public interface ITypeListMetadataReader
 	{
 		IEnumerable<Type> GetMappedTypes();
 	}
