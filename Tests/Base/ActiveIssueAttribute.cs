@@ -2,7 +2,6 @@
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using System;
-using System.Text;
 
 namespace Tests
 {
@@ -66,15 +65,6 @@ namespace Tests
 
 		void IApplyToTest.ApplyToTest(Test test)
 		{
-			var debug = new StringBuilder();
-			debug.AppendLine("ActiveIssue debug details");
-			debug.AppendLine($"RunState: {test.RunState}");
-			debug.AppendLine($"IsSuite: {test.IsSuite}");
-			debug.AppendLine($"Details: {Details}");
-			debug.AppendLine($"Configuration: {Configuration}");
-			debug.AppendLine($"SkipForLinqService: {SkipForLinqService}");
-			debug.AppendLine($"SkipForNonLinqService: {SkipForNonLinqService}");
-
 			if (test.RunState != RunState.NotRunnable
 				&& test.RunState != RunState.Ignored)
 			{
@@ -92,7 +82,6 @@ namespace Tests
 				{
 					// this case is handled by BaseDataContextSourceAttribute.BuildFrom
 					// it will call this attribute again on test level
-					throw new InvalidOperationException(debug.ToString());
 				}
 				else
 				{
@@ -114,10 +103,7 @@ namespace Tests
 
 							// attribute is not applicable to current test case
 							if (!matched)
-							{
-								throw new InvalidOperationException(debug.ToString());
-								//return;
-							}
+								return;
 						}
 					}
 

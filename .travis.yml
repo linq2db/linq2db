@@ -24,7 +24,7 @@ dotnet: 2.0.0
 
 env:
   global:
-    - testFilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly"
+    - testFilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
     - testRunner=dotnet
     - testTargetFramework=netcoreapp2.0
     - testConfiguration=Travis
