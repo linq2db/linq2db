@@ -14,7 +14,7 @@ environment:
   packageVersion: 2.0.0-beta4
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
-##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit & TestCategory != ActiveIssue
+##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
 ##  #testFilter: TestCategory=Create
 ##  testRunner: dotnet
 ##  testLogger: trx
