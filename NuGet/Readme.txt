@@ -9,6 +9,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: new In/NotIn extension methods added to LinqToDB.Tools.Extensions
 - feature: [Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, MS SQL] CTE (common table expressions) support implemented including WCF support (see DataExtensions.GetCte(),  LinqExtensions.AsCte() methods)
 - feature: IBM.Data.DB2.Core provider support
+- feature: Oracle Data Provider for .NET Core provider support
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
@@ -25,6 +26,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: name spelling fix: ForeingKeyInfo -> ForeignKeyInfo (#941)
 - fix: Sql.Lower/Sql.Upper functions should be evaluated on server when possible (#819)
 - fix: [Firebird] fixed Sql.DatePart function support for seconds and milliseconds (#967)
+- fix: async query could be blocked by Connection.Open used internally instead of Connection.OpenAsync (#1023)
 
 - other changes: t4models repository moved to main repository
 
@@ -33,6 +35,7 @@ LINQ to DB 2.0.0  Release Notes
 - for developers: migrated to latest C# version
 - for developers: moved methods SchemaProviderBase.ToTypeName(), SchemaProviderBase.ToValidName() to public API (#944, #963)
 - for developers: dual owner/schema naming replaced with schema name in code
+- for developers: ActiveIssue attribute added for tests
 
 
 LINQ to DB 1.10.1  Release Notes

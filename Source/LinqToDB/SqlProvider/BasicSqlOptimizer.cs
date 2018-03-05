@@ -36,17 +36,34 @@ namespace LinqToDB.SqlProvider
 						SqlProviderFlags.IsApplyJoinSupported,
 						SqlProviderFlags.IsGroupByExpressionSupported);
 
+					return selectQuery;
+				}
+			);
+
+			statement.WalkQueries(
+				selectQuery =>
+				{
 					if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
 					if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
-
-					if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
-							SqlProviderFlags.IsApplyJoinSupported,
-							SqlProviderFlags.IsGroupByExpressionSupported);
 
 					return selectQuery;
 				}
 			);
+
+			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
+			{
+				statement.WalkQueries(
+					selectQuery =>
+					{
+						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+							SqlProviderFlags.IsApplyJoinSupported,
+							SqlProviderFlags.IsGroupByExpressionSupported);
+
+						return selectQuery;
+					}
+				);
+			}
+
 
 //statement.EnsureFindTables();
 			if (Configuration.Linq.OptimizeJoins)
