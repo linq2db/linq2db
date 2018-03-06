@@ -2,8 +2,10 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -20,7 +22,7 @@ namespace Tests.UserTests
 		public interface ITargetAware
 		{
 			string TargetName { get; }
-			int TargetId { get; }
+			int    TargetId   { get; }
 		}
 
 		[Table(Name="TaskStages")]
@@ -47,11 +49,10 @@ namespace Tests.UserTests
 			[Column,     NotNull    ] public int       TargetId    { get; set; } // Int
 			[Column,        Nullable] public int?      ParentId    { get; set; } // Int
 
-					[Association(ThisKey =nameof(Id), OtherKey =nameof(TaskStage.TaskId), ExpressionPredicate = nameof(ActualTaskExp), CanBeNull =true)]
-					public IEnumerable<TaskStage> ActualStage { get; set; }
+			[Association(ThisKey =nameof(Id), OtherKey =nameof(TaskStage.TaskId), ExpressionPredicate = nameof(ActualTaskExp), CanBeNull =true)]
+			public IEnumerable<TaskStage> ActualStage { get; set; }
 
-					private static Expression<Func<Task, TaskStage, bool>> ActualTaskExp()
-							=> (t, ts) => ts.Actual == true;
+			private static Expression<Func<Task, TaskStage, bool>> ActualTaskExp() => (t, ts) => ts.Actual == true;
 		  }
 
 		[Table(Name="Assignments")]
@@ -117,11 +118,11 @@ namespace Tests.UserTests
 								  && (a.DateRevoke == null || a.DateRevoke > SqlServer.GetDate())
 							select t)
 						.Distinct()
+#pragma warning disable CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
 						.Where(it => it.ActualStage.Any(d => d.StageId < 9000 || ((int?)d.StageId) == null));
-
+#pragma warning restore CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
 
 					var zz = query.ToArray();
-
 				}
 				finally
 				{
@@ -129,10 +130,7 @@ namespace Tests.UserTests
 					db.DropTable<TaskStage>();
 					db.DropTable<Assignment>();
 				}
-
-
 			}
 		}
-
 	}
 }
