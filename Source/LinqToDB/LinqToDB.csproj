@@ -17,6 +17,11 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugType>pdbonly</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 		<DefineConstants>OVERRIDETOSTRING1;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
