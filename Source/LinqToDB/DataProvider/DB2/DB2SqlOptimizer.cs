@@ -24,8 +24,11 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			if (statement.SelectQuery != null)
-				new QueryVisitor().Visit(statement.SelectQuery, SetQueryParameter);
+			statement.WalkQueries(selectQuery =>
+			{
+				new QueryVisitor().Visit(selectQuery, SetQueryParameter);
+				return selectQuery;
+			});
 
 			statement = base.Finalize(statement);
 
