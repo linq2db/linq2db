@@ -305,5 +305,27 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 			}
 		}
+
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void DeleteFromPartialSourceProjectionWithoutKey(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var exception = Assert.Catch(
+					() => table
+						.Merge()
+						.Using(table.Select(_ => new TestMapping1() { Field1 = _.Field1 }))
+						.OnTargetKey()
+						.DeleteWhenMatched()
+						.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Column Id doesn't exist in source", exception.Message);
+			}
+		}
 	}
 }

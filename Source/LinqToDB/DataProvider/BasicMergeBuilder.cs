@@ -220,10 +220,7 @@ namespace LinqToDB.DataProvider
 
 			public SqlStatement   Statement  { get; set; }
 
-			public SqlParameter[] GetParameters()
-			{
-				return SqlParameters;
-			}
+			public SqlParameter[] GetParameters() => SqlParameters;
 		}
 		#endregion
 
@@ -419,6 +416,7 @@ namespace LinqToDB.DataProvider
 					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == column.Members[0]);
 
 					var alias = CreateSourceColumnAlias(columnDescriptor.ColumnName, false);
+
 					statement.SelectQuery.Select.Columns.Add(new SqlColumn(statement.SelectQuery, column.Sql, alias));
 				}
 
@@ -525,6 +523,34 @@ namespace LinqToDB.DataProvider
 
 		private string GetSourceColumnAlias(string columnName)
 		{
+			if (!_sourceAliases.ContainsKey(columnName))
+			{
+				// this exception thrown when user use projection of mapping class in source query without all
+				// required fields
+				// Example:
+				/*
+				 * class Entity
+				 * {
+				 *     [PrimaryKey]
+				 *     public int Id { get; }
+				 *
+				 *     public int Field1 { get; }
+				 *
+				 *     public int Field2 { get; }
+				 * }
+				 * 
+				 * db.Table
+				 *     .Merge()
+				 *     .Using(db.Entity.Select(e => new Entity() { Field1 = e.Field2 }))
+				 *     // here we expect Id primary key in source, but only Field1 selected
+				 *     .OnTargetKey()
+				 *     here we expect all fields from source, but only Field1 selected
+				 *     .InsertWhenNotMatched()
+				 *     .Merge();
+				 */
+				throw new LinqToDBException($"Column {columnName} doesn't exist in source");
+			}
+
 			return _sourceAliases[columnName];
 		}
 
@@ -688,7 +714,7 @@ namespace LinqToDB.DataProvider
 					Expression.Quote(create)
 				});
 
-			var qry       = Query<int>.GetQuery(DataContext, ref insertExpression);
+			var qry = Query<int>.GetQuery(DataContext, ref insertExpression);
 			var statement = qry.Queries[0].Statement;
 
 			// we need InsertOrUpdate for sql builder to generate values clause
@@ -697,7 +723,7 @@ namespace LinqToDB.DataProvider
 			newInsert.Insert.Into.Alias = _targetAlias;
 
 			var tables = MoveJoinsToSubqueries(newInsert, SourceAlias, null, QueryElement.InsertSetter);
-			SetSourceColumnAliases(newInsert, tables.Item1.Source);
+			SetSourceColumnAliases(newInsert.Insert, tables.Item1.Source);
 
 			qry.Queries[0].Statement = newInsert;
 			QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);

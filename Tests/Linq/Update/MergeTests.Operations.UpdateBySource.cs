@@ -445,5 +445,50 @@ namespace Tests.xUpdate
 				Assert.IsNull(result[3].Field5);
 			}
 		}
+
+		[Test, MergeBySourceDataContextSource]
+		public void UpdateBySourceFromPartialSourceProjectionExplicitSetter(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id }))
+					.OnTargetKey()
+					.UpdateWhenNotMatchedBySourceAnd(
+						t => t.Id == 1,
+						t => new TestMapping1()
+						{
+							Id = 123,
+							Field1 = t.Id * 11,
+							Field2 = t.Field2 + t.Field4,
+							Field3 = t.Field3 + t.Field3,
+							Field4 = t.Field4 + t.Field2,
+							Field5 = t.Field5 + t.Field1
+						})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(4, result.Count);
+
+				AssertRow(InitialTargetData[1], result[0], null, null);
+				AssertRow(InitialTargetData[2], result[1], null, 203);
+				AssertRow(InitialTargetData[3], result[2], null, null);
+
+				Assert.AreEqual(123, result[3].Id);
+				Assert.AreEqual(11, result[3].Field1);
+				Assert.IsNull(result[3].Field2);
+				Assert.IsNull(result[3].Field3);
+				Assert.IsNull(result[3].Field4);
+				Assert.IsNull(result[3].Field5);
+			}
+		}
 	}
 }
