@@ -669,7 +669,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, MergeDataContextSource]
-		public void InsertFromPartialSourceProjection(string context)
+		public void InsertFromPartialSourceProjection_UnknownFieldInDefaultSetter(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -691,7 +691,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, MergeDataContextSource]
-		public void InsertFromPartialSourceProjectionExplicitSetter(string context)
+		public void InsertFromPartialSourceProjection_UnknownFieldInSetter(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -776,6 +776,58 @@ namespace Tests.xUpdate
 				var rows = table
 					.Merge()
 					.Using(GetSource1(db))
+					.OnTargetKey()
+					.InsertWhenNotMatched(_ => new TestMapping1()
+					{
+						Id = 10 + _.Id,
+						Field1 = 123,
+						Field2 = _.Field1,
+						Field3 = _.Field2,
+						Field4 = 999,
+						Field5 = 888
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(6, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+
+				Assert.AreEqual(InitialSourceData[2].Id + 10, result[4].Id);
+				Assert.AreEqual(123, result[4].Field1);
+				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
+				Assert.AreEqual(4, result[4].Field3);
+				Assert.AreEqual(999, result[4].Field4);
+				Assert.AreEqual(888, result[4].Field5);
+
+				Assert.AreEqual(InitialSourceData[3].Id + 10, result[5].Id);
+				Assert.AreEqual(123, result[5].Field1);
+				Assert.AreEqual(InitialSourceData[3].Field1, result[5].Field2);
+				Assert.IsNull(result[5].Field3);
+				Assert.AreEqual(999, result[5].Field4);
+				Assert.AreEqual(888, result[5].Field5);
+			}
+		}
+
+		[Test, MergeDataContextSource]
+		public void InsertPartialSourceProjection_KnownFieldInSetter(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db)
+						.Select(s => new TestMapping1() { Id = s.Id, Field1 = s.Field1, Field2 = s.Field2}))
 					.OnTargetKey()
 					.InsertWhenNotMatched(_ => new TestMapping1()
 					{
@@ -914,6 +966,87 @@ namespace Tests.xUpdate
 				Assert.AreEqual(999, result[4].Field4);
 				//Assert.IsNull(result[4].Field5);
 				Assert.AreEqual(888, result[4].Field5);
+			}
+		}
+
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		public void InsertWithPredicatePartialSourceProjection_KnownFieldInCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db)
+						.Select(s => new TestMapping1() { Id = s.Id, Field2 = s.Field2, Field1 = s.Field1 }))
+					.OnTargetKey()
+					.InsertWhenNotMatchedAnd(
+						_ => _.Field2 != null,
+						_ => new TestMapping1()
+						{
+							Id = 10 + _.Id,
+							Field1 = 123,
+							Field2 = _.Field1,
+							Field3 = _.Field2,
+							Field4 = 999,
+							Field5 = 888
+						})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(1, rows, context);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+
+				Assert.AreEqual(InitialSourceData[2].Id + 10, result[4].Id);
+				Assert.AreEqual(123, result[4].Field1);
+				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
+				// SkipInsert is ignored by explicit insert. Is it correct?
+				//Assert.IsNull(result[4].Field3);
+				Assert.AreEqual(4, result[4].Field3);
+				Assert.AreEqual(999, result[4].Field4);
+				//Assert.IsNull(result[4].Field5);
+				Assert.AreEqual(888, result[4].Field5);
+			}
+		}
+
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		public void SameSourceInsertWithPredicateAndCreatePartialSourceProjection_UnknownFieldInCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var exception = Assert.Catch(
+					() => table
+					    .Merge()
+					    .Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
+					    .OnTargetKey()
+					    .InsertWhenNotMatchedAnd(
+						_ => _.Field2 != null,
+						_ => new TestMapping1()
+						{
+							Id = 10 + _.Id,
+							Field1 = 123,
+							Field2 = _.Field1,
+							Field4 = 999,
+							Field5 = 888
+						})
+					.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 		#endregion

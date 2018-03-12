@@ -2045,9 +2045,7 @@ namespace LinqToDB.SqlProvider
 						var table = Statement.GetTableSource(column.Parent);
 
 						if (table == null && column.Expression is SqlField)
-						{
 							return BuildExpression(column.Expression);
-						}
 
 						if (table == null)
 						{

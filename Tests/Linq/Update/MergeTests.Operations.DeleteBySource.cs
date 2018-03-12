@@ -247,7 +247,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, MergeBySourceDataContextSource]
-		public void DeleteBySourceFromPartialSourceProjectionExplicitSetter(string context)
+		public void DeleteBySourceFromPartialSourceProjection(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -257,7 +257,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id }))
+					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
 					.OnTargetKey()
 					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 1)
 					.Merge();
