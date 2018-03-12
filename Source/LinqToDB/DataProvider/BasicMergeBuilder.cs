@@ -15,6 +15,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using System.Threading;
 
 	/// <summary>
 	/// Basic merge builder's validation options set to validate merge operation on SQL:2008 level without specific
@@ -404,14 +405,14 @@ namespace LinqToDB.DataProvider
 			{
 				_connection.InlineParameters = !SupportsParametersInSource;
 
-				var ctx       = queryableSource.GetMergeContext();
+				var ctx = queryableSource.GetMergeContext();
+
+				ctx.UpdateParameters();
+
 				var statement = ctx.GetResultStatement();
 
-				// update list of selected fields
-				var info = ctx.FixSelectList();
-
 				statement.SelectQuery.Select.Columns.Clear();
-				foreach (var column in info)
+				foreach (var column in ctx.Columns)
 				{
 					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == column.Members[0]);
 
@@ -422,7 +423,7 @@ namespace LinqToDB.DataProvider
 
 				// bind parameters
 				statement.Parameters.Clear();
-				new QueryVisitor().VisitAll(statement, expr =>
+				new QueryVisitor().VisitAll(ctx.SelectQuery, expr =>
 				{
 					switch (expr.ElementType)
 					{
@@ -441,15 +442,9 @@ namespace LinqToDB.DataProvider
 
 				SaveParameters(statement.Parameters);
 
-				var queryContext = new QueryContext()
-				{
-					Statement     = new SqlSelectStatement(statement.SelectQuery),
-					SqlParameters = statement.Parameters.ToArray()
-				};
+				ctx.BuildExpression(null, 0, true);
 
-				var preparedQuery = DataConnection.QueryRunner.SetQuery(_connection, queryContext, 1);
-
-				Command.Append(preparedQuery.Commands[0]);
+				SqlBuilder.BuildSql(0, statement, Command);
 
 				var cs = new [] { ' ', '\t', '\r', '\n' };
 
@@ -1152,13 +1147,7 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// List of generated command parameters.
 		/// </summary>
-		public DataParameter[] Parameters
-		{
-			get
-			{
-				return _parameters.ToArray();
-			}
-		}
+		public DataParameter[] Parameters => _parameters.ToArray();
 
 		/// <summary>
 		/// If true, command execution must return 0 without request to database.
@@ -1168,7 +1157,7 @@ namespace LinqToDB.DataProvider
 
 		protected string GetNextParameterName()
 		{
-			return string.Format("p{0}", _parameterCnt++);
+			return string.Format("p{0}", Interlocked.Increment(ref _parameterCnt));
 		}
 
 		private void SaveParameters(IEnumerable<SqlParameter> parameters)
@@ -1192,8 +1181,6 @@ namespace LinqToDB.DataProvider
 		protected StringBuilder Command { get; } = new StringBuilder();
 
 		protected IDataContext  DataContext => Merge.Target.DataContext;
-
-		protected int EnumerableSourceSize { get; private set; }
 
 		/// <summary>
 		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
@@ -1224,7 +1211,7 @@ namespace LinqToDB.DataProvider
 		/// </summary>
 		protected virtual bool EmptySourceSupported => true;
 
-		protected BasicSqlBuilder SqlBuilder { get; private set; }
+		protected BasicSqlBuilder SqlBuilder { get; private set;  }
 
 		/// <summary>
 		/// If true, provider allows to generate subquery as a source element of merge command.
@@ -1306,75 +1293,39 @@ namespace LinqToDB.DataProvider
 		/// For providers, that use <see cref="BasicSqlOptimizer.GetAlternativeUpdate"/> method to build
 		/// UPDATE FROM query, this property should be set to true.
 		/// </summary>
-		protected virtual bool ProviderUsesAlternativeUpdate
-		{
-			get
-			{
-				return false;
-			}
-		}
+		protected virtual bool ProviderUsesAlternativeUpdate => false;
 
 		/// <summary>
 		/// If true, merge command could include DeleteBySource and UpdateBySource operations. Those operations
 		/// supported only by SQL Server.
 		/// </summary>
-		protected virtual bool BySourceOperationsSupported
-		{
-			get
-			{
-				return false;
-			}
-		}
+		protected virtual bool BySourceOperationsSupported => false;
 
 		/// <summary>
 		/// If true, merge command could include Delete operation. This operation is a part of SQL 2008 standard.
 		/// </summary>
-		protected virtual bool DeleteOperationSupported
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool DeleteOperationSupported => true;
 
 		/// <summary>
 		/// Maximum number of oprations, allowed in single merge command. If value is less than one - there is no limits
 		/// on number of commands. This option is used by providers that have limitations on number of operations like
 		/// SQL Server.
 		/// </summary>
-		protected virtual int MaxOperationsCount
-		{
-			get
-			{
-				return 0;
-			}
-		}
+		protected virtual int MaxOperationsCount => 0;
 
 		/// <summary>
 		/// If true, merge command operations could have predicates. This is a part of SQL 2008 standard.
 		/// </summary>
-		protected virtual bool OperationPredicateSupported
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool OperationPredicateSupported => true;
 
-		protected string ProviderName { get; private set; }
+		protected string ProviderName { get; }
 
 		/// <summary>
 		/// If true, merge command could have multiple operations of the same type with predicates with upt to one
 		/// command without predicate. This option is used by providers that doesn't allow multiple operations of the
 		/// same type like SQL Server.
 		/// </summary>
-		protected virtual bool SameTypeOperationsAllowed
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool SameTypeOperationsAllowed => true;
 
 		/// <summary>
 		/// When this operation enabled, merge command cannot include Delete or Update operations together with
@@ -1382,13 +1333,7 @@ namespace LinqToDB.DataProvider
 		/// not allowed even without UpdateWithDelete operation.
 		/// This is Oracle-specific operation.
 		/// </summary>
-		protected virtual bool UpdateWithDeleteOperationSupported
-		{
-			get
-			{
-				return false;
-			}
-		}
+		protected virtual bool UpdateWithDeleteOperationSupported => false;
 
 		/// <summary>
 		/// Validates command configuration to not violate common or provider-specific rules.
@@ -1527,7 +1472,9 @@ namespace LinqToDB.DataProvider
 		{
 			public Action SetParameters;
 
-			private Action UpdateParameters;
+			public Action UpdateParameters;
+
+			public SqlInfo[] Columns;
 
 			public Context(IBuildContext context) : base(context)
 			{
@@ -1539,6 +1486,8 @@ namespace LinqToDB.DataProvider
 
 				QueryRunner.SetNonQueryQuery(query);
 
+				Columns = ConvertToIndex(null, 0, ConvertFlags.All);
+
 				SetParameters = () => QueryRunner.SetParameters(query, Builder.DataContext, query.Expression, null, 0);
 
 				query.GetElement = (db, expr, ps) => this;
@@ -1548,15 +1497,6 @@ namespace LinqToDB.DataProvider
 					query.Queries[0].Parameters.Clear();
 					query.Queries[0].Parameters.AddRange(Builder.CurrentSqlParameters);
 				};
-			}
-
-			public SqlInfo[] FixSelectList()
-			{
-				var columns = ConvertToIndex(null, 1, ConvertFlags.All);
-
-				UpdateParameters();
-
-				return columns;
 			}
 		}
 	}
