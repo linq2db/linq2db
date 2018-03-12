@@ -79,17 +79,18 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Dictionary<string,string>   Aliases                   { get; private set; }
 
+		/// <summary>
+		/// Gets list of calculated members. Members with attribute MethodExpression and IsColumn flag
+		/// </summary>
+		public List<MemberAccessor>        CalculatedMembers         { get; private set; }
+
+		public bool                        HasCalculatedMembers      => CalculatedMembers != null && CalculatedMembers.Count > 0;
+
 		private List<InheritanceMapping> _inheritanceMappings;
 		/// <summary>
 		/// Gets list of inheritace mapping descriptors for current entity.
 		/// </summary>
-		public  List<InheritanceMapping>  InheritanceMapping
-		{
-			get
-			{
-				return _inheritanceMappings;
-			}
-		}
+		public  List<InheritanceMapping>  InheritanceMapping         => _inheritanceMappings;
 
 		/// <summary>
 		/// Gets mapping class type.
@@ -167,6 +168,14 @@ namespace LinqToDB.Mapping
 
 						Aliases.Add(member.Name, caa.MemberName);
 					}
+				}
+
+				var ma = mappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				if (ma != null && ma.IsColumn)
+				{
+					if (CalculatedMembers == null)
+						CalculatedMembers = new List<MemberAccessor>();
+					CalculatedMembers.Add(member);
 				}
 			}
 

@@ -203,6 +203,26 @@ namespace LinqToDB.Linq.Builder
 					? BuildDefaultConstructor(entityDescriptor, objectType, index)
 					: BuildRecordConstructor (entityDescriptor, objectType, index);
 
+				if (!isRecord && entityDescriptor.HasCalculatedMembers && expr is MemberInitExpression memberInit)
+				{
+					var variable = Builder.BuildVariable(memberInit);
+
+					var selectingMembers =
+						memberInit.Bindings
+							.Select(b => b.Member)
+							.Concat(
+								entityDescriptor.CalculatedMembers.Select(c => c.MemberInfo));
+
+					var bindings =
+						selectingMembers.Select(m =>
+						{
+							var access = Expression.MakeMemberAccess(variable, m);
+							return Expression.Bind(m, access);
+						});
+
+					expr = Expression.MemberInit(memberInit.NewExpression, bindings);
+				}
+
 				expr = ProcessExpression(expr);
 
 				if (!buildBlock)
