@@ -341,6 +341,11 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
+		private void SetColumnAlias(string alias, string columnName)
+		{
+			_sourceAliases.Add(columnName, alias);
+		}
+
 		private string CreateSourceColumnAlias(string columnName, bool returnEscaped)
 		{
 			var alias = "c" + _sourceAliases.Count;
@@ -411,14 +416,14 @@ namespace LinqToDB.DataProvider
 
 				var statement = ctx.GetResultStatement();
 
-				statement.SelectQuery.Select.Columns.Clear();
-				foreach (var column in ctx.Columns)
+				for (var i = 0; i < ctx.Columns.Length; i++)
 				{
-					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == column.Members[0]);
+					var columnInfo = ctx.Columns[i];
+					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.Members[0]);
 
-					var alias = CreateSourceColumnAlias(columnDescriptor.ColumnName, false);
+					var column = statement.SelectQuery.Select.Columns[columnInfo.Index];
 
-					statement.SelectQuery.Select.Columns.Add(new SqlColumn(statement.SelectQuery, column.Sql, alias));
+					SetColumnAlias(column.Alias, columnDescriptor.ColumnName);
 				}
 
 				// bind parameters
@@ -1484,9 +1489,9 @@ namespace LinqToDB.DataProvider
 			{
 				query.DoNotCache = true;
 
-				QueryRunner.SetNonQueryQuery(query);
-
 				Columns = ConvertToIndex(null, 0, ConvertFlags.All);
+
+				QueryRunner.SetNonQueryQuery(query);
 
 				SetParameters = () => QueryRunner.SetParameters(query, Builder.DataContext, query.Expression, null, 0);
 

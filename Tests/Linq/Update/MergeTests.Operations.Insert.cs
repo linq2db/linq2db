@@ -1581,5 +1581,44 @@ namespace Tests.xUpdate
 			}
 		}
 		#endregion
+
+
+		[ActiveIssue(896, Details = "Selects 2 columns instead of 1. Should be the same issue as in InsertFromCrossJoinedSourceQuery2")]
+		[Test, MergeDataContextSource]
+		public void CrossJoinedSourceWithSingleFieldSelection(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				// prepare test data
+				db.GetTable<CrossJoinLeft>().Delete();
+				db.GetTable<CrossJoinRight>().Delete();
+				db.GetTable<CrossJoinResult>().Delete();
+
+				db.Insert(new CrossJoinLeft() { Id = 1 });
+				db.Insert(new CrossJoinLeft() { Id = 2 });
+				db.Insert(new CrossJoinRight() { Id = 10 });
+				db.Insert(new CrossJoinRight() { Id = 20 });
+				db.Insert(new CrossJoinResult() { Id = 11, LeftId = 100, RightId = 200 });
+
+				var source = from t1 in db.GetTable<CrossJoinLeft>()
+							 from t2 in db.GetTable<CrossJoinRight>()
+							 select new
+							 {
+								 RightId = t2.Id
+							 };
+
+				var rows = db.GetTable<CrossJoinResult>()
+					.Merge()
+					.Using(source)
+					.On((t, s) => t.Id == s.RightId)
+					.InsertWhenNotMatched(s => new CrossJoinResult()
+					{
+						RightId = s.RightId
+					})
+					.Merge();
+
+				Assert.Fail("It's fixed! Need to add results assert");
+			}
+		}
 	}
 }
