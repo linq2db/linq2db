@@ -7,6 +7,7 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
+	using LinqToDB;
 	using Model;
 
 	public partial class MergeTests
@@ -23,6 +24,58 @@ namespace Tests.xUpdate
 				var rows = table
 					.Merge()
 					.Using(GetSource1(db))
+					.On((t, s) => s.Id == 3)
+					.UpdateWhenMatchedThenDelete((t, s) => t.Id == 4)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(4, rows, context);
+
+				Assert.AreEqual(3, result.Count);
+
+				Assert.AreEqual(1, result[0].Id);
+				Assert.IsNull(result[0].Field1);
+				Assert.AreEqual(3, result[0].Field2);
+				Assert.IsNull(result[0].Field3);
+				Assert.IsNull(result[0].Field4);
+				Assert.IsNull(result[0].Field5);
+
+				Assert.AreEqual(2, result[1].Id);
+				Assert.IsNull(result[1].Field1);
+				Assert.AreEqual(3, result[1].Field2);
+				Assert.IsNull(result[1].Field3);
+				Assert.IsNull(result[1].Field4);
+				Assert.IsNull(result[1].Field5);
+
+				Assert.AreEqual(3, result[2].Id);
+				Assert.IsNull(result[2].Field1);
+				Assert.AreEqual(3, result[2].Field2);
+				Assert.IsNull(result[2].Field3);
+				Assert.AreEqual(203, result[2].Field4);
+				Assert.IsNull(result[2].Field5);
+			}
+		}
+
+		[Test, MergeUpdateWithDeleteDataContextSource]
+		public void UpdateWithDeletePartialSourceProjection_KnownFieldsInDefaultSetter(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db)
+						.Select(s => new TestMapping1()
+						{
+							Id = s.Id,
+							Field1 = s.Field1,
+							Field2 = s.Field2,
+							Field3 = s.Field3
+						}))
 					.On((t, s) => s.Id == 3)
 					.UpdateWhenMatchedThenDelete((t, s) => t.Id == 4)
 					.Merge();
@@ -178,6 +231,52 @@ namespace Tests.xUpdate
 		}
 
 		[Test, MergeUpdateWithDeleteDataContextSource]
+		public void UpdateWithDeletePartialSourceProjection_KnownFieldInUpdateCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db)
+						.Select(s => new TestMapping1()
+						{
+							Id = s.Id,
+							Field2 = s.Field2,
+							Field5 = s.Field5
+						}))
+					.OnTargetKey()
+					.UpdateWhenMatchedAndThenDelete(
+						(t, s) => s.Field2 == 3,
+						(t, s) => new TestMapping1()
+						{
+							Field1 = t.Field1 + s.Field5
+						},
+						(t, s) => s.Id == 3)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(1, rows, context);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+
+				Assert.AreEqual(4, result[2].Id);
+				Assert.AreEqual(5, result[2].Field1);
+				Assert.AreEqual(6, result[2].Field2);
+				Assert.IsNull(result[2].Field3);
+				Assert.IsNull(result[2].Field4);
+				Assert.IsNull(result[2].Field5);
+			}
+		}
+
+		[Test, MergeUpdateWithDeleteDataContextSource]
 		public void OtherSourceUpdateWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -216,6 +315,52 @@ namespace Tests.xUpdate
 				Assert.AreEqual(3, result[2].Field2);
 				Assert.IsNull(result[2].Field3);
 				Assert.IsNull(result[2].Field4);
+				Assert.IsNull(result[2].Field5);
+			}
+		}
+
+		[Test, MergeUpdateWithDeleteDataContextSource]
+		public void UpdateWithDeletePartialSourceProjection_KnownFieldInDeleteCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource2(db)
+						.Select(s => new TestMapping2()
+						{
+							OtherId = s.OtherId,
+							OtherField1 = s.OtherField1,
+							OtherField2 = s.OtherField2
+						}))
+					.On((t, s) => t.Id == s.OtherId)
+					.UpdateWhenMatchedThenDelete(
+						(t, s) => new TestMapping1()
+						{
+							Field1 = s.OtherField1,
+							Field2 = s.OtherField2
+						},
+						(t, s) => s.OtherId == 4)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+
+				Assert.AreEqual(3, result[2].Id);
+				Assert.IsNull(result[2].Field1);
+				Assert.AreEqual(3, result[2].Field2);
+				Assert.IsNull(result[2].Field3);
+				Assert.AreEqual(203, result[2].Field4);
 				Assert.IsNull(result[2].Field5);
 			}
 		}
@@ -502,6 +647,113 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
+			}
+		}
+
+		[Test, MergeUpdateWithDeleteDataContextSource]
+		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInDeleteCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var exception = Assert.Catch(
+					() => table
+						.Merge()
+						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
+						.OnTargetKey()
+						.UpdateWhenMatchedThenDelete(
+							(t, s) => new TestMapping1()
+							{
+								Id = s.Id,
+								Field1 = s.Field1
+							},
+							(t, s) => t.Field2 == s.Field2)
+						.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+			}
+		}
+
+		[Test, MergeUpdateWithDeleteDataContextSource]
+		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInSetter(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var exception = Assert.Catch(
+					() => table
+						.Merge()
+						.Using(table.Select(_ => new TestMapping1() { Id = _.Id }))
+						.OnTargetKey()
+						.UpdateWhenMatchedThenDelete(
+							(t, s) => new TestMapping1()
+							{
+								Id = s.Id,
+								Field1 = s.Field2
+							},
+							(t, s) => t.Field2 == s.Field1)
+						.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+			}
+		}
+
+		[Test, MergeUpdateWithDeleteDataContextSource]
+		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInDefaultSetter(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var exception = Assert.Catch(
+					() => table
+						.Merge()
+						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
+						.OnTargetKey()
+						.UpdateWhenMatchedThenDelete((t, s) => t.Field2 == s.Field1)
+						.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+			}
+		}
+
+		[Test, MergeUpdateWithDeleteDataContextSource]
+		public void UpdateThenDeleteFromPartialSourceProjection_UnknownFieldInSearchCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var exception = Assert.Catch(
+					() => table
+						.Merge()
+						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
+						.OnTargetKey()
+						.UpdateWhenMatchedAndThenDelete(
+						    (t, s) => t.Field2 == s.Field2,
+							(t, s) => new TestMapping1()
+							{
+								Id = s.Id,
+								Field1 = s.Field1
+							},
+							(t, s) => t.Field2 == s.Field1)
+						.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
 			}
 		}
 	}

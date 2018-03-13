@@ -382,8 +382,9 @@ namespace LinqToDB.SqlQuery
 				sql.Unions.InsertRange(0, union.Unions);
 			});
 
-			_selectQuery.Walk(
-				false, expr => exprs.TryGetValue(expr, out var e) ? e : expr);
+			if (exprs.Count > 0)
+				_selectQuery.Walk(
+					false, expr => exprs.TryGetValue(expr, out var e) ? e : expr);
 		}
 
 		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, List<ISqlTableSource> tables)

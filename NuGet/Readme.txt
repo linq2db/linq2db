@@ -13,6 +13,8 @@ LINQ to DB 2.0.0  Release Notes
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
+- improvement: [Merge] Support partial projection in source query
+- improvement: [Merge] Merge operation will throw LinqToDBException: "Column <column_name> doesn't exist in source" if projection in source query doesn't select needed field
 
 - fix: fixed another case of defect #170, where default(T) value could be selected for non-nullable field instead of NULL from left join, if SelectMany() call used in source (#1012)
 - fix: [MS SQL, Sybase] updated Merge insert operation to respect SkipOnInsert mapping flag for identity fields when no custom insert expression specified. With this fix merge operation will allow database to generate identity value instead of use of value from source (#914)
@@ -27,6 +29,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: Sql.Lower/Sql.Upper functions should be evaluated on server when possible (#819)
 - fix: [Firebird] fixed Sql.DatePart function support for seconds and milliseconds (#967)
 - fix: async query could be blocked by Connection.Open used internally instead of Connection.OpenAsync (#1023)
+- fix: Fixed "Table not found for 't18.[3]t19.Field2'" error for merge with source query using cross joins or SelectMany (#896)
 
 - other changes: t4models repository moved to main repository
 
