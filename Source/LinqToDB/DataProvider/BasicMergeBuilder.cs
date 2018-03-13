@@ -192,6 +192,9 @@ namespace LinqToDB.DataProvider
 						targetAlias, SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField),
 						sourceAlias, GetEscapedSourceColumnAlias(column.ColumnName));
 			}
+
+			if (first)
+				throw new LinqToDBException("Method OnTargetKey() needs at least one primary key column");
 		}
 
 		private void SetSourceColumnAliases(IQueryElement query, ISqlTableSource sourceTable)

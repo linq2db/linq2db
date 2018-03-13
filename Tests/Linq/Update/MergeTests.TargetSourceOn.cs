@@ -8,11 +8,38 @@ using NUnit.Framework;
 namespace Tests.xUpdate
 {
 	using LinqToDB;
+	using LinqToDB.Mapping;
 	using Model;
 
 	// tests for target/source/match condition configuration methods, not covered by other tests
 	public partial class MergeTests
 	{
+		[Table("DoesntMatter")]
+		public class TableWithoutKey
+		{
+			[Column]
+			public int Id { get; set; }
+		}
+
+		[Test, MergeDataContextSource]
+		public void OnTargetKeyWithoutKeyFields(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var table = db.GetTable<TableWithoutKey>();
+
+				var exception = Assert.Catch(
+					() => table
+					.MergeInto(table)
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Method OnTargetKey() needs at least one primary key column", exception.Message);
+			}
+		}
+
 		[Test, MergeDataContextSource]
 		public void MergeInto(string context)
 		{
