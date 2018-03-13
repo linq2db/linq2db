@@ -447,8 +447,6 @@ namespace LinqToDB.DataProvider
 
 				SaveParameters(statement.Parameters);
 
-				ctx.BuildExpression(null, 0, true);
-
 				SqlBuilder.BuildSql(0, statement, Command);
 
 				var cs = new [] { ' ', '\t', '\r', '\n' };

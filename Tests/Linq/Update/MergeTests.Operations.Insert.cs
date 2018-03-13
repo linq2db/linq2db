@@ -1583,7 +1583,6 @@ namespace Tests.xUpdate
 		#endregion
 
 
-		[ActiveIssue(896, Details = "Selects 2 columns instead of 1. Should be the same issue as in InsertFromCrossJoinedSourceQuery2")]
 		[Test, MergeDataContextSource]
 		public void CrossJoinedSourceWithSingleFieldSelection(string context)
 		{
@@ -1617,7 +1616,31 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.Fail("It's fixed! Need to add results assert");
+				var result = db.GetTable<CrossJoinResult>().OrderBy(_ => _.Id).ThenBy(_ => _.RightId).ToList();
+
+				AssertRowCount(4, rows, context);
+
+				Assert.AreEqual(5, result.Count);
+
+				Assert.AreEqual(0, result[0].Id);
+				Assert.AreEqual(0, result[0].LeftId);
+				Assert.AreEqual(10, result[0].RightId);
+
+				Assert.AreEqual(0, result[1].Id);
+				Assert.AreEqual(0, result[1].LeftId);
+				Assert.AreEqual(10, result[1].RightId);
+
+				Assert.AreEqual(0, result[2].Id);
+				Assert.AreEqual(0, result[2].LeftId);
+				Assert.AreEqual(20, result[2].RightId);
+
+				Assert.AreEqual(0, result[3].Id);
+				Assert.AreEqual(0, result[3].LeftId);
+				Assert.AreEqual(20, result[3].RightId);
+
+				Assert.AreEqual(11, result[4].Id);
+				Assert.AreEqual(100, result[4].LeftId);
+				Assert.AreEqual(200, result[4].RightId);
 			}
 		}
 	}
