@@ -15,6 +15,7 @@ LINQ to DB 2.0.0  Release Notes
 - improvement: [Oracle] corrected date literal generation (#969)
 - improvement: [Merge] Support partial projection in source query
 - improvement: [Merge] Merge operation will throw LinqToDBException: "Column <column_name> doesn't exist in source" if projection in source query doesn't select needed field
+- improvement: [Merge][MS SQL] Prefer parameters over literals for binary types in client-side source to avoid generation of huge SQL queries
 
 - fix: fixed another case of defect #170, where default(T) value could be selected for non-nullable field instead of NULL from left join, if SelectMany() call used in source (#1012)
 - fix: [MS SQL, Sybase] updated Merge insert operation to respect SkipOnInsert mapping flag for identity fields when no custom insert expression specified. With this fix merge operation will allow database to generate identity value instead of use of value from source (#914)
