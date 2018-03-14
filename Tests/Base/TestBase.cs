@@ -1173,7 +1173,7 @@ namespace Tests
 			Providers = providers;
 		}
 
-		public IEnumerable GetData(IParameterInfo parameter)
+		public virtual IEnumerable GetData(IParameterInfo parameter)
 		{
 			if (!IncludeLinqService)
 				return GetProviders();
