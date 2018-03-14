@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -10,7 +9,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy2(dataConnection, options, false, source, "");
+			return MultipleRowsCopy2(dataConnection, options, options.KeepIdentity == true, source, "");
 		}
 	}
 }

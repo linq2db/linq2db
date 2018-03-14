@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider
 {
 	using Data;
-	using Expressions;
 	using Mapping;
 	using SqlProvider;
 
@@ -329,7 +327,7 @@ namespace LinqToDB.DataProvider
 
 		protected  BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, options.KeepIdentity == true);
 
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
