@@ -330,9 +330,9 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else
 			{
-			var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Schema)
-				? string.Empty
-				: dropTable.Table.Schema + ".";
+				var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Schema)
+					? string.Empty
+					: dropTable.Table.Schema + ".";
 
 				StringBuilder
 					.Append("DROP TRIGGER ")

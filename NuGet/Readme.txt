@@ -31,6 +31,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: [Firebird] fixed Sql.DatePart function support for seconds and milliseconds (#967)
 - fix: async query could be blocked by Connection.Open used internally instead of Connection.OpenAsync (#1023)
 - fix: Fixed "Table not found for 't18.[3]t19.Field2'" error for merge with source query using cross joins or SelectMany (#896)
+- fix: [MS SQL] Drop table in another database doesn't work (#1030)
 
 - other changes: t4models repository moved to main repository
 
