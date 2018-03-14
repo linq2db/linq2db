@@ -197,31 +197,13 @@ namespace LinqToDB.Linq.Builder
 
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
-				bool isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType));
+				var isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType));
 
 				var expr = isRecord == false
 					? BuildDefaultConstructor(entityDescriptor, objectType, index)
 					: BuildRecordConstructor (entityDescriptor, objectType, index);
 
-				if (!isRecord && entityDescriptor.HasCalculatedMembers && expr is MemberInitExpression memberInit)
-				{
-					var variable = Builder.BuildVariable(memberInit);
-
-					var selectingMembers =
-						memberInit.Bindings
-							.Select(b => b.Member)
-							.Concat(
-								entityDescriptor.CalculatedMembers.Select(c => c.MemberInfo));
-
-					var bindings =
-						selectingMembers.Select(m =>
-						{
-							var access = Expression.MakeMemberAccess(variable, m);
-							return Expression.Bind(m, access);
-						});
-
-					expr = Expression.MemberInit(memberInit.NewExpression, bindings);
-				}
+				expr = BuildCalculatedColumns(entityDescriptor, expr);
 
 				expr = ProcessExpression(expr);
 
@@ -229,6 +211,39 @@ namespace LinqToDB.Linq.Builder
 					return expr;
 
 				return _variable = Builder.BuildVariable(expr);
+			}
+
+			Expression BuildCalculatedColumns(EntityDescriptor entityDescriptor, Expression expr)
+			{
+				if (!entityDescriptor.HasCalculatedMembers)
+					return expr;
+
+				var isBlockDisable = Builder.IsBlockDisable;
+
+				Builder.IsBlockDisable = true;
+
+				var variable    = Expression.Variable(expr.Type, expr.Type.ToString());
+				var expressions = new List<Expression>
+				{
+					Expression.Assign(variable, expr)
+				};
+
+				foreach (var member in entityDescriptor.CalculatedMembers)
+				{
+					var access   = Expression.MakeMemberAccess(variable, member.MemberInfo);
+					var exposed  = Builder.ExposeExpression(access);
+					var selector = Expression.Lambda(exposed, variable);
+					var ctx      = new SelectContext (null, selector, this);
+					var exp      = ctx.BuildExpression(null, 0, false);
+
+					expressions.Add(Expression.Assign(access, exp));
+				}
+
+				expressions.Add(variable);
+
+				Builder.IsBlockDisable = isBlockDisable;
+
+				return Expression.Block(new[] { variable }, expressions);
 			}
 
 			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
@@ -358,7 +373,7 @@ namespace LinqToDB.Linq.Builder
 										join e in exprs.Select((e, i) => new { e, i }) on p.i equals e.i into j
 											from e in j.DefaultIfEmpty()
 											select
-											(e == null ? null : e.e) ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+											e?.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
 										).ToList();
 
 									yield return Expression.New(ctor, parms);
@@ -568,7 +583,7 @@ namespace LinqToDB.Linq.Builder
 							EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 						{
 							throw new LinqException("Member '{0}.{1}' is not a table column.",
-								memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
+								memberExpression.Member.DeclaringType?.Name, memberExpression.Member.Name);
 						}
 					}
 
