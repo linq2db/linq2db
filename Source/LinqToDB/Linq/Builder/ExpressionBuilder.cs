@@ -408,7 +408,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ExposeExpression
 
-		Expression ExposeExpression(Expression expression)
+		public Expression ExposeExpression(Expression expression)
 		{
 			return expression.Transform(expr =>
 			{
@@ -463,9 +463,9 @@ namespace LinqToDB.Linq.Builder
 							//if (c.Value is IExpressionQuery)
 							//	return ((IQueryable)c.Value).Expression;
 
-							if (c.Value is IQueryable && !(c.Value is ITable))
+							if (c.Value is IQueryable queryable && !(queryable is ITable))
 							{
-								var e = ((IQueryable)c.Value).Expression;
+								var e = queryable.Expression;
 
 								if (!_visitedExpressions.Contains(e))
 								{
@@ -619,12 +619,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (mi is MethodInfo && ((MethodInfo)mi).IsGenericMethod)
+				if (mi is MethodInfo method && method.IsGenericMethod)
 				{
-					var method = (MethodInfo)mi;
-					var args   = method.GetGenericArguments();
-					var names  = args.Select(t => (object)t.Name).ToArray();
-					var name   = string.Format(attr.MethodName, names);
+					var args  = method.GetGenericArguments();
+					var names = args.Select(t => (object)t.Name).ToArray();
+					var name  = string.Format(attr.MethodName, names);
 
 					expr = Expression.Call(
 						mi.DeclaringType,
