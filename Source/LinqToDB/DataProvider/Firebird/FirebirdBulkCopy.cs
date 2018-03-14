@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -9,7 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy2(dataConnection, options, options.KeepIdentity == true, source, " FROM rdb$database");
+			return MultipleRowsCopy2(dataConnection, options, false, source, " FROM rdb$database");
 		}
 	}
 }

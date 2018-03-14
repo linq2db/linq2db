@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider
 			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			Columns        = Descriptor.Columns
-				.Where(c => !c.SkipOnInsert || enforceKeepIdentity && options.KeepIdentity == true && c.IsIdentity)
+				.Where(c => !c.SkipOnInsert || c.IsIdentity && (options.KeepIdentity ?? enforceKeepIdentity))
 				.ToArray();
 			ColumnTypes    = Columns.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale)).ToArray();
 			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();

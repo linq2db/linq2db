@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -9,7 +10,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy1(dataConnection, options, options.KeepIdentity == true, source);
+			return MultipleRowsCopy1(dataConnection, options, false, source);
 		}
 	}
 }

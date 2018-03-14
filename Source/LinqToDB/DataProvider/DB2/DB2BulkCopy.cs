@@ -116,9 +116,9 @@ namespace LinqToDB.DataProvider.DB2
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
-				return MultipleRowsCopy2(dataConnection, options, options.KeepIdentity == true, source, " FROM SYSIBM.SYSDUMMY1");
+				return MultipleRowsCopy2(dataConnection, options, false, source, " FROM SYSIBM.SYSDUMMY1");
 
-			return MultipleRowsCopy1(dataConnection, options, options.KeepIdentity == true, source);
+			return MultipleRowsCopy1(dataConnection, options, false, source);
 		}
 	}
 }
