@@ -1126,12 +1126,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlJoinSimple([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
-			// temporary AllJoinsSource nunit workaround
-			if (context == string.Empty)
-				return;
-
 			using (var db = GetDataContext(context))
 			{
 				var expected = from p in Parent
@@ -1191,27 +1188,12 @@ namespace Tests.Linq
 				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird, ProviderName.PostgreSQL)
 			{
 			}
-
-			// this is a temporary workaround for nunit error "No arguments were provided" when there is no providers enabled
-			// remove this override and checks in tests when it fixed
-			// https://github.com/nunit/nunit/issues/2759
-			public override IEnumerable GetData(IParameterInfo parameter)
-			{
-				foreach (var provider in base.GetData(parameter))
-					yield return provider;
-
-				yield return string.Empty;
-			}
-
 		}
 
 		[Test]
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlJoinSubQuery([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
-			// temporary AllJoinsSource nunit workaround
-			if (context == string.Empty)
-				return;
-
 			using (var db = GetDataContext(context))
 			{
 				var expected = from p in Parent.Where(p => p.ParentID > 0).Take(10)
@@ -1228,12 +1210,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
-			// temporary AllJoinsSource nunit workaround
-			if (context == string.Empty)
-				return;
-
 			using (var db = GetDataContext(context))
 			{
 				var expected = Parent.SqlJoinInternal(Parent, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1,
@@ -1250,12 +1229,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
 		public void SqlNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
-			// temporary AllJoinsSource nunit workaround
-			if (context == string.Empty)
-				return;
-
 			using (var db = GetDataContext(context))
 			{
 				var expected = Parent.Take(10).SqlJoinInternal(Parent.Take(10), (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1,
