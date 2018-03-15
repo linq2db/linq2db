@@ -1197,7 +1197,7 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			return TestBase.UserProviders.Where(p => !Providers.Contains(p));
+			return TestBase.UserProviders.Where(p => !Providers.Contains(p) && TestBase.Providers.Contains(p));
 		}
 	}
 
