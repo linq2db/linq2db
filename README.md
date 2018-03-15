@@ -493,7 +493,7 @@ public class DbDataContext : DataConnection
     // allways set before LINQ to DB provider instance creation
     LinqToDB.Common.Configuration.AvoidSpecificDataProviderAPI = true;
 
-				return new SqlServerDataProvider("", SqlServerVersion.v2012);
+    return new SqlServerDataProvider("", SqlServerVersion.v2012);
   }
 
   private static IDbConnection GetConnection()
