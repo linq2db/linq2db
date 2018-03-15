@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
-  <PropertyGroup>
+	<PropertyGroup>
 		<TargetFrameworks>net452;netcoreapp2.0;netcoreapp1.0</TargetFrameworks>
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
-    <AssemblyName>linq2db.Tests</AssemblyName>
+		<AssemblyName>linq2db.Tests</AssemblyName>
 		<Configurations>Debug;Release;AppVeyor;NET.45;CORE.1;CORE.2</Configurations>
-  </PropertyGroup>
+	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
 		<DefineConstants>RELEASE;APPVEYOR</DefineConstants>
@@ -25,26 +25,26 @@
 	<PropertyGroup Condition=" '$(Configuration)' == 'NET.45' ">
 		<TargetFrameworks>net452</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.1' ">
 		<TargetFrameworks>netcoreapp1.0</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
 		<Optimize>false</Optimize>
-  </PropertyGroup>
+	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'CORE.2' ">
 		<TargetFrameworks>netcoreapp2.0</TargetFrameworks>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
 		<Optimize>false</Optimize>
-  </PropertyGroup>
+	</PropertyGroup>
 
 
 	<ItemGroup>
@@ -65,12 +65,12 @@
 
 		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
 		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" Condition=" '$(TargetFramework)' != 'net40' " />
+		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
 		<PackageReference Include="NUnit" Version="3.9.0" />
 		<PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.1" />
-		<PackageReference Include="Npgsql" Version="3.2.7" />
+		<PackageReference Include="Npgsql" Version="3.2.6" />
 		<PackageReference Include="Mono.Cecil" Version="0.10.0-beta6" />
 		<PackageReference Include="MySql.Data" Version="6.10.6" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
@@ -80,52 +80,52 @@
 	<!-- .NET Framework -->
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net452'">
-    <PlatformTarget>x86</PlatformTarget>
-  </PropertyGroup>
+		<PlatformTarget>x86</PlatformTarget>
+	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net452' ">
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System" />
+		<Reference Include="System.Configuration" />
 		<Reference Include="System.Core" />
 		<Reference Include="System.Data.DataSetExtensions" />
 		<Reference Include="System.Data.Linq" />
-    <Reference Include="System.Data.Services" />
+		<Reference Include="System.Data.Services" />
 		<Reference Include="System.Threading.Tasks" />
-    <Reference Include="System.ServiceModel" />
+		<Reference Include="System.ServiceModel" />
 		<Reference Include="System.Web.Services" />
 		<Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+		<Reference Include="System.Data" />
+		<Reference Include="System.Xml" />
 		<Reference Include="System.Runtime.Serialization" />
 		<Reference Include="System.Windows.Forms" />
 
 		<None Update="SqlServerTypes\x64\msvcr120.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="SqlServerTypes\x86\msvcr120.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
 		<None Update="x64\**\*">
 			<Link>x64/%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="x86\**\*">
 			<Link>x86/%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="x86\sqlite3.dll">
 			<Link>sqlite3.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
 		<Reference Include="IBM.Data.DB2">
@@ -173,21 +173,21 @@
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<None Update="x64\**\*">
 			<Link>x64/%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="x86\**\*">
 			<Link>x86/%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="x86\sqlite3.dll">
 			<Link>sqlite3.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.Data.SQLite" Version="2.0.0" />
-  </ItemGroup>
+	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
@@ -220,11 +220,11 @@
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
 		<Compile Remove="**\PartialTrust*.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
-  </ItemGroup>
+	</ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
 	  <Reference Include="Oracle.ManagedDataAccess">
 	    <HintPath>..\..\Redist\Oracle\Oracle.Core\Oracle.ManagedDataAccess.dll</HintPath>
 	  </Reference>
-  </ItemGroup>
+	</ItemGroup>
 </Project>

@@ -15,6 +15,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using System.Threading;
 
 	/// <summary>
 	/// Basic merge builder's validation options set to validate merge operation on SQL:2008 level without specific
@@ -191,6 +192,9 @@ namespace LinqToDB.DataProvider
 						targetAlias, SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField),
 						sourceAlias, GetEscapedSourceColumnAlias(column.ColumnName));
 			}
+
+			if (first)
+				throw new LinqToDBException("Method OnTargetKey() needs at least one primary key column");
 		}
 
 		private void SetSourceColumnAliases(IQueryElement query, ISqlTableSource sourceTable)
@@ -220,10 +224,7 @@ namespace LinqToDB.DataProvider
 
 			public SqlStatement   Statement  { get; set; }
 
-			public SqlParameter[] GetParameters()
-			{
-				return SqlParameters;
-			}
+			public SqlParameter[] GetParameters() => SqlParameters;
 		}
 		#endregion
 
@@ -343,6 +344,11 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
+		private void SetColumnAlias(string alias, string columnName)
+		{
+			_sourceAliases.Add(columnName, alias);
+		}
+
 		private string CreateSourceColumnAlias(string columnName, bool returnEscaped)
 		{
 			var alias = "c" + _sourceAliases.Count;
@@ -407,24 +413,25 @@ namespace LinqToDB.DataProvider
 			{
 				_connection.InlineParameters = !SupportsParametersInSource;
 
-				var ctx       = queryableSource.GetMergeContext();
+				var ctx = queryableSource.GetMergeContext();
+
+				ctx.UpdateParameters();
+
 				var statement = ctx.GetResultStatement();
 
-				// update list of selected fields
-				var info = ctx.FixSelectList();
-
-				statement.SelectQuery.Select.Columns.Clear();
-				foreach (var column in info)
+				for (var i = 0; i < ctx.Columns.Length; i++)
 				{
-					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == column.Members[0]);
+					var columnInfo = ctx.Columns[i];
+					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.Members[0]);
 
-					var alias = CreateSourceColumnAlias(columnDescriptor.ColumnName, false);
-					statement.SelectQuery.Select.Columns.Add(new SqlColumn(statement.SelectQuery, column.Sql, alias));
+					var column = statement.SelectQuery.Select.Columns[columnInfo.Index];
+
+					SetColumnAlias(column.Alias, columnDescriptor.ColumnName);
 				}
 
 				// bind parameters
 				statement.Parameters.Clear();
-				new QueryVisitor().VisitAll(statement, expr =>
+				new QueryVisitor().VisitAll(ctx.SelectQuery, expr =>
 				{
 					switch (expr.ElementType)
 					{
@@ -443,15 +450,7 @@ namespace LinqToDB.DataProvider
 
 				SaveParameters(statement.Parameters);
 
-				var queryContext = new QueryContext()
-				{
-					Statement     = new SqlSelectStatement(statement.SelectQuery),
-					SqlParameters = statement.Parameters.ToArray()
-				};
-
-				var preparedQuery = DataConnection.QueryRunner.SetQuery(_connection, queryContext, 1);
-
-				Command.Append(preparedQuery.Commands[0]);
+				SqlBuilder.BuildSql(0, statement, Command);
 
 				var cs = new [] { ' ', '\t', '\r', '\n' };
 
@@ -525,6 +524,34 @@ namespace LinqToDB.DataProvider
 
 		private string GetSourceColumnAlias(string columnName)
 		{
+			if (!_sourceAliases.ContainsKey(columnName))
+			{
+				// this exception thrown when user use projection of mapping class in source query without all
+				// required fields
+				// Example:
+				/*
+				 * class Entity
+				 * {
+				 *     [PrimaryKey]
+				 *     public int Id { get; }
+				 *
+				 *     public int Field1 { get; }
+				 *
+				 *     public int Field2 { get; }
+				 * }
+				 * 
+				 * db.Table
+				 *     .Merge()
+				 *     .Using(db.Entity.Select(e => new Entity() { Field1 = e.Field2 }))
+				 *     // here we expect Id primary key in source, but only Field1 selected
+				 *     .OnTargetKey()
+				 *     here we expect all fields from source, but only Field1 selected
+				 *     .InsertWhenNotMatched()
+				 *     .Merge();
+				 */
+				throw new LinqToDBException($"Column {columnName} doesn't exist in source");
+			}
+
 			return _sourceAliases[columnName];
 		}
 
@@ -688,7 +715,7 @@ namespace LinqToDB.DataProvider
 					Expression.Quote(create)
 				});
 
-			var qry       = Query<int>.GetQuery(DataContext, ref insertExpression);
+			var qry = Query<int>.GetQuery(DataContext, ref insertExpression);
 			var statement = qry.Queries[0].Statement;
 
 			// we need InsertOrUpdate for sql builder to generate values clause
@@ -697,7 +724,7 @@ namespace LinqToDB.DataProvider
 			newInsert.Insert.Into.Alias = _targetAlias;
 
 			var tables = MoveJoinsToSubqueries(newInsert, SourceAlias, null, QueryElement.InsertSetter);
-			SetSourceColumnAliases(newInsert, tables.Item1.Source);
+			SetSourceColumnAliases(newInsert.Insert, tables.Item1.Source);
 
 			qry.Queries[0].Statement = newInsert;
 			QueryRunner.SetParameters(qry, DataContext, insertExpression, null, 0);
@@ -1126,13 +1153,7 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// List of generated command parameters.
 		/// </summary>
-		public DataParameter[] Parameters
-		{
-			get
-			{
-				return _parameters.ToArray();
-			}
-		}
+		public DataParameter[] Parameters => _parameters.ToArray();
 
 		/// <summary>
 		/// If true, command execution must return 0 without request to database.
@@ -1142,7 +1163,7 @@ namespace LinqToDB.DataProvider
 
 		protected string GetNextParameterName()
 		{
-			return string.Format("p{0}", _parameterCnt++);
+			return string.Format("p{0}", Interlocked.Increment(ref _parameterCnt));
 		}
 
 		private void SaveParameters(IEnumerable<SqlParameter> parameters)
@@ -1166,8 +1187,6 @@ namespace LinqToDB.DataProvider
 		protected StringBuilder Command { get; } = new StringBuilder();
 
 		protected IDataContext  DataContext => Merge.Target.DataContext;
-
-		protected int EnumerableSourceSize { get; private set; }
 
 		/// <summary>
 		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
@@ -1198,7 +1217,7 @@ namespace LinqToDB.DataProvider
 		/// </summary>
 		protected virtual bool EmptySourceSupported => true;
 
-		protected BasicSqlBuilder SqlBuilder { get; private set; }
+		protected BasicSqlBuilder SqlBuilder { get; private set;  }
 
 		/// <summary>
 		/// If true, provider allows to generate subquery as a source element of merge command.
@@ -1280,75 +1299,39 @@ namespace LinqToDB.DataProvider
 		/// For providers, that use <see cref="BasicSqlOptimizer.GetAlternativeUpdate"/> method to build
 		/// UPDATE FROM query, this property should be set to true.
 		/// </summary>
-		protected virtual bool ProviderUsesAlternativeUpdate
-		{
-			get
-			{
-				return false;
-			}
-		}
+		protected virtual bool ProviderUsesAlternativeUpdate => false;
 
 		/// <summary>
 		/// If true, merge command could include DeleteBySource and UpdateBySource operations. Those operations
 		/// supported only by SQL Server.
 		/// </summary>
-		protected virtual bool BySourceOperationsSupported
-		{
-			get
-			{
-				return false;
-			}
-		}
+		protected virtual bool BySourceOperationsSupported => false;
 
 		/// <summary>
 		/// If true, merge command could include Delete operation. This operation is a part of SQL 2008 standard.
 		/// </summary>
-		protected virtual bool DeleteOperationSupported
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool DeleteOperationSupported => true;
 
 		/// <summary>
 		/// Maximum number of oprations, allowed in single merge command. If value is less than one - there is no limits
 		/// on number of commands. This option is used by providers that have limitations on number of operations like
 		/// SQL Server.
 		/// </summary>
-		protected virtual int MaxOperationsCount
-		{
-			get
-			{
-				return 0;
-			}
-		}
+		protected virtual int MaxOperationsCount => 0;
 
 		/// <summary>
 		/// If true, merge command operations could have predicates. This is a part of SQL 2008 standard.
 		/// </summary>
-		protected virtual bool OperationPredicateSupported
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool OperationPredicateSupported => true;
 
-		protected string ProviderName { get; private set; }
+		protected string ProviderName { get; }
 
 		/// <summary>
 		/// If true, merge command could have multiple operations of the same type with predicates with upt to one
 		/// command without predicate. This option is used by providers that doesn't allow multiple operations of the
 		/// same type like SQL Server.
 		/// </summary>
-		protected virtual bool SameTypeOperationsAllowed
-		{
-			get
-			{
-				return true;
-			}
-		}
+		protected virtual bool SameTypeOperationsAllowed => true;
 
 		/// <summary>
 		/// When this operation enabled, merge command cannot include Delete or Update operations together with
@@ -1356,13 +1339,7 @@ namespace LinqToDB.DataProvider
 		/// not allowed even without UpdateWithDelete operation.
 		/// This is Oracle-specific operation.
 		/// </summary>
-		protected virtual bool UpdateWithDeleteOperationSupported
-		{
-			get
-			{
-				return false;
-			}
-		}
+		protected virtual bool UpdateWithDeleteOperationSupported => false;
 
 		/// <summary>
 		/// Validates command configuration to not violate common or provider-specific rules.
@@ -1501,7 +1478,9 @@ namespace LinqToDB.DataProvider
 		{
 			public Action SetParameters;
 
-			private Action UpdateParameters;
+			public Action UpdateParameters;
+
+			public SqlInfo[] Columns;
 
 			public Context(IBuildContext context) : base(context)
 			{
@@ -1510,6 +1489,8 @@ namespace LinqToDB.DataProvider
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				query.DoNotCache = true;
+
+				Columns = ConvertToIndex(null, 0, ConvertFlags.All);
 
 				QueryRunner.SetNonQueryQuery(query);
 
@@ -1522,15 +1503,6 @@ namespace LinqToDB.DataProvider
 					query.Queries[0].Parameters.Clear();
 					query.Queries[0].Parameters.AddRange(Builder.CurrentSqlParameters);
 				};
-			}
-
-			public SqlInfo[] FixSelectList()
-			{
-				var columns = ConvertToIndex(null, 1, ConvertFlags.All);
-
-				UpdateParameters();
-
-				return columns;
 			}
 		}
 	}

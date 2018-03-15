@@ -137,17 +137,17 @@ namespace Tests.xUpdate
 		}
 
 		private static ITable<TestMapping1> GetTarget(IDataContext db)
-			{
+		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge1");
 		}
 
 		private static ITable<TestMapping1> GetSource1(IDataContext db)
-			{
+		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge2");
 		}
 
 		private static ITable<TestMapping2> GetSource2(IDataContext db)
-			{
+		{
 			return db.GetTable<TestMapping2>().TableName("TestMerge2");
 		}
 
@@ -196,9 +196,9 @@ namespace Tests.xUpdate
 		};
 
 		private static IEnumerable<TestMapping2> GetInitialSourceData2()
-				{
+		{
 			foreach (var record in InitialSourceData)
-					{
+			{
 				yield return new TestMapping2()
 						{
 					OtherId = record.Id,
@@ -209,8 +209,8 @@ namespace Tests.xUpdate
 					OtherField5 = record.Field5,
 					OtherFake = record.Fake
 				};
-						}
-				}
+			}
+		}
 
 		[Test, DataContextSource(false)]
 		public void TestDataGenerationTest(string context)
@@ -219,7 +219,7 @@ namespace Tests.xUpdate
 			{
 				PrepareData(db);
 
-				var result1 = GetTarget(db).OrderBy(_ => _.Id).ToList();
+				var result1 = GetTarget(db). OrderBy(_ => _.Id).ToList();
 				var result2 = GetSource1(db).OrderBy(_ => _.Id).ToList();
 
 				Assert.AreEqual(4, result1.Count);

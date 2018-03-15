@@ -241,6 +241,13 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+				case QueryElementType.TruncateTableStatement:
+					{
+						if (((SqlTruncateTableStatement)element).Table != null)
+							Visit1(((SqlTruncateTableStatement)element).Table);
+						break;
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						Visit1X((SqlSelectClause)element);
@@ -658,6 +665,13 @@ namespace LinqToDB.SqlQuery
 					{
 						if (((SqlDropTableStatement)element).Table != null)
 							Visit2(((SqlDropTableStatement)element).Table);
+						break;
+					}
+
+				case QueryElementType.TruncateTableStatement:
+					{
+						if (((SqlTruncateTableStatement)element).Table != null)
+							Visit2(((SqlTruncateTableStatement)element).Table);
 						break;
 					}
 

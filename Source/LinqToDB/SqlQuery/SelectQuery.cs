@@ -161,7 +161,7 @@ namespace LinqToDB.SqlQuery
 //			if (ts == null && IsUpdate && Update.Table == table)
 //				return Update.Table;
 
-			return ts == null && ParentSelect != null? ParentSelect.GetTableSource(table) : ts;
+			return ts == null && ParentSelect != null ? ParentSelect.GetTableSource(table) : ts;
 		}
 
 		internal static SqlTableSource CheckTableSource(SqlTableSource ts, ISqlTableSource table, string alias)

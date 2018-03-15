@@ -123,7 +123,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		// Excluded providers inline such parameter
+		[Test, DataContextSource(false, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Informix)]
 		public void ExposeSqlStringParameter(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -143,7 +144,8 @@ namespace Tests.Linq
 			public byte[]  BinaryDataType;
 		}
 
-		[Test, DataContextSource(false)]
+		// Excluded providers inline such parameter
+		[Test, DataContextSource(false, ProviderName.DB2, ProviderName.DB2LUW, ProviderName.DB2zOS, ProviderName.Informix)]
 		public void ExposeSqlDecimalParameter(string context)
 		{
 			using (var db = new DataConnection(context))

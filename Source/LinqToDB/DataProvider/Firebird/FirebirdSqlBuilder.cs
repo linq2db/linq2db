@@ -235,19 +235,22 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (statement is SqlCreateTableStatement createTable)
+			switch (statement)
 			{
-				_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+				case SqlTruncateTableStatement truncate:
+					return truncate.ResetIdentity && truncate.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 
-				if (_identityField != null)
-					return 3;
-			}
-			else if (statement is SqlDropTableStatement dropTable)
-			{
-				_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+				case SqlCreateTableStatement createTable:
+					_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					if (_identityField != null)
+						return 3;
+					break;
 
-				if (_identityField != null)
-					return 3;
+				case SqlDropTableStatement dropTable:
+					_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					if (_identityField != null)
+						return 3;
+					break;
 			}
 
 			return base.CommandCount(statement);
@@ -268,10 +271,18 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			switch (Statement)
 			{
+				case SqlTruncateTableStatement truncate:
+					StringBuilder
+						.Append("SET GENERATOR GIDENTITY_")
+						.Append(truncate.Table.PhysicalName)
+						.AppendLine(" TO 0")
+						;
+					break;
+
 				case SqlDropTableStatement dropTable:
 					{
 						if (commandNumber == 1)
@@ -283,6 +294,7 @@ namespace LinqToDB.DataProvider.Firebird
 						}
 						else
 							base.BuildDropTableStatement(dropTable);
+
 						break;
 					}
 
@@ -306,6 +318,7 @@ namespace LinqToDB.DataProvider.Firebird
 								.AppendLine  ()
 								.AppendLine  ("END");
 						}
+
 						break;
 					}
 			}

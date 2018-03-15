@@ -56,6 +56,7 @@ namespace LinqToDB.Linq.Builder
 			new AsUpdatableBuilder         (),
 			new LoadWithBuilder            (),
 			new DropBuilder                (),
+			new TruncateBuilder            (),
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),
@@ -324,7 +325,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								// having N items will lead to NxM recursive calls in expression visitors and
 								// will result in stack overflow on relatively small numbers (~1000 items).
-								// To fix it we will rebalance condition tree here which will result in 
+								// To fix it we will rebalance condition tree here which will result in
 								// LOG2(N)*M recursive calls, or 10*M calls for 1000 items.
 								//
 								// E.g. we have condition A OR B OR C OR D OR E

@@ -456,23 +456,26 @@ namespace Tests.Linq
 				(from t in db.Types select Sql.AsSql(t.DateTimeValue.AddMilliseconds(221))).ToList();
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Informix)]
 		public void AddDaysFromColumnPositive(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = 2, DateTimeValue = new DateTime(2018, 01, 03) });
-
-				var result = db.Types
-					.Count(t => t.ID == 5000 && t.DateTimeValue.AddDays(t.SmallIntValue) > new DateTime(2018, 01, 02));
-
-				db.Types.Delete(t => t.ID == 5000);
-
-				Assert.AreEqual(1, result);
+				try
+				{
+					var result = db.Types
+						.Count(t => t.ID == 5000 && t.DateTimeValue.AddDays(t.SmallIntValue) > new DateTime(2018, 01, 02));
+					Assert.AreEqual(1, result);
+				}
+				finally
+				{
+					db.Types.Delete(t => t.ID == 5000);
+				}
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Informix)]
 		public void AddDaysFromColumnNegative(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -488,7 +491,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Informix)]
 		public void AddDaysFromColumn(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -498,7 +501,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Informix)]
 		public void AddWeekFromColumn(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -509,7 +512,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Informix)]
 		public void AddQuarterFromColumn(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -520,7 +523,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Informix)]
 		public void AddYearFromColumn(string context)
 		{
 			using (var db = GetDataContext(context))

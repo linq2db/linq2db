@@ -4,12 +4,13 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlDropTableStatement : SqlStatement
+	public class SqlTruncateTableStatement : SqlStatement
 	{
-		public SqlTable       Table           { get; set; }
+		public SqlTable Table         { get; set; }
+		public bool     ResetIdentity { get; set; }
 
-		public override QueryType          QueryType    => QueryType.DropTable;
-		public override QueryElementType   ElementType  => QueryElementType.DropTableStatement;
+		public override QueryType          QueryType    => QueryType.TruncateTable;
+		public override QueryElementType   ElementType  => QueryElementType.TruncateTableStatement;
 
 		public override bool               IsParameterDependent
 		{
@@ -21,7 +22,7 @@ namespace LinqToDB.SqlQuery
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			sb.Append("DROP TABLE ");
+			sb.Append("TRUNCATE TABLE ");
 
 			((IQueryElement)Table)?.ToString(sb, dic);
 

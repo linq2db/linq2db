@@ -5,8 +5,12 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Tools
 {
-	public static class Extensions
+	using Data;
+
+	public static class SqlExtensions
 	{
+		#region In/NotIn
+
 		[ExpressionMethod(nameof(InImpl1))]
 		public static bool In<T>(this T value, IEnumerable<T> sequence)
 		{
@@ -116,5 +120,23 @@ namespace LinqToDB.Tools
 		{
 			return (value,cmp1,cmp2,cmp3) => value.NotIn(new[] { cmp1, cmp2, cmp3 });
 		}
+
+		#endregion
+
+//		#region Truncate
+//
+//		public static int Truncate<T>(this ITable<T> table)
+//		{
+//			var tableName = table.GetTableName();
+//
+//			switch (table.DataContext)
+//			{
+//				case DataConnection dc : return dc.                    Execute<int>($"TRUNCATE TABLE {tableName}");
+//				case DataContext    dx : return dx.GetDataConnection().Execute<int>($"TRUNCATE TABLE {tableName}");
+//				default                : throw new NotImplementedException();
+//			}
+//		}
+//
+//		#endregion
 	}
 }
