@@ -25,7 +25,7 @@ namespace LinqToDB.Mapping
 		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute columnAttribute, MemberAccessor memberAccessor)
 		{
 			MemberAccessor = memberAccessor;
-			MemberInfo     = memberAccessor.MemberInfo;
+			MemberInfo = memberAccessor.MemberInfo;
 
 			if (MemberInfo.IsFieldEx())
 			{
@@ -38,18 +38,18 @@ namespace LinqToDB.Mapping
 				MemberType = propertyInfo.PropertyType;
 			}
 
-			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
-			ColumnName      = columnAttribute.Name       ?? MemberInfo.Name;
-			Storage         = columnAttribute.Storage;
+			MemberName = columnAttribute.MemberName ?? MemberInfo.Name;
+			ColumnName = columnAttribute.Name ?? MemberInfo.Name;
+			Storage = columnAttribute.Storage;
 			PrimaryKeyOrder = columnAttribute.PrimaryKeyOrder;
 			IsDiscriminator = columnAttribute.IsDiscriminator;
-			DataType        = columnAttribute.DataType;
-			DbType          = columnAttribute.DbType;
-			CreateFormat    = columnAttribute.CreateFormat;
+			DataType = columnAttribute.DataType;
+			DbType = columnAttribute.DbType;
+			CreateFormat = columnAttribute.CreateFormat;
 
-			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
+			if (columnAttribute.HasLength()) Length = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
-			if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
+			if (columnAttribute.HasScale()) Scale = columnAttribute.Scale;
 
 			if (Storage == null)
 			{
@@ -77,7 +77,7 @@ namespace LinqToDB.Mapping
 				}
 				else
 				{
-					CanBeNull        = mappingSchema.GetCanBeNull(MemberType);
+					CanBeNull = mappingSchema.GetCanBeNull(MemberType);
 					defaultCanBeNull = true;
 				}
 			}
@@ -112,7 +112,7 @@ namespace LinqToDB.Mapping
 
 				if (a != null)
 				{
-					IsPrimaryKey    = true;
+					IsPrimaryKey = true;
 					PrimaryKeyOrder = a.Order;
 				}
 			}
@@ -135,27 +135,27 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets column mapping member accessor.
 		/// </summary>
-		public MemberAccessor MemberAccessor  { get; private set; }
+		public MemberAccessor MemberAccessor { get; private set; }
 
 		/// <summary>
 		/// Gets column mapping member (field or property).
 		/// </summary>
-		public MemberInfo     MemberInfo      { get; private set; }
+		public MemberInfo MemberInfo { get; private set; }
 
 		/// <summary>
 		/// Gets value storage member (field or property).
 		/// </summary>
-		public MemberInfo     StorageInfo     { get; private set; }
+		public MemberInfo StorageInfo { get; private set; }
 
 		/// <summary>
 		/// Gets type of column mapping member (field or property).
 		/// </summary>
-		public Type           MemberType      { get; private set; }
+		public Type MemberType { get; private set; }
 
 		/// <summary>
 		/// Gets type of column value storage member (field or property).
 		/// </summary>
-		public Type           StorageType     { get; private set; }
+		public Type StorageType { get; private set; }
 
 		/// <summary>
 		/// Gets the name of mapped member.
@@ -183,41 +183,41 @@ namespace LinqToDB.Mapping
 		/// }
 		/// </example>
 		/// </summary>
-		public string         MemberName      { get; private set; }
+		public string MemberName { get; private set; }
 
 		/// <summary>
 		/// Gets the name of a column in database.
 		/// If not specified, <see cref="MemberName"/> value will be used.
 		/// </summary>
-		public string         ColumnName      { get; private set; }
+		public string ColumnName { get; private set; }
 
 		/// <summary>
 		/// Gets storage property or field to hold the value from a column.
 		/// Could be usefull e.g. in combination of private storage field and getter-only mapping property.
 		/// </summary>
-		public string         Storage         { get; private set; }
+		public string Storage { get; private set; }
 
 		/// <summary>
 		/// Gets whether a column contains a discriminator value for a LINQ to DB inheritance hierarchy.
 		/// <see cref="InheritanceMappingAttribute"/> for more details.
 		/// Default value: <c>false</c>.
 		/// </summary>
-		public bool           IsDiscriminator { get; private set; }
+		public bool IsDiscriminator { get; private set; }
 
 		/// <summary>
 		/// Gets LINQ to DB type for column.
 		/// </summary>
-		public DataType       DataType        { get; private set; }
+		public DataType DataType { get; private set; }
 
 		/// <summary>
 		/// Gets the name of the database column type.
 		/// </summary>
-		public string         DbType          { get; private set; }
+		public string DbType { get; private set; }
 
 		/// <summary>
 		/// Gets whether a column contains values that the database auto-generates.
 		/// </summary>
-		public bool           IsIdentity      { get; private set; }
+		public bool IsIdentity { get; private set; }
 
 		/// <summary>
 		/// Gets whether a column is insertable.
@@ -225,48 +225,48 @@ namespace LinqToDB.Mapping
 		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		public bool           SkipOnInsert    { get; private set; }
+		public bool SkipOnInsert { get; private set; }
 
 		/// <summary>
 		/// Gets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		public bool           SkipOnUpdate    { get; private set; }
+		public bool SkipOnUpdate { get; private set; }
 
 		/// <summary>
 		/// Gets whether this member represents a column that is part or all of the primary key of the table.
 		/// Also see <see cref="PrimaryKeyAttribute"/>.
 		/// </summary>
-		public bool           IsPrimaryKey    { get; private set; }
+		public bool IsPrimaryKey { get; private set; }
 
 		/// <summary>
 		/// Gets order of current column in composite primary key.
 		/// Order is used for query generation to define in which order primary key columns must be mentioned in query
 		/// from columns with smallest order value to greatest.
 		/// </summary>
-		public int            PrimaryKeyOrder { get; private set; }
+		public int PrimaryKeyOrder { get; private set; }
 
 		/// <summary>
 		/// Gets whether a column can contain null values.
 		/// </summary>
-		public bool           CanBeNull       { get; private set; }
+		public bool CanBeNull { get; private set; }
 
 		/// <summary>
 		/// Gets the length of the database column.
 		/// </summary>
-		public int?           Length          { get; private set; }
+		public int? Length { get; private set; }
 
 		/// <summary>
 		/// Gets the precision of the database column.
 		/// </summary>
-		public int?           Precision       { get; private set; }
+		public int? Precision { get; private set; }
 
 		/// <summary>
 		/// Gets the Scale of the database column.
 		/// </summary>
-		public int?           Scale           { get; private set; }
+		public int? Scale { get; private set; }
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
@@ -277,14 +277,14 @@ namespace LinqToDB.Mapping
 		/// - {2} - NULL specifier;
 		/// - {3} - identity specification.
 		/// </summary>
-		public string         CreateFormat    { get; private set; }
+		public string CreateFormat { get; private set; }
 
 		/// <summary>
 		/// Gets sequence name for specified column.
 		/// </summary>
 		public SequenceNameAttribute SequenceName { get; private set; }
 
-		Func<object,object> _getter;
+		Func<object, object> _getter;
 
 		// TODO: passing mapping schema to generate converter in combination with converter caching looks wrong
 		/// <summary>
@@ -297,10 +297,10 @@ namespace LinqToDB.Mapping
 		{
 			if (_getter == null)
 			{
-				var objParam   = Expression.Parameter(typeof(object), "obj");
+				var objParam = Expression.Parameter(typeof(object), "obj");
 				var getterExpr = MemberAccessor.GetterExpression.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
 
-				var expr = mappingSchema.GetConvertExpression(MemberType, typeof(DataParameter), createDefault : false);
+				var expr = mappingSchema.GetConvertExpression(MemberType, typeof(DataParameter), createDefault: false);
 
 				if (expr != null)
 				{
@@ -317,7 +317,7 @@ namespace LinqToDB.Mapping
 					}
 				}
 
-				var getter = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
+				var getter = Expression.Lambda<Func<object, object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 
 				_getter = getter.Compile();
 			}
