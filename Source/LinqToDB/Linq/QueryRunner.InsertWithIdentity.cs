@@ -57,24 +57,24 @@ namespace LinqToDB.Linq
 				return ei;
 			}
 
-			public static object Query(IDataContext dataContext, T obj, string tableName, string databaseName, string schema)
+			public static object Query(IDataContext dataContext, T obj, string tableName, string databaseName = null, string schemaName = null)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName));
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName };
+				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
 
 				return ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
-			public static async Task<object> QueryAsync(IDataContext dataContext, T obj, string tableName, string databaseName, string schema, CancellationToken token)
+			public static async Task<object> QueryAsync(IDataContext dataContext, T obj, CancellationToken token, string tableName = null, string databaseName = null, string schemaName = null)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName));
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName };
+				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
 
 				return await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 			}
