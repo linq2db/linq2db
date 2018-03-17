@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema      = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				var sqlQuery        = new SelectQuery();
 				var insertStatement = new SqlInsertStatement(sqlQuery);
