@@ -33,7 +33,6 @@
 			"SQLite.MS",
 			"Northwind.SQLite",
 			"Northwind.SQLite.MS",
-			"PostgreSQL",
 			"TestNoopProvider"
 		]
 	},
