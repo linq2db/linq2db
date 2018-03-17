@@ -12,7 +12,7 @@ namespace Tests.Data
 	public class DataExtensionsTests : TestBase
 	{
 
-		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
 		public void TestCNCreateTableAndInsertAndUpdateAndDeleteAndDrop(string context)
 		{
 			const string CNSchemaName = "linq2db";
