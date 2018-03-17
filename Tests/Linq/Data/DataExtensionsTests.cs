@@ -99,7 +99,7 @@ namespace Tests.Data
 
 		class QueryObject
 		{
-			public int Column1;
+			public int      Column1;
 			public DateTime Column2;
 		}
 
@@ -218,7 +218,7 @@ namespace Tests.Data
 		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
 		public void TestDataReader(string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn   = new DataConnection(context))
 			using (var reader = conn.ExecuteReader("SELECT 1; SELECT '2'"))
 			{
 				var n = reader.Execute<int>();

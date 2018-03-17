@@ -20,16 +20,16 @@ namespace LinqToDB.Linq
 				var fieldDic = new Dictionary<SqlField,ParameterAccessor>();
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
-				if (tableName		!= null)	sqlTable.PhysicalName	= tableName;
-				if (databaseName	!= null)	sqlTable.Database		= databaseName;
-				if (schemaName		!= null)	sqlTable.Schema			= schemaName;
+				if (tableName	 != null)	sqlTable.PhysicalName = tableName;
+				if (databaseName != null)	sqlTable.Database     = databaseName;
+				if (schemaName	 != null)	sqlTable.Schema       = schemaName;
 
 				var sqlQuery = new SelectQuery();
 
 				ParameterAccessor param;
 
 				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
-				insertOrUpdateStatement.Insert.Into	 = sqlTable;
+				insertOrUpdateStatement.Insert.Into  = sqlTable;
 				insertOrUpdateStatement.Update.Table = sqlTable;
 
 				sqlQuery.From.Table(sqlTable);

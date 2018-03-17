@@ -23,15 +23,15 @@ namespace LinqToDB.Mapping
 		/// <param name="entity">Entity fluent mapping builder.</param>
 		/// <param name="memberGetter">Column or association member getter expression.</param>
 		public PropertyMappingBuilder(
-			[JetBrains.Annotations.NotNull] EntityMappingBuilder<T> entity,
+			[JetBrains.Annotations.NotNull] EntityMappingBuilder<T>     entity,
 			[JetBrains.Annotations.NotNull] Expression<Func<T, object>> memberGetter)
 		{
-			if (entity == null) throw new ArgumentNullException("entity");
+			if (entity       == null) throw new ArgumentNullException("entity");
 			if (memberGetter == null) throw new ArgumentNullException("memberGetter");
 
-			_entity = entity;
+			_entity       = entity;
 			_memberGetter = memberGetter;
-			_memberInfo = MemberHelper.MemberOf(memberGetter);
+			_memberInfo   = MemberHelper.MemberOf(memberGetter);
 
 			if (_memberInfo.ReflectedTypeEx() != typeof(T))
 				_memberInfo = typeof(T).GetMemberEx(_memberInfo) ?? _memberInfo;
@@ -116,9 +116,9 @@ namespace LinqToDB.Mapping
 
 		PropertyMappingBuilder<T> SetColumn(Action<ColumnAttribute> setColumn)
 		{
-			var getter = _memberGetter;
+			var getter     = _memberGetter;
 			var memberName = null as string;
-			var me = _memberGetter.Body.Unwrap() as MemberExpression;
+			var me         = _memberGetter.Body.Unwrap() as MemberExpression;
 
 			if (me != null && me.Expression is MemberExpression)
 			{
@@ -144,9 +144,9 @@ namespace LinqToDB.Mapping
 						 return a;
 					 },
 					(_, a) => setColumn(a),
-					a => a.Configuration,
-					a => new ColumnAttribute(a),
-					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
+					a      => a.Configuration,
+					a      => new ColumnAttribute(a),
+					attrs  => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 			return this;
 		}

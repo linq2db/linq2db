@@ -4,11 +4,10 @@ namespace Tests.Model
 {
 	public class Cat
 	{
-		[Column, Identity, PrimaryKey]
-		public int CatID;
-		[NotNull] public string Name;
-		[NotNull] public int Age;
-		[Nullable] public string Color;
+		[Column, Identity, PrimaryKey] public int    CatID;
+		[NotNull]                      public string Name;
+		[NotNull]                      public int    Age;
+		[Nullable]                     public string Color;
 
 
 		public override bool Equals(object obj)

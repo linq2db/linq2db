@@ -39,7 +39,7 @@ namespace LinqToDB.Mapping
 		/// <param name="memberName">Name of mapped member. See <see cref="MemberName"/> for more details.</param>
 		public ColumnAttribute(string columnName, string memberName) : this()
 		{
-			Name = columnName;
+			Name       = columnName;
 			MemberName = memberName;
 		}
 
@@ -60,25 +60,25 @@ namespace LinqToDB.Mapping
 		/// <param name="ca">Attribute to clone.</param>
 		internal ColumnAttribute(ColumnAttribute ca)
 		{
-			MemberName = ca.MemberName;
-			Configuration = ca.Configuration;
-			Name = ca.Name;
-			DataType = ca.DataType;
-			DbType = ca.DbType;
-			Storage = ca.Storage;
+			MemberName      = ca.MemberName;
+			Configuration   = ca.Configuration;
+			Name            = ca.Name;
+			DataType        = ca.DataType;
+			DbType          = ca.DbType;
+			Storage         = ca.Storage;
 			IsDiscriminator = ca.IsDiscriminator;
 			PrimaryKeyOrder = ca.PrimaryKeyOrder;
-			IsColumn = ca.IsColumn;
-			CreateFormat = ca.CreateFormat;
+			IsColumn        = ca.IsColumn;
+			CreateFormat    = ca.CreateFormat;
 
 			if (ca.HasSkipOnInsert()) SkipOnInsert = ca.SkipOnInsert;
 			if (ca.HasSkipOnUpdate()) SkipOnUpdate = ca.SkipOnUpdate;
-			if (ca.HasCanBeNull()) CanBeNull = ca.CanBeNull;
-			if (ca.HasIsIdentity()) IsIdentity = ca.IsIdentity;
+			if (ca.HasCanBeNull()) CanBeNull       = ca.CanBeNull;
+			if (ca.HasIsIdentity()) IsIdentity     = ca.IsIdentity;
 			if (ca.HasIsPrimaryKey()) IsPrimaryKey = ca.IsPrimaryKey;
-			if (ca.HasLength()) Length = ca.Length;
-			if (ca.HasPrecision()) Precision = ca.Precision;
-			if (ca.HasScale()) Scale = ca.Scale;
+			if (ca.HasLength()) Length             = ca.Length;
+			if (ca.HasPrecision()) Precision       = ca.Precision;
+			if (ca.HasScale()) Scale               = ca.Scale;
 		}
 
 		/// <summary>

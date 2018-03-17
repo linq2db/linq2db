@@ -19,8 +19,8 @@ namespace LinqToDB.Linq
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (databaseName != null) sqlTable.Database		= databaseName;
-				if (schemaName   != null) sqlTable.Schema		= schemaName;
+				if (databaseName != null) sqlTable.Database	    = databaseName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				var deleteStatement = new SqlDeleteStatement();
 

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB
 {
@@ -578,12 +577,12 @@ namespace LinqToDB
 				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
 			}
 			else try
-				{
-					QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
-				}
-				catch
-				{
-				}
+			{
+				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
+			}
+			catch
+			{
+			}
 		}
 
 		/// <summary>
@@ -616,16 +615,16 @@ namespace LinqToDB
 					schemaName   ?? table.SchemaName);
 			}
 			else try
-				{
-					QueryRunner.DropTable<T>.Query(
-						table.DataContext,
-						tableName    ?? table.TableName,
-						databaseName ?? table.DatabaseName,
-						schemaName   ?? table.SchemaName);
-				}
-				catch
-				{
-				}
+			{
+				QueryRunner.DropTable<T>.Query(
+					table.DataContext,
+					tableName    ?? table.TableName,
+					databaseName ?? table.DatabaseName,
+					schemaName   ?? table.SchemaName);
+			}
+			catch
+			{
+			}
 		}
 
 		/// <summary>
@@ -657,12 +656,12 @@ namespace LinqToDB
 				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token);
 			}
 			else try
-				{
-					await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token);
-				}
-				catch
-				{
-				}
+			{
+				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token);
+			}
+			catch
+			{
+			}
 		}
 
 		/// <summary>
@@ -698,17 +697,17 @@ namespace LinqToDB
 					schemaName   ?? table.SchemaName, token);
 			}
 			else try
-				{
-					await QueryRunner.DropTable<T>.QueryAsync(
-						table.DataContext,
-						tableName    ?? table.TableName,
-						databaseName ?? table.DatabaseName,
-						schemaName   ?? table.SchemaName,
-						token);
-				}
-				catch
-				{
-				}
+			{
+				await QueryRunner.DropTable<T>.QueryAsync(
+					table.DataContext,
+					tableName    ?? table.TableName,
+					databaseName ?? table.DatabaseName,
+					schemaName   ?? table.SchemaName,
+					token);
+			}
+			catch
+			{
+			}
 		}
 
 		#endregion
