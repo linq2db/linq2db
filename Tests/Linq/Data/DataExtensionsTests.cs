@@ -56,6 +56,10 @@ namespace Tests.Data
 				Assert.IsNotNull(catRemained);
 				// Cleanup, drop table
 				conn.DropTable<Cat>(tableName: CNTableName, schemaName: CNSchemaName);
+				// check that table dropped
+				var exception = Assert.Catch(() => table.ToList());
+				Assert.True(exception != null && exception is Exception);
+
 			}
 		}
 
