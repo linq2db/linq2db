@@ -21,7 +21,7 @@ namespace LinqToDB.Linq
 				if (databaseName != null) sqlTable.Database     = databaseName;
 				if (schemaName   != null) sqlTable.Schema      = schemaName;
 
-				var sqlQuery = new SelectQuery();
+				var sqlQuery        = new SelectQuery();
 				var insertStatement = new SqlInsertStatement(sqlQuery);
 
 				insertStatement.Insert.Into         = sqlTable;
@@ -63,7 +63,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
 
 				return ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -74,7 +74,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
 
 				return await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 			}

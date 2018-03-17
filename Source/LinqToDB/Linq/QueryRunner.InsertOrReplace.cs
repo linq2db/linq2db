@@ -20,9 +20,9 @@ namespace LinqToDB.Linq
 				var fieldDic = new Dictionary<SqlField,ParameterAccessor>();
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
-				if (tableName	 != null)	sqlTable.PhysicalName = tableName;
-				if (databaseName != null)	sqlTable.Database     = databaseName;
-				if (schemaName	 != null)	sqlTable.Schema       = schemaName;
+				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (databaseName != null) sqlTable.Database     = databaseName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				var sqlQuery = new SelectQuery();
 
@@ -66,7 +66,7 @@ namespace LinqToDB.Linq
 
 				// Update.
 				//
-				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys).ToList();
 
 				if (keys.Count == 0)
@@ -121,7 +121,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema));
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -132,7 +132,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName));
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 
@@ -186,7 +186,7 @@ namespace LinqToDB.Linq
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement = new SqlSelectStatement(firstStatement.SelectQuery),
+				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
 				Parameters = query.Queries[0].Parameters.ToList(),
 			});
 		}

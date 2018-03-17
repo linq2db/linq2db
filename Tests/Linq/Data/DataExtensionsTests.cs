@@ -162,7 +162,7 @@ namespace Tests.Data
 					"SELECT @p",
 					new
 					{
-						p = new DataParameter { DataType = DataType.VarChar, Value = "123" },
+						p  = new DataParameter { DataType = DataType.VarChar, Value = "123" },
 						p1 = 1
 					});
 
@@ -200,7 +200,7 @@ namespace Tests.Data
 		[ScalarType(false)]
 		struct QueryStruct
 		{
-			public int Column1;
+			public int      Column1;
 			public DateTime Column2;
 		}
 
@@ -276,11 +276,11 @@ namespace Tests.Data
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<TwoValues, DataParameter>(tv =>
-				 new DataParameter
-				 {
-					 Value = tv == null ? (long?)null : (long)tv.Value1 << 32 | tv.Value2,
-					 DataType = DataType.Int64
-				 },
+				new DataParameter
+				{
+					Value    = tv == null ? (long?)null : (long)tv.Value1 << 32 | tv.Value2,
+					DataType = DataType.Int64
+				},
 				false);
 
 			using (var conn = (DataConnection)GetDataContext(context, ms))

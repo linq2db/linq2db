@@ -38,8 +38,8 @@ namespace LinqToDB.Mapping
 		}
 
 		readonly Expression<Func<T, object>> _memberGetter;
-		readonly MemberInfo _memberInfo;
-		readonly EntityMappingBuilder<T> _entity;
+		readonly MemberInfo                  _memberInfo;
+		readonly EntityMappingBuilder<T>     _entity;
 
 		#endregion
 		/// <summary>
@@ -139,14 +139,14 @@ namespace LinqToDB.Mapping
 					false,
 					 _ =>
 					 {
-						 var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName };
-						 setColumn(a);
-						 return a;
+						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName };
+						setColumn(a);
+						return a;
 					 },
-					(_, a) => setColumn(a),
-					a      => a.Configuration,
-					a      => new ColumnAttribute(a),
-					attrs  => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
+					(_,a) => setColumn(a),
+					a     => a.Configuration,
+					a     => new ColumnAttribute(a),
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 			return this;
 		}

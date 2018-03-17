@@ -161,7 +161,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		public	  bool   SkipOnInsert
+		public bool   SkipOnInsert
 		{
 			get => _skipOnInsert ?? false;
 			set => _skipOnInsert = value;
