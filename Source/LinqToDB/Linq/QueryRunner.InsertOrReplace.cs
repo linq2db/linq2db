@@ -13,23 +13,23 @@ namespace LinqToDB.Linq
 	{
 		public static class InsertOrReplace<T>
 		{
-			static readonly ConcurrentDictionary<object, Query<int>> _queryCache = new ConcurrentDictionary<object, Query<int>>();
+			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
-				if (tableName != null) sqlTable.PhysicalName = tableName;
-				if (databaseName != null) sqlTable.Database = databaseName;
-				if (schemaName != null) sqlTable.Schema = schemaName;
+				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (databaseName != null) sqlTable.Database     = databaseName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				var sqlQuery = new SelectQuery();
 
 				ParameterAccessor param;
 
 				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
-				insertOrUpdateStatement.Insert.Into = sqlTable;
+				insertOrUpdateStatement.Insert.Into  = sqlTable;
 				insertOrUpdateStatement.Update.Table = sqlTable;
 
 				sqlQuery.From.Table(sqlTable);
@@ -66,7 +66,7 @@ namespace LinqToDB.Linq
 
 				// Update.
 				//
-				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 				var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys).ToList();
 
 				if (keys.Count == 0)
@@ -145,15 +145,15 @@ namespace LinqToDB.Linq
 			var dic = new Dictionary<ICloneableElement, ICloneableElement>();
 
 			var firstStatement = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
-			var cloned = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, _ => true);
+			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, _ => true);
 
-			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) { Insert = cloned.Insert };
+			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert};
 			insertStatement.SelectQuery.From.Tables.Clear();
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement = insertStatement,
-				Parameters = query.Queries[0].Parameters
+				Statement   = insertStatement,
+				Parameters  = query.Queries[0].Parameters
 					.Select(p => new ParameterAccessor
 						(
 							p.Expression,
@@ -173,7 +173,7 @@ namespace LinqToDB.Linq
 			//TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)
 			{
-				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery) { Update = firstStatement.Update };
+				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery) {Update = firstStatement.Update};
 				SetNonQueryQuery2(query);
 			}
 			else
@@ -186,7 +186,7 @@ namespace LinqToDB.Linq
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement = new SqlSelectStatement(firstStatement.SelectQuery),
+				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
 				Parameters = query.Queries[0].Parameters.ToList(),
 			});
 		}

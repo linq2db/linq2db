@@ -23,23 +23,23 @@ namespace LinqToDB.Mapping
 		/// <param name="entity">Entity fluent mapping builder.</param>
 		/// <param name="memberGetter">Column or association member getter expression.</param>
 		public PropertyMappingBuilder(
-			[JetBrains.Annotations.NotNull] EntityMappingBuilder<T> entity,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, object>> memberGetter)
+			[JetBrains.Annotations.NotNull] EntityMappingBuilder<T>    entity,
+			[JetBrains.Annotations.NotNull] Expression<Func<T,object>> memberGetter)
 		{
-			if (entity == null) throw new ArgumentNullException("entity");
+			if (entity       == null) throw new ArgumentNullException("entity");
 			if (memberGetter == null) throw new ArgumentNullException("memberGetter");
 
-			_entity = entity;
+			_entity       = entity;
 			_memberGetter = memberGetter;
-			_memberInfo = MemberHelper.MemberOf(memberGetter);
+			_memberInfo   = MemberHelper.MemberOf(memberGetter);
 
 			if (_memberInfo.ReflectedTypeEx() != typeof(T))
 				_memberInfo = typeof(T).GetMemberEx(_memberInfo) ?? _memberInfo;
 		}
 
-		readonly Expression<Func<T, object>> _memberGetter;
-		readonly MemberInfo _memberInfo;
-		readonly EntityMappingBuilder<T> _entity;
+		readonly Expression<Func<T,object>> _memberGetter;
+		readonly MemberInfo                 _memberInfo;
+		readonly EntityMappingBuilder<T>    _entity;
 
 		#endregion
 		/// <summary>
@@ -70,7 +70,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns property mapping builder.</returns>
-		public PropertyMappingBuilder<T> Property(Expression<Func<T, object>> func)
+		public PropertyMappingBuilder<T> Property(Expression<Func<T,object>> func)
 		{
 			return _entity.Property(func);
 		}
@@ -90,7 +90,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<T, ID1>> thisKey,
 			Expression<Func<S, ID2>> otherKey)
 		{
-			return _entity.Association(prop, thisKey, otherKey);
+			return _entity.Association( prop, thisKey, otherKey );
 		}
 
 		/// <summary>
@@ -116,9 +116,9 @@ namespace LinqToDB.Mapping
 
 		PropertyMappingBuilder<T> SetColumn(Action<ColumnAttribute> setColumn)
 		{
-			var getter = _memberGetter;
+			var getter     = _memberGetter;
 			var memberName = null as string;
-			var me = _memberGetter.Body.Unwrap() as MemberExpression;
+			var me         = _memberGetter.Body.Unwrap() as MemberExpression;
 
 			if (me != null && me.Expression is MemberExpression)
 			{
@@ -130,7 +130,7 @@ namespace LinqToDB.Mapping
 					me = m;
 				}
 
-				var p = Expression.Parameter(typeof(T));
+				var p  = Expression.Parameter(typeof(T));
 				getter = Expression.Lambda<Func<T, object>>(Expression.PropertyOrField(p, me.Member.Name), p);
 			}
 
@@ -139,13 +139,13 @@ namespace LinqToDB.Mapping
 					false,
 					 _ =>
 					 {
-						 var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName };
-						 setColumn(a);
-						 return a;
+						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName};
+						setColumn(a);
+						return a;
 					 },
-					(_, a) => setColumn(a),
-					a => a.Configuration,
-					a => new ColumnAttribute(a),
+					(_,a) => setColumn(a),
+					a     => a.Configuration,
+					a     => new ColumnAttribute(a),
 					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 			return this;

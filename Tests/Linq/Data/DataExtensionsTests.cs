@@ -1,9 +1,11 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using System;
-using System.Linq;
 using Tests.Model;
 
 namespace Tests.Data
@@ -11,55 +13,6 @@ namespace Tests.Data
 	[TestFixture]
 	public class DataExtensionsTests : TestBase
 	{
-
-		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
-		public void TestCNCreateTableAndInsertAndUpdateAndDeleteAndDrop(string context)
-		{
-			const string CNSchemaName = "linq2db";
-			const string CNTableName = "xxcat";
-			using (var conn = new DataConnection(context))
-			{
-				// Drop table if exists
-				conn.DropTable<Cat>(tableName: CNTableName, schemaName: CNSchemaName, throwExceptionIfNotExists: false);
-				// create table
-				ITable<Cat> table = conn.CreateTable<Cat>(tableName: CNTableName, schemaName: CNSchemaName);
-				Assert.IsNotNull(table);
-				Assert.AreEqual(CNTableName, table.TableName);
-				Assert.AreEqual(CNSchemaName, table.SchemaName);
-				Assert.IsTrue(conn.LastQuery.StartsWith($"CREATE TABLE {CNSchemaName}.{CNTableName}", StringComparison.Ordinal));
-				// insert a row into the table
-				Cat cat = new Cat() { Name = "Tom", Age = 5, Color = "Blue" };
-				int newId = conn.InsertWithInt32Identity<Cat>(cat, tableName: CNTableName, schemaName: CNSchemaName);
-				var count = table.Count();
-				Assert.AreEqual(count, 1);
-				// update that row
-				Cat catForUpdate = table.SingleOrDefault(c => c.CatID == newId);
-				Assert.IsNotNull(catForUpdate);
-				catForUpdate.Age = 3;
-				conn.Update(catForUpdate, tableName: CNTableName, schemaName: CNSchemaName);
-				count = table.Count();
-				Assert.AreEqual(count, 1);
-				Cat catUpdated = table.SingleOrDefault(c => c.CatID == newId);
-				Assert.IsNotNull(catUpdated);
-				Assert.AreEqual(3, catUpdated.Age);
-				// insert an other row
-				int newId2 = newId + 1;
-				Cat cat2 = new Cat() { CatID = newId2, Name = "Thomas", Age = 8, Color = "Black" };
-				conn.Insert<Cat>(cat2, tableName: CNTableName, schemaName: CNSchemaName);
-				count = table.Count();
-				Assert.AreEqual(count, 2);
-				// Delete that row from table
-				conn.Delete(catUpdated, tableName: CNTableName, schemaName: CNSchemaName);
-				count = table.Count();
-				Assert.AreEqual(count, 1);
-				Cat catRemained = table.SingleOrDefault(c => c.CatID == newId2);
-				Assert.IsNotNull(catRemained);
-				// Cleanup, drop table
-				conn.DropTable<Cat>(tableName: CNTableName, schemaName: CNSchemaName);
-			}
-		}
-
-
 		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
 		public void TestScalar1(string context)
 		{
@@ -95,7 +48,7 @@ namespace Tests.Data
 
 		class QueryObject
 		{
-			public int Column1;
+			public int      Column1;
 			public DateTime Column2;
 		}
 
@@ -158,7 +111,7 @@ namespace Tests.Data
 					"SELECT @p",
 					new
 					{
-						p = new DataParameter { DataType = DataType.VarChar, Value = "123" },
+						p  = new DataParameter { DataType = DataType.VarChar, Value = "123" },
 						p1 = 1
 					});
 
@@ -196,7 +149,7 @@ namespace Tests.Data
 		[ScalarType(false)]
 		struct QueryStruct
 		{
-			public int Column1;
+			public int      Column1;
 			public DateTime Column2;
 		}
 
@@ -214,7 +167,7 @@ namespace Tests.Data
 		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
 		public void TestDataReader(string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn   = new DataConnection(context))
 			using (var reader = conn.ExecuteReader("SELECT 1; SELECT '2'"))
 			{
 				var n = reader.Execute<int>();
@@ -241,7 +194,7 @@ namespace Tests.Data
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<TwoValues, DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
+			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
 
 			using (var conn = new DataConnection().AddMappingSchema(ms))
 			{
@@ -256,7 +209,7 @@ namespace Tests.Data
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<TwoValues, DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
+			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
 
 			using (var conn = (DataConnection)GetDataContext(context, ms))
 			{
@@ -271,12 +224,12 @@ namespace Tests.Data
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<TwoValues, DataParameter>(tv =>
-				 new DataParameter
-				 {
-					 Value = tv == null ? (long?)null : (long)tv.Value1 << 32 | tv.Value2,
-					 DataType = DataType.Int64
-				 },
+			ms.SetConvertExpression<TwoValues,DataParameter>(tv =>
+				new DataParameter
+				{
+					Value    = tv == null ? (long?)null : (long)tv.Value1 << 32 | tv.Value2,
+					DataType = DataType.Int64
+				},
 				false);
 
 			using (var conn = (DataConnection)GetDataContext(context, ms))
@@ -290,7 +243,7 @@ namespace Tests.Data
 		[Test, IncludeDataContextSourceAttribute(TestProvName.Northwind)]
 		public void CacheTest(string context)
 		{
-			using (var dc = new DataConnection(context))
+			using (var dc= new DataConnection(context))
 			{
 				dc.Execute("CREATE TABLE #t1(v1 int not null)");
 				dc.Execute("INSERT INTO #t1(v1) values (1)");

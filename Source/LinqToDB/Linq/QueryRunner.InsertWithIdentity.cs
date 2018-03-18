@@ -11,20 +11,20 @@ namespace LinqToDB.Linq
 	{
 		public static class InsertWithIdentity<T>
 		{
-			static readonly ConcurrentDictionary<object, Query<object>> _queryCache = new ConcurrentDictionary<object, Query<object>>();
+			static readonly ConcurrentDictionary<object,Query<object>> _queryCache = new ConcurrentDictionary<object,Query<object>>();
 
 			static Query<object> CreateQuery(IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 
-				if (tableName != null) sqlTable.PhysicalName = tableName;
-				if (databaseName != null) sqlTable.Database = databaseName;
-				if (schemaName != null) sqlTable.Schema = schemaName;
+				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (databaseName != null) sqlTable.Database     = databaseName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
-				var sqlQuery = new SelectQuery();
+				var sqlQuery        = new SelectQuery();
 				var insertStatement = new SqlInsertStatement(sqlQuery);
 
-				insertStatement.Insert.Into = sqlTable;
+				insertStatement.Insert.Into         = sqlTable;
 				insertStatement.Insert.WithIdentity = true;
 
 				var ei = new Query<object>(dataContext, null)
@@ -74,7 +74,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
 
 				return await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 			}

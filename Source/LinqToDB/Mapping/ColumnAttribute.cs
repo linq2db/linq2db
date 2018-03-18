@@ -39,7 +39,7 @@ namespace LinqToDB.Mapping
 		/// <param name="memberName">Name of mapped member. See <see cref="MemberName"/> for more details.</param>
 		public ColumnAttribute(string columnName, string memberName) : this()
 		{
-			Name = columnName;
+			Name       = columnName;
 			MemberName = memberName;
 		}
 
@@ -60,25 +60,25 @@ namespace LinqToDB.Mapping
 		/// <param name="ca">Attribute to clone.</param>
 		internal ColumnAttribute(ColumnAttribute ca)
 		{
-			MemberName = ca.MemberName;
-			Configuration = ca.Configuration;
-			Name = ca.Name;
-			DataType = ca.DataType;
-			DbType = ca.DbType;
-			Storage = ca.Storage;
+			MemberName      = ca.MemberName;
+			Configuration   = ca.Configuration;
+			Name            = ca.Name;
+			DataType        = ca.DataType;
+			DbType          = ca.DbType;
+			Storage         = ca.Storage;
 			IsDiscriminator = ca.IsDiscriminator;
 			PrimaryKeyOrder = ca.PrimaryKeyOrder;
-			IsColumn = ca.IsColumn;
-			CreateFormat = ca.CreateFormat;
+			IsColumn        = ca.IsColumn;
+			CreateFormat    = ca.CreateFormat;
 
 			if (ca.HasSkipOnInsert()) SkipOnInsert = ca.SkipOnInsert;
 			if (ca.HasSkipOnUpdate()) SkipOnUpdate = ca.SkipOnUpdate;
-			if (ca.HasCanBeNull()) CanBeNull = ca.CanBeNull;
-			if (ca.HasIsIdentity()) IsIdentity = ca.IsIdentity;
+			if (ca.HasCanBeNull())    CanBeNull    = ca.CanBeNull;
+			if (ca.HasIsIdentity())   IsIdentity   = ca.IsIdentity;
 			if (ca.HasIsPrimaryKey()) IsPrimaryKey = ca.IsPrimaryKey;
-			if (ca.HasLength()) Length = ca.Length;
-			if (ca.HasPrecision()) Precision = ca.Precision;
-			if (ca.HasScale()) Scale = ca.Scale;
+			if (ca.HasLength())       Length       = ca.Length;
+			if (ca.HasPrecision())    Precision    = ca.Precision;
+			if (ca.HasScale())        Scale        = ca.Scale;
 		}
 
 		/// <summary>
@@ -161,7 +161,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		public bool SkipOnInsert
+		public  bool   SkipOnInsert
 		{
 			get => _skipOnInsert ?? false;
 			set => _skipOnInsert = value;
@@ -180,7 +180,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string )"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		public bool SkipOnUpdate
+		public bool   SkipOnUpdate
 		{
 			get => _skipOnUpdate ?? false;
 			set => _skipOnUpdate = value;
@@ -197,7 +197,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets whether a column contains values that the database auto-generates.
 		/// Also see <see cref="IdentityAttribute"/>.
 		/// </summary>
-		public bool IsIdentity
+		public  bool   IsIdentity
 		{
 			get => _isIdentity ?? false;
 			set => _isIdentity = value;
@@ -214,7 +214,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets whether this class member represents a column that is part or all of the primary key of the table.
 		/// Also see <see cref="PrimaryKeyAttribute"/>.
 		/// </summary>
-		public bool IsPrimaryKey
+		public bool   IsPrimaryKey
 		{
 			get => _isPrimaryKey ?? false;
 			set => _isPrimaryKey = value;
@@ -236,7 +236,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets whether a column can contain <c>NULL</c> values.
 		/// </summary>
-		public bool CanBeNull
+		public  bool   CanBeNull
 		{
 			get => _canBeNull ?? true;
 			set => _canBeNull = value;
@@ -253,7 +253,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the length of the database column.
 		/// Default value: value, defined for member type in mapping schema.
 		/// </summary>
-		public int Length
+		public  int   Length
 		{
 			get => _length ?? 0;
 			set => _length = value;
@@ -270,7 +270,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the precision of the database column.
 		/// Default value: value, defined for member type in mapping schema.
 		/// </summary>
-		public int Precision
+		public int   Precision
 		{
 			get => _precision ?? 0;
 			set => _precision = value;
@@ -287,7 +287,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the Scale of the database column.
 		/// Default value: value, defined for member type in mapping schema.
 		/// </summary>
-		public int Scale
+		public int   Scale
 		{
 			get => _scale ?? 0;
 			set => _scale = value;

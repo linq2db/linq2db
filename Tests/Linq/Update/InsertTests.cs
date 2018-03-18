@@ -1545,5 +1545,159 @@ namespace Tests.xUpdate
 				.Insert(db.Parent, t => new Parent { ParentID = t });
 			}
 		}
+
+		[Test, DataContextSource(ProviderName.OracleNative)]
+		public void InsertByTableName(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				db.Insert(person, tableName: tableName, schemaName: schemaName);
+				var newId1   = db.InsertWithInt32Identity(person, tableName: tableName, schemaName: schemaName);
+				var newId2   = db.InsertWithIdentity(person, tableName: tableName, schemaName: schemaName);
+
+				var newCount = table.Count();
+				Assert.AreEqual(3, newCount);
+
+				Assert.AreNotEqual(newId1, newId2);
+
+				var integritycount = table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).Count();
+				Assert.AreEqual(3, integritycount);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.OracleNative)]
+		public async Task InsertByTableNameAsync(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+				var newId1   = await db.InsertWithInt32IdentityAsync(person, tableName: tableName, schemaName: schemaName);
+				var newId2   = await db.InsertWithIdentityAsync(person, tableName: tableName, schemaName: schemaName);
+
+				var newCount = await table.CountAsync();
+				Assert.AreEqual(3, newCount);
+
+				Assert.AreNotEqual(newId1, newId2);
+
+				var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
+				Assert.AreEqual(3, integritycount);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.OracleNative)]
+		public void InsertOrReplaceByTableName(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPatient";
+
+			using (var db = GetDataContext(context))
+			{
+				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				var table = db.CreateTable<Patient>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person1 = new Patient()
+				{
+					PersonID  = 1,
+					Diagnosis = "ABC1",
+				};
+
+				var person2 = new Patient()
+				{
+					PersonID  = 2,
+					Diagnosis = "ABC2",
+				};
+
+
+				db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+				db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+				Assert.AreEqual(2, table.Count());
+
+				db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+				db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+				Assert.AreEqual(2, table.Count());
+
+				table.Drop();
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.OracleNative)]
+		public async Task InsertOrReplaceByTableNameAsync(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPatient";
+
+			using (var db = GetDataContext(context))
+			{
+				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				var table = await db.CreateTableAsync<Patient>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person1 = new Patient()
+				{
+					PersonID  = 1,
+					Diagnosis = "ABC1",
+				};
+
+				var person2 = new Patient()
+				{
+					PersonID  = 2,
+					Diagnosis = "ABC2",
+				};
+
+
+				await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+				await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+				Assert.AreEqual(2, await table.CountAsync());
+
+				await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+				await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+				Assert.AreEqual(2, await table.CountAsync());
+
+				await table.DropAsync();
+			}
+		}
 	}
 }

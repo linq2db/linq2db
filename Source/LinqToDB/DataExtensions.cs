@@ -1,11 +1,12 @@
-﻿using JetBrains.Annotations;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -66,7 +67,7 @@ namespace LinqToDB
 
 			if (parameters.Length > 0)
 			{
-				var pis = methodInfo.GetParameters();
+				var pis  = methodInfo.GetParameters();
 				var args = new List<Expression>(parameters.Length);
 
 				for (var i = 0; i < parameters.Length; i++)
@@ -97,9 +98,9 @@ namespace LinqToDB
 		/// <param name="query">The query expression to be compiled.</param>
 		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
-		public static Func<TDc, TResult> Compile<TDc, TResult>(
+		public static Func<TDc,TResult> Compile<TDc,TResult>(
 			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc, TResult>> query)
+			[NotNull] Expression<Func<TDc,TResult>> query)
 			where TDc : IDataContext
 		{
 			return CompiledQuery.Compile(query);
@@ -116,9 +117,9 @@ namespace LinqToDB
 		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TArg1">Type of parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
-		public static Func<TDc, TArg1, TResult> Compile<TDc, TArg1, TResult>(
+		public static Func<TDc,TArg1,TResult> Compile<TDc,TArg1, TResult>(
 			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc, TArg1, TResult>> query)
+			[NotNull] Expression<Func<TDc,TArg1,TResult>> query)
 			where TDc : IDataContext
 		{
 			return CompiledQuery.Compile(query);
@@ -136,9 +137,9 @@ namespace LinqToDB
 		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
-		public static Func<TDc, TArg1, TArg2, TResult> Compile<TDc, TArg1, TArg2, TResult>(
+		public static Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
 			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc, TArg1, TArg2, TResult>> query)
+			[NotNull] Expression<Func<TDc,TArg1,TArg2,TResult>> query)
 			where TDc : IDataContext
 		{
 			return CompiledQuery.Compile(query);
@@ -157,9 +158,9 @@ namespace LinqToDB
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
-		public static Func<TDc, TArg1, TArg2, TArg3, TResult> Compile<TDc, TArg1, TArg2, TArg3, TResult>(
+		public static Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
 			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc, TArg1, TArg2, TArg3, TResult>> query)
+			[NotNull] Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
 			where TDc : IDataContext
 		{
 			return CompiledQuery.Compile(query);
@@ -503,12 +504,12 @@ namespace LinqToDB
 		/// </param>
 		/// <returns>Created table as queryable source.</returns>
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
-			string tableName = null,
-			string databaseName = null,
-			string schemaName = null,
-			string statementHeader = null,
-			string statementFooter = null,
-			DefaultNullable defaultNullable = DefaultNullable.None)
+			string          tableName       = null,
+			string          databaseName    = null,
+			string          schemaName      = null,
+			string          statementHeader = null,
+			string          statementFooter = null,
+			DefaultNullable defaultNullable  = DefaultNullable.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.Query(dataContext,
@@ -535,13 +536,13 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
 		public static Task<ITable<T>> CreateTableAsync<T>([NotNull] this IDataContext dataContext,
-			string tableName = null,
-			string databaseName = null,
-			string schemaName = null,
-			string statementHeader = null,
-			string statementFooter = null,
-			DefaultNullable defaultNullable = DefaultNullable.None,
-			CancellationToken token = default)
+			string            tableName       = null,
+			string            databaseName    = null,
+			string            schemaName      = null,
+			string            statementHeader = null,
+			string            statementFooter = null,
+			DefaultNullable   defaultNullable = DefaultNullable.None,
+			CancellationToken token           = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
@@ -566,10 +567,10 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.</param>
 		public static void DropTable<T>(
 			[NotNull] this IDataContext dataContext,
-			string tableName = null,
-			string databaseName = null,
-			string schemaName = null,
-			bool throwExceptionIfNotExists = true)
+			string tableName                 = null,
+			string databaseName              = null,
+			string schemaName                = null,
+			bool   throwExceptionIfNotExists = true)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -578,12 +579,12 @@ namespace LinqToDB
 				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
 			}
 			else try
-				{
-					QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
-				}
-				catch
-				{
-				}
+			{
+				QueryRunner.DropTable<T>.Query(dataContext, tableName, databaseName, schemaName);
+			}
+			catch
+			{
+			}
 		}
 
 		/// <summary>
@@ -600,10 +601,10 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.</param>
 		public static void DropTable<T>(
 			[NotNull] this ITable<T> table,
-			string tableName = null,
-			string databaseName = null,
-			string schemaName = null,
-			bool throwExceptionIfNotExists = true)
+			string tableName                 = null,
+			string databaseName              = null,
+			string schemaName                = null,
+			bool   throwExceptionIfNotExists = true)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -611,21 +612,21 @@ namespace LinqToDB
 			{
 				QueryRunner.DropTable<T>.Query(
 					table.DataContext,
-					tableName ?? table.TableName,
+					tableName    ?? table.TableName,
 					databaseName ?? table.DatabaseName,
-					schemaName ?? table.SchemaName);
+					schemaName   ?? table.SchemaName);
 			}
 			else try
-				{
-					QueryRunner.DropTable<T>.Query(
-						table.DataContext,
-						tableName ?? table.TableName,
-						databaseName ?? table.DatabaseName,
-						schemaName ?? table.SchemaName);
-				}
-				catch
-				{
-				}
+			{
+				QueryRunner.DropTable<T>.Query(
+					table.DataContext,
+					tableName    ?? table.TableName,
+					databaseName ?? table.DatabaseName,
+					schemaName   ?? table.SchemaName);
+			}
+			catch
+			{
+			}
 		}
 
 		/// <summary>
@@ -644,11 +645,11 @@ namespace LinqToDB
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static async Task DropTableAsync<T>(
 			[NotNull] this IDataContext dataContext,
-			string tableName = null,
-			string databaseName = null,
-			string schemaName = null,
-			bool throwExceptionIfNotExists = true,
-			CancellationToken token = default)
+			string tableName                 = null,
+			string databaseName              = null,
+			string schemaName                = null,
+			bool   throwExceptionIfNotExists = true,
+			CancellationToken token          = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
@@ -657,12 +658,12 @@ namespace LinqToDB
 				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token);
 			}
 			else try
-				{
-					await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token);
-				}
-				catch
-				{
-				}
+			{
+				await QueryRunner.DropTable<T>.QueryAsync(dataContext, tableName, databaseName, schemaName, token);
+			}
+			catch
+			{
+			}
 		}
 
 		/// <summary>
@@ -681,11 +682,11 @@ namespace LinqToDB
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static async Task DropTableAsync<T>(
 			[NotNull] this ITable<T> table,
-			string tableName = null,
-			string databaseName = null,
-			string schemaName = null,
-			bool throwExceptionIfNotExists = true,
-			CancellationToken token = default)
+			string tableName                 = null,
+			string databaseName              = null,
+			string schemaName                = null,
+			bool   throwExceptionIfNotExists = true,
+			CancellationToken token          = default)
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -693,22 +694,22 @@ namespace LinqToDB
 			{
 				await QueryRunner.DropTable<T>.QueryAsync(
 					table.DataContext,
-					tableName ?? table.TableName,
+					tableName    ?? table.TableName,
 					databaseName ?? table.DatabaseName,
-					schemaName ?? table.SchemaName, token);
+					schemaName   ?? table.SchemaName, token);
 			}
 			else try
-				{
-					await QueryRunner.DropTable<T>.QueryAsync(
-						table.DataContext,
-						tableName ?? table.TableName,
-						databaseName ?? table.DatabaseName,
-						schemaName ?? table.SchemaName,
-						token);
-				}
-				catch
-				{
-				}
+			{
+				await QueryRunner.DropTable<T>.QueryAsync(
+					table.DataContext,
+					tableName    ?? table.TableName,
+					databaseName ?? table.DatabaseName,
+					schemaName   ?? table.SchemaName,
+					token);
+			}
+			catch
+			{
+			}
 		}
 
 		#endregion
@@ -716,15 +717,15 @@ namespace LinqToDB
 		#region CTE
 
 		public static IQueryable<T> GetCte<T>(
-			[NotNull]   this IDataContext dataContext,
-			[NotNull]   Func<IQueryable<T>, IQueryable<T>> cteBody,
-			[CanBeNull] string cteTableName = null)
+			[NotNull]   this IDataContext                 dataContext,
+			[NotNull]   Func<IQueryable<T>,IQueryable<T>> cteBody,
+			[CanBeNull] string                            cteTableName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (cteBody == null) throw new ArgumentNullException(nameof(cteBody));
+			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
 
 			var cteTable = new CteTable<T>(dataContext);
-			var param = MethodHelper.GetMethodInfo(cteBody, cteTable).GetParameters()[0];
+			var param    = MethodHelper.GetMethodInfo(cteBody, cteTable).GetParameters()[0];
 
 			var cteQuery = cteBody(cteTable);
 
@@ -732,7 +733,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, cteTableName),
-					new[] { cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name) }));
+					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)}));
 		}
 
 		#endregion
