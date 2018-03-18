@@ -13,7 +13,7 @@ namespace LinqToDB.Linq
 	{
 		public static class Update<T>
 		{
-			static readonly ConcurrentDictionary<object, Query<int>> _queryCache = new ConcurrentDictionary<object, Query<int>>();
+			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
 			{
@@ -75,7 +75,7 @@ namespace LinqToDB.Linq
 
 			public static int Query(IDataContext dataContext, T obj, string tableName, string databaseName = null, string schemaName = null)
 			{
-				if (Equals(default(T), obj))
+				if (Equals(default, obj))
 					return 0;
 
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName };

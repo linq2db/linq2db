@@ -12,7 +12,7 @@ namespace LinqToDB.Linq
 	{
 		public static class Delete<T>
 		{
-			static readonly ConcurrentDictionary<object, Query<int>> _queryCache = new ConcurrentDictionary<object, Query<int>>();
+			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
 			static Query<int> CreateQuery(IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
 			{

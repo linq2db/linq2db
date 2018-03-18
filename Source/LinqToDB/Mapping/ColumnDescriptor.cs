@@ -300,7 +300,7 @@ namespace LinqToDB.Mapping
 				var objParam   = Expression.Parameter(typeof(object), "obj");
 				var getterExpr = MemberAccessor.GetterExpression.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
 
-				var expr = mappingSchema.GetConvertExpression(MemberType, typeof(DataParameter), createDefault: false);
+				var expr = mappingSchema.GetConvertExpression(MemberType, typeof(DataParameter), createDefault : false);
 
 				if (expr != null)
 				{

@@ -11,7 +11,7 @@ namespace LinqToDB.Linq
 	{
 		public static class InsertWithIdentity<T>
 		{
-			static readonly ConcurrentDictionary<object, Query<object>> _queryCache = new ConcurrentDictionary<object, Query<object>>();
+			static readonly ConcurrentDictionary<object,Query<object>> _queryCache = new ConcurrentDictionary<object,Query<object>>();
 
 			static Query<object> CreateQuery(IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
 			{
