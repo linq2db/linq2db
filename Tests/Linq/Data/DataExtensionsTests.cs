@@ -13,6 +13,59 @@ namespace Tests.Data
 	[TestFixture]
 	public class DataExtensionsTests : TestBase
 	{
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void TestCNCreateTableAndInsertAndUpdateAndDeleteAndDrop(string context)
+		{
+			const string CNSchemaName = "linq2db";
+			const string CNTableName = "xxcat";
+			using (var conn = new DataConnection(context))
+			{
+				// Drop table if exists
+				conn.DropTable<Cat>(tableName: CNTableName, schemaName: CNSchemaName, throwExceptionIfNotExists: false);
+				// create table
+				ITable<Cat> table = conn.CreateTable<Cat>(tableName: CNTableName, schemaName: CNSchemaName);
+				Assert.IsNotNull(table);
+				Assert.AreEqual(CNTableName, table.TableName);
+				Assert.AreEqual(CNSchemaName, table.SchemaName);
+				Assert.IsTrue(conn.LastQuery.StartsWith($"CREATE TABLE {CNSchemaName}.{CNTableName}", StringComparison.Ordinal));
+				// insert a row into the table
+				Cat cat = new Cat() { Name = "Tom", Age = 5, Color = "Blue" };
+				int newId = conn.InsertWithInt32Identity<Cat>(cat, tableName: CNTableName, schemaName: CNSchemaName);
+				var count = table.Count();
+				Assert.AreEqual(count, 1);
+				// update that row
+				Cat catForUpdate = table.SingleOrDefault(c => c.CatID == newId);
+				Assert.IsNotNull(catForUpdate);
+				catForUpdate.Age = 3;
+				conn.Update(catForUpdate, tableName: CNTableName, schemaName: CNSchemaName);
+				count = table.Count();
+				Assert.AreEqual(count, 1);
+				Cat catUpdated = table.SingleOrDefault(c => c.CatID == newId);
+				Assert.IsNotNull(catUpdated);
+				Assert.AreEqual(3, catUpdated.Age);
+				// insert an other row
+				int newId2 = newId + 1;
+				Cat cat2 = new Cat() { CatID = newId2, Name = "Thomas", Age = 8, Color = "Black" };
+				conn.Insert<Cat>(cat2, tableName: CNTableName, schemaName: CNSchemaName);
+				count = table.Count();
+				Assert.AreEqual(count, 2);
+				// Delete that row from table
+				conn.Delete(catUpdated, tableName: CNTableName, schemaName: CNSchemaName);
+				count = table.Count();
+				Assert.AreEqual(count, 1);
+				Cat catRemained = table.SingleOrDefault(c => c.CatID == newId2);
+				Assert.IsNotNull(catRemained);
+				// Cleanup, drop table
+				conn.DropTable<Cat>(tableName: CNTableName, schemaName: CNSchemaName);
+				// check that table dropped
+				var exception = Assert.Catch(() => table.ToList());
+				Assert.True(exception != null && exception is Exception);
+
+			}
+		}
+
+
 		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
 		public void TestScalar1(string context)
 		{
@@ -243,7 +296,7 @@ namespace Tests.Data
 		[Test, IncludeDataContextSourceAttribute(TestProvName.Northwind)]
 		public void CacheTest(string context)
 		{
-			using (var dc= new DataConnection(context))
+			using (var dc = new DataConnection(context))
 			{
 				dc.Execute("CREATE TABLE #t1(v1 int not null)");
 				dc.Execute("INSERT INTO #t1(v1) values (1)");

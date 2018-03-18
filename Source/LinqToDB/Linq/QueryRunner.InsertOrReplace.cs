@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -14,12 +13,17 @@ namespace LinqToDB.Linq
 	{
 		public static class InsertOrReplace<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryChache = new ConcurrentDictionary<object,Query<int>>();
+			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
-			static Query<int> CreateQuery(IDataContext dataContext)
+			static Query<int> CreateQuery(IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
 			{
 				var fieldDic = new Dictionary<SqlField,ParameterAccessor>();
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
+
+				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (databaseName != null) sqlTable.Database     = databaseName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
+
 				var sqlQuery = new SelectQuery();
 
 				ParameterAccessor param;
@@ -111,24 +115,24 @@ namespace LinqToDB.Linq
 				return ei;
 			}
 
-			public static int Query(IDataContext dataContext, T obj)
+			public static int Query(IDataContext dataContext, T obj, string tableName, string databaseName, string schema)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName };
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
-			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
+			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName, string databaseName, string schema, CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema };
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 
@@ -143,7 +147,7 @@ namespace LinqToDB.Linq
 			var firstStatement = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
 			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, _ => true);
 
-			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert};
+			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) { Insert = cloned.Insert };
 			insertStatement.SelectQuery.From.Tables.Clear();
 
 			query.Queries.Add(new QueryInfo
@@ -183,7 +187,7 @@ namespace LinqToDB.Linq
 			query.Queries.Add(new QueryInfo
 			{
 				Statement = new SqlSelectStatement(firstStatement.SelectQuery),
-				Parameters  = query.Queries[0].Parameters.ToList(),
+				Parameters = query.Queries[0].Parameters.ToList(),
 			});
 		}
 	}
