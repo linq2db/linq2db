@@ -47,9 +47,9 @@ namespace LinqToDB.Mapping
 			DbType          = columnAttribute.DbType;
 			CreateFormat    = columnAttribute.CreateFormat;
 
-			if (columnAttribute.HasLength())    Length    = columnAttribute.Length;
+			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
-			if (columnAttribute.HasScale())     Scale     = columnAttribute.Scale;
+			if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
 
 			if (Storage == null)
 			{
@@ -284,7 +284,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public SequenceNameAttribute SequenceName { get; private set; }
 
-		Func<object, object> _getter;
+		Func<object,object> _getter;
 
 		// TODO: passing mapping schema to generate converter in combination with converter caching looks wrong
 		/// <summary>
@@ -312,12 +312,12 @@ namespace LinqToDB.Mapping
 
 					if (type != null)
 					{
-						expr       = mappingSchema.GetConvertExpression(MemberType, type);
+						expr = mappingSchema.GetConvertExpression(MemberType, type);
 						getterExpr = expr.GetBody(getterExpr);
 					}
 				}
 
-				var getter = Expression.Lambda<Func<object, object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
+				var getter = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 
 				_getter = getter.Compile();
 			}

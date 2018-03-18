@@ -23,8 +23,8 @@ namespace LinqToDB.Mapping
 		/// <param name="entity">Entity fluent mapping builder.</param>
 		/// <param name="memberGetter">Column or association member getter expression.</param>
 		public PropertyMappingBuilder(
-			[JetBrains.Annotations.NotNull] EntityMappingBuilder<T>     entity,
-			[JetBrains.Annotations.NotNull] Expression<Func<T, object>> memberGetter)
+			[JetBrains.Annotations.NotNull] EntityMappingBuilder<T>    entity,
+			[JetBrains.Annotations.NotNull] Expression<Func<T,object>> memberGetter)
 		{
 			if (entity       == null) throw new ArgumentNullException("entity");
 			if (memberGetter == null) throw new ArgumentNullException("memberGetter");
@@ -37,9 +37,9 @@ namespace LinqToDB.Mapping
 				_memberInfo = typeof(T).GetMemberEx(_memberInfo) ?? _memberInfo;
 		}
 
-		readonly Expression<Func<T, object>> _memberGetter;
-		readonly MemberInfo                  _memberInfo;
-		readonly EntityMappingBuilder<T>     _entity;
+		readonly Expression<Func<T,object>> _memberGetter;
+		readonly MemberInfo                 _memberInfo;
+		readonly EntityMappingBuilder<T>    _entity;
 
 		#endregion
 		/// <summary>
@@ -70,7 +70,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns property mapping builder.</returns>
-		public PropertyMappingBuilder<T> Property(Expression<Func<T, object>> func)
+		public PropertyMappingBuilder<T> Property(Expression<Func<T,object>> func)
 		{
 			return _entity.Property(func);
 		}
@@ -88,9 +88,9 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
 			Expression<Func<T, S>> prop,
 			Expression<Func<T, ID1>> thisKey,
-			Expression<Func<S, ID2>> otherKey)
+			Expression<Func<S, ID2>> otherKey )
 		{
-			return _entity.Association(prop, thisKey, otherKey);
+			return _entity.Association( prop, thisKey, otherKey );
 		}
 
 		/// <summary>
@@ -130,7 +130,7 @@ namespace LinqToDB.Mapping
 					me = m;
 				}
 
-				var p = Expression.Parameter(typeof(T));
+				var p  = Expression.Parameter(typeof(T));
 				getter = Expression.Lambda<Func<T, object>>(Expression.PropertyOrField(p, me.Member.Name), p);
 			}
 
@@ -139,7 +139,7 @@ namespace LinqToDB.Mapping
 					false,
 					 _ =>
 					 {
-						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName };
+						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName};
 						setColumn(a);
 						return a;
 					 },
