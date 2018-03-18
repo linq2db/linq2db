@@ -93,8 +93,8 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public override ISite Site
 		{
-			get { return _connection.Site;  }
-			set { _connection.Site = value; }
+			get => _connection.Site;
+			set => _connection.Site = value;
 		}
 #endif
 
@@ -108,8 +108,8 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public object Clone()
 		{
-			if (_connection is ICloneable)
-				return ((ICloneable)_connection).Clone();
+			if (_connection is ICloneable cloneable)
+				return cloneable.Clone();
 			return _dataConnection.DataProvider.CreateConnection(_dataConnection.ConnectionString);
 		}
 	}

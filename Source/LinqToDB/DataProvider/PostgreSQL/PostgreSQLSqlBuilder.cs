@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			var insertClause = Statement.GetInsertClause();
 			if (insertClause != null)
@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					attr != null
 						? attr.SequenceName
 						: Convert(
-							string.Format("{0}_{1}_seq", into.PhysicalName, into.GetIdentityField().PhysicalName),
+							$"{into.PhysicalName}_{into.GetIdentityField().PhysicalName}_seq",
 							ConvertType.NameToQueryField);
 
 				name = Convert(name, ConvertType.NameToQueryTable);
@@ -222,6 +222,25 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			dynamic p = parameter;
 			return p.NpgsqlDbType.ToString();
+		}
+
+		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
+		{
+			var table = truncateTable.Table;
+
+			AppendIndent();
+			StringBuilder.Append("TRUNCATE TABLE ");
+			BuildPhysicalTable(table, null);
+
+			if (truncateTable.Table.Fields.Values.Any(f => f.IsIdentity))
+			{
+				if (truncateTable.ResetIdentity)
+					StringBuilder.Append(" RESTART IDENTITY");
+				else
+					StringBuilder.Append(" CONTINUE IDENTITY");
+			}
+
+			StringBuilder.AppendLine();
 		}
 
 		protected override void BuildReturningSubclause(SqlStatement statement)

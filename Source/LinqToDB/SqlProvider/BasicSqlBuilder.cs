@@ -91,11 +91,11 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				BuildCommand(commandNumber);
+				BuildCommand(statement, commandNumber);
 			}
 		}
 
-		protected virtual void BuildCommand(int commandNumber)
+		protected virtual void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 		}
 
@@ -150,14 +150,15 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (Statement.QueryType)
 			{
-				case QueryType.Select        : BuildSelectQuery((SqlSelectStatement)Statement);                                 break;
-				case QueryType.Delete        : BuildDeleteQuery((SqlDeleteStatement)Statement);                                 break;
-				case QueryType.Update        : BuildUpdateQuery(Statement, Statement.SelectQuery, ((SqlUpdateStatement)Statement).Update); break;
-				case QueryType.Insert        : BuildInsertQuery(Statement, ((SqlInsertStatement)Statement).Insert);             break;
-				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery((SqlInsertOrUpdateStatement)Statement);                 break;
-				case QueryType.CreateTable   : BuildCreateTableStatement((SqlCreateTableStatement)Statement);                   break;
-				case QueryType.DropTable     : BuildDropTableStatement((SqlDropTableStatement)Statement);                       break;
-				default                      : BuildUnknownQuery();                                                             break;
+				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                     break;
+				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                     break;
+				case QueryType.Update        : BuildUpdateQuery           (Statement, Statement.SelectQuery, ((SqlUpdateStatement)Statement).Update); break;
+				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert); break;
+				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);             break;
+				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                break;
+				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                  break;
+				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);              break;
+				default                      : BuildUnknownQuery();                                                            break;
 			}
 		}
 
@@ -766,6 +767,24 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region Build DDL
+
+		protected virtual void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
+		{
+			var table = truncateTable.Table;
+
+			AppendIndent();
+
+			BuildTruncateTable(truncateTable);
+
+			BuildPhysicalTable(table, null);
+			StringBuilder.AppendLine();
+		}
+
+		protected virtual void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			//StringBuilder.Append("TRUNCATE TABLE ");
+			StringBuilder.Append("DELETE FROM ");
+		}
 
 		protected virtual void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{

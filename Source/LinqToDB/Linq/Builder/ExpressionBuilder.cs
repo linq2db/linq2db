@@ -57,6 +57,7 @@ namespace LinqToDB.Linq.Builder
 			new AsUpdatableBuilder         (),
 			new LoadWithBuilder            (),
 			new DropBuilder                (),
+			new TruncateBuilder            (),
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),

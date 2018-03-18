@@ -18,7 +18,7 @@ namespace LinqToDB.Data
 	{
 		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object[] parameters)
 		{
-			ThrowOnDisposed();
+			CheckAndThrowOnDisposed();
 			return new QueryRunner(query, queryNumber, this, expression, parameters);
 		}
 
@@ -286,6 +286,8 @@ namespace LinqToDB.Data
 					return dataConnection.ExecuteNonQuery();
 				}
 
+				var rowsAffected = -1;
+
 				for (var i = 0; i < preparedQuery.Commands.Length; i++)
 				{
 					dataConnection.InitCommand(CommandType.Text, preparedQuery.Commands[i], null, i == 0 ? preparedQuery.QueryHints : null);
@@ -306,11 +308,14 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						dataConnection.ExecuteNonQuery();
+						var n = dataConnection.ExecuteNonQuery();
+
+						if (i == 0)
+							rowsAffected = n;
 					}
 				}
 
-				return -1;
+				return rowsAffected;
 			}
 
 			public override int ExecuteNonQuery()
@@ -461,9 +466,11 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
+				await _dataConnection.EnsureConnectionAsync(cancellationToken);
+
 				base.SetCommand(true);
 
-				await _dataConnection.InitCommandAsync(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints, cancellationToken);
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[0], null, QueryHints);
 
 				if (_preparedQuery.Parameters != null)
 					foreach (var p in _preparedQuery.Parameters)
@@ -478,12 +485,14 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
+				await _dataConnection.EnsureConnectionAsync(cancellationToken);
+
 				base.SetCommand(true);
 
 				if (_preparedQuery.Commands.Length == 1)
 				{
-					await _dataConnection.InitCommandAsync(
-						CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints, cancellationToken);
+					_dataConnection.InitCommand(
+						CommandType.Text, _preparedQuery.Commands[0], null, _preparedQuery.QueryHints);
 
 					if (_preparedQuery.Parameters != null)
 						foreach (var p in _preparedQuery.Parameters)
@@ -494,8 +503,8 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < _preparedQuery.Commands.Length; i++)
 				{
-					await _dataConnection.InitCommandAsync(
-						CommandType.Text, _preparedQuery.Commands[i], null, i == 0 ? _preparedQuery.QueryHints : null, cancellationToken);
+					_dataConnection.InitCommand(
+						CommandType.Text, _preparedQuery.Commands[i], null, i == 0 ? _preparedQuery.QueryHints : null);
 
 					if (i == 0 && _preparedQuery.Parameters != null)
 						foreach (var p in _preparedQuery.Parameters)
@@ -522,6 +531,10 @@ namespace LinqToDB.Data
 
 			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
+				_isAsync = true;
+
+				await _dataConnection.EnsureConnectionAsync(cancellationToken);
+
 				SetCommand();
 
 				IDbDataParameter idparam = null;
@@ -556,7 +569,7 @@ namespace LinqToDB.Data
 
 				await _dataConnection.ExecuteNonQueryAsync(cancellationToken);
 
-				await _dataConnection.InitCommandAsync(CommandType.Text, _preparedQuery.Commands[1], null, null, cancellationToken);
+				_dataConnection.InitCommand(CommandType.Text, _preparedQuery.Commands[1], null, null);
 
 				return await _dataConnection.ExecuteScalarAsync(cancellationToken);
 			}

@@ -245,5 +245,33 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[3], result[2], null, null);
 			}
 		}
+
+		[Test, MergeBySourceDataContextSource]
+		public void DeleteBySourceFromPartialSourceProjection(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
+					.OnTargetKey()
+					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 1)
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.AreEqual(1, rows);
+
+				Assert.AreEqual(3, result.Count);
+
+				AssertRow(InitialTargetData[1], result[0], null, null);
+				AssertRow(InitialTargetData[2], result[1], null, 203);
+				AssertRow(InitialTargetData[3], result[2], null, null);
+			}
+		}
 	}
 }
