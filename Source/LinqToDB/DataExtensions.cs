@@ -1,10 +1,12 @@
-﻿using JetBrains.Annotations;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -96,9 +98,9 @@ namespace LinqToDB
 		/// <param name="query">The query expression to be compiled.</param>
 		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
-		public static Func<TDc, TResult> Compile<TDc, TResult>(
+		public static Func<TDc,TResult> Compile<TDc,TResult>(
 			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc, TResult>> query)
+			[NotNull] Expression<Func<TDc,TResult>> query)
 			where TDc : IDataContext
 		{
 			return CompiledQuery.Compile(query);
@@ -115,9 +117,9 @@ namespace LinqToDB
 		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TArg1">Type of parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
-		public static Func<TDc, TArg1, TResult> Compile<TDc, TArg1, TResult>(
+		public static Func<TDc,TArg1,TResult> Compile<TDc,TArg1,TResult>(
 			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc, TArg1, TResult>> query)
+			[NotNull] Expression<Func<TDc,TArg1,TResult>> query)
 			where TDc : IDataContext
 		{
 			return CompiledQuery.Compile(query);
@@ -135,9 +137,9 @@ namespace LinqToDB
 		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
-		public static Func<TDc, TArg1, TArg2, TResult> Compile<TDc, TArg1, TArg2, TResult>(
+		public static Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
 			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc, TArg1, TArg2, TResult>> query)
+			[NotNull] Expression<Func<TDc,TArg1,TArg2,TResult>> query)
 			where TDc : IDataContext
 		{
 			return CompiledQuery.Compile(query);
@@ -156,9 +158,9 @@ namespace LinqToDB
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
-		public static Func<TDc, TArg1, TArg2, TArg3, TResult> Compile<TDc, TArg1, TArg2, TArg3, TResult>(
+		public static Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
 			[NotNull] this IDataContext dataContext,
-			[NotNull] Expression<Func<TDc, TArg1, TArg2, TArg3, TResult>> query)
+			[NotNull] Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
 			where TDc : IDataContext
 		{
 			return CompiledQuery.Compile(query);

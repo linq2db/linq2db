@@ -1,9 +1,11 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using System;
-using System.Linq;
 using Tests.Model;
 
 namespace Tests.Data
@@ -245,7 +247,7 @@ namespace Tests.Data
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<TwoValues, DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
+			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
 
 			using (var conn = new DataConnection().AddMappingSchema(ms))
 			{
@@ -260,7 +262,7 @@ namespace Tests.Data
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<TwoValues, DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
+			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
 
 			using (var conn = (DataConnection)GetDataContext(context, ms))
 			{
@@ -275,7 +277,7 @@ namespace Tests.Data
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConvertExpression<TwoValues, DataParameter>(tv =>
+			ms.SetConvertExpression<TwoValues,DataParameter>(tv =>
 				new DataParameter
 				{
 					Value    = tv == null ? (long?)null : (long)tv.Value1 << 32 | tv.Value2,
