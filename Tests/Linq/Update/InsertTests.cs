@@ -1579,6 +1579,8 @@ namespace Tests.xUpdate
 
 				var integritycount = table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).Count();
 				Assert.AreEqual(3, integritycount);
+
+				table.Drop();
 			}
 		}
 
@@ -1615,6 +1617,8 @@ namespace Tests.xUpdate
 
 				var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
 				Assert.AreEqual(3, integritycount);
+
+				await table.DropAsync();
 			}
 		}
 

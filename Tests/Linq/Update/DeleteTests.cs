@@ -404,6 +404,8 @@ namespace Tests.xUpdate
 				db.Delete(personForDelete, tableName: tableName, schemaName: schemaName);
 
 				Assert.AreEqual(0, table.Count());
+
+				table.Drop();
 			}
 		}
 
@@ -438,6 +440,8 @@ namespace Tests.xUpdate
 				await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
 
 				Assert.AreEqual(0, await table.CountAsync());
+
+				await table.DropAsync();
 			}
 		}
 	}

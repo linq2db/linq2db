@@ -1255,7 +1255,7 @@ namespace Tests.xUpdate
 				var updatedPerson = await table.SingleAsync();
 				Assert.AreEqual("None", updatedPerson.MiddleName);
 
-				table.Drop();
+				await table.DropAsync();
 			}
 		}
 

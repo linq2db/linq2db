@@ -335,7 +335,7 @@ namespace LinqToDB
 			[NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, tableName, databaseName, schemaName);
+			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 		}
 
 		/// <summary>
@@ -355,7 +355,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, tableName, databaseName, schemaName);
+			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
 		}
 
@@ -376,7 +376,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, tableName, databaseName, schemaName);
+			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
 		}
 
@@ -397,7 +397,7 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token, tableName, databaseName, schemaName);
+			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
 		}
 
@@ -438,7 +438,7 @@ namespace LinqToDB
 			[NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, token, tableName, databaseName, schemaName);
+			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 		}
 
 		#endregion
@@ -478,7 +478,7 @@ namespace LinqToDB
 			[NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, token, tableName, databaseName, schemaName);
+			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 		}
 
 		#endregion

@@ -84,7 +84,8 @@ namespace LinqToDB.Linq
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
-			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, CancellationToken token, string tableName = null, string databaseName = null, string schemaName = null)
+			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName = null,
+				string databaseName = null, string schemaName = null, CancellationToken token = default)
 			{
 				if (Equals(default, obj))
 					return 0;
