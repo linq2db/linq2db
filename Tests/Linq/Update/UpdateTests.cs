@@ -1189,7 +1189,6 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
 				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
 
 				Assert.AreEqual(tableName,  table.TableName);
@@ -1228,7 +1227,6 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
 				var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
 
 				Assert.AreEqual(tableName,  table.TableName);
