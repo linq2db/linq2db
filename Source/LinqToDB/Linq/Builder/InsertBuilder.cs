@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 				int index;
 				if (!indexedParameters.TryGetValue("outputExpression", out index))
 				{
-					var param = Expression.Parameter(methodCall.Method.GetGenericArguments()[1]);
+					var param = Expression.Parameter(outputType);
 					return Expression.Lambda(param, param);
 				}
 
@@ -125,126 +125,35 @@ namespace LinqToDB.Linq.Builder
 
 					insertStatement.Output = new SqlOutputClause();
 
-					var table = new SqlTable(outputExpression.Parameters[0].Type)
+					var insertedTable = new SqlTable(outputExpression.Parameters[0].Type)
 					{
 						Name         = "INSERTED",
 						PhysicalName = "INSERTED",
 						SqlTableType = SqlTableType.SystemTable,
 					};
 
-					var selectQuery = new SelectQuery();
+					outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
 
-					selectQuery.From.Table(table);
+					insertStatement.Output.InsertedTable = insertedTable;
 
-					outputContext = new TableBuilder.TableContext(builder, selectQuery, table);
-
-					insertStatement.Output.InsertedTable = table;
-
-//					UpdateBuilder.BuildSetter(
-//						builder,
-//						buildInfo,
-//						outputExpression,
-//						into,
-//						insertStatement.Output.OutputItems,
-//						insertedContext);
-				}
-
-				if (insertType == InsertContext.InsertType.InsertOutputInto)
-				{
-					var outputTable = GetArgumentByName("outputTable");
-					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
-					insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
-				}
-			}
-
-/*
-			switch (methodCall.Arguments.Count)
-			{
-				case 1 :
-					// static int Insert<T>              (this IValueInsertable<T> source)
-					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
+					if (insertType == InsertContext.InsertType.InsertOutputInto)
 					{
-						foreach (var item in insertStatement.Insert.Items)
-							sequence.SelectQuery.Select.Expr(item.Expression);
-						break;
-					}
-
-				case 2 : // static int Insert<T>(this Table<T> target, Expression<Func<T>> setter)
-					{
-						UpdateBuilder.BuildSetter(
-							builder,
-							buildInfo,
-							(LambdaExpression)methodCall.Arguments[1].Unwrap(),
-							sequence,
-							insertStatement.Insert.Items,
-							sequence);
-
-						insertStatement.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
-						sequence.SelectQuery.From.Tables.Clear();
-
-						break;
-					}
-
-				case 3 : // static int Insert<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
-				case 4 : // InsertWithOutput or InsertWithOutputInto
-				case 5 : // InsertWithOutputInto
-					{
-						into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+						var outputTable = GetArgumentByName("outputTable");
+						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 						UpdateBuilder.BuildSetter(
 							builder,
 							buildInfo,
-							(LambdaExpression)methodCall.Arguments[2].Unwrap(),
-							into,
-							insertStatement.Insert.Items,
-							sequence);
+							outputExpression,
+							destination,
+							insertStatement.Output.OutputItems,
+							outputContext);
 
-						sequence.SelectQuery.Select.Columns.Clear();
-
-						foreach (var item in insertStatement.Insert.Items)
-							sequence.SelectQuery.Select.Columns.Add(new SqlColumn(sequence.SelectQuery, item.Expression));
-
-						insertStatement.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
-
-						break;
+						insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 					}
-			}
-
-			if (into != null && methodCall.Method.Name.StartsWith("InsertWithOutput"))
-			{
-				insertType = InsertContext.InsertType.InsertOutput;
-				insertStatement.Output = new SqlOutputClause();
-
-				if (methodCall.Arguments.Count == 4)
-				{
-					outputExpression = (LambdaExpression)methodCall.Arguments[3].Unwrap();
-				}
-				else
-				{
-					var param        = Expression.Parameter(methodCall.Method.GetGenericArguments()[1]);
-					outputExpression = Expression.Lambda(param, param);
 				}
 
-				var table          = new SqlTable(outputExpression.Parameters[0].Type);
-				table.Name         = "INSERTED";
-				table.PhysicalName = table.Name;
-				table.SqlTableType = SqlTableType.SystemTable;
-
-				var insertedContext = new TableBuilder.TableContext(builder, buildInfo, table);
-
-				insertStatement.Output.InsertedTable = table;
-
-				UpdateBuilder.BuildOutput(
-					builder,
-					buildInfo,
-					outputExpression,
-					into,
-					insertStatement.Output.OutputItems,
-					insertedContext,
-					null);
-
 			}
-*/
 
 			var insert = insertStatement.Insert;
 

@@ -26,7 +26,15 @@ namespace Tests.Tools
 
 		public TempTable(IDataContext db, string tableName)
 		{
-			Table = db.CreateTable<T>(tableName);
+			try
+			{
+				Table = db.CreateTable<T>(tableName);
+			}
+			catch
+			{
+				db.DropTable<T>(tableName, throwExceptionIfNotExists: false);
+				Table = db.CreateTable<T>(tableName);
+			}
 		}
 
 		public void Dispose()

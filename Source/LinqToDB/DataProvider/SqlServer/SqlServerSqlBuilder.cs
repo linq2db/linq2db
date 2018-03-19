@@ -107,8 +107,11 @@ namespace LinqToDB.DataProvider.SqlServer
 						BuildExpression(oi.Expression);
 					}
 
-//					StringBuilder
-//						.AppendLine();
+					if (output.OutputItems.Count > 0)
+					{
+						StringBuilder
+							.AppendLine();
+					}
 
 					--Indent;
 

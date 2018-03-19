@@ -1553,11 +1553,13 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
+				const int idsLimit = 1000;
+
 				try
 				{
-					var id = 1001;
+					var id = idsLimit + 1;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 
 					var output = db.Child
 						.Where(c => c.ChildID == 11)
@@ -1574,10 +1576,17 @@ namespace Tests.xUpdate
 								inserted.ParentID
 							})
 						.ToArray();
+
+						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new
+							{
+								c.ChildID,
+								c.ParentID,
+							}),
+							output);
 				}
 				finally
 				{
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 				}
 			}
 		}
@@ -1587,24 +1596,34 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
+				const int idsLimit = 1000;
+
 				try
 				{
-					var id = 1001;
+					var id = idsLimit + 1;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 
 					var output =
 						db.Child
 							.Where(c => c.ChildID == 11)
 							.InsertWithOutput(db.Child, c => new Child
 							{
-								ParentID = c.ParentID,
-								ChildID  = id
+								ChildID  = id,
+								ParentID = c.ParentID
 							}).ToArray();
+
+					AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
+						{
+							ChildID = c.ChildID,
+							ParentID = c.ParentID,
+						}),
+						output);
+
 				}
 				finally
 				{
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 				}
 			}
 		}
@@ -1614,11 +1633,11 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
+				const int idsLimit = 1000;
+
 				try
 				{
-					var id = 1001;
-
-					db.Child.Delete(c => c.ChildID > 1000);
+					var id = idsLimit + 1;
 
 					var output = db.Child
 						.Where(c => c.ChildID == 11)
@@ -1634,10 +1653,16 @@ namespace Tests.xUpdate
 								ID = inserted.ChildID + inserted.ParentID
 							})
 						.ToArray();
+
+					AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new
+						{
+							ID = c.ChildID + c.ParentID
+						}),
+						output);
 				}
 				finally
 				{
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 				}
 			}
 		}
@@ -1647,11 +1672,11 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
+				const int idsLimit = 1000;
+
 				try
 				{
-					var id = 1001;
-
-					db.Child.Delete(c => c.ChildID > 1000);
+					var id = idsLimit + 1;
 
 					var output = db.Child
 						.Where(c => c.ChildID == 11)
@@ -1664,10 +1689,15 @@ namespace Tests.xUpdate
 							},
 							inserted => Sql.AsSql(inserted.ChildID + inserted.ParentID))
 						.ToArray();
+
+					AreEqual(
+						db.Child.Where(c => c.ChildID > idsLimit)
+							.Select(c => c.ChildID + c.ParentID),
+						output);
 				}
 				finally
 				{
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 				}
 			}
 		}
@@ -1677,11 +1707,13 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
+				const int idsLimit = 1000;
+
 				try
 				{
-					var id = 1001;
+					var id = idsLimit + 1;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 
 					using (var t = CreateTempTable<Child>(db, "TInserted", context))
 					{
@@ -1698,15 +1730,30 @@ namespace Tests.xUpdate
 										new Child
 										{
 											ChildID = inserted.ChildID,
-											ParentID = inserted.ParentID
+											ParentID = inserted.ParentID + 1
 										}
 								);
+
+						Assert.AreEqual(1, output);
+
+						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID = c.ChildID
+							}),
+							t.Table.Select(c => new Child
+								{
+									ParentID = c.ParentID - 1,
+									ChildID = c.ChildID
+								}
+							)
+						);
 					}
 
 				}
 				finally
 				{
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 				}
 			}
 		}
@@ -1716,11 +1763,13 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
+				const int idsLimit = 1000;
+
 				try
 				{
-					var id = 1001;
+					var id = idsLimit + 1;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 
 					using (var t = CreateTempTable<Child>(db, "TInserted", context))
 					{
@@ -1735,12 +1784,25 @@ namespace Tests.xUpdate
 									},
 									t.Table);
 
-						var zz = t.Table.ToArray();
+						Assert.AreEqual(1, output);
+
+						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID = c.ChildID
+							}),
+							t.Table.Select(c => new Child
+								{
+									ParentID = c.ParentID,
+									ChildID = c.ChildID
+								}
+							)
+						);
 					}
 				}
 				finally
 				{
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Delete(c => c.ChildID > idsLimit);
 				}
 			}
 		}
