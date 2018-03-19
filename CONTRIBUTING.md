@@ -287,7 +287,7 @@ In general you should follow simple rules:
 * If you are going to implement any big feature you may want other contributors to participate (coding, code review, feature discuss and so on), so to do it:
   * Create new PR with **[WIP]** prefix (Work In Process)
   * After you are ready to merge remove the prefix & assign contributors as reviewers
-* If you wo have write access, it is recommended to use central repository (not forks). Why - simple, it would allow other teammates to help you in developing (if needed). Certainly you are free to use fork if it is more convenient to you
+* If you do have write access, it is recommended to use central repository (not forks). Why - simple, it would allow other teammates to help you in developing (if needed). Certainly you are free to use fork if it is more convenient to you
 * Please avoid adding new public classes, properties, methods without XML doc
 * Read issues and help users
 * Do not EF :)

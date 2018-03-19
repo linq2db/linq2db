@@ -535,8 +535,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// FB, INFORMIX: doesn't support parameters in source select list
-		[Test, MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
+		// FB, INFORMIX, Oracle: doesn't support parameters in source select list
+		[Test, MergeDataContextSource(
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInSourceSelect(string context)
 		{
 			using (var db = new TestDataConnection(context))
