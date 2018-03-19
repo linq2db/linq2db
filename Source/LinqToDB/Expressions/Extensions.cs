@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Expressions
 {
@@ -1497,7 +1498,12 @@ namespace LinqToDB.Expressions
 										var ex = Transform(ma.Expression, func);
 
 										if (ex != ma.Expression)
+										{
+											var memberType = ma.Member.GetMemberType();
+											if (ex.Type != memberType)
+												ex = Expression.Convert(ex, memberType);
 											ma = Expression.Bind(ma.Member, ex);
+										}
 
 										return ma;
 									}
