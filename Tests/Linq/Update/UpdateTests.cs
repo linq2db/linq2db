@@ -1181,7 +1181,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource]
 		public void UpdateByTableName(string context)
 		{
 			const string schemaName = null;
@@ -1219,7 +1219,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource]
 		public async Task UpdateByTableNameAsync(string context)
 		{
 			const string schemaName = null;

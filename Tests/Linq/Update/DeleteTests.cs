@@ -373,7 +373,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource]
 		public void DeleteByTableName(string context)
 		{
 			const string schemaName = null;
@@ -408,7 +408,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource]
 		public async Task DeleteByTableNameAsync(string context)
 		{
 			const string schemaName = null;

@@ -1546,7 +1546,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource]
 		public void InsertByTableName(string context)
 		{
 			const string schemaName = null;
@@ -1583,7 +1583,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource]
 		public async Task InsertByTableNameAsync(string context)
 		{
 			const string schemaName = null;
@@ -1620,7 +1620,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource]
 		public void InsertOrReplaceByTableName(string context)
 		{
 			const string schemaName = null;
@@ -1661,7 +1661,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
+		[Test, DataContextSource]
 		public async Task InsertOrReplaceByTableNameAsync(string context)
 		{
 			const string schemaName = null;

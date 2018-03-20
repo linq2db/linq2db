@@ -381,7 +381,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Sybase)]
 		public void DeleteFromPartialSourceProjection_MissingKeyField(string context)
 		{
 			using (var db = new TestDataConnection(context))
