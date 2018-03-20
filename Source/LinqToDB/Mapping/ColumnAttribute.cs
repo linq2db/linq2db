@@ -11,7 +11,7 @@ namespace LinqToDB.Mapping
 	/// In latter case you should specify member name using <see cref="MemberName"/> property.
 	/// </summary>
 	[AttributeUsage(
-		AttributeTargets.Field | AttributeTargets.Property| AttributeTargets.Class | AttributeTargets.Interface,
+		AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Interface,
 		AllowMultiple = true, Inherited = true)]
 	public class ColumnAttribute : Attribute
 	{
@@ -177,7 +177,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string )"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool   SkipOnUpdate

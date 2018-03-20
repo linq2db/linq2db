@@ -230,7 +230,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool           SkipOnUpdate    { get; private set; }
