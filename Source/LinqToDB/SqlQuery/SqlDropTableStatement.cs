@@ -18,7 +18,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public override SelectQuery SelectQuery { get => null; set {}}
-		
+
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			sb.Append("DROP TABLE ");
@@ -66,6 +66,5 @@ namespace LinqToDB.SqlQuery
 					SelectQuery = newQuery;
 			}
 		}
-
 	}
 }

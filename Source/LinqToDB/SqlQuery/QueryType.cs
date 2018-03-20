@@ -11,5 +11,6 @@ namespace LinqToDB.SqlQuery
 		InsertOrUpdate,
 		CreateTable,
 		DropTable,
+		TruncateTable,
 	}
 }

@@ -9,7 +9,9 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Collections;
 	using Model;
+	using NUnit.Framework.Interfaces;
 
 	public static class EnumerableExtesions
 	{
@@ -56,8 +58,8 @@ namespace Tests.Linq
 			Func<TFirst, TSecond, TResult> resultSelector,
 			SqlJoinType joinType)
 		{
-			if (first == null) throw new ArgumentNullException("first");
-			if (second == null) throw new ArgumentNullException("second");
+			if (first  == null) throw new ArgumentNullException(nameof(first));
+			if (second == null) throw new ArgumentNullException(nameof(second));
 
 			switch (joinType)
 			{
@@ -96,7 +98,7 @@ namespace Tests.Linq
 
 					return res;
 				default:
-					throw new ArgumentOutOfRangeException("joinType", joinType, null);
+					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
 			}
 		}
 	}
@@ -821,6 +823,32 @@ namespace Tests.Linq
 					select new { p, ch });
 		}
 
+		[ActiveIssue(577)]
+		[Test, DataContextSource]
+		public void MultipleLeftJoin(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result =
+					from parent             in db.Parent
+					join child              in db.Child      on parent.ParentID equals child.ParentID      into childTemp
+					join grandChild         in db.GrandChild on parent.ParentID equals grandChild.ParentID into grandChildTemp
+					from grandChildLeftJoin in grandChildTemp.DefaultIfEmpty()
+					from childLeftJoin      in childTemp.DefaultIfEmpty()
+					select new { parent.ParentID, ChildID = (int?)childLeftJoin.ChildID, GrandChildID = (int?)grandChildLeftJoin.GrandChildID };
+
+				var expected =
+					from parent             in Parent
+					join child              in Child      on parent.ParentID equals child.ParentID      into childTemp
+					join grandChild         in GrandChild on parent.ParentID equals grandChild.ParentID into grandChildTemp
+					from grandChildLeftJoin in grandChildTemp.DefaultIfEmpty()
+					from childLeftJoin      in childTemp.DefaultIfEmpty()
+					select new { parent.ParentID, childLeftJoin?.ChildID, grandChildLeftJoin?.GrandChildID };
+
+				AreEqual(expected, result);
+			}
+		}
+
 		[Test, DataContextSource]
 		public void SubQueryJoin(string context)
 		{
@@ -1098,12 +1126,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlJoinSimple(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-					SqlJoinType.Left,
-					SqlJoinType.Right,
-					SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlJoinSimple([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1167,12 +1191,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlJoinSubQuery(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-				SqlJoinType.Left,
-				SqlJoinType.Right,
-				SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlJoinSubQuery([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1190,12 +1210,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereJoin(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-				SqlJoinType.Left,
-				SqlJoinType.Right,
-				SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1213,12 +1229,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereSubqueryJoin(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-				SqlJoinType.Left,
-				SqlJoinType.Right,
-				SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1232,6 +1244,27 @@ namespace Tests.Linq
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
+			}
+		}
+
+		[Test, IncludeDataContextSource(true, ProviderName.SqlServer2012)]
+		public void FromLeftJoinTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					from g in db.GrandChild
+						.Where(t =>
+							db.Person
+								.Select(r => r.ID)
+								.Contains(c.ChildID))
+						.DefaultIfEmpty()
+					select new { p.ParentID }
+					;
+
+				var list = q.ToList();
 			}
 		}
 	}

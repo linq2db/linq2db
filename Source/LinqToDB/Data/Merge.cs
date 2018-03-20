@@ -1,10 +1,11 @@
-﻿using JetBrains.Annotations;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
@@ -25,7 +26,7 @@ namespace LinqToDB.Data
 				where TTarget : class
 		{
 			if (target == null)
-				throw new ArgumentNullException("target");
+				throw new ArgumentNullException(nameof(target));
 
 			return new MergeDefinition<TTarget, TTarget>(target);
 		}
@@ -44,11 +45,8 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (source == null)
-				throw new ArgumentNullException("source");
-
-			if (target == null)
-				throw new ArgumentNullException("target");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			return new MergeDefinition<TTarget, TSource>(target, source);
 		}
@@ -67,11 +65,8 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (source == null)
-				throw new ArgumentNullException("source");
+			if (merge  == null) throw new ArgumentNullException(nameof(merge));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((MergeDefinition<TTarget, TTarget>)merge).AddSource(source);
 		}
@@ -90,11 +85,8 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (source == null)
-				throw new ArgumentNullException("source");
+			if (merge  == null) throw new ArgumentNullException(nameof(merge));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((MergeDefinition<TTarget, TTarget>)merge).AddSource(source);
 		}
@@ -106,12 +98,11 @@ namespace LinqToDB.Data
 		/// <param name="merge">Merge command builder.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		public static IMergeableOn<TTarget, TTarget> UsingTarget<TTarget>(this IMergeableUsing<TTarget> merge)
-				where TTarget : class
+			where TTarget : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			var builder = (MergeDefinition<TTarget, TTarget>)merge;
+			var builder = (MergeDefinition<TTarget,TTarget>)merge;
 			return builder.AddSource(builder.Target);
 		}
 		#endregion
@@ -134,14 +125,9 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (targetKey == null)
-				throw new ArgumentNullException("targetKey");
-
-			if (sourceKey == null)
-				throw new ArgumentNullException("sourceKey");
+			if (merge     == null) throw new ArgumentNullException(nameof(merge));
+			if (targetKey == null) throw new ArgumentNullException(nameof(targetKey));
+			if (sourceKey == null) throw new ArgumentNullException(nameof(sourceKey));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOnKey(targetKey, sourceKey);
 		}
@@ -160,11 +146,8 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (matchCondition == null)
-				throw new ArgumentNullException("matchCondition");
+			if (merge          == null) throw new ArgumentNullException(nameof(merge));
+			if (matchCondition == null) throw new ArgumentNullException(nameof(matchCondition));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOnPredicate(matchCondition);
 		}
@@ -178,8 +161,7 @@ namespace LinqToDB.Data
 		public static IMergeable<TTarget, TTarget> OnTargetKey<TTarget>(this IMergeableOn<TTarget, TTarget> merge)
 				where TTarget : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
 			return (MergeDefinition<TTarget, TTarget>)merge;
 		}
@@ -197,8 +179,7 @@ namespace LinqToDB.Data
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatched<TTarget>(this IMergeableSource<TTarget, TTarget> merge)
 				where TTarget : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
 			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
 				MergeDefinition<TTarget, TTarget>.Operation.Insert(null, null));
@@ -219,11 +200,8 @@ namespace LinqToDB.Data
 			Expression<Func<TTarget, bool>> searchCondition)
 				where TTarget : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (searchCondition == null)
-				throw new ArgumentNullException("searchCondition");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 
 			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
 				MergeDefinition<TTarget, TTarget>.Operation.Insert(searchCondition, null));
@@ -246,11 +224,8 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (setter == null)
-				throw new ArgumentNullException("setter");
+			if (merge  == null) throw new ArgumentNullException(nameof(merge));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Insert(null, setter));
@@ -276,14 +251,9 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (searchCondition == null)
-				throw new ArgumentNullException("searchCondition");
-
-			if (setter == null)
-				throw new ArgumentNullException("setter");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
+			if (setter          == null) throw new ArgumentNullException(nameof(setter));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Insert(searchCondition, setter));
@@ -302,8 +272,7 @@ namespace LinqToDB.Data
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatched<TTarget>(this IMergeableSource<TTarget, TTarget> merge)
 				where TTarget : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
 			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
 				MergeDefinition<TTarget, TTarget>.Operation.Update(null, null));
@@ -324,11 +293,8 @@ namespace LinqToDB.Data
 			Expression<Func<TTarget, TTarget, bool>> searchCondition)
 				where TTarget : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (searchCondition == null)
-				throw new ArgumentNullException("searchCondition");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 
 			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
 				MergeDefinition<TTarget, TTarget>.Operation.Update(searchCondition, null));
@@ -351,11 +317,8 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (setter == null)
-				throw new ArgumentNullException("setter");
+			if (merge  == null) throw new ArgumentNullException(nameof(merge));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Update(null, setter));
@@ -381,14 +344,9 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (searchCondition == null)
-				throw new ArgumentNullException("searchCondition");
-
-			if (setter == null)
-				throw new ArgumentNullException("setter");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
+			if (setter          == null) throw new ArgumentNullException(nameof(setter));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Update(searchCondition, setter));
@@ -412,11 +370,8 @@ namespace LinqToDB.Data
 			Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 				where TTarget : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (deleteCondition == null)
-				throw new ArgumentNullException("deleteCondition");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
 
 			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
 				MergeDefinition<TTarget, TTarget>.Operation.UpdateWithDelete(null, null, deleteCondition));
@@ -441,14 +396,9 @@ namespace LinqToDB.Data
 			Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 				where TTarget : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (searchCondition == null)
-				throw new ArgumentNullException("searchCondition");
-
-			if (deleteCondition == null)
-				throw new ArgumentNullException("deleteCondition");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
+			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
 
 			return ((MergeDefinition<TTarget, TTarget>)merge).AddOperation(
 				MergeDefinition<TTarget, TTarget>.Operation.UpdateWithDelete(searchCondition, null, deleteCondition));
@@ -475,14 +425,9 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (setter == null)
-				throw new ArgumentNullException("setter");
-
-			if (deleteCondition == null)
-				throw new ArgumentNullException("deleteCondition");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (setter          == null) throw new ArgumentNullException(nameof(setter));
+			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(null, setter, deleteCondition));
@@ -512,17 +457,10 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (searchCondition == null)
-				throw new ArgumentNullException("searchCondition");
-
-			if (setter == null)
-				throw new ArgumentNullException("setter");
-
-			if (deleteCondition == null)
-				throw new ArgumentNullException("deleteCondition");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
+			if (setter          == null) throw new ArgumentNullException(nameof(setter));
+			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(searchCondition, setter, deleteCondition));
@@ -544,8 +482,7 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Delete(null));
@@ -567,11 +504,8 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (searchCondition == null)
-				throw new ArgumentNullException("searchCondition");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.Delete(searchCondition));
@@ -597,11 +531,8 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (setter == null)
-				throw new ArgumentNullException("setter");
+			if (merge  == null) throw new ArgumentNullException(nameof(merge));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(null, setter));
@@ -628,14 +559,9 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (searchCondition == null)
-				throw new ArgumentNullException("searchCondition");
-
-			if (setter == null)
-				throw new ArgumentNullException("setter");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
+			if (setter          == null) throw new ArgumentNullException(nameof(setter));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(searchCondition, setter));
@@ -658,8 +584,7 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(null));
@@ -682,11 +607,8 @@ namespace LinqToDB.Data
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
-
-			if (searchCondition == null)
-				throw new ArgumentNullException("searchCondition");
+			if (merge           == null) throw new ArgumentNullException(nameof(merge));
+			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
 
 			return ((MergeDefinition<TTarget, TSource>)merge).AddOperation(
 				MergeDefinition<TTarget, TSource>.Operation.DeleteBySource(searchCondition));
@@ -705,18 +627,19 @@ namespace LinqToDB.Data
 			where TTarget : class
 			where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException("merge");
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
 			var definition = (MergeDefinition<TTarget, TSource>)merge;
 
 			DataConnection dataConnection;
-			if (definition.Target.DataContext is DataConnection)
-				dataConnection = (DataConnection)definition.Target.DataContext;
-			else if (definition.Target.DataContext is DataContext)
-				dataConnection = ((DataContext)definition.Target.DataContext).GetDataConnection();
-			else
-				throw new ArgumentException("DataContext must be of DataConnection or DataContext type.");
+
+			switch (definition.Target.DataContext)
+			{
+				case DataConnection dcon : dataConnection = dcon;                     break;
+				case DataContext    dctx : dataConnection = dctx.GetDataConnection(); break;
+				default:
+					throw new ArgumentException("DataContext must be of DataConnection or DataContext type.");
+			}
 
 			return dataConnection.DataProvider.Merge(dataConnection, definition);
 		}
@@ -731,24 +654,26 @@ namespace LinqToDB.Data
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="token">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
-		public async static Task<int> MergeAsync<TTarget, TSource>(
+		public static async Task<int> MergeAsync<TTarget, TSource>(
 			this IMergeable<TTarget, TSource> merge,
-			CancellationToken token = default(CancellationToken))
+			CancellationToken token = default)
 				where TTarget : class
 				where TSource : class
 		{
 			if (merge == null)
-				throw new ArgumentNullException("merge");
+				throw new ArgumentNullException(nameof(merge));
 
 			var definition = (MergeDefinition<TTarget, TSource>)merge;
 
 			DataConnection dataConnection;
-			if (definition.Target.DataContext is DataConnection)
-				dataConnection = (DataConnection)definition.Target.DataContext;
-			else if (definition.Target.DataContext is DataContext)
-				dataConnection = ((DataContext)definition.Target.DataContext).GetDataConnection();
-			else
-				throw new ArgumentException("DataContext must be of DataConnection or DataContext type.");
+
+			switch (definition.Target.DataContext)
+			{
+				case DataConnection dcon : dataConnection = dcon;                     break;
+				case DataContext    dctx : dataConnection = dctx.GetDataConnection(); break;
+				default:
+					throw new ArgumentException("DataContext must be of DataConnection or DataContext type.");
+			}
 
 			return await dataConnection.DataProvider.MergeAsync(dataConnection, definition, token);
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -137,7 +138,8 @@ namespace LinqToDB.SqlQuery
 
 		#region Init from Table
 
-		public SqlTable(SqlTable table) : this()
+		public SqlTable(SqlTable table)
+			: this()
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
@@ -154,7 +156,8 @@ namespace LinqToDB.SqlQuery
 			TableArguments = table.TableArguments;
 		}
 
-		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments) : this()
+		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
+			: this()
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
@@ -174,14 +177,10 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
-
 		public override string ToString()
 		{
 			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
 		}
-
-#endif
 
 		#endregion
 
@@ -315,11 +314,13 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
+		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			return sb.Append(Name);
+			if (Database != null) sb.Append($"[{Database}].");
+			if (Schema   != null) sb.Append($"[{Schema}].");
+			return sb.Append($"[{Name}]");
 		}
 
 		#endregion

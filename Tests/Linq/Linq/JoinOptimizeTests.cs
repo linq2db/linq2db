@@ -258,7 +258,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test, NorthwindDataContext]
 		public void InnerJoin1(string context)
 		{

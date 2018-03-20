@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,9 +7,6 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-	using Mapping;
-
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public class SelectQuery : ISqlTableSource
 	{
@@ -153,8 +149,8 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(this, e =>
 			{
-				if (e is SelectQuery && e != this)
-					((SelectQuery)e).ForEachTable(action, visitedQueries);
+				if (e is SelectQuery query && e != this)
+					query.ForEachTable(action, visitedQueries);
 			});
 		}
 
@@ -165,7 +161,7 @@ namespace LinqToDB.SqlQuery
 //			if (ts == null && IsUpdate && Update.Table == table)
 //				return Update.Table;
 
-			return ts == null && ParentSelect != null? ParentSelect.GetTableSource(table) : ts;
+			return ts == null && ParentSelect != null ? ParentSelect.GetTableSource(table) : ts;
 		}
 
 		internal static SqlTableSource CheckTableSource(SqlTableSource ts, ISqlTableSource table, string alias)
@@ -352,6 +348,24 @@ namespace LinqToDB.SqlQuery
 			dic.Remove(this);
 
 			return sb;
+		}
+
+		#endregion
+
+		#region Debug
+
+		internal void EnsureFindTables()
+		{
+			new QueryVisitor().Visit(this, e =>
+			{
+				if (e is SqlField f)
+				{
+					var ts = GetTableSource(f.Table);
+
+					if (ts == null && f != f.Table.All)
+						throw new SqlException("Table '{0}' not found.", f.Table);
+				}
+			});
 		}
 
 		#endregion

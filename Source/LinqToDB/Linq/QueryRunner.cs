@@ -125,7 +125,7 @@ namespace LinqToDB.Linq
 							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType, p))
 				);
 
-				sql.Parameters  = parameters.ToList();
+				sql.Parameters = parameters.ToList();
 			}
 		}
 

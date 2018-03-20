@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			var insertClause = Statement.GetInsertClause();
 			if (insertClause != null)
