@@ -245,8 +245,13 @@ namespace LinqToDB.DataProvider.MySql
 				{
 					ProcedureID         = catalog + "." + name,
 					CatalogName         = catalog,
+					SchemaName          = null,
 					ProcedureName       = name,
-					IsDefaultSchema     = false
+					IsFunction          = p.Field<string>("ROUTINE_TYPE") == "FUNCTION",
+					IsTableFunction     = false,
+					IsAggregateFunction = false,
+					IsDefaultSchema     = true,
+					ProcedureDefinition = p.Field<string>("ROUTINE_DEFINITION")
 				}
 			).ToList();
 		}
@@ -255,25 +260,68 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("PROCEDURE PARAMETERS");
 
+			// return parameter should be detected as parameter with mode = null, but .net provider
+			// has a bug where they replace it with named IN parameter:
+			// https://github.com/mysql/mysql-connector-net/blob/5864e6b21a8b32f5154b53d1610278abb3cb1cee/Source/MySql.Data/ISSchemaProvider.cs#L293
+			// Still, ordinal position is not touched, so we use as as a second criteria below
 			return
 			(
 				from p in ps.AsEnumerable()
 				let catalog = p.Field<string>("SPECIFIC_SCHEMA")
 				let name    = p.Field<string>("SPECIFIC_NAME")
 				let mode    = p.Field<string>("PARAMETER_MODE")
+				let ordinal = Converter.ChangeTypeTo<int>(p.Field<object>("ORDINAL_POSITION"))
 				select new ProcedureParameterInfo
 				{
 					ProcedureID   = catalog + "." + name,
-					ParameterName = p.Field<string>("PARAMETER_NAME"),
-					IsIn          = mode == "IN"  || mode == "INOUT",
-					IsOut         = mode == "OUT" || mode == "INOUT",
+					ParameterName = ordinal == 0 ? null : p.Field<string>("PARAMETER_NAME"),
+					IsIn          = ordinal != 0 && (mode == "IN"  || mode == "INOUT"),
+					IsOut         = ordinal != 0 && (mode == "OUT" || mode == "INOUT"),
 					Precision     = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_PRECISION")),
 					Scale         = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_SCALE")),
 					Ordinal       = Converter.ChangeTypeTo<int>(p.Field<object>("ORDINAL_POSITION")),
-					IsResult      = mode == null,
+					IsResult      = mode == null || ordinal == 0,
 					DataType      = p.Field<string>("DATA_TYPE"),
 				}
 			).ToList();
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		{
+#if !NETSTANDARD
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
+				let dataType = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
+				let columnType = dataType == null ? null : dataType.TypeName
+
+				let columnName = r.Field<string>("ColumnName")
+				let isNullable = r.Field<bool>("AllowDBNull")
+
+				let length = r.Field<int>("ColumnSize")
+				let precision = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale = Converter.ChangeTypeTo<int>(r["NumericScale"])
+
+				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale)
+
+				select new ColumnSchema
+				{
+					ColumnName           = columnName,
+					ColumnType           = GetDbType(columnType, dataType, length, precision, scale),
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = systemType ?? typeof(object),
+					DataType             = GetDataType(columnType, null, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(columnType),
+					IsIdentity           = r.IsNull("IsIdentity") ? false : r.Field<bool>("IsIdentity")
+				}
+			).ToList();
+#else
+			return new List<ColumnSchema>();
+#endif
 		}
 
 		protected override string GetProviderSpecificTypeNamespace()
