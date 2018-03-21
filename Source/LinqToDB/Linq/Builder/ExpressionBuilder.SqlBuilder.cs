@@ -2381,6 +2381,7 @@ namespace LinqToDB.Linq.Builder
 
 				var e = isEqual ? Expression.Equal(left, right) : Expression.NotEqual(left, right);
 
+				//expr = expr != null ? Expression.AndAlso(expr, e) : e;
 				expr = expr != null ? Expression.OrElse(expr, e) : e;
 			}
 
