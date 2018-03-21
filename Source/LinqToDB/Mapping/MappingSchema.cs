@@ -758,6 +758,12 @@ namespace LinqToDB.Mapping
 			lock (_metadataReadersSyncRoot)
 			{
 				var currentReader = MetadataReader;
+				if (currentReader is MetadataReader metadataReader)
+				{
+					metadataReader.AddReader(reader);
+					return;
+				}
+
 				MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
 			}
 		}

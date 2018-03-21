@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -6,6 +7,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Metadata
 {
+	/// <summary>
+	/// Aggregation metadata reader, that just delegates all calls to nested readers.
+	/// </summary>
 	public class MetadataReader : IMetadataReader
 	{
 		public static MetadataReader Default = new MetadataReader(
@@ -20,10 +24,16 @@ namespace LinqToDB.Metadata
 
 		public MetadataReader([NotNull] params IMetadataReader[] readers)
 		{
-			_readers = readers ?? throw new ArgumentNullException(nameof(readers));
+			_readers = new List<IMetadataReader>(readers) ?? throw new ArgumentNullException(nameof(readers));
 		}
 
-		readonly IMetadataReader[] _readers;
+		IList<IMetadataReader> _readers;
+
+		internal void AddReader(IMetadataReader reader)
+		{
+			// creation of new list is cheaper than lock on each method call
+			_readers = new[] { reader }.Concat(_readers).ToList();
+		}
 
 		public T[] GetAttributes<T>(Type type, bool inherit)
 			where T : Attribute
