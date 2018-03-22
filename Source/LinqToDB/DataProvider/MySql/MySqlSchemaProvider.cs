@@ -234,56 +234,51 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("PROCEDURES");
-
-			return
-			(
-				from p in ps.AsEnumerable()
-				let catalog  = p.Field<string>("ROUTINE_SCHEMA")
-				let name     = p.Field<string>("ROUTINE_NAME")
-				select new ProcedureInfo
+			// GetSchema("PROCEDURES") not used, as for MySql 5.7 (but not mariadb/mysql 5.6) it returns procedures from
+			// sys database too
+			return dataConnection
+				.Query(rd =>
 				{
-					ProcedureID         = catalog + "." + name,
-					CatalogName         = catalog,
-					SchemaName          = null,
-					ProcedureName       = name,
-					IsFunction          = p.Field<string>("ROUTINE_TYPE") == "FUNCTION",
-					IsTableFunction     = false,
-					IsAggregateFunction = false,
-					IsDefaultSchema     = true,
-					ProcedureDefinition = p.Field<string>("ROUTINE_DEFINITION")
-				}
-			).ToList();
+					var catalog = Converter.ChangeTypeTo<string>(rd[0]);
+					var name    = Converter.ChangeTypeTo<string>(rd[1]);
+					return new ProcedureInfo()
+					{
+						ProcedureID         = catalog + "." + name,
+						CatalogName         = catalog,
+						SchemaName          = null,
+						ProcedureName       = name,
+						IsFunction          = Converter.ChangeTypeTo<string>(rd[2]) == "FUNCTION",
+						IsTableFunction     = false,
+						IsAggregateFunction = false,
+						IsDefaultSchema     = true,
+						ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3])
+				};
+				}, "SELECT ROUTINE_SCHEMA, ROUTINE_NAME, ROUTINE_TYPE, ROUTINE_DEFINITION FROM INFORMATION_SCHEMA.routines WHERE ROUTINE_SCHEMA = database()")
+				.ToList();
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
 		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("PROCEDURE PARAMETERS");
-
-			// return parameter should be detected as parameter with mode = null, but .net provider
-			// has a bug where they replace it with named IN parameter:
-			// https://github.com/mysql/mysql-connector-net/blob/5864e6b21a8b32f5154b53d1610278abb3cb1cee/Source/MySql.Data/ISSchemaProvider.cs#L293
-			// Still, ordinal position is not touched, so we use as as a second criteria below
-			return
-			(
-				from p in ps.AsEnumerable()
-				let catalog = p.Field<string>("SPECIFIC_SCHEMA")
-				let name    = p.Field<string>("SPECIFIC_NAME")
-				let mode    = p.Field<string>("PARAMETER_MODE")
-				let ordinal = Converter.ChangeTypeTo<int>(p.Field<object>("ORDINAL_POSITION"))
-				select new ProcedureParameterInfo
+			// don't use GetSchema("PROCEDURE PARAMETERS") as MySql provider's implementation does strange stuff
+			// instead of just quering of INFORMATION_SCHEMA view. It returns incorrect results and breaks provider
+			return dataConnection
+				.Query(rd =>
 				{
-					ProcedureID   = catalog + "." + name,
-					ParameterName = ordinal == 0 ? null : p.Field<string>("PARAMETER_NAME"),
-					IsIn          = ordinal != 0 && (mode == "IN"  || mode == "INOUT"),
-					IsOut         = ordinal != 0 && (mode == "OUT" || mode == "INOUT"),
-					Precision     = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_PRECISION")),
-					Scale         = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_SCALE")),
-					Ordinal       = Converter.ChangeTypeTo<int>(p.Field<object>("ORDINAL_POSITION")),
-					IsResult      = mode == null || ordinal == 0,
-					DataType      = p.Field<string>("DATA_TYPE"),
-				}
-			).ToList();
+					var mode = Converter.ChangeTypeTo<string>(rd[2]);
+					return new ProcedureParameterInfo()
+					{
+						ProcedureID   = rd.GetString(0) + "." + rd.GetString(1),
+						ParameterName = Converter.ChangeTypeTo<string>(rd[4]),
+						IsIn          = mode == "IN"  || mode == "INOUT",
+						IsOut         = mode == "OUT" || mode == "INOUT",
+						Precision     = Converter.ChangeTypeTo<int?>(rd["NUMERIC_PRECISION"]),
+						Scale         = Converter.ChangeTypeTo<int?>(rd["NUMERIC_SCALE"]),
+						Ordinal       = Converter.ChangeTypeTo<int>(rd["ORDINAL_POSITION"]),
+						IsResult      = mode == null,
+						DataType      = rd.GetString(7).ToUpper(),
+					};
+				}, "SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE FROM INFORMATION_SCHEMA.parameters WHERE SPECIFIC_SCHEMA = database()")
+				.ToList();
 		}
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
