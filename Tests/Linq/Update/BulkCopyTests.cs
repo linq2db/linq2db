@@ -51,57 +51,66 @@ namespace Tests.xUpdate
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType)
 		{
+			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
-
-			using (db.BeginTransaction())
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable2());
-				db.GetTable<TestTable2>().Delete();
-
-				var options = new BulkCopyOptions()
+				try
 				{
-					KeepIdentity = keepIdentity,
-					BulkCopyType = copyType
-				};
+					var options = new BulkCopyOptions()
+					{
+						KeepIdentity = keepIdentity,
+						BulkCopyType = copyType
+					};
 
-				// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
-				// Access provider use RowByRow mode allways
-				if ((copyType == BulkCopyType.RowByRow || context == ProviderName.Access) && keepIdentity == true)
-				{
-					var ex = Assert.Catch(perform);
-					Assert.IsInstanceOf<LinqToDBException>(ex);
-					Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
-					return;
+					// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
+					if ((copyType == BulkCopyType.RowByRow
+							|| context == ProviderName.Access
+							|| context == ProviderName.Informix
+							|| (context == ProviderName.SapHana
+								&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default)))
+						&& keepIdentity == true)
+					{
+						var ex = Assert.Catch(perform);
+						Assert.IsInstanceOf<LinqToDBException>(ex);
+						Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
+						return;
+					}
+
+					perform();
+
+					var data = db.GetTable<TestTable2>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
+
+					Assert.AreEqual(2, data.Length);
+
+					Assert.AreEqual(lastId + (keepIdentity == true ? 10 : 1), data[0].ID);
+					Assert.AreEqual(200, data[0].Value);
+					Assert.AreEqual(lastId + (keepIdentity == true ? 20 : 2), data[1].ID);
+					Assert.AreEqual(300, data[1].Value);
+
+					void perform()
+					{
+						db.BulkCopy(
+							options,
+							new[]
+							{
+								new TestTable2()
+								{
+									ID = lastId + 10,
+									Value = 200
+								},
+								new TestTable2()
+								{
+									ID = lastId + 20,
+									Value = 300
+								}
+							});
+					}
 				}
-
-				perform();
-
-				var data = db.GetTable<TestTable2>().OrderBy(_ => _.ID).ToArray();
-
-				Assert.AreEqual(2, data.Length);
-
-				Assert.AreEqual(lastId + (keepIdentity == true ? 10 : 1), data[0].ID);
-				Assert.AreEqual(200, data[0].Value);
-				Assert.AreEqual(lastId + (keepIdentity == true ? 20 : 2), data[1].ID);
-				Assert.AreEqual(300, data[1].Value);
-
-				void perform()
+				finally
 				{
-					db.BulkCopy(
-						options,
-						new[]
-						{
-							new TestTable2()
-							{
-								ID = lastId + 10,
-								Value = 200
-							},
-							new TestTable2()
-							{
-								ID = lastId + 20,
-								Value = 300
-							}
-						});
+					// cleanup
+					db.GetTable<TestTable2>().Delete(_ => _.ID >= lastId);
 				}
 			}
 		}
@@ -112,57 +121,68 @@ namespace Tests.xUpdate
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType)
 		{
+			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
-
-			using (db.BeginTransaction())
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable1());
-				db.GetTable<TestTable1>().Delete();
-
-				var options = new BulkCopyOptions()
+				try
 				{
-					KeepIdentity = keepIdentity,
-					BulkCopyType = copyType
-				};
+					db.GetTable<TestTable1>().Delete();
 
-				// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
-				// Access provider use RowByRow mode allways
-				if ((copyType == BulkCopyType.RowByRow || context == ProviderName.Access) && keepIdentity == true)
-				{
-					var ex = Assert.Catch(perform);
-					Assert.IsInstanceOf<LinqToDBException>(ex);
-					Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
-					return;
+					var options = new BulkCopyOptions()
+					{
+						KeepIdentity = keepIdentity,
+						BulkCopyType = copyType
+					};
+
+					// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
+					if ((copyType == BulkCopyType.RowByRow
+							|| context == ProviderName.Access
+							|| context == ProviderName.Informix
+							|| (context == ProviderName.SapHana
+								&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default)))
+						&& keepIdentity == true)
+					{
+						var ex = Assert.Catch(perform);
+						Assert.IsInstanceOf<LinqToDBException>(ex);
+						Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
+						return;
+					}
+
+					perform();
+
+					var data = db.GetTable<TestTable1>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
+
+					Assert.AreEqual(2, data.Length);
+
+					Assert.AreEqual(lastId + (keepIdentity == true ? 10 : 1), data[0].ID);
+					Assert.AreEqual(200, data[0].Value);
+					Assert.AreEqual(lastId + (keepIdentity == true ? 20 : 2), data[1].ID);
+					Assert.AreEqual(300, data[1].Value);
+
+					void perform()
+					{
+						db.BulkCopy(
+							options,
+							new[]
+							{
+								new TestTable1()
+								{
+									ID = lastId + 10,
+									Value = 200
+								},
+								new TestTable1()
+								{
+									ID = lastId + 20,
+									Value = 300
+								}
+							});
+					}
 				}
-
-				perform();
-
-				var data = db.GetTable<TestTable1>().OrderBy(_ => _.ID).ToArray();
-
-				Assert.AreEqual(2, data.Length);
-
-				Assert.AreEqual(lastId + (keepIdentity == true ? 10 : 1), data[0].ID);
-				Assert.AreEqual(200, data[0].Value);
-				Assert.AreEqual(lastId + (keepIdentity == true ? 20 : 2), data[1].ID);
-				Assert.AreEqual(300, data[1].Value);
-
-				void perform()
+				finally
 				{
-					db.BulkCopy(
-						options,
-						new[]
-						{
-							new TestTable1()
-							{
-								ID = lastId + 10,
-								Value = 200
-							},
-							new TestTable1()
-							{
-								ID = lastId + 20,
-								Value = 300
-							}
-						});
+					// cleanup
+					db.GetTable<TestTable2>().Delete(_ => _.ID >= lastId);
 				}
 			}
 		}
