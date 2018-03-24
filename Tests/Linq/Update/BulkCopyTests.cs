@@ -11,7 +11,7 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class BulkCopyTests : TestBase
 	{
-		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
 		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class TestTable1
@@ -20,7 +20,7 @@ namespace Tests.xUpdate
 			public int ID { get; set; }
 
 			[Column("intDataType")]
-			[Column("INTDATATYPE", Configuration = ProviderName.DB2)]
+			[Column("Value", Configuration = ProviderName.DB2)]
 			[Column("intdatatype", Configuration = ProviderName.PostgreSQL)]
 			public int Value { get; set; }
 
@@ -28,7 +28,7 @@ namespace Tests.xUpdate
 			public bool ThisIsSYBASE;
 		}
 
-		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
 		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class TestTable2
@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 			public int ID { get; set; }
 
 			[Column("intDataType")]
-			[Column("INTDATATYPE", Configuration = ProviderName.DB2)]
+			[Column("Value", Configuration = ProviderName.DB2)]
 			[Column("intdatatype", Configuration = ProviderName.PostgreSQL)]
 			public int Value { get; set; }
 
