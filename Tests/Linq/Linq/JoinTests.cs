@@ -9,7 +9,9 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Collections;
 	using Model;
+	using NUnit.Framework.Interfaces;
 
 	public static class EnumerableExtesions
 	{
@@ -1124,12 +1126,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlJoinSimple(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-					SqlJoinType.Left,
-					SqlJoinType.Right,
-					SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlJoinSimple([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1193,12 +1191,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlJoinSubQuery(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-				SqlJoinType.Left,
-				SqlJoinType.Right,
-				SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlJoinSubQuery([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1216,12 +1210,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereJoin(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-				SqlJoinType.Left,
-				SqlJoinType.Right,
-				SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1239,12 +1229,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereSubqueryJoin(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-				SqlJoinType.Left,
-				SqlJoinType.Right,
-				SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
 			using (var db = GetDataContext(context))
 			{
