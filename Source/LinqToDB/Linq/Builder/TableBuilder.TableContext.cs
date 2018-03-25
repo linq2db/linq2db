@@ -182,10 +182,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			static bool IsRecord(IEnumerable<Attribute> attrs)
+			static bool IsRecord(Attribute[] attrs)
 			{
-				return  attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute")
-					&& !attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
+				return attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute")
+					&& attrs.All(attr => attr.GetType().FullName != "Microsoft.FSharp.Core.CLIMutableAttribute");
 			}
 
 			ParameterExpression _variable;

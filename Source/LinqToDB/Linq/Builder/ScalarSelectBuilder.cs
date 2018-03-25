@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 			public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
 #endif
 
-			public ExpressionBuilder Builder     { get; private set; }
+			public ExpressionBuilder Builder     { get; }
 			public Expression        Expression  { get; set; }
 			public SelectQuery       SelectQuery { get; set; }
 			public SqlStatement      Statement   { get; set; }

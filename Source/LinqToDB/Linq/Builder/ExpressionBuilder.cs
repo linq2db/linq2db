@@ -132,10 +132,7 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
-		public MappingSchema MappingSchema
-		{
-			get { return DataContext.MappingSchema; }
-		}
+		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
 		#endregion
 
@@ -487,24 +484,16 @@ namespace LinqToDB.Linq.Builder
 		#region OptimizeExpression
 
 		private MethodInfo[] _enumerableMethods;
-		public  MethodInfo[]  EnumerableMethods
-		{
-			get { return _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethodsEx()); }
-		}
+		public  MethodInfo[]  EnumerableMethods => _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethodsEx());
 
 		private MethodInfo[] _queryableMethods;
-		public  MethodInfo[]  QueryableMethods
-		{
-			get { return _queryableMethods ?? (_queryableMethods = typeof(Queryable).GetMethodsEx()); }
-		}
+		public  MethodInfo[]  QueryableMethods  => _queryableMethods  ?? (_queryableMethods  = typeof(Queryable). GetMethodsEx());
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
 
 		Expression OptimizeExpression(Expression expression)
 		{
-			Expression expr;
-
-			if (_optimizedExpressions.TryGetValue(expression, out expr))
+			if (_optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
 			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
