@@ -8,7 +8,7 @@ namespace LinqToDB.SqlQuery
 	public class SqlCteTable : SqlTable
 	{
 		[JetBrains.Annotations.NotNull]
-		public          CteClause Cte  { get; protected set; }
+		public          CteClause Cte  { get; }
 
 		public override string    Name
 		{
@@ -18,9 +18,9 @@ namespace LinqToDB.SqlQuery
 
 		public SqlCteTable(
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
-			[JetBrains.Annotations.NotNull] CteClause cte) : base(mappingSchema, cte.ObjectType, cte.Name)
+			[JetBrains.Annotations.NotNull] CteClause cte) : base(mappingSchema, cte.ObjectType)
 		{
-			
+			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields, [JetBrains.Annotations.NotNull] CteClause cte)
@@ -31,15 +31,15 @@ namespace LinqToDB.SqlQuery
 
 		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
 		{
-			Alias = table.Alias;
-			Database = table.Database;
-			Schema = table.Schema;
+			Alias              = table.Alias;
+			Database           = table.Database;
+			Schema             = table.Schema;
 
-			PhysicalName = table.PhysicalName;
-			ObjectType = table.ObjectType;
+			PhysicalName       = table.PhysicalName;
+			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
-			Cte = cte;
+			Cte                = cte;
 
 			AddRange(fields);
 		}
