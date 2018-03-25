@@ -214,18 +214,6 @@ namespace LinqToDB.DataProvider
 			});
 		}
 
-		private class QueryContext : IQueryContext
-		{
-			public SqlParameter[] SqlParameters;
-
-			public object         Context    { get; set; }
-
-			public List<string>   QueryHints { get; set; }
-
-			public SqlStatement   Statement  { get; set; }
-
-			public SqlParameter[] GetParameters() => SqlParameters;
-		}
 		#endregion
 
 		#region MERGE : SOURCE
@@ -539,7 +527,7 @@ namespace LinqToDB.DataProvider
 				 *
 				 *     public int Field2 { get; }
 				 * }
-				 * 
+				 *
 				 * db.Table
 				 *     .Merge()
 				 *     .Using(db.Entity.Select(e => new Entity() { Field1 = e.Field2 }))
