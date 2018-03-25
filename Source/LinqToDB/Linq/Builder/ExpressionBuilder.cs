@@ -197,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 		}
 
-		public SequenceConvertInfo ConvertSequence(BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo ConvertSequence(BuildInfo buildInfo, ParameterExpression param, bool throwExceptionIfCantConvert)
 		{
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
@@ -205,7 +205,10 @@ namespace LinqToDB.Linq.Builder
 				if (builder.CanBuild(this, buildInfo))
 					return builder.Convert(this, buildInfo, param);
 
-			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+			if (throwExceptionIfCantConvert)
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+
+			return null;
 		}
 
 		public bool IsSequence(BuildInfo buildInfo)
@@ -225,7 +228,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ParameterExpression SequenceParameter;
 
-		Expression ConvertExpressionTree(Expression expression)
+		public Expression ConvertExpressionTree(Expression expression)
 		{
 			var expr = expression;
 
@@ -259,7 +262,7 @@ namespace LinqToDB.Linq.Builder
 
 			SequenceParameter = Expression.Parameter(paramType, "cp");
 
-			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SelectQuery()), SequenceParameter);
+			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SelectQuery()), SequenceParameter, false);
 
 			if (sequence != null)
 			{
@@ -405,7 +408,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ExposeExpression
 
-		public Expression ExposeExpression(Expression expression)
+		Expression ExposeExpression(Expression expression)
 		{
 			return expression.Transform(expr =>
 			{

@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -54,7 +56,7 @@ namespace Tests.Linq
 				var q = db.GetTable<PersonCalculated>().Where(i => i.FirstName != "John");
 				var l = q.ToList();
 
-				Assert.That(l, Is.Not.Empty);
+				Assert.That(l,                  Is.Not.Empty);
 				Assert.That(l[0].FullName,      Is.Not.Null);
 				Assert.That(l[0].AsSqlFullName, Is.Not.Null);
 				Assert.That(l[0].FullName,      Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
@@ -84,10 +86,16 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = db.GetTable<PersonCalculated>().Where(i => i.FirstName != "John").Select(t => new { t });
+				var q = db.GetTable<PersonCalculated>()
+					.Where (i => i.FirstName != "John")
+					.Select(t => new
+					{
+						cnt = db.Doctor.Count(d => d.PersonID == t.PersonID),
+						t,
+					});
 				var l = q.ToList();
 
-				Assert.That(l, Is.Not.Empty);
+				Assert.That(l,                    Is.Not.Empty);
 				Assert.That(l[0].t.FullName,      Is.Not.Null);
 				Assert.That(l[0].t.AsSqlFullName, Is.Not.Null);
 				Assert.That(l[0].t.FullName,      Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));

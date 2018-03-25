@@ -230,13 +230,13 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in entityDescriptor.CalculatedMembers)
 				{
-					var access   = Expression.MakeMemberAccess(variable, member.MemberInfo);
-					var exposed  = Builder.ExposeExpression(access);
-					var selector = Expression.Lambda(exposed, variable);
-					var ctx      = new SelectContext (null, selector, this);
-					var exp      = ctx.BuildExpression(null, 0, false);
+					var accessExpression    = Expression.MakeMemberAccess(variable, member.MemberInfo);
+					var convertedExpression = Builder.ConvertExpressionTree(accessExpression);
+					var selectorLambda      = Expression.Lambda(convertedExpression, variable);
+					var context             = new SelectContext(null, selectorLambda, this);
+					var expression          = context.BuildExpression(null, 0, false);
 
-					expressions.Add(Expression.Assign(access, exp));
+					expressions.Add(Expression.Assign(accessExpression, expression));
 				}
 
 				expressions.Add(variable);
