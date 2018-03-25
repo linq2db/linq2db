@@ -71,9 +71,15 @@ namespace Tests.xUpdate
 
 					Assert.AreEqual(2, data.Length);
 
-					Assert.AreEqual(lastId + (keepIdentity == true ? 10 : 1), data[0].ID);
+					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
+					var useGenerated = keepIdentity != true
+						|| context == ProviderName.Oracle
+						|| context == ProviderName.OracleNative
+						|| context == ProviderName.OracleManaged;
+
+					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
 					Assert.AreEqual(200, data[0].Value);
-					Assert.AreEqual(lastId + (keepIdentity == true ? 20 : 2), data[1].ID);
+					Assert.AreEqual(lastId + (!useGenerated ? 20 : 2), data[1].ID);
 					Assert.AreEqual(300, data[1].Value);
 
 					void perform()
@@ -130,9 +136,15 @@ namespace Tests.xUpdate
 
 					Assert.AreEqual(2, data.Length);
 
-					Assert.AreEqual(lastId + (keepIdentity == true ? 10 : 1), data[0].ID);
+					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
+					var useGenerated = keepIdentity != true
+						|| context == ProviderName.Oracle
+						|| context == ProviderName.OracleNative
+						|| context == ProviderName.OracleManaged;
+
+					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
 					Assert.AreEqual(200, data[0].Value);
-					Assert.AreEqual(lastId + (keepIdentity == true ? 20 : 2), data[1].ID);
+					Assert.AreEqual(lastId + (!useGenerated ? 20 : 2), data[1].ID);
 					Assert.AreEqual(300, data[1].Value);
 
 					void perform()
