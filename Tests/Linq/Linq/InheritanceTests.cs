@@ -114,7 +114,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.ParentInheritance3 where p is ParentInheritance13 select p;
-				q.ToList();
+				var lst = q.ToList();
+
+				Assert.AreEqual(2, lst.Count);
 			}
 		}
 
