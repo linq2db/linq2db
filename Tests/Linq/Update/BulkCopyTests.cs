@@ -18,6 +18,7 @@ namespace Tests.xUpdate
 		public class TestTable1
 		{
 			[Identity]
+			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
@@ -35,6 +36,7 @@ namespace Tests.xUpdate
 		public class TestTable2
 		{
 			[Identity, Column(SkipOnInsert = true)]
+			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
