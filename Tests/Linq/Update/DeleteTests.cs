@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -370,6 +370,76 @@ namespace Tests.xUpdate
 				{
 					db.Parent.Delete(c => c.ParentID >= 1000);
 				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void DeleteByTableName(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				db.Insert(person, tableName: tableName, schemaName: schemaName);
+				var newCount  = table.Count();
+				Assert.AreEqual(1, newCount);
+
+				var personForDelete = table.Single();
+
+				db.Delete(personForDelete, tableName: tableName, schemaName: schemaName);
+
+				Assert.AreEqual(0, table.Count());
+
+				table.Drop();
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task DeleteByTableNameAsync(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+				var newCount  = await table.CountAsync();
+				Assert.AreEqual(1, newCount);
+
+				var personForDelete = await table.SingleAsync();
+
+				await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
+
+				Assert.AreEqual(0, await table.CountAsync());
+
+				await table.DropAsync();
 			}
 		}
 	}

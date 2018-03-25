@@ -544,11 +544,13 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('GrandChild') A
 BEGIN DROP TABLE GrandChild END
 GO
 
-CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
+CREATE TABLE Parent     (ParentID int, Value1 int,  _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE Child       (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
+CREATE TABLE Child      (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
+CREATE INDEX IX_ChildIndex ON Child (ParentID)
+GO
+CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
 
 -- SKIP SqlAzure.2012 BEGIN
@@ -599,7 +601,7 @@ GO
 -- SKIP SqlServer.2005 BEGIN
 CREATE TABLE LinqDataTypes
 (
-	_ID            int IDENTITY  PRIMARY KEY,
+	_ID            int IDENTITY PRIMARY KEY,
 	ID             int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime,
@@ -801,6 +803,9 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestMerge2') AND type in (N'U'))
 BEGIN DROP TABLE TestMerge2 END
 GO
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestMergeIdentity') AND type in (N'U'))
+BEGIN DROP TABLE TestMergeIdentity END
+GO
 CREATE TABLE TestMerge1
 (
 	Id     int NOT NULL CONSTRAINT PK_TestMerge1 PRIMARY KEY CLUSTERED,
@@ -866,7 +871,12 @@ CREATE TABLE TestMerge2
 	FieldEnumNumber INT               NULL
 )
 GO
-
+CREATE TABLE TestMergeIdentity
+(
+	Id     int NOT NULL IDENTITY(1,1) CONSTRAINT PK_TestMergeIdentity PRIMARY KEY CLUSTERED,
+	Field  int NULL
+)
+GO
 
 -- Generate schema
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestSchemaY') AND type in (N'U'))

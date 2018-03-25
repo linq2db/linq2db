@@ -15,6 +15,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using Microsoft.SqlServer.Types;
@@ -1062,7 +1063,7 @@ namespace Tests.DataProvider
 #endif
 
 		[Test, SqlServerDataContext]
-		public void CreateAlltypes(string context)
+		public void CreateAllTypes(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -1083,6 +1084,7 @@ namespace Tests.DataProvider
 				}
 
 				var table = db.CreateTable<AllTypes>();
+
 				var list = table.ToList();
 
 				db.DropTable<AllTypes>();

@@ -22,7 +22,10 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (Version == DB2Version.LUW && statement is SqlInsertStatement insertStatement && insertStatement.Insert.WithIdentity == true)
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+
+			if (Version == DB2Version.LUW && statement is SqlInsertStatement insertStatement && insertStatement.Insert.WithIdentity)
 			{
 				_identityField = insertStatement.Insert.Into.GetIdentityField();
 
@@ -31,6 +34,37 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return 1;
+		}
+
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
+		{
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+
+				StringBuilder.Append("ALTER TABLE ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder
+					.Append(" ALTER ")
+					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
+					.AppendLine(" RESTART WITH 1")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
+			}
+		}
+
+		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
+		{
+			var table = truncateTable.Table;
+
+			AppendIndent();
+			StringBuilder.Append("TRUNCATE TABLE ");
+			BuildPhysicalTable(table, null);
+			StringBuilder.Append(" IMMEDIATE");
+			StringBuilder.AppendLine();
 		}
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
@@ -67,11 +101,6 @@ namespace LinqToDB.DataProvider.DB2
 					.AppendLine(";")
 					.AppendLine("SELECT IDENTITY_VAL_LOCAL() FROM SYSIBM.SYSDUMMY1");
 			}
-		}
-
-		protected override void BuildCommand(int commandNumber)
-		{
-			StringBuilder.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
 		}
 
 		protected override void BuildSql()
@@ -117,10 +146,7 @@ namespace LinqToDB.DataProvider.DB2
 				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-				}
+					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
@@ -206,7 +232,7 @@ namespace LinqToDB.DataProvider.DB2
 		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
-			if (schema    != null && schema.   Length == 0) schema    = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
 
 			// "db..table" syntax not supported
 			if (database != null && schema == null)

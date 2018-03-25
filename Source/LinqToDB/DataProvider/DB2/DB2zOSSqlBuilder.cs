@@ -16,9 +16,6 @@ namespace LinqToDB.DataProvider.DB2
 			return new DB2zOSSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override DB2Version Version
-		{
-			get { return DB2Version.zOS; }
-		}
+		protected override DB2Version Version => DB2Version.zOS;
 	}
 }

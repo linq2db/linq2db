@@ -63,7 +63,7 @@ namespace LinqToDB.Data
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
-			ThrowOnDisposed();
+			CheckAndThrowOnDisposed();
 
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
 				return new DataConnection(DataProvider, _connection)

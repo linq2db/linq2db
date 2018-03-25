@@ -2791,7 +2791,8 @@ namespace LinqToDB.Linq.Builder
 			foreach (var context in Contexts)
 				if (context != newParent)
 					if (context.Parent == oldParent)
-						context.Parent = newParent;
+						if (newParent != null && newParent.Parent != context)
+							context.Parent = newParent;
 		}
 
 		#endregion

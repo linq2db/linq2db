@@ -7,6 +7,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -152,7 +153,7 @@ namespace Tests.xUpdate
 						table = await db.CreateTableAsync<TestTable>(statementHeader:"DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}");
 						break;
 					default:
-						table = await db.CreateTableAsync<TestTable>(tableName);       
+						table = await db.CreateTableAsync<TestTable>(tableName);
 						break;
 				}
 

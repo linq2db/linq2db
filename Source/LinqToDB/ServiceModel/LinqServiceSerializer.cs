@@ -1093,6 +1093,17 @@ namespace LinqToDB.ServiceModel
 						break;
 					}
 
+					case QueryElementType.TruncateTableStatement :
+					{
+						var elem = (SqlTruncateTableStatement)e;
+
+						Append(elem.Table);
+						Append(elem.ResetIdentity);
+						Append(elem.Parameters);
+
+						break;
+					}
+
 					case QueryElementType.FromClause    : Append(((SqlFromClause)   e).Tables);          break;
 					case QueryElementType.WhereClause   : Append(((SqlWhereClause)  e).SearchCondition); break;
 					case QueryElementType.GroupByClause : Append(((SqlGroupByClause)e).Items);           break;
@@ -1734,6 +1745,22 @@ namespace LinqToDB.ServiceModel
 						obj = _statement = new SqlDropTableStatement
 						{
 							Table = table,
+						};
+						_statement.Parameters.AddRange(parameters);
+
+						break;
+					}
+
+					case QueryElementType.TruncateTableStatement :
+					{
+						var table      = Read<SqlTable>();
+						var reset      = ReadBool();
+						var parameters = ReadArray<SqlParameter>();
+
+						obj = _statement = new SqlTruncateTableStatement
+						{
+							Table         = table,
+							ResetIdentity = reset
 						};
 						_statement.Parameters.AddRange(parameters);
 

@@ -1139,5 +1139,123 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+		[Test, DataContextSource()]
+		public void UpdateMultipleColumns(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ldt = new LinqDataTypes
+				{
+					ID            = 1001,
+					MoneyValue    = 1000,
+					SmallIntValue = 100,
+				};
+
+				try
+				{
+					db.Types.Delete(c => c.ID == ldt.ID);
+					db.Types
+						.Value (t => t.ID,            ldt.ID)
+						.Value (t => t.MoneyValue,    () => ldt.MoneyValue)
+						.Value (t => t.SmallIntValue, () => ldt.SmallIntValue)
+						.Insert()
+						;
+
+					db.Types
+						.Where (t => t.ID == ldt.ID)
+						.Set   (t => t.MoneyValue,    () => 2000)
+						.Set   (t => t.SmallIntValue, () => 200)
+						.Update()
+						;
+
+					var udt = db.Types.Single(t => t.ID == ldt.ID);
+
+					Assert.That(udt.MoneyValue,    Is.Not.EqualTo(ldt.MoneyValue));
+					Assert.That(udt.SmallIntValue, Is.Not.EqualTo(ldt.SmallIntValue));
+				}
+				finally
+				{
+					db.Types.Delete(t => t.ID == ldt.ID);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void UpdateByTableName(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				db.Insert(person, tableName: tableName, schemaName: schemaName);
+				var newCount  = table.Count();
+				Assert.AreEqual(1, newCount);
+
+				var personForUpdate = table.Single();
+
+				// update that row
+				personForUpdate.MiddleName = "None";
+				db.Update(personForUpdate, tableName: tableName, schemaName: schemaName);
+
+				var updatedPerson = table.Single();
+				Assert.AreEqual("None", updatedPerson.MiddleName);
+
+				table.Drop();
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task UpdateByTableNameAsync(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+				var newCount  = await table.CountAsync();
+				Assert.AreEqual(1, newCount);
+
+				var personForUpdate = await table.SingleAsync();
+
+				// update that row
+				personForUpdate.MiddleName = "None";
+				await db.UpdateAsync(personForUpdate, tableName: tableName, schemaName: schemaName);
+
+				var updatedPerson = await table.SingleAsync();
+				Assert.AreEqual("None", updatedPerson.MiddleName);
+
+				await table.DropAsync();
+			}
+		}
+
 	}
 }

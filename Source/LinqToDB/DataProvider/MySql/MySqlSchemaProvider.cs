@@ -232,6 +232,93 @@ namespace LinqToDB.DataProvider.MySql
 			return DataType.Undefined;
 		}
 
+		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		{
+			// GetSchema("PROCEDURES") not used, as for MySql 5.7 (but not mariadb/mysql 5.6) it returns procedures from
+			// sys database too
+			return dataConnection
+				.Query(rd =>
+				{
+					var catalog = Converter.ChangeTypeTo<string>(rd[0]);
+					var name    = Converter.ChangeTypeTo<string>(rd[1]);
+					return new ProcedureInfo()
+					{
+						ProcedureID         = catalog + "." + name,
+						CatalogName         = catalog,
+						SchemaName          = null,
+						ProcedureName       = name,
+						IsFunction          = Converter.ChangeTypeTo<string>(rd[2]) == "FUNCTION",
+						IsTableFunction     = false,
+						IsAggregateFunction = false,
+						IsDefaultSchema     = true,
+						ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3])
+				};
+				}, "SELECT ROUTINE_SCHEMA, ROUTINE_NAME, ROUTINE_TYPE, ROUTINE_DEFINITION FROM INFORMATION_SCHEMA.routines WHERE ROUTINE_SCHEMA = database()")
+				.ToList();
+		}
+
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		{
+			// don't use GetSchema("PROCEDURE PARAMETERS") as MySql provider's implementation does strange stuff
+			// instead of just quering of INFORMATION_SCHEMA view. It returns incorrect results and breaks provider
+			return dataConnection
+				.Query(rd =>
+				{
+					var mode = Converter.ChangeTypeTo<string>(rd[2]);
+					return new ProcedureParameterInfo()
+					{
+						ProcedureID   = rd.GetString(0) + "." + rd.GetString(1),
+						ParameterName = Converter.ChangeTypeTo<string>(rd[4]),
+						IsIn          = mode == "IN"  || mode == "INOUT",
+						IsOut         = mode == "OUT" || mode == "INOUT",
+						Precision     = Converter.ChangeTypeTo<int?>(rd["NUMERIC_PRECISION"]),
+						Scale         = Converter.ChangeTypeTo<int?>(rd["NUMERIC_SCALE"]),
+						Ordinal       = Converter.ChangeTypeTo<int>(rd["ORDINAL_POSITION"]),
+						IsResult      = mode == null,
+						DataType      = rd.GetString(7).ToUpper(),
+					};
+				}, "SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE FROM INFORMATION_SCHEMA.parameters WHERE SPECIFIC_SCHEMA = database()")
+				.ToList();
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		{
+#if !NETSTANDARD
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
+				let dataType = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
+				let columnType = dataType == null ? null : dataType.TypeName
+
+				let columnName = r.Field<string>("ColumnName")
+				let isNullable = r.Field<bool>("AllowDBNull")
+
+				let length = r.Field<int>("ColumnSize")
+				let precision = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale = Converter.ChangeTypeTo<int>(r["NumericScale"])
+
+				let systemType = GetSystemType(columnType, null, dataType, length, precision, scale)
+
+				select new ColumnSchema
+				{
+					ColumnName           = columnName,
+					ColumnType           = GetDbType(columnType, dataType, length, precision, scale),
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = systemType ?? typeof(object),
+					DataType             = GetDataType(columnType, null, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(columnType),
+					IsIdentity           = r.IsNull("IsIdentity") ? false : r.Field<bool>("IsIdentity")
+				}
+			).ToList();
+#else
+			return new List<ColumnSchema>();
+#endif
+		}
+
 		protected override string GetProviderSpecificTypeNamespace()
 		{
 			return "MySql.Data.Types";

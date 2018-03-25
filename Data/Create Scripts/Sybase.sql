@@ -244,3 +244,18 @@ CREATE TABLE TestMerge2
 
 	CONSTRAINT PK_TestMerge2 PRIMARY KEY CLUSTERED (Id)
 )
+
+GO
+CREATE TABLE TestMergeIdentity
+(
+	Id     int IDENTITY,
+	Field  int NULL,
+
+	CONSTRAINT PK_TestMergeIdentity PRIMARY KEY CLUSTERED (Id)
+)
+GO
+
+CREATE OR REPLACE PROCEDURE AddIssue792Record AS
+	INSERT INTO dbo.AllTypes(char20DataType, bitDataType) VALUES('issue792', 1)
+	SELECT * FROM dbo.AllTypes
+RETURN

@@ -58,7 +58,6 @@
 			<Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
@@ -146,8 +145,6 @@
 			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
 
-		<PackageReference Include="xunit" Version="1.9.1" />
-		<PackageReference Include="xunit.extensions" Version="1.9.1" />
 		<!--
 		<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
 		-->
@@ -172,6 +169,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<Compile Remove="SchemaProvider\SchemaProviderTests.cs" />
+		<Compile Remove="DataProvider\OracleTests.cs" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<None Update="x64\**\*">
 			<Link>x64/%(FileName)%(Extension)</Link>
@@ -215,7 +213,6 @@
 		<Compile Remove="DataProvider\SybaseTests.cs" />
 		<Compile Remove="DataProvider\SapHanaTests.cs" />
 		<Compile Remove="DataProvider\InformixTests.cs" />
-		<Compile Remove="DataProvider\OracleTests.cs" />
 		<Compile Remove="DataProvider\SqlServerTypesTests.cs" />
 		<Compile Remove="Data\MiniProfilerTests.cs" />
 		<Compile Remove="Linq\DataServiceTests.cs" />
@@ -223,5 +220,11 @@
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
 		<Compile Remove="**\PartialTrust*.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="Oracle.ManagedDataAccess">
+	    <HintPath>..\..\Redist\Oracle\Oracle.Core\Oracle.ManagedDataAccess.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 </Project>

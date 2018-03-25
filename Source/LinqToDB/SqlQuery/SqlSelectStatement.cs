@@ -35,14 +35,14 @@ namespace LinqToDB.SqlQuery
 		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			var clone = new SqlSelectStatement();
-			
+
 			if (SelectQuery != null)
 				clone.SelectQuery = (SelectQuery)SelectQuery.Clone(objectTree, doClone);
 
 			clone.Parameters.AddRange(Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 
 			objectTree.Add(this, clone);
-			
+
 			return clone;
 		}
 	}
