@@ -2,6 +2,7 @@
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using System;
 using System.Linq;
 using Tests.Model;
 
@@ -63,21 +64,8 @@ namespace Tests.xUpdate
 						BulkCopyType = copyType
 					};
 
-					// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
-					if ((copyType == BulkCopyType.RowByRow
-							|| context == ProviderName.Access
-							|| context == ProviderName.Informix
-							|| (context == ProviderName.SapHana
-								&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default)))
-						&& keepIdentity == true)
-					{
-						var ex = Assert.Catch(perform);
-						Assert.IsInstanceOf<LinqToDBException>(ex);
-						Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
+					if (!Execute(context, perform, keepIdentity, copyType))
 						return;
-					}
-
-					perform();
 
 					var data = db.GetTable<TestTable2>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
 
@@ -135,21 +123,8 @@ namespace Tests.xUpdate
 						BulkCopyType = copyType
 					};
 
-					// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
-					if ((copyType == BulkCopyType.RowByRow
-							|| context == ProviderName.Access
-							|| context == ProviderName.Informix
-							|| (context == ProviderName.SapHana
-								&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default)))
-						&& keepIdentity == true)
-					{
-						var ex = Assert.Catch(perform);
-						Assert.IsInstanceOf<LinqToDBException>(ex);
-						Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
+					if (!Execute(context, perform, keepIdentity, copyType))
 						return;
-					}
-
-					perform();
 
 					var data = db.GetTable<TestTable1>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
 
@@ -185,6 +160,38 @@ namespace Tests.xUpdate
 					db.GetTable<TestTable2>().Delete(_ => _.ID >= lastId);
 				}
 			}
+		}
+
+		private bool Execute(string context, Action perform, bool? keepIdentity, BulkCopyType copyType)
+		{
+			if ((context == ProviderName.Firebird || context == TestProvName.Firebird3)
+				&& keepIdentity == true
+				&& (copyType    == BulkCopyType.Default
+					|| copyType == BulkCopyType.MultipleRows
+					|| copyType == BulkCopyType.ProviderSpecific))
+			{
+				var ex = Assert.Catch(() => perform());
+				Assert.IsInstanceOf<LinqToDBException>(ex);
+				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually.", ex.Message);
+				return false;
+			}
+
+			// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
+			if ((copyType       == BulkCopyType.RowByRow
+					|| context  == ProviderName.Access
+					|| context  == ProviderName.Informix
+					|| (context == ProviderName.SapHana
+						&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default)))
+				&& keepIdentity == true)
+			{
+				var ex = Assert.Catch(() => perform());
+				Assert.IsInstanceOf<LinqToDBException>(ex);
+				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
+				return false;
+			}
+
+			perform();
+			return true;
 		}
 	}
 }
