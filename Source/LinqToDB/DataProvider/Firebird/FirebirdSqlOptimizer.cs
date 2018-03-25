@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -71,7 +72,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 			statement = base.Finalize(statement);
 
-			if (FirebirdConfiguration.ConvertInnerJoinsToLeftJoins)
+			if (FirebirdConfiguration.ConvertInnerJoinsToLeftJoins
+				&& !FirebirdConfiguration.DisableConvertInnerJoinsToLeftJoins.Value)
 			{
 				ConvertInnerJoinsToLeftJoins(statement);
 			}
@@ -97,23 +99,15 @@ namespace LinqToDB.DataProvider.Firebird
 
 					foreach (var join in q.From.Tables.SelectMany(t => t.Joins))
 					{
-						if (join.JoinType == JoinType.Inner)
+						if (join.JoinType == JoinType.Inner && !join.Condition.Conditions.IsNullOrEmpty())
 						{
-							var keys = join.Table.Source.GetKeys(true);
-
-							var useOr       = true;
-							var notNullable = keys.Where(w => e is SqlField field && !field.CanBeNull).ToList();
-							if (notNullable.Count > 0)
-							{
-								useOr = false;
-								keys  = notNullable;
-							}
-
 							join.JoinType  = JoinType.Left;
-							var conditions = keys.Select(f => new SqlCondition(false, new SqlPredicate.IsNull(f, true), useOr));
-							var sc         = new SqlSearchCondition(conditions);
 
-							q.Select.Where.ConcatSearchCondition(sc);
+							// move join condition to where and use 1=1 as join condition
+							q.Select.Where.ConcatSearchCondition(join.Condition);
+
+							join.Condition.Conditions.Clear();
+							join.Condition.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(1)), true));
 						}
 					}
 				});
