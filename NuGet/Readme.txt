@@ -10,6 +10,8 @@ LINQ to DB 2.0.0  Release Notes
 - feature: [Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, MS SQL] CTE (common table expressions) support implemented including WCF support (see DataExtensions.GetCte(),  LinqExtensions.AsCte() methods)
 - feature: IBM.Data.DB2.Core provider support
 - feature: Oracle Data Provider for .NET Core provider support
+- feature: parameters to override table, schema/owner and database names added to InsertOrReplace*, InsertWith*Identity*, Update* and Delete* IDataContext extension methods
+- feature: [MySQL] Procedures and function support added to schema provider (#991)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
@@ -32,6 +34,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: async query could be blocked by Connection.Open used internally instead of Connection.OpenAsync (#1023)
 - fix: Fixed "Table not found for 't18.[3]t19.Field2'" error for merge with source query using cross joins or SelectMany (#896)
 - fix: [MS SQL] Drop table in another database doesn't work (#1030)
+- fix: [Inheritance mapping] Fixed exception when you try to select inherited record as a field/property of specific type instead of base inheritance type (#1046)
 
 - other changes: t4models repository moved to main repository
 
