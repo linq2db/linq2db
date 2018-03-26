@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.Data
+namespace LinqToDB
 {
+	using Data;
+
 	/// <summary>
 	/// Contains extension methods for merge API.
 	/// </summary>

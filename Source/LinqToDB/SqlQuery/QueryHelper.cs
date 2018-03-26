@@ -47,7 +47,7 @@ namespace LinqToDB.SqlQuery
 			}
 			return query;
 		}
-		
+
 		public static SqlJoinedTable FindJoin(this SelectQuery query,
 			Func<SqlJoinedTable, bool> match)
 		{

@@ -439,12 +439,12 @@ namespace LinqToDB.Linq.Builder
 
 			BlockExpressions.Add(expression);
 
-			expression = Expression.Block(BlockVariables, BlockExpressions);
+			var blockExpression = Expression.Block(BlockVariables, BlockExpressions);
 
 			while (BlockVariables.  Count > 1) BlockVariables.  RemoveAt(BlockVariables.  Count - 1);
 			while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
 
-			return expression;
+			return blockExpression;
 		}
 
 		public ParameterExpression BuildVariable(Expression expr, string name = null)
