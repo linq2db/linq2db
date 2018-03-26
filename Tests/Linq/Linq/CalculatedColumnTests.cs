@@ -100,6 +100,7 @@ namespace Tests.Linq
 				Assert.That(l[0].t.AsSqlFullName, Is.Not.Null);
 				Assert.That(l[0].t.FullName,      Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
 				Assert.That(l[0].t.AsSqlFullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
+				Assert.That(l[0].t.DoctorCount,   Is.EqualTo(l[0].cnt));
 			}
 		}
 	}
