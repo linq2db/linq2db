@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider
 
 	public class MultipleRowsHelper<T>
 	{
-		public MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity)
+		public MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options)
 		{
 			DataConnection = dataConnection;
 			Options        = options;
@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider
 			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			Columns        = Descriptor.Columns
-				.Where(c => !c.SkipOnInsert || c.IsIdentity && (options.KeepIdentity ?? enforceKeepIdentity))
+				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
 				.ToArray();
 			ColumnTypes    = Columns.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale)).ToArray();
 			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();

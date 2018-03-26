@@ -209,10 +209,10 @@ namespace LinqToDB.DataProvider
 		#region MultipleRows Support
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
-			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source)
+			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return MultipleRowsCopy1(
-				new MultipleRowsHelper<T>(dataConnection, options, enforceKeepIdentity),
+				new MultipleRowsHelper<T>(dataConnection, options),
 				dataConnection,
 				options,
 				source);
@@ -272,10 +272,10 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected virtual BulkCopyRowsCopied MultipleRowsCopy2<T>(
-			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source, string from)
+			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
 		{
 			return MultipleRowsCopy2<T>(
-				new MultipleRowsHelper<T>(dataConnection, options, enforceKeepIdentity),
+				new MultipleRowsHelper<T>(dataConnection, options),
 				dataConnection,
 				options,
 				source,
@@ -334,7 +334,7 @@ namespace LinqToDB.DataProvider
 
 		protected  BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options);
 
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()

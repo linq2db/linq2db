@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Firebird
 			if (options.KeepIdentity == true)
 				throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually.");
 
-			return MultipleRowsCopy2(dataConnection, options, false, source, " FROM rdb$database");
+			return MultipleRowsCopy2(dataConnection, options, source, " FROM rdb$database");
 		}
 	}
 }
