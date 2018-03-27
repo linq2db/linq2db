@@ -945,7 +945,7 @@ namespace Tests.DataProvider
 				{
 					MaxBatchSize       = 5,
 					//RetrieveSequence   = true,
-					KeepIdentity       = true,
+					KeepIdentity       = bulkCopyType != BulkCopyType.RowByRow,
 					BulkCopyType       = bulkCopyType,
 					NotifyAfter        = 3,
 					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)

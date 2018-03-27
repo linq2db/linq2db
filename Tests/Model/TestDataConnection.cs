@@ -15,10 +15,28 @@ namespace Tests.Model
 		public TestDataConnection(string configString)
 			: base(configString)
 		{
+//			if (configString == ProviderName.MySql)
+//				OnClosing += TestDataConnection_OnClosing;
 		}
 
 		public TestDataConnection()
 		{
+		}
+
+		void TestDataConnection_OnClosing(object sender, EventArgs e)
+		{
+			using (var db = new DataConnection(ProviderName.MySql))
+			{
+				var name =
+				(
+					from p in db.GetTable<Person>()
+					select p.FirstName
+				).First();
+
+				if (string.IsNullOrEmpty(name))
+				{
+				}
+			}
 		}
 
 		public ITable<Person>                 Person                 { get { return GetTable<Person>();                 } }

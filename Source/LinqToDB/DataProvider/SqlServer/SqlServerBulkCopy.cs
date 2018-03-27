@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			BulkCopyRowsCopied ret;
 
-			var helper = new MultipleRowsHelper<T>(dataConnection, options, options.KeepIdentity == true);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options);
 
 			if (options.KeepIdentity == true)
 				dataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");

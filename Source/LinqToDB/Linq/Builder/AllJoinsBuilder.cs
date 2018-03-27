@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 			ParameterExpression param)
 		{
 			var predicate = (LambdaExpression)methodCall.Arguments[2].Unwrap();
-			var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0]);
+			var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
 
 			if (info != null)
 			{

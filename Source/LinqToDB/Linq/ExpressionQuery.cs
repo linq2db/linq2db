@@ -35,16 +35,15 @@ namespace LinqToDB.Linq
 		#region Public Members
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private string _sqlTextHolder;
+		string _sqlTextHolder;
 
-// ReSharper disable InconsistentNaming
 		// This property is helpful in Debug Mode.
 		//
 		[UsedImplicitly]
-		private string _sqlText => SqlText;
-// ReSharper restore InconsistentNaming
+		// ReSharper disable once InconsistentNaming
+		string _sqlText => SqlText;
 
-		public  string  SqlText
+		public string SqlText
 		{
 			get
 			{
@@ -113,20 +112,9 @@ namespace LinqToDB.Linq
 
 		#region IQueryable Members
 
-		Type IQueryable.ElementType
-		{
-			get { return typeof(T); }
-		}
-
-		Expression IQueryable.Expression
-		{
-			get { return Expression; }
-		}
-
-		IQueryProvider IQueryable.Provider
-		{
-			get { return this; }
-		}
+		Type           IQueryable.ElementType => typeof(T);
+		Expression     IQueryable.Expression  => Expression;
+		IQueryProvider IQueryable.Provider    => this;
 
 		#endregion
 
@@ -135,7 +123,7 @@ namespace LinqToDB.Linq
 		IQueryable<TElement> IQueryProvider.CreateQuery<TElement>(Expression expression)
 		{
 			if (expression == null)
-				throw new ArgumentNullException("expression");
+				throw new ArgumentNullException(nameof(expression));
 
 			return new ExpressionQueryImpl<TElement>(DataContext, expression);
 		}
@@ -143,13 +131,15 @@ namespace LinqToDB.Linq
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
 		{
 			if (expression == null)
-				throw new ArgumentNullException("expression");
+				throw new ArgumentNullException(nameof(expression));
 
 			var elementType = expression.Type.GetItemType() ?? expression.Type;
 
 			try
 			{
-				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryImpl<>).MakeGenericType(elementType), new object[] { DataContext, expression });
+				return (IQueryable)Activator.CreateInstance(
+					typeof(ExpressionQueryImpl<>).MakeGenericType(elementType),
+					DataContext, expression);
 			}
 			catch (TargetInvocationException ex)
 			{

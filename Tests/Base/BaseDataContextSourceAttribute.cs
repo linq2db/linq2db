@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using NUnit.Framework;
@@ -59,7 +60,7 @@ namespace Tests
 			return Order;
 		}
 
-		protected virtual IEnumerable<Tuple<object[], string>> GetParameters(string provider)
+		protected virtual IEnumerable<Tuple<object[],string>> GetParameters(string provider)
 		{
 			yield return Tuple.Create(new object[] {provider}, (string)null);
 		}

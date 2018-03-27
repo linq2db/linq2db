@@ -319,7 +319,7 @@ namespace Tests.Linq
 					from od in db.OrderDetail
 					where od.Product.Category.CategoryName == "Seafood"
 					select new { od.Order, od.Product };
-				
+
 				var list = result.ToList();
 
 				Assert.AreEqual(330, list.Count);
