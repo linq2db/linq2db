@@ -190,6 +190,11 @@ namespace LinqToDB.SchemaProvider
 			{
 				#region Procedures
 
+				var isActiveTransaction = dataConnection.Transaction != null;
+
+				if (!isActiveTransaction)
+					dataConnection.BeginTransaction();
+
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
 				var procs       = GetProcedures(dataConnection);
 				var procPparams = GetProcedureParameters(dataConnection);
@@ -269,12 +274,15 @@ namespace LinqToDB.SchemaProvider
 				else
 					procedures = new List<ProcedureSchema>();
 
-				#endregion
-
 				var psp = GetProviderSpecificProcedures(dataConnection);
 
 				if (psp != null)
 					procedures.AddRange(psp);
+
+				if (!isActiveTransaction)
+					dataConnection.RollbackTransaction();
+
+				#endregion
 			}
 			else
 				procedures = new List<ProcedureSchema>();
