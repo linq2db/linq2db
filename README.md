@@ -98,7 +98,7 @@ You can also use same for regular .NET.
 
 ## Now let's create a **POCO** class
 
-Important: you also can generate those classes from your database using [T4 templates](https://github.com/linq2db/t4models). Demonstration video could be found [here](https://github.com/linq2db/linq2db/wiki).
+Important: you also can generate those classes from your database using [T4 templates](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.Templates#t4-models). Demonstration video could be found [here](https://github.com/linq2db/linq2db/wiki).
 
 ```c#
 using System;
