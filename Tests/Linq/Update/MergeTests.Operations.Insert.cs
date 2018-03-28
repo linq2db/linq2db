@@ -624,7 +624,7 @@ namespace Tests.xUpdate
 				var source = db.GetTable<CrossJoinLeft>()
 					.SelectMany(
 						r => db.GetTable<CrossJoinRight>(),
-						(t1, t2) => 
+						(t1, t2) =>
 						 new
 							 {
 								 LeftId = t1.Id,
