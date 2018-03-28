@@ -190,11 +190,6 @@ namespace LinqToDB.SchemaProvider
 			{
 				#region Procedures
 
-				var isActiveTransaction = dataConnection.Transaction != null;
-
-				if (!isActiveTransaction)
-					dataConnection.BeginTransaction();
-
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
 				var procs       = GetProcedures(dataConnection);
 				var procPparams = GetProcedureParameters(dataConnection);
@@ -255,6 +250,11 @@ namespace LinqToDB.SchemaProvider
 
 					var current = 1;
 
+					var isActiveTransaction = dataConnection.Transaction != null;
+
+					if (!isActiveTransaction)
+						dataConnection.BeginTransaction();
+
 					foreach (var procedure in procedures)
 					{
 						if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
@@ -270,6 +270,8 @@ namespace LinqToDB.SchemaProvider
 						options.ProcedureLoadingProgress(procedures.Count, current++);
 					}
 
+					if (!isActiveTransaction)
+						dataConnection.RollbackTransaction();
 				}
 				else
 					procedures = new List<ProcedureSchema>();
@@ -278,9 +280,6 @@ namespace LinqToDB.SchemaProvider
 
 				if (psp != null)
 					procedures.AddRange(psp);
-
-				if (!isActiveTransaction)
-					dataConnection.RollbackTransaction();
 
 				#endregion
 			}
