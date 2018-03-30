@@ -511,6 +511,8 @@ namespace Tests.xUpdate
 		{
 			using (var db = new TestDataConnection(context))
 			{
+				db.BeginTransaction();
+
 				// prepare test data
 				db.GetTable<CrossJoinLeft>().Delete();
 				db.GetTable<CrossJoinRight>().Delete();
@@ -564,6 +566,8 @@ namespace Tests.xUpdate
 				Assert.AreEqual(22, result[3].Id);
 				Assert.AreEqual(2,  result[3].LeftId);
 				Assert.AreEqual(20, result[3].RightId);
+
+				db.RollbackTransaction();
 			}
 		}
 
@@ -573,6 +577,8 @@ namespace Tests.xUpdate
 		{
 			using (var db = new TestDataConnection(context))
 			{
+				db.BeginTransaction();
+
 				PrepareData(db);
 
 				var table = GetTarget(db);
@@ -602,6 +608,8 @@ namespace Tests.xUpdate
 				Assert.Fail("Almost done, uncomment and fix asserts below");
 
 				AssertRowCount(0, rows, context);
+
+				db.RollbackTransaction();
 			}
 		}
 
@@ -610,6 +618,8 @@ namespace Tests.xUpdate
 		{
 			using (var db = new TestDataConnection(context))
 			{
+				db.BeginTransaction();
+
 				// prepare test data
 				db.GetTable<CrossJoinLeft>().Delete();
 				db.GetTable<CrossJoinRight>().Delete();
@@ -665,6 +675,8 @@ namespace Tests.xUpdate
 				Assert.AreEqual(22, result[3].Id);
 				Assert.AreEqual(2, result[3].LeftId);
 				Assert.AreEqual(20, result[3].RightId);
+
+				db.RollbackTransaction();
 			}
 		}
 
@@ -1583,11 +1595,13 @@ namespace Tests.xUpdate
 		#endregion
 
 
-		[Test, MergeDataContextSource]
+		//[Test, MergeDataContextSource]
 		public void CrossJoinedSourceWithSingleFieldSelection(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
+				db.BeginTransaction();
+
 				// prepare test data
 				db.GetTable<CrossJoinLeft>().Delete();
 				db.GetTable<CrossJoinRight>().Delete();
@@ -1641,6 +1655,8 @@ namespace Tests.xUpdate
 				Assert.AreEqual(11, result[4].Id);
 				Assert.AreEqual(100, result[4].LeftId);
 				Assert.AreEqual(200, result[4].RightId);
+
+				db.RollbackTransaction();
 			}
 		}
 	}
