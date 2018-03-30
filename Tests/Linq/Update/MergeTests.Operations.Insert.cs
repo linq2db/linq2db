@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Tests.Model;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 using LinqToDB.Mapping;
@@ -19,7 +18,9 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromTable(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
+
 				PrepareData(db);
 
 				var table = GetTarget(db);
@@ -50,6 +51,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromQuery(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -80,6 +82,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromQueryWithSelect(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -120,6 +123,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromTableWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -150,6 +154,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromTableWithMatchAlternative(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -181,6 +186,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromQueryWithSelectAndMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -225,6 +231,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromQueryWithSelectAndMatchAlternative(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -269,6 +276,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromCollection(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -300,6 +308,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromEmptyCollection(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -330,6 +339,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromCollectionWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -360,6 +370,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromCollectionWithMatchAlternative(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -390,6 +401,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromEmptyCollectionWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -419,6 +431,7 @@ namespace Tests.xUpdate
 		public void InsertFromCrossJoinedSourceQuery2Workaround(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -452,6 +465,7 @@ namespace Tests.xUpdate
 		public void InsertFromCrossJoinedSourceQuery2(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -510,9 +524,8 @@ namespace Tests.xUpdate
 		public void InsertFromCrossJoinedSourceQuery(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.BeginTransaction();
-
 				// prepare test data
 				db.GetTable<CrossJoinLeft>().Delete();
 				db.GetTable<CrossJoinRight>().Delete();
@@ -566,8 +579,6 @@ namespace Tests.xUpdate
 				Assert.AreEqual(22, result[3].Id);
 				Assert.AreEqual(2,  result[3].LeftId);
 				Assert.AreEqual(20, result[3].RightId);
-
-				db.RollbackTransaction();
 			}
 		}
 
@@ -576,9 +587,8 @@ namespace Tests.xUpdate
 		public void InsertFromCrossJoinedSourceQuery3(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.BeginTransaction();
-
 				PrepareData(db);
 
 				var table = GetTarget(db);
@@ -608,8 +618,6 @@ namespace Tests.xUpdate
 				Assert.Fail("Almost done, uncomment and fix asserts below");
 
 				AssertRowCount(0, rows, context);
-
-				db.RollbackTransaction();
 			}
 		}
 
@@ -617,9 +625,8 @@ namespace Tests.xUpdate
 		public void InsertFromSelectManySourceQuery(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.BeginTransaction();
-
 				// prepare test data
 				db.GetTable<CrossJoinLeft>().Delete();
 				db.GetTable<CrossJoinRight>().Delete();
@@ -675,8 +682,6 @@ namespace Tests.xUpdate
 				Assert.AreEqual(22, result[3].Id);
 				Assert.AreEqual(2, result[3].LeftId);
 				Assert.AreEqual(20, result[3].RightId);
-
-				db.RollbackTransaction();
 			}
 		}
 
@@ -684,6 +689,7 @@ namespace Tests.xUpdate
 		public void InsertFromPartialSourceProjection_UnknownFieldInDefaultSetter(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -706,6 +712,7 @@ namespace Tests.xUpdate
 		public void InsertFromPartialSourceProjection_UnknownFieldInSetter(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -734,6 +741,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -780,6 +788,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertWithCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -831,6 +840,7 @@ namespace Tests.xUpdate
 		public void InsertPartialSourceProjection_KnownFieldInSetter(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -883,6 +893,7 @@ namespace Tests.xUpdate
 		public void DataContextTest(string context)
 		{
 			using (var db = new DataContext(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -936,6 +947,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertWithPredicateAndCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -985,6 +997,7 @@ namespace Tests.xUpdate
 		public void InsertWithPredicatePartialSourceProjection_KnownFieldInCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1035,6 +1048,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertWithPredicateAndCreatePartialSourceProjection_UnknownFieldInCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1068,6 +1082,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromTable(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1107,6 +1122,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromQuery(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1151,6 +1167,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromQueryWithSelect(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1210,6 +1227,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1261,6 +1279,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromEmptyList(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1299,6 +1318,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1339,6 +1359,7 @@ namespace Tests.xUpdate
 		public void AnonymousSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1387,6 +1408,7 @@ namespace Tests.xUpdate
 		public void AnonymousListSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1436,6 +1458,7 @@ namespace Tests.xUpdate
 		public void InsertReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1484,6 +1507,7 @@ namespace Tests.xUpdate
 		public void InsertReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1536,6 +1560,7 @@ namespace Tests.xUpdate
 		public async Task SameSourceInsertFromTableAsyn(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1567,6 +1592,7 @@ namespace Tests.xUpdate
 		public async Task SameSourceInsertFromQueryAsyn(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1595,13 +1621,12 @@ namespace Tests.xUpdate
 		#endregion
 
 
-		//[Test, MergeDataContextSource]
+		[Test, MergeDataContextSource(ProviderName.Sybase)]
 		public void CrossJoinedSourceWithSingleFieldSelection(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.BeginTransaction();
-
 				// prepare test data
 				db.GetTable<CrossJoinLeft>().Delete();
 				db.GetTable<CrossJoinRight>().Delete();
@@ -1655,8 +1680,6 @@ namespace Tests.xUpdate
 				Assert.AreEqual(11, result[4].Id);
 				Assert.AreEqual(100, result[4].LeftId);
 				Assert.AreEqual(200, result[4].RightId);
-
-				db.RollbackTransaction();
 			}
 		}
 	}
