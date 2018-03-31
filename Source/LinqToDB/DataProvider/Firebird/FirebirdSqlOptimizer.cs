@@ -6,8 +6,9 @@ namespace LinqToDB.DataProvider.Firebird
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using System;
 
-	class FirebirdSqlOptimizer : BasicSqlOptimizer
+	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
 		public FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -72,47 +73,12 @@ namespace LinqToDB.DataProvider.Firebird
 
 			statement = base.Finalize(statement);
 
-			if (FirebirdConfiguration.ConvertInnerJoinsToLeftJoins
-				&& !FirebirdConfiguration.DisableConvertInnerJoinsToLeftJoins.Value)
-			{
-				ConvertInnerJoinsToLeftJoins(statement);
-			}
-
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
 				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
 				default               : return statement;
 			}
-		}
-
-		private void ConvertInnerJoinsToLeftJoins(SqlStatement statement)
-		{
-			statement.WalkQueries(query =>
-			{
-				new QueryVisitor().Visit(query, e =>
-				{
-					if (e.ElementType != QueryElementType.SqlQuery)
-						return;
-
-					var q = (SelectQuery)e;
-
-					foreach (var join in q.From.Tables.SelectMany(t => t.Joins))
-					{
-						if (join.JoinType == JoinType.Inner && !join.Condition.Conditions.IsNullOrEmpty())
-						{
-							join.JoinType  = JoinType.Left;
-
-							// move join condition to where and use 1=1 as join condition
-							q.Select.Where.ConcatSearchCondition(join.Condition);
-
-							join.Condition.Conditions.Clear();
-							join.Condition.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(1)), true));
-						}
-					}
-				});
-				return query;
-			});
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

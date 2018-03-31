@@ -40,9 +40,9 @@ LINQ to DB 2.0.0  Release Notes
 - fix: Fixed "Table not found for 't18.[3]t19.Field2'" error for merge with source query using cross joins or SelectMany (#896)
 - fix: [MS SQL] Drop table in another database doesn't work (#1030)
 - fix: [Inheritance mapping] Fixed exception when you try to select inherited record as a field/property of specific type instead of base inheritance type (#1046)
-- fix: [Firebird] New flag FirebirdConfiguration.ConvertInnerJoinsToLeftJoins as workaround for http://tracker.firebirdsql.org/browse/CORE-3707 issue (#982, #1000)
 
 - other changes: t4models repository moved to main repository
+- other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)
 
 - for developers: SelectQuery class refactoring (#936, #938)
 - for developers: *DataProviders.txt tests configuration file replaced with JSON-based *DataProviders.json files (TODO: add link to readme when it is updated)

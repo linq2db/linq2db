@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider
 			Command.Append(" ");
 		}
 
-		protected virtual void BuildPredicateByTargetAndSource(Expression<Func<TTarget, TSource, bool>> predicate)
+		protected void BuildPredicateByTargetAndSource(Expression<Func<TTarget, TSource, bool>> predicate)
 		{
 			var query = _connection.GetTable<TTarget>()
 				.SelectMany(_ => _connection.GetTable<TSource>(), (t, s) => new { t, s });

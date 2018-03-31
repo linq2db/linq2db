@@ -515,42 +515,5 @@ namespace Tests.DataProvider
 				
 			}
 		}
-
-		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
-		public void ConvertInnerJoinsToLeftJoins(string context)
-		{
-			FirebirdConfiguration.ConvertInnerJoinsToLeftJoins = true;
-
-			try
-			{
-				using (var db = GetDataContext(context))
-				{
-					var query = from p in db.Parent
-						from c in db.Child.InnerJoin(c => c.ParentID == p.ParentID)
-						from cg in (
-							from cc in db.Child
-							group cc by cc.ChildID
-							into g
-							select g.Key
-						).InnerJoin(cg => c.ChildID == cg)
-						where p.ParentID > 1 || p.ParentID > 0
-						select new
-						{
-							p,
-							c
-						};
-
-					var str    = query.ToString();
-					Assert.That(str, Is.Not.Contains("INNER"));
-					var values = query.ToArray();
-				}
-			}
-			finally
-			{
-				FirebirdConfiguration.ConvertInnerJoinsToLeftJoins = false;
-			}
-		}
-
-
 	}
 }

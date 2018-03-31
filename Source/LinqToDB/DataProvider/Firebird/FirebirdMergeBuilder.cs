@@ -83,37 +83,5 @@ namespace LinqToDB.DataProvider.Firebird
 			else
 				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
 		}
-
-		protected override void BuildMatch()
-		{
-			var old = FirebirdConfiguration.DisableConvertInnerJoinsToLeftJoins.Value;
-
-			try
-			{
-				FirebirdConfiguration.DisableConvertInnerJoinsToLeftJoins.Value = true;
-
-				base.BuildMatch();
-			}
-			finally
-			{
-				FirebirdConfiguration.DisableConvertInnerJoinsToLeftJoins.Value = old;
-			}
-		}
-
-		protected override void BuildPredicateByTargetAndSource(Expression<Func<TTarget, TSource, bool>> predicate)
-		{
-			var old = FirebirdConfiguration.DisableConvertInnerJoinsToLeftJoins.Value;
-
-			try
-			{
-				FirebirdConfiguration.DisableConvertInnerJoinsToLeftJoins.Value = true;
-
-				base.BuildPredicateByTargetAndSource(predicate);
-			}
-			finally
-			{
-				FirebirdConfiguration.DisableConvertInnerJoinsToLeftJoins.Value = old;
-			}
-		}
 	}
 }
