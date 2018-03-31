@@ -1,12 +1,8 @@
-﻿using System.Linq;
-using LinqToDB.Common;
-
-namespace LinqToDB.DataProvider.Firebird
+﻿namespace LinqToDB.DataProvider.Firebird
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using System;
 
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
