@@ -158,7 +158,7 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public          bool            DoNotCache;
+		public bool DoNotCache;
 
 		public Func<IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
 		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
@@ -173,11 +173,11 @@ namespace LinqToDB.Linq
 		/// LINQ query cache version. Changed when query added or removed from cache.
 		/// Not changed when cache reordered.
 		/// </summary>
-		static          int            _cacheVersion;
+		static int _cacheVersion;
 		/// <summary>
 		/// LINQ query cache synchronization object.
 		/// </summary>
-		static readonly object         _sync;
+		static readonly object _sync;
 
 		/// <summary>
 		/// LINQ query cache size (per entity type).

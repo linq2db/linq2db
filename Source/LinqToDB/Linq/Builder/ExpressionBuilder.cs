@@ -132,10 +132,7 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
-		public MappingSchema MappingSchema
-		{
-			get { return DataContext.MappingSchema; }
-		}
+		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
 		#endregion
 
@@ -200,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 		}
 
-		public SequenceConvertInfo ConvertSequence(BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo ConvertSequence(BuildInfo buildInfo, ParameterExpression param, bool throwExceptionIfCantConvert)
 		{
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
@@ -208,7 +205,10 @@ namespace LinqToDB.Linq.Builder
 				if (builder.CanBuild(this, buildInfo))
 					return builder.Convert(this, buildInfo, param);
 
-			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+			if (throwExceptionIfCantConvert)
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+
+			return null;
 		}
 
 		public bool IsSequence(BuildInfo buildInfo)
@@ -228,7 +228,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ParameterExpression SequenceParameter;
 
-		Expression ConvertExpressionTree(Expression expression)
+		public Expression ConvertExpressionTree(Expression expression)
 		{
 			var expr = expression;
 
@@ -262,7 +262,7 @@ namespace LinqToDB.Linq.Builder
 
 			SequenceParameter = Expression.Parameter(paramType, "cp");
 
-			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SelectQuery()), SequenceParameter);
+			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SelectQuery()), SequenceParameter, false);
 
 			if (sequence != null)
 			{
@@ -463,9 +463,9 @@ namespace LinqToDB.Linq.Builder
 							//if (c.Value is IExpressionQuery)
 							//	return ((IQueryable)c.Value).Expression;
 
-							if (c.Value is IQueryable && !(c.Value is ITable))
+							if (c.Value is IQueryable queryable && !(queryable is ITable))
 							{
-								var e = ((IQueryable)c.Value).Expression;
+								var e = queryable.Expression;
 
 								if (!_visitedExpressions.Contains(e))
 								{
@@ -487,24 +487,16 @@ namespace LinqToDB.Linq.Builder
 		#region OptimizeExpression
 
 		private MethodInfo[] _enumerableMethods;
-		public  MethodInfo[]  EnumerableMethods
-		{
-			get { return _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethodsEx()); }
-		}
+		public  MethodInfo[]  EnumerableMethods => _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethodsEx());
 
 		private MethodInfo[] _queryableMethods;
-		public  MethodInfo[]  QueryableMethods
-		{
-			get { return _queryableMethods ?? (_queryableMethods = typeof(Queryable).GetMethodsEx()); }
-		}
+		public  MethodInfo[]  QueryableMethods  => _queryableMethods  ?? (_queryableMethods  = typeof(Queryable). GetMethodsEx());
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
 
 		Expression OptimizeExpression(Expression expression)
 		{
-			Expression expr;
-
-			if (_optimizedExpressions.TryGetValue(expression, out expr))
+			if (_optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
 			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
@@ -619,12 +611,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (mi is MethodInfo && ((MethodInfo)mi).IsGenericMethod)
+				if (mi is MethodInfo method && method.IsGenericMethod)
 				{
-					var method = (MethodInfo)mi;
-					var args   = method.GetGenericArguments();
-					var names  = args.Select(t => (object)t.Name).ToArray();
-					var name   = string.Format(attr.MethodName, names);
+					var args  = method.GetGenericArguments();
+					var names = args.Select(t => (object)t.Name).ToArray();
+					var name  = string.Format(attr.MethodName, names);
 
 					expr = Expression.Call(
 						mi.DeclaringType,

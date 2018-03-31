@@ -5,8 +5,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Tools
 {
-	using Data;
-
 	public static class SqlExtensions
 	{
 		#region In/NotIn

@@ -84,11 +84,11 @@ INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoi
 GO
 
 
-CREATE TABLE Parent      (ParentID int, Value1 int NULL)
+CREATE TABLE Parent      (ParentID INT NULL, Value1 int NULL)
 GO
-CREATE TABLE Child       (ParentID int, ChildID int)
+CREATE TABLE Child       (ParentID int NULL, ChildID INT NULL)
 GO
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
+CREATE TABLE GrandChild  (ParentID INT NULL, ChildID INT NULL, GrandChildID INT NULL)
 GO
 
 CREATE TABLE LinqDataTypes
@@ -159,8 +159,8 @@ GO
 INSERT INTO AllTypes
 (
 	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType, smallmoneyDataType,
-	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
-	uBigintDataType, uSmallintDataType, uIntDataType, 
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
+	uBigintDataType, uSmallintDataType, uIntDataType,
 
 	datetimeDataType, smalldatetimeDataType, dateDataType, timeDataType,
 

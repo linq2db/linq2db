@@ -915,10 +915,20 @@ namespace Tests
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
-			AreEqual(t => t, expected, result);
+			AreEqual(t => t, expected, result, EqualityComparer<T>.Default);
+		}
+
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
+		{
+			AreEqual(t => t, expected, result, comparer);
 		}
 
 		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result)
+		{
+			AreEqual(fixSelector, expected, result, EqualityComparer<T>.Default);
+		}
+
+		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
@@ -926,8 +936,8 @@ namespace Tests
 			Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
-			var exceptExpectedList = resultList.  Except(expectedList).ToList();
-			var exceptResultList   = expectedList.Except(resultList).  ToList();
+			var exceptExpectedList = resultList.  Except(expectedList, comparer).ToList();
+			var exceptResultList   = expectedList.Except(resultList,   comparer).ToList();
 
 			var exceptExpected = exceptExpectedList.Count;
 			var exceptResult   = exceptResultList.  Count;
@@ -936,8 +946,8 @@ namespace Tests
 			if (exceptResult != 0 || exceptExpected != 0)
 				for (var i = 0; i < resultList.Count; i++)
 				{
-					Debug.  WriteLine   ("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
-					message.AppendFormat("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					Debug.  WriteLine   ("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					message.AppendFormat("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendLine  ();
 				}
 
@@ -1197,7 +1207,7 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			return TestBase.UserProviders.Where(p => !Providers.Contains(p));
+			return TestBase.UserProviders.Where(p => !Providers.Contains(p) && TestBase.Providers.Contains(p));
 		}
 	}
 

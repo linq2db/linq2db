@@ -88,10 +88,10 @@ namespace Tests.DataProvider
 				Result = result;
 			}
 
-			public string                                            Name   { get; set; }
-			public int                                               ID     { get; set; }
+			public string                                             Name   { get; set; }
+			public int                                                ID     { get; set; }
 			public Func<string,PostgreSQLTests,DataConnection,object> Func   { get; set; }
-			public object                                            Result { get; set; }
+			public object                                             Result { get; set; }
 		}
 
 		class TestDataTypeAttribute : NUnitAttribute, ITestBuilder, IImplyFixture

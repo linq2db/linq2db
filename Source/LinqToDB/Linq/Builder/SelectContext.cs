@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -25,14 +26,14 @@ namespace LinqToDB.Linq.Builder
 		public MethodCallExpression MethodCall;
 #endif
 
-		public IBuildContext[]   Sequence    { get; }
-		public LambdaExpression  Lambda      { get; set; }
-		public Expression        Body        { get; set; }
-		public ExpressionBuilder Builder     { get; }
-		public SelectQuery       SelectQuery { get; set; }
-		public SqlStatement      Statement   { get; set; }
-		public IBuildContext     Parent      { get; set; }
-		public bool              IsScalar    { get; }
+		public IBuildContext[]   Sequence    { [DebuggerStepThrough] get; }
+		public LambdaExpression  Lambda      { [DebuggerStepThrough] get; set; }
+		public Expression        Body        { [DebuggerStepThrough] get; set; }
+		public ExpressionBuilder Builder     { [DebuggerStepThrough] get; }
+		public SelectQuery       SelectQuery { [DebuggerStepThrough] get; set; }
+		public SqlStatement      Statement   { [DebuggerStepThrough] get; set; }
+		public IBuildContext     Parent      { [DebuggerStepThrough] get; set; }
+		public bool              IsScalar    { [DebuggerStepThrough] get; }
 
 		Expression IBuildContext.Expression => Lambda;
 
