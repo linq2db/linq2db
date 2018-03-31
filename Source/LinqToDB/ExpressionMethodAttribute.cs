@@ -61,9 +61,9 @@ namespace LinqToDB
 		/// </summary>
 		public string MethodName    { get; set; }
 
-		/// <summary>	
+		/// <summary>
 		/// Indicates whether a property should be mapped with this expression Method. </summary>
-		/// <value>	
+		/// <value>
 		/// True if the property should be mapped with this expression Method. </value>
 		public bool IsColumn { get; set; }
 
