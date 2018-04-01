@@ -24,7 +24,9 @@ namespace LinqToDB.Metadata
 
 		public MetadataReader([NotNull] params IMetadataReader[] readers)
 		{
-			_readers = new List<IMetadataReader>(readers) ?? throw new ArgumentNullException(nameof(readers));
+			if (readers == null)
+				throw new ArgumentNullException(nameof(readers));
+			_readers = readers.ToArray();
 		}
 
 		IList<IMetadataReader> _readers;
@@ -32,7 +34,7 @@ namespace LinqToDB.Metadata
 		internal void AddReader(IMetadataReader reader)
 		{
 			// creation of new list is cheaper than lock on each method call
-			_readers = new[] { reader }.Concat(_readers).ToList();
+			_readers = new[] { reader }.Concat(_readers).ToArray();
 		}
 
 		public T[] GetAttributes<T>(Type type, bool inherit)
