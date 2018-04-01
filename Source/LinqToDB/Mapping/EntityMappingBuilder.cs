@@ -448,6 +448,27 @@ namespace LinqToDB.Mapping
 		}
 
 		internal EntityMappingBuilder<T> SetAttribute<TA>(
+			Func<TA> getNew,
+			Action<TA> modifyExisting,
+			Func<TA, string> configGetter,
+			Func<IEnumerable<TA>, TA> existingGetter)
+			where TA : Attribute
+		{
+			var attr = existingGetter(GetAttributes(typeof(T), configGetter));
+
+			if (attr == null)
+			{
+				_builder.HasAttribute(typeof(T), getNew());
+			}
+			else
+			{
+				modifyExisting(attr);
+			}
+
+			return this;
+		}
+
+		internal EntityMappingBuilder<T> SetAttribute<TA>(
 			Expression<Func<T,object>> func,
 			bool                       processNewExpression,
 			Func<bool,TA>              getNew,
