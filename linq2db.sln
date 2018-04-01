@@ -109,6 +109,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Access", "Access", "{D4859E
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Access\CopyMe.Access.tt.txt = NuGet\Access\CopyMe.Access.tt.txt
 		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
+		NuGet\Access\linq2db.Access.props = NuGet\Access\linq2db.Access.props
 		NuGet\Access\LinqToDB.Access.Tools.ttinclude = NuGet\Access\LinqToDB.Access.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -116,6 +117,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Firebird", "Firebird", "{84
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Firebird\CopyMe.Firebird.tt.txt = NuGet\Firebird\CopyMe.Firebird.tt.txt
 		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
+		NuGet\Firebird\linq2db.Firebird.props = NuGet\Firebird\linq2db.Firebird.props
 		NuGet\Firebird\LinqToDB.Firebird.Tools.ttinclude = NuGet\Firebird\LinqToDB.Firebird.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -123,6 +125,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DB2", "DB2", "{93B6C26B-DC1
 	ProjectSection(SolutionItems) = preProject
 		NuGet\DB2\CopyMe.DB2.tt.txt = NuGet\DB2\CopyMe.DB2.tt.txt
 		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
+		NuGet\DB2\linq2db.DB2.props = NuGet\DB2\linq2db.DB2.props
 		NuGet\DB2\LinqToDB.DB2.Tools.ttinclude = NuGet\DB2\LinqToDB.DB2.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -130,6 +133,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Informix", "Informix", "{3E
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Informix\CopyMe.Informix.tt.txt = NuGet\Informix\CopyMe.Informix.tt.txt
 		NuGet\linq2db.Informix.nuspec = NuGet\linq2db.Informix.nuspec
+		NuGet\Informix\linq2db.Informix.props = NuGet\Informix\linq2db.Informix.props
 		NuGet\Informix\LinqToDB.Informix.Tools.ttinclude = NuGet\Informix\LinqToDB.Informix.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -137,6 +141,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySql", "MySql", "{FB9C38B7
 	ProjectSection(SolutionItems) = preProject
 		NuGet\MySql\CopyMe.MySql.tt.txt = NuGet\MySql\CopyMe.MySql.tt.txt
 		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
+		NuGet\MySql\linq2db.MySql.props = NuGet\MySql\linq2db.MySql.props
 		NuGet\MySql\LinqToDB.MySql.Tools.ttinclude = NuGet\MySql\LinqToDB.MySql.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -144,6 +149,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Oracle", "Oracle", "{470C3F
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Oracle\CopyMe.Oracle.tt.txt = NuGet\Oracle\CopyMe.Oracle.tt.txt
 		NuGet\linq2db.Oracle.Managed.nuspec = NuGet\linq2db.Oracle.Managed.nuspec
+		NuGet\Oracle\linq2db.Oracle.props = NuGet\Oracle\linq2db.Oracle.props
 		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
 		NuGet\Oracle\LinqToDB.Oracle.Managed.Tools.ttinclude = NuGet\Oracle\LinqToDB.Oracle.Managed.Tools.ttinclude
 		NuGet\Oracle\LinqToDB.Oracle.Tools.ttinclude = NuGet\Oracle\LinqToDB.Oracle.Tools.ttinclude
@@ -155,6 +161,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PostgreSQL", "PostgreSQL", 
 	ProjectSection(SolutionItems) = preProject
 		NuGet\PostgreSQL\CopyMe.PostgreSQL.tt.txt = NuGet\PostgreSQL\CopyMe.PostgreSQL.tt.txt
 		NuGet\linq2db.PostgreSQL.nuspec = NuGet\linq2db.PostgreSQL.nuspec
+		NuGet\PostgreSQL\linq2db.PostgreSQL.props = NuGet\PostgreSQL\linq2db.PostgreSQL.props
 		NuGet\PostgreSQL\LinqToDB.PostgreSQL.Tools.ttinclude = NuGet\PostgreSQL\LinqToDB.PostgreSQL.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -162,6 +169,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SapHana", "SapHana", "{07E4
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SapHana\CopyMe.SapHana.tt.txt = NuGet\SapHana\CopyMe.SapHana.tt.txt
 		NuGet\linq2db.SapHana.nuspec = NuGet\linq2db.SapHana.nuspec
+		NuGet\SapHana\linq2db.SapHana.props = NuGet\SapHana\linq2db.SapHana.props
 		NuGet\SapHana\LinqToDB.SapHana.Tools.ttinclude = NuGet\SapHana\LinqToDB.SapHana.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -169,6 +177,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SqlCe", "SqlCe", "{FD12E2D7
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SqlCe\CopyMe.SqlCe.tt.txt = NuGet\SqlCe\CopyMe.SqlCe.tt.txt
 		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
+		NuGet\SqlCe\linq2db.SqlCe.props = NuGet\SqlCe\linq2db.SqlCe.props
 		NuGet\SqlCe\LinqToDB.SqlCe.Tools.ttinclude = NuGet\SqlCe\LinqToDB.SqlCe.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -176,6 +185,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SqlServer", "SqlServer", "{
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SqlServer\CopyMe.SqlServer.tt.txt = NuGet\SqlServer\CopyMe.SqlServer.tt.txt
 		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
+		NuGet\SqlServer\linq2db.SqlServer.props = NuGet\SqlServer\linq2db.SqlServer.props
 		NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude = NuGet\SqlServer\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude
 		NuGet\SqlServer\LinqToDB.SqlServer.Tools.ttinclude = NuGet\SqlServer\LinqToDB.SqlServer.Tools.ttinclude
 	EndProjectSection
@@ -184,6 +194,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sybase", "Sybase", "{4E326A
 	ProjectSection(SolutionItems) = preProject
 		NuGet\Sybase\CopyMe.Sybase.tt.txt = NuGet\Sybase\CopyMe.Sybase.tt.txt
 		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
+		NuGet\Sybase\linq2db.Sybase.props = NuGet\Sybase\linq2db.Sybase.props
 		NuGet\Sybase\LinqToDB.Sybase.Tools.ttinclude = NuGet\Sybase\LinqToDB.Sybase.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -191,6 +202,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQLite", "SQLite", "{FCE717
 	ProjectSection(SolutionItems) = preProject
 		NuGet\SQLite\CopyMe.SQLite.tt.txt = NuGet\SQLite\CopyMe.SQLite.tt.txt
 		NuGet\linq2db.SQLite.nuspec = NuGet\linq2db.SQLite.nuspec
+		NuGet\SQLite\linq2db.SQLite.props = NuGet\SQLite\linq2db.SQLite.props
 		NuGet\SQLite\LinqToDB.SQLite.Tools.ttinclude = NuGet\SQLite\LinqToDB.SQLite.Tools.ttinclude
 	EndProjectSection
 EndProject

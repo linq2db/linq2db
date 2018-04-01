@@ -1,3 +1,3 @@
-<#@ assembly name="$(SolutionDir).tools\linq2db.t4models\IBM.Data.Informix.dll" #>
+<#@ assembly name="$(LinqToDBT4InformixToolsDirectory)IBM.Data.Informix.dll" #>
 <#@ include file="LinqToDB.Tools.ttinclude" #>
 <#@ include file="LinqToDB.Informix.ttinclude" #>
