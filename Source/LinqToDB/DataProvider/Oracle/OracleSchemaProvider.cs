@@ -232,13 +232,13 @@ namespace LinqToDB.DataProvider.Oracle
 			(
 				from p in ps.AsEnumerable()
 				let schema = p.Field<string>("OWNER")
-				let name = p.Field<string>("OBJECT_NAME")
+				let name   = p.Field<string>("OBJECT_NAME")
 				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureInfo
 				{
-					ProcedureID = schema + "." + name,
-					SchemaName = schema,
-					ProcedureName = name,
+					ProcedureID     = schema + "." + name,
+					SchemaName      = schema,
+					ProcedureName   = name,
 					IsDefaultSchema = schema == _currentUser,
 				}
 			).ToList();

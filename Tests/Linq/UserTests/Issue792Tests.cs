@@ -132,7 +132,7 @@ namespace Tests.UserTests
 				}));
 
 				Assert.IsInstanceOf<InvalidOperationException>(ex);
-				Assert.AreEqual("Execute requires the command to have a transaction object when the connection assigned to the command is in a pending local transaction.  The Transaction property of the command has not been initialized.", ex.Message);
+				Assert.IsTrue(ex.Message.Contains("requires the command to have a transaction"));
 			}
 		}
 

@@ -49,19 +49,19 @@ namespace LinqToDB.DataProvider.DB2
 				where
 					new[] { "TABLE", "VIEW" }.Contains(t.Field<string>("TABLE_TYPE"))
 				let catalog = dataConnection.Connection.Database
-				let schema = t.Field<string>("TABLE_SCHEMA")
-				let name = t.Field<string>("TABLE_NAME")
-				let system = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
+				let schema  = t.Field<string>("TABLE_SCHEMA")
+				let name    = t.Field<string>("TABLE_NAME")
+				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
 				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == CurrentSchema
 				select new TableInfo
 				{
-					TableID = catalog + '.' + schema + '.' + name,
-					CatalogName = catalog,
-					SchemaName = schema,
-					TableName = name,
-					IsDefaultSchema = schema.IsNullOrEmpty(),
-					IsView = t.Field<string>("TABLE_TYPE") == "VIEW",
-					Description = t.Field<string>("REMARKS"),
+					TableID            = catalog + '.' + schema + '.' + name,
+					CatalogName        = catalog,
+					SchemaName         = schema,
+					TableName          = name,
+					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
+					Description        = t.Field<string>("REMARKS"),
 					IsProviderSpecific = system || _systemSchemas.Contains(schema)
 				}
 			).ToList();
