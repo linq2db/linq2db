@@ -2362,7 +2362,10 @@ namespace LinqToDB.Linq.Builder
 
 				var e = isEqual ? Expression.Equal(left, right) : Expression.NotEqual(left, right);
 
-				expr = expr != null ? Expression.AndAlso(expr, e) : e;
+				if (!isEqual)
+					expr = expr != null ? Expression.AndAlso(expr, e) : e;
+				else
+					expr = expr != null ? Expression.OrElse(expr, e) : e;
 			}
 
 			return ConvertPredicate(context, expr);
