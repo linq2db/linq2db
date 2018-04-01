@@ -653,3 +653,16 @@ CREATE TABLE TestMerge2
 	FieldEnumNumber INT               NULL
 )
 GO
+
+DROP Procedure AddIssue792Record
+GO
+
+CREATE Procedure AddIssue792Record
+AS
+BEGIN
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792')
+END
+GO
+
+GRANT EXEC ON AddIssue792Record TO PUBLIC
+GO

@@ -593,8 +593,8 @@ INSERT INTO DataTypeTest
 	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,     Xml_)
 VALUES
 	(   NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
+		NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
+		NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
 /
 
 INSERT INTO DataTypeTest
@@ -960,4 +960,11 @@ CREATE TABLE TestMerge2
 	FieldEnumString VARCHAR(20)              NULL,
 	FieldEnumNumber NUMBER                   NULL
 )
+/
+
+CREATE OR REPLACE
+PROCEDURE AddIssue792Record() IS
+BEGIN
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+END;
 /

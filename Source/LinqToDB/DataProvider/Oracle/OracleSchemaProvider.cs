@@ -30,11 +30,11 @@ namespace LinqToDB.DataProvider.Oracle
 			return ((dynamic)Proxy.GetUnderlyingObject(dbConnection)).DatabaseName;
 		}
 
-		string _currentUser;
+		private string _currentUser;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			_currentUser = dataConnection.Execute<string>("select user from dual");
+			LoadCurrentUser(dataConnection);
 
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
@@ -224,22 +224,30 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
+			LoadCurrentUser(dataConnection);
+
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 
 			return
 			(
 				from p in ps.AsEnumerable()
-				let schema  = p.Field<string>("OWNER")
-				let name    = p.Field<string>("OBJECT_NAME")
+				let schema = p.Field<string>("OWNER")
+				let name = p.Field<string>("OBJECT_NAME")
 				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureInfo
 				{
-					ProcedureID     = schema + "." + name,
-					SchemaName      = schema,
-					ProcedureName   = name,
+					ProcedureID = schema + "." + name,
+					SchemaName = schema,
+					ProcedureName = name,
 					IsDefaultSchema = schema == _currentUser,
 				}
 			).ToList();
+		}
+
+		private void LoadCurrentUser(DataConnection dataConnection)
+		{
+			if (_currentUser == null)
+				_currentUser = dataConnection.Execute<string>("select user from dual");
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
