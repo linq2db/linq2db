@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	public static class FirebirdConfiguration
 	{

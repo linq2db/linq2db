@@ -82,6 +82,9 @@ namespace Tests.UserTests
 						cond.Expr(key).LessOrEqual.Expr(new SqlValue(maxValue));
 
 					where.ConcatSearchCondition(cond);
+
+					// only one field is enough
+					break;
 				}
 			}
 
