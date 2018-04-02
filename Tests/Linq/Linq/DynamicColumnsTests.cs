@@ -79,7 +79,7 @@ namespace Tests.Linq
 					.Select(x => Sql.Property<object>(Sql.Property<object>(x, "Patient"), "Diagnosis"))
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.IsTrue(result.OrderBy(_ => _ as string).SequenceEqual(expected.OrderBy(_ => _)));
 			}
 		}
 
@@ -172,7 +172,7 @@ namespace Tests.Linq
 					.Select(x => Sql.Property<string>(Sql.Property<Patient>(x, "Patient"), "Diagnosis"))
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.IsTrue(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)));
 			}
 		}
 
@@ -232,7 +232,7 @@ namespace Tests.Linq
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.IsTrue(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)));
 			}
 		}
 
@@ -262,7 +262,7 @@ namespace Tests.Linq
 					.Select(p => new {p.Key, Count = p.Count()})
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.IsTrue(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)));
 			}
 		}
 
@@ -297,7 +297,7 @@ namespace Tests.Linq
 					.Select(p => ((Patient)p.ExtendedProperties["Patient"])?.Diagnosis)
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.IsTrue(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)));
 			}
 		}
 		

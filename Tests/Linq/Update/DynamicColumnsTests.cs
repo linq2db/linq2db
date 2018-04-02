@@ -70,27 +70,21 @@ namespace Tests.Update
 			{
 				try
 				{
-					var id = 1001;
-
-					db.GetTable<MyClass>().Delete(c => Sql.Property<int>(c, "ID") > 1000);
-
 					Assert.AreEqual(1,
 						db
 							.GetTable<MyClass>()
-							.Value(c => Sql.Property<int>(c, "ID"), () => id)
-							.Value(c => Sql.Property<string>(c, "FirstName"), () => "John1")
-							.Value(c => Sql.Property<string>(c, "LastName"), () => "Test1")
+							.Value(c => Sql.Property<string>(c, "FirstName"), () => "John")
+							.Value(c => Sql.Property<string>(c, "LastName"), () => "The Dynamic")
 							.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
 							.Insert());
 					Assert.AreEqual(1,
 						db.GetTable<MyClass>().Count(c =>
-							Sql.Property<int>(c, "ID") == id && 
-							Sql.Property<string>(c, "FirstName") == "John1" &&
-							Sql.Property<string>(c, "LastName") == "Test1"));
+							Sql.Property<string>(c, "FirstName") == "John" &&
+							Sql.Property<string>(c, "LastName") == "The Dynamic"));
 				}
 				finally
 				{
-					db.GetTable<MyClass>().Delete(c => Sql.Property<int>(c, "ID") > 1000);
+					db.GetTable<MyClass>().Delete(c => Sql.Property<string>(c, "LastName") == "The Dynamic");
 				}
 			}
 		}
@@ -102,27 +96,23 @@ namespace Tests.Update
 			{
 				try
 				{
-					var id = 1001;
-
-					db.GetTable<MyClass>().Delete(c => Sql.Property<int>(c, "ID") > 1000);
 					db.GetTable<MyClass>()
-						.Value(c => Sql.Property<int>(c, "ID"), () => id)
-						.Value(c => Sql.Property<string>(c, "FirstName"), () => "John1")
-						.Value(c => Sql.Property<string>(c, "LastName"), () => "Test1")
+						.Value(c => Sql.Property<string>(c, "FirstName"), () => "John")
+						.Value(c => Sql.Property<string>(c, "LastName"), () => "Limonadovy")
 						.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
 						.Insert();
 
-					Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<int>(c, "ID") == id));
+					Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "LastName") == "Limonadovy"));
 					Assert.AreEqual(1,
 						db.GetTable<MyClass>()
-							.Where(c => Sql.Property<int>(c, "ID") == id)
-							.Set(c => Sql.Property<string>(c, "FirstName"), () => "Johnny1")
+							.Where(c => Sql.Property<string>(c, "LastName") == "Limonadovy")
+							.Set(c => Sql.Property<string>(c, "FirstName"), () => "Johnny")
 							.Update());
-					Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<int>(c, "ID") == id && Sql.Property<string>(c, "FirstName") == "Johnny1"));
+					Assert.AreEqual(1, db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "FirstName") == "Johnny" && Sql.Property<string>(c, "LastName") == "Limonadovy"));
 				}
 				finally
 				{
-					db.GetTable<MyClass>().Delete(c => Sql.Property<int>(c, "ID") > 1000);
+					db.GetTable<MyClass>().Delete(c => Sql.Property<string>(c, "LastName") == "Limonadovy");
 				}
 			}
 		}
