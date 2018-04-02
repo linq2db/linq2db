@@ -161,24 +161,28 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in members)
 				{
-					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
-
-					if (member.NextLoadWith.Count > 0)
+					if (member.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
 					{
-						var table = FindTable(ma, 1, false, true);
-						table.Table.LoadWith = member.NextLoadWith;
+						var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
+
+						if (member.NextLoadWith.Count > 0)
+						{
+							var table = FindTable(ma, 1, false, true);
+							table.Table.LoadWith = member.NextLoadWith;
+						}
+
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(),
+							member.MemberInfo);
+
+						var ex = BuildExpression(ma, 1, parentObject);
+						var ax = Expression.Assign(
+							attr?.Storage != null
+								? Expression.PropertyOrField(parentObject, attr.Storage)
+								: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
+							ex);
+
+						exprs.Add(ax);
 					}
-
-					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
-
-					var ex = BuildExpression(ma, 1, parentObject);
-					var ax = Expression.Assign(
-						attr?.Storage != null ?
-							Expression.PropertyOrField (parentObject, attr.Storage) :
-							Expression.MakeMemberAccess(parentObject, member.MemberInfo),
-						ex);
-
-					exprs.Add(ax);
 				}
 			}
 
@@ -487,22 +491,29 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
-					var dindex          =
+					if (tableContext is AssociatedTableContext)
+					{
+						expr = Expression.Constant(null, ObjectType);
+					}
+					else
+					{
+						var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
+						var dindex =
 						(
 							from f in SqlTable.Fields.Values
 							where f.Name == InheritanceMapping[0].DiscriminatorName
 							select ConvertToParentIndex(_indexes[f].Index, null)
 						).First();
 
-					expr = Expression.Convert(
-						Expression.Call(null, exceptionMethod,
-							Expression.Call(
-								ExpressionBuilder.DataReaderParam,
-								ReflectionHelper.DataReader.GetValue,
-								Expression.Constant(dindex)),
-							Expression.Constant(ObjectType)),
-						ObjectType);
+						expr = Expression.Convert(
+							Expression.Call(null, exceptionMethod,
+								Expression.Call(
+									ExpressionBuilder.DataReaderParam,
+									ReflectionHelper.DataReader.GetValue,
+									Expression.Constant(dindex)),
+								Expression.Constant(ObjectType)),
+							ObjectType);
+					}
 				}
 
 				foreach (var mapping in InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))

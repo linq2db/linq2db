@@ -21,6 +21,12 @@ namespace LinqToDB.Common
 		public static bool IsStructIsScalarType = true;
 
 		/// <summary>
+		/// If <c>true</c> - Enum Values are stored as by calling ToString().
+		/// Default value: <c>true</c>.
+		/// </summary>
+		public static bool UseEnumValueNameForStringColumns = true;
+
+		/// <summary>
 		/// If <c>true</c> - data providers will try to use standard ADO.NET interfaces instead of provider-specific functionality when possible. This option could be usefull if you need to intercept
 		/// database calls using tools such as <a href="https://github.com/MiniProfiler/dotnet">MiniProfiler</a>.
 		/// Default value: <c>false</c>.

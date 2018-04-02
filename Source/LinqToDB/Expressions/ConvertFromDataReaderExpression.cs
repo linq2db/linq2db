@@ -151,7 +151,22 @@ namespace LinqToDB.Expressions
 					_columnConverters[fromType] = func = lex.Compile();
 				}
 
-				return func(dataReader);
+				try
+				{
+					return func(dataReader);
+				}
+				catch (FormatException ex)
+				{
+					throw new FormatException("FormatException on Column: " + dataReader.GetName(_columnIndex), ex);
+				}
+				catch (InvalidCastException ex)
+				{
+					throw new InvalidCastException("InvalidCastException on Column: " + dataReader.GetName(_columnIndex), ex);
+				}
+				catch (Exception ex)
+				{
+					throw new Exception("Exception on Column: " + dataReader.GetName(_columnIndex), ex);
+				}
 
 				/*
 				var value = dataReader.GetValue(_columnIndex);

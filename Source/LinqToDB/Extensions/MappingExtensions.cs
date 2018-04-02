@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Data;
 
 namespace LinqToDB.Extensions
 {
@@ -24,7 +25,10 @@ namespace LinqToDB.Extensions
 			{
 				if (value != null || systemType == underlyingType)
 				{
+
 					var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType);
+					if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string))
+						return new SqlValue(type, value.ToString());
 
 					return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema));
 				}

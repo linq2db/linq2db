@@ -9,7 +9,7 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 
-	public class FluentMetadataReader : IMetadataReader
+	public class FluentMetadataReader : IMetadataReader, ITypeListMetadataReader
 	{
 		readonly ConcurrentDictionary<Type,List<Attribute>> _types = new ConcurrentDictionary<Type,List<Attribute>>();
 
@@ -49,6 +49,11 @@ namespace LinqToDB.Metadata
 				return Array<T>.Empty;
 
 			return GetAttributes<T>(parent, mi, inherit);
+		}
+
+		public IEnumerable<Type> GetMappedTypes()
+		{
+			return _types.Keys;
 		}
 
 		public void AddAttribute(MemberInfo memberInfo, Attribute attribute)
