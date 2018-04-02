@@ -264,15 +264,23 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
-
 					var ex = BuildExpression(ma, 1, parentObject);
-					var ax = Expression.Assign(
-						attr?.Storage != null ?
-							Expression.PropertyOrField (parentObject, attr.Storage) :
-							Expression.MakeMemberAccess(parentObject, member.MemberInfo),
-						ex);
 
-					exprs.Add(ax);
+					if (member.MemberInfo.IsDynamicColumnPropertyEx())
+					{
+						var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
+						var setter = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
+
+						exprs.Add(Expression.Invoke(setter, parentObject, ex));
+					}
+					else
+					{
+						exprs.Add(Expression.Assign(
+							attr?.Storage != null
+								? Expression.PropertyOrField(parentObject, attr.Storage)
+								: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
+							ex));
+					}
 				}
 			}
 
@@ -1156,7 +1164,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 								{
-									if (field.ColumnDescriptor.MemberAccessor.IsComplex)
+									if (field.ColumnDescriptor.MemberAccessor.IsComplex && !field.ColumnDescriptor.MemberAccessor.MemberInfo.IsDynamicColumnPropertyEx())
 									{
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;
