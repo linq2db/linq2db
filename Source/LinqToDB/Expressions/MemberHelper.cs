@@ -74,9 +74,11 @@ namespace LinqToDB.Expressions
 			}
 
 			return
-				expr is MemberExpression     ? ((MemberExpression)    expr).Member :
-				expr is MethodCallExpression ? ((MethodCallExpression)expr).Method :
-				                 (MemberInfo)((NewExpression)         expr).Constructor;
+				expr is MemberExpression me
+					? me.Member
+					: expr is MethodCallExpression mce
+						? mce.Method
+						: (MemberInfo)((NewExpression)expr).Constructor;
 		}
 
 		public static MemberInfo MemberOf<T>(Expression<Func<T,object>> func)

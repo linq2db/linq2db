@@ -274,7 +274,13 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items)
 		{
 			var member = MemberHelper.GetMemberInfo(extract.Body);
-			var rootObject = extract.Body.GetRootObject(builder.MappingSchema);
+
+			var ext = extract.Body;
+
+			while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)
+				ext = ((UnaryExpression)ext).Operand;
+
+			var rootObject = ext.GetRootObject(builder.MappingSchema);
 
 			if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
 				throw new LinqException("Member expression expected for the 'Set' statement.");
