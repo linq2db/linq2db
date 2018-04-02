@@ -285,7 +285,7 @@ namespace LinqToDB.Linq.Builder
 			if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
 				throw new LinqException("Member expression expected for the 'Set' statement.");
 
-			var body = Expression.MakeMemberAccess(rootObject, member);
+			var body = ext is MemberExpression mex ? mex : Expression.MakeMemberAccess(rootObject, member);
 
 			if (member is MethodInfo)
 				member = ((MethodInfo)member).GetPropertyInfo();

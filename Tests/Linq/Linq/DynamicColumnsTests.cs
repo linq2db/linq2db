@@ -247,7 +247,7 @@ namespace Tests.Linq
 					.Select(p => new {p.Key, Count = p.Count()})
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.IsTrue(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)));
 			}
 		}
 
