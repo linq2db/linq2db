@@ -45,6 +45,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: [MySQL, Sybase] Reading of procedure schema from ambient transaction will throw LinqToDbException to avoid unintentional database corruption (#792)
 
 - other changes: t4models repository moved to main repository
+- other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)
 
 - for developers: SelectQuery class refactoring (#936, #938)
 - for developers: *DataProviders.txt tests configuration file replaced with JSON-based *DataProviders.json files (TODO: add link to readme when it is updated)
