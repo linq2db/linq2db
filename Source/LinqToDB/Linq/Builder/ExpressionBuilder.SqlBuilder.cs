@@ -1964,13 +1964,6 @@ namespace LinqToDB.Linq.Builder
 			BuildParameterType  buildParameterType = BuildParameterType.Default)
 		{
 			var type        = accessorExpression.Type;
-			var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
-
-			if (defaultType != null)
-			{
-				var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
-				accessorExpression = enumMapExpr.GetBody(accessorExpression);
-			}
 
 			LambdaExpression expr = null;
 			if (buildParameterType != BuildParameterType.InPredicate)
@@ -1982,6 +1975,16 @@ namespace LinqToDB.Linq.Builder
 
 				accessorExpression         = Expression.PropertyOrField(body, "Value");
 				dataTypeAccessorExpression = Expression.PropertyOrField(body, "DataType");
+			}
+			else
+			{
+				var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
+
+				if (defaultType != null)
+				{
+					var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
+					accessorExpression = enumMapExpr.GetBody(accessorExpression);
+				}
 			}
 
 			// see #820
