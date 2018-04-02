@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override string FakeSourceTableOwner
+		protected override string FakeSourceTableSchema
 		{
 			get
 			{

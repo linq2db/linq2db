@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<Import Project="..\..\Build\linq2db.Default.props" />
 
@@ -15,6 +15,11 @@
 
 		<Configurations>Debug;Release</Configurations>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugType>pdbonly</DebugType>
+		<DebugSymbols>true</DebugSymbols>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -94,15 +99,15 @@
 	<!-- .NET Standard -->
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="1.1.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
 		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
 		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
@@ -117,9 +122,9 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
 
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />
@@ -140,8 +145,8 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
 
 		<Compile Remove="Metadata\SystemDataLinqAttributeReader.cs" />
 		<Compile Remove="Metadata\SystemDataSqlServerAttributeReader.cs" />

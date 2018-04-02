@@ -6,19 +6,44 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace Tests.Model
 {
 	public class TestDataConnection : DataConnection, ITestDataContext
 	{
+		static int _counter;
+
 		public TestDataConnection(string configString)
 			: base(configString)
 		{
+//			if (configString == ProviderName.SqlServer2008 && ++_counter > 1000)
+//				OnClosing += TestDataConnection_OnClosing;
 		}
 
 		public TestDataConnection()
 		{
+		}
+
+		static object _sync = new object();
+
+		[Table("AllTypes")]
+		class AllTypes
+		{
+			[Column("ID")] public int ID;
+		}
+
+		void TestDataConnection_OnClosing(object sender, EventArgs e)
+		{
+			lock (_sync)
+			using (var db = new DataConnection(ProviderName.SqlServer2008))
+			{
+				var n = db.GetTable<AllTypes>().Count();
+				if (n == 0)
+				{
+				}
+			}
 		}
 
 		public ITable<Person>                 Person                 { get { return GetTable<Person>();                 } }
@@ -60,9 +85,9 @@ namespace Tests.Model
 
 			//provider.SqlQuery = sql;
 
-			query = (SelectQuery)optimizer.Finalize(query);
+			var statement = (SqlSelectStatement)optimizer.Finalize(new SqlSelectStatement(query));
 
-			var cc = provider.CommandCount(query);
+			var cc = provider.CommandCount(statement);
 			var sb = new StringBuilder();
 
 			var commands = new string[cc];
@@ -71,7 +96,7 @@ namespace Tests.Model
 			{
 				sb.Length = 0;
 
-				provider.BuildSql(i, query, sb);
+				provider.BuildSql(i, statement, sb);
 				commands[i] = sb.ToString();
 			}
 

@@ -11,9 +11,9 @@ namespace LinqToDB.SqlQuery
 			Items = new List<SqlSetExpression>();
 		}
 
-		public List<SqlSetExpression> Items     { get; }
-		public SqlTable            Into         { get; set; }
-		public bool                WithIdentity { get; set; }
+		public List<SqlSetExpression> Items        { get; }
+		public SqlTable               Into         { get; set; }
+		public bool                   WithIdentity { get; set; }
 
 		#region Overrides
 

@@ -7,7 +7,6 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Reflection
 {
-	using Common;
 	using Extensions;
 
 	public class TypeAccessor<T> : TypeAccessor
@@ -20,7 +19,7 @@ namespace LinqToDB.Reflection
 
 			if (type.IsValueTypeEx())
 			{
-				_createInstance = () => default(T);
+				_createInstance = () => default;
 			}
 			else
 			{

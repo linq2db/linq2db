@@ -16,7 +16,9 @@ using MySql.Data.Types;
 
 namespace Tests.DataProvider
 {
+	using LinqToDB.SchemaProvider;
 	using Model;
+	using System.Collections.Generic;
 	using System.Diagnostics;
 
 	[TestFixture]
@@ -61,7 +63,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<int?>          (conn, "intDataType",       DataType.Int32),               Is.EqualTo(7777777));
 				Assert.That(TestType<decimal?>      (conn, "numericDataType",   DataType.Decimal),             Is.EqualTo(9999999m));
 				Assert.That(TestType<decimal?>      (conn, "decimalDataType",   DataType.Decimal),             Is.EqualTo(8888888m));
-				            TestType<MySqlDecimal?> (conn, "decimalDataType",   DataType.Decimal);
+							TestType<MySqlDecimal?> (conn, "decimalDataType",   DataType.Decimal);
 				Assert.That(TestType<double?>       (conn, "doubleDataType",    DataType.Double),              Is.EqualTo(20.31d));
 				Assert.That(TestType<float?>        (conn, "floatDataType",     DataType.Single),              Is.EqualTo(16.0f));
 
@@ -457,6 +459,270 @@ namespace Tests.DataProvider
 
 				var views = schema.Tables.Where(_ => _.IsView).ToList();
 				Assert.AreEqual(1, views.Count);
+			}
+		}
+
+		public static IEnumerable<ProcedureSchema> ProcedureTestCases
+		{
+			get
+			{
+				// create procedure
+				yield return new ProcedureSchema()
+				{
+					CatalogName     = "SET_BY_TEST",
+					ProcedureName   = "TestProcedure",
+					MemberName      = "TestProcedure",
+					IsDefaultSchema = true,
+					IsLoaded        = true,
+					Parameters      = new List<ParameterSchema>()
+					{
+						new ParameterSchema()
+						{
+							SchemaName    = "param3",
+							SchemaType    = "INT",
+							IsIn          = true,
+							ParameterName = "param3",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "param2",
+							SchemaType    = "INT",
+							IsIn          = true,
+							IsOut         = true,
+							ParameterName = "param2",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "param1",
+							SchemaType    = "INT",
+							IsOut         = true,
+							ParameterName = "param1",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						}
+					},
+					ResultTable = new TableSchema()
+					{
+						IsProcedureResult = true,
+						TypeName          = "TestProcedureResult",
+						Columns           = new List<ColumnSchema>()
+						{
+							new ColumnSchema()
+							{
+								ColumnName = "PersonID",
+								ColumnType = "INT",
+								MemberName = "PersonID",
+								MemberType = "int",
+								SystemType = typeof(int),
+								DataType   = DataType.Int32
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "FirstName",
+								ColumnType = "VARCHAR(50)",
+								MemberName = "FirstName",
+								MemberType = "string",
+								SystemType = typeof(string),
+								DataType   = DataType.VarChar
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "LastName",
+								ColumnType = "VARCHAR(50)",
+								MemberName = "LastName",
+								MemberType = "string",
+								SystemType = typeof(string),
+								DataType   = DataType.VarChar
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "MiddleName",
+								ColumnType = "VARCHAR(50)",
+								IsNullable = true,
+								MemberName = "MiddleName",
+								MemberType = "string",
+								SystemType = typeof(string),
+								DataType   = DataType.VarChar
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "Gender",
+								ColumnType = "CHAR(1)",
+								MemberName = "Gender",
+								MemberType = "char",
+								SystemType = typeof(char),
+								DataType   = DataType.Char
+							}
+						}
+					},
+					SimilarTables = new List<TableSchema>()
+					{
+						new TableSchema()
+						{
+							TableName = "person"
+						}
+					}
+				};
+
+				// create function
+				yield return new ProcedureSchema()
+				{
+					CatalogName     = "SET_BY_TEST",
+					ProcedureName   = "TestFunction",
+					MemberName      = "TestFunction",
+					IsFunction      = true,
+					IsDefaultSchema = true,
+					Parameters      = new List<ParameterSchema>()
+					{
+						new ParameterSchema()
+						{
+							SchemaType    = "VARCHAR",
+							IsResult      = true,
+							ParameterName = "par1",
+							ParameterType = "string",
+							SystemType    = typeof(string),
+							DataType      = DataType.VarChar
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "param",
+							SchemaType    = "INT",
+							IsIn          = true,
+							ParameterName = "param",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						}
+					}
+				};
+			}
+		}
+
+		[Test, Combinatorial]
+		public void ProceduresSchemaProviderTest(
+			[IncludeDataSources(false, ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)] string context,
+			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
+		{
+			// TODO: add aggregate/udf functions test cases
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
+
+				Assert.AreEqual(1, procedures.Count);
+
+				var procedure = procedures[0];
+
+				Assert.AreEqual(expectedProc.CatalogName,         procedure.CatalogName);
+				Assert.AreEqual(expectedProc.SchemaName,          procedure.SchemaName);
+				Assert.AreEqual(expectedProc.MemberName,          procedure.MemberName);
+				Assert.AreEqual(expectedProc.IsTableFunction,     procedure.IsTableFunction);
+				Assert.AreEqual(expectedProc.IsAggregateFunction, procedure.IsAggregateFunction);
+				Assert.AreEqual(expectedProc.IsDefaultSchema,     procedure.IsDefaultSchema);
+				Assert.AreEqual(expectedProc.IsLoaded,            procedure.IsLoaded);
+
+				Assert.IsNull(procedure.ResultException);
+
+				Assert.AreEqual(expectedProc.Parameters.Count, procedure.Parameters.Count);
+
+				for (var i = 0; i < procedure.Parameters.Count; i++)
+				{
+					var actualParam = procedure.Parameters[i];
+					var expectedParam = expectedProc.Parameters[i];
+
+					Assert.IsNotNull(expectedParam);
+
+					Assert.AreEqual(expectedParam.SchemaName,           actualParam.SchemaName);
+					Assert.AreEqual(expectedParam.ParameterName,        actualParam.ParameterName);
+					Assert.AreEqual(expectedParam.SchemaType,           actualParam.SchemaType);
+					Assert.AreEqual(expectedParam.IsIn,                 actualParam.IsIn);
+					Assert.AreEqual(expectedParam.IsOut,                actualParam.IsOut);
+					Assert.AreEqual(expectedParam.IsResult,             actualParam.IsResult);
+					Assert.AreEqual(expectedParam.Size,                 actualParam.Size);
+					Assert.AreEqual(expectedParam.ParameterType,        actualParam.ParameterType);
+					Assert.AreEqual(expectedParam.SystemType,           actualParam.SystemType);
+					Assert.AreEqual(expectedParam.DataType,             actualParam.DataType);
+					Assert.AreEqual(expectedParam.ProviderSpecificType, actualParam.ProviderSpecificType);
+				}
+
+				if (expectedProc.ResultTable == null)
+				{
+					Assert.IsNull(procedure.ResultTable);
+
+					// maybe it is worth changing
+					Assert.IsNull(procedure.SimilarTables);
+				}
+				else
+				{
+					Assert.IsNotNull(procedure.ResultTable);
+
+					var expectedTable = expectedProc.ResultTable;
+					var actualTable = procedure.ResultTable;
+
+					Assert.AreEqual(expectedTable.ID,                 actualTable.ID);
+					Assert.AreEqual(expectedTable.CatalogName,        actualTable.CatalogName);
+					Assert.AreEqual(expectedTable.SchemaName,         actualTable.SchemaName);
+					Assert.AreEqual(expectedTable.TableName,          actualTable.TableName);
+					Assert.AreEqual(expectedTable.Description,        actualTable.Description);
+					Assert.AreEqual(expectedTable.IsDefaultSchema,    actualTable.IsDefaultSchema);
+					Assert.AreEqual(expectedTable.IsView,             actualTable.IsView);
+					Assert.AreEqual(expectedTable.IsProcedureResult,  actualTable.IsProcedureResult);
+					Assert.AreEqual(expectedTable.TypeName,           actualTable.TypeName);
+					Assert.AreEqual(expectedTable.IsProviderSpecific, actualTable.IsProviderSpecific);
+
+					Assert.IsNotNull(actualTable.ForeignKeys);
+					Assert.IsEmpty(actualTable.ForeignKeys);
+
+					Assert.AreEqual(expectedTable.Columns.Count, actualTable.Columns.Count);
+
+					foreach (var actualColumn in actualTable.Columns)
+					{
+						var expectedColumn = expectedTable.Columns
+							.Where(_ => _.ColumnName == actualColumn.ColumnName)
+							.SingleOrDefault();
+
+						Assert.IsNotNull(expectedColumn);
+
+						Assert.AreEqual(expectedColumn.ColumnType,           actualColumn.ColumnType);
+						Assert.AreEqual(expectedColumn.IsNullable,           actualColumn.IsNullable);
+						Assert.AreEqual(expectedColumn.IsIdentity,           actualColumn.IsIdentity);
+						Assert.AreEqual(expectedColumn.IsPrimaryKey,         actualColumn.IsPrimaryKey);
+						Assert.AreEqual(expectedColumn.PrimaryKeyOrder,      actualColumn.PrimaryKeyOrder);
+						Assert.AreEqual(expectedColumn.Description,          actualColumn.Description);
+						Assert.AreEqual(expectedColumn.MemberName,           actualColumn.MemberName);
+						Assert.AreEqual(expectedColumn.MemberType,           actualColumn.MemberType);
+						Assert.AreEqual(expectedColumn.ProviderSpecificType, actualColumn.ProviderSpecificType);
+						Assert.AreEqual(expectedColumn.SystemType,           actualColumn.SystemType);
+						Assert.AreEqual(expectedColumn.DataType,             actualColumn.DataType);
+						Assert.AreEqual(expectedColumn.SkipOnInsert,         actualColumn.SkipOnInsert);
+						Assert.AreEqual(expectedColumn.SkipOnUpdate,         actualColumn.SkipOnUpdate);
+						Assert.AreEqual(expectedColumn.Length,               actualColumn.Length);
+						Assert.AreEqual(expectedColumn.Precision,            actualColumn.Precision);
+						Assert.AreEqual(expectedColumn.Scale,                actualColumn.Scale);
+						Assert.AreEqual(actualTable,                         actualColumn.Table);
+					}
+
+					Assert.IsNotNull(procedure.SimilarTables);
+
+					foreach (var table in procedure.SimilarTables)
+					{
+						var tbl = expectedProc.SimilarTables
+							.Where(_ => _.TableName == table.TableName)
+							.SingleOrDefault();
+
+						Assert.IsNotNull(tbl);
+					}
+				}
 			}
 		}
 #endif

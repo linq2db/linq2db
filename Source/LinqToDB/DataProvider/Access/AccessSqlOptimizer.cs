@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.Access
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete((SelectQuery) statement);
+				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement) statement);
 				default               : return statement;
 			}
 		}

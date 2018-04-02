@@ -7,10 +7,9 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Data;
 	using Expressions;
-
 	using Extensions;
-
 	using Reflection;
+	using SqlQuery;
 
 	/// <summary>
 	/// Stores mapping entity column descriptor.
@@ -231,7 +230,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool           SkipOnUpdate    { get; private set; }
@@ -271,7 +270,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, SqlQuery.DefaulNullable)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;

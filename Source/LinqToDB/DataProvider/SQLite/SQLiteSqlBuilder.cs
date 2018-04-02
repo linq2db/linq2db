@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -18,12 +17,25 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity && trun.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			StringBuilder.AppendLine("SELECT last_insert_rowid()");
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				StringBuilder
+					.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='")
+					.Append(trun.Table.PhysicalName)
+					.AppendLine("'")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT last_insert_rowid()");
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -43,10 +55,10 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool IsNestedJoinSupported { get { return false; } }
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -71,7 +83,7 @@ namespace LinqToDB.DataProvider.SQLite
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{
@@ -161,7 +173,7 @@ namespace LinqToDB.DataProvider.SQLite
 			base.BuildPredicate(predicate);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 

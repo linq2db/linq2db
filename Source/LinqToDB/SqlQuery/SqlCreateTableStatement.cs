@@ -6,20 +6,27 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlCreateTableStatement : SqlStatement
 	{
-		public SqlTable       Table           { get; set; }
-		public string         StatementHeader { get; set; }
-		public string         StatementFooter { get; set; }
-		public DefaulNullable DefaulNullable  { get; set; }
+		public SqlTable        Table           { get; set; }
+		public string          StatementHeader { get; set; }
+		public string          StatementFooter { get; set; }
+		public DefaultNullable DefaultNullable { get; set; }
 
 		public override QueryType        QueryType   => QueryType.CreateTable;
 		public override QueryElementType ElementType => QueryElementType.CreateTableStatement;
+
+		public override bool             IsParameterDependent
+		{
+			get => false;
+			set {}
+		}
+
+		public override SelectQuery SelectQuery { get => null; set {}}
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			sb.Append("CREATE TABLE ");
 
-			if (Table != null)
-				((IQueryElement)Table).ToString(sb, dic);
+			((IQueryElement)Table)?.ToString(sb, dic);
 
 			sb.AppendLine();
 
@@ -28,8 +35,7 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
-			if (Table != null)
-				((ISqlExpressionWalkable)Table).Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Table)?.Walk(skipColumns, func);
 
 			return null;
 		}
@@ -47,6 +53,21 @@ namespace LinqToDB.SqlQuery
 			objectTree.Add(this, clone);
 
 			return clone;
+		}
+
+		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		{
+			return null;
+		}
+
+		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		{
+			if (SelectQuery != null)
+			{
+				var newQuery = func(SelectQuery);
+				if (!ReferenceEquals(newQuery, SelectQuery))
+					SelectQuery = newQuery;
+			}
 		}
 	}
 }

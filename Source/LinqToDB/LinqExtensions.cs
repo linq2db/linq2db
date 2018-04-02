@@ -79,8 +79,6 @@ namespace LinqToDB
 			return table;
 		}
 
-		static readonly MethodInfo _ownerNameMethodInfo = MemberHelper.MethodOf(() => OwnerName<int>(null, null)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
@@ -93,20 +91,10 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
 		[Pure]
+		[Obsolete("Use SchemaName instead.")]
 		public static ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull, SqlQueryDependent] string name)
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-			if (name  == null) throw new ArgumentNullException(nameof(name));
-
-			table.Expression = Expression.Call(
-				null,
-				_ownerNameMethodInfo.MakeGenericMethod(typeof(T)),
-				new[] { table.Expression, Expression.Constant(name) });
-
-			if (table is Table<T> tbl)
-				tbl.SchemaName = name;
-
-			return table;
+			return SchemaName(table, name);
 		}
 
 		static readonly MethodInfo _schemaNameMethodInfo = MemberHelper.MethodOf(() => SchemaName<int>(null, null)).GetGenericMethodDefinition();
@@ -114,7 +102,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
 		/// owner/schema name in fully-qualified table name.
-		/// <see cref="OwnerName{T}(ITable{T}, string)"/> method is a synonym of this method.
 		/// <para>Supported by: DB2, Oracle, PostgreSQL, SAP HANA, Informix, SQL Server, Sybase ASE.</para>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
@@ -2245,6 +2232,61 @@ namespace LinqToDB
 
 		#endregion
 
+		#region Truncate
+
+		static readonly MethodInfo _truncateMethodInfo = MemberHelper.MethodOf(() => Truncate<int>(null, true)).GetGenericMethodDefinition();
+
+		/// <summary>
+		/// Truncates database table.
+		/// </summary>
+		/// <typeparam name="T">Table record type.</typeparam>
+		/// <param name="target">Truncated table.</param>
+		/// <param name="resetIdentity">Performs reset identity column.</param>
+		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
+		public static int Truncate<T>([NotNull] this ITable<T> target, bool resetIdentity = true)
+		{
+			if (target == null) throw new ArgumentNullException(nameof(target));
+
+			IQueryable<T> query = target;
+
+			var expr = Expression.Call(
+				null,
+				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
+				new[] { query.Expression, Expression.Constant(resetIdentity) });
+
+			return query.Provider.Execute<int>(expr);
+		}
+
+		/// <summary>
+		/// Truncates database table asynchronously.
+		/// </summary>
+		/// <typeparam name="T">Table record type.</typeparam>
+		/// <param name="target">Truncated table.</param>
+		/// <param name="resetIdentity">Performs reset identity column.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
+		public static async Task<int> TruncateAsync<T>(
+			[NotNull] this ITable<T> target,
+			bool                     resetIdentity = true,
+			CancellationToken        token = default)
+		{
+			if (target == null) throw new ArgumentNullException(nameof(target));
+
+			IQueryable<T> source = target;
+
+			var expr = Expression.Call(
+				null,
+				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
+				new[] { source.Expression, Expression.Constant(resetIdentity) });
+
+			if (source is IQueryProviderAsync query)
+				return await query.ExecuteAsync<int>(expr, token);
+
+			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+		}
+
+		#endregion
+
 		#region Take / Skip / ElementAt
 
 		static readonly MethodInfo _takeMethodInfo = MemberHelper.MethodOf(() => Take<int>(null,null)).GetGenericMethodDefinition();
@@ -2679,6 +2721,44 @@ namespace LinqToDB
 			[CanBeNull] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Full, predicate);
+		}
+
+		#endregion
+
+		#region CTE
+
+		internal static IQueryable<T> AsCte<T>(IQueryable<T> cteTable, IQueryable<T> cteBody, string tableName)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> AsCte<TSource>(
+			[NotNull] this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsCte, source),
+					source.Expression));
+		}
+
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> AsCte<TSource>(
+			[NotNull]   this IQueryable<TSource> source,
+			[CanBeNull] string                   name)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsCte, source, name),
+					new[] {source.Expression, Expression.Constant(name ?? string.Empty)}));
 		}
 
 		#endregion

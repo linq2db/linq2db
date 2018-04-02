@@ -27,6 +27,11 @@ namespace LinqToDB.Common
 		/// </summary>
 		public static bool AvoidSpecificDataProviderAPI;
 
+		public static class Data
+		{
+			public static bool ThrowOnDisposed = true;
+		}
+
 		/// <summary>
 		/// LINQ query settings.
 		/// </summary>
@@ -104,25 +109,25 @@ namespace LinqToDB.Common
 			/// {
 			///     public int? Value;
 			/// }
-			/// 
+			///
 			/// db.MyEntity.Where(e => e.Value != 10)
-			/// 
+			///
 			/// from e1 in db.MyEntity
 			/// join e2 in db.MyEntity on e1.Value equals e2.Value
 			/// select e1
-			/// 
+			///
 			/// var filter = new [] {1, 2, 3};
 			/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 			/// </code>
-			/// 
+			///
 			/// Would be converted to next queries:
 			/// <code>
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
-			/// 
+			///
 			/// SELECT e1.Value
 			/// FROM MyEntity e1
 			/// INNER JOIN MyEntity e2 ON e1.Value = e2.Value OR (e1.Value IS NULL AND e2.Value IS NULL)
-			/// 
+			///
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR NOT Value IN (1, 2, 3)
 			/// </code>
 			/// </example>
@@ -164,6 +169,11 @@ namespace LinqToDB.Common
 			/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 			/// </summary>
 			public static bool DisableQueryCache;
+
+			/// <summary>
+			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
+			/// </summary>
+			public static bool PrefereApply = true;
 		}
 
 		/// <summary>

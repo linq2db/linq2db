@@ -34,7 +34,6 @@ namespace LinqToDB.SqlQuery
 			InsertClause,
 			UpdateClause,
 				SetExpression,
-			DeleteClause,
 			FromClause,
 			WhereClause,
 			GroupByClause,
@@ -42,8 +41,18 @@ namespace LinqToDB.SqlQuery
 				OrderByItem,
 			Union,
 
+		WithClause,
+		CteClause,
+		SqlCteTable,
+
+		SelectStatement,
+		InsertStatement,
+		InsertOrUpdateStatement,
+		UpdateStatement,
+		DeleteStatement,
+
 		CreateTableStatement,
 		DropTableStatement,
-		DeleteStatement
+		TruncateTableStatement,
 	}
 }

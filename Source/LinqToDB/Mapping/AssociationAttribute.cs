@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
@@ -58,6 +58,14 @@ namespace LinqToDB.Mapping
 		/// Predicate expression lambda function takes two parameters: this record and other record and returns boolean result.
 		/// </summary>
 		public string       ExpressionPredicate { get; set; }
+
+
+		/// <summary>
+		/// Specifies predicate expression. This predicate will be used together with
+		/// <see cref="ThisKey"/>/<see cref="OtherKey"/> join keys, if they are specified.
+		/// Predicate expression lambda function takes two parameters: this record and other record and returns boolean result.
+		/// </summary>
+		public Expression   Predicate           { get; set; }
 
 		/// <summary>
 		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{T}(ITable{T}, System.Linq.Expressions.Expression{Func{T, object}})"/> method.

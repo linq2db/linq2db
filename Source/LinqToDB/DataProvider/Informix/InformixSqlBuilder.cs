@@ -20,12 +20,34 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+
+				StringBuilder.Append("ALTER TABLE ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder
+					.Append(" MODIFY ")
+					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
+					.AppendLine(" SERIAL(1)")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
+			}
+		}
+
+		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -123,10 +145,10 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -177,18 +199,18 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
-			if (owner    != null && owner.   Length == 0) owner    = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
 
 			// TODO: FQN could also contain server name, but we don't have such API for now
 			// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
 			if (database != null)
 				sb.Append(database).Append(":");
 
-			if (owner != null)
-				sb.Append(owner).Append(".");
+			if (schema != null)
+				sb.Append(schema).Append(".");
 
 			return sb.Append(table);
 		}
