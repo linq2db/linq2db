@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Text.RegularExpressions;
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -266,6 +266,57 @@ namespace Tests.Linq
 				Assert.That(list.Count, Is.GreaterThan(0));
 			}
 		}
+
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+
+		[System.Data.SQLite.SQLiteFunction(Name = "REGEXP", Arguments = 2, FuncType = System.Data.SQLite.FunctionType.Scalar)]
+		class RegExpFunction : System.Data.SQLite.SQLiteFunction
+		{
+			public override object Invoke(object[] args)
+			{
+				return System.Text.RegularExpressions.Regex.IsMatch(Convert.ToString(args[1]), Convert.ToString(args[0]));
+			}
+		}
+
+		[Test, IncludeDataContextSource(TestProvName.NorthwindSQLite), Category("Regex")]
+		public void Regex1(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				((System.Data.SQLite.SQLiteConnection)db.Connection).BindFunction((System.Data.SQLite.SQLiteFunctionAttribute)typeof(RegExpFunction).GetCustomAttributes(typeof(System.Data.SQLite.SQLiteFunctionAttribute), true).First(), new RegExpFunction());
+
+				var q =
+					from t in db.Category
+					where Sql.RegExp(t.CategoryName, "Condim.*")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test, IncludeDataContextSource(TestProvName.NorthwindSQLite), Category("Regex")]
+		public void Regex2(string context)
+		{
+			LinqToDB.Linq.Expressions.MapMember((string s1, string s2) => Regex.IsMatch(s1, s2), (s1, s2) => Sql.RegExp(s1, s2));
+
+			using (var db = new NorthwindDB(context))
+			{
+				((System.Data.SQLite.SQLiteConnection)db.Connection).BindFunction((System.Data.SQLite.SQLiteFunctionAttribute)typeof(RegExpFunction).GetCustomAttributes(typeof(System.Data.SQLite.SQLiteFunctionAttribute), true).First(), new RegExpFunction());
+
+				var q =
+					from t in db.Category
+					where Regex.IsMatch(t.CategoryName, "Condim.*")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
+
+#endif
 
 		[Test, IncludeDataContextSource(TestProvName.Northwind)]
 		public void WithUpdateLock(string context)

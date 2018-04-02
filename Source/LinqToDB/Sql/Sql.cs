@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -1094,6 +1095,17 @@ namespace LinqToDB
 		public static bool FreeText(object table, string text)
 		{
 			throw new LinqException("'FreeText' is only server-side method.");
+		}
+
+		[Sql.Expression(ProviderName.MySql, "{0} REGEXP {1}", ServerSideOnly = true, IsPredicate = true)]
+		[Sql.Expression(ProviderName.SQLite, "{0} REGEXP {1}", ServerSideOnly = true, IsPredicate = true)] // only possible with custom user function, see TableFunctionTests.Regex
+		[Sql.Expression(ProviderName.PostgreSQL, "{0} SIMILAR TO {1}", ServerSideOnly = true, IsPredicate = true)]
+		[Sql.Expression(ProviderName.Oracle, "REGEXP_LIKE({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
+		[Sql.Expression(ProviderName.SapHana, "{0} REGEXP {1}", ServerSideOnly = true, IsPredicate = true)]
+		[Sql.Expression(ProviderName.SqlServer, "SQLNET::New('Regex.IsMatch({0}, {1}')", ServerSideOnly = true, IsPredicate = true)] // supported via https://github.com/zzzprojects/Eval-SQL.NET
+		public static bool RegExp(string text, string expression)
+		{
+			return System.Text.RegularExpressions.Regex.IsMatch(text, expression);
 		}
 
 		#endregion
