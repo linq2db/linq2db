@@ -409,7 +409,27 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Call:
 						{
-							var cm = ConvertMethod((MethodCallExpression)e);
+							var expr = (MethodCallExpression)e;
+
+							if (expr.Method.IsSqlPropertyMethodEx())
+							{
+								// transform Sql.Property into member access
+								if (expr.Arguments[1].NodeType != ExpressionType.Constant || expr.Arguments[1].Type != typeof(string))
+									throw new ArgumentException("Only constant strings are alowed for member name in Sql.Property expressions.");
+
+								var entity = ConvertExpression(expr.Arguments[0]);
+								var memberName = (string)((ConstantExpression)expr.Arguments[1]).Value;
+								var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
+								var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
+									                 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
+								
+								if (memberInfo == null)
+									throw new ArgumentException("Unknown/unmapped member name used in Sql.Property expression.");
+
+								return new TransformInfo(ConvertExpression(Expression.MakeMemberAccess(entity, memberInfo)));
+							}
+
+							var cm = ConvertMethod(expr);
 							if (cm != null)
 								return new TransformInfo(ConvertExpression(cm));
 							break;
@@ -934,6 +954,9 @@ namespace LinqToDB.Linq.Builder
 
 							return Convert(context, attr.GetExpression(e.Method, parms.ToArray()));
 						}
+
+						if (e.Method.IsSqlPropertyMethodEx())
+							return ConvertToSql(context, ConvertExpression(expression), unwrap);
 
 						break;
 					}
