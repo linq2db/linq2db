@@ -14,7 +14,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity column descriptor.
 	/// </summary>
-	public class ColumnDescriptor
+	public class ColumnDescriptor : IColumnChangeDescriptor
 	{
 		/// <summary>
 		/// Creates descriptor instance.
@@ -185,11 +185,22 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string         MemberName      { get; private set; }
 
+		string IColumnChangeDescriptor.MemberName
+		{
+			get { return this.MemberName; }
+		}
+
 		/// <summary>
 		/// Gets the name of a column in database.
 		/// If not specified, <see cref="MemberName"/> value will be used.
 		/// </summary>
 		public string         ColumnName      { get; private set; }
+
+		string IColumnChangeDescriptor.ColumnName
+		{
+			get { return this.ColumnName; }
+			set { this.ColumnName = value; }
+		}
 
 		/// <summary>
 		/// Gets storage property or field to hold the value from a column.

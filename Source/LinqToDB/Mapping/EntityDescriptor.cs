@@ -12,7 +12,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity descriptor.
 	/// </summary>
-	public class EntityDescriptor
+	public class EntityDescriptor : IEntityChangeDescriptor
 	{
 		/// <summary>
 		/// Creates descriptor instance.
@@ -27,12 +27,18 @@ namespace LinqToDB.Mapping
 
 			Init(mappingSchema);
 			InitInheritanceMapping(mappingSchema);
+
+			var cb = mappingSchema.EntityDescriptorCreatedCallback;
+			if (cb != null)
+			{
+				mappingSchema.EntityDescriptorCreatedCallback?.Invoke(mappingSchema, this);
+			}
 		}
 
 		/// <summary>
 		/// Gets mapping type accessor.
 		/// </summary>
-		public TypeAccessor TypeAccessor { get; private set; }
+		public TypeAccessor TypeAccessor { get; set; }
 
 		/// <summary>
 		/// Gets name of table or view in database.
@@ -40,14 +46,41 @@ namespace LinqToDB.Mapping
 		public string TableName { get; private set; }
 
 		/// <summary>
+		/// Gets name of table or view in database.
+		/// </summary>
+		string IEntityChangeDescriptor.TableName
+		{
+			get { return this.TableName; }
+			set { this.TableName = value; }
+		}
+
+		/// <summary>
 		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
 		public string SchemaName { get; private set; }
 
 		/// <summary>
+		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		string IEntityChangeDescriptor.SchemaName
+		{
+			get { return this.SchemaName; }
+			set { this.SchemaName = value; }
+		}
+
+		/// <summary>
 		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
 		public string DatabaseName { get; private set; }
+
+		/// <summary>
+		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
+		string IEntityChangeDescriptor.DatabaseName
+		{
+			get { return this.DatabaseName; }
+			set { this.DatabaseName = value; }
+		}
 
 		// TODO: V2: remove?
 		/// <summary>
@@ -73,6 +106,11 @@ namespace LinqToDB.Mapping
 		/// Gets list of column descriptors for current entity.
 		/// </summary>
 		public List<ColumnDescriptor> Columns { get; private set; }
+
+		List<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns
+		{
+			get { return Columns.Cast<IColumnChangeDescriptor>().ToList(); }
+		}
 
 		/// <summary>
 		/// Gets list of association descriptors for current entity.
