@@ -44,6 +44,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: [Inheritance mapping] Fixed exception when you try to select inherited record as a field/property of specific type instead of base inheritance type (#1046)
 - fix: [DB2, Oracle] Schema provider will not find any procedures when called with GetTables = false (#1068)
 - fix: [MySQL, Sybase] Reading of procedure schema from ambient transaction will throw LinqToDbException to avoid unintentional database corruption (#792)
+- fix: [Merge] Fixed API to not propose Merge call right after On* call when no operations added yet
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)
