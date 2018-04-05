@@ -1,8 +1,9 @@
-<#@ assembly name="System.Data"        #>
-<#@ import namespace="System.Data"     #>
-<#@ import namespace="LinqToDB.Data"   #>
-<#@ import namespace="System.Text" #>
-<#@ include file="DataModel.ttinclude" #>
+<#@ assembly name="System.Data"                       #>
+<#@ import namespace="System.Data"                    #>
+<#@ import namespace="LinqToDB.Data"                  #>
+<#@ import namespace="System.Text"                    #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+<#@ include file="DataModel.ttinclude"                #>
 <#
 	if (BaseDataContextClass == null)
 		BaseDataContextClass = "LinqToDB.Data.DataConnection";
@@ -24,19 +25,25 @@ bool?  GenerateScaleProperty     = null;
 bool   GenerateDbTypes           = false;
 bool   GenerateSchemaAsType      = false;
 bool   GenerateViews             = true;
+string ReferenceMainPattern		 = null;
+string ReferenceManyPattern		 = null;
 string SchemaNameSuffix          = "Schema";
 string SchemaDataContextTypeName = "DataContext";
 
 Dictionary<string,string> SchemaNameMapping = new Dictionary<string,string>();
 
-Func<string,string,IEnumerable<Method>> GetConstructors =  (conf, name) => GetConstructorsImpl(conf, name);
+Func<bool,string,string,IEnumerable<Method>> GetConstructors =  (parameterless, conf, name) => GetConstructorsImpl(parameterless, conf, name);
 
-static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, string name)
+static IEnumerable<Method> GetConstructorsImpl(bool parameterlessConstructor, string defaultConfiguration, string name)
 {
-	if (defaultConfiguration == null)
-		yield return new Method(null, name);
-	else
-		yield return new Method(null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
+	if (parameterlessConstructor == true)
+    {
+		if (defaultConfiguration == null)
+			yield return new Method(null, name);
+		else
+			yield return new Method(null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
+    }
+
 	yield return new Method(null, name, new[] { "string configuration" }) { AfterSignature = { ": base(configuration)" } };
 }
 
@@ -107,7 +114,7 @@ void GenerateTypesFromMetadata()
 
 	if (GenerateConstructors)
 	{
-		foreach (var c in GetConstructors(DefaultConfiguration, DataContextObject.Name))
+		foreach (var c in GetConstructors(ParameterlessConstructor, DefaultConfiguration, DataContextObject.Name))
 		{
 			if (c.Body.Count > 0)
 				c.Body.Add("");
@@ -424,7 +431,16 @@ void GenerateTypesFromMetadata()
 						key.Type = string.Format(OneToManyAssociationType, key.OtherTable.TypePrefix + key.OtherTable.TypeName);
 					else
 						key.Type = key.OtherTable.TypePrefix + key.OtherTable.TypeName;
+                }
 
+				var duplicates = keys.GroupBy(item => item.Type)
+								     .Select(item => new { Type = item.Key, Count = item.Count() })
+								     .Where(item => item.Count >= 2)
+								     .Select(item => item.Type)
+								     .ToList();
+
+				foreach (var key in keys.OrderBy(k => k.MemberName))
+                {
 					var aa = new Attribute("Association");
 
 					aa.Parameters.Add("ThisKey=\""   + string.Join(", ", (from c in key.ThisColumns  select c.MemberName).ToArray()) + "\"");
@@ -454,6 +470,35 @@ void GenerateTypesFromMetadata()
 
 					SetPropertyValue(key, "IsNotifying", true);
 					SetPropertyValue(key, "IsEditable",  true);
+
+					if (key.AssociationType == AssociationType.ManyToOne || key.AssociationType == AssociationType.OneToOne)
+					{
+						if (ReferenceMainPattern != null)
+						{
+							Regex pattern = new Regex(ReferenceMainPattern);
+							Match match = pattern.Match(key.KeyName);
+
+							string target = match.Groups["target"].Value;
+					
+							if (match.Success == true)
+								key.MemberName = target;
+						}
+					}
+
+					if (key.AssociationType == AssociationType.OneToMany)
+					{
+						if (ReferenceManyPattern != null)
+						{
+							Regex pattern = new Regex(ReferenceManyPattern);
+							Match match = pattern.Match(key.KeyName);
+
+							string target = match.Groups["target"].Value;
+							string column = match.Groups["column"].Value;
+					
+							if (match.Success == true)
+								key.MemberName = duplicates.Contains(key.Type) ? column + ToPlural(target) : ToPlural(target);
+						}
+					}
 
 					associations.Members.Add(key);
 

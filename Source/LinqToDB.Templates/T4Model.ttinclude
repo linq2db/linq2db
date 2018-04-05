@@ -1,4 +1,5 @@
 <#@ assembly name="System.Core"                   #>
+<#@ assembly name="System.Core"                   #>
 <#@ import namespace="System"                     #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq"                #>
@@ -7,7 +8,9 @@ static Action<GeneratedTextTransformation,string> WriteComment    = (tt,s) => tt
 
 Action BeforeGenerateModel = () => {};
 
+int  UsingsBlankLines = 1;
 bool GenerateProcedureErrors = true;
+AccessModifier DefaultAccessModifier = AccessModifier.Public;
 
 void GenerateModel()
 {
@@ -84,7 +87,11 @@ public partial class ModelSource : ITree
 	public virtual void Render(GeneratedTextTransformation tt)
 	{
 		tt.RenderUsings(Usings);
-		tt.WriteLine("");
+		
+        for (int line = 0; line < tt.UsingsBlankLines; line++)
+        {
+			 tt.WriteLine("");
+        }
 
 		foreach (var nm in Namespaces)
 		{
@@ -161,6 +168,7 @@ public interface IClassMember : ITree
 
 public enum AccessModifier
 {
+	None = 0,
 	Public,
 	Protected,
 	Internal,
@@ -170,17 +178,26 @@ public enum AccessModifier
 
 public abstract partial class TypeBase : IClassMember
 {
-	public AccessModifier  AccessModifier = AccessModifier.Public;
+	private AccessModifier accessModifier = AccessModifier.None;
+
 	public string          Name;
 	public bool            IsPartial  = true;
 	public List<string>    Comment    = new List<string>();
 	public List<Attribute> Attributes = new List<Attribute>();
 	public string          Conditional;
 
+	public AccessModifier  AccessModifier {
+		get { return accessModifier != AccessModifier.None ? accessModifier : AccessModifier.Public; }
+		set { accessModifier = value; }
+	} 
+
 	public abstract void Render(GeneratedTextTransformation tt);
 
 	protected virtual void BeginConditional(GeneratedTextTransformation tt)
 	{
+		if (accessModifier == AccessModifier.None)
+			accessModifier = tt.DefaultAccessModifier;
+
 		if (Conditional != null)
 		{
 			tt.RemoveSpace();

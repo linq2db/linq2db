@@ -16,8 +16,9 @@ void DoGenerateSqlServerFreeText()
 {
 	if (!GenerateSqlServerFreeText)
 		return;
-
+	
 	Model.Usings.Add("System.Collections.Generic");
+	Model.Usings.Add("System.Linq");
 	Model.Usings.Add("System.Linq.Expressions");
 	Model.Usings.Add("System.Reflection");
 	Model.Usings.Add("LinqToDB");

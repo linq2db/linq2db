@@ -35,6 +35,8 @@ bool     GenerateAssociationExtensions = false;
 bool     ReplaceSimilarTables          = true;
 bool     IncludeDefaultSchema          = true;
 
+bool     ParameterlessConstructor     = true;
+
 Class    DataContextObject;
 
 bool PluralizeClassNames                 = false;
