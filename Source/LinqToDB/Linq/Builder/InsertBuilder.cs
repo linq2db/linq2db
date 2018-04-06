@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -83,15 +84,60 @@ namespace LinqToDB.Linq.Builder
 					// static TTarget InsertWithOutput<TTarget>(this ITable<TTarget> target, Expression<Func<TTarget>> setter)
 					// static TTarget InsertWithOutput<TTarget>(this ITable<TTarget> target, Expression<Func<TTarget>> setter, Expression<Func<TTarget,TOutput>> outputExpression)
 
-					var setter = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+					var arg = methodCall.Arguments[1].Unwrap();
+					LambdaExpression setter = null;
+					switch (arg)
+					{
+						case LambdaExpression lambda:
+							{
+								setter = lambda;
 
-					UpdateBuilder.BuildSetter(
-						builder,
-						buildInfo,
-						setter,
-						sequence,
-						insertStatement.Insert.Items,
-						sequence);
+								UpdateBuilder.BuildSetter(
+									builder,
+									buildInfo,
+									setter,
+									sequence,
+									insertStatement.Insert.Items,
+									sequence);
+
+								break;
+							}
+						default:
+							{
+								var obj = arg.EvaluateExpression();
+								var objType = obj.GetType();
+
+								var ed   = builder.MappingSchema.GetEntityDescriptor(objType);
+								var into = sequence;
+								var ctx  = new TableBuilder.TableContext(builder, buildInfo, objType);
+
+								var table = new SqlTable(objType);
+
+								foreach (ColumnDescriptor c in ed.Columns.Where(c => !c.SkipOnInsert))
+								{
+									if (!table.Fields.TryGetValue(c.ColumnName, out var field))
+										continue;
+
+									var pe = Expression.MakeMemberAccess(arg, c.MemberInfo);
+
+									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
+									var parameter = 
+										QueryRunner.GetParameter(objType, builder.DataContext, field, ExpressionBuilder.ParametersParam);
+									builder.CurrentSqlParameters.Add(parameter);
+
+									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
+								}
+
+								var insertedTable = new SqlTable(methodCall.Method.GetGenericArguments()[0])
+								{
+									Name         = "INSERTED",
+									PhysicalName = "INSERTED",
+									SqlTableType = SqlTableType.SystemTable,
+								};
+
+								break;
+							}
+					}
 
 					insertStatement.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
 					sequence.SelectQuery.From.Tables.Clear();

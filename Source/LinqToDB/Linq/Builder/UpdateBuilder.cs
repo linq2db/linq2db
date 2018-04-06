@@ -212,12 +212,12 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		static void BuildSetter(
-			ExpressionBuilder               builder,
-			IBuildContext                   into,
+			ExpressionBuilder      builder,
+			IBuildContext          into,
 			List<SqlSetExpression> items,
-			IBuildContext                   ctx,
-			MemberInitExpression            expression,
-			Expression                      path)
+			IBuildContext          ctx,
+			MemberInitExpression   expression,
+			Expression             path)
 		{
 			foreach (var binding in expression.Bindings)
 			{

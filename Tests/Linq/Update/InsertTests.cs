@@ -1859,6 +1859,34 @@ namespace Tests.xUpdate
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void InsertWithOutputObjTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				const int idsLimit = 1000;
+
+				try
+				{
+					var id = idsLimit + 1;
+
+					var child = new Child
+					{
+						ParentID = 1001,
+						ChildID  = id
+					};
+
+					var output = db.Child.InsertWithOutput(child);
+
+					Assert.AreEqual(db.Child.Single(c => c.ChildID > idsLimit), output);
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > idsLimit);
+				}
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
 		public void InsertWithOutputIntoTest1(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -209,7 +209,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		static ParameterAccessor GetParameter(Type type, IDataContext dataContext, SqlField field)
+		internal static ParameterAccessor GetParameter(Type type, IDataContext dataContext, SqlField field, ParameterExpression parametersParam = null)
 		{
 			var exprParam = Expression.Parameter(typeof(Expression), "expr");
 
@@ -243,7 +243,7 @@ namespace LinqToDB.Linq
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, dataTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+				dataContext, getter, dataTypeExpression, getter, exprParam, parametersParam ?? Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
 
 			return param;
 		}
