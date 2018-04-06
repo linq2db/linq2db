@@ -247,7 +247,12 @@ namespace LinqToDB.Mapping
 		public EntityDescriptor GetEntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
 			if (!_entityDescriptors.TryGetValue(type, out var ed))
-				ed = _entityDescriptors.GetOrAdd(type, new EntityDescriptor(mappingSchema, type));
+			{
+				var edNew = new EntityDescriptor(mappingSchema, type);
+				ed = _entityDescriptors.GetOrAdd(type, edNew);
+				if (ed == edNew)
+					mappingSchema.EntityDescriptorCreatedCallback?.Invoke(mappingSchema, ed);
+			}
 
 			return ed;
 		}

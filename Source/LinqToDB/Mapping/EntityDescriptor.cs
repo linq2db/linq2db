@@ -27,12 +27,6 @@ namespace LinqToDB.Mapping
 
 			Init(mappingSchema);
 			InitInheritanceMapping(mappingSchema);
-
-			var cb = mappingSchema.EntityDescriptorCreatedCallback;
-			if (cb != null)
-			{
-				mappingSchema.EntityDescriptorCreatedCallback?.Invoke(mappingSchema, this);
-			}
 		}
 
 		/// <summary>
