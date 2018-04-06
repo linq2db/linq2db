@@ -1338,6 +1338,11 @@ namespace LinqToDB.Mapping
 		#region EntityDescriptor
 
 		/// <summary>
+		/// A Action called when the Entitydescriptor is created
+		/// </summary>
+		public Action<MappingSchema, IEntityChangeDescriptor> EntityDescriptorCreatedCallback { get; set; }
+
+		/// <summary>
 		/// Returns mapped entity descriptor.
 		/// </summary>
 		/// <param name="type">Mapped type.</param>
