@@ -1,7 +1,7 @@
 ﻿namespace LinqToDB.Mapping
 {
 	/// <summary>
-	/// Stores mapping entity column descriptor.
+	/// Mapping entity column descriptor change interface.
 	/// </summary>
 	public interface IColumnChangeDescriptor
 	{
@@ -34,8 +34,8 @@
 		string MemberName { get; }
 
 		/// <summary>
-		/// Gets the name of a column in database.
-		/// If not specified, <see cref="MemberName"/> value will be used.
+		/// Gets or sets the name of a column in database.
+		/// If not specified, <see cref="MemberName"/> value will be returned.
 		/// </summary>
 		string ColumnName { get; set; }
 	}

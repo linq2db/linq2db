@@ -185,10 +185,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string         MemberName      { get; private set; }
 
-		string IColumnChangeDescriptor.MemberName
-		{
-			get { return this.MemberName; }
-		}
+		string IColumnChangeDescriptor.MemberName => MemberName;
 
 		/// <summary>
 		/// Gets the name of a column in database.
@@ -198,8 +195,8 @@ namespace LinqToDB.Mapping
 
 		string IColumnChangeDescriptor.ColumnName
 		{
-			get { return this.ColumnName; }
-			set { this.ColumnName = value; }
+			get => ColumnName;
+			set => ColumnName = value;
 		}
 
 		/// <summary>

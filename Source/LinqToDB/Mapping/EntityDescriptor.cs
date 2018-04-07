@@ -30,7 +30,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets mapping type accessor.
+		/// Gets or sets mapping type accessor.
 		/// </summary>
 		public TypeAccessor TypeAccessor { get; set; }
 
@@ -39,13 +39,10 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string TableName { get; private set; }
 
-		/// <summary>
-		/// Gets name of table or view in database.
-		/// </summary>
 		string IEntityChangeDescriptor.TableName
 		{
-			get { return this.TableName; }
-			set { this.TableName = value; }
+			get => TableName;
+			set => TableName = value;
 		}
 
 		/// <summary>
@@ -53,13 +50,10 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string SchemaName { get; private set; }
 
-		/// <summary>
-		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
-		/// </summary>
 		string IEntityChangeDescriptor.SchemaName
 		{
-			get { return this.SchemaName; }
-			set { this.SchemaName = value; }
+			get => SchemaName;
+			set => SchemaName = value;
 		}
 
 		/// <summary>
@@ -67,13 +61,10 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string DatabaseName { get; private set; }
 
-		/// <summary>
-		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
-		/// </summary>
 		string IEntityChangeDescriptor.DatabaseName
 		{
-			get { return this.DatabaseName; }
-			set { this.DatabaseName = value; }
+			get => DatabaseName;
+			set => DatabaseName = value;
 		}
 
 		// TODO: V2: remove?
@@ -101,10 +92,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public List<ColumnDescriptor> Columns { get; private set; }
 
-		List<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns
-		{
-			get { return Columns.Cast<IColumnChangeDescriptor>().ToList(); }
-		}
+		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => Columns.Cast<IColumnChangeDescriptor>();
 
 		/// <summary>
 		/// Gets list of association descriptors for current entity.

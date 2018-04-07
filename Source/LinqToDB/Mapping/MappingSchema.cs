@@ -1338,7 +1338,8 @@ namespace LinqToDB.Mapping
 		#region EntityDescriptor
 
 		/// <summary>
-		/// A Action called when the Entitydescriptor is created
+		/// Gets or sets action, called when the EntityDescriptor is created.
+		/// Could be used to adjust created descriptor before use.
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor> EntityDescriptorCreatedCallback { get; set; }
 

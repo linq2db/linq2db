@@ -10,33 +10,33 @@ namespace LinqToDB.Mapping
 	using Reflection;
 
 	/// <summary>
-	/// Stores mapping entity descriptor.
+	/// Mapping entity descriptor change interface.
 	/// </summary>
 	public interface IEntityChangeDescriptor
 	{
 		/// <summary>
-		/// Gets mapping type accessor.
+		/// Gets or sets mapping type accessor.
 		/// </summary>
 		TypeAccessor TypeAccessor { get; set; }
 
 		/// <summary>
-		/// Gets name of table or view in database.
+		/// Gets or sets name of table or view in database.
 		/// </summary>
 		string TableName { get; set; }
 
 		/// <summary>
-		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// Gets or sets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
 		string SchemaName { get; set; }
 
 		/// <summary>
-		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// Gets or sets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
 		string DatabaseName { get; set; }
 
 		/// <summary>
-		/// Gets list of column descriptors for current entity.
+		/// Gets list of change interfaces for column descriptors for current entity.
 		/// </summary>
-		List<IColumnChangeDescriptor> Columns { get; }
+		IEnumerable<IColumnChangeDescriptor> Columns { get; }
 	}
 }
