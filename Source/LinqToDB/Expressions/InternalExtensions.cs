@@ -738,6 +738,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Quote          : return ((UnaryExpression)ex).Operand.Unwrap();
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
+				case ExpressionType.TypeAs         :
 					{
 						var ue = (UnaryExpression)ex;
 
