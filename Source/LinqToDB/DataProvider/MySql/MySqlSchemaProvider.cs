@@ -34,6 +34,9 @@ namespace LinqToDB.DataProvider.MySql
 				.ToList();
 		}
 
+		// mysql provider will execute procedure
+		protected override bool GetProcedureSchemaExecutesProcedure => true;
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var restrictions = string.IsNullOrEmpty(dataConnection.Connection.Database) ? new [] { (string)null} : new[] { null, dataConnection.Connection.Database };

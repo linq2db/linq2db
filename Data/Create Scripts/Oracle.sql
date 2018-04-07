@@ -961,3 +961,10 @@ CREATE TABLE TestMerge2
 	FieldEnumNumber NUMBER                   NULL
 )
 /
+
+CREATE OR REPLACE
+PROCEDURE AddIssue792Record() IS
+BEGIN
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+END;
+/

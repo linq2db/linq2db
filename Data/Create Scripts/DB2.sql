@@ -323,3 +323,10 @@ CREATE TABLE "KeepIdentityTest" (
 	"Value" INTEGER                                                  NULL
 )
 GO
+
+CREATE OR REPLACE Procedure AddIssue792Record()
+LANGUAGE SQL
+BEGIN
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+END
+GO

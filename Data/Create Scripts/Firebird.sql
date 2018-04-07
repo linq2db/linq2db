@@ -1,4 +1,5 @@
-﻿DROP PROCEDURE Person_SelectByKey;            COMMIT;
+﻿DROP PROCEDURE AddIssue792Record;             COMMIT;
+DROP PROCEDURE Person_SelectByKey;            COMMIT;
 DROP PROCEDURE Person_SelectAll;              COMMIT;
 DROP PROCEDURE Person_SelectByName;           COMMIT;
 DROP PROCEDURE Person_Insert;                 COMMIT;
@@ -768,4 +769,12 @@ CREATE TABLE TestMerge2
 	FieldEnumString VARCHAR(20),
 	FieldEnumNumber INT
 );
+COMMIT;
+
+CREATE PROCEDURE AddIssue792Record
+AS
+BEGIN
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+	SUSPEND;
+END;
 COMMIT;
