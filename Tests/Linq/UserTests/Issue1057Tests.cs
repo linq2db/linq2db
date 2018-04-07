@@ -52,10 +52,9 @@ namespace Tests.UserTests
 		[Test]
 		public void Test()
 		{
-			DataConnection.AddConfiguration("default", "Data Source=:memory:", new LinqToDB.DataProvider.SQLite.SQLiteDataProvider());
-			DataConnection.DefaultConfiguration = "default";
+			DataConnection.AddConfiguration("Test1057Config", "Data Source=:memory:", new LinqToDB.DataProvider.SQLite.SQLiteDataProvider());
 
-			var db = new DataConnection();
+			var db = new DataConnection("Test1057Config");
 			db.CreateTable<Task>();
 			db.CreateTable<TaskStage>();
 
