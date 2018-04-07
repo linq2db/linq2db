@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 						switch (mc.Method.Name)
 						{
 							case "GetTable":
-								if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
+							if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 									return BuildContextType.GetTableMethod;
 								break;
 
@@ -127,9 +127,9 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
-			}
+				}
 
-			throw new InvalidOperationException();
+				throw new InvalidOperationException();
 		}
 
 		public SequenceConvertInfo Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression param)

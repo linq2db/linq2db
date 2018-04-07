@@ -810,7 +810,7 @@ namespace LinqToDB.Expressions
 						if (e.Object != null)
 							return GetRootObject(e.Object, mapping);
 
-						if (e.Arguments != null && e.Arguments.Count > 0 && (e.IsQueryable() || e.IsAggregate(mapping) || e.IsAssociation(mapping)))
+						if (e.Arguments != null && e.Arguments.Count > 0 && (e.IsQueryable() || e.IsAggregate(mapping) || e.IsAssociation(mapping) || e.Method.IsSqlPropertyMethodEx()))
 							return GetRootObject(e.Arguments[0], mapping);
 
 						break;
@@ -922,7 +922,7 @@ namespace LinqToDB.Expressions
 						var call = (MethodCallExpression)expression;
 						var expr = call.Object;
 
-						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping) || call.IsAssociation(mapping)) && call.Arguments.Count > 0)
+						if (expr == null && (call.IsQueryable() || call.IsAggregate(mapping) || call.IsAssociation(mapping) || call.Method.IsSqlPropertyMethodEx()) && call.Arguments.Count > 0)
 							expr = call.Arguments[0];
 
 						if (expr != null)
