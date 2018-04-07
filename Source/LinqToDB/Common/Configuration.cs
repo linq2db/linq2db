@@ -21,7 +21,7 @@ namespace LinqToDB.Common
 		public static bool IsStructIsScalarType = true;
 
 		/// <summary>
-		/// If <c>true</c> - Enum Values are stored as by calling ToString().
+		/// If <c>true</c> - Enum values are stored as by calling ToString().
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public static bool UseEnumValueNameForStringColumns = true;
