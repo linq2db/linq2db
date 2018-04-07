@@ -12,6 +12,9 @@ namespace LinqToDB.DataProvider.Sybase
 
 	class SybaseSchemaProvider : SchemaProviderBase
 	{
+		// sybase provider will execute procedure
+		protected override bool GetProcedureSchemaExecutesProcedure => true;
+
 		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
@@ -178,6 +181,10 @@ WHERE
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
 		{
+			// otherwise GetSchema will throw AseException
+			if (dataConnection.Transaction != null)
+				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
 
 			return

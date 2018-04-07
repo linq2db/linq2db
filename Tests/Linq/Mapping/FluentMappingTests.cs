@@ -52,6 +52,29 @@ namespace Tests.Mapping
 		}
 
 		[Test]
+		public void LowerCaseMappingTest()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
+			{
+				entityDescriptor.TableName = entityDescriptor.TableName.ToLower();
+				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
+				{
+					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLower();
+				}
+			};
+
+			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn();
+
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That(ed.TableName, Is.EqualTo("newname"));
+			Assert.That(ed.Columns.First().ColumnName, Is.EqualTo("id1"));
+		}
+
+		[Test]
 		public void AddAtribute1()
 		{
 			var ms = new MappingSchema();

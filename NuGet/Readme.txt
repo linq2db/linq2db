@@ -14,6 +14,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: [MySQL] Procedures and function support added to schema provider (#991)
 - feature: [BulkCopy][SAP HANA, SQL CE] BulkCopyOptions.KeepIdentity support added (#1037)
 - feature: Calculated columns support through ExpressionMethodAttribute.IsColumn property (#1004)
+- feature: Dynamic columns support (#964, #507, #744)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
@@ -23,6 +24,8 @@ LINQ to DB 2.0.0  Release Notes
 - improvement: [BulkCopy] BulkCopy operation will throw LinqToDBException: "BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode" if KeepIdentity set to true for unsupported copy mode (#1037)
 - improvement: [BulkCopy][SAP HANA] BulkCopy operation will throw LinqToDBException if BulkCopyOptions.KeepIdentity set to true for unsupported provider version to avoid unexpected results (#1037)
 - improvement: [BulkCopy][Firebird] BulkCopy operation will throw LinqToDBException if BulkCopyOptions.KeepIdentity set to true to avoid unexpected results (#1037)
+- improvement: Reading of schema for procedures will be wrapped into transaction with rollback if called without ambient transaction
+- improvement: Allow basic mappings modifications using MappingSchema.EntityDescriptorCreatedCallback callback (#1074)
 
 - fix: fixed another case of defect #170, where default(T) value could be selected for non-nullable field instead of NULL from left join, if SelectMany() call used in source (#1012)
 - fix: [MS SQL, Sybase] updated Merge insert operation to respect SkipOnInsert mapping flag for identity fields when no custom insert expression specified. With this fix merge operation will allow database to generate identity value instead of use of value from source (#914)
@@ -40,8 +43,12 @@ LINQ to DB 2.0.0  Release Notes
 - fix: Fixed "Table not found for 't18.[3]t19.Field2'" error for merge with source query using cross joins or SelectMany (#896)
 - fix: [MS SQL] Drop table in another database doesn't work (#1030)
 - fix: [Inheritance mapping] Fixed exception when you try to select inherited record as a field/property of specific type instead of base inheritance type (#1046)
+- fix: [DB2, Oracle] Schema provider will not find any procedures when called with GetTables = false (#1068)
+- fix: [MySQL, Sybase] Reading of procedure schema from ambient transaction will throw LinqToDbException to avoid unintentional database corruption (#792)
+- fix: [Merge] Fixed API to not propose Merge call right after On* call when no operations added yet
 
 - other changes: t4models repository moved to main repository
+- other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)
 
 - for developers: SelectQuery class refactoring (#936, #938)
 - for developers: *DataProviders.txt tests configuration file replaced with JSON-based *DataProviders.json files (TODO: add link to readme when it is updated)

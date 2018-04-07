@@ -929,6 +929,14 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Gets the dynamic columns defined on given type.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		/// <returns>All dynamic columns defined on given type.</returns>
+		public MemberInfo[] GetDynamicColumns(Type type)
+			=> MetadataReaders.SelectMany(mr => mr.GetDynamicColumns(type)).ToArray();
+
+		/// <summary>
 		/// Gets fluent mapping builder for current schema.
 		/// </summary>
 		/// <returns>Fluent mapping builder.</returns>
@@ -1334,6 +1342,12 @@ namespace LinqToDB.Mapping
 		#endregion
 
 		#region EntityDescriptor
+
+		/// <summary>
+		/// Gets or sets action, called when the EntityDescriptor is created.
+		/// Could be used to adjust created descriptor before use.
+		/// </summary>
+		public Action<MappingSchema, IEntityChangeDescriptor> EntityDescriptorCreatedCallback { get; set; }
 
 		/// <summary>
 		/// Returns mapped entity descriptor.

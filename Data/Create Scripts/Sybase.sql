@@ -257,5 +257,4 @@ GO
 
 CREATE OR REPLACE PROCEDURE AddIssue792Record AS
 	INSERT INTO dbo.AllTypes(char20DataType, bitDataType) VALUES('issue792', 1)
-	SELECT * FROM dbo.AllTypes
 RETURN

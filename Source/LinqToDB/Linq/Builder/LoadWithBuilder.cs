@@ -47,10 +47,20 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Call      :
 						{
+							var cexpr = (MethodCallExpression)expression;
+
+							if (cexpr.Method.IsSqlPropertyMethodEx())
+							{
+								foreach (var assoc in GetAssociations(builder, builder.ConvertExpression(expression)))
+									yield return assoc;
+
+								yield break;
+							}
+
+
 							if (lastMember == null)
 								goto default;
-
-							var cexpr = (MethodCallExpression)expression;
+							
 							var expr  = cexpr.Object;
 
 							if (expr == null)
