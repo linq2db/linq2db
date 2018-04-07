@@ -1691,19 +1691,31 @@ namespace LinqToDB.Linq.Builder
 						var origValue = Enum.Parse(type, name, false);
 
 						if (!dic.TryGetValue(origValue, out var mapValue))
-							mapValue = ((ConstantExpression)value).Value;
+							mapValue = origValue;
 
 						ISqlExpression l, r;
+
+						SqlValue sqlvalue;
+						var ce = MappingSchema.GetConverter(type, typeof(DataParameter), false);
+
+						if (ce != null)
+						{
+							sqlvalue = new SqlValue(ce.ConvertValueToParameter(origValue));
+						}
+						else
+						{
+							sqlvalue = MappingSchema.GetSqlValue(type, mapValue);
+						}
 
 						if (left.NodeType == ExpressionType.Convert)
 						{
 							l = ConvertToSql(context, operand);
-							r = MappingSchema.GetSqlValue(type, mapValue);
+							r = sqlvalue;
 						}
 						else
 						{
 							r = ConvertToSql(context, operand);
-							l = MappingSchema.GetSqlValue(type, mapValue);
+							l = sqlvalue;
 						}
 
 						return Convert(context, new SqlPredicate.ExprExpr(l, op, r));
@@ -1987,13 +1999,6 @@ namespace LinqToDB.Linq.Builder
 			BuildParameterType  buildParameterType = BuildParameterType.Default)
 		{
 			var type        = accessorExpression.Type;
-			var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
-
-			if (defaultType != null)
-			{
-				var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
-				accessorExpression = enumMapExpr.GetBody(accessorExpression);
-			}
 
 			LambdaExpression expr = null;
 			if (buildParameterType != BuildParameterType.InPredicate)
@@ -2005,6 +2010,16 @@ namespace LinqToDB.Linq.Builder
 
 				accessorExpression         = Expression.PropertyOrField(body, "Value");
 				dataTypeAccessorExpression = Expression.PropertyOrField(body, "DataType");
+			}
+			else
+			{
+				var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
+
+				if (defaultType != null)
+				{
+					var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
+					accessorExpression = enumMapExpr.GetBody(accessorExpression);
+				}
 			}
 
 			// see #820

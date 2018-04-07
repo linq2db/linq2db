@@ -499,7 +499,7 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		ConvertInfo.LambdaInfo GetConverter(Type from, Type to, bool create)
+		internal ConvertInfo.LambdaInfo GetConverter(Type from, Type to, bool create)
 		{
 			for (var i = 0; i < Schemas.Length; i++)
 			{
