@@ -40,6 +40,11 @@ namespace LinqToDB.SchemaProvider
 
 		protected Dictionary<string,DataTypeInfo> DataTypesDic;
 
+		/// <summary>
+		/// If true, provider doesn't support schema-only procedure execution and will execute procedure for real.
+		/// </summary>
+		protected virtual bool GetProcedureSchemaExecutesProcedure => false;
+
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
 		{
 			if (options == null)
@@ -252,26 +257,34 @@ namespace LinqToDB.SchemaProvider
 
 					var isActiveTransaction = dataConnection.Transaction != null;
 
+					if (GetProcedureSchemaExecutesProcedure && isActiveTransaction)
+						throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+
 					if (!isActiveTransaction)
 						dataConnection.BeginTransaction();
 
-					foreach (var procedure in procedures)
+					try
 					{
-						if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
+						foreach (var procedure in procedures)
 						{
-							var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
-								 procedure.CatalogName,
-								 procedure.SchemaName,
-								 procedure.ProcedureName).ToString();
+							if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
+							{
+								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
+									 procedure.CatalogName,
+									 procedure.SchemaName,
+									 procedure.ProcedureName).ToString();
 
-							LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
+								LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
+							}
+
+							options.ProcedureLoadingProgress(procedures.Count, current++);
 						}
-
-						options.ProcedureLoadingProgress(procedures.Count, current++);
 					}
-
-					if (!isActiveTransaction)
-						dataConnection.RollbackTransaction();
+					finally
+					{
+						if (!isActiveTransaction)
+							dataConnection.RollbackTransaction();
+					}
 				}
 				else
 					procedures = new List<ProcedureSchema>();

@@ -163,27 +163,34 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (member.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
 					{
-						var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
+					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
 
-						if (member.NextLoadWith.Count > 0)
-						{
-							var table = FindTable(ma, 1, false, true);
-							table.Table.LoadWith = member.NextLoadWith;
-						}
+					if (member.NextLoadWith.Count > 0)
+					{
+						var table = FindTable(ma, 1, false, true);
+						table.Table.LoadWith = member.NextLoadWith;
+					}
 
-						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(),
-							member.MemberInfo);
+					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
 
-						var ex = BuildExpression(ma, 1, parentObject);
-						var ax = Expression.Assign(
+					var ex = BuildExpression(ma, 1, parentObject);
+					if (member.MemberInfo.IsDynamicColumnPropertyEx())
+					{
+						var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
+						var setter = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
+
+						exprs.Add(Expression.Invoke(setter, parentObject, ex));
+					}
+					else
+					{
+						exprs.Add(Expression.Assign(
 							attr?.Storage != null
 								? Expression.PropertyOrField(parentObject, attr.Storage)
 								: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
-							ex);
-
-						exprs.Add(ax);
+							ex));
 					}
 				}
+			}
 			}
 
 			static bool IsRecord(Attribute[] attrs)
@@ -497,23 +504,23 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
-						var dindex =
+					var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
+					var dindex          =
 						(
 							from f in SqlTable.Fields.Values
 							where f.Name == InheritanceMapping[0].DiscriminatorName
 							select ConvertToParentIndex(_indexes[f].Index, null)
 						).First();
 
-						expr = Expression.Convert(
-							Expression.Call(null, exceptionMethod,
-								Expression.Call(
-									ExpressionBuilder.DataReaderParam,
-									ReflectionHelper.DataReader.GetValue,
-									Expression.Constant(dindex)),
-								Expression.Constant(ObjectType)),
-							ObjectType);
-					}
+					expr = Expression.Convert(
+						Expression.Call(null, exceptionMethod,
+							Expression.Call(
+								ExpressionBuilder.DataReaderParam,
+								ReflectionHelper.DataReader.GetValue,
+								Expression.Constant(dindex)),
+							Expression.Constant(ObjectType)),
+						ObjectType);
+				}
 				}
 
 				foreach (var mapping in InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
@@ -1108,7 +1115,8 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 								{
-									if (field.ColumnDescriptor.MemberAccessor.IsComplex)
+									if (field.ColumnDescriptor.MemberAccessor.IsComplex
+										&& !field.ColumnDescriptor.MemberAccessor.MemberInfo.IsDynamicColumnPropertyEx())
 									{
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;

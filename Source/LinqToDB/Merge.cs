@@ -120,7 +120,7 @@ namespace LinqToDB
 		/// <param name="targetKey">Target record match key definition.</param>
 		/// <param name="sourceKey">Source record match key definition.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
-		public static IMergeable<TTarget, TSource> On<TTarget, TSource, TKey>(
+		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource, TKey>(
 			this IMergeableOn<TTarget, TSource> merge,
 			Expression<Func<TTarget, TKey>> targetKey,
 			Expression<Func<TSource, TKey>> sourceKey)
@@ -142,7 +142,7 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder.</param>
 		/// <param name="matchCondition">Rule to match/join target and source records.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
-		public static IMergeable<TTarget, TSource> On<TTarget, TSource>(
+		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource>(
 			this IMergeableOn<TTarget, TSource> merge,
 			Expression<Func<TTarget, TSource, bool>> matchCondition)
 				where TTarget : class
@@ -160,7 +160,7 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <param name="merge">Merge command builder.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
-		public static IMergeable<TTarget, TTarget> OnTargetKey<TTarget>(this IMergeableOn<TTarget, TTarget> merge)
+		public static IMergeableSource<TTarget, TTarget> OnTargetKey<TTarget>(this IMergeableOn<TTarget, TTarget> merge)
 				where TTarget : class
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));

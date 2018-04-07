@@ -36,5 +36,9 @@ namespace LinqToDB.Metadata
 		{
 			return _readers.SelectMany(r => r.GetAttributes<T>(type, memberInfo, inherit)).ToArray();
 		}
+
+		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
+		public MemberInfo[] GetDynamicColumns(Type type)
+			=> _readers.SelectMany(r => r.GetDynamicColumns(type)).ToArray();
 	}
 }
