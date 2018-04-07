@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return
 				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3 ||
-				methodCall.IsQueryable("InnerJoin", "LeftJoin", "RightJoin", "FullJoin");
+				methodCall.IsQueryable("InnerJoin", "LeftJoin", "RightJoin", "FullJoin") && methodCall.Arguments.Count == 2;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -65,35 +65,9 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
-		// Method copied from WhereBuilder
 		protected override SequenceConvertInfo Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
 			ParameterExpression param)
 		{
-			var predicate = (LambdaExpression)methodCall.Arguments[2].Unwrap();
-			var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
-
-			if (info != null)
-			{
-				info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
-
-				if (param != null)
-				{
-					if (param.Type != info.Parameter.Type)
-						param = Expression.Parameter(info.Parameter.Type, param.Name);
-
-					if (info.ExpressionsToReplace != null)
-						foreach (var path in info.ExpressionsToReplace)
-						{
-							path.Path = path.Path.Transform(e => e == info.Parameter ? param : e);
-							path.Expr = path.Expr.Transform(e => e == info.Parameter ? param : e);
-						}
-				}
-
-				info.Parameter = param;
-
-				return info;
-			}
-
 			return null;
 		}
 	}
