@@ -110,13 +110,19 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Extension    :
 						{
-							if (expression is GetItemExpression)
+							if (expression is GetItemExpression getItemExpression)
 							{
-								expression = ((GetItemExpression)expression).Expression;
+								expression = getItemExpression.Expression;
 								break;
 							}
 
 							goto default;
+						}
+
+					case ExpressionType.Convert      :
+						{
+							expression = ((UnaryExpression)expression).Operand;
+							break;
 						}
 
 					default :

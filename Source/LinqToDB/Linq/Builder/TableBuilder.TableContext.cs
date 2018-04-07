@@ -161,6 +161,8 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in members)
 				{
+					if (member.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
+					{
 					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
 
 					if (member.NextLoadWith.Count > 0)
@@ -188,6 +190,7 @@ namespace LinqToDB.Linq.Builder
 							ex));
 					}
 				}
+			}
 			}
 
 			static bool IsRecord(Attribute[] attrs)
@@ -495,6 +498,12 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
+					if (tableContext is AssociatedTableContext)
+					{
+						expr = Expression.Constant(null, ObjectType);
+					}
+					else
+					{
 					var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
 					var dindex          =
 						(
@@ -511,6 +520,7 @@ namespace LinqToDB.Linq.Builder
 								Expression.Constant(dindex)),
 							Expression.Constant(ObjectType)),
 						ObjectType);
+				}
 				}
 
 				foreach (var mapping in InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
