@@ -16,6 +16,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: [BulkCopy][SAP HANA, SQL CE] BulkCopyOptions.KeepIdentity support added (#1037)
 - feature: Calculated columns support through ExpressionMethodAttribute.IsColumn property (#1004)
 - feature: Dynamic columns support (#964, #507, #744)
+- feature: Extra overrides to Join* extensions that accept two queryable sources, join predicate and result selector expression (#1076, #1088)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
