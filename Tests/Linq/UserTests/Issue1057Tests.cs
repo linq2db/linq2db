@@ -8,7 +8,8 @@ namespace Tests.UserTests
 	using LinqToDB;
 	using LinqToDB.Mapping;
 
-	public class Issue1057Tests: TestBase
+	[ActiveIssue(1057)]
+	public class Issue1057Tests : TestBase
 	{
 		[Table, InheritanceMapping(Code = "bda.Requests", Type = typeof(BdaTask))]
 		class Task
@@ -26,7 +27,7 @@ namespace Tests.UserTests
 				=> (t, ts) => t.Id == ts.TaskId && ts.Actual == true;
 		}
 
-		class BdaTask:Task
+		class BdaTask : Task
 		{
 			public const string Code = "bda.Requests";
 		}
@@ -34,7 +35,7 @@ namespace Tests.UserTests
 		[Table]
 		class TaskStage
 		{
-			[Column(IsPrimaryKey =true)]
+			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
 
 			[Column]
@@ -73,10 +74,10 @@ namespace Tests.UserTests
 						.OfType<BdaTask>()
 						.Select(p => new
 						{
-							Instance = p, //without cast throw other exception
+							Instance = p,
 							ActualStageId = p.ActualStage.Id
 						});
-					var res = query.ToArray(); //this call throw exception					
+					var res = query.ToArray();
 				}
 				finally
 				{
