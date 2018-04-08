@@ -153,15 +153,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertQuery(selectQuery);
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert);
 
 			AppendIndent();
 			StringBuilder.Append("ON CONFLICT (");
 
 			var firstKey = true;
-			foreach (var expr in selectQuery.Update.Keys)
+			foreach (var expr in insertOrUpdate.Update.Keys)
 			{
 				if (!firstKey)
 					StringBuilder.Append(',');
@@ -170,21 +170,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				BuildExpression(expr.Column, false, true);
 			}
 
-			if (selectQuery.Update.Items.Count > 0)
+			if (insertOrUpdate.Update.Items.Count > 0)
 			{
 				StringBuilder.AppendLine(") DO UPDATE SET");
 
 				Indent++;
 
-				var tableName    = selectQuery.Insert.Into.Name;
-				var ts           = (SqlTableSource)selectQuery.GetTableSource(selectQuery.Update.Table);
+				var tableName    = insertOrUpdate.Insert.Into.Name;
+				var ts           = (SqlTableSource)insertOrUpdate.GetTableSource(insertOrUpdate.Update.Table);
 				var aliasBackup  = ts.Alias;
 
 				ts.Alias         = (string)Convert(tableName, ConvertType.NameToQueryTable);
 
 				var first = true;
 
-				foreach (var expr in selectQuery.Update.Items)
+				foreach (var expr in insertOrUpdate.Update.Items)
 				{
 					if (!first)
 						StringBuilder.Append(',').AppendLine();
