@@ -16,6 +16,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static readonly PostgreSQLDataProvider _postgreSQLDataProvider   = new PostgreSQLDataProvider();
 		static readonly PostgreSQLDataProvider _postgreSQLDataProvider92 = new PostgreSQLDataProvider(ProviderName.PostgreSQL92, PostgreSQLVersion.v92);
 		static readonly PostgreSQLDataProvider _postgreSQLDataProvider93 = new PostgreSQLDataProvider(ProviderName.PostgreSQL93, PostgreSQLVersion.v93);
+		static readonly PostgreSQLDataProvider _postgreSQLDataProvider95 = new PostgreSQLDataProvider(ProviderName.PostgreSQL95, PostgreSQLVersion.v95);
 
 		public static bool AutoDetectProvider { get; set; }
 
@@ -26,6 +27,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			DataConnection.AddDataProvider(_postgreSQLDataProvider);
 			DataConnection.AddDataProvider(_postgreSQLDataProvider92);
 			DataConnection.AddDataProvider(_postgreSQLDataProvider93);
+			DataConnection.AddDataProvider(_postgreSQLDataProvider95);
 
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
@@ -51,8 +53,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				case "PostgreSQL93"   : case "PostgreSQL.93"  : case "PostgreSQL.9.3" :
 				case "PostgreSQL94"   : case "PostgreSQL.94"  : case "PostgreSQL.9.4" :
-				case "PostgreSQL95"   : case "PostgreSQL.95"  : case "PostgreSQL.9.5" :
 					return _postgreSQLDataProvider93;
+
+				case "PostgreSQL95"   : case "PostgreSQL.95"  : case "PostgreSQL.9.5" :
+				case "PostgreSQL96"   : case "PostgreSQL.96"  : case "PostgreSQL.9.6" :
+					return _postgreSQLDataProvider95;
 
 				case "PostgreSQL"     :
 				case "Npgsql"         :
@@ -61,9 +66,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						return _postgreSQLDataProvider;
 
 					if (css.Name.Contains("93") || css.Name.Contains("9.3") ||
-						css.Name.Contains("94") || css.Name.Contains("9.4") ||
-						css.Name.Contains("95") || css.Name.Contains("9.5"))
+						css.Name.Contains("94") || css.Name.Contains("9.4"))
 						return _postgreSQLDataProvider93;
+
+					if (css.Name.Contains("95") || css.Name.Contains("9.5") ||
+						css.Name.Contains("96") || css.Name.Contains("9.6"))
+						return _postgreSQLDataProvider95;
 
 					if (AutoDetectProvider)
 					{
@@ -79,8 +87,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 								var postgreSqlVersion = ((dynamic)conn).PostgreSqlVersion;
 
-								return postgreSqlVersion.Major > 9 || postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 2
-									? _postgreSQLDataProvider93 : _postgreSQLDataProvider;
+								if (postgreSqlVersion.Major > 9 || postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 4)
+								{
+									return _postgreSQLDataProvider95;
+								}
+
+								if (postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 2)
+								{
+									return _postgreSQLDataProvider93;
+								}
+
+								return _postgreSQLDataProvider;
 							}
 						}
 						catch (Exception)
@@ -97,7 +114,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92)
 		{
-			return version == PostgreSQLVersion.v92 ? _postgreSQLDataProvider : _postgreSQLDataProvider93;
+			switch (version)
+			{
+				case PostgreSQLVersion.v95:
+					return _postgreSQLDataProvider95;
+				case PostgreSQLVersion.v93:
+					return _postgreSQLDataProvider93;
+				case PostgreSQLVersion.v92:
+					return _postgreSQLDataProvider92;
+				default:
+					return _postgreSQLDataProvider;
+			}
 		}
 
 		public static void ResolvePostgreSQL(string path)
