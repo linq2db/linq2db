@@ -35,10 +35,18 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 
-						if (c.Value is IQueryable)
+						if (c.Value is IQueryable queryable)
 						{
 							if (typeof(CteTable<>).IsSameOrParentOf(c.Value.GetType()))
 								return BuildContextType.CteConstant;
+
+							// Avoid collision with ArrayBuilder
+							var elementType = queryable.ElementType;
+							if (builder.MappingSchema.IsScalarType(elementType) && typeof(EnumerableQuery<>).IsSameOrParentOf(c.Value.GetType()))
+								break;
+
+							if (queryable.Expression.NodeType == ExpressionType.NewArrayInit)
+								break;
 
 							return BuildContextType.TableConstant;
 						}

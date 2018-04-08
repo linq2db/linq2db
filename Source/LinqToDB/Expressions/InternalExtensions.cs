@@ -960,13 +960,13 @@ namespace LinqToDB.Expressions
 		}
 
 		/// <summary>
-		/// Returns part of expression based on his level
+		/// Returns part of expression based on its level.
 		/// </summary>
-		/// <param name="expression">Base expression that needs decomposition</param>
-		/// <param name="mapping">MapingSchema</param>
-		/// <param name="level">Leve which needs to be extracted</param>
-		/// <returns>Extsracted expression</returns>
-		/// <example> 
+		/// <param name="expression">Base expression that needs decomposition.</param>
+		/// <param name="mapping">Maping schema.</param>
+		/// <param name="level">Level that should be to be extracted.</param>
+		/// <returns>Exstracted expression.</returns>
+		/// <example>
 		/// This sample shows what method returns for expression [c.ParentId].
 		/// <code>
 		/// expression.GetLevelExpression(mapping, 0) == [c]
