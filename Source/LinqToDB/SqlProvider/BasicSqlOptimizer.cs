@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace LinqToDB.SqlProvider
 {
-	using System.Collections.Generic;
-	using System.Linq;
-
+	using Common;
 	using Extensions;
 	using SqlQuery;
 
@@ -25,25 +25,103 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement Finalize(SqlStatement statement)
 		{
-			if (statement is SelectQuery selectQuery)
-			{
-				new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
-					SqlProviderFlags.IsApplyJoinSupported,
-					SqlProviderFlags.IsGroupByExpressionSupported);
-				if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
-				if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
+			FinalizeCte(statement);
 
-				if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-					new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
+//statement.EnsureFindTables();
+			//TODO: We can use Walk here but OptimizeUnions fails with subqueris. Needs revising.
+			statement.WalkQueries(
+				selectQuery =>
+				{
+					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
 						SqlProviderFlags.IsApplyJoinSupported,
 						SqlProviderFlags.IsGroupByExpressionSupported);
 
-				if (Common.Configuration.Linq.OptimizeJoins)
-					OptimizeJoins(selectQuery);
+					return selectQuery;
+				}
+			);
 
-				return selectQuery;
+			statement.WalkQueries(
+				selectQuery =>
+				{
+					if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
+					if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
+
+					return selectQuery;
+				}
+			);
+
+			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
+			{
+				statement.WalkQueries(
+					selectQuery =>
+					{
+						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery).FinalizeAndValidate(
+							SqlProviderFlags.IsApplyJoinSupported,
+							SqlProviderFlags.IsGroupByExpressionSupported);
+
+						return selectQuery;
+					}
+				);
 			}
+
+
+//statement.EnsureFindTables();
+			if (Configuration.Linq.OptimizeJoins)
+				OptimizeJoins(statement);
+
+//statement.EnsureFindTables();
+			statement.SetAliases();
+
 			return statement;
+		}
+
+		private void FinalizeCte(SqlStatement statement)
+		{
+			if (statement is SqlStatementWithQueryBase select)
+			{
+				var foundCte  = new Dictionary<CteClause, HashSet<CteClause>>();
+
+				new QueryVisitor().Visit(select.SelectQuery, e =>
+					{
+						if (e.ElementType == QueryElementType.SqlCteTable)
+						{
+							var cte = ((SqlCteTable)e).Cte;
+							if (!foundCte.ContainsKey(cte))
+							{
+								var dependsOn = new HashSet<CteClause>();
+								new QueryVisitor().Visit(cte.Body, ce =>
+								{
+									if (ce.ElementType == QueryElementType.SqlCteTable)
+									{
+										var subCte = ((SqlCteTable)ce).Cte;
+										dependsOn.Add(subCte);
+									}
+
+								});
+								// self-reference is allowed, so we do not need to add dependency
+								dependsOn.Remove(cte);
+								foundCte.Add(cte, dependsOn);
+							}
+						}
+					}
+				);
+
+				if (foundCte.Count == 0)
+					select.With = null;
+				else
+				{
+					//TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
+					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
+						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
+
+					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
+
+					Utils.MakeUniqueNames(ordered, c => c.Name, (c, n) => c.Name = n, "CTE_1");
+
+					select.With = new SqlWithClause();
+					select.With.Clauses.AddRange(ordered);
+				}
+			}
 		}
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery)
@@ -404,378 +482,338 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (expression.ElementType)
 			{
-				case QueryElementType.SqlBinaryExpression:
+				case QueryElementType.SqlBinaryExpression :
+				#region SqlBinaryExpression
+				{
+					var be = (SqlBinaryExpression)expression;
 
-					#region SqlBinaryExpression
-
+					switch (be.Operation)
 					{
-						var be = (SqlBinaryExpression)expression;
-
-						switch (be.Operation)
+						case "+":
 						{
-							case "+":
-								if (be.Expr1 is SqlValue)
+							if (be.Expr1 is SqlValue v1)
+							{
+								switch (v1.Value)
 								{
-									var v1 = (SqlValue)be.Expr1;
-									if (v1.Value is int    && (int)   v1.Value == 0 ||
-										v1.Value is string && (string)v1.Value == "") return be.Expr2;
+									case short   h when h == 0  :
+									case int     i when i == 0  :
+									case long    l when l == 0  :
+									case decimal d when d == 0  :
+									case string  s when s == "" : return be.Expr2;
 								}
+							}
+							else v1 = null;
 
-								if (be.Expr2 is SqlValue)
+							if (be.Expr2 is SqlValue v2)
+							{
+								switch (v2.Value)
 								{
-									var v2 = (SqlValue) be.Expr2;
-
-									if (v2.Value is int)
+									case int vi when vi == 0 : return be.Expr1;
+									case int vi when
+										be.Expr1    is SqlBinaryExpression be1 &&
+										be1.Expr2   is SqlValue be1v2          &&
+										be1v2.Value is int      be1v2i :
 									{
-										if ((int)v2.Value == 0) return be.Expr1;
-
-										if (be.Expr1 is SqlBinaryExpression)
+										switch (be1.Operation)
 										{
-											var be1 = (SqlBinaryExpression)be.Expr1;
-
-											if (be1.Expr2 is SqlValue)
+											case "+":
 											{
-												var be1v2 = (SqlValue)be1.Expr2;
+												var value = be1v2i + vi;
+												var oper  = be1.Operation;
 
-												if (be1v2.Value is int)
+												if (value < 0)
 												{
-													switch (be1.Operation)
-													{
-														case "+":
-															{
-																var value = (int)be1v2.Value + (int)v2.Value;
-																var oper  = be1.Operation;
-
-																if (value < 0)
-																{
-																	value = - value;
-																	oper  = "-";
-																}
-
-																return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, new SqlValue(value), be.Precedence);
-															}
-
-														case "-":
-															{
-																var value = (int)be1v2.Value - (int)v2.Value;
-																var oper  = be1.Operation;
-
-																if (value < 0)
-																{
-																	value = - value;
-																	oper  = "+";
-																}
-
-																return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, new SqlValue(value), be.Precedence);
-															}
-													}
-												}
-											}
-										}
-									}
-									else if (v2.Value is string)
-									{
-										if ((string)v2.Value == "") return be.Expr1;
-
-										if (be.Expr1 is SqlBinaryExpression)
-										{
-											var be1 = (SqlBinaryExpression)be.Expr1;
-
-											if (be1.Expr2 is SqlValue)
-											{
-												var value = ((SqlValue)be1.Expr2).Value;
-
-												if (value is string)
-													return new SqlBinaryExpression(
-														be1.SystemType,
-														be1.Expr1,
-														be1.Operation,
-														new SqlValue(string.Concat(value, v2.Value)));
-											}
-										}
-									}
-								}
-
-								if (be.Expr1 is SqlValue && be.Expr2 is SqlValue)
-								{
-									var v1 = (SqlValue)be.Expr1;
-									var v2 = (SqlValue)be.Expr2;
-									if (v1.Value is int    && v2.Value is int)    return new SqlValue((int)v1.Value + (int)v2.Value);
-									if (v1.Value is string || v2.Value is string) return new SqlValue(v1.Value.ToString() + v2.Value);
-								}
-
-								if (be.Expr1.SystemType == typeof(string) && be.Expr2.SystemType != typeof(string))
-								{
-									var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).DataType);
-
-									if (len <= 0)
-										len = 100;
-
-									return new SqlBinaryExpression(
-										be.SystemType,
-										be.Expr1,
-										be.Operation,
-										ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2)),
-										be.Precedence);
-								}
-
-								if (be.Expr1.SystemType != typeof(string) && be.Expr2.SystemType == typeof(string))
-								{
-									var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).DataType);
-
-									if (len <= 0)
-										len = 100;
-
-									return new SqlBinaryExpression(
-										be.SystemType,
-										ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1)),
-										be.Operation,
-										be.Expr2,
-										be.Precedence);
-								}
-
-								break;
-
-							case "-":
-								if (be.Expr2 is SqlValue)
-								{
-									var v2 = (SqlValue) be.Expr2;
-
-									if (v2.Value is int)
-									{
-										if ((int)v2.Value == 0) return be.Expr1;
-
-										if (be.Expr1 is SqlBinaryExpression)
-										{
-											var be1 = (SqlBinaryExpression)be.Expr1;
-
-											if (be1.Expr2 is SqlValue)
-											{
-												var be1v2 = (SqlValue)be1.Expr2;
-
-												if (be1v2.Value is int)
-												{
-													switch (be1.Operation)
-													{
-														case "+":
-															{
-																var value = (int)be1v2.Value - (int)v2.Value;
-																var oper  = be1.Operation;
-
-																if (value < 0)
-																{
-																	value = -value;
-																	oper  = "-";
-																}
-
-																return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, new SqlValue(value), be.Precedence);
-															}
-
-														case "-":
-															{
-																var value = (int)be1v2.Value + (int)v2.Value;
-																var oper  = be1.Operation;
-
-																if (value < 0)
-																{
-																	value = -value;
-																	oper  = "+";
-																}
-
-																return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, new SqlValue(value), be.Precedence);
-															}
-													}
-												}
-											}
-										}
-									}
-								}
-
-								if (be.Expr1 is SqlValue && be.Expr2 is SqlValue)
-								{
-									var v1 = (SqlValue)be.Expr1;
-									var v2 = (SqlValue)be.Expr2;
-									if (v1.Value is int && v2.Value is int) return new SqlValue((int)v1.Value - (int)v2.Value);
-								}
-
-								break;
-
-							case "*":
-								if (be.Expr1 is SqlValue)
-								{
-									var v1 = (SqlValue)be.Expr1;
-
-									if (v1.Value is int)
-									{
-										var v1v = (int)v1.Value;
-
-										switch (v1v)
-										{
-											case  0 : return new SqlValue(0);
-											case  1 : return be.Expr2;
-											default :
-												{
-													var be2 = be.Expr2 as SqlBinaryExpression;
-
-													if (be2 != null && be2.Operation == "*" && be2.Expr1 is SqlValue)
-													{
-														var be2v1 = be2.Expr1 as SqlValue;
-
-														if (be2v1.Value is int)
-															return ConvertExpression(
-																new SqlBinaryExpression(be2.SystemType, new SqlValue(v1v * (int)be2v1.Value), "*", be2.Expr2));
-													}
-
-													break;
+													value = -value;
+													oper  = "-";
 												}
 
+												return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, new SqlValue(value), be.Precedence);
+											}
+
+											case "-":
+											{
+												var value = be1v2i - vi;
+												var oper  = be1.Operation;
+
+												if (value < 0)
+												{
+													value = -value;
+													oper  = "+";
+												}
+
+												return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, new SqlValue(value), be.Precedence);
+											}
 										}
+
+										break;
 									}
-								}
 
-								if (be.Expr2 is SqlValue)
-								{
-									var v2 = (SqlValue)be.Expr2;
-									if (v2.Value is int && (int)v2.Value == 1) return be.Expr1;
-									if (v2.Value is int && (int)v2.Value == 0) return new SqlValue(0);
-								}
-
-								if (be.Expr1 is SqlValue && be.Expr2 is SqlValue)
-								{
-									var v1 = (SqlValue)be.Expr1;
-									var v2 = (SqlValue)be.Expr2;
-
-									if (v1.Value is int)
+									case string vs when vs == "" : return be.Expr1;
+									case string vs when
+										be.Expr1    is SqlBinaryExpression be1 &&
+										//be1.Operation == "+"                   &&
+										be1.Expr2   is SqlValue be1v2          &&
+										be1v2.Value is string   be1v2s :
 									{
-										if (v2.Value is int)    return new SqlValue((int)   v1.Value * (int)   v2.Value);
-										if (v2.Value is double) return new SqlValue((int)   v1.Value * (double)v2.Value);
-									}
-									else if (v1.Value is double)
-									{
-										if (v2.Value is int)    return new SqlValue((double)v1.Value * (int)   v2.Value);
-										if (v2.Value is double) return new SqlValue((double)v1.Value * (double)v2.Value);
+										return new SqlBinaryExpression(
+											be1.SystemType,
+											be1.Expr1,
+											be1.Operation,
+											new SqlValue(string.Concat(be1v2s, vs)));
 									}
 								}
+							}
+							else v2 = null;
 
-								break;
+							if (v1 != null && v2 != null)
+							{
+								if (v1.Value is int i1 && v2.Value is int i2) return new SqlValue(i1 + i2);
+								if (v1.Value is string || v2.Value is string) return new SqlValue(v1.Value?.ToString() + v2.Value);
+							}
+
+							if (be.Expr1.SystemType == typeof(string) && be.Expr2.SystemType != typeof(string))
+							{
+								var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).DataType);
+
+								if (len <= 0)
+									len = 100;
+
+								return new SqlBinaryExpression(
+									be.SystemType,
+									be.Expr1,
+									be.Operation,
+									ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2)),
+									be.Precedence);
+							}
+
+							if (be.Expr1.SystemType != typeof(string) && be.Expr2.SystemType == typeof(string))
+							{
+								var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).DataType);
+
+								if (len <= 0)
+									len = 100;
+
+								return new SqlBinaryExpression(
+									be.SystemType,
+									ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1)),
+									be.Operation,
+									be.Expr2,
+									be.Precedence);
+							}
+
+							break;
+						}
+
+						case "-":
+						{
+							if (be.Expr2 is SqlValue v2)
+							{
+								switch (v2.Value)
+								{
+									case int vi when vi == 0 : return be.Expr1;
+									case int vi when
+										be.Expr1    is SqlBinaryExpression be1 &&
+										be1.Expr2   is SqlValue be1v2          &&
+										be1v2.Value is int      be1v2i :
+									{
+										switch (be1.Operation)
+										{
+											case "+":
+											{
+												var value = be1v2i - vi;
+												var oper  = be1.Operation;
+
+												if (value < 0)
+												{
+													value = -value;
+													oper  = "-";
+												}
+
+												return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, new SqlValue(value), be.Precedence);
+											}
+
+											case "-":
+											{
+												var value = be1v2i + vi;
+												var oper  = be1.Operation;
+
+												if (value < 0)
+												{
+													value = -value;
+													oper  = "+";
+												}
+
+												return new SqlBinaryExpression(be.SystemType, be1.Expr1, oper, new SqlValue(value), be.Precedence);
+											}
+										}
+
+										break;
+									}
+								}
+							}
+							else v2 = null;
+
+							if (be.Expr1 is SqlValue v1 && v2 != null)
+							{
+								if (v1.Value is int i1 && v2.Value is int i2) return new SqlValue(i1 - i2);
+							}
+
+							break;
+						}
+
+						case "*":
+						{
+							if (be.Expr1 is SqlValue v1)
+							{
+								switch (v1.Value)
+								{
+									case int i when i == 0 : return new SqlValue(0);
+									case int i when i == 1 : return be.Expr2;
+									case int i when
+										be.Expr2    is SqlBinaryExpression be2 &&
+										be2.Operation == "*"                   &&
+										be2.Expr1   is SqlValue be2v1          &&
+										be2v1.Value is int bi :
+									{
+										return ConvertExpression(
+											new SqlBinaryExpression(be2.SystemType, new SqlValue(i * bi), "*", be2.Expr2));
+									}
+								}
+							}
+							else v1 = null;
+
+							if (be.Expr2 is SqlValue v2)
+							{
+								switch (v2.Value)
+								{
+									case int i when i == 0 : return new SqlValue(0);
+									case int i when i == 1 : return be.Expr1;
+								}
+							}
+							else v2 = null;
+
+							if (v1 != null && v2 != null)
+							{
+								switch (v1.Value)
+								{
+									case int    i1 when v2.Value is int    i2 : return new SqlValue(i1 * i2);
+									case int    i1 when v2.Value is double d2 : return new SqlValue(i1 * d2);
+									case double d1 when v2.Value is int    i2 : return new SqlValue(d1 * i2);
+									case double d1 when v2.Value is double d2 : return new SqlValue(d1 * d2);
+								}
+							}
+
+							break;
 						}
 					}
 
-					#endregion
-
 					break;
+				}
+				#endregion
 
-				case QueryElementType.SqlFunction:
+				case QueryElementType.SqlFunction :
+				#region SqlFunction
+				{
+					var func = (SqlFunction)expression;
 
-					#region SqlFunction
-
+					switch (func.Name)
 					{
-						var func = (SqlFunction)expression;
+						case "ConvertToCaseCompareTo":
+							return ConvertExpression(new SqlFunction(func.SystemType, "CASE",
+								new SqlSearchCondition().Expr(func.Parameters[0]). Greater .Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
+								new SqlSearchCondition().Expr(func.Parameters[0]). Equal   .Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
+								new SqlValue(-1)));
 
-						switch (func.Name)
-						{
-							case "ConvertToCaseCompareTo":
-								return ConvertExpression(new SqlFunction(func.SystemType, "CASE",
-									new SqlSearchCondition().Expr(func.Parameters[0]). Greater .Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
-									new SqlSearchCondition().Expr(func.Parameters[0]). Equal   .Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
-									new SqlValue(-1)));
-
-							case "$Convert$": return ConvertConvertion(func);
-							case "Average"  : return new SqlFunction(func.SystemType, "Avg", func.Parameters);
-							case "Max"      :
-							case "Min"      :
+						case "$Convert$": return ConvertConvertion(func);
+						case "Average"  : return new SqlFunction(func.SystemType, "Avg", func.Parameters);
+						case "Max"      :
+						case "Min"      :
+							{
+								if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
 								{
-									if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
-									{
-										return new SqlFunction(typeof(int), func.Name,
-											new SqlFunction(func.SystemType, "CASE", func.Parameters[0], new SqlValue(1), new SqlValue(0)));
-									}
-
-									break;
+									return new SqlFunction(typeof(int), func.Name,
+										new SqlFunction(func.SystemType, "CASE", func.Parameters[0], new SqlValue(1), new SqlValue(0)));
 								}
 
-							case "CASE"     :
+								break;
+							}
+
+						case "CASE"     :
+							{
+								var parms = func.Parameters;
+								var len   = parms.Length;
+
+								for (var i = 0; i < parms.Length - 1; i += 2)
 								{
-									var parms = func.Parameters;
-									var len   = parms.Length;
-
-									for (var i = 0; i < parms.Length - 1; i += 2)
+									if (parms[i] is SqlValue value)
 									{
-										var value = parms[i] as SqlValue;
-
-										if (value != null)
+										if ((bool)value.Value == false)
 										{
-											if ((bool)value.Value == false)
-											{
-												var newParms = new ISqlExpression[parms.Length - 2];
+											var newParms = new ISqlExpression[parms.Length - 2];
 
-												if (i != 0)
-													Array.Copy(parms, 0, newParms, 0, i);
+											if (i != 0)
+												Array.Copy(parms, 0, newParms, 0, i);
 
-												Array.Copy(parms, i + 2, newParms, i, parms.Length - i - 2);
+											Array.Copy(parms, i + 2, newParms, i, parms.Length - i - 2);
 
-												parms = newParms;
-												i -= 2;
-											}
-											else
-											{
-												var newParms = new ISqlExpression[i + 1];
+											parms = newParms;
+											i -= 2;
+										}
+										else
+										{
+											var newParms = new ISqlExpression[i + 1];
 
-												if (i != 0)
-													Array.Copy(parms, 0, newParms, 0, i);
+											if (i != 0)
+												Array.Copy(parms, 0, newParms, 0, i);
 
-												newParms[i] = parms[i + 1];
+											newParms[i] = parms[i + 1];
 
-												parms = newParms;
-												break;
-											}
+											parms = newParms;
+											break;
 										}
 									}
-
-									if (parms.Length == 1)
-										return parms[0];
-
-									if (parms.Length != len)
-										return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
 								}
 
-								break;
+								if (parms.Length == 1)
+									return parms[0];
 
-							case "Convert":
-								{
-									var from  = func.Parameters[1] as SqlFunction;
-									var typef = func.SystemType.ToUnderlying();
+								if (parms.Length != len)
+									return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
+							}
 
-									if (from != null && from.Name == "Convert" && from.Parameters[1].SystemType.ToUnderlying() == typef)
-										return from.Parameters[1];
+							break;
 
-									var fe = func.Parameters[1] as SqlExpression;
+						case "Convert":
+							{
+								var typef = func.SystemType.ToUnderlying();
 
-									if (fe != null && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType.ToUnderlying() == typef)
-										return fe.Parameters[0];
-								}
+								if (func.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType.ToUnderlying() == typef)
+									return from.Parameters[1];
 
-								break;
-						}
+								if (func.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType.ToUnderlying() == typef)
+									return fe.Parameters[0];
+							}
+
+							break;
 					}
 
-					#endregion
-
 					break;
+				}
+				#endregion
 
 				case QueryElementType.SearchCondition :
 					SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)expression);
 					break;
 
 				case QueryElementType.SqlExpression   :
-					{
-						var se = (SqlExpression)expression;
+				{
+					var se = (SqlExpression)expression;
 
-						if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNull)
-							return se.Parameters[0];
-					}
+					if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNull)
+						return se.Parameters[0];
 
 					break;
+				}
 			}
 
 			return expression;
@@ -1191,27 +1229,26 @@ namespace LinqToDB.SqlProvider
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
-		protected SqlStatement GetAlternativeDelete(SelectQuery selectQuery)
+		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement)
 		{
-			if (selectQuery.IsDelete &&
-				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) &&
-				selectQuery.From.Tables[0].Source is SqlTable)
+			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0) &&
+				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable)
 			{
-				var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent };
-				sql.ChangeQueryType(QueryType.Delete);
+				var sql = new SelectQuery { IsParameterDependent = deleteStatement.IsParameterDependent };
 
-				selectQuery.ParentSelect = sql;
-				selectQuery.ChangeQueryType(QueryType.Select);
+				var newDeleteStatement = new SqlDeleteStatement(sql);
 
-				var table = (SqlTable)selectQuery.From.Tables[0].Source;
+				deleteStatement.SelectQuery.ParentSelect = sql;
+
+				var table = (SqlTable)deleteStatement.SelectQuery.From.Tables[0].Source;
 				var copy  = new SqlTable(table) { Alias = null };
 
 				var tableKeys = table.GetKeys(true);
 				var copyKeys  = copy. GetKeys(true);
 
-				if (selectQuery.Where.SearchCondition.Conditions.Any(c => c.IsOr))
+				if (deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Any(c => c.IsOr))
 				{
-					var sc1 = new SqlSearchCondition(selectQuery.Where.SearchCondition.Conditions);
+					var sc1 = new SqlSearchCondition(deleteStatement.SelectQuery.Where.SearchCondition.Conditions);
 					var sc2 = new SqlSearchCondition();
 
 					for (var i = 0; i < tableKeys.Count; i++)
@@ -1221,44 +1258,43 @@ namespace LinqToDB.SqlProvider
 							new SqlPredicate.ExprExpr(copyKeys[i], SqlPredicate.Operator.Equal, tableKeys[i])));
 					}
 
-					selectQuery.Where.SearchCondition.Conditions.Clear();
-					selectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
-					selectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
+					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();
+					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
+					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
 				}
 				else
 				{
 					for (var i = 0; i < tableKeys.Count; i++)
-						selectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
+						deleteStatement.SelectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
 				}
 
-				sql.From.Table(copy).Where.Exists(selectQuery);
-				sql.Parameters.AddRange(selectQuery.Parameters);
+				newDeleteStatement.SelectQuery.From.Table(copy).Where.Exists(deleteStatement.SelectQuery);
+				newDeleteStatement.Parameters.AddRange(deleteStatement.Parameters);
 
-				selectQuery.Parameters.Clear();
+				deleteStatement.Parameters.Clear();
 
-				selectQuery = sql;
+				deleteStatement = newDeleteStatement;
 			}
 
-			return selectQuery;
+			return deleteStatement;
 		}
 
-		protected SelectQuery GetAlternativeUpdate(SelectQuery selectQuery)
+		protected SqlStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
-			if (selectQuery.IsUpdate && (selectQuery.From.Tables[0].Source is SqlTable || selectQuery.Update.Table != null))
+			if (updateStatement.SelectQuery.From.Tables[0].Source is SqlTable || updateStatement.Update.Table != null)
 			{
-				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
+				if (updateStatement.SelectQuery.From.Tables.Count > 1 || updateStatement.SelectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SelectQuery { IsParameterDependent = selectQuery.IsParameterDependent };
-					sql.ChangeQueryType(QueryType.Update);
+					var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
 
-					selectQuery.ParentSelect = sql;
-					selectQuery.ChangeQueryType(QueryType.Select);
+					var newUpdateStatement = new SqlUpdateStatement(sql);
+					updateStatement.SelectQuery.ParentSelect = sql;
 
-					var table = selectQuery.Update.Table ?? (SqlTable)selectQuery.From.Tables[0].Source;
+					var table = updateStatement.Update.Table ?? (SqlTable)updateStatement.SelectQuery.From.Tables[0].Source;
 
-					if (selectQuery.Update.Table != null)
-						if (QueryVisitor.Find(selectQuery.From, t => t == table) == null)
-							table = (SqlTable)QueryVisitor.Find(selectQuery.From,
+					if (updateStatement.Update.Table != null)
+						if (QueryVisitor.Find(updateStatement.SelectQuery.From, t => t == table) == null)
+							table = (SqlTable)QueryVisitor.Find(updateStatement.SelectQuery.From,
 								ex => ex is SqlTable && ((SqlTable)ex).ObjectType == table.ObjectType) ?? table;
 
 					var copy = new SqlTable(table);
@@ -1267,17 +1303,17 @@ namespace LinqToDB.SqlProvider
 					var copyKeys  = copy. GetKeys(true);
 
 					for (var i = 0; i < tableKeys.Count; i++)
-						selectQuery.Where
+						updateStatement.SelectQuery.Where
 							.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
 
-					sql.From.Table(copy).Where.Exists(selectQuery);
+					newUpdateStatement.SelectQuery.From.Table(copy).Where.Exists(updateStatement.SelectQuery);
 
 					var map = new Dictionary<SqlField,SqlField>(table.Fields.Count);
 
 					foreach (var field in table.Fields.Values)
 						map.Add(field, copy[field.Name]);
 
-					foreach (var item in selectQuery.Update.Items)
+					foreach (var item in updateStatement.Update.Items)
 					{
 						var ex = new QueryVisitor().Convert(item, expr =>
 						{
@@ -1285,22 +1321,22 @@ namespace LinqToDB.SqlProvider
 							return fld != null && map.TryGetValue(fld, out fld) ? fld : expr;
 						});
 
-						sql.Update.Items.Add(ex);
+						newUpdateStatement.Update.Items.Add(ex);
 					}
 
-					sql.Parameters.AddRange(selectQuery.Parameters);
-					sql.Update.Table = selectQuery.Update.Table;
+					newUpdateStatement.Parameters.AddRange(updateStatement.Parameters);
+					newUpdateStatement.Update.Table = updateStatement.Update.Table;
 
-					selectQuery.Parameters.Clear();
-					selectQuery.Update.Items.Clear();
+					updateStatement.Parameters.Clear();
+					updateStatement.Update.Items.Clear();
 
-					selectQuery = sql;
+					updateStatement = newUpdateStatement;
 				}
 
-				selectQuery.From.Tables[0].Alias = "$";
+				updateStatement.SelectQuery.From.Tables[0].Alias = "$";
 			}
 
-			return selectQuery;
+			return updateStatement;
 		}
 
 		#endregion
@@ -1340,9 +1376,9 @@ namespace LinqToDB.SqlProvider
 			{
 				switch (e.ElementType)
 				{
-					case QueryElementType.SqlField     : ((SqlField)      e).Alias = SetAlias(((SqlField)      e).Alias, maxLen); break;
-					case QueryElementType.SqlParameter : ((SqlParameter)  e).Name  = SetAlias(((SqlParameter)  e).Name,  maxLen); break;
-					case QueryElementType.SqlTable     : ((SqlTable)      e).Alias = SetAlias(((SqlTable)      e).Alias, maxLen); break;
+					case QueryElementType.SqlField     : ((SqlField)               e).Alias = SetAlias(((SqlField)               e).Alias, maxLen); break;
+					case QueryElementType.SqlParameter : ((SqlParameter)           e).Name  = SetAlias(((SqlParameter)           e).Name,  maxLen); break;
+					case QueryElementType.SqlTable     : ((SqlTable)               e).Alias = SetAlias(((SqlTable)               e).Alias, maxLen); break;
 					case QueryElementType.Column       : ((SqlColumn)     e).Alias = SetAlias(((SqlColumn)     e).Alias, maxLen); break;
 					case QueryElementType.TableSource  : ((SqlTableSource)e).Alias = SetAlias(((SqlTableSource)e).Alias, maxLen); break;
 				}
@@ -1423,15 +1459,15 @@ namespace LinqToDB.SqlProvider
 
 		#region Optimizing Joins
 
-		public void OptimizeJoins(SelectQuery selectQuery)
+		public void OptimizeJoins(SqlStatement statement)
 		{
-			((ISqlExpressionWalkable) selectQuery).Walk(false, element =>
+			((ISqlExpressionWalkable) statement).Walk(false, element =>
 			{
 				var query = element as SelectQuery;
 				if (query != null)
 				{
 					var optimizer = new JoinOptimizer();
-					optimizer.OptimizeJoins(query);
+					optimizer.OptimizeJoins(statement, query);
 				}
 				return element;
 			});

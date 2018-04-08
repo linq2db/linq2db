@@ -58,7 +58,6 @@
 			<Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
@@ -66,14 +65,14 @@
 
 		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
 		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" Condition=" '$(TargetFramework)' != 'net40' " />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" Condition=" '$(TargetFramework)' != 'net40' " />
 		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
 		<PackageReference Include="NUnit" Version="3.9.0" />
 		<PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.0" />
-		<PackageReference Include="Npgsql" Version="3.2.5" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.1" />
+		<PackageReference Include="Npgsql" Version="3.2.6" />
 		<PackageReference Include="Mono.Cecil" Version="0.10.0-beta6" />
-		<PackageReference Include="MySql.Data" Version="6.10.4" />
+		<PackageReference Include="MySql.Data" Version="6.10.6" />
 		<PackageReference Include="Humanizer.Core" Version="2.2.0" />
 	</ItemGroup>
 
@@ -146,8 +145,6 @@
 			<HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
 
-		<PackageReference Include="xunit" Version="1.9.1" />
-		<PackageReference Include="xunit.extensions" Version="1.9.1" />
 		<!--
 		<PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
 		-->
@@ -156,7 +153,7 @@
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.106.0" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.107" />
 	</ItemGroup>
 
 
@@ -172,6 +169,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
 		<Compile Remove="SchemaProvider\SchemaProviderTests.cs" />
+		<Compile Remove="DataProvider\OracleTests.cs" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
 		<None Update="x64\**\*">
 			<Link>x64/%(FileName)%(Extension)</Link>
@@ -192,10 +190,10 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
 		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.3" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.4" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
 		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
 		<PackageReference Include="System.Data.Common" Version="4.3.0" />
 		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
@@ -205,7 +203,7 @@
 		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
 		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
 		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
 
 		<PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
@@ -215,7 +213,6 @@
 		<Compile Remove="DataProvider\SybaseTests.cs" />
 		<Compile Remove="DataProvider\SapHanaTests.cs" />
 		<Compile Remove="DataProvider\InformixTests.cs" />
-		<Compile Remove="DataProvider\OracleTests.cs" />
 		<Compile Remove="DataProvider\SqlServerTypesTests.cs" />
 		<Compile Remove="Data\MiniProfilerTests.cs" />
 		<Compile Remove="Linq\DataServiceTests.cs" />
@@ -223,5 +220,11 @@
 		<Compile Remove="Metadata\XmlReaderTests.cs" />
 		<Compile Remove="**\PartialTrust*.cs" />
 		<Compile Remove="Linq\FSharpTests.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="Oracle.ManagedDataAccess">
+	    <HintPath>..\..\Redist\Oracle\Oracle.Core\Oracle.ManagedDataAccess.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 </Project>

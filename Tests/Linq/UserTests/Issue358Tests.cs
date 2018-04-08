@@ -40,7 +40,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
-			} 
+			}
 		}
 
 		[Test]
@@ -58,7 +58,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
-			} 
+			}
 		}
 
 		[Test]
@@ -77,7 +77,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
-			} 
+			}
 		}
 
 		[Test]
@@ -93,7 +93,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
-			} 
+			}
 		}
 
 		[Test]
@@ -111,7 +111,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
-			} 
+			}
 		}
 
 		static LinqDataTypes2 FixData(LinqDataTypes2 data)

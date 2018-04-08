@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			StringBuilder
 				.AppendLine()
@@ -85,8 +85,10 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		protected override void BuildDeleteClause(SelectQuery selectQuery)
+		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
+			var selectQuery = deleteStatement.SelectQuery;
+
 			AppendIndent();
 			StringBuilder.Append("DELETE");
 			BuildSkipFirst(selectQuery);
@@ -95,8 +97,8 @@ namespace LinqToDB.DataProvider.Sybase
 			ISqlTableSource table;
 			ISqlTableSource source;
 
-			if (selectQuery.Delete.Table != null)
-				table = source = selectQuery.Delete.Table;
+			if (deleteStatement.Table != null)
+				table = source = deleteStatement.Table;
 			else
 			{
 				table  = selectQuery.From.Tables[0];
@@ -105,7 +107,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			var alias = GetTableAlias(table);
 			BuildPhysicalTable(source, alias);
-	
+
 			StringBuilder.AppendLine();
 		}
 
@@ -133,10 +135,10 @@ namespace LinqToDB.DataProvider.Sybase
 			base.BuildLikePredicate(predicate);
 		}
 
-		protected override void BuildUpdateTableName(SelectQuery selectQuery)
+		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			if (selectQuery.Update.Table != null && selectQuery.Update.Table != selectQuery.From.Tables[0].Source)
-				BuildPhysicalTable(selectQuery.Update.Table, null);
+			if (updateClause.Table != null && updateClause.Table != selectQuery.From.Tables[0].Source)
+				BuildPhysicalTable(updateClause.Table, null);
 			else
 				BuildTableName(selectQuery.From.Tables[0], true, false);
 		}
@@ -170,7 +172,7 @@ namespace LinqToDB.DataProvider.Sybase
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{
@@ -200,12 +202,12 @@ namespace LinqToDB.DataProvider.Sybase
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(selectQuery);
+			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
-		protected override void BuildEmptyInsert(SelectQuery selectQuery)
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.AppendLine("VALUES ()");
 		}
@@ -227,6 +229,29 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			dynamic p = parameter;
 			return p.AseDbType.ToString();
+		}
+
+		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			StringBuilder.Append("TRUNCATE TABLE ");
+		}
+
+		public override int CommandCount(SqlStatement statement)
+		{
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity && trun.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+
+			return 1;
+		}
+
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
+		{
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				StringBuilder.Append("sp_chgattribute ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
+			}
 		}
 	}
 }

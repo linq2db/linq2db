@@ -15,14 +15,20 @@ namespace LinqToDB.DataProvider.Firebird
 	public class FirebirdDataProvider : DynamicDataProviderBase
 	{
 		public FirebirdDataProvider()
-			: this(ProviderName.Firebird, new FirebirdMappingSchema())
+			: this(ProviderName.Firebird, new FirebirdMappingSchema(), null)
 		{
 		}
 
-		protected FirebirdDataProvider(string name, MappingSchema mappingSchema)
+		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
+			: this(ProviderName.Firebird, new FirebirdMappingSchema(), sqlOptimizer)
+		{
+		}
+
+		protected FirebirdDataProvider(string name, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsIdentityParameterRequired = true;
+			SqlProviderFlags.IsIdentityParameterRequired       = true;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
@@ -30,7 +36,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
 
-			_sqlOptimizer = new FirebirdSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = sqlOptimizer ?? new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
 
 		static DateTime GetDateTime(IDataReader dr, int idx)

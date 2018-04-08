@@ -1,4 +1,7 @@
 ﻿using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 using System;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -70,6 +73,31 @@ namespace LinqToDB.DataProvider.SqlServer
 				// this code should be added before MERGE and command already partially generated at this stage
 				Command.Insert(0, string.Format("SET IDENTITY_INSERT {0} ON{1}", TargetTableName, Environment.NewLine));
 			}
+		}
+
+		protected override void AddSourceValue(
+			ValueToSqlConverter valueConverter,
+			ColumnDescriptor column,
+			SqlDataType columnType,
+			object value,
+			bool isFirstRow)
+		{
+			if (value != null)
+			{
+				var dataType = columnType.DataType != DataType.Undefined
+					? columnType.DataType
+					: DataContext.MappingSchema.GetDataType(column.MemberType).DataType;
+
+
+				if (dataType == DataType.Binary || dataType == DataType.VarBinary)
+				{
+					// don't generate binary literal in source, as it could lead to huge SQL
+					AddSourceValueAsParameter(column.DataType, value);
+					return;
+				}
+			}
+
+			base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
 		}
 	}
 }

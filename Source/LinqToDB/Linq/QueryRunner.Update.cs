@@ -14,19 +14,24 @@ namespace LinqToDB.Linq
 	{
 		public static class Update<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryChache = new ConcurrentDictionary<object,Query<int>>();
+			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
-			static Query<int> CreateQuery(IDataContext dataContext)
+			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
+
+				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (databaseName != null) sqlTable.Database     = databaseName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
+
 				var sqlQuery = new SelectQuery();
-				sqlQuery.ChangeQueryType(QueryType.Update);
+				var updateStatement = new SqlUpdateStatement(sqlQuery);
 
 				sqlQuery.From.Table(sqlTable);
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { Statement = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = updateStatement, } }
 				};
 
 				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
@@ -45,16 +50,16 @@ namespace LinqToDB.Linq
 
 				foreach (var field in fields)
 				{
-					var param = GetParameter(typeof(T), dataContext, field);
+					var param = GetParameter(type, dataContext, field);
 
 					ei.Queries[0].Parameters.Add(param);
 
-					sqlQuery.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
+					updateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 				}
 
 				foreach (var field in keys)
 				{
-					var param = GetParameter(typeof(T), dataContext, field);
+					var param = GetParameter(type, dataContext, field);
 
 					ei.Queries[0].Parameters.Add(param);
 
@@ -69,24 +74,27 @@ namespace LinqToDB.Linq
 				return ei;
 			}
 
-			public static int Query(IDataContext dataContext, T obj)
+			public static int Query(IDataContext dataContext, T obj, string tableName, string databaseName = null, string schemaName = null)
 			{
-				if (Equals(default, obj))
+				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
+				var type = obj.GetType();
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
-			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
+			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName = null,
+				string databaseName = null, string schemaName = null, CancellationToken token = default)
 			{
 				if (Equals(default, obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
+				var type = obj.GetType();						
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 

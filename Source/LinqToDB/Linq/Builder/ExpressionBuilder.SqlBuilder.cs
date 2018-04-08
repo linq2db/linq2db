@@ -409,7 +409,27 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Call:
 						{
-							var cm = ConvertMethod((MethodCallExpression)e);
+							var expr = (MethodCallExpression)e;
+
+							if (expr.Method.IsSqlPropertyMethodEx())
+							{
+								// transform Sql.Property into member access
+								if (expr.Arguments[1].NodeType != ExpressionType.Constant || expr.Arguments[1].Type != typeof(string))
+									throw new ArgumentException("Only constant strings are alowed for member name in Sql.Property expressions.");
+
+								var entity = ConvertExpression(expr.Arguments[0]);
+								var memberName = (string)((ConstantExpression)expr.Arguments[1]).Value;
+								var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
+								var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
+									                 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
+								
+								if (memberInfo == null)
+									throw new ArgumentException("Unknown/unmapped member name used in Sql.Property expression.");
+
+								return new TransformInfo(ConvertExpression(Expression.MakeMemberAccess(entity, memberInfo)));
+							}
+
+							var cm = ConvertMethod(expr);
 							if (cm != null)
 								return new TransformInfo(ConvertExpression(cm));
 							break;
@@ -934,6 +954,9 @@ namespace LinqToDB.Linq.Builder
 
 							return Convert(context, attr.GetExpression(e.Method, parms.ToArray()));
 						}
+
+						if (e.Method.IsSqlPropertyMethodEx())
+							return ConvertToSql(context, ConvertExpression(expression), unwrap);
 
 						break;
 					}
@@ -1668,19 +1691,31 @@ namespace LinqToDB.Linq.Builder
 						var origValue = Enum.Parse(type, name, false);
 
 						if (!dic.TryGetValue(origValue, out var mapValue))
-							mapValue = ((ConstantExpression)value).Value;
+							mapValue = origValue;
 
 						ISqlExpression l, r;
+
+						SqlValue sqlvalue;
+						var ce = MappingSchema.GetConverter(type, typeof(DataParameter), false);
+
+						if (ce != null)
+						{
+							sqlvalue = new SqlValue(ce.ConvertValueToParameter(origValue));
+						}
+						else
+						{
+							sqlvalue = MappingSchema.GetSqlValue(type, mapValue);
+						}
 
 						if (left.NodeType == ExpressionType.Convert)
 						{
 							l = ConvertToSql(context, operand);
-							r = MappingSchema.GetSqlValue(type, mapValue);
+							r = sqlvalue;
 						}
 						else
 						{
 							r = ConvertToSql(context, operand);
-							l = MappingSchema.GetSqlValue(type, mapValue);
+							l = sqlvalue;
 						}
 
 						return Convert(context, new SqlPredicate.ExprExpr(l, op, r));
@@ -1964,13 +1999,6 @@ namespace LinqToDB.Linq.Builder
 			BuildParameterType  buildParameterType = BuildParameterType.Default)
 		{
 			var type        = accessorExpression.Type;
-			var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
-
-			if (defaultType != null)
-			{
-				var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
-				accessorExpression = enumMapExpr.GetBody(accessorExpression);
-			}
 
 			LambdaExpression expr = null;
 			if (buildParameterType != BuildParameterType.InPredicate)
@@ -1982,6 +2010,16 @@ namespace LinqToDB.Linq.Builder
 
 				accessorExpression         = Expression.PropertyOrField(body, "Value");
 				dataTypeAccessorExpression = Expression.PropertyOrField(body, "DataType");
+			}
+			else
+			{
+				var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
+
+				if (defaultType != null)
+				{
+					var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
+					accessorExpression = enumMapExpr.GetBody(accessorExpression);
+				}
 			}
 
 			// see #820
@@ -2791,7 +2829,56 @@ namespace LinqToDB.Linq.Builder
 			foreach (var context in Contexts)
 				if (context != newParent)
 					if (context.Parent == oldParent)
-						context.Parent = newParent;
+						if (newParent != null && newParent.Parent != context)
+							context.Parent = newParent;
+		}
+
+		#endregion
+
+		#region CTE
+
+		readonly Dictionary<Expression, Tuple<CteClause,IBuildContext>> _ctes = new Dictionary<Expression, Tuple<CteClause,IBuildContext>>(new ExpressionEqualityComparer());
+		readonly Dictionary<IQueryable, Expression> _ctesObjectMapping = new Dictionary<IQueryable, Expression>();
+
+		public Tuple<CteClause, IBuildContext, Expression> RegisterCte(IQueryable queryable, Expression cteExpression, Func<CteClause> buildFunc)
+		{
+			if (cteExpression != null && queryable != null && !_ctesObjectMapping.ContainsKey(queryable))
+			{
+				_ctesObjectMapping.Add(queryable, cteExpression);
+			}
+
+			if (cteExpression == null)
+			{
+				cteExpression = _ctesObjectMapping[queryable];
+			}
+
+			if (!_ctes.TryGetValue(cteExpression, out var value))
+			{
+				var cte = buildFunc();
+				value = Tuple.Create<CteClause, IBuildContext>(cte, null);
+				_ctes.Add(cteExpression, value);
+			}
+
+			return Tuple.Create(value.Item1, value.Item2, cteExpression);
+		}
+
+		public Tuple<CteClause, IBuildContext> BuildCte(Expression cteExpression, Func<CteClause, Tuple<CteClause, IBuildContext>> buildFunc)
+		{
+			if (_ctes.TryGetValue(cteExpression, out var value))
+				if (value.Item2 != null)
+					return value;
+
+			value = buildFunc(value?.Item1);
+			_ctes.Remove(cteExpression);
+			_ctes.Add(cteExpression, value);
+			return value;
+		}
+
+		public IBuildContext GetCteContext(Expression cteExpression)
+		{
+			if (_ctes.TryGetValue(cteExpression, out var value))
+				return value.Item2;
+			return null;
 		}
 
 		#endregion

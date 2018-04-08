@@ -16,7 +16,8 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			CheckAliases(statement, 30);
 
-			if (statement is SelectQuery selectQuery)
+			var selectQuery = statement.SelectQuery;
+			if (selectQuery != null)
 			{
 				new QueryVisitor().Visit(selectQuery.Select, element =>
 				{
@@ -33,8 +34,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete((SelectQuery) statement);
-				case QueryType.Update : return GetAlternativeUpdate((SelectQuery) statement);
+				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement) statement);
+				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement) statement);
 				default               : return statement;
 			}
 		}
@@ -93,13 +94,17 @@ namespace LinqToDB.DataProvider.Oracle
 									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("HH24:MI:SS"));
 								}
 
-								if (func.Parameters[1].SystemType.ToUnderlying() == typeof(DateTime) &&
-									IsDateDataType(func.Parameters[0], "Date"))
+								if (IsDateDataType(func.Parameters[0], "Date"))
 								{
-									return new SqlFunction(func.SystemType, "Trunc", func.Parameters[1], new SqlValue("DD"));
+									if (func.Parameters[1].SystemType.ToUnderlying() == typeof(DateTime))
+									{
+										return new SqlFunction(func.SystemType, "Trunc", func.Parameters[1], new SqlValue("DD"));
+									}
+
+									return new SqlFunction(func.SystemType, "TO_DATE", func.Parameters[1], new SqlValue("YYYY-MM-DD"));
 								}
 
-								return new SqlFunction(func.SystemType, "To_Timestamp", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+								return new SqlFunction(func.SystemType, "TO_TIMESTAMP", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 							}
 
 							return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.Data;
+using LinqToDB;
 
 using NUnit.Framework;
 
@@ -106,7 +106,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, MergeBySourceDataContextSource]
-		public void OtherSourceUpdateBySource(string context)
+		public void OnConditionPartialSourceProjection_KnownFieldInCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -116,7 +116,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(GetSource2(db))
+					.Using(GetSource2(db).Select(s => new TestMapping2() { OtherId = s.OtherId }))
 					.On((t, s) => t.Id == s.OtherId)
 					.UpdateWhenNotMatchedBySource(t => new TestMapping1()
 					{

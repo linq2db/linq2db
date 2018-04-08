@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -11,7 +12,6 @@ namespace LinqToDB
 {
 	using Extensions;
 	using Linq;
-
 	using SqlQuery;
 
 	/// <summary>
@@ -218,11 +218,14 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert or update.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>		
 		/// <returns>Number of affected records.</returns>
-		public static int InsertOrReplace<T>([NotNull] this IDataContext dataContext, T obj)
+		public static int InsertOrReplace<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.InsertOrReplace<T>.Query(dataContext, obj);
+			return QueryRunner.InsertOrReplace<T>.Query(dataContext, obj, tableName, databaseName, schemaName);
 		}
 
 		/// <summary>
@@ -232,13 +235,16 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert or update.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>		
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> InsertOrReplaceAsync<T>([NotNull] this IDataContext dataContext, T obj,
-			CancellationToken token = default)
+			string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, token);
+			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 		}
 
 		#endregion
@@ -252,11 +258,14 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>		
 		/// <returns>Inserted record's identity value.</returns>
-		public static object InsertWithIdentity<T>([NotNull] this IDataContext dataContext, T obj)
+		public static object InsertWithIdentity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj);
+			return QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, tableName, databaseName, schemaName);
 		}
 
 		/// <summary>
@@ -266,11 +275,14 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
 		/// <returns>Inserted record's identity value.</returns>
-		public static int InsertWithInt32Identity<T>([NotNull] this IDataContext dataContext, T obj)
+		public static int InsertWithInt32Identity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return dataContext.MappingSchema.ChangeTypeTo<int>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
+			return dataContext.MappingSchema.ChangeTypeTo<int>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, tableName, databaseName, schemaName));
 		}
 
 		/// <summary>
@@ -280,11 +292,14 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
 		/// <returns>Inserted record's identity value.</returns>
-		public static long InsertWithInt64Identity<T>([NotNull] this IDataContext dataContext, T obj)
+		public static long InsertWithInt64Identity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return dataContext.MappingSchema.ChangeTypeTo<long>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
+			return dataContext.MappingSchema.ChangeTypeTo<long>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, tableName, databaseName, schemaName));
 		}
 
 		/// <summary>
@@ -294,11 +309,14 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
 		/// <returns>Inserted record's identity value.</returns>
-		public static decimal InsertWithDecimalIdentity<T>([NotNull] this IDataContext dataContext, T obj)
+		public static decimal InsertWithDecimalIdentity<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return dataContext.MappingSchema.ChangeTypeTo<decimal>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj));
+			return dataContext.MappingSchema.ChangeTypeTo<decimal>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, tableName, databaseName, schemaName));
 		}
 
 		/// <summary>
@@ -308,13 +326,16 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>					
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static Task<object> InsertWithIdentityAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
+			[NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token);
+			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 		}
 
 		/// <summary>
@@ -324,14 +345,17 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
+			[NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token);
+			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
 		}
 
@@ -342,14 +366,17 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>						
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
+			[NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token);
+			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
 		}
 
@@ -360,14 +387,17 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>					
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
+			[NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
-			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, token);
+			var ret = await QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
 		}
 
@@ -382,11 +412,14 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to update.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>						
 		/// <returns>Number of affected records.</returns>
-		public static int Update<T>([NotNull] this IDataContext dataContext, T obj)
+		public static int Update<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Update<T>.Query(dataContext, obj);
+			return QueryRunner.Update<T>.Query(dataContext, obj, tableName, databaseName, schemaName);
 		}
 
 		/// <summary>
@@ -396,13 +429,16 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to update.</param>
+		/// <param name="tableName">Name of the table</param>
+		/// <param name="databaseName">Name of the database</param>
+		/// <param name="schemaName">Name of the schema</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> UpdateAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
+			[NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, token);
+			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 		}
 
 		#endregion
@@ -416,11 +452,14 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data for delete operation.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
 		/// <returns>Number of affected records.</returns>
-		public static int Delete<T>([NotNull] this IDataContext dataContext, T obj)
+		public static int Delete<T>([NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Delete<T>.Query(dataContext, obj);
+			return QueryRunner.Delete<T>.Query(dataContext, obj, tableName, databaseName, schemaName);
 		}
 
 		/// <summary>
@@ -430,13 +469,16 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data for delete operation.</param>
+		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
+		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
+		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>				
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static Task<int> DeleteAsync<T>(
-			[NotNull] this IDataContext dataContext, T obj, CancellationToken token = default)
+			[NotNull] this IDataContext dataContext, T obj, string tableName = null, string databaseName = null, string schemaName = null, CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, token);
+			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, tableName, databaseName, schemaName, token);
 		}
 
 		#endregion
@@ -454,24 +496,24 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
 		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
-		/// <param name="defaulNullable">Defines how columns nullability flag should be generated:
-		/// <para> - <see cref="DefaulNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
-		/// <para> - <see cref="DefaulNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
-		/// <para> - <see cref="DefaulNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
-		/// Default value: <see cref="DefaulNullable.None"/>.
+		/// <param name="defaultNullable">Defines how columns nullability flag should be generated:
+		/// <para> - <see cref="DefaultNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
+		/// <para> - <see cref="DefaultNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
+		/// <para> - <see cref="DefaultNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
+		/// Default value: <see cref="DefaultNullable.None"/>.
 		/// </param>
 		/// <returns>Created table as queryable source.</returns>
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
-			string         tableName       = null,
-			string         databaseName    = null,
-			string         schemaName      = null,
-			string         statementHeader = null,
-			string         statementFooter = null,
-			DefaulNullable defaulNullable  = DefaulNullable.None)
+			string          tableName       = null,
+			string          databaseName    = null,
+			string          schemaName      = null,
+			string          statementHeader = null,
+			string          statementFooter = null,
+			DefaultNullable defaultNullable  = DefaultNullable.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.Query(dataContext,
-				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable);
+				tableName, databaseName, schemaName, statementHeader, statementFooter, defaultNullable);
 		}
 
 		/// <summary>
@@ -485,26 +527,26 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
 		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
-		/// <param name="defaulNullable">Defines how columns nullability flag should be generated:
-		/// <para> - <see cref="DefaulNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
-		/// <para> - <see cref="DefaulNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
-		/// <para> - <see cref="DefaulNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
-		/// Default value: <see cref="DefaulNullable.None"/>.
+		/// <param name="defaultNullable">Defines how columns nullability flag should be generated:
+		/// <para> - <see cref="DefaultNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
+		/// <para> - <see cref="DefaultNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
+		/// <para> - <see cref="DefaultNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
+		/// Default value: <see cref="DefaultNullable.None"/>.
 		/// </param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
 		public static Task<ITable<T>> CreateTableAsync<T>([NotNull] this IDataContext dataContext,
-			string              tableName       = null,
-			string              databaseName    = null,
-			string              schemaName      = null,
-			string              statementHeader = null,
-			string              statementFooter = null,
-			DefaulNullable      defaulNullable  = DefaulNullable.None,
-			CancellationToken   token           = default)
+			string            tableName       = null,
+			string            databaseName    = null,
+			string            schemaName      = null,
+			string            statementHeader = null,
+			string            statementFooter = null,
+			DefaultNullable   defaultNullable = DefaultNullable.None,
+			CancellationToken token           = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
-				tableName, databaseName, schemaName, statementHeader, statementFooter, defaulNullable, token);
+				tableName, databaseName, schemaName, statementHeader, statementFooter, defaultNullable, token);
 		}
 
 		#endregion
@@ -668,6 +710,30 @@ namespace LinqToDB
 			catch
 			{
 			}
+		}
+
+		#endregion
+
+		#region CTE
+
+		public static IQueryable<T> GetCte<T>(
+			[NotNull]   this IDataContext                 dataContext,
+			[NotNull]   Func<IQueryable<T>,IQueryable<T>> cteBody,
+			[CanBeNull] string                            cteTableName = null)
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
+
+			var cteTable = new CteTable<T>(dataContext);
+			var param    = MethodHelper.GetMethodInfo(cteBody, cteTable).GetParameters()[0];
+
+			var cteQuery = cteBody(cteTable);
+
+			return ((IQueryable<T>)cteTable).Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, cteTableName),
+					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)}));
 		}
 
 		#endregion

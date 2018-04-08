@@ -14,19 +14,19 @@ namespace LinqToDB.Linq
 			public static ITable<T> Query(IDataContext dataContext,
 				string tableName, string databaseName, string schemaName,
 				string statementHeader, string statementFooter,
-				DefaulNullable defaulNullable)
+				DefaultNullable defaultNullable)
 			{
 				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Owner        = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
 				createTable.StatementFooter = statementFooter;
-				createTable.DefaulNullable  = defaulNullable;
+				createTable.DefaultNullable = defaultNullable;
 
 				var query = new Query<int>(dataContext, null)
 				{
@@ -39,16 +39,16 @@ namespace LinqToDB.Linq
 
 				ITable<T> table = new Table<T>(dataContext);
 
-				if (tableName    != null) table = table.TableName   (tableName);
-				if (databaseName != null) table = table.DatabaseName(databaseName);
-				if (schemaName   != null) table = table.SchemaName  (schemaName);
+				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
+				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
+				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
 
 				return table;
 			}
 
 			public static async Task<ITable<T>> QueryAsync(IDataContext dataContext,
 				string tableName, string databaseName, string schemaName, string statementHeader,
-				string statementFooter, DefaulNullable defaulNullable,
+				string statementFooter, DefaultNullable defaultNullable,
 				CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
@@ -56,12 +56,12 @@ namespace LinqToDB.Linq
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Owner        = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
 				createTable.Table           = sqlTable;
 				createTable.StatementHeader = statementHeader;
 				createTable.StatementFooter = statementFooter;
-				createTable.DefaulNullable  = defaulNullable;
+				createTable.DefaultNullable = defaultNullable;
 
 				var query = new Query<int>(dataContext, null)
 				{
@@ -74,9 +74,9 @@ namespace LinqToDB.Linq
 
 				ITable<T> table = new Table<T>(dataContext);
 
-				if (tableName    != null) table = table.TableName   (tableName);
-				if (databaseName != null) table = table.DatabaseName(databaseName);
-				if (schemaName   != null) table = table.SchemaName  (schemaName);
+				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
+				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
+				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
 
 				return table;
 			}

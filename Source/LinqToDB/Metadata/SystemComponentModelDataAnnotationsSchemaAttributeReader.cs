@@ -15,7 +15,7 @@ namespace LinqToDB.Metadata
 		{
 			if (typeof(T) == typeof(TableAttribute))
 			{
-				var ta = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.TableAttribute>   (type, inherit);
+				var ta = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.TableAttribute>(type, inherit);
 
 				var t = ta.Length == 1 ? ta[0] : null;
 
@@ -65,7 +65,7 @@ namespace LinqToDB.Metadata
 					var attr = new ColumnAttribute
 					{
 						Name   = c.Name,
-						DbType = c.TypeName 
+						DbType = c.TypeName
 					};
 
 					return new[] { (T)(Attribute)attr };
@@ -74,5 +74,9 @@ namespace LinqToDB.Metadata
 
 			return Array<T>.Empty;
 		}
+
+		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
+		public MemberInfo[] GetDynamicColumns(Type type)
+			=> new MemberInfo[0];
 	}
 }

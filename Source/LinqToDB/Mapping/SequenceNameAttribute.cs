@@ -6,7 +6,8 @@ namespace LinqToDB.Mapping
 	/// Specifies value generation sequence for mapped property of field.
 	/// Currently it supported only for:
 	/// - Firebird generators;
-	/// - Oracle sequences.
+	/// - Oracle sequences;
+	/// - PostgreSQL serial pseudotypes/sequences;
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
 	public class SequenceNameAttribute : Attribute

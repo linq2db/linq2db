@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using LinqToDB;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -18,7 +20,7 @@ namespace Tests.Linq
 			var eq = (IExpressionQuery)query;
 			var expression = eq.Expression;
 			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
-			return (SelectQuery)info.Queries.Single().Statement;
+			return info.Queries.Single().Statement.SelectQuery;
 		}
 
 		SqlSearchCondition GetWhere<T>(IQueryable<T> query)
@@ -255,7 +257,6 @@ namespace Tests.Linq
 				Assert.AreEqual(3, ts.Joins.Count(j => j.JoinType == JoinType.Left));
 			}
 		}
-
 
 		[Test, NorthwindDataContext]
 		public void InnerJoin1(string context)
@@ -591,5 +592,73 @@ namespace Tests.Linq
 				Assert.AreEqual(0, GeTableSource(q2).Joins.Count);
 			}
 		}
+
+
+		[Table(Name = "Person")]
+		public class PersonEntity
+		{
+			[Column]
+			[PrimaryKey]
+			[Identity]
+			public int Id { get; set; }
+
+			[Column]
+			public string Name { get; set; }
+		}
+
+
+		[Table(Name = "Adress")]
+		public class AdressEntity
+		{
+			[Column]
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public int PersonId { get; set; }
+		}
+
+		[Test, NorthwindDataContext]
+		public void JoinWithHint(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var query = from p in db.GetTable<PersonEntity>().With("READUNCOMMITTED")
+						 join a in db.GetTable<AdressEntity>().With("READUNCOMMITTED")
+						 on p.Id equals a.Id //PK column
+						 select p;
+
+				Assert.AreEqual(1, GeTableSource(query).Joins.Count);
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void SelfJoinWithHint(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var query = from p in db.GetTable<AdressEntity>().With("READUNCOMMITTED")
+						 join a in db.GetTable<AdressEntity>().With("READUNCOMMITTED")
+						 on p.Id equals a.Id //PK column
+						 select p;
+
+				Assert.AreEqual(0, GeTableSource(query).Joins.Count);
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void SelfJoinWithDifferentHint(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var query = from p in db.GetTable<AdressEntity>().With("NOLOCK")
+						 join a in db.GetTable<AdressEntity>().With("READUNCOMMITTED")
+						 on p.Id equals a.Id //PK column
+						 select p;
+
+				Assert.AreEqual(1, GeTableSource(query).Joins.Count);
+			}
+		}
+
 	}
 }

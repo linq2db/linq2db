@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -12,7 +11,7 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-		internal async Task InitCommandAsync(CommandType commandType, string sql, DataParameter[] parameters, CancellationToken cancellationToken)
+		public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
 		{
 			if (_connection == null)
 			{
@@ -24,28 +23,31 @@ namespace LinqToDB.Data
 
 			if (_connection.State == ConnectionState.Closed)
 			{
-				if (_connection is RetryingDbConnection)
-					await ((RetryingDbConnection)_connection).OpenAsync(cancellationToken);
-				else
-					await ((DbConnection)_connection).OpenAsync(cancellationToken);
+				try
+				{
+					if (_connection is RetryingDbConnection retrying)
+						await retrying.OpenAsync(cancellationToken);
+					else
+						await ((DbConnection)_connection).OpenAsync(cancellationToken);
 
-				_closeConnection = true;
+					_closeConnection = true;
+				}
+				catch (Exception ex)
+				{
+					if (TraceSwitch.TraceError)
+					{
+						OnTraceConnection(new TraceInfo(TraceInfoStep.Error)
+						{
+							TraceLevel     = TraceLevel.Error,
+							DataConnection = this,
+							Exception      = ex,
+							IsAsync        = true,
+						});
+					}
+
+					throw;
+				}
 			}
-
-			InitCommand(commandType, sql, parameters, null);
-		}
-
-		internal async Task InitCommandAsync(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints, CancellationToken cancellationToken)
-		{
-			if (queryHints != null && queryHints.Count > 0)
-			{
-				var sqlProvider = DataProvider.CreateSqlBuilder();
-				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
-				queryHints.Clear();
-			}
-
-			await InitCommandAsync(commandType, sql, parameters, cancellationToken);
-			LastQuery = Command.CommandText;
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)

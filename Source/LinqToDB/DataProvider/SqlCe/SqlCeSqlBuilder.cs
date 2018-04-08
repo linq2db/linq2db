@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -33,12 +34,29 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			StringBuilder.AppendLine("SELECT @@IDENTITY");
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+
+				StringBuilder.Append("ALTER TABLE ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder
+					.Append(" ALTER COLUMN ")
+					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
+					.AppendLine(" IDENTITY(1,1)")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT @@IDENTITY");
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -67,10 +85,10 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildOrderByClause(SelectQuery selectQuery)
@@ -103,10 +121,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-				}
+					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
@@ -136,7 +151,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{
@@ -169,7 +184,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			StringBuilder.Append("IDENTITY");
 		}
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			return sb.Append(table);
 		}

@@ -58,8 +58,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql = GetSubQuery(null);
 
-				var sq = new SelectQuery();
-				sq.Select.Add(sql);
+				var sq = new SqlSelectStatement();
+				sq.SelectQuery.Select.Add(sql);
 
 				query.Queries[0].Statement = sq;
 

@@ -57,6 +57,23 @@ namespace Tests.xUpdate
 			}
 		}
 
+		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataContextSourceAttribute
+		{
+			static string[] Supported = new[]
+			{
+				ProviderName.Sybase,
+					  ProviderName.SqlServer2008,
+					  ProviderName.SqlServer2012,
+					  ProviderName.SqlServer2014
+			};
+
+			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
+				: base(false, Supported.Except(except).ToArray())
+			{
+				ParallelScope = ParallelScope.None;
+			}
+		}
+
 		[Table("merge1")]
 		class TestMapping1
 		{
@@ -81,6 +98,17 @@ namespace Tests.xUpdate
 
 			[Column("fake", Configuration = "Other")]
 			public int Fake;
+		}
+
+		[Table("TestMergeIdentity", Configuration = ProviderName.Sybase)]
+		[Table("TestMergeIdentity", Configuration = ProviderName.SqlServer)]
+		class TestMappingWithIdentity
+		{
+			[Column("Id", SkipOnInsert = true, IsIdentity = true)]
+			public int Id;
+
+			[Column("Field")]
+			public int? Field;
 		}
 
 		[Table("merge2")]
@@ -110,17 +138,17 @@ namespace Tests.xUpdate
 		}
 
 		private static ITable<TestMapping1> GetTarget(IDataContext db)
-			{
+		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge1");
 		}
 
 		private static ITable<TestMapping1> GetSource1(IDataContext db)
-			{
+		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge2");
 		}
 
 		private static ITable<TestMapping2> GetSource2(IDataContext db)
-			{
+		{
 			return db.GetTable<TestMapping2>().TableName("TestMerge2");
 		}
 
@@ -169,9 +197,9 @@ namespace Tests.xUpdate
 		};
 
 		private static IEnumerable<TestMapping2> GetInitialSourceData2()
-				{
+		{
 			foreach (var record in InitialSourceData)
-					{
+			{
 				yield return new TestMapping2()
 						{
 					OtherId = record.Id,
@@ -182,8 +210,8 @@ namespace Tests.xUpdate
 					OtherField5 = record.Field5,
 					OtherFake = record.Fake
 				};
-						}
-				}
+			}
+		}
 
 		[Test, DataContextSource(false)]
 		public void TestDataGenerationTest(string context)
@@ -192,7 +220,7 @@ namespace Tests.xUpdate
 			{
 				PrepareData(db);
 
-				var result1 = GetTarget(db).OrderBy(_ => _.Id).ToList();
+				var result1 = GetTarget(db). OrderBy(_ => _.Id).ToList();
 				var result2 = GetSource1(db).OrderBy(_ => _.Id).ToList();
 
 				Assert.AreEqual(4, result1.Count);

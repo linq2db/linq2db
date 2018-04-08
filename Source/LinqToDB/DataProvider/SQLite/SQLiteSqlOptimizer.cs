@@ -20,12 +20,12 @@ namespace LinqToDB.DataProvider.SQLite
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					statement = GetAlternativeDelete((SelectQuery)statement);
-					((SelectQuery)statement).From.Tables[0].Alias = "$";
+					statement = GetAlternativeDelete((SqlDeleteStatement)statement);
+					statement.SelectQuery.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SelectQuery)statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
 					break;
 			}
 
@@ -94,10 +94,10 @@ namespace LinqToDB.DataProvider.SQLite
 				if (e.Expr.StartsWith("DateTime"))
 				{
 					if (e.Expr.EndsWith("Quarter')"))
-						return new SqlExpression(e.SystemType, "DateTime({1}, '{0} Month')", Precedence.Primary, Mul(e.Parameters[0], 3), e.Parameters[1]);
+						return new SqlExpression(e.SystemType, "DateTime({1}, {0} || ' Month')", Precedence.Primary, Mul(e.Parameters[0], 3), e.Parameters[1]);
 
 					if (e.Expr.EndsWith("Week')"))
-						return new SqlExpression(e.SystemType, "DateTime({1}, '{0} Day')",   Precedence.Primary, Mul(e.Parameters[0], 7), e.Parameters[1]);
+						return new SqlExpression(e.SystemType, "DateTime({1}, {0} || ' Day')",   Precedence.Primary, Mul(e.Parameters[0], 7), e.Parameters[1]);
 				}
 			}
 

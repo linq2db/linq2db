@@ -49,20 +49,20 @@ namespace LinqToDB.DataProvider.Firebird
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override bool   SkipFirst   { get { return false;       } }
-		protected override string SkipFormat  { get { return "SKIP {0}";  } }
+		protected override bool   SkipFirst  => false;
+		protected override string SkipFormat => "SKIP {0}";
 
 		protected override string FirstFormat(SelectQuery selectQuery)
 		{
 			return "FIRST {0}";
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = selectQuery.Insert.Into.GetIdentityField();
+			var identityField = insertClause.Into.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", selectQuery.Insert.Into.Name);
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append("\t");
@@ -145,10 +145,10 @@ namespace LinqToDB.DataProvider.Firebird
 //			base.BuildDataType(type, createDbType);
 //		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
@@ -160,10 +160,11 @@ namespace LinqToDB.DataProvider.Firebird
 				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-				}
+					wrap =
+						expr is SqlExpression ex      &&
+						ex.Expr              == "{0}" &&
+						ex.Parameters.Length == 1     &&
+						ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
@@ -219,12 +220,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectQuery, "FROM rdb$database");
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM rdb$database");
 		}
 
-		protected override void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
+		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
 		{
 			if (!field.CanBeNull)
 				StringBuilder.Append("NOT NULL");
@@ -234,12 +235,22 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (statement is SqlCreateTableStatement createTable)
+			switch (statement)
 			{
-				_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+				case SqlTruncateTableStatement truncate:
+					return truncate.ResetIdentity && truncate.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 
-				if (_identityField != null)
-					return 3;
+				case SqlCreateTableStatement createTable:
+					_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					if (_identityField != null)
+						return 3;
+					break;
+
+				case SqlDropTableStatement dropTable:
+					_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					if (_identityField != null)
+						return 3;
+					break;
 			}
 
 			return base.CommandCount(statement);
@@ -260,10 +271,18 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			switch (Statement)
 			{
+				case SqlTruncateTableStatement truncate:
+					StringBuilder
+						.Append("SET GENERATOR GIDENTITY_")
+						.Append(truncate.Table.PhysicalName)
+						.AppendLine(" TO 0")
+						;
+					break;
+
 				case SqlDropTableStatement dropTable:
 					{
 						if (commandNumber == 1)
@@ -275,6 +294,7 @@ namespace LinqToDB.DataProvider.Firebird
 						}
 						else
 							base.BuildDropTableStatement(dropTable);
+
 						break;
 					}
 
@@ -298,12 +318,13 @@ namespace LinqToDB.DataProvider.Firebird
 								.AppendLine  ()
 								.AppendLine  ("END");
 						}
+
 						break;
 					}
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			return sb.Append(table);
 		}
