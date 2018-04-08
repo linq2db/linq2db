@@ -40,8 +40,13 @@ namespace LinqToDB.Reflection
 
 		#region Public Members
 
-		public IObjectFactory ObjectFactory { get; set; }
-		public abstract Type  Type          { get; }
+		public IObjectFactory          ObjectFactory               { get; set; }
+		public abstract Type           Type                        { get; }
+
+		/// <summary>
+		/// Gets the dynamic columns store accessor.
+		/// </summary>
+		public abstract MemberAccessor DynamicColumnsStoreAccessor { get; }
 
 		#endregion
 

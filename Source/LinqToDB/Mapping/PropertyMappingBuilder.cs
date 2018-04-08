@@ -124,14 +124,21 @@ namespace LinqToDB.Mapping
 			{
 				for (var m = me; m != null; m = m.Expression as MemberExpression)
 				{
-					if (me != m)
-						memberName = me.Member.Name + (string.IsNullOrEmpty(memberName) ? "" : "." + memberName);
-
-					me = m;
+					memberName = m.Member.Name + (memberName != null ? "." + memberName : "");
 				}
 
-				var p  = Expression.Parameter(typeof(T));
-				getter = Expression.Lambda<Func<T, object>>(Expression.PropertyOrField(p, me.Member.Name), p);
+				_entity.SetAttribute(
+					() =>
+					{
+						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName };
+						setColumn(a);
+						return a;
+					},
+					setColumn,
+					a => a.Configuration,
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
+
+				return this;
 			}
 
 			_entity.SetAttribute(

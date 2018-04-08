@@ -505,3 +505,13 @@ CREATE TABLE "TestMerge2"
 	"FieldEnumNumber" INT                      NULL
 )
 GO
+
+CREATE OR REPLACE FUNCTION AddIssue792Record()
+	RETURNS void AS
+$BODY$
+BEGIN
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+END;
+$BODY$
+	LANGUAGE plpgsql;
+GO

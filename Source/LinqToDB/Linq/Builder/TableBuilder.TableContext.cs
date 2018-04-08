@@ -161,6 +161,8 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in members)
 				{
+					if (member.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
+					{
 					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
 
 					if (member.NextLoadWith.Count > 0)
@@ -172,14 +174,23 @@ namespace LinqToDB.Linq.Builder
 					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
 
 					var ex = BuildExpression(ma, 1, parentObject);
-					var ax = Expression.Assign(
-						attr?.Storage != null ?
-							Expression.PropertyOrField (parentObject, attr.Storage) :
-							Expression.MakeMemberAccess(parentObject, member.MemberInfo),
-						ex);
+					if (member.MemberInfo.IsDynamicColumnPropertyEx())
+					{
+						var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
+						var setter = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
 
-					exprs.Add(ax);
+						exprs.Add(Expression.Invoke(setter, parentObject, ex));
+					}
+					else
+					{
+						exprs.Add(Expression.Assign(
+							attr?.Storage != null
+								? Expression.PropertyOrField(parentObject, attr.Storage)
+								: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
+							ex));
+					}
 				}
+			}
 			}
 
 			static bool IsRecord(Attribute[] attrs)
@@ -487,6 +498,12 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
+					if (tableContext is AssociatedTableContext)
+					{
+						expr = Expression.Constant(null, ObjectType);
+					}
+					else
+					{
 					var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
 					var dindex          =
 						(
@@ -503,6 +520,7 @@ namespace LinqToDB.Linq.Builder
 								Expression.Constant(dindex)),
 							Expression.Constant(ObjectType)),
 						ObjectType);
+				}
 				}
 
 				foreach (var mapping in InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
@@ -1097,7 +1115,8 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 								{
-									if (field.ColumnDescriptor.MemberAccessor.IsComplex)
+									if (field.ColumnDescriptor.MemberAccessor.IsComplex
+										&& !field.ColumnDescriptor.MemberAccessor.MemberInfo.IsDynamicColumnPropertyEx())
 									{
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;
