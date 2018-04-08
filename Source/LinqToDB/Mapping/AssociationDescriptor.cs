@@ -170,7 +170,7 @@ namespace LinqToDB.Mapping
 					throw new LinqToDBException(
 						$"Invalid predicate expression in {type.Name}. Expected: Expression<Func<{parentType.Name}, {objectType.Name}, bool>>");
 
-			if (lambda.Parameters[0].Type != parentType)
+			if (!lambda.Parameters[0].Type.IsSameOrParentOf(parentType))
 				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
 
 			if (lambda.Parameters[1].Type != objectType)
