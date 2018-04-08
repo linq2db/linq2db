@@ -499,7 +499,7 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		ConvertInfo.LambdaInfo GetConverter(Type from, Type to, bool create)
+		internal ConvertInfo.LambdaInfo GetConverter(Type from, Type to, bool create)
 		{
 			for (var i = 0; i < Schemas.Length; i++)
 			{
@@ -758,6 +758,12 @@ namespace LinqToDB.Mapping
 			lock (_metadataReadersSyncRoot)
 			{
 				var currentReader = MetadataReader;
+				if (currentReader is MetadataReader metadataReader)
+				{
+					metadataReader.AddReader(reader);
+					return;
+				}
+
 				MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
 			}
 		}
@@ -1336,6 +1342,12 @@ namespace LinqToDB.Mapping
 		#endregion
 
 		#region EntityDescriptor
+
+		/// <summary>
+		/// Gets or sets action, called when the EntityDescriptor is created.
+		/// Could be used to adjust created descriptor before use.
+		/// </summary>
+		public Action<MappingSchema, IEntityChangeDescriptor> EntityDescriptorCreatedCallback { get; set; }
 
 		/// <summary>
 		/// Returns mapped entity descriptor.

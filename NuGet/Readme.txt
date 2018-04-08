@@ -2,6 +2,7 @@ LINQ to DB 2.0.0  Release Notes
 ---------------------------------
 *IMPORTANT: LINQ to DB 2.0 is not released yet*
 - breaking change: dropped support for .NET 4.0, Silverlight 4-5 and Windows 8 Store frameworks. New target frameworks list is netcoreapp2.0, netstandard1.6, netstandard2.0 and net45
+- breaking change: behavior of enum mapping to a text type for enum without configured mappings changed to use ToString() instead of (enum underlying type).ToString(). To return old behavior, you should set Configuration.UseEnumValueNameForStringColumns to false (#1006, #1071)
 
 - feature: predicate expression support added for associations configuration using fluent mapping (#961)
 - feature: support creation of query parameters in extension builders (#964)
@@ -25,6 +26,7 @@ LINQ to DB 2.0.0  Release Notes
 - improvement: [BulkCopy][SAP HANA] BulkCopy operation will throw LinqToDBException if BulkCopyOptions.KeepIdentity set to true for unsupported provider version to avoid unexpected results (#1037)
 - improvement: [BulkCopy][Firebird] BulkCopy operation will throw LinqToDBException if BulkCopyOptions.KeepIdentity set to true to avoid unexpected results (#1037)
 - improvement: Reading of schema for procedures will be wrapped into transaction with rollback if called without ambient transaction
+- improvement: Allow basic mappings modifications using MappingSchema.EntityDescriptorCreatedCallback callback (#1074)
 
 - fix: fixed another case of defect #170, where default(T) value could be selected for non-nullable field instead of NULL from left join, if SelectMany() call used in source (#1012)
 - fix: [MS SQL, Sybase] updated Merge insert operation to respect SkipOnInsert mapping flag for identity fields when no custom insert expression specified. With this fix merge operation will allow database to generate identity value instead of use of value from source (#914)
@@ -45,6 +47,12 @@ LINQ to DB 2.0.0  Release Notes
 - fix: [DB2, Oracle] Schema provider will not find any procedures when called with GetTables = false (#1068)
 - fix: [MySQL, Sybase] Reading of procedure schema from ambient transaction will throw LinqToDbException to avoid unintentional database corruption (#792)
 - fix: [Merge] Fixed API to not propose Merge call right after On* call when no operations added yet
+- fix: MappingSchema converters not used for enum types (#1006)
+- fix: [Inheritance mapping] Passing derived entity using parameter of base type use parameter type instead of entity type in Update, Delete and Insert methods for query generation (#1017)
+- fix: [Flient Mapping] Complex types mapping doesn't work with fluent mapping (#1005)
+- fix: Adding multiple metadata readers to default mapping schema could result in use of only last added reader (#1066)
+- fix: LoadWith do not support type casts in load expression (#1069)
+- fix: [Inheritance mapping] Support for loading of derived entities in LoadWith (#994)
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)

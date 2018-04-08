@@ -12,7 +12,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity descriptor.
 	/// </summary>
-	public class EntityDescriptor
+	public class EntityDescriptor : IEntityChangeDescriptor
 	{
 		/// <summary>
 		/// Creates descriptor instance.
@@ -30,24 +30,42 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets mapping type accessor.
+		/// Gets or sets mapping type accessor.
 		/// </summary>
-		public TypeAccessor TypeAccessor { get; private set; }
+		public TypeAccessor TypeAccessor { get; set; }
 
 		/// <summary>
 		/// Gets name of table or view in database.
 		/// </summary>
 		public string TableName { get; private set; }
 
+		string IEntityChangeDescriptor.TableName
+		{
+			get => TableName;
+			set => TableName = value;
+		}
+
 		/// <summary>
 		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
 		public string SchemaName { get; private set; }
 
+		string IEntityChangeDescriptor.SchemaName
+		{
+			get => SchemaName;
+			set => SchemaName = value;
+		}
+
 		/// <summary>
 		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
 		public string DatabaseName { get; private set; }
+
+		string IEntityChangeDescriptor.DatabaseName
+		{
+			get => DatabaseName;
+			set => DatabaseName = value;
+		}
 
 		// TODO: V2: remove?
 		/// <summary>
@@ -73,6 +91,8 @@ namespace LinqToDB.Mapping
 		/// Gets list of column descriptors for current entity.
 		/// </summary>
 		public List<ColumnDescriptor> Columns { get; private set; }
+
+		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => Columns.Cast<IColumnChangeDescriptor>();
 
 		/// <summary>
 		/// Gets list of association descriptors for current entity.
