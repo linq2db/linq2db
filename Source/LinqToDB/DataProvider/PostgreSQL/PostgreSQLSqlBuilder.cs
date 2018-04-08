@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert);
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, true);
 
 			AppendIndent();
 			StringBuilder.Append("ON CONFLICT (");
@@ -176,12 +176,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				Indent++;
 
-				var tableName    = insertOrUpdate.Insert.Into.Name;
-				var ts           = (SqlTableSource)insertOrUpdate.GetTableSource(insertOrUpdate.Update.Table);
-				var aliasBackup  = ts.Alias;
-
-				ts.Alias         = (string)Convert(tableName, ConvertType.NameToQueryTable);
-
 				var first = true;
 
 				foreach (var expr in insertOrUpdate.Update.Items)
@@ -195,8 +189,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					StringBuilder.Append(" = ");
 					BuildExpression(expr.Expression, true, true);
 				}
-
-				ts.Alias = aliasBackup;
 
 				Indent--;
 
