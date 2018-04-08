@@ -1,14 +1,13 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
 {
-	using System.Linq;
-
 	using Expressions;
+	using Extensions;
+	using SqlQuery;
 
 	/// <summary>
 	/// Column or association fluent mapping builder.
@@ -89,7 +88,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
 			Expression<Func<T, S>> prop,
 			Expression<Func<T, ID1>> thisKey,
-			Expression<Func<S, ID2>> otherKey )
+			Expression<Func<S, ID2>> otherKey)
 		{
 			return _entity.Association( prop, thisKey, otherKey );
 		}
@@ -119,20 +118,27 @@ namespace LinqToDB.Mapping
 		{
 			var getter     = _memberGetter;
 			var memberName = null as string;
-			var me         = _memberGetter.Body as MemberExpression;
+			var me         = _memberGetter.Body.Unwrap() as MemberExpression;
 
 			if (me != null && me.Expression is MemberExpression)
 			{
 				for (var m = me; m != null; m = m.Expression as MemberExpression)
 				{
-					if (me != m)
-						memberName = me.Member.Name + (string.IsNullOrEmpty(memberName) ? "" : "." + memberName);
-
-					me = m;
+					memberName = m.Member.Name + (memberName != null ? "." + memberName : "");
 				}
 
-				var p  = Expression.Parameter(typeof(T));
-				getter = Expression.Lambda<Func<T, object>>(Expression.PropertyOrField(p, me.Member.Name), p);
+				_entity.SetAttribute(
+					() =>
+					{
+						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName };
+						setColumn(a);
+						return a;
+					},
+					setColumn,
+					a => a.Configuration,
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
+
+				return this;
 			}
 
 			_entity.SetAttribute(
@@ -187,7 +193,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="format">
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, SqlQuery.DefaulNullable)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;
@@ -236,7 +242,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Sets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		/// <param name="skipOnUpdate">If <c>true</c> - column will be ignored for implicit update operations.</param>

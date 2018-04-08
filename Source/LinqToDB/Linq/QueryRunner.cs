@@ -106,11 +106,26 @@ namespace LinqToDB.Linq
 			foreach (var sql in query.Queries)
 			{
 				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
-				sql.Parameters  = sql.Parameters
-					.Select (p => new { p, idx = sql.Statement.Parameters.IndexOf(p.SqlParameter) })
-					.OrderBy(p => p.idx)
-					.Select (p => p.p)
-					.ToList();
+				var parameters =
+					sql.Parameters
+						.Select(p => new {p, idx = sql.Statement.Parameters.IndexOf(p.SqlParameter)})
+						.OrderBy(p => p.idx)
+						.Select(p => p.p);
+
+				var alreadyAdded = new HashSet<SqlParameter>(sql.Parameters.Select(pp => pp.SqlParameter));
+
+				var runtime = sql.Statement.Parameters.Where(p => !alreadyAdded.Contains(p));
+
+				// combining with dynamically created parameters
+
+				parameters = parameters.Concat(
+					runtime.Select(p => new ParameterAccessor(Expression.Constant(p.Value), (e, o) => p.Value,
+						(e, o) => p.DataType != DataType.Undefined || p.Value == null
+							? p.DataType
+							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType, p))
+				);
+
+				sql.Parameters = parameters.ToList();
 			}
 		}
 
@@ -252,7 +267,7 @@ namespace LinqToDB.Linq
 
 			Func<Expression,object[],int> skip = null, take = null;
 
-			var selectQuery = (SelectQuery) query.Queries[0].Statement;
+			var selectQuery = query.Queries[0].Statement.SelectQuery;
 			var select      = selectQuery.Select;
 
 			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery))
@@ -633,7 +648,7 @@ namespace LinqToDB.Linq
 
 			ClearParameters(query);
 
-			query.GetElement      = (db, expr, ps) => NonQueryQuery2(query, db, expr, ps);
+			query.GetElement      = (db, expr, ps)        => NonQueryQuery2(query, db, expr, ps);
 			query.GetElementAsync = (db, expr, ps, token) => NonQueryQuery2Async(query, db, expr, ps, token);
 		}
 

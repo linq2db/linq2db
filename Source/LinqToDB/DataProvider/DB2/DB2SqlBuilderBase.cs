@@ -22,15 +22,49 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (Version == DB2Version.LUW && statement.IsInsertWithIdentity())
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+
+			if (Version == DB2Version.LUW && statement is SqlInsertStatement insertStatement && insertStatement.Insert.WithIdentity)
 			{
-				_identityField = ((SelectQuery)statement).Insert.Into.GetIdentityField();
+				_identityField = insertStatement.Insert.Into.GetIdentityField();
 
 				if (_identityField == null)
 					return 2;
 			}
 
 			return 1;
+		}
+
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
+		{
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+
+				StringBuilder.Append("ALTER TABLE ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder
+					.Append(" ALTER ")
+					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
+					.AppendLine(" RESTART WITH 1")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
+			}
+		}
+
+		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
+		{
+			var table = truncateTable.Table;
+
+			AppendIndent();
+			StringBuilder.Append("TRUNCATE TABLE ");
+			BuildPhysicalTable(table, null);
+			StringBuilder.Append(" IMMEDIATE");
+			StringBuilder.AppendLine();
 		}
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
@@ -59,7 +93,7 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine("\t)");
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			if (Version == DB2Version.zOS)
 			{
@@ -67,11 +101,6 @@ namespace LinqToDB.DataProvider.DB2
 					.AppendLine(";")
 					.AppendLine("SELECT IDENTITY_VAL_LOCAL() FROM SYSIBM.SYSDUMMY1");
 			}
-		}
-
-		protected override void BuildCommand(int commandNumber)
-		{
-			StringBuilder.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
 		}
 
 		protected override void BuildSql()
@@ -102,10 +131,10 @@ namespace LinqToDB.DataProvider.DB2
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
@@ -117,10 +146,7 @@ namespace LinqToDB.DataProvider.DB2
 				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-				}
+					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
@@ -183,16 +209,16 @@ namespace LinqToDB.DataProvider.DB2
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectQuery, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 		}
 
-		protected override void BuildEmptyInsert(SelectQuery selectQuery)
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in selectQuery.Insert.Into.Fields)
+			foreach (var col in insertClause.Into.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();
@@ -203,16 +229,16 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
-			if (owner    != null && owner.   Length == 0) owner    = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
 
 			// "db..table" syntax not supported
-			if (database != null && owner == null)
+			if (database != null && schema == null)
 				throw new LinqToDBException("DB2 requires schema name if database name provided.");
 
-			return base.BuildTableName(sb, database, owner, table);
+			return base.BuildTableName(sb, database, schema, table);
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

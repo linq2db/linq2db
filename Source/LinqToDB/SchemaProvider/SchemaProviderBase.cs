@@ -40,6 +40,11 @@ namespace LinqToDB.SchemaProvider
 
 		protected Dictionary<string,DataTypeInfo> DataTypesDic;
 
+		/// <summary>
+		/// If true, provider doesn't support schema-only procedure execution and will execute procedure for real.
+		/// </summary>
+		protected virtual bool GetProcedureSchemaExecutesProcedure => false;
+
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
 		{
 			if (options == null)
@@ -250,31 +255,46 @@ namespace LinqToDB.SchemaProvider
 
 					var current = 1;
 
-					foreach (var procedure in procedures)
+					var isActiveTransaction = dataConnection.Transaction != null;
+
+					if (GetProcedureSchemaExecutesProcedure && isActiveTransaction)
+						throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+
+					if (!isActiveTransaction)
+						dataConnection.BeginTransaction();
+
+					try
 					{
-						if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
+						foreach (var procedure in procedures)
 						{
-							var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
-								 procedure.CatalogName,
-								 procedure.SchemaName,
-								 procedure.ProcedureName).ToString();
+							if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
+							{
+								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
+									 procedure.CatalogName,
+									 procedure.SchemaName,
+									 procedure.ProcedureName).ToString();
 
-							LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
+								LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
+							}
+
+							options.ProcedureLoadingProgress(procedures.Count, current++);
 						}
-
-						options.ProcedureLoadingProgress(procedures.Count, current++);
 					}
-
+					finally
+					{
+						if (!isActiveTransaction)
+							dataConnection.RollbackTransaction();
+					}
 				}
 				else
 					procedures = new List<ProcedureSchema>();
-
-				#endregion
 
 				var psp = GetProviderSpecificProcedures(dataConnection);
 
 				if (psp != null)
 					procedures.AddRange(psp);
+
+				#endregion
 			}
 			else
 				procedures = new List<ProcedureSchema>();
@@ -550,7 +570,7 @@ namespace LinqToDB.SchemaProvider
 				;
 		}
 
-		protected string ToTypeName(Type type, bool isNullable)
+		public static string ToTypeName(Type type, bool isNullable)
 		{
 			if (type == null)
 				type = typeof(object);
@@ -626,77 +646,86 @@ namespace LinqToDB.SchemaProvider
 					}
 				}
 
+if (t.TableName == "Employees")
+{
+}
+
 				foreach (var key in t.ForeignKeys)
 				{
-					string name = null;
-
-					if (schemaOptions.GetAssociationMemberName != null)
-					{
-						name = schemaOptions.GetAssociationMemberName(key);
-
-						if (name != null)
-							key.MemberName = ToValidName(name);
-					}
-
-					if (name == null)
-					{
-						name = key.MemberName;
-
-						if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
-						{
-							name = key.ThisColumns[0].MemberName;
-							name = name.Substring(0, name.Length - "id".Length);
-
-							if (t.ForeignKeys.Select(_ => _.MemberName). Concat(
-								t.Columns.    Select(_ => _.MemberName)).Concat(
-								new[] { t.TypeName }).All(_ => _ != name))
-							{
-								name = key.MemberName;
-							}
-						}
-			
-						if (name == key.MemberName)
-						{
-							if (name.StartsWith("FK_"))
-								name = name.Substring(3);
-
-							if (name.EndsWith("_BackReference"))
-								name = name.Substring(0, name.Length - "_BackReference".Length);
-
-							name = string.Join("", name
-								.Split('_')
-								.Where(_ =>
-									_.Length > 0 && _ != t.TableName &&
-									(t.SchemaName == null || t.IsDefaultSchema || _ != t.SchemaName))
-								.ToArray());
-
-							var digitEnd = 0;
-							for (var i = name.Length - 1; i >= 0; i--)
-							{
-								if (char.IsDigit(name[i]))
-									digitEnd++;
-								else
-									break;
-							}
-
-							if (digitEnd > 0)
-								name = name.Substring(0, name.Length - digitEnd);
-						}
-
-						if (string.IsNullOrEmpty(name))
-							name = key.OtherTable.TableName;
-
-						if (t.ForeignKeys.Select(_ => _.MemberName). Concat(
-							t.Columns.    Select(_ => _.MemberName)).Concat(
-								new[] { t.TypeName }).All(_ => _ != name))
-						{
-							key.MemberName = ToValidName(name);
-						}
-					}
+					SetForeignKeyMemberName(schemaOptions, t, key);
 				}
 			}
 
 			return databaseSchema;
+		}
+
+		internal static void SetForeignKeyMemberName(GetSchemaOptions schemaOptions, TableSchema table, ForeignKeySchema key)
+		{
+			string name = null;
+
+			if (schemaOptions.GetAssociationMemberName != null)
+			{
+				name = schemaOptions.GetAssociationMemberName(key);
+
+				if (name != null)
+					key.MemberName = ToValidName(name);
+			}
+
+			if (name == null)
+			{
+				name = key.MemberName;
+
+				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+				{
+					name = key.ThisColumns[0].MemberName;
+					name = name.Substring(0, name.Length - "id".Length);
+
+					if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
+						table.Columns.    Select(_ => _.MemberName)).Concat(
+						new[] { table.TypeName }).Any(_ => _ == name))
+					{
+						name = key.MemberName;
+					}
+				}
+
+				if (name == key.MemberName)
+				{
+					if (name.StartsWith("FK_"))
+						name = name.Substring(3);
+
+					if (name.EndsWith("_BackReference"))
+						name = name.Substring(0, name.Length - "_BackReference".Length);
+
+					name = string.Join("", name
+						.Split('_')
+						.Where(_ =>
+							_.Length > 0 && _ != table.TableName &&
+							(table.SchemaName == null || table.IsDefaultSchema || _ != table.SchemaName))
+						.ToArray());
+
+					var digitEnd = 0;
+					for (var i = name.Length - 1; i >= 0; i--)
+					{
+						if (char.IsDigit(name[i]))
+							digitEnd++;
+						else
+							break;
+					}
+
+					if (digitEnd > 0)
+						name = name.Substring(0, name.Length - digitEnd);
+				}
+
+				if (string.IsNullOrEmpty(name))
+					name = key.OtherTable != key.ThisTable ? key.OtherTable.TableName : key.KeyName;
+
+				if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
+					table.Columns.    Select(_ => _.MemberName)).Concat(
+					new[] { table.TypeName }).All(_ => _ != name))
+				{
+					key.MemberName = ToValidName(name);
+				}
+			}
 		}
 	}
 }

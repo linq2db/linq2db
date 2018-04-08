@@ -22,12 +22,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2000SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildOutputSubclause(SelectQuery selectQuery)
+		protected override void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
 		{
 			// OUTPUT clause is only supported by the MS SQL Server starts with 2005 version.
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			StringBuilder
 				.AppendLine()

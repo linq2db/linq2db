@@ -14,25 +14,30 @@ namespace LinqToDB.Linq
 	{
 		public static class InsertOrReplace<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryChache = new ConcurrentDictionary<object,Query<int>>();
+			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
-			static Query<int> CreateQuery(IDataContext dataContext)
+			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
-				var fieldDic = new Dictionary<SqlField,ParameterAccessor>();
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
+				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
+				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
+
+				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (databaseName != null) sqlTable.Database     = databaseName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
+
 				var sqlQuery = new SelectQuery();
-				sqlQuery.ChangeQueryType(QueryType.InsertOrUpdate);
 
 				ParameterAccessor param;
 
-				sqlQuery.Insert.Into  = sqlTable;
-				sqlQuery.Update.Table = sqlTable;
+				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
+				insertOrUpdateStatement.Insert.Into  = sqlTable;
+				insertOrUpdateStatement.Update.Table = sqlTable;
 
 				sqlQuery.From.Table(sqlTable);
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { Statement = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = insertOrUpdateStatement, } }
 				};
 
 				var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
@@ -45,14 +50,14 @@ namespace LinqToDB.Linq
 					{
 						if (!supported || !fieldDic.TryGetValue(field, out param))
 						{
-							param = GetParameter(typeof(T), dataContext, field);
+							param = GetParameter(type, dataContext, field);
 							ei.Queries[0].Parameters.Add(param);
 
 							if (supported)
 								fieldDic.Add(field, param);
 						}
 
-						sqlQuery.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
+						insertOrUpdateStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
 					else if (field.IsIdentity)
 					{
@@ -71,7 +76,7 @@ namespace LinqToDB.Linq
 				var q =
 				(
 					from k in keys
-					join i in sqlQuery.Insert.Items on k equals i.Column
+					join i in insertOrUpdateStatement.Insert.Items on k equals i.Column
 					select new { k, i }
 				).ToList();
 
@@ -89,46 +94,48 @@ namespace LinqToDB.Linq
 				{
 					if (!supported || !fieldDic.TryGetValue(field, out param))
 					{
-						param = GetParameter(typeof(T), dataContext, field);
+						param = GetParameter(type, dataContext, field);
 						ei.Queries[0].Parameters.Add(param);
 
 						if (supported)
 							fieldDic.Add(field, param = GetParameter(typeof(T), dataContext, field));
 					}
 
-					sqlQuery.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
+					insertOrUpdateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 				}
 
-				sqlQuery.Update.Keys.AddRange(q.Select(i => i.i));
+				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 
 				// Set the query.
 				//
 				if (ei.SqlProviderFlags.IsInsertOrUpdateSupported)
 					SetNonQueryQuery(ei);
 				else
-					MakeAlternativeInsertOrUpdate(ei, sqlQuery);
+					MakeAlternativeInsertOrUpdate(ei);
 
 				return ei;
 			}
 
-			public static int Query(IDataContext dataContext, T obj)
+			public static int Query(IDataContext dataContext, T obj, string tableName, string databaseName, string schema)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
+				var type = obj.GetType();
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
+				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
-			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
+			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName, string databaseName, string schema, CancellationToken token)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
+				var type = obj.GetType();
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
+				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 
@@ -136,19 +143,19 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public static void MakeAlternativeInsertOrUpdate(Query query, SelectQuery selectQuery)
+		public static void MakeAlternativeInsertOrUpdate(Query query)
 		{
 			var dic = new Dictionary<ICloneableElement, ICloneableElement>();
 
-			var insertQuery = (SelectQuery)selectQuery.Clone(dic, _ => true);
+			var firstStatement = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
+			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, _ => true);
 
-			insertQuery.ChangeQueryType(QueryType.Insert);
-			insertQuery.ClearUpdate();
-			insertQuery.From.Tables.Clear();
+			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert};
+			insertStatement.SelectQuery.From.Tables.Clear();
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement = insertQuery,
+				Statement   = insertStatement,
 				Parameters  = query.Queries[0].Parameters
 					.Select(p => new ParameterAccessor
 						(
@@ -161,30 +168,29 @@ namespace LinqToDB.Linq
 					.ToList(),
 			});
 
-			var keys = selectQuery.Update.Keys;
+			var keys = firstStatement.Update.Keys;
 
 			foreach (var key in keys)
-				selectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression);
+				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression);
 
-			selectQuery.ClearInsert();
-
-			if (selectQuery.Update.Items.Count > 0)
+			//TODO! looks not working solution
+			if (firstStatement.Update.Items.Count > 0)
 			{
-				selectQuery.ChangeQueryType(QueryType.Update);
+				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery) {Update = firstStatement.Update};
 				SetNonQueryQuery2(query);
 			}
 			else
 			{
-				selectQuery.ChangeQueryType(QueryType.Select);
-				selectQuery.Select.Columns.Clear();
-				selectQuery.Select.Columns.Add(new SqlColumn(selectQuery, new SqlExpression("1")));
+				firstStatement.SelectQuery.Select.Columns.Clear();
+				firstStatement.SelectQuery.Select.Columns.Add(new SqlColumn(firstStatement.SelectQuery, new SqlExpression("1")));
+				query.Queries[0].Statement = new SqlSelectStatement(firstStatement.SelectQuery);
 				SetQueryQuery2(query);
 			}
 
 			query.Queries.Add(new QueryInfo
 			{
-				Statement = insertQuery,
-				Parameters  = query.Queries[0].Parameters.ToList(),
+				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
+				Parameters = query.Queries[0].Parameters.ToList(),
 			});
 		}
 	}

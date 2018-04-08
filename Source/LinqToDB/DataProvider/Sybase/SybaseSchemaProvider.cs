@@ -12,6 +12,9 @@ namespace LinqToDB.DataProvider.Sybase
 
 	class SybaseSchemaProvider : SchemaProviderBase
 	{
+		// sybase provider will execute procedure
+		protected override bool GetProcedureSchemaExecutesProcedure => true;
+
 		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
@@ -59,17 +62,17 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			return dataConnection.Query<TableInfo>(@"
-				SELECT
-					id                                                 as TableID,
-					@db                                                as CatalogName,
-					USER_NAME(uid)                                     as SchemaName,
-					name                                               as TableName,
-					CASE WHEN type = 'V' THEN 1 ELSE 0 END             as IsView,
-					CASE WHEN USER_NAME(uid) = 'dbo' THEN 1 ELSE 0 END as IsDefaultSchema
-				FROM
-					sysobjects
-				WHERE
-					type IN ('U','V')",
+SELECT
+	id                                                 as TableID,
+	@db                                                as CatalogName,
+	USER_NAME(uid)                                     as SchemaName,
+	name                                               as TableName,
+	CASE WHEN type = 'V' THEN 1 ELSE 0 END             as IsView,
+	CASE WHEN USER_NAME(uid) = 'dbo' THEN 1 ELSE 0 END as IsDefaultSchema
+FROM
+	sysobjects
+WHERE
+	type IN ('U','V')",
 				new { @db = dataConnection.Connection.Database})
 				.ToList();
 		}
@@ -77,68 +80,68 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(@"
-				SELECT
-					i.id                                                              as TableID,
-					i.name                                                            as PrimaryKeyName,
-					INDEX_COL(USER_NAME(o.uid) + '.' + o.name, i.indid, c.colid)      as ColumnName,
-					INDEX_COLORDER(USER_NAME(o.uid) + '.' + o.name, i.indid, c.colid),
-					c.colid                                                           as Ordinal
-				FROM
-					sysindexes i
-						JOIN sysobjects o ON i.id = o.id
-						JOIN syscolumns c ON i.id = c.id
-				WHERE
-					i.status2 & 2 = 2 AND
-					i.status & 2048 = 2048 AND
-					i.indid > 0 AND
-					c.colid < i.keycnt + CASE WHEN i.indid = 1 THEN 1 ELSE 0 END")
+SELECT
+	i.id                                                              as TableID,
+	i.name                                                            as PrimaryKeyName,
+	INDEX_COL(USER_NAME(o.uid) + '.' + o.name, i.indid, c.colid)      as ColumnName,
+	INDEX_COLORDER(USER_NAME(o.uid) + '.' + o.name, i.indid, c.colid),
+	c.colid                                                           as Ordinal
+FROM
+	sysindexes i
+		JOIN sysobjects o ON i.id = o.id
+		JOIN syscolumns c ON i.id = c.id
+WHERE
+	i.status2 & 2 = 2 AND
+	i.status & 2048 = 2048 AND
+	i.indid > 0 AND
+	c.colid < i.keycnt + CASE WHEN i.indid = 1 THEN 1 ELSE 0 END")
 				.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
 			return dataConnection.Query<ColumnInfo>(@"
-				SELECT
-					o.id                                             as TableID,
-					c.name                                           as Name,
-					Convert(bit, c.status & 0x08)                    as IsNullable,
-					c.colid                                          as Ordinal,
-					t.name                                           as DataType,
-					c.length                                         as Length,
-					c.prec                                           as [Precision],
-					c.scale                                          as Scale,
-					Convert(bit, c.status & 0x80)                    as IsIdentity,
-					CASE WHEN t.name = 'timestamp' THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN t.name = 'timestamp' THEN 1 ELSE 0 END as SkipOnUpdate
-				FROM
-					syscolumns c
-						JOIN sysobjects o ON c.id       = o.id
-						JOIN systypes   t ON c.usertype = t.usertype
-				WHERE
-					o.type IN ('U','V')")
+SELECT
+	o.id                                             as TableID,
+	c.name                                           as Name,
+	Convert(bit, c.status & 0x08)                    as IsNullable,
+	c.colid                                          as Ordinal,
+	t.name                                           as DataType,
+	c.length                                         as Length,
+	c.prec                                           as [Precision],
+	c.scale                                          as Scale,
+	Convert(bit, c.status & 0x80)                    as IsIdentity,
+	CASE WHEN t.name = 'timestamp' THEN 1 ELSE 0 END as SkipOnInsert,
+	CASE WHEN t.name = 'timestamp' THEN 1 ELSE 0 END as SkipOnUpdate
+FROM
+	syscolumns c
+		JOIN sysobjects o ON c.id       = o.id
+		JOIN systypes   t ON c.usertype = t.usertype
+WHERE
+	o.type IN ('U','V')")
 				.ToList();
 		}
 
 		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			const string baseSql = @"
-				SELECT
-					o.name                           as Name,
-					c.tableid                        as ThisTableID,
-					r.reftabid                       as OtherTableID,
-					COL_NAME(c.tableid,  r.fokey{0})   as ThisColumn,
-					COL_NAME(r.reftabid, r.refkey{0})  as OtherColumn,
-					{0}                              as Ordinal
-				FROM
-					sysreferences r
-						JOIN sysconstraints c ON r.constrid = c.constrid
-							JOIN sysobjects o  ON c.constrid = o.id
-							JOIN sysobjects o3 ON c.tableid  = o3.id
-						LEFT JOIN sysobjects o2 ON r.reftabid = o2.id
-						JOIN sysreferences r2 ON r.constrid = r2.constrid
-							LEFT JOIN sysindexes i ON r2.indexid = i.indid AND r2.reftabid = i.id
-				WHERE
-					c.status = 64";
+SELECT
+	o.name                           as Name,
+	c.tableid                        as ThisTableID,
+	r.reftabid                       as OtherTableID,
+	COL_NAME(c.tableid,  r.fokey{0})   as ThisColumn,
+	COL_NAME(r.reftabid, r.refkey{0})  as OtherColumn,
+	{0}                              as Ordinal
+FROM
+	sysreferences r
+		JOIN sysconstraints c ON r.constrid = c.constrid
+			JOIN sysobjects o  ON c.constrid = o.id
+			JOIN sysobjects o3 ON c.tableid  = o3.id
+		LEFT JOIN sysobjects o2 ON r.reftabid = o2.id
+		JOIN sysreferences r2 ON r.constrid = r2.constrid
+			LEFT JOIN sysindexes i ON r2.indexid = i.indid AND r2.reftabid = i.id
+WHERE
+	c.status = 64";
 
 			string sql = null;
 
@@ -178,6 +181,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
 		{
+			// otherwise GetSchema will throw AseException
+			if (dataConnection.Transaction != null)
+				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
 
 			return

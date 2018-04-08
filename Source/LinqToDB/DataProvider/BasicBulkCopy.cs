@@ -38,6 +38,11 @@ namespace LinqToDB.DataProvider
 
 		protected virtual BulkCopyRowsCopied RowByRowCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
+			// This limitation could be lifted later for some providers that supports identity insert if we will get such request
+			// It will require support from DataConnection.Insert
+			if (options.KeepIdentity == true)
+				throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by {nameof(BulkCopyType)}.{nameof(BulkCopyType.RowByRow)} mode");
+
 			var rowsCopied = new BulkCopyRowsCopied();
 
 			foreach (var item in source)
@@ -66,7 +71,7 @@ namespace LinqToDB.DataProvider
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
 				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase).  ToString(),
-				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToOwner).     ToString(),
+				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToSchema).    ToString(),
 				tableName    == null ? null : sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable).ToString())
 			.ToString();
 		}
@@ -204,10 +209,10 @@ namespace LinqToDB.DataProvider
 		#region MultipleRows Support
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
-			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source)
+			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return MultipleRowsCopy1(
-				new MultipleRowsHelper<T>(dataConnection, options, enforceKeepIdentity),
+				new MultipleRowsHelper<T>(dataConnection, options),
 				dataConnection,
 				options,
 				source);
@@ -267,10 +272,10 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected virtual BulkCopyRowsCopied MultipleRowsCopy2<T>(
-			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source, string from)
+			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
 		{
 			return MultipleRowsCopy2<T>(
-				new MultipleRowsHelper<T>(dataConnection, options, enforceKeepIdentity),
+				new MultipleRowsHelper<T>(dataConnection, options),
 				dataConnection,
 				options,
 				source,
@@ -329,7 +334,7 @@ namespace LinqToDB.DataProvider
 
 		protected  BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options);
 
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()

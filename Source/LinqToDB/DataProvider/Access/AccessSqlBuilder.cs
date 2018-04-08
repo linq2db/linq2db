@@ -19,12 +19,29 @@ namespace LinqToDB.DataProvider.Access
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.IsInsertWithIdentity() ? 2 : 1;
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			StringBuilder.AppendLine("SELECT @@IDENTITY");
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+
+				StringBuilder.Append("ALTER TABLE ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder
+					.Append(" ALTER COLUMN ")
+					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
+					.AppendLine(" COUNTER(1,1)")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT @@IDENTITY");
+			}
 		}
 
 		public override bool IsNestedJoinSupported => false;
@@ -39,7 +56,8 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildSql()
 		{
-			if (Statement is SelectQuery selectQuery)
+			var selectQuery = Statement.SelectQuery;
+			if (selectQuery != null)
 			{
 				if (NeedSkip(selectQuery))
 				{
@@ -111,7 +129,7 @@ namespace LinqToDB.DataProvider.Access
 
 			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
 
-			BuildSql(0, query, StringBuilder);
+			BuildSql(0, new SqlSelectStatement(query), StringBuilder);
 
 			_selectColumn = null;
 		}
@@ -321,17 +339,17 @@ namespace LinqToDB.DataProvider.Access
 			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
 		}
 
-		protected override void BuildUpdateClause(SelectQuery selectQuery)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			base.BuildFromClause(selectQuery);
+			base.BuildFromClause(statement, selectQuery);
 			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet(selectQuery);
+			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType)
@@ -364,8 +382,8 @@ namespace LinqToDB.DataProvider.Access
 
 					return "[" + value + "]";
 
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{
@@ -408,7 +426,7 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			if (database != null && database.Length == 0) database = null;
 

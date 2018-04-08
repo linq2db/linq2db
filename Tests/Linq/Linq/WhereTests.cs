@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Tools;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -1085,6 +1085,23 @@ namespace Tests.Linq
 				var p2    = db.Child;
 				var qry2  = p2.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
 				var qry22 = p2.Where(x => qry2.Contains(x.ChildID));
+
+				AreEqual(qry12, qry22);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void GroupBySubQquery2In(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var p1    = Child;
+				var qry1  = p1.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
+				var qry12 = p1.Where(x => x.ChildID.In(qry1));
+
+				var p2    = db.Child;
+				var qry2  = p2.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
+				var qry22 = p2.Where(x => x.ChildID.In(qry2));
 
 				AreEqual(qry12, qry22);
 			}

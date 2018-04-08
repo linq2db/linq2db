@@ -28,12 +28,12 @@ namespace LinqToDB.DataProvider.Oracle
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override void BuildGetIdentity(SelectQuery selectQuery)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = selectQuery.Insert.Into.GetIdentityField();
+			var identityField = insertClause.Into.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", selectQuery.Insert.Into.Name);
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append("\t");
@@ -99,7 +99,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildSql()
 		{
-			if (!(Statement is SelectQuery selectQuery))
+			var selectQuery = Statement.SelectQuery;
+
+			if (selectQuery == null)
 			{
 				base.BuildSql();
 				return;
@@ -236,10 +238,10 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override void BuildFromClause(SelectQuery selectQuery)
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!selectQuery.IsUpdate)
-				base.BuildFromClause(selectQuery);
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
@@ -274,9 +276,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(SelectQuery selectQuery)
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(selectQuery, "FROM SYS.DUAL");
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYS.DUAL");
 		}
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
@@ -284,11 +286,11 @@ namespace LinqToDB.DataProvider.Oracle
 			return "SELECT " + sequenceName + ".nextval ID from DUAL connect by level <= " + count;
 		}
 
-		protected override void BuildEmptyInsert(SelectQuery selectQuery)
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in selectQuery.Insert.Into.Fields)
+			foreach (var col in insertClause.Into.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();
@@ -298,19 +300,23 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (statement is SqlCreateTableStatement createTable)
+			switch (statement)
 			{
-				_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+				case SqlTruncateTableStatement truncateTable:
+					return truncateTable.ResetIdentity ? 2 : 1;
 
-				if (_identityField != null)
-					return 3;
-			}
-			else if (statement is SqlDropTableStatement dropTable)
-			{
-				_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+				case SqlCreateTableStatement createTable:
+					_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					if (_identityField != null)
+						return 3;
+					break;
 
-				if (_identityField != null)
-					return 3;
+				case SqlDropTableStatement dropTable:
+					_identityField = dropTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+					if (_identityField != null)
+						return 3;
+
+					break;
 			}
 
 			return base.CommandCount(statement);
@@ -324,9 +330,9 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else
 			{
-			var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Owner)
-				? string.Empty
-				: dropTable.Table.Owner + ".";
+				var schemaPrefix = string.IsNullOrWhiteSpace(dropTable.Table.Schema)
+					? string.Empty
+					: dropTable.Table.Schema + ".";
 
 				StringBuilder
 					.Append("DROP TRIGGER ")
@@ -337,17 +343,40 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			string GetSchemaPrefix(SqlTable table)
 			{
-				return string.IsNullOrWhiteSpace(table.Owner)
+				return string.IsNullOrWhiteSpace(table.Schema)
 					? string.Empty
-					: table.Owner + ".";
+					: table.Schema + ".";
 			}
 
 			switch (Statement)
 			{
+				case SqlTruncateTableStatement truncate:
+					StringBuilder
+						.AppendFormat(@"DECLARE
+	l_value number;
+BEGIN
+	-- Select the next value of the sequence
+	EXECUTE IMMEDIATE 'SELECT SIDENTITY_{0}.NEXTVAL FROM dual' INTO l_value;
+
+	-- Set a negative increment for the sequence, with value = the current value of the sequence
+	EXECUTE IMMEDIATE 'ALTER SEQUENCE SIDENTITY_{0} INCREMENT BY -' || l_value || ' MINVALUE 0';
+
+	-- Select once from the sequence, to take its current value back to 0
+	EXECUTE IMMEDIATE 'select SIDENTITY_{0}.NEXTVAL FROM dual' INTO l_value;
+
+	-- Set the increment back to 1
+	EXECUTE IMMEDIATE 'ALTER SEQUENCE SIDENTITY_{0} INCREMENT BY 1 MINVALUE 0';
+END;",
+							truncate.Table.PhysicalName)
+						.AppendLine()
+						;
+
+					break;
+
 				case SqlDropTableStatement dropTable:
 					if (commandNumber == 1)
 					{
@@ -388,8 +417,7 @@ namespace LinqToDB.DataProvider.Oracle
 						BuildPhysicalTable(createTable.Table, null);
 
 						StringBuilder
-							.AppendLine(" FOR EACH ROW")
-							.AppendLine  ()
+							.AppendLine  (" FOR EACH ROW")
 							.AppendLine  ("BEGIN")
 							.AppendFormat("\tSELECT {2}SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, createTable.Table.PhysicalName, schemaPrefix)
 							.AppendLine  ()
@@ -401,12 +429,17 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
-			if (owner != null && owner.Length == 0) owner = null;
+			StringBuilder.Append("TRUNCATE TABLE ");
+		}
 
-			if (owner != null)
-				sb.Append(owner).Append(".");
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
+		{
+			if (schema != null && schema.Length == 0) schema = null;
+
+			if (schema != null)
+				sb.Append(schema).Append(".");
 
 			return sb.Append(table);
 		}

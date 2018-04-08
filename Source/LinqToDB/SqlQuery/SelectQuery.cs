@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,11 +7,8 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-	using Mapping;
-
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SelectQuery : SqlStatement, ISqlTableSource
+	public class SelectQuery : ISqlTableSource
 	{
 		#region Init
 
@@ -34,23 +30,16 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void Init(
-			SqlInsertClause    insert,
-			SqlUpdateClause    update,
-			SqlDeleteClause    delete,
-			SqlSelectClause    select,
-			SqlFromClause      from,
-			SqlWhereClause     where,
-			SqlGroupByClause   groupBy,
-			SqlWhereClause     having,
-			SqlOrderByClause   orderBy,
-			List<SqlUnion>     unions,
-			SelectQuery        parentSelect,
-			bool               parameterDependent,
-			List<SqlParameter> parameters)
+			SqlSelectClause         select,
+			SqlFromClause           from,
+			SqlWhereClause          where,
+			SqlGroupByClause        groupBy,
+			SqlWhereClause          having,
+			SqlOrderByClause        orderBy,
+			List<SqlUnion>          unions,
+			SelectQuery          parentSelect,
+			bool                 parameterDependent)
 		{
-			_insert              = insert;
-			_update              = update;
-			_delete              = delete;
 			Select               = select;
 			From                 = from;
 			Where                = where;
@@ -60,8 +49,6 @@ namespace LinqToDB.SqlQuery
 			_unions              = unions;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
-
-			Parameters.AddRange(parameters);
 
 			foreach (var col in select.Columns)
 				col.Parent = this;
@@ -84,66 +71,11 @@ namespace LinqToDB.SqlQuery
 		private List<object> _properties;
 		public  List<object>  Properties => _properties ?? (_properties = new List<object>());
 
-		public SelectQuery ParentSelect { get; set; }
+		public SelectQuery ParentSelect         { get; set; }
 
 		public bool IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
 
-		public override QueryType QueryType => _queryType;
-
-		private QueryType _queryType = QueryType.Select;
-
-		public void ChangeQueryType(QueryType newQueryType)
-		{
-			_queryType = newQueryType;
-		}
-
-		public bool IsSelect         => _queryType == QueryType.Select;
-		public bool IsDelete         => _queryType == QueryType.Delete;
-		public bool IsInsertOrUpdate => _queryType == QueryType.InsertOrUpdate;
-		public bool IsInsert         => _queryType == QueryType.Insert || _queryType == QueryType.InsertOrUpdate;
-		public bool IsUpdate         => _queryType == QueryType.Update || _queryType == QueryType.InsertOrUpdate;
-
-		#endregion
-
-		#region Temporary Delete
-
-		private SqlDeleteClause _delete;
-		public  SqlDeleteClause  Delete => _delete ?? (_delete = new SqlDeleteClause());
-
-		public void ClearDelete()
-		{
-			_delete = null;
-		}
-
-		#endregion
-
-		#region InsertClause
-
-		private SqlInsertClause _insert;
-		public  SqlInsertClause  Insert
-		{
-			get { return _insert ?? (_insert = new SqlInsertClause()); }
-		}
-
-		public void ClearInsert()
-		{
-			_insert = null;
-		}
-
-		#endregion
-
-		#region UpdateClause
-
-		private SqlUpdateClause _update;
-		public  SqlUpdateClause  Update
-		{
-			get { return _update ?? (_update = new SqlUpdateClause()); }
-		}
-
-		public void ClearUpdate()
-		{
-			_update = null;
-		}
+		public bool               IsParameterDependent { get; set; }
 
 		#endregion
 
@@ -157,234 +89,6 @@ namespace LinqToDB.SqlQuery
 		public void AddUnion(SelectQuery union, bool isAll)
 		{
 			Unions.Add(new SqlUnion(union, isAll));
-		}
-
-		#endregion
-
-		#region ProcessParameters
-
-		public override SqlStatement ProcessParameters(MappingSchema mappingSchema)
-		{
-			if (IsParameterDependent)
-			{
-				var query = new QueryVisitor().Convert(this, e =>
-				{
-					switch (e.ElementType)
-					{
-						case QueryElementType.SqlParameter :
-							{
-								var p = (SqlParameter)e;
-
-								if (p.Value == null)
-									return new SqlValue(null);
-							}
-
-							break;
-
-						case QueryElementType.ExprExprPredicate :
-							{
-								var ee = (SqlPredicate.ExprExpr)e;
-
-								if (ee.Operator == SqlPredicate.Operator.Equal || ee.Operator == SqlPredicate.Operator.NotEqual)
-								{
-									object value1;
-									object value2;
-
-									if (ee.Expr1 is SqlValue)
-										value1 = ((SqlValue)ee.Expr1).Value;
-									else if (ee.Expr1 is SqlParameter)
-										value1 = ((SqlParameter)ee.Expr1).Value;
-									else
-										break;
-
-									if (ee.Expr2 is SqlValue)
-										value2 = ((SqlValue)ee.Expr2).Value;
-									else if (ee.Expr2 is SqlParameter)
-										value2 = ((SqlParameter)ee.Expr2).Value;
-									else
-										break;
-
-									var value = Equals(value1, value2);
-
-									if (ee.Operator == SqlPredicate.Operator.NotEqual)
-										value = !value;
-
-									return new SqlPredicate.Expr(new SqlValue(value), SqlQuery.Precedence.Comparison);
-								}
-							}
-
-							break;
-
-						case QueryElementType.InListPredicate :
-							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e);
-					}
-
-					return null;
-				});
-
-				if (query != this)
-				{
-					query.Parameters.Clear();
-
-					new QueryVisitor().VisitAll(query, expr =>
-					{
-						switch (expr.ElementType)
-						{
-							case QueryElementType.SqlParameter :
-								{
-									var p = (SqlParameter)expr;
-									if (p.IsQueryParameter)
-										query.Parameters.Add(p);
-
-									break;
-								}
-						}
-					});
-				}
-
-				return query;
-			}
-
-			return this;
-		}
-
-		static SqlPredicate ConvertInListPredicate(MappingSchema mappingSchema, SqlPredicate.InList p)
-		{
-			if (p.Values == null || p.Values.Count == 0)
-				return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-			if (p.Values.Count == 1 && p.Values[0] is SqlParameter)
-			{
-				var pr = (SqlParameter)p.Values[0];
-
-				if (pr.Value == null)
-					return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-				if (pr.Value is IEnumerable)
-				{
-					var items = (IEnumerable)pr.Value;
-
-					if (p.Expr1 is ISqlTableSource)
-					{
-						var table = (ISqlTableSource)p.Expr1;
-						var keys  = table.GetKeys(true);
-
-						if (keys == null || keys.Count == 0)
-							throw new SqlException("Cant create IN expression.");
-
-						if (keys.Count == 1)
-						{
-							var values = new List<ISqlExpression>();
-							var field  = GetUnderlayingField(keys[0]);
-							var cd     = field.ColumnDescriptor;
-
-							foreach (var item in items)
-							{
-								var value = cd.MemberAccessor.GetValue(item);
-								values.Add(mappingSchema.GetSqlValue(cd.MemberType, value));
-							}
-
-							if (values.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-							return new SqlPredicate.InList(keys[0], p.IsNot, values);
-						}
-
-						{
-							var sc = new SqlSearchCondition();
-
-							foreach (var item in items)
-							{
-								var itemCond = new SqlSearchCondition();
-
-								foreach (var key in keys)
-								{
-									var field = GetUnderlayingField(key);
-									var cd    = field.ColumnDescriptor;
-									var value = cd.MemberAccessor.GetValue(item);
-									var cond  = value == null ?
-										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
-										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, mappingSchema.GetSqlValue(value)));
-
-									itemCond.Conditions.Add(cond);
-								}
-
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
-							}
-
-							if (sc.Conditions.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-							if (p.IsNot)
-								return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
-
-							return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
-						}
-					}
-
-					if (p.Expr1 is ObjectSqlExpression)
-					{
-						var expr = (ObjectSqlExpression)p.Expr1;
-
-						if (expr.Parameters.Length == 1)
-						{
-							var values = new List<ISqlExpression>();
-
-							foreach (var item in items)
-							{
-								var value = expr.GetValue(item, 0);
-								values.Add(new SqlValue(value));
-							}
-
-							if (values.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-							return new SqlPredicate.InList(expr.Parameters[0], p.IsNot, values);
-						}
-
-						var sc = new SqlSearchCondition();
-
-						foreach (var item in items)
-						{
-							var itemCond = new SqlSearchCondition();
-
-							for (var i = 0; i < expr.Parameters.Length; i++)
-							{
-								var sql   = expr.Parameters[i];
-								var value = expr.GetValue(item, i);
-								var cond  = value == null ?
-									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
-									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, new SqlValue(value)));
-
-								itemCond.Conditions.Add(cond);
-							}
-
-							sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
-						}
-
-						if (sc.Conditions.Count == 0)
-							return new SqlPredicate.Expr(new SqlValue(p.IsNot));
-
-						if (p.IsNot)
-							return new SqlPredicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
-
-						return new SqlPredicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
-					}
-				}
-			}
-
-			return null;
-		}
-
-		static SqlField GetUnderlayingField(ISqlExpression expr)
-		{
-			switch (expr.ElementType)
-			{
-				case QueryElementType.SqlField: return (SqlField)expr;
-				case QueryElementType.Column  : return GetUnderlayingField(((SqlColumn)expr).Expression);
-			}
-
-			throw new InvalidOperationException();
 		}
 
 		#endregion
@@ -403,12 +107,6 @@ namespace LinqToDB.SqlQuery
 			if (clone.ParentSelect != null)
 				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
 
-			_queryType = clone._queryType;
-
-			if (IsInsert) _insert = (SqlInsertClause)clone._insert.Clone(objectTree, doClone);
-			if (IsUpdate) _update = (SqlUpdateClause)clone._update.Clone(objectTree, doClone);
-			if (IsDelete) _delete = (SqlDeleteClause)clone._delete.Clone(objectTree, doClone);
-
 			Select  = new SqlSelectClause (this, clone.Select,  objectTree, doClone);
 			From    = new SqlFromClause   (this, clone.From,    objectTree, doClone);
 			Where   = new SqlWhereClause  (this, clone.Where,   objectTree, doClone);
@@ -416,7 +114,6 @@ namespace LinqToDB.SqlQuery
 			Having  = new SqlWhereClause  (this, clone.Having,  objectTree, doClone);
 			OrderBy = new SqlOrderByClause(this, clone.OrderBy, objectTree, doClone);
 
-			Parameters.AddRange(clone.Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 			IsParameterDependent = clone.IsParameterDependent;
 
 			new QueryVisitor().Visit(this, expr =>
@@ -438,7 +135,7 @@ namespace LinqToDB.SqlQuery
 			return (SelectQuery)Clone(new Dictionary<ICloneableElement,ICloneableElement>(), doClone);
 		}
 
-		#endregion
+#endregion
 
 		#region Helpers
 
@@ -452,19 +149,19 @@ namespace LinqToDB.SqlQuery
 
 			new QueryVisitor().Visit(this, e =>
 			{
-				if (e is SelectQuery && e != this)
-					((SelectQuery)e).ForEachTable(action, visitedQueries);
+				if (e is SelectQuery query && e != this)
+					query.ForEachTable(action, visitedQueries);
 			});
 		}
 
-		public override ISqlTableSource GetTableSource(ISqlTableSource table)
+		public ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
 			var ts = From[table];
 
 //			if (ts == null && IsUpdate && Update.Table == table)
 //				return Update.Table;
 
-			return ts == null && ParentSelect != null? ParentSelect.GetTableSource(table) : ts;
+			return ts == null && ParentSelect != null ? ParentSelect.GetTableSource(table) : ts;
 		}
 
 		internal static SqlTableSource CheckTableSource(SqlTableSource ts, ISqlTableSource table, string alias)
@@ -532,7 +229,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ICloneableElement Members
 
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;
@@ -547,18 +244,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public override ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)_insert)?.Walk(skipColumns, func);
-			((ISqlExpressionWalkable)_update)?.Walk(skipColumns, func);
-			((ISqlExpressionWalkable)_delete)?.Walk(skipColumns, func);
-
-			((ISqlExpressionWalkable)Select) . Walk(skipColumns, func);
-			((ISqlExpressionWalkable)From)   . Walk(skipColumns, func);
-			((ISqlExpressionWalkable)Where)  . Walk(skipColumns, func);
-			((ISqlExpressionWalkable)GroupBy). Walk(skipColumns, func);
-			((ISqlExpressionWalkable)Having) . Walk(skipColumns, func);
-			((ISqlExpressionWalkable)OrderBy). Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Select) .Walk(skipColumns, func);
+			((ISqlExpressionWalkable)From)   .Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Where)  .Walk(skipColumns, func);
+			((ISqlExpressionWalkable)GroupBy).Walk(skipColumns, func);
+			((ISqlExpressionWalkable)Having) .Walk(skipColumns, func);
+			((ISqlExpressionWalkable)OrderBy).Walk(skipColumns, func);
 
 			if (HasUnion)
 				foreach (var union in Unions)
@@ -623,9 +316,13 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public override QueryElementType ElementType => QueryElementType.SqlQuery;
+		public QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public string SqlText =>
+			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+			.ToString();
+
+		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
 			if (dic.ContainsKey(this))
 				return sb.Append("...");
@@ -651,6 +348,24 @@ namespace LinqToDB.SqlQuery
 			dic.Remove(this);
 
 			return sb;
+		}
+
+		#endregion
+
+		#region Debug
+
+		internal void EnsureFindTables()
+		{
+			new QueryVisitor().Visit(this, e =>
+			{
+				if (e is SqlField f)
+				{
+					var ts = GetTableSource(f.Table);
+
+					if (ts == null && f != f.Table.All)
+						throw new SqlException("Table '{0}' not found.", f.Table);
+				}
+			});
 		}
 
 		#endregion

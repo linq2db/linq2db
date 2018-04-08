@@ -60,5 +60,12 @@ namespace LinqToDB
 		/// Name of method in the same class that returns substitution expression.
 		/// </summary>
 		public string MethodName    { get; set; }
+
+		/// <summary>
+		/// Indicates whether a property should be mapped with this expression Method. </summary>
+		/// <value>
+		/// True if the property should be mapped with this expression Method. </value>
+		public bool IsColumn { get; set; }
+
 	}
 }

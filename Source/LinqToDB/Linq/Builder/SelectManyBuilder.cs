@@ -153,6 +153,7 @@ namespace LinqToDB.Linq.Builder
 				if (joinType == JoinType.Auto)
 				{
 					var isApplyJoin =
+						//Common.Configuration.Linq.PrefereApply    ||
 						collection.SelectQuery.Select.HasModifier ||
 						table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0;
 
@@ -245,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 			private IBuildContext _collection;
 			public  IBuildContext  Collection
 			{
-				get { return _collection; }
+				get => _collection;
 				set
 				{
 					_collection = value;
