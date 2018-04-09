@@ -140,6 +140,18 @@ namespace Tests.Linq
 					select p);
 		}
 
+		[Test, DataContextSource]
+		public void TestGetBaseClass(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.GetTable<ParentInheritanceBase3>()
+					.Where(x => x is ParentInheritance13)
+					.ToList();
+				Assert.AreEqual(2, q.Count);
+			}
+		}
+
 		[Test, NorthwindDataContext]
 		public void TypeCastAsTest1(string context)
 		{
