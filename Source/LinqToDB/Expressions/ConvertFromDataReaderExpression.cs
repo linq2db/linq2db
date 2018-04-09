@@ -155,17 +155,10 @@ namespace LinqToDB.Expressions
 				{
 					return func(dataReader);
 				}
-				catch (FormatException ex)
-				{
-					throw new FormatException("FormatException on Column: " + dataReader.GetName(_columnIndex), ex);
-				}
-				catch (InvalidCastException ex)
-				{
-					throw new InvalidCastException("InvalidCastException on Column: " + dataReader.GetName(_columnIndex), ex);
-				}
 				catch (Exception ex)
 				{
-					throw new Exception("Exception on Column: " + dataReader.GetName(_columnIndex), ex);
+					var name = dataReader.GetName(_columnIndex);
+					throw new LinqToDBException($"Mapping of column {name} value failed, see inner exception for details", ex);
 				}
 
 				/*
