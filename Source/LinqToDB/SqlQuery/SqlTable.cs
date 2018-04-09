@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -14,22 +15,22 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTable()
 		{
-			_sourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
-			Fields    = new Dictionary<string,SqlField>();
+			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+			Fields   = new Dictionary<string,SqlField>();
 		}
 
 		internal SqlTable(
-			int id, string name, string alias, string database, string owner, string physicalName, Type objectType,
+			int id, string name, string alias, string database, string schema, string physicalName, Type objectType,
 			SequenceNameAttribute[] sequenceAttributes,
 			SqlField[]              fields,
 			SqlTableType            sqlTableType,
 			ISqlExpression[]        tableArguments)
 		{
-			_sourceID          = id;
+			SourceID           = id;
 			Name               = name;
 			Alias              = alias;
 			Database           = database;
-			Owner              = owner;
+			Schema             = schema;
 			PhysicalName       = physicalName;
 			ObjectType         = objectType;
 			SequenceAttributes = sequenceAttributes;
@@ -59,12 +60,12 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTable([JetBrains.Annotations.NotNull] MappingSchema mappingSchema, Type objectType) : this()
 		{
-			if (mappingSchema == null) throw new ArgumentNullException("mappingSchema");
+			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
 			Database     = ed.DatabaseName;
-			Owner        = ed.SchemaName;
+			Schema       = ed.SchemaName;
 			Name         = ed.TableName;
 			ObjectType   = objectType;
 			PhysicalName = Name;
@@ -137,11 +138,12 @@ namespace LinqToDB.SqlQuery
 
 		#region Init from Table
 
-		public SqlTable(SqlTable table) : this()
+		public SqlTable(SqlTable table)
+			: this()
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
-			Owner              = table.Owner;
+			Schema             = table.Schema;
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
 			ObjectType         = table.ObjectType;
@@ -154,11 +156,12 @@ namespace LinqToDB.SqlQuery
 			TableArguments = table.TableArguments;
 		}
 
-		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments) : this()
+		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
+			: this()
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
-			Owner              = table.Owner;
+			Schema             = table.Schema;
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
 			ObjectType         = table.ObjectType;
@@ -174,14 +177,10 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
-
 		public override string ToString()
 		{
 			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
 		}
-
-#endif
 
 		#endregion
 
@@ -191,30 +190,26 @@ namespace LinqToDB.SqlQuery
 		{
 			get
 			{
-				SqlField field;
-				Fields.TryGetValue(fieldName, out field);
+				Fields.TryGetValue(fieldName, out var field);
 				return field;
 			}
 		}
 
-		public string           Name           { get; set; }
-		public string           Alias          { get; set; }
-		public string           Database       { get; set; }
-		public string           Owner          { get; set; }
-		public Type             ObjectType     { get; set; }
-		public string           PhysicalName   { get; set; }
-		public SqlTableType     SqlTableType   { get; set; }
-		public ISqlExpression[] TableArguments { get; set; }
+		public virtual string           Name           { get; set; }
+		public         string           Alias          { get; set; }
+		public         string           Database       { get; set; }
+		public         string           Schema         { get; set; }
+		public         Type             ObjectType     { get; set; }
+		public         string           PhysicalName   { get; set; }
+		public virtual SqlTableType     SqlTableType   { get; set; }
+		public         ISqlExpression[] TableArguments { get; set; }
 
-		public Dictionary<string,SqlField> Fields { get; private set; }
+		public Dictionary<string,SqlField> Fields { get; }
 
-		public SequenceNameAttribute[] SequenceAttributes { get; private set; }
+		public SequenceNameAttribute[] SequenceAttributes { get; protected set; }
 
 		private SqlField _all;
-		public  SqlField  All
-		{
-			get { return _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this }); }
-		}
+		public  SqlField  All => _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this });
 
 		public SqlField GetIdentityField()
 		{
@@ -249,8 +244,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlTableSource Members
 
-		readonly int _sourceID;
-		public   int  SourceID { get { return _sourceID; } }
+		public   int  SourceID { get; protected set; }
 
 		List<ISqlExpression> _keyFields;
 
@@ -281,16 +275,14 @@ namespace LinqToDB.SqlQuery
 			if (!doClone(this))
 				return this;
 
-			ICloneableElement clone;
-
-			if (!objectTree.TryGetValue(this, out clone))
+			if (!objectTree.TryGetValue(this, out var clone))
 			{
 				var table = new SqlTable
 				{
 					Name               = Name,
 					Alias              = Alias,
 					Database           = Database,
-					Owner              = Owner,
+					Schema             = Schema,
 					PhysicalName       = PhysicalName,
 					ObjectType         = ObjectType,
 					SqlTableType       = SqlTableType,
@@ -307,8 +299,7 @@ namespace LinqToDB.SqlQuery
 					table.     Add(fc);
 				}
 
-				if (TableArguments != null)
-					TableArguments = TableArguments.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray();
+				TableArguments = TableArguments?.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray();
 
 				objectTree.Add(this, table);
 				objectTree.Add(All,  table.All);
@@ -323,35 +314,26 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlTable; } }
+		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			return sb.Append(Name);
+			if (Database != null) sb.Append($"[{Database}].");
+			if (Schema   != null) sb.Append($"[{Schema}].");
+			return sb.Append($"[{Name}]");
 		}
 
 		#endregion
 
 		#region ISqlExpression Members
 
-		bool ISqlExpression.CanBeNull
-		{
-			get { return true; }
-		}
+		bool ISqlExpression.CanBeNull  => true;
+		int  ISqlExpression.Precedence => Precedence.Primary;
+		Type ISqlExpression.SystemType => ObjectType;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return this == other;
-		}
-
-		int ISqlExpression.Precedence
-		{
-			get { return Precedence.Primary; }
-		}
-
-		Type ISqlExpression.SystemType
-		{
-			get { return ObjectType; }
 		}
 
 		#endregion
@@ -367,7 +349,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+		public virtual ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (TableArguments != null)
 				for (var i = 0; i < TableArguments.Length; i++)

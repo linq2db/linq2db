@@ -11,14 +11,14 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			selectQuery = base.Finalize(selectQuery);
+			statement = base.Finalize(statement);
 
-			switch (selectQuery.QueryType)
+			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
-				default               : return selectQuery;
+				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement) statement);
+				default               : return statement;
 			}
 		}
 

@@ -21,12 +21,12 @@ namespace LinqToDB.DataProvider.MySql
 			ParameterSymbol = '@';
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
 		}
@@ -36,23 +36,26 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override string LimitFormat { get { return "LIMIT {0}"; } }
+		protected override string LimitFormat(SelectQuery selectQuery)
+		{
+			return "LIMIT {0}";
+		}
 
 		public override bool IsNestedJoinParenthesisRequired { get { return true; } }
 
-		protected override void BuildOffsetLimit()
+		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			if (SelectQuery.Select.SkipValue == null)
-				base.BuildOffsetLimit();
+			if (selectQuery.Select.SkipValue == null)
+				base.BuildOffsetLimit(selectQuery);
 			else
 			{
 				AppendIndent()
 					.AppendFormat(
 						"LIMIT {0},{1}",
-						WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.SkipValue)),
-						SelectQuery.Select.TakeValue == null ?
+						WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue)),
+						selectQuery.Select.TakeValue == null ?
 							long.MaxValue.ToString() :
-							WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.TakeValue).ToString()))
+							WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue).ToString()))
 					.AppendLine();
 			}
 		}
@@ -92,11 +95,11 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDeleteClause()
+		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
-			var table = SelectQuery.Delete.Table != null ?
-				(SelectQuery.From.FindTableSource(SelectQuery.Delete.Table) ?? SelectQuery.Delete.Table) :
-				SelectQuery.From.Tables[0];
+			var table = deleteStatement.Table != null ?
+				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
+				deleteStatement.SelectQuery.From.Tables[0];
 
 			AppendIndent()
 				.Append("DELETE ")
@@ -104,17 +107,17 @@ namespace LinqToDB.DataProvider.MySql
 				.AppendLine();
 		}
 
-		protected override void BuildUpdateClause()
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			base.BuildFromClause();
+			base.BuildFromClause(statement, selectQuery);
 			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet();
+			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		public static char ParameterSymbol           { get; set; }
@@ -189,7 +192,7 @@ namespace LinqToDB.DataProvider.MySql
 					}
 
 				case ConvertType.NameToDatabase   :
-				case ConvertType.NameToOwner      :
+				case ConvertType.NameToSchema     :
 				case ConvertType.NameToQueryTable :
 					if (value != null)
 					{
@@ -219,20 +222,20 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return base.BuildExpression(
 				expr,
-				buildTableName && SelectQuery.QueryType != QueryType.InsertOrUpdate,
+				buildTableName && Statement.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
 				alias,
 				ref addAlias,
 				throwExceptionIfTableNotFound);
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			var position = StringBuilder.Length;
 
-			BuildInsertQuery();
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert);
 
-			if (SelectQuery.Update.Items.Count > 0)
+			if (insertOrUpdate.Update.Items.Count > 0)
 			{
 				AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
@@ -240,7 +243,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				var first = true;
 
-				foreach (var expr in SelectQuery.Update.Items)
+				foreach (var expr in insertOrUpdate.Update.Items)
 				{
 					if (!first)
 						StringBuilder.Append(',').AppendLine();
@@ -268,7 +271,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildEmptyInsert()
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.AppendLine("() VALUES ()");
 		}
@@ -278,7 +281,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append("AUTO_INCREMENT");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
@@ -286,8 +289,10 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+
 			if (database != null)
 				sb.Append(database).Append(".");
 
@@ -298,6 +303,14 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			dynamic p = parameter;
 			return p.MySqlDbType.ToString();
+		}
+
+		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			if (truncateTable.ResetIdentity || truncateTable.Table.Fields.Values.All(f => !f.IsIdentity))
+				StringBuilder.Append("TRUNCATE TABLE ");
+			else
+				StringBuilder.Append("DELETE FROM ");
 		}
 	}
 }

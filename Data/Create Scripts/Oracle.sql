@@ -1,6 +1,13 @@
 ﻿-- Cleanup schema
 
-DROP SEQUENCE PersonSeq
+BEGIN
+	EXECUTE IMMEDIATE 'DROP SEQUENCE ' || 'PersonSeq';
+EXCEPTION
+	WHEN OTHERS THEN
+		IF SQLCODE != -2289 THEN
+			RAISE;
+		END IF;
+END;
 /
 DROP TABLE Doctor
 /
@@ -92,7 +99,7 @@ CREATE TABLE Person
 	, Lastname                     VARCHAR2(50) NOT NULL
 	, Middlename                   VARCHAR2(50)
 	, Gender                       CHAR(1) NOT NULL
-	
+
 	, CONSTRAINT Ck_Person_Gender  CHECK (Gender IN ('M', 'F', 'U', 'O'))
 	)
 /
@@ -118,7 +125,7 @@ END;
 CREATE TABLE Doctor
 	( PersonID                       NUMBER NOT NULL PRIMARY KEY
 	, Taxonomy                       NVARCHAR2(50) NOT NULL
-	
+
 	, CONSTRAINT Fk_Doctor_Person FOREIGN KEY (PersonID)
 		REFERENCES Person (PersonID) ON DELETE CASCADE
 	)
@@ -129,7 +136,7 @@ CREATE TABLE Doctor
 CREATE TABLE Patient
 	( PersonID                       NUMBER NOT NULL PRIMARY KEY
 	, Diagnosis                      NVARCHAR2(256) NOT NULL
-	
+
 	, CONSTRAINT Fk_Patient_Person FOREIGN KEY (PersonID)
 		REFERENCES Person (PersonID) ON DELETE CASCADE
 	)
@@ -152,7 +159,7 @@ INSERT INTO Patient (PersonID,  Diagnosis) VALUES (2, 'Hallucination with Parano
 
 -- Person_Delete
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE Person_Delete(pPersonID IN NUMBER) IS
 BEGIN
 DELETE FROM
@@ -164,7 +171,7 @@ END;
 
 -- Person_Insert
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE Person_Insert_OutputParameter
 	( pFirstName  IN NVARCHAR2
 	, pLastName   IN NVARCHAR2
@@ -184,7 +191,7 @@ INTO
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_Insert
 	( pFirstName  IN NVARCHAR2
 	, pLastName   IN NVARCHAR2
@@ -206,7 +213,7 @@ INTO
 
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -218,14 +225,14 @@ END;
 
 -- Person_SelectAll
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectAll
 RETURN SYS_REFCURSOR IS
 	retCursor SYS_REFCURSOR;
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person;
 RETURN
@@ -235,14 +242,14 @@ END;
 
 -- Person_SelectAllByGender
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectAllByGender(pGender IN CHAR)
 RETURN SYS_REFCURSOR IS
 	retCursor SYS_REFCURSOR;
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -254,14 +261,14 @@ END;
 
 -- Person_SelectByKey
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectByKey(pID IN NUMBER)
 RETURN SYS_REFCURSOR IS
 	retCursor SYS_REFCURSOR;
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -273,7 +280,7 @@ END;
 
 -- Person_SelectByName
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectByName
 	( pFirstName IN NVARCHAR2
 	, pLastName  IN NVARCHAR2
@@ -283,7 +290,7 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -295,7 +302,7 @@ END;
 
 -- Person_SelectListByName
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Person_SelectListByName
 	( pFirstName IN NVARCHAR2
 	, pLastName  IN NVARCHAR2
@@ -305,7 +312,7 @@ RETURN SYS_REFCURSOR IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
+		PersonID, Firstname, Lastname, Middlename, Gender
 	FROM
 		Person
 	WHERE
@@ -315,7 +322,7 @@ RETURN
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE Person_Update
 	( pPersonID   IN NUMBER
 	, pFirstName  IN NVARCHAR2
@@ -338,7 +345,7 @@ END;
 
 -- Patient_SelectAll
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Patient_SelectAll
 RETURN SYS_REFCURSOR IS
 	retCursor SYS_REFCURSOR;
@@ -358,7 +365,7 @@ END;
 
 -- Patient_SelectByName
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Patient_SelectByName
 	( pFirstName IN NVARCHAR2
 	, pLastName  IN NVARCHAR2
@@ -409,7 +416,7 @@ END;
 
 -- OutRefTest
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE OutRefTest
 	( pID             IN     NUMBER
 	, pOutputID       OUT    NUMBER
@@ -426,7 +433,7 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE OutRefEnumTest
 	( pStr            IN     NVARCHAR2
 	, pOutputStr      OUT    NVARCHAR2
@@ -440,7 +447,7 @@ END;
 
 -- ArrayTest
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE ArrayTest
 	( pIntArray            IN     DBMS_UTILITY.NUMBER_ARRAY
 	, pOutputIntArray      OUT    DBMS_UTILITY.NUMBER_ARRAY
@@ -464,7 +471,7 @@ END LOOP;
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE ScalarArray
 	( pOutputIntArray      OUT    DBMS_UTILITY.NUMBER_ARRAY
 	) IS
@@ -477,7 +484,7 @@ END;
 
 -- ResultSetTest
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE RESULTSETTEST
 	( mr OUT SYS_REFCURSOR
 	, sr OUT SYS_REFCURSOR
@@ -496,7 +503,7 @@ END;
 
 -- ExecuteScalarTest
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Scalar_DataReader
 RETURN SYS_REFCURSOR
 IS
@@ -504,7 +511,7 @@ IS
 BEGIN
 OPEN retCursor FOR
 	SELECT
-		12345 intField, '54321' stringField 
+		12345 intField, '54321' stringField
 	FROM
 		DUAL;
 RETURN
@@ -512,7 +519,7 @@ RETURN
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 PROCEDURE Scalar_OutputParameter
 	( pOutputInt    OUT BINARY_INTEGER
 	, pOutputString OUT NVARCHAR2
@@ -523,7 +530,7 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
 FUNCTION Scalar_ReturnParameter
 RETURN BINARY_INTEGER IS
 BEGIN
@@ -744,7 +751,7 @@ CREATE TABLE AllTypes
 
 	uriDataType              UriType                        NULL,
 	xmlDataType              XmlType                        NULL
-) 
+)
 /
 
 DROP SEQUENCE AllTypesSeq
@@ -953,4 +960,11 @@ CREATE TABLE TestMerge2
 	FieldEnumString VARCHAR(20)              NULL,
 	FieldEnumNumber NUMBER                   NULL
 )
+/
+
+CREATE OR REPLACE
+PROCEDURE AddIssue792Record() IS
+BEGIN
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+END;
 /

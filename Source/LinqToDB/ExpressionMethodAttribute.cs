@@ -5,7 +5,7 @@ namespace LinqToDB
 	/// <summary>
 	/// When applied to method or property, tells linq2db to replace them in queryable LINQ expression with another expression,
 	/// returned by method, specified in this attribute.
-	/// 
+	///
 	/// Requirements to expression method:
 	/// <para>
 	/// - expression method should be in the same class and replaced property of method;
@@ -60,5 +60,12 @@ namespace LinqToDB
 		/// Name of method in the same class that returns substitution expression.
 		/// </summary>
 		public string MethodName    { get; set; }
+
+		/// <summary>
+		/// Indicates whether a property should be mapped with this expression Method. </summary>
+		/// <value>
+		/// True if the property should be mapped with this expression Method. </value>
+		public bool IsColumn { get; set; }
+
 	}
 }

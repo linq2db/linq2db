@@ -12,9 +12,10 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
-		private HashSet<string> _systemSchemas =
+		readonly HashSet<string> _systemSchemas =
 			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
 				StringComparer.OrdinalIgnoreCase);
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
@@ -34,11 +35,11 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected string CurrenSchema;
+		protected string CurrentSchema { get; private set; }
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			CurrenSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+			LoadCurrentSchema(dataConnection);
 
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 
@@ -51,7 +52,7 @@ namespace LinqToDB.DataProvider.DB2
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
 				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
-				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == CurrenSchema
+				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == CurrentSchema
 				select new TableInfo
 				{
 					TableID            = catalog + '.' + schema + '.' + name,
@@ -64,6 +65,12 @@ namespace LinqToDB.DataProvider.DB2
 					IsProviderSpecific = system || _systemSchemas.Contains(schema)
 				}
 			).ToList();
+		}
+
+		protected void LoadCurrentSchema(DataConnection dataConnection)
+		{
+			if (CurrentSchema == null)
+				CurrentSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
 		}
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
@@ -175,7 +182,7 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			return dataConnection
 				.Query(rd => new
@@ -205,7 +212,7 @@ namespace LinqToDB.DataProvider.DB2
 					var thisColumns  = fk.thisColumns. Trim();
 					var otherColumns = fk.otherColumns.Trim();
 
-					var list = new List<ForeingKeyInfo>();
+					var list = new List<ForeignKeyInfo>();
 
 					for (var i = 0; thisColumns.Length > 0; i++)
 					{
@@ -218,7 +225,7 @@ namespace LinqToDB.DataProvider.DB2
 							continue;
 
 
-						list.Add(new ForeingKeyInfo
+						list.Add(new ForeignKeyInfo
 						{
 							Name         = fk.name,
 							ThisTableID  = fk.thisTable,
@@ -379,6 +386,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
+			LoadCurrentSchema(dataConnection);
+
 			var sql = @"
 				SELECT
 					PROCSCHEMA,
@@ -406,7 +415,7 @@ namespace LinqToDB.DataProvider.DB2
 						};
 					},
 					sql)
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrenSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrentSchema)
 				.ToList();
 		}
 
@@ -479,7 +488,7 @@ namespace LinqToDB.DataProvider.DB2
 				return sql;
 			}
 
-			return string.Format("{0} = '{1}'", schemaNameField, CurrenSchema);
+			return string.Format("{0} = '{1}'", schemaNameField, CurrentSchema);
 		}
 	}
 
@@ -488,7 +497,7 @@ namespace LinqToDB.DataProvider.DB2
 		public static string ToString(this IDataReader reader, int i)
 		{
 			var value = Converter.ChangeTypeTo<string>(reader[i]);
-			return value == null ? null : value.TrimEnd();
+			return value?.TrimEnd();
 		}
 	}
 }

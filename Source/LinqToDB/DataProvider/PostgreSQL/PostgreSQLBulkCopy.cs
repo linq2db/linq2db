@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy1(dataConnection, options, false, source);
+			return MultipleRowsCopy1(dataConnection, options, source);
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)

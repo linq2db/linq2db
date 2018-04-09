@@ -19,15 +19,15 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			SelectQuery.JoinType joinType;
+			JoinType joinType;
 			var conditionIndex = 1;
 
 			switch (methodCall.Method.Name)
 			{
-				case "InnerJoin" : joinType = SelectQuery.JoinType.Inner; break;
-				case "LeftJoin"  : joinType = SelectQuery.JoinType.Left;  break;
-				case "RightJoin" : joinType = SelectQuery.JoinType.Right; break;
-				case "FullJoin"  : joinType = SelectQuery.JoinType.Full;  break;
+				case "InnerJoin" : joinType = JoinType.Inner; break;
+				case "LeftJoin"  : joinType = JoinType.Left;  break;
+				case "RightJoin" : joinType = JoinType.Right; break;
+				case "FullJoin"  : joinType = JoinType.Full;  break;
 				default:
 					conditionIndex = 2;
 
@@ -35,10 +35,10 @@ namespace LinqToDB.Linq.Builder
 
 					switch (joinValue)
 					{
-						case SqlJoinType.Inner : joinType = SelectQuery.JoinType.Inner; break;
-						case SqlJoinType.Left  : joinType = SelectQuery.JoinType.Left;  break;
-						case SqlJoinType.Right : joinType = SelectQuery.JoinType.Right; break;
-						case SqlJoinType.Full  : joinType = SelectQuery.JoinType.Full;  break;
+						case SqlJoinType.Inner : joinType = JoinType.Inner; break;
+						case SqlJoinType.Left  : joinType = JoinType.Left;  break;
+						case SqlJoinType.Right : joinType = JoinType.Right; break;
+						case SqlJoinType.Full  : joinType = JoinType.Full;  break;
 						default                : throw new ArgumentOutOfRangeException();
 					}
 
@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 			ParameterExpression param)
 		{
 			var predicate = (LambdaExpression)methodCall.Arguments[2].Unwrap();
-			var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0]);
+			var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
 
 			if (info != null)
 			{

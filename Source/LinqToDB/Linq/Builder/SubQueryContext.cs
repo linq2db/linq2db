@@ -14,11 +14,12 @@ namespace LinqToDB.Linq.Builder
 			: base(subQuery)
 		{
 			if (selectQuery == subQuery.SelectQuery)
-				throw new ArgumentException("Wrong subQuery argument.", "subQuery");
+				throw new ArgumentException("Wrong subQuery argument.", nameof(subQuery));
 
 			SubQuery        = subQuery;
 			SubQuery.Parent = this;
 			SelectQuery     = selectQuery;
+			Statement       = subQuery.Statement;
 
 			if (addToSql)
 				selectQuery.From.Table(SubQuery.SelectQuery);
@@ -27,6 +28,7 @@ namespace LinqToDB.Linq.Builder
 		public SubQueryContext(IBuildContext subQuery, bool addToSql = true)
 			: this(subQuery, new SelectQuery { ParentSelect = subQuery.SelectQuery.ParentSelect }, addToSql)
 		{
+			Statement = subQuery.Statement;
 		}
 
 		public          IBuildContext SubQuery    { get; private set; }
@@ -109,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 				.Select(idx =>
 				{
 					idx.Query = SelectQuery;
-					idx.Index = GetIndex((SelectQuery.Column)idx.Sql);
+					idx.Index = GetIndex((SqlColumn)idx.Sql);
 
 					return idx;
 				})
@@ -128,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected internal readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();
 
-		protected virtual int GetIndex(SelectQuery.Column column)
+		protected virtual int GetIndex(SqlColumn column)
 		{
 			int idx;
 
@@ -162,6 +164,11 @@ namespace LinqToDB.Linq.Builder
 		public override ISqlExpression GetSubQuery(IBuildContext context)
 		{
 			return null;
+		}
+
+		public override SqlStatement GetResultStatement()
+		{
+			return Statement ?? (Statement = new SqlSelectStatement(SelectQuery));
 		}
 	}
 }

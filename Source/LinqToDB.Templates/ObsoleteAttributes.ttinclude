@@ -65,7 +65,7 @@
 					.Where(t => t.Type == name || t.Type.Contains("<" + name + ">")))
 				{
 					// check schema
-					
+
 					if (cm.Parent != null && cm.Parent.Parent != null)
 					{
 						var parent = cm.Parent.Parent;
@@ -93,7 +93,7 @@
 					}
 				}
 			}
-			
+
 			afterGenerateLinqToDBModel();
 		};
 	}

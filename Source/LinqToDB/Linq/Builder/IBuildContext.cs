@@ -20,6 +20,7 @@ namespace LinqToDB.Linq.Builder
 		ExpressionBuilder  Builder     { get; }
 		Expression         Expression  { get; }
 		SelectQuery        SelectQuery { get; set; }
+		SqlStatement       Statement   { get; set; }
 		IBuildContext      Parent      { get; set; }
 
 		void               BuildQuery<T>       (Query<T> query, ParameterExpression queryParameter);
@@ -31,5 +32,7 @@ namespace LinqToDB.Linq.Builder
 		int                ConvertToParentIndex(int index, IBuildContext context);
 		void               SetAlias            (string alias);
 		ISqlExpression     GetSubQuery         (IBuildContext context);
+
+		SqlStatement       GetResultStatement();
 	}
 }

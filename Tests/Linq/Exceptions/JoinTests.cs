@@ -10,7 +10,6 @@ using NUnit.Framework;
 
 namespace Tests.Exceptions
 {
-
 	using Model;
 
 	[TestFixture]
@@ -88,7 +87,6 @@ namespace Tests.Exceptions
 
 				AreEqual(expected, result);
 			}
-			
 		}
 
 		[Test, DataContextSource]
@@ -187,6 +185,5 @@ namespace Tests.Exceptions
 				AreEqual(expected, result);
 			}
 		}
-
 	}
 }

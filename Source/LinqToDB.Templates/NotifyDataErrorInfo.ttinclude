@@ -14,14 +14,14 @@ void NotifyDataErrorInfoImpl()
 	foreach (var prop in  GetTreeNodes(Model).OfType<Property>().Where(p => p.CustomValidation).ToList())
 	{
 		ITree p = prop.Parent;
-		
+
 		while (!(p is Class) && p != null)
 			p = p.Parent;
-		
+
 		if (p != null)
 		{
 			var cl = (Class)p;
-			
+
 			if (!cl.Interfaces.Contains("INotifyDataErrorInfo"))
 			{
 				if (!Model.Usings.Contains("System.ComponentModel")) Model.Usings.Add("System.ComponentModel");

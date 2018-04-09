@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.DB2
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			if (dataConnection.Transaction == null)
 			{
@@ -116,9 +116,9 @@ namespace LinqToDB.DataProvider.DB2
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
-				return MultipleRowsCopy2(dataConnection, options, false, source, " FROM SYSIBM.SYSDUMMY1");
+				return MultipleRowsCopy2(dataConnection, options, source, " FROM SYSIBM.SYSDUMMY1");
 
-			return MultipleRowsCopy1(dataConnection, options, false, source);
+			return MultipleRowsCopy1(dataConnection, options, source);
 		}
 	}
 }

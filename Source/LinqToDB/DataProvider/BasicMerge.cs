@@ -122,7 +122,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine(")")
 				;
 
-			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey && (IsIdentitySupported && c.Column.IsIdentity || !c.Column.SkipOnUpdate)).ToList();
+			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey && !c.Column.IsIdentity && !c.Column.SkipOnUpdate).ToList();
 
 			if (updateColumns.Count > 0)
 			{
@@ -198,27 +198,27 @@ namespace LinqToDB.DataProvider
 						// toggle parameters embedding as literals
 						dataConnection.InlineParameters = true;
 
-						var q   = dataConnection.GetTable<T>().Where(deletePredicate);
-						var ctx = q.GetContext();
-						var sql = ctx.SelectQuery;
+						var q         = dataConnection.GetTable<T>().Where(deletePredicate);
+						var ctx       = q.GetContext();
+						var statement = ctx.GetResultStatement();
 
 						var tableSet  = new HashSet<SqlTable>();
 						var tables    = new List<SqlTable>();
 
-						var fromTable = (SqlTable)sql.From.Tables[0].Source;
+						var fromTable = (SqlTable)statement.SelectQuery.From.Tables[0].Source;
 
-						new QueryVisitor().Visit(sql.From, e =>
+						new QueryVisitor().Visit(statement.SelectQuery.From, e =>
 						{
 							if (e.ElementType == QueryElementType.TableSource)
 							{
-								var et = (SelectQuery.TableSource)e;
+								var et = (SqlTableSource)e;
 
 								tableSet.Add((SqlTable)et.Source);
 								tables.  Add((SqlTable)et.Source);
 							}
 						});
 
-						var whereClause = new QueryVisitor().Convert(sql.Where, e =>
+						var whereClause = new QueryVisitor().Convert(statement.SelectQuery.Where, e =>
 						{
 							if (e.ElementType == QueryElementType.SqlQuery)
 							{
@@ -232,47 +232,47 @@ namespace LinqToDB.DataProvider
 
 								if (tbl != fromTable && tableSet.Contains(tbl))
 								{
-									var tempCopy   = sql.Clone();
-									var tempTables = new List<SelectQuery.TableSource>();
+									var tempCopy   = statement.Clone();
+									var tempTables = new List<SqlTableSource>();
 
-									new QueryVisitor().Visit(tempCopy.From, ee =>
+									new QueryVisitor().Visit(tempCopy.SelectQuery.From, ee =>
 									{
 										if (ee.ElementType == QueryElementType.TableSource)
-											tempTables.Add((SelectQuery.TableSource)ee);
+											tempTables.Add((SqlTableSource)ee);
 									});
 
 									var tt = tempTables[tables.IndexOf(tbl)];
 
-									tempCopy.Select.Columns.Clear();
-									tempCopy.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
+									tempCopy.SelectQuery.Select.Columns.Clear();
+									tempCopy.SelectQuery.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
 
-									tempCopy.Where.SearchCondition.Conditions.Clear();
+									tempCopy.SelectQuery.Where.SearchCondition.Conditions.Clear();
 
-									var keys = tempCopy.From.Tables[0].Source.GetKeys(true);
+									var keys = tempCopy.SelectQuery.From.Tables[0].Source.GetKeys(true);
 
 									foreach (SqlField key in keys)
-										tempCopy.Where.Field(key).Equal.Field(fromTable.Fields[key.Name]);
+										tempCopy.SelectQuery.Where.Field(key).Equal.Field(fromTable.Fields[key.Name]);
 
-									tempCopy.ParentSelect = sql;
+									tempCopy.SelectQuery.ParentSelect = statement.SelectQuery;
 
-									return tempCopy;
+									return tempCopy.SelectQuery;
 								}
 							}
 
 							return e;
 						}).SearchCondition.Conditions.ToList();
 
-						sql.Where.SearchCondition.Conditions.Clear();
-						sql.Where.SearchCondition.Conditions.AddRange(whereClause);
+						statement.SelectQuery.Where.SearchCondition.Conditions.Clear();
+						statement.SelectQuery.Where.SearchCondition.Conditions.AddRange(whereClause);
 
-						sql.From.Tables[0].Alias = "Target";
+						statement.SelectQuery.From.Tables[0].Alias = "Target";
 
 						ctx.SetParameters();
 
 						var pq = DataConnection.QueryRunner.SetQuery(dataConnection, new QueryContext
 						{
-							SelectQuery   = sql,
-							SqlParameters = sql.Parameters.ToArray(),
+							Statement     = statement,
+							SqlParameters = statement.Parameters.ToArray(),
 						});
 
 						var cmd = pq.Commands[0];
@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider
 
 		class QueryContext : IQueryContext
 		{
-			public SelectQuery    SelectQuery { get; set; }
+			public SqlStatement   Statement   { get; set; }
 			public object         Context     { get; set; }
 			public SqlParameter[] SqlParameters;
 			public List<string>   QueryHints  { get; set; }

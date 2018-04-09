@@ -3,21 +3,22 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.SqlQuery
 {
+	using LinqToDB.Extensions;
+
 	public static class ReservedWords
 	{
 		static ReservedWords()
 		{
-			_reservedWords[string.Empty]               = ReservedWordsAll;
-			_reservedWords[ProviderName.PostgreSQL]    = ReservedWordsPostgres;
-			_reservedWords[ProviderName.PostgreSQL92]  = ReservedWordsPostgres;
-			_reservedWords[ProviderName.PostgreSQL93]  = ReservedWordsPostgres;
-			_reservedWords[ProviderName.Oracle]        = ReservedWordsOracle;
-			_reservedWords[ProviderName.OracleManaged] = ReservedWordsOracle;
-			_reservedWords[ProviderName.OracleNative]  = ReservedWordsOracle;
+			_reservedWords[string.Empty]               = _reservedWordsAll;
+			_reservedWords[ProviderName.PostgreSQL]    = _reservedWordsPostgres;
+			_reservedWords[ProviderName.PostgreSQL92]  = _reservedWordsPostgres;
+			_reservedWords[ProviderName.PostgreSQL93]  = _reservedWordsPostgres;
+			_reservedWords[ProviderName.Oracle]        = _reservedWordsOracle;
+			_reservedWords[ProviderName.OracleManaged] = _reservedWordsOracle;
+			_reservedWords[ProviderName.OracleNative]  = _reservedWordsOracle;
 
 
 			var assembly = typeof(SelectQuery).AssemblyEx();
@@ -28,7 +29,7 @@ namespace LinqToDB.SqlQuery
 			{
 				string s;
 				while ((s = reader.ReadLine()) != null)
-					ReservedWordsAll.Add(s);
+					_reservedWordsAll.Add(s);
 			}
 
 			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsPostgres.txt"));
@@ -39,8 +40,8 @@ namespace LinqToDB.SqlQuery
 				string s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					ReservedWordsPostgres.Add(s);
-					ReservedWordsAll     .Add(s);
+					_reservedWordsPostgres.Add(s);
+					_reservedWordsAll     .Add(s);
 				}
 			}
 
@@ -52,37 +53,36 @@ namespace LinqToDB.SqlQuery
 				string s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					ReservedWordsOracle.Add(s);
-					ReservedWordsAll   .Add(s);
+					_reservedWordsOracle.Add(s);
+					_reservedWordsAll   .Add(s);
 				}
 			}
 		}
 
-		private static readonly HashSet<string> ReservedWordsAll      = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-		private static readonly HashSet<string> ReservedWordsPostgres = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-		private static readonly HashSet<string> ReservedWordsOracle   = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly HashSet<string> _reservedWordsAll      = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly HashSet<string> _reservedWordsPostgres = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly HashSet<string> _reservedWordsOracle   = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-		private static ConcurrentDictionary<string, HashSet<string>> _reservedWords =
+		static readonly ConcurrentDictionary<string,HashSet<string>> _reservedWords =
 			new ConcurrentDictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
 
 		public static bool IsReserved(string word, string providerName = null)
 		{
 			if (string.IsNullOrEmpty(providerName))
-				return ReservedWordsAll.Contains(word);
+				return _reservedWordsAll.Contains(word);
 
-			HashSet<string> words;
-			if (!_reservedWords.TryGetValue(providerName, out words))
-				words = ReservedWordsAll;
+			if (!_reservedWords.TryGetValue(providerName, out var words))
+				words = _reservedWordsAll;
 
 			return words.Contains(word);
 		}
 
 		public static void Add(string word, string providerName = null)
 		{
-			lock (ReservedWordsAll)
-				ReservedWordsAll.Add(word);
+			lock (_reservedWordsAll)
+				_reservedWordsAll.Add(word);
 
-			if(string.IsNullOrEmpty(providerName))
+			if (string.IsNullOrEmpty(providerName))
 				return;
 
 			var set = _reservedWords.GetOrAdd(providerName, new HashSet<string>(StringComparer.OrdinalIgnoreCase));

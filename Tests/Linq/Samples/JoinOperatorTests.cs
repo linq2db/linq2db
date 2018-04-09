@@ -22,7 +22,11 @@ namespace Tests.Samples
 					select c;
 
 				foreach (var category in query)
+				{
+#if !APPVEYOR
 					Console.WriteLine(category.CategoryID);
+#endif
+				}
 			}
 		}
 

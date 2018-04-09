@@ -81,11 +81,21 @@ namespace Tests._Create
 							if (!DataConnection.TraceSwitch.TraceInfo)
 								Console.WriteLine(command);
 
+							var isDrop =
+								command.TrimStart().StartsWith("DROP") ||
+								command.TrimStart().StartsWith("CALL DROP");
+
+#if APPVEYOR
+							if (!isDrop)
+#endif
 							Console.WriteLine(ex.Message);
 
-							if (command.TrimStart().StartsWith("DROP")
-								|| command.TrimStart().StartsWith("CALL DROP"))
+							if (isDrop)
+							{
+#if !APPVEYOR
 								Console.WriteLine("\nnot too OK\n");
+#endif
+							}
 							else
 							{
 								Console.WriteLine("\nFAILED\n");

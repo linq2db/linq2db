@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 #if DEBUG
-		public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
+		public string _sqlQueryText => SelectQuery?.SqlText ?? "";
 #endif
 
 		public IBuildContext     Parent      { get; set; }
@@ -34,10 +34,10 @@ namespace LinqToDB.Linq.Builder
 		public ExpressionBuilder Builder     { get; set; }
 		public LambdaExpression  Lambda      { get; set; }
 		public SelectQuery       SelectQuery { get; set; }
+		public SqlStatement      Statement   { get; set; }
+		public IBuildContext     Sequence => Sequences[0];
 
-		Expression IBuildContext.Expression { get { return Lambda; } }
-
-		public  IBuildContext Sequence      { get { return Sequences[0]; } }
+		Expression IBuildContext.Expression => Lambda;
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
@@ -53,9 +53,14 @@ namespace LinqToDB.Linq.Builder
 		public abstract IsExpressionResult IsExpression   (Expression expression, int level, RequestFor requestFlag);
 		public abstract IBuildContext      GetContext     (Expression expression, int level, BuildInfo buildInfo);
 
+		public virtual SqlStatement GetResultStatement()
+		{
+			return Sequence.GetResultStatement();
+		}
+
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			return Parent == null ? index : Parent.ConvertToParentIndex(index, context);
+			return Parent?.ConvertToParentIndex(index, context) ?? index;
 		}
 
 		public virtual void SetAlias(string alias)

@@ -25,7 +25,7 @@ namespace Tests.Samples
 			/// We need to use same paremeters as for original query
 			/// </summary>
 			/// <param name="original"></param>
-			SelectQuery Clone(SelectQuery original)
+			SqlStatement Clone(SqlStatement original)
 			{
 				var clone = original.Clone();
 
@@ -44,39 +44,40 @@ namespace Tests.Samples
 				return clone;
 			}
 
-			protected override SelectQuery ProcessQuery(SelectQuery selectQuery)
+			protected override SqlStatement ProcessQuery(SqlStatement statement)
 			{
 				#region Update
 
-				if (selectQuery.IsUpdate)
+				if (statement.QueryType == QueryType.Update || statement.QueryType == QueryType.InsertOrUpdate)
 				{
-					var source = selectQuery.From.Tables[0].Source as SqlTable;
+					var query = statement.SelectQuery;
+					var source = query.From.Tables[0].Source as SqlTable;
 					if (source == null)
-						return selectQuery;
+						return statement;
 
 					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					if (descriptor == null)
-						return selectQuery;
+						return statement;
 
 					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 					if (rowVersion == null)
-						return selectQuery;
+						return statement;
 
-					var newQuery = Clone(selectQuery);
-					source       = newQuery.From.Tables[0].Source as SqlTable;
-					var field    = source.Fields[rowVersion.ColumnName];
+					var newStatment = Clone(statement);
+					source        = newStatment.SelectQuery.From.Tables[0].Source as SqlTable;
+					var field     = source.Fields[rowVersion.ColumnName];
 
 					// get real value of RowVersion
-					var updateColumn = newQuery.Update.Items.FirstOrDefault(ui => ui.Column is SqlField && ((SqlField)ui.Column).Equals(field));
+					var updateColumn = newStatment.RequireUpdateClause().Items.FirstOrDefault(ui => ui.Column is SqlField && ((SqlField)ui.Column).Equals(field));
 					if (updateColumn == null)
 					{
-						updateColumn = new SelectQuery.SetExpression(field, field);
-						newQuery.Update.Items.Add(updateColumn);
+						updateColumn = new SqlSetExpression(field, field);
+						newStatment.RequireUpdateClause().Items.Add(updateColumn);
 					}
 
 					updateColumn.Expression = new SqlBinaryExpression(typeof(int), field, "+", new SqlValue(1));
 
-					return newQuery;
+					return newStatment;
 
 				}
 
@@ -84,21 +85,21 @@ namespace Tests.Samples
 
 				#region Insert
 
-				else if (selectQuery.IsInsert)
+				else if (statement.QueryType == QueryType.Insert || statement.QueryType == QueryType.InsertOrUpdate)
 				{
-					var source     = selectQuery.Insert.Into;
-					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
-					var rowVersion = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
+					var source          = statement.RequireInsertClause().Into;
+					var descriptor      = MappingSchema.GetEntityDescriptor(source.ObjectType);
+					var rowVersion      = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 
 					if (rowVersion == null)
-						return selectQuery;
+						return statement;
 
 
-					var newQuery = Clone(selectQuery);
+					var newInsertStatement = Clone(statement);
+					var insertClause       = newInsertStatement.RequireInsertClause();
+					var field              = insertClause.Into[rowVersion.ColumnName];
 
-					var field = newQuery.Insert.Into[rowVersion.ColumnName];
-
-					var versionColumn = (from i in newQuery.Insert.Items
+					var versionColumn = (from i in insertClause.Items
 										 let f = i.Column as SqlField
 										 where f != null && f.PhysicalName == field.PhysicalName
 										 select i).FirstOrDefault();
@@ -107,12 +108,12 @@ namespace Tests.Samples
 					if (versionColumn != null)
 					{
 						versionColumn.Expression = new SqlValue(1);
-						return newQuery;
+						return newInsertStatement;
 					}
 				}
 				#endregion Insert
 
-				return selectQuery;
+				return statement;
 			}
 		}
 

@@ -12,17 +12,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			CheckAliases(selectQuery, int.MaxValue);
+			CheckAliases(statement, int.MaxValue);
 
-			selectQuery = base.Finalize(selectQuery);
+			statement = base.Finalize(statement);
 
-			switch (selectQuery.QueryType)
+			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
-				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
-				default               : return selectQuery;
+				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
+				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
+				default               : return statement;
 			}
 		}
 

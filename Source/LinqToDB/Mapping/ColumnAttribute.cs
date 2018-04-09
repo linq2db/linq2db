@@ -2,6 +2,8 @@
 
 namespace LinqToDB.Mapping
 {
+	using SqlQuery;
+
 	// TODO: V2 - make Has* methods internal
 	/// <summary>
 	/// Configures mapping of mapping class member to database column.
@@ -9,7 +11,7 @@ namespace LinqToDB.Mapping
 	/// In latter case you should specify member name using <see cref="MemberName"/> property.
 	/// </summary>
 	[AttributeUsage(
-		AttributeTargets.Field | AttributeTargets.Property| AttributeTargets.Class | AttributeTargets.Interface,
+		AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Interface,
 		AllowMultiple = true, Inherited = true)]
 	public class ColumnAttribute : Attribute
 	{
@@ -95,7 +97,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets the name of mapped member.
 		/// When applied to class or interface, should contain name of property of field.
-		/// 
+		///
 		/// If column is mapped to a property or field of composite object, <see cref="MemberName"/> should contain a path to that
 		/// member using dot as separator.
 		/// <example>
@@ -105,13 +107,13 @@ namespace LinqToDB.Mapping
 		///     public string Street   { get; set; }
 		///     public int    Building { get; set; }
 		/// }
-		/// 
+		///
 		/// [Column("city", "Residence.Street")]
 		/// [Column("user_name", "Name")]
 		/// public class User
 		/// {
 		///     public string Name;
-		///     
+		///
 		///     [Column("street", ".Street")]
 		///     [Column("building_number", MemberName = ".Building")]
 		///     public Address Residence { get; set; }
@@ -161,8 +163,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public  bool   SkipOnInsert
 		{
-			get { return _skipOnInsert ?? false; }
-			set { _skipOnInsert = value;         }
+			get => _skipOnInsert ?? false;
+			set => _skipOnInsert = value;
 		}
 
 		/// <summary>
@@ -175,13 +177,13 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string )"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool   SkipOnUpdate
 		{
-			get { return _skipOnUpdate ?? false; }
-			set { _skipOnUpdate = value;         }
+			get => _skipOnUpdate ?? false;
+			set => _skipOnUpdate = value;
 		}
 
 		/// <summary>
@@ -197,8 +199,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public  bool   IsIdentity
 		{
-			get { return _isIdentity ?? false; }
-			set { _isIdentity = value;         }
+			get => _isIdentity ?? false;
+			set => _isIdentity = value;
 		}
 
 		/// <summary>
@@ -214,8 +216,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool   IsPrimaryKey
 		{
-			get { return _isPrimaryKey ?? false;  }
-			set { _isPrimaryKey = value; }
+			get => _isPrimaryKey ?? false;
+			set => _isPrimaryKey = value;
 		}
 
 		/// <summary>
@@ -236,8 +238,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public  bool   CanBeNull
 		{
-			get { return _canBeNull ?? true; }
-			set { _canBeNull = value;        }
+			get => _canBeNull ?? true;
+			set => _canBeNull = value;
 		}
 
 		/// <summary>
@@ -253,8 +255,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public  int   Length
 		{
-			get { return _length ?? 0; }
-			set { _length = value;         }
+			get => _length ?? 0;
+			set => _length = value;
 		}
 
 		/// <summary>
@@ -270,8 +272,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public int   Precision
 		{
-			get { return _precision ?? 0; }
-			set { _precision = value;         }
+			get => _precision ?? 0;
+			set => _precision = value;
 		}
 
 		/// <summary>
@@ -287,8 +289,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public int   Scale
 		{
-			get { return _scale ?? 0; }
-			set { _scale = value;         }
+			get => _scale ?? 0;
+			set => _scale = value;
 		}
 
 		/// <summary>
@@ -299,7 +301,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, SqlQuery.DefaulNullable)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;

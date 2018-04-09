@@ -30,11 +30,11 @@ namespace LinqToDB.DataProvider.Oracle
 			return ((dynamic)Proxy.GetUnderlyingObject(dbConnection)).DatabaseName;
 		}
 
-		string _currentUser;
+		private string _currentUser;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			_currentUser = dataConnection.Execute<string>("select user from dual");
+			LoadCurrentUser(dataConnection);
 
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
@@ -160,13 +160,13 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
 				// This is very slow
 				return
-					dataConnection.Query<ForeingKeyInfo>(@"
+					dataConnection.Query<ForeignKeyInfo>(@"
 						SELECT
 							FKCON.CONSTRAINT_NAME                  as Name,
 							FKCON.OWNER || '.' || FKCON.TABLE_NAME as ThisTableID,
@@ -199,7 +199,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				// This is significally faster
 				return
-					dataConnection.Query<ForeingKeyInfo>(@"
+					dataConnection.Query<ForeignKeyInfo>(@"
 						SELECT
 							FKCON.CONSTRAINT_NAME                    as Name,
 							FKCON.OWNER || '.' || FKCON.TABLE_NAME   as ThisTableID,
@@ -224,13 +224,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
+			LoadCurrentUser(dataConnection);
+
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 
 			return
 			(
 				from p in ps.AsEnumerable()
-				let schema  = p.Field<string>("OWNER")
-				let name    = p.Field<string>("OBJECT_NAME")
+				let schema = p.Field<string>("OWNER")
+				let name   = p.Field<string>("OBJECT_NAME")
 				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureInfo
 				{
@@ -240,6 +242,12 @@ namespace LinqToDB.DataProvider.Oracle
 					IsDefaultSchema = schema == _currentUser,
 				}
 			).ToList();
+		}
+
+		private void LoadCurrentUser(DataConnection dataConnection)
+		{
+			if (_currentUser == null)
+				_currentUser = dataConnection.Execute<string>("select user from dual");
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)

@@ -14,23 +14,23 @@ namespace LinqToDB.Linq
 			public static ITable<T> Query(IDataContext dataContext,
 				string tableName, string databaseName, string schemaName,
 				string statementHeader, string statementFooter,
-				DefaulNullable defaulNullable)
+				DefaultNullable defaultNullable)
 			{
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
+				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
+				var createTable = new SqlCreateTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Owner        = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
-				sqlQuery.CreateTable.Table           = sqlTable;
-				sqlQuery.CreateTable.StatementHeader = statementHeader;
-				sqlQuery.CreateTable.StatementFooter = statementFooter;
-				sqlQuery.CreateTable.DefaulNullable  = defaulNullable;
+				createTable.Table           = sqlTable;
+				createTable.StatementHeader = statementHeader;
+				createTable.StatementFooter = statementFooter;
+				createTable.DefaultNullable = defaultNullable;
 
 				var query = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = createTable, } }
 				};
 
 				SetNonQueryQuery(query);
@@ -39,33 +39,33 @@ namespace LinqToDB.Linq
 
 				ITable<T> table = new Table<T>(dataContext);
 
-				if (tableName    != null) table = table.TableName   (tableName);
-				if (databaseName != null) table = table.DatabaseName(databaseName);
-				if (schemaName   != null) table = table.SchemaName  (schemaName);
+				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
+				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
+				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
 
 				return table;
 			}
 
 			public static async Task<ITable<T>> QueryAsync(IDataContext dataContext,
 				string tableName, string databaseName, string schemaName, string statementHeader,
-				string statementFooter, DefaulNullable defaulNullable,
+				string statementFooter, DefaultNullable defaultNullable,
 				CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
+				var createTable = new SqlCreateTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Owner        = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
-				sqlQuery.CreateTable.Table           = sqlTable;
-				sqlQuery.CreateTable.StatementHeader = statementHeader;
-				sqlQuery.CreateTable.StatementFooter = statementFooter;
-				sqlQuery.CreateTable.DefaulNullable  = defaulNullable;
+				createTable.Table           = sqlTable;
+				createTable.StatementHeader = statementHeader;
+				createTable.StatementFooter = statementFooter;
+				createTable.DefaultNullable = defaultNullable;
 
 				var query = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = createTable, } }
 				};
 
 				SetNonQueryQuery(query);
@@ -74,9 +74,9 @@ namespace LinqToDB.Linq
 
 				ITable<T> table = new Table<T>(dataContext);
 
-				if (tableName    != null) table = table.TableName   (tableName);
-				if (databaseName != null) table = table.DatabaseName(databaseName);
-				if (schemaName   != null) table = table.SchemaName  (schemaName);
+				if (sqlTable.PhysicalName != null) table = table.TableName   (sqlTable.PhysicalName);
+				if (sqlTable.Database     != null) table = table.DatabaseName(sqlTable.Database);
+				if (sqlTable.Schema       != null) table = table.SchemaName  (sqlTable.Schema);
 
 				return table;
 			}

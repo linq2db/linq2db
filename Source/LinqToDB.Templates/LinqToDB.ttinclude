@@ -192,7 +192,7 @@ void GenerateTypesFromMetadata()
 				t.AliasPropertyName,
 				new[] { t.DataContextPropertyName },
 				null);
-			
+
 			if (GenerateObsoleteAttributeForAliases)
 				aProp.Attributes.Add(new Attribute("Obsolete", "\"Use " + t.DataContextPropertyName + " instead.\""));
 
@@ -234,8 +234,8 @@ void GenerateTypesFromMetadata()
 		var columnAliases  = new MemberGroup { IsCompact = IsCompactColumnAliases, Region = "Alias members" };
 		var nPKs           = t.Columns.Values.Count(c => c.IsPrimaryKey);
 		var allNullable    = t.Columns.Values.All  (c => c.IsNullable || c.IsIdentity);
-		var nameMaxLen     = t.Columns.Values.Max  (c => (int?)(c.MemberName == c.ColumnName 
-			? 0 
+		var nameMaxLen     = t.Columns.Values.Max  (c => (int?)(c.MemberName == c.ColumnName
+			? 0
 			: NormalizeStringName(c.ColumnName).Length)) ?? 0;
 		var dbTypeMaxLen   = t.Columns.Values.Max  (c => (int?)(c.ColumnType.Length)) ?? 0;
 		var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => (int?)(c.DataType.Length)) ?? 0;
@@ -295,7 +295,7 @@ void GenerateTypesFromMetadata()
 				if (c.Scale     != null) ca.Parameters.Add("Scale=" + c.Scale);
 				canBeReplaced = false;
 			}
-			
+
 			if (c.SkipOnInsert && !c.IsIdentity)
 			{
 				ca.Parameters.Add("SkipOnInsert=true");
@@ -507,7 +507,7 @@ void GenerateTypesFromMetadata()
 
 						if (key.CanBeNull)
 							sb.Append(".FirstOrDefault();");
-						else 
+						else
 							sb.Append(".First();");
 
 						single.Body.Add(sb.ToString());
@@ -697,7 +697,7 @@ void GenerateTypesFromMetadata()
 			}
 			else
 			{
-				var spName = 
+				var spName =
 					SqlBuilder.BuildTableName(
 						new System.Text.StringBuilder(),
 						(string)SqlBuilder.Convert(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
@@ -874,7 +874,9 @@ void GenerateTypesFromMetadata()
 
 string NormalizeStringName(string name)
 {
-	return @"@""" + name.Replace(@"""", @"""""") + @"""";
+	if (name.Contains("\"") || name.Contains("\\"))
+		return @"@""" + name.Replace(@"""", @"""""") + @"""";
+	return "\"" + name + "\"";
 }
 
 #>

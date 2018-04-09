@@ -40,7 +40,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
-			} 
+			}
 		}
 
 		[Test]
@@ -58,7 +58,26 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.GreaterThan(0), sql);
-			} 
+			}
+		}
+
+		[Test]
+		public void ContainsHasIsNullWithoutComparasionNullCheck()
+		{
+			using (new WithoutComparasionNullCheck())
+			using (var db = new TestDataConnection())
+			{
+				var filter = new[] {TestIssue358Enum.Value2};
+
+				var qry =
+					from p in db.GetTable<TestIssue358Class>()
+					where !!filter.Contains(p.MyEnum.Value)
+					select p;
+
+				var sql = qry.ToString();
+
+				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
+			}
 		}
 
 		[Test]
@@ -74,7 +93,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
-			} 
+			}
 		}
 
 		[Test]
@@ -92,7 +111,7 @@ namespace Tests.UserTests
 				var sql = qry.ToString();
 
 				Assert.That(sql.IndexOf("NULL"), Is.LessThan(0), sql);
-			} 
+			}
 		}
 
 		static LinqDataTypes2 FixData(LinqDataTypes2 data)
@@ -143,6 +162,20 @@ namespace Tests.UserTests
 
 				AreEqual(FixData,
 					   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)),
+					db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test4WithoutComparasionNullCheck(string context)
+		{
+			using (new WithoutComparasionNullCheck())
+			using (var db = GetDataContext(context))
+			{
+				var bigintFilter = new Int64?[] {2};
+
+				AreEqual(FixData,
+					   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
 					db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
 			}
 		}

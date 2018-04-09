@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Collections;
+using LinqToDB.SqlQuery;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlProvider;
@@ -804,7 +806,7 @@ namespace Tests
 		{
 			get
 			{
-				return "Tests.TestNoopConnection, linq2db.Tests";
+				return "Tests.TestNoopConnection, " + GetType().AssemblyEx().FullName;
 			}
 		}
 
@@ -812,7 +814,7 @@ namespace Tests
 		{
 			get
 			{
-				return "Tests.TestNoopDataReader, linq2db.Tests";
+				return "Tests.TestNoopDataReader, " + GetType().AssemblyEx().FullName;
 			}
 		}
 
@@ -860,9 +862,9 @@ namespace Tests
 			throw new NotImplementedException();
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(null);
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, null);
 		}
 	}
 

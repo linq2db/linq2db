@@ -19,17 +19,6 @@ namespace Tests.Linq
 			public int? Value1;
 		}
 
-		[Sql.Function("DB_NAME", ServerSideOnly = true)]
-		static string DbName()
-		{
-			throw new InvalidOperationException();
-		}
-
-		private static string GetDatabaseName(ITestDataContext db)
-		{
-			return db.Types.Select(_ => DbName()).First();
-		}
-
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void TableName(string context)
 		{
@@ -41,11 +30,11 @@ namespace Tests.Linq
 		public void DatabaseName(string context)
 		{
 			using (var db = GetDataContext(context))
-				db.GetTable<Parent>().DatabaseName(GetDatabaseName(db)).ToList();
+				db.GetTable<Parent>().DatabaseName(TestUtils.GetDatabaseName(db)).ToList();
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void OwnerName(string context)
+		public void SchemaName(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().SchemaName("dbo").ToList();
@@ -56,7 +45,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>()
-					.DatabaseName(GetDatabaseName(db))
+					.DatabaseName(TestUtils.GetDatabaseName(db))
 					.SchemaName("dbo")
 					.TableName("Parent")
 					.ToList();

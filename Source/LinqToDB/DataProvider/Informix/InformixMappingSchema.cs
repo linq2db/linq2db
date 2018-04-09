@@ -24,6 +24,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
@@ -55,5 +56,19 @@ namespace LinqToDB.DataProvider.Informix
 					break;
 			}
 		}
+
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
+		{
+			string format;
+			if (value.Millisecond != 0)
+				format = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S.%F5')";
+			else
+				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
+					? "TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')"
+					: "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', '%Y-%m-%d %H:%M:%S')";
+
+			stringBuilder.AppendFormat(format, value);
+		}
+
 	}
 }

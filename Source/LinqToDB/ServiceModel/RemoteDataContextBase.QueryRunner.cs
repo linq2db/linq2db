@@ -54,9 +54,9 @@ namespace LinqToDB.ServiceModel
 					.Append(sqlBuilder.Name)
 					.AppendLine();
 
-				if (query.SelectQuery.Parameters != null && query.SelectQuery.Parameters.Count > 0)
+				if (query.Statement.Parameters != null && query.Statement.Parameters.Count > 0)
 				{
-					foreach (var p in query.SelectQuery.Parameters)
+					foreach (var p in query.Statement.Parameters)
 					{
 						var value = p.Value;
 
@@ -70,7 +70,7 @@ namespace LinqToDB.ServiceModel
 
 					sb.AppendLine();
 
-					foreach (var p in query.SelectQuery.Parameters)
+					foreach (var p in query.Statement.Parameters)
 					{
 						var value = p.Value;
 
@@ -88,11 +88,11 @@ namespace LinqToDB.ServiceModel
 					sb.AppendLine();
 				}
 
-				var cc = sqlBuilder.CommandCount(query.SelectQuery);
+				var cc = sqlBuilder.CommandCount(query.Statement);
 
 				for (var i = 0; i < cc; i++)
 				{
-					sqlBuilder.BuildSql(i, query.SelectQuery, sb);
+					sqlBuilder.BuildSql(i, query.Statement, sb);
 
 					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
 					{
@@ -124,7 +124,7 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q    = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+				var q    = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
 				var data = LinqServiceSerializer.Serialize(
 					q,
 					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
@@ -152,7 +152,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+				var q = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
 
 				return _client.ExecuteScalar(
 					_dataContext.Configuration,
@@ -174,7 +174,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q   = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+				var q   = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
 				var ret = _client.ExecuteReader(
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
@@ -243,7 +243,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q   = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+				var q   = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
 				var ret = await _client.ExecuteReaderAsync(
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
@@ -265,7 +265,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+				var q = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
 
 				return await _client.ExecuteScalarAsync(
 					_dataContext.Configuration,
@@ -280,7 +280,7 @@ namespace LinqToDB.ServiceModel
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q    = queryContext.SelectQuery.ProcessParameters(_dataContext.MappingSchema);
+				var q    = queryContext.Statement.ProcessParameters(_dataContext.MappingSchema);
 				var data = LinqServiceSerializer.Serialize(
 					q,
 					q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),

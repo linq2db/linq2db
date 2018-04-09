@@ -22,7 +22,7 @@ namespace LinqToDB.SqlQuery
 				{
 					case QueryElementType.Column :
 						{
-							var c = (SelectQuery.Column) e;
+							var c = (SqlColumn) e;
 							if (hash.Contains(c.Parent))
 								found.Add(c);
 							break;
@@ -48,21 +48,21 @@ namespace LinqToDB.SqlQuery
 			return query;
 		}
 
-		public static SelectQuery.JoinedTable FindJoin(this SelectQuery query,
-			Func<SelectQuery.JoinedTable, bool> match)
+		public static SqlJoinedTable FindJoin(this SelectQuery query,
+			Func<SqlJoinedTable, bool> match)
 		{
 			return QueryVisitor.Find(query, e =>
 			{
 				if (e.ElementType == QueryElementType.JoinedTable)
 				{
-					if (match((SelectQuery.JoinedTable) e))
+					if (match((SqlJoinedTable) e))
 						return true;
 				}
 				return false;
-			}) as SelectQuery.JoinedTable;
+			}) as SqlJoinedTable;
 		}
 
-		public static void ConcatSearchCondition(this SelectQuery.WhereClause where, SelectQuery.SearchCondition search)
+		public static void ConcatSearchCondition(this SqlWhereClause where, SqlSearchCondition search)
 		{
 			if (where.IsEmpty)
 			{
@@ -72,26 +72,25 @@ namespace LinqToDB.SqlQuery
 			{
 				if (where.SearchCondition.Precedence < Precedence.LogicalConjunction)
 				{
-					var sc1 = new SelectQuery.SearchCondition();
+					var sc1 = new SqlSearchCondition();
 
 					sc1.Conditions.AddRange(where.SearchCondition.Conditions);
 
 					where.SearchCondition.Conditions.Clear();
-					where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc1));
+					where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
 				}
 
 				if (search.Precedence < Precedence.LogicalConjunction)
 				{
-					var sc2 = new SelectQuery.SearchCondition();
+					var sc2 = new SqlSearchCondition();
 
 					sc2.Conditions.AddRange(search.Conditions);
 
-					where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc2));
+					where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
 				}
 				else
 					where.SearchCondition.Conditions.AddRange(search.Conditions);
 			}
 		}
-
 	}
 }

@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return 
+			return
 				methodCall.IsQueryable(MethodNames) &&
 				methodCall.Arguments.Count == 1;
 		}
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.Arguments.Count == 2)
 			{
 				var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0]);
+				var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
 
 				if (info != null)
 				{
@@ -74,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null);
+				var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null, true);
 
 				if (info != null)
 				{
@@ -199,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					_isJoinCreated = true;
 
-					var join = SelectQuery.OuterApply(SelectQuery);
+					var join = SelectQuery.OuterApply();
 
 					Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}

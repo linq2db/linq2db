@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -16,14 +15,27 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity && trun.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			StringBuilder.AppendLine("SELECT last_insert_rowid()");
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				StringBuilder
+					.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='")
+					.Append(trun.Table.PhysicalName)
+					.AppendLine("'")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT last_insert_rowid()");
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -31,15 +43,22 @@ namespace LinqToDB.DataProvider.SQLite
 			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override string LimitFormat  { get { return "LIMIT {0}";  } }
-		protected override string OffsetFormat { get { return "OFFSET {0}"; } }
+		protected override string LimitFormat(SelectQuery selectQuery)
+		{
+			return "LIMIT {0}";
+		}
+
+		protected override string OffsetFormat(SelectQuery selectQuery)
+		{
+			return "OFFSET {0}";
+		}
 
 		public override bool IsNestedJoinSupported { get { return false; } }
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -64,7 +83,7 @@ namespace LinqToDB.DataProvider.SQLite
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{
@@ -105,9 +124,9 @@ namespace LinqToDB.DataProvider.SQLite
 			StringBuilder.Append("PRIMARY KEY AUTOINCREMENT");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
-			if (SelectQuery.CreateTable.Table.Fields.Values.Any(f => f.IsIdentity))
+			if (createTable.Table.Fields.Values.Any(f => f.IsIdentity))
 			{
 				while (StringBuilder[StringBuilder.Length - 1] != ',')
 					StringBuilder.Length--;
@@ -124,7 +143,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildPredicate(ISqlPredicate predicate)
 		{
-			var exprExpr = predicate as SelectQuery.Predicate.ExprExpr;
+			var exprExpr = predicate as SqlPredicate.ExprExpr;
 
 			if (exprExpr != null)
 			{
@@ -135,14 +154,13 @@ namespace LinqToDB.DataProvider.SQLite
 					!(exprExpr.Expr1 is IValueContainer && ((IValueContainer)exprExpr.Expr1).Value == null ||
 					  exprExpr.Expr2 is IValueContainer && ((IValueContainer)exprExpr.Expr2).Value == null))
 				{
-					
 					if (leftType != null && !(exprExpr.Expr1 is SqlFunction && ((SqlFunction)exprExpr.Expr1).Name == "$Convert$"))
 					{
 						var l = new SqlFunction(leftType, "$Convert$", SqlDataType.GetDataType(leftType),
 							SqlDataType.GetDataType(leftType), exprExpr.Expr1);
 						exprExpr.Expr1 = l;
 					}
-				
+
 					if (rightType != null && !(exprExpr.Expr2 is SqlFunction && ((SqlFunction)exprExpr.Expr2).Name == "$Convert$"))
 					{
 						var r = new SqlFunction(rightType, "$Convert$", SqlDataType.GetDataType(rightType),
@@ -155,8 +173,10 @@ namespace LinqToDB.DataProvider.SQLite
 			base.BuildPredicate(predicate);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+
 			if (database != null)
 				sb.Append(database).Append(".");
 

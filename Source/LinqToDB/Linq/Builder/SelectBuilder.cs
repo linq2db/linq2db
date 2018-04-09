@@ -131,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = originalMethodCall;
 			var selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var info       = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), selector.Parameters[0]);
+			var info       = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), selector.Parameters[0], true);
 
 			if (info != null)
 			{

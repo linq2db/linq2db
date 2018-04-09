@@ -22,27 +22,33 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			CheckAliases(selectQuery, int.MaxValue);
+			CheckAliases(statement, int.MaxValue);
 
-			new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
-
-			selectQuery = base.Finalize(selectQuery);
-
-			switch (selectQuery.QueryType)
+			statement.WalkQueries(selectQuery =>
 			{
-				case QueryType.Delete :
-					selectQuery = GetAlternativeDelete(selectQuery);
-					selectQuery.From.Tables[0].Alias = "$";
+				new QueryVisitor().Visit(selectQuery, SetQueryParameter);
+				return selectQuery;
+			});
+
+			statement = base.Finalize(statement);
+
+			switch (statement.QueryType)
+			{
+				case QueryType.Delete:
+					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement);
+					statement = deleteStatement;
+					if (deleteStatement.SelectQuery != null)
+						deleteStatement.SelectQuery.From.Tables[0].Alias = "$";
 					break;
 
-				case QueryType.Update :
-					selectQuery = GetAlternativeUpdate(selectQuery);
+				case QueryType.Update:
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
 					break;
 			}
 
-			return selectQuery;
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

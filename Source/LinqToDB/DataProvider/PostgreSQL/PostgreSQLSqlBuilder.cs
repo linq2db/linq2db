@@ -16,33 +16,37 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			var into = SelectQuery.Insert.Into;
-			var attr = GetSequenceNameAttribute(into, false);
-			var name =
-				attr != null ?
-					attr.SequenceName :
-					Convert(
-						string.Format("{0}_{1}_seq", into.PhysicalName, into.GetIdentityField().PhysicalName),
-						ConvertType.NameToQueryField);
+			var insertClause = Statement.GetInsertClause();
+			if (insertClause != null)
+			{
+				var into = insertClause.Into;
+				var attr = GetSequenceNameAttribute(into, false);
+				var name =
+					attr != null
+						? attr.SequenceName
+						: Convert(
+							$"{into.PhysicalName}_{into.GetIdentityField().PhysicalName}_seq",
+							ConvertType.NameToQueryField);
 
-			name = Convert(name, ConvertType.NameToQueryTable);
+				name = Convert(name, ConvertType.NameToQueryTable);
 
-			var database = GetTableDatabaseName(into);
-			var owner    = GetTableOwnerName   (into);
+				var database = GetTableDatabaseName(into);
+				var schema   = GetTableSchemaName(into);
 
-			AppendIndent()
-				.Append("SELECT currval('");
+				AppendIndent()
+					.Append("SELECT currval('");
 
-			BuildTableName(StringBuilder, database, owner, name.ToString());
+				BuildTableName(StringBuilder, database, schema, name.ToString());
 
-			StringBuilder.AppendLine("')");
+				StringBuilder.AppendLine("')");
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -50,8 +54,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override string LimitFormat  { get { return "LIMIT {0}";   } }
-		protected override string OffsetFormat { get { return "OFFSET {0} "; } }
+		protected override string LimitFormat(SelectQuery selectQuery)
+		{
+			return "LIMIT {0}";
+		}
+
+		protected override string OffsetFormat(SelectQuery selectQuery)
+		{
+			return "OFFSET {0} ";
+		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType)
 		{
@@ -82,10 +93,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected sealed override bool IsReserved(string word)
@@ -104,7 +115,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToQueryTableAlias:
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 					if (value != null && IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						var name = value.ToString();
@@ -117,7 +128,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 						if (IsReserved(name))
 							return '"' + name + '"';
-						
+
 						if (name.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
 							return '"' + name + '"';
 					}
@@ -152,11 +163,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
 					var database = GetTableDatabaseName(table);
-					var owner    = GetTableOwnerName   (table);
+					var schema   = GetTableSchemaName  (table);
 
-					var sb = BuildTableName(new StringBuilder(), database, owner, name);
+					var sb = BuildTableName(new StringBuilder(), database, schema, name);
 
-					return new SqlExpression("nextval('" + sb + "')", Precedence.Primary);
+					return new SqlExpression($"nextval('{sb}')", Precedence.Primary);
 				}
 			}
 
@@ -183,31 +194,53 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			base.BuildCreateTableFieldType(field);
 		}
 
-		protected override bool BuildJoinType(SelectQuery.JoinedTable join)
+		protected override bool BuildJoinType(SqlJoinedTable join)
 		{
 			switch (join.JoinType)
 			{
-				case SelectQuery.JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
-				case SelectQuery.JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
+				case JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
+				case JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
 			}
 
 			return base.BuildJoinType(join);
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
+
 			// "db..table" syntax not supported and postgresql doesn't support database name, if it is not current database
 			// so we can clear database name to avoid error from server
-			if (database != null && owner == null)
+			if (database != null && schema == null)
 				database = null;
 
-			return base.BuildTableName(sb, database, owner, table);
+			return base.BuildTableName(sb, database, schema, table);
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.NpgsqlDbType.ToString();
+		}
+
+		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
+		{
+			var table = truncateTable.Table;
+
+			AppendIndent();
+			StringBuilder.Append("TRUNCATE TABLE ");
+			BuildPhysicalTable(table, null);
+
+			if (truncateTable.Table.Fields.Values.Any(f => f.IsIdentity))
+			{
+				if (truncateTable.ResetIdentity)
+					StringBuilder.Append(" RESTART IDENTITY");
+				else
+					StringBuilder.Append(" CONTINUE IDENTITY");
+			}
+
+			StringBuilder.AppendLine();
 		}
 	}
 }

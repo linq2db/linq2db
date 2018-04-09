@@ -69,20 +69,20 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets context identifier. Uses provider's name by default.
 		/// </summary>
-		public string        ContextID           { get; set;         }
+		public string        ContextID           { get; set; }
 		/// <summary>
 		/// Gets or sets mapping schema. Uses provider's mapping schema by default.
 		/// </summary>
-		public MappingSchema MappingSchema       { get; set;         }
+		public MappingSchema MappingSchema       { get; set; }
 		/// <summary>
 		/// Gets or sets option to force inline parameter values as literals into command text. If parameter inlining not supported
 		/// for specific value type, it will be used as parameter.
 		/// </summary>
-		public bool          InlineParameters    { get; set;         }
+		public bool          InlineParameters    { get; set; }
 		/// <summary>
 		/// Contains text of last command, sent to database using current context.
 		/// </summary>
-		public string        LastQuery           { get; set;         }
+		public string        LastQuery           { get; set; }
 
 		private bool _keepConnectionAlive;
 		/// <summary>
@@ -218,20 +218,10 @@ namespace LinqToDB
 			}
 		}
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider
-		{
-			get { return DataProvider.CreateSqlBuilder; }
-		}
-
-		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer
-		{
-			get { return DataProvider.GetSqlOptimizer; }
-		}
-
-		Type IDataContext.DataReaderType
-		{
-			get { return DataProvider.DataReaderType; }
-		}
+		Func<ISqlBuilder>   IDataContext.CreateSqlProvider => DataProvider.CreateSqlBuilder;
+		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer   => DataProvider.GetSqlOptimizer;
+		Type                IDataContext.DataReaderType    => DataProvider.DataReaderType;
+		SqlProviderFlags    IDataContext.SqlProviderFlags  => DataProvider.SqlProviderFlags;
 
 		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
@@ -241,11 +231,6 @@ namespace LinqToDB
 		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			return DataProvider.IsDBNullAllowed(reader, idx);
-		}
-
-		SqlProviderFlags IDataContext.SqlProviderFlags
-		{
-			get { return DataProvider.SqlProviderFlags; }
 		}
 
 		/// <summary>

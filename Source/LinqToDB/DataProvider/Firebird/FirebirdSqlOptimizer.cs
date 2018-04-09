@@ -1,12 +1,10 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Firebird
+﻿namespace LinqToDB.DataProvider.Firebird
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
 
-	class FirebirdSqlOptimizer : BasicSqlOptimizer
+	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
 		public FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -50,31 +48,32 @@ namespace LinqToDB.DataProvider.Firebird
 			return true;
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			CheckAliases(selectQuery, int.MaxValue);
+			CheckAliases(statement, int.MaxValue);
 
-			new QueryVisitor().VisitParentFirst(selectQuery, SearchSelectClause);
+			new QueryVisitor().VisitParentFirst(statement, SearchSelectClause);
 
-			if (selectQuery.QueryType == QueryType.InsertOrUpdate)
+			if (statement.QueryType == QueryType.InsertOrUpdate)
 			{
-				foreach (var key in selectQuery.Insert.Items)
+				var insertOrUpdate = (SqlInsertOrUpdateStatement)statement;
+				foreach (var key in insertOrUpdate.Insert.Items)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 
-				foreach (var key in selectQuery.Update.Items)
+				foreach (var key in insertOrUpdate.Update.Items)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 
-				foreach (var key in selectQuery.Update.Keys)
+				foreach (var key in insertOrUpdate.Update.Keys)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 			}
 
-			selectQuery = base.Finalize(selectQuery);
+			statement = base.Finalize(statement);
 
-			switch (selectQuery.QueryType)
+			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
-				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
-				default               : return selectQuery;
+				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement)statement);
+				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement)statement);
+				default               : return statement;
 			}
 		}
 
@@ -130,13 +129,13 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				SqlExpression e = (SqlExpression)expr;
 
-				if (e.Expr.StartsWith("Extract(Quarter"))
+				if (e.Expr.StartsWith("Cast(Floor(Extract(Quarter"))
 					return Inc(Div(Dec(new SqlExpression(e.SystemType, "Extract(Month from {0})", e.Parameters)), 3));
 
-				if (e.Expr.StartsWith("Extract(YearDay"))
+				if (e.Expr.StartsWith("Cast(Floor(Extract(YearDay"))
 					return Inc(new SqlExpression(e.SystemType, e.Expr.Replace("Extract(YearDay", "Extract(yearDay"), e.Parameters));
 
-				if (e.Expr.StartsWith("Extract(WeekDay"))
+				if (e.Expr.StartsWith("Cast(Floor(Extract(WeekDay"))
 					return Inc(new SqlExpression(e.SystemType, e.Expr.Replace("Extract(WeekDay", "Extract(weekDay"), e.Parameters));
 			}
 

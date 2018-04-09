@@ -12,33 +12,32 @@ namespace LinqToDB.Linq
 	{
 		public static class Insert<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryChache = new ConcurrentDictionary<object,Query<int>>();
+			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
-			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName)
+			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.Insert };
+				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Owner        = schemaName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
-				sqlQuery.Insert.Into = sqlTable;
+				var insertStatement = new SqlInsertStatement { Insert = { Into = sqlTable } };
 
 				var ei = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = insertStatement } }
 				};
 
 				foreach (var field in sqlTable.Fields)
 				{
 					if (field.Value.IsInsertable)
 					{
-						var param = GetParameter(typeof(T), dataContext, field.Value);
+						var param = GetParameter(type, dataContext, field.Value);
 
 						ei.Queries[0].Parameters.Add(param);
 
-						sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, param.SqlParameter));
+						insertStatement.Insert.Items.Add(new SqlSetExpression(field.Value, param.SqlParameter));
 					}
 					else if (field.Value.IsIdentity)
 					{
@@ -46,7 +45,7 @@ namespace LinqToDB.Linq
 						var expr = sqlb.GetIdentityExpression(sqlTable);
 
 						if (expr != null)
-							sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, expr));
+							insertStatement.Insert.Items.Add(new SqlSetExpression(field.Value, expr));
 					}
 				}
 
@@ -60,8 +59,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
+				var type = obj.GetType();
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type };
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -72,8 +72,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
+				var type = obj.GetType();
+				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type };
+				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 

@@ -18,14 +18,36 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+
+				StringBuilder.Append("ALTER TABLE ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder
+					.Append(" MODIFY ")
+					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
+					.AppendLine(" SERIAL(1)")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
+			}
+		}
+
+		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -33,9 +55,9 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
 		{
-			base.BuildSql(commandNumber, selectQuery, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")
@@ -47,31 +69,31 @@ namespace LinqToDB.DataProvider.Informix
 //			return joins.Any(j => j.JoinType == SelectQuery.JoinType.Inner && j.Condition.Conditions.IsNullOrEmpty());
 //		}
 
-		protected override void BuildSelectClause()
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
-			if (SelectQuery.From.Tables.Count == 0)
+			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().Append("SELECT FIRST 1").AppendLine();
-				BuildColumns();
+				BuildColumns(selectQuery);
 				AppendIndent().Append("FROM SYSTABLES").AppendLine();
 			}
-			else if (SelectQuery.Select.IsDistinct)
+			else if (selectQuery.Select.IsDistinct)
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT");
-				BuildSkipFirst();
+				BuildSkipFirst(selectQuery);
 				StringBuilder.Append(" DISTINCT");
 				StringBuilder.AppendLine();
-				BuildColumns();
+				BuildColumns(selectQuery);
 			}
 			else
-				base.BuildSelectClause();
+				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override string FirstFormat { get { return "FIRST {0}"; } }
-		protected override string SkipFormat  { get { return "SKIP {0}";  } }
+		protected override string FirstFormat(SelectQuery selectQuery) => "FIRST {0}";
+		protected override string SkipFormat  => "SKIP {0}";
 
-		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
+		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
 			if (predicate.IsNot)
 				StringBuilder.Append("NOT ");
@@ -123,10 +145,10 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -169,7 +191,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.BuildCreateTableFieldType(field);
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
@@ -177,15 +199,18 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append(")");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
+
 			// TODO: FQN could also contain server name, but we don't have such API for now
 			// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
 			if (database != null)
 				sb.Append(database).Append(":");
 
-			if (owner != null)
-				sb.Append(owner).Append(".");
+			if (schema != null)
+				sb.Append(schema).Append(".");
 
 			return sb.Append(table);
 		}

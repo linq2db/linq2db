@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -14,19 +15,48 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		protected override string FirstFormat  { get { return SelectQuery.Select.SkipValue == null ? "TOP ({0})" :                null; } }
-		protected override string LimitFormat  { get { return SelectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null; } }
-		protected override string OffsetFormat { get { return "OFFSET {0} ROWS"; } }
-		protected override bool   OffsetFirst  { get { return true;              } }
-
-		public override int CommandCount(SelectQuery selectQuery)
+		protected override string FirstFormat(SelectQuery selectQuery)
 		{
-			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
+			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override string LimitFormat(SelectQuery selectQuery)
 		{
-			StringBuilder.AppendLine("SELECT @@IDENTITY");
+			return selectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null;
+		}
+
+		protected override string OffsetFormat(SelectQuery selectQuery)
+		{
+			return "OFFSET {0} ROWS";
+		}
+
+		protected override bool   OffsetFirst => true;
+
+		public override int CommandCount(SqlStatement statement)
+		{
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+			return statement.NeedsIdentity() ? 2 : 1;
+		}
+
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
+		{
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+
+				StringBuilder.Append("ALTER TABLE ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder
+					.Append(" ALTER COLUMN ")
+					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
+					.AppendLine(" IDENTITY(1,1)")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT @@IDENTITY");
+			}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -55,15 +85,15 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
-		protected override void BuildOrderByClause()
+		protected override void BuildOrderByClause(SelectQuery selectQuery)
 		{
-			if (SelectQuery.OrderBy.Items.Count == 0 && SelectQuery.Select.SkipValue != null)
+			if (selectQuery.OrderBy.Items.Count == 0 && selectQuery.Select.SkipValue != null)
 			{
 				AppendIndent();
 
@@ -73,32 +103,29 @@ namespace LinqToDB.DataProvider.SqlCe
 
 				AppendIndent();
 
-				BuildExpression(SelectQuery.Select.Columns[0].Expression);
+				BuildExpression(selectQuery.Select.Columns[0].Expression);
 				StringBuilder.AppendLine();
 
 				Indent--;
 			}
 			else
-				base.BuildOrderByClause();
+				base.BuildOrderByClause(selectQuery);
 		}
 
-		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SelectQuery.SearchCondition)
+				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
-				}
+					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
@@ -124,7 +151,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{
@@ -157,7 +184,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			StringBuilder.Append("IDENTITY");
 		}
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
 			return sb.Append(table);
 		}

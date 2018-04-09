@@ -39,9 +39,9 @@ namespace LinqToDB.Data
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);
 		}
 
-		protected virtual SelectQuery ProcessQuery(SelectQuery selectQuery)
+		protected virtual SqlStatement ProcessQuery(SqlStatement statement)
 		{
-			return selectQuery;
+			return statement;
 		}
 
 		#region IDataContext Members
@@ -63,7 +63,7 @@ namespace LinqToDB.Data
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
-			ThrowOnDisposed();
+			CheckAndThrowOnDisposed();
 
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
 				return new DataConnection(DataProvider, _connection)

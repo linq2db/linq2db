@@ -229,7 +229,9 @@ namespace LinqToDB.Data
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandType, CommandText, Parameters, cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken);
+
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -373,7 +375,9 @@ namespace LinqToDB.Data
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandType, CommandText, Parameters, cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken);
+
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -510,7 +514,9 @@ namespace LinqToDB.Data
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public async Task<int> ExecuteAsync(CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandType, CommandText, Parameters, cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken);
+
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -589,7 +595,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns single value.
+		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Task with resulting value.</returns>
@@ -600,7 +606,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="StoredProcedure"/> command type asynchronously and returns single value.
+		/// Executes command using <see cref="System.Data.CommandType.StoredProcedure"/> command type asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -612,14 +618,16 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Executes command using <see cref="CommandType.StoredProcedure"/> command type asynchronously and returns single value.
+		/// Executes command asynchronously and returns single value.
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with resulting value.</returns>
 		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandType, CommandText, Parameters, cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken);
+
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -639,7 +647,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			return default(T);
+			return default;
 		}
 
 		#endregion
@@ -738,7 +746,9 @@ namespace LinqToDB.Data
 		/// <returns>Task with data reader object.</returns>
 		public async Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandType, CommandText, Parameters, cancellationToken);
+			await DataConnection.EnsureConnectionAsync(cancellationToken);
+
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -1111,7 +1121,7 @@ namespace LinqToDB.Data
 				{
 					var q =
 						from c in ctors
-						let count = c.ps.Count(p => names.Contains(p.Name, StringComparer.OrdinalIgnoreCase))
+						let count = c.ps.Count(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer))
 						orderby count descending
 						select c;
 
@@ -1121,7 +1131,7 @@ namespace LinqToDB.Data
 					{
 						expr = Expression.New(
 							ctor.c,
-							ctor.ps.Select(p => names.Contains(p.Name, StringComparer.OrdinalIgnoreCase) ?
+							ctor.ps.Select(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer) ?
 								getMemberExpression(
 									p.ParameterType,
 									(names

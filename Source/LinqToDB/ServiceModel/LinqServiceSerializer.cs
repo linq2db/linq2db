@@ -18,9 +18,9 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
+		public static string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
 		{
-			return new QuerySerializer().Serialize(query, parameters, queryHints);
+			return new QuerySerializer().Serialize(statement, parameters, queryHints);
 		}
 
 		public static LinqServiceQuery Deserialize(string str)
@@ -510,7 +510,7 @@ namespace LinqToDB.ServiceModel
 
 		class QuerySerializer : SerializerBase
 		{
-			public string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
+			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
 			{
 				var queryHintCount = queryHints == null ? 0 : queryHints.Count;
 
@@ -522,7 +522,7 @@ namespace LinqToDB.ServiceModel
 
 				var visitor = new QueryVisitor();
 
-				visitor.Visit(query, Visit);
+				visitor.Visit(statement, Visit);
 
 				foreach (var parameter in parameters)
 					if (!Dic.ContainsKey(parameter))
@@ -551,7 +551,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var fld = (SqlField)e;
 
-							if (fld != fld.Table.All)
+							if (fld != fld.Table?.All)
 								GetType(fld.SystemType);
 
 							break;
@@ -582,6 +582,8 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlDataType         : GetType(((SqlDataType)        e).Type);       break;
 					case QueryElementType.SqlValue            : GetType(((SqlValue)           e).SystemType); break;
 					case QueryElementType.SqlTable            : GetType(((SqlTable)           e).ObjectType); break;
+					case QueryElementType.SqlCteTable         : GetType(((SqlCteTable)        e).ObjectType); break;
+					case QueryElementType.CteClause           : GetType(((CteClause)          e).ObjectType); break;
 				}
 
 				Dic.Add(e, ++Index);
@@ -713,7 +715,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.Alias);
 							Append(elem.Database);
-							Append(elem.Owner);
+							Append(elem.Schema);
 							Append(elem.PhysicalName);
 							Append(elem.ObjectType);
 
@@ -754,9 +756,26 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
+					case QueryElementType.SqlCteTable :
+						{
+							var elem = (SqlCteTable)e;
+
+							Append(elem.SourceID);
+							Append(elem.Alias);
+							Append(elem.Cte);
+
+							Append(Dic[elem.All]);
+							Append(elem.Fields.Count);
+
+							foreach (var field in elem.Fields)
+								Append(Dic[field.Value]);
+
+							break;
+						}
+
 					case QueryElementType.ExprPredicate :
 						{
-							var elem = (SelectQuery.Predicate.Expr)e;
+							var elem = (SqlPredicate.Expr)e;
 
 							Append(elem.Expr1);
 							Append(elem.Precedence);
@@ -766,7 +785,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.NotExprPredicate :
 						{
-							var elem = (SelectQuery.Predicate.NotExpr)e;
+							var elem = (SqlPredicate.NotExpr)e;
 
 							Append(elem.Expr1);
 							Append(elem.IsNot);
@@ -777,7 +796,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.ExprExprPredicate :
 						{
-							var elem = (SelectQuery.Predicate.ExprExpr)e;
+							var elem = (SqlPredicate.ExprExpr)e;
 
 							Append(elem.Expr1);
 							Append((int)elem.Operator);
@@ -788,7 +807,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.LikePredicate :
 						{
-							var elem = (SelectQuery.Predicate.Like)e;
+							var elem = (SqlPredicate.Like)e;
 
 							Append(elem.Expr1);
 							Append(elem.IsNot);
@@ -800,7 +819,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.BetweenPredicate :
 						{
-							var elem = (SelectQuery.Predicate.Between)e;
+							var elem = (SqlPredicate.Between)e;
 
 							Append(elem.Expr1);
 							Append(elem.IsNot);
@@ -812,7 +831,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.IsNullPredicate :
 						{
-							var elem = (SelectQuery.Predicate.IsNull)e;
+							var elem = (SqlPredicate.IsNull)e;
 
 							Append(elem.Expr1);
 							Append(elem.IsNot);
@@ -822,7 +841,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.InSubQueryPredicate :
 						{
-							var elem = (SelectQuery.Predicate.InSubQuery)e;
+							var elem = (SqlPredicate.InSubQuery)e;
 
 							Append(elem.Expr1);
 							Append(elem.IsNot);
@@ -833,7 +852,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.InListPredicate :
 						{
-							var elem = (SelectQuery.Predicate.InList)e;
+							var elem = (SqlPredicate.InList)e;
 
 							Append(elem.Expr1);
 							Append(elem.IsNot);
@@ -844,7 +863,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.FuncLikePredicate :
 						{
-							var elem = (SelectQuery.Predicate.FuncLike)e;
+							var elem = (SqlPredicate.FuncLike)e;
 							Append(elem.Function);
 							break;
 						}
@@ -854,66 +873,21 @@ namespace LinqToDB.ServiceModel
 							var elem = (SelectQuery)e;
 
 							Append(elem.SourceID);
-							Append((int)elem.QueryType);
 							Append(elem.From);
 
-							var appendInsert      = false;
-							var appendUpdate      = false;
-							var appendDelete      = false;
-							var appendSelect      = false;
-							var appendCreateTable = false;
-
-							switch (elem.QueryType)
-							{
-								case QueryType.InsertOrUpdate :
-									appendUpdate = true;
-									appendInsert = true;
-									break;
-
-								case QueryType.Update         :
-									appendUpdate = true;
-									appendSelect = elem.Select.SkipValue != null || elem.Select.TakeValue != null;
-									break;
-
-								case QueryType.Delete         :
-									appendDelete = true;
-									appendSelect = true;
-									break;
-
-								case QueryType.Insert         :
-									appendInsert = true;
-									if (elem.From.Tables.Count != 0)
-										appendSelect = true;
-									break;
-
-								case QueryType.CreateTable    :
-									appendCreateTable = true;
-									break;
-
-								default                       :
-									appendSelect = true;
-									break;
-							}
-
-							Append(appendInsert);      if (appendInsert)      Append(elem.Insert);
-							Append(appendUpdate);      if (appendUpdate)      Append(elem.Update);
-							Append(appendDelete);      if (appendDelete)      Append(elem.Delete);
-							Append(appendSelect);      if (appendSelect)      Append(elem.Select);
-							Append(appendCreateTable); if (appendCreateTable) Append(elem.CreateTable);
+							Append(elem.Select);
 
 							Append(elem.Where);
 							Append(elem.GroupBy);
 							Append(elem.Having);
 							Append(elem.OrderBy);
-							Append(elem.ParentSelect == null ? 0 : elem.ParentSelect.SourceID);
+							Append(elem.ParentSelect?.SourceID ?? 0);
 							Append(elem.IsParameterDependent);
 
 							if (!elem.HasUnion)
 								Builder.Append(" -");
 							else
 								Append(elem.Unions);
-
-							Append(elem.Parameters);
 
 							if (Dic.ContainsKey(elem.All))
 								Append(Dic[elem.All]);
@@ -925,24 +899,24 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.Column :
 						{
-							var elem = (SelectQuery.Column) e;
+							var elem = (SqlColumn) e;
 
 							Append(elem.Parent.SourceID);
 							Append(elem.Expression);
-							Append(elem._alias);
+							Append(elem.RawAlias);
 
 							break;
 						}
 
 					case QueryElementType.SearchCondition :
 						{
-							Append(((SelectQuery.SearchCondition)e).Conditions);
+							Append(((SqlSearchCondition)e).Conditions);
 							break;
 						}
 
 					case QueryElementType.Condition :
 						{
-							var elem = (SelectQuery.Condition)e;
+							var elem = (SqlCondition)e;
 
 							Append(elem.IsNot);
 							Append(elem.Predicate);
@@ -953,7 +927,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.TableSource :
 						{
-							var elem = (SelectQuery.TableSource)e;
+							var elem = (SqlTableSource)e;
 
 							Append(elem.Source);
 							Append(elem._alias);
@@ -964,7 +938,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.JoinedTable :
 						{
-							var elem = (SelectQuery.JoinedTable)e;
+							var elem = (SqlJoinedTable)e;
 
 							Append((int)elem.JoinType);
 							Append(elem.Table);
@@ -976,7 +950,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SelectClause :
 						{
-							var elem = (SelectQuery.SelectClause)e;
+							var elem = (SqlSelectClause)e;
 
 							Append(elem.IsDistinct);
 							Append(elem.SkipValue);
@@ -988,7 +962,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.InsertClause :
 						{
-							var elem = (SelectQuery.InsertClause)e;
+							var elem = (SqlInsertClause)e;
 
 							Append(elem.Items);
 							Append(elem.Into);
@@ -999,7 +973,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.UpdateClause :
 						{
-							var elem = (SelectQuery.UpdateClause)e;
+							var elem = (SqlUpdateClause)e;
 
 							Append(elem.Items);
 							Append(elem.Keys);
@@ -1008,15 +982,87 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.DeleteClause :
+					case QueryElementType.WithClause :
 						{
-							Append(((SelectQuery.DeleteClause)e).Table);
+							var elem = (SqlWithClause)e;
+
+							Append(elem.Clauses);
+
+							break;
+						}
+
+					case QueryElementType.CteClause:
+						{
+							var elem = (CteClause)e;
+
+							Append(elem.Name);
+							Append(elem.Body);
+							Append(elem.ObjectType);
+							Append(elem.Fields.Values);
+
+							break;
+						}
+
+					case QueryElementType.SelectStatement :
+						{
+							var elem = (SqlSelectStatement)e;
+							Append(elem.With);
+							Append(elem.SelectQuery);
+							Append(elem.Parameters);
+
+							break;
+						}
+
+					case QueryElementType.InsertStatement :
+						{
+							var elem = (SqlInsertStatement)e;
+							Append(elem.With);
+							Append(elem.Insert);
+							Append(elem.SelectQuery);
+							Append(elem.Parameters);
+
+							break;
+						}
+
+					case QueryElementType.InsertOrUpdateStatement :
+						{
+							var elem = (SqlInsertOrUpdateStatement)e;
+							Append(elem.With);
+							Append(elem.Insert);
+							Append(elem.Update);
+							Append(elem.SelectQuery);
+							Append(elem.Parameters);
+
+							break;
+						}
+
+					case QueryElementType.UpdateStatement :
+						{
+							var elem = (SqlUpdateStatement)e;
+							Append(elem.With);
+							Append(elem.Update);
+							Append(elem.SelectQuery);
+							Append(elem.Parameters);
+
+							break;
+						}
+
+					case QueryElementType.DeleteStatement :
+						{
+							var elem = (SqlDeleteStatement)e;
+
+							Append(elem.With);
+							Append(elem.Table);
+							Append(elem.Top);
+							Append(elem.SelectQuery);
+							Append(elem.Parameters);
+
 							break;
 						}
 
 					case QueryElementType.SetExpression :
 						{
-							var elem = (SelectQuery.SetExpression)e;
+							var elem = (SqlSetExpression)e;
 
 							Append(elem.Column);
 							Append(elem.Expression);
@@ -1026,25 +1072,46 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.CreateTableStatement :
 						{
-							var elem = (SelectQuery.CreateTableStatement)e;
+							var elem = (SqlCreateTableStatement)e;
 
 							Append(elem.Table);
-							Append(elem.IsDrop);
+							Append(elem.Parameters);
 							Append(elem.StatementHeader);
 							Append(elem.StatementFooter);
-							Append((int)elem.DefaulNullable);
+							Append((int)elem.DefaultNullable);
 
 							break;
 						}
 
-					case QueryElementType.FromClause    : Append(((SelectQuery.FromClause)   e).Tables);          break;
-					case QueryElementType.WhereClause   : Append(((SelectQuery.WhereClause)  e).SearchCondition); break;
-					case QueryElementType.GroupByClause : Append(((SelectQuery.GroupByClause)e).Items);           break;
-					case QueryElementType.OrderByClause : Append(((SelectQuery.OrderByClause)e).Items);           break;
+					case QueryElementType.DropTableStatement :
+					{
+						var elem = (SqlDropTableStatement)e;
+
+						Append(elem.Table);
+						Append(elem.Parameters);
+
+						break;
+					}
+
+					case QueryElementType.TruncateTableStatement :
+					{
+						var elem = (SqlTruncateTableStatement)e;
+
+						Append(elem.Table);
+						Append(elem.ResetIdentity);
+						Append(elem.Parameters);
+
+						break;
+					}
+
+					case QueryElementType.FromClause    : Append(((SqlFromClause)   e).Tables);          break;
+					case QueryElementType.WhereClause   : Append(((SqlWhereClause)  e).SearchCondition); break;
+					case QueryElementType.GroupByClause : Append(((SqlGroupByClause)e).Items);           break;
+					case QueryElementType.OrderByClause : Append(((SqlOrderByClause)e).Items);           break;
 
 					case QueryElementType.OrderByItem :
 						{
-							var elem = (SelectQuery.OrderByItem)e;
+							var elem = (SqlOrderByItem)e;
 
 							Append(elem.Expression);
 							Append(elem.IsDescending);
@@ -1054,7 +1121,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.Union :
 						{
-							var elem = (SelectQuery.Union)e;
+							var elem = (SqlUnion)e;
 
 							Append(elem.SelectQuery);
 							Append(elem.IsAll);
@@ -1087,7 +1154,7 @@ namespace LinqToDB.ServiceModel
 
 		public class QueryDeserializer : DeserializerBase
 		{
-			SelectQuery    _query;
+			SqlStatement   _statement;
 			SqlParameter[] _parameters;
 
 			readonly Dictionary<int,SelectQuery> _queries = new Dictionary<int,SelectQuery>();
@@ -1125,7 +1192,7 @@ namespace LinqToDB.ServiceModel
 				foreach (var action in _actions)
 					action();
 
-				return new LinqServiceQuery { Query = _query, Parameters = _parameters, QueryHints = queryHints };
+				return new LinqServiceQuery { Statement = _statement, Parameters = _parameters, QueryHints = queryHints };
 			}
 
 			bool Parse()
@@ -1278,7 +1345,7 @@ namespace LinqToDB.ServiceModel
 							var name               = ReadString();
 							var alias              = ReadString();
 							var database           = ReadString();
-							var owner              = ReadString();
+							var schema             = ReadString();
 							var physicalName       = ReadString();
 							var objectType         = Read<Type>();
 							var sequenceAttributes = null as SequenceNameAttribute[];
@@ -1304,8 +1371,26 @@ namespace LinqToDB.ServiceModel
 							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
 
 							obj = new SqlTable(
-								sourceID, name, alias, database, owner, physicalName, objectType, sequenceAttributes, flds,
+								sourceID, name, alias, database, schema, physicalName, objectType, sequenceAttributes, flds,
 								sqlTableType, tableArgs);
+
+							break;
+						}
+
+					case QueryElementType.SqlCteTable :
+						{
+							var sourceID  = ReadInt();
+							var alias     = ReadString();
+							var cte       = Read<CteClause>();
+
+							var all    = Read<SqlField>();
+							var fields = ReadArray<SqlField>();
+							var flds   = new SqlField[fields.Length + 1];
+
+							flds[0] = all;
+							Array.Copy(fields, 0, flds, 1, fields.Length);
+
+							obj = new SqlCteTable(sourceID, alias, flds, cte);
 
 							break;
 						}
@@ -1315,7 +1400,7 @@ namespace LinqToDB.ServiceModel
 							var expr1      = Read<ISqlExpression>();
 							var precedence = ReadInt();
 
-							obj = new SelectQuery.Predicate.Expr(expr1, precedence);
+							obj = new SqlPredicate.Expr(expr1, precedence);
 
 							break;
 						}
@@ -1326,7 +1411,7 @@ namespace LinqToDB.ServiceModel
 							var isNot      = ReadBool();
 							var precedence = ReadInt();
 
-							obj = new SelectQuery.Predicate.NotExpr(expr1, isNot, precedence);
+							obj = new SqlPredicate.NotExpr(expr1, isNot, precedence);
 
 							break;
 						}
@@ -1334,10 +1419,10 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.ExprExprPredicate :
 						{
 							var expr1     = Read<ISqlExpression>();
-							var @operator = (SelectQuery.Predicate.Operator)ReadInt();
+							var @operator = (SqlPredicate.Operator)ReadInt();
 							var expr2     = Read<ISqlExpression>();
 
-							obj = new SelectQuery.Predicate.ExprExpr(expr1, @operator, expr2);
+							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2);
 
 							break;
 						}
@@ -1349,7 +1434,7 @@ namespace LinqToDB.ServiceModel
 							var expr2  = Read<ISqlExpression>();
 							var escape = Read<ISqlExpression>();
 
-							obj = new SelectQuery.Predicate.Like(expr1, isNot, expr2, escape);
+							obj = new SqlPredicate.Like(expr1, isNot, expr2, escape);
 
 							break;
 						}
@@ -1361,7 +1446,7 @@ namespace LinqToDB.ServiceModel
 							var expr2 = Read<ISqlExpression>();
 							var expr3 = Read<ISqlExpression>();
 
-							obj = new SelectQuery.Predicate.Between(expr1, isNot, expr2, expr3);
+							obj = new SqlPredicate.Between(expr1, isNot, expr2, expr3);
 
 							break;
 						}
@@ -1371,7 +1456,7 @@ namespace LinqToDB.ServiceModel
 							var expr1 = Read<ISqlExpression>();
 							var isNot = ReadBool();
 
-							obj = new SelectQuery.Predicate.IsNull(expr1, isNot);
+							obj = new SqlPredicate.IsNull(expr1, isNot);
 
 							break;
 						}
@@ -1382,7 +1467,7 @@ namespace LinqToDB.ServiceModel
 							var isNot    = ReadBool();
 							var subQuery = Read<SelectQuery>();
 
-							obj = new SelectQuery.Predicate.InSubQuery(expr1, isNot, subQuery);
+							obj = new SqlPredicate.InSubQuery(expr1, isNot, subQuery);
 
 							break;
 						}
@@ -1393,7 +1478,7 @@ namespace LinqToDB.ServiceModel
 							var isNot  = ReadBool();
 							var values = ReadList<ISqlExpression>();
 
-							obj = new SelectQuery.Predicate.InList(expr1, isNot, values);
+							obj = new SqlPredicate.InList(expr1, isNot, values);
 
 							break;
 						}
@@ -1401,42 +1486,27 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.FuncLikePredicate :
 						{
 							var func = Read<SqlFunction>();
-							obj = new SelectQuery.Predicate.FuncLike(func);
+							obj = new SqlPredicate.FuncLike(func);
 							break;
 						}
 
 					case QueryElementType.SqlQuery :
 						{
 							var sid                = ReadInt();
-							var queryType          = (QueryType)ReadInt();
-							var from               = Read<SelectQuery.FromClause>();
-							var readInsert         = ReadBool();
-							var insert             = readInsert ? Read<SelectQuery.InsertClause>() : null;
-							var readUpdate         = ReadBool();
-							var update             = readUpdate ? Read<SelectQuery.UpdateClause>() : null;
-							var readDelete         = ReadBool();
-							var delete             = readDelete ? Read<SelectQuery.DeleteClause>() : null;
-							var readSelect         = ReadBool();
-							var select             = readSelect ? Read<SelectQuery.SelectClause>() : new SelectQuery.SelectClause(null);
-							var readCreateTable    = ReadBool();
-							var createTable        = readCreateTable ?
-								Read<SelectQuery.CreateTableStatement>() :
-								new SelectQuery.CreateTableStatement();
-							var where              = Read<SelectQuery.WhereClause>();
-							var groupBy            = Read<SelectQuery.GroupByClause>();
-							var having             = Read<SelectQuery.WhereClause>();
-							var orderBy            = Read<SelectQuery.OrderByClause>();
+							var from               = Read<SqlFromClause>();
+							var select             = Read<SqlSelectClause>();
+							var where              = Read<SqlWhereClause>();
+							var groupBy            = Read<SqlGroupByClause>();
+							var having             = Read<SqlWhereClause>();
+							var orderBy            = Read<SqlOrderByClause>();
 							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
-							var unions             = ReadArray<SelectQuery.Union>();
-							var parameters         = ReadArray<SqlParameter>();
+							var unions             = ReadArray<SqlUnion>();
 
-							var query = _query = new SelectQuery(sid) { QueryType = queryType };
+							var query = new SelectQuery(sid);
+							_statement = new SqlSelectStatement(query);
 
 							query.Init(
-								insert,
-								update,
-								delete,
 								select,
 								from,
 								where,
@@ -1445,11 +1515,9 @@ namespace LinqToDB.ServiceModel
 								orderBy,
 								unions?.ToList(),
 								null,
-								createTable,
-								parameterDependent,
-								parameters.ToList());
+								parameterDependent);
 
-							_queries.Add(sid, _query);
+							_queries.Add(sid, query);
 
 							if (parentSql != 0)
 								_actions.Add(() =>
@@ -1471,7 +1539,7 @@ namespace LinqToDB.ServiceModel
 							var expression = Read<ISqlExpression>();
 							var alias      = ReadString();
 
-							var col = new SelectQuery.Column(null, expression, alias);
+							var col = new SqlColumn(null, expression, alias);
 
 							_actions.Add(() => { col.Parent = _queries[sid]; });
 
@@ -1481,32 +1549,32 @@ namespace LinqToDB.ServiceModel
 						}
 
 					case QueryElementType.SearchCondition :
-						obj = new SelectQuery.SearchCondition(ReadArray<SelectQuery.Condition>());
+						obj = new SqlSearchCondition(ReadArray<SqlCondition>());
 						break;
 
 					case QueryElementType.Condition :
-						obj = new SelectQuery.Condition(ReadBool(), Read<ISqlPredicate>(), ReadBool());
+						obj = new SqlCondition(ReadBool(), Read<ISqlPredicate>(), ReadBool());
 						break;
 
 					case QueryElementType.TableSource :
 						{
 							var source = Read<ISqlTableSource>();
 							var alias  = ReadString();
-							var joins  = ReadArray<SelectQuery.JoinedTable>();
+							var joins  = ReadArray<SqlJoinedTable>();
 
-							obj = new SelectQuery.TableSource(source, alias, joins);
+							obj = new SqlTableSource(source, alias, joins);
 
 							break;
 						}
 
 					case QueryElementType.JoinedTable :
 						{
-							var joinType  = (SelectQuery.JoinType)ReadInt();
-							var table     = Read<SelectQuery.TableSource>();
+							var joinType  = (JoinType)ReadInt();
+							var table     = Read<SqlTableSource>();
 							var isWeak    = ReadBool();
-							var condition = Read<SelectQuery.SearchCondition>();
+							var condition = Read<SqlSearchCondition>();
 
-							obj = new SelectQuery.JoinedTable(joinType, table, isWeak, condition);
+							obj = new SqlJoinedTable(joinType, table, isWeak, condition);
 
 							break;
 						}
@@ -1516,20 +1584,20 @@ namespace LinqToDB.ServiceModel
 							var isDistinct = ReadBool();
 							var skipValue  = Read<ISqlExpression>();
 							var takeValue  = Read<ISqlExpression>();
-							var columns    = ReadArray<SelectQuery.Column>();
+							var columns    = ReadArray<SqlColumn>();
 
-							obj = new SelectQuery.SelectClause(isDistinct, takeValue, skipValue, columns);
+							obj = new SqlSelectClause(isDistinct, takeValue, skipValue, columns);
 
 							break;
 						}
 
 					case QueryElementType.InsertClause :
 						{
-							var items = ReadArray<SelectQuery.SetExpression>();
+							var items = ReadArray<SqlSetExpression>();
 							var into  = Read<SqlTable>();
 							var wid   = ReadBool();
 
-							var c = new SelectQuery.InsertClause { Into = into, WithIdentity = wid };
+							var c = new SqlInsertClause { Into = into, WithIdentity = wid };
 
 							c.Items.AddRange(items);
 							obj = c;
@@ -1539,11 +1607,11 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.UpdateClause :
 						{
-							var items = ReadArray<SelectQuery.SetExpression>();
-							var keys  = ReadArray<SelectQuery.SetExpression>();
+							var items = ReadArray<SqlSetExpression>();
+							var keys  = ReadArray<SqlSetExpression>();
 							var table = Read<SqlTable>();
 
-							var c = new SelectQuery.UpdateClause { Table = table };
+							var c = new SqlUpdateClause { Table = table };
 
 							c.Items.AddRange(items);
 							c.Keys. AddRange(keys);
@@ -1552,45 +1620,165 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.DeleteClause :
+					case QueryElementType.WithClause :
 						{
-							var table = Read<SqlTable>();
-							obj = new SelectQuery.DeleteClause { Table = table };
+							var items = ReadArray<CteClause>();
+
+							var c = new SqlWithClause();
+							c.Clauses.AddRange(items);
+
+							obj = c;
+
+							break;
+						}
+
+					case QueryElementType.CteClause:
+						{
+							var name       = ReadString();
+							var body       = Read<SelectQuery>();
+							var objectType = Read<Type>();
+							var fields     = ReadArray<SqlField>();
+
+							var c = new CteClause(body, fields, objectType, name);
+
+							obj = c;
+
+							break;
+						}
+
+					case QueryElementType.SelectStatement :
+						{
+							var with        = Read<SqlWithClause>();
+							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
+
+							obj = _statement = new SqlSelectStatement(selectQuery);
+							_statement.Parameters.AddRange(parameters);
+							((SqlSelectStatement)_statement).With = with;
+
+							break;
+						}
+
+					case QueryElementType.InsertStatement :
+						{
+							var with        = Read<SqlWithClause>();
+							var insert      = Read<SqlInsertClause>();
+							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
+
+							obj = _statement = new SqlInsertStatement(selectQuery) {Insert = insert};
+							_statement.Parameters.AddRange(parameters);
+							((SqlInsertStatement)_statement).With = with;
+
+							break;
+						}
+
+					case QueryElementType.UpdateStatement :
+						{
+							var with        = Read<SqlWithClause>();
+							var update      = Read<SqlUpdateClause>();
+							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
+
+							obj = _statement = new SqlUpdateStatement(selectQuery) {Update = update};
+							_statement.Parameters.AddRange(parameters);
+							((SqlUpdateStatement)_statement).With = with;
+
+							break;
+						}
+
+					case QueryElementType.InsertOrUpdateStatement :
+						{
+							var with        = Read<SqlWithClause>();
+							var insert      = Read<SqlInsertClause>();
+							var update      = Read<SqlUpdateClause>();
+							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
+
+							obj = _statement = new SqlInsertOrUpdateStatement(selectQuery) {Insert = insert, Update = update};
+							_statement.Parameters.AddRange(parameters);
+							((SqlInsertOrUpdateStatement)_statement).With = with;
+
+							break;
+						}
+
+					case QueryElementType.DeleteStatement :
+						{
+							var with        = Read<SqlWithClause>();
+							var table       = Read<SqlTable>();
+							var top         = Read<ISqlExpression>();
+							var selectQuery = Read<SelectQuery>();
+							var parameters  = ReadArray<SqlParameter>();
+
+							obj = _statement = new SqlDeleteStatement { Table = table, Top = top, SelectQuery = selectQuery };
+							_statement.Parameters.AddRange(parameters);
+							((SqlDeleteStatement)_statement).With = with;
+
 							break;
 						}
 
 					case QueryElementType.CreateTableStatement :
 						{
 							var table           = Read<SqlTable>();
-							var isDrop          = ReadBool();
+							var parameters      = ReadArray<SqlParameter>();
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
-							var defaultNullable = (DefaulNullable)ReadInt();
+							var defaultNullable = (DefaultNullable)ReadInt();
 
-							obj = new SelectQuery.CreateTableStatement
+							obj = _statement = new SqlCreateTableStatement
 							{
 								Table           = table,
-								IsDrop          = isDrop,
 								StatementHeader = statementHeader,
 								StatementFooter = statementFooter,
-								DefaulNullable  = defaultNullable,
+								DefaultNullable = defaultNullable,
 							};
+							_statement.Parameters.AddRange(parameters);
 
 							break;
 						}
 
-					case QueryElementType.SetExpression : obj = new SelectQuery.SetExpression(Read     <ISqlExpression>(), Read<ISqlExpression>()); break;
-					case QueryElementType.FromClause    : obj = new SelectQuery.FromClause   (ReadArray<SelectQuery.TableSource>());                break;
-					case QueryElementType.WhereClause   : obj = new SelectQuery.WhereClause  (Read     <SelectQuery.SearchCondition>());            break;
-					case QueryElementType.GroupByClause : obj = new SelectQuery.GroupByClause(ReadArray<ISqlExpression>());                         break;
-					case QueryElementType.OrderByClause : obj = new SelectQuery.OrderByClause(ReadArray<SelectQuery.OrderByItem>());                break;
+					case QueryElementType.DropTableStatement :
+					{
+						var table      = Read<SqlTable>();
+						var parameters = ReadArray<SqlParameter>();
+
+						obj = _statement = new SqlDropTableStatement
+						{
+							Table = table,
+						};
+						_statement.Parameters.AddRange(parameters);
+
+						break;
+					}
+
+					case QueryElementType.TruncateTableStatement :
+					{
+						var table      = Read<SqlTable>();
+						var reset      = ReadBool();
+						var parameters = ReadArray<SqlParameter>();
+
+						obj = _statement = new SqlTruncateTableStatement
+						{
+							Table         = table,
+							ResetIdentity = reset
+						};
+						_statement.Parameters.AddRange(parameters);
+
+						break;
+					}
+
+					case QueryElementType.SetExpression : obj = new SqlSetExpression(Read     <ISqlExpression>(), Read<ISqlExpression>()); break;
+					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>());                break;
+					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>());            break;
+					case QueryElementType.GroupByClause : obj = new SqlGroupByClause(ReadArray<ISqlExpression>());                break;
+					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>());                break;
 
 					case QueryElementType.OrderByItem :
 						{
 							var expression   = Read<ISqlExpression>();
 							var isDescending = ReadBool();
 
-							obj = new SelectQuery.OrderByItem(expression, isDescending);
+							obj = new SqlOrderByItem(expression, isDescending);
 
 							break;
 						}
@@ -1600,7 +1788,7 @@ namespace LinqToDB.ServiceModel
 							var sqlQuery = Read<SelectQuery>();
 							var isAll    = ReadBool();
 
-							obj = new SelectQuery.Union(sqlQuery, isAll);
+							obj = new SqlUnion(sqlQuery, isAll);
 
 							break;
 						}

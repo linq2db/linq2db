@@ -19,10 +19,10 @@ namespace Tests.Linq
 	{
 		static IEnumerable<T> QueryTable<T>(IDataContext dataContext)
 		{
-			var query = new SelectQuery();
+			var query = new SqlSelectStatement();
 			var table = new SqlTable(typeof(T));
-			var tableSource = new SelectQuery.TableSource(table, "t");
-			query.From.Tables.Add(tableSource);
+			var tableSource = new SqlTableSource(table, "t");
+			query.SelectQuery.From.Tables.Add(tableSource);
 
 			var connection = (DataConnection) dataContext;
 

@@ -507,7 +507,6 @@ namespace Tests.Model
 	#region Inheritance3
 
 	[Table(Name="Parent")]
-	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase3))]
 	[InheritanceMapping(Code = 1,    Type = typeof(ParentInheritance13))]
 	[InheritanceMapping(Code = 2,    Type = typeof(ParentInheritance13))]
 	public abstract class ParentInheritanceBase3

@@ -16,11 +16,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		protected virtual  bool BuildAlternativeSql { get { return true; } }
+		protected virtual  bool BuildAlternativeSql => true;
 
-		protected override string FirstFormat
+		protected override string FirstFormat(SelectQuery selectQuery)
 		{
-			get { return SelectQuery.Select.SkipValue == null ? "TOP ({0})" : null; }
+			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;
 		}
 
 		protected override void BuildSql()
@@ -37,17 +37,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			return StringBuilder;
 		}
 
-		protected override void BuildInsertQuery()
+		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClasuse)
 		{
-			if (SelectQuery.Insert.WithIdentity)
+			if (insertClasuse.WithIdentity)
 			{
-				var identityField = SelectQuery.Insert.Into.GetIdentityField();
+				var identityField = insertClasuse.Into.GetIdentityField();
 
 				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
-					AppendOutputTableVariable(SelectQuery.Insert.Into)
+					AppendOutputTableVariable(insertClasuse.Into)
 						.Append(" TABLE (")
 						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
 						.Append(" ");
@@ -58,14 +58,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 			}
 
-			base.BuildInsertQuery();
+			base.BuildInsertQuery(statement, insertClasuse);
 		}
 
-		protected override void BuildOutputSubclause()
+		protected override void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
 		{
-			if (SelectQuery.Insert.WithIdentity)
+			if (insertClause.WithIdentity)
 			{
-				var identityField = SelectQuery.Insert.Into.GetIdentityField();
+				var identityField = insertClause.Into.GetIdentityField();
 
 				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
@@ -75,15 +75,15 @@ namespace LinqToDB.DataProvider.SqlServer
 						.AppendLine();
 					AppendIndent()
 						.Append("INTO ");
-					AppendOutputTableVariable(SelectQuery.Insert.Into)
+					AppendOutputTableVariable(insertClause.Into)
 						.AppendLine();
 				}
 			}
 		}
 
-		protected override void BuildGetIdentity()
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = SelectQuery.Insert.Into.GetIdentityField();
+			var identityField = insertClause.Into.GetIdentityField();
 
 			if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 			{
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					.Append("SELECT ")
 					.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
 					.Append(" FROM ");
-				AppendOutputTableVariable(SelectQuery.Insert.Into)
+				AppendOutputTableVariable(insertClause.Into)
 					.AppendLine();
 			}
 			else
@@ -104,29 +104,29 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void BuildOrderByClause()
+		protected override void BuildOrderByClause(SelectQuery selectQuery)
 		{
-			if (!BuildAlternativeSql || !NeedSkip)
-				base.BuildOrderByClause();
+			if (!BuildAlternativeSql || !NeedSkip(selectQuery))
+				base.BuildOrderByClause(selectQuery);
 		}
 
-		protected override IEnumerable<SelectQuery.Column> GetSelectedColumns()
+		protected override IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
 		{
-			if (BuildAlternativeSql && NeedSkip && !SelectQuery.OrderBy.IsEmpty)
-				return AlternativeGetSelectedColumns(base.GetSelectedColumns);
-			return base.GetSelectedColumns();
+			if (BuildAlternativeSql && NeedSkip(selectQuery) && !selectQuery.OrderBy.IsEmpty)
+				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
+			return base.GetSelectedColumns(selectQuery);
 		}
 
-		protected override void BuildDeleteClause()
+		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
-			var table = SelectQuery.Delete.Table != null ?
-				(SelectQuery.From.FindTableSource(SelectQuery.Delete.Table) ?? SelectQuery.Delete.Table) :
-				SelectQuery.From.Tables[0];
+			var table = deleteStatement.Table != null ?
+				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
+				deleteStatement.SelectQuery.From.Tables[0];
 
 			AppendIndent()
 				.Append("DELETE");
 
-			BuildSkipFirst();
+			BuildSkipFirst(deleteStatement.SelectQuery);
 
 			StringBuilder
 				.Append(" ")
@@ -134,11 +134,11 @@ namespace LinqToDB.DataProvider.SqlServer
 				.AppendLine();
 		}
 
-		protected override void BuildUpdateTableName()
+		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			var table = SelectQuery.Update.Table != null ?
-				(SelectQuery.From.FindTableSource(SelectQuery.Update.Table) ?? SelectQuery.Update.Table) :
-				SelectQuery.From.Tables[0];
+			var table = updateClause.Table != null ?
+				(selectQuery.From.FindTableSource(updateClause.Table) ?? updateClause.Table) :
+				selectQuery.From.Tables[0];
 
 			if (table is SqlTable)
 				BuildPhysicalTable(table, null);
@@ -146,27 +146,27 @@ namespace LinqToDB.DataProvider.SqlServer
 				StringBuilder.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias));
 		}
 
-		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SelectQuery.SearchCondition)
+				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 				}
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
+		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
 			if (predicate.Expr2 is SqlValue)
 			{
@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					var ntext = text.Replace("[", "[[]");
 
 					if (text != ntext)
-						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+						predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
 				}
 			}
 			else if (predicate.Expr2 is SqlParameter)
@@ -212,7 +212,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					return "[" + value + "]";
 
 				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
+				case ConvertType.NameToSchema:
 				case ConvertType.NameToQueryTable:
 					if (value != null)
 					{
@@ -241,9 +241,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert();
+			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append("IDENTITY");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
 
@@ -263,9 +263,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append(")");
 		}
 
-		protected override void BuildDropTableStatement()
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = SelectQuery.CreateTable.Table;
+			var table = dropTable.Table;
 
 			if (table.PhysicalName.StartsWith("#"))
 			{
@@ -275,13 +275,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			else
 			{
-				StringBuilder.Append("IF EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'");
+				StringBuilder.Append("IF (OBJECT_ID(N'");
 				BuildPhysicalTable(table, null);
-				StringBuilder.AppendLine("') AND type in (N'U'))");
+				StringBuilder.AppendLine("', N'U') IS NOT NULL)");
 
-				AppendIndent().Append("BEGIN DROP TABLE ");
+				Indent++;
+				AppendIndent().Append("DROP TABLE ");
 				BuildPhysicalTable(table, null);
-				StringBuilder.AppendLine(" END");
+				Indent--;
 			}
 		}
 
@@ -324,6 +325,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).SqlDbType.ToString();
+		}
+
+		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			if (truncateTable.ResetIdentity || truncateTable.Table.Fields.Values.All(f => !f.IsIdentity))
+				StringBuilder.Append("TRUNCATE TABLE ");
+			else
+				StringBuilder.Append("DELETE FROM ");
 		}
 	}
 }

@@ -34,15 +34,15 @@ namespace LinqToDB.DataProvider.SqlServer
 				var tbl    = new SqlTable(ttype);
 
 				var database     = Convert(tbl.Database);
-				var owner        = Convert(tbl.Owner);
+				var schema       = Convert(tbl.Schema);
 				var physicalName = Convert(tbl.PhysicalName);
 
 				var name = "";
 
 				if (database != null)
-					name = database + "." + (owner == null ? "." : owner + ".");
-				else if (owner != null)
-					name = owner + ".";
+					name = database + "." + (schema == null ? "." : schema + ".");
+				else if (schema != null)
+					name = schema + ".";
 
 				name += physicalName;
 

@@ -7,6 +7,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -113,7 +114,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
+		[Test, IncludeDataContextSource(false, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
 		public async Task CreateLocalTempTable1Async(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -152,7 +153,8 @@ namespace Tests.xUpdate
 						table = await db.CreateTableAsync<TestTable>(statementHeader:"DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}");
 						break;
 					default:
-						throw new InvalidOperationException();
+						table = await db.CreateTableAsync<TestTable>(tableName);
+						break;
 				}
 
 				var list = await table.ToListAsync();

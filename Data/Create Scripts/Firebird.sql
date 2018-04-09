@@ -1,4 +1,5 @@
-﻿DROP PROCEDURE Person_SelectByKey;            COMMIT;
+﻿DROP PROCEDURE AddIssue792Record;             COMMIT;
+DROP PROCEDURE Person_SelectByKey;            COMMIT;
 DROP PROCEDURE Person_SelectAll;              COMMIT;
 DROP PROCEDURE Person_SelectByName;           COMMIT;
 DROP PROCEDURE Person_Insert;                 COMMIT;
@@ -97,7 +98,7 @@ CREATE TRIGGER CREATE_PersonID FOR Person
 BEFORE INSERT POSITION 0
 AS BEGIN
 	NEW.PersonID = GEN_ID(PersonID, 1);
-END
+END;
 COMMIT;
 
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M');
@@ -118,7 +119,7 @@ CREATE TABLE Doctor
 	Taxonomy VARCHAR(50) NOT NULL,
 		CONSTRAINT FK_Doctor_Person FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 			ON DELETE CASCADE
-)
+);
 COMMIT;
 
 INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
@@ -171,7 +172,7 @@ CREATE TABLE DataTypeTest
 	UInt32_         INTEGER,
 	UInt64_         NUMERIC(11),
 	Xml_            CHAR(1000)
-)
+);
 COMMIT;
 
 CREATE GENERATOR DataTypeID;
@@ -181,7 +182,7 @@ CREATE TRIGGER CREATE_DataTypeTest FOR DataTypeTest
 BEFORE INSERT POSITION 0
 AS BEGIN
 	NEW.DataTypeID = GEN_ID(DataTypeID, 1); 
-END
+END;
 COMMIT;
 
 INSERT INTO DataTypeTest
@@ -208,16 +209,16 @@ COMMIT;
 
 
 
-DROP TABLE Parent     COMMIT;
-DROP TABLE Child      COMMIT;
-DROP TABLE GrandChild COMMIT;
+DROP TABLE Parent;     COMMIT;
+DROP TABLE Child;      COMMIT;
+DROP TABLE GrandChild; COMMIT;
 
-CREATE TABLE Parent      (ParentID int, Value1 int)                    COMMIT;
-CREATE TABLE Child       (ParentID int, ChildID int)                   COMMIT;
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int) COMMIT;
+CREATE TABLE Parent      (ParentID int, Value1 int);                    COMMIT;
+CREATE TABLE Child       (ParentID int, ChildID int);                   COMMIT;
+CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int); COMMIT;
 
 
-DROP TABLE LinqDataTypes COMMIT;
+DROP TABLE LinqDataTypes; COMMIT;
 
 CREATE TABLE LinqDataTypes
 (
@@ -232,36 +233,36 @@ CREATE TABLE LinqDataTypes
 	IntValue       int,
 	BigIntValue    bigint,
 	StringValue    VARCHAR(50)
-)
+);
 COMMIT;
 
-DROP GENERATOR SequenceTestSeq COMMIT;
+DROP GENERATOR SequenceTestSeq; COMMIT;
 
-CREATE GENERATOR SequenceTestSeq
+CREATE GENERATOR SequenceTestSeq;
 COMMIT;
 
-DROP TABLE SequenceTest COMMIT;
+DROP TABLE SequenceTest; COMMIT;
 
 CREATE TABLE SequenceTest
 (
 	ID     int         NOT NULL PRIMARY KEY,
 	Value_ VARCHAR(50) NOT NULL
-)
+);
 COMMIT;
 
 
-DROP TRIGGER CREATE_ID
+DROP TRIGGER CREATE_ID;
 COMMIT;
 
-DROP GENERATOR TestIdentityID
+DROP GENERATOR TestIdentityID;
 COMMIT;
 
-DROP TABLE TestIdentity
+DROP TABLE TestIdentity;
 COMMIT;
 
 CREATE TABLE TestIdentity (
 	ID INTEGER NOT NULL PRIMARY KEY
-)
+);
 COMMIT;
 
 CREATE GENERATOR TestIdentityID;
@@ -271,18 +272,18 @@ CREATE TRIGGER CREATE_ID FOR TestIdentity
 BEFORE INSERT POSITION 0
 AS BEGIN
 	NEW.ID = GEN_ID(TestIdentityID, 1);
-END
+END;
 COMMIT;
 
 
 
-DROP TRIGGER AllTypes_ID
+DROP TRIGGER AllTypes_ID;
 COMMIT;
 
-DROP GENERATOR AllTypesID
+DROP GENERATOR AllTypesID;
 COMMIT;
 
-DROP TABLE AllTypes
+DROP TABLE AllTypes;
 COMMIT;
 
 CREATE TABLE AllTypes
@@ -306,7 +307,7 @@ CREATE TABLE AllTypes
 	nvarcharDataType         varchar(20) character set UNICODE_FSS,
 
 	blobDataType             blob
-)
+);
 COMMIT;
 
 CREATE GENERATOR AllTypesID;
@@ -316,7 +317,7 @@ CREATE TRIGGER AllTypes_ID FOR AllTypes
 BEFORE INSERT POSITION 0
 AS BEGIN
 	NEW.ID = GEN_ID(AllTypesID, 1);
-END
+END;
 COMMIT;
 
 INSERT INTO AllTypes
@@ -341,7 +342,7 @@ VALUES
 	NULL,
 
 	NULL
-)
+);
 COMMIT;
 
 INSERT INTO AllTypes
@@ -366,13 +367,13 @@ VALUES
 	'3323',
 
 	'12345'
-)
+);
 COMMIT;
 
 
 CREATE VIEW PersonView
 AS
-	SELECT * FROM Person
+	SELECT * FROM Person;
 COMMIT;
 
 
@@ -397,7 +398,7 @@ BEGIN
 		:MiddleName,
 		:Gender;
 	SUSPEND;
-END
+END;
 COMMIT;
 
 -- Person_SelectAll
@@ -421,7 +422,7 @@ BEGIN
 			:MiddleName,
 			:Gender
 	DO SUSPEND;
-END
+END;
 COMMIT;
 
 -- Person_SelectByName
@@ -451,7 +452,7 @@ BEGIN
 		:MiddleName,
 		:Gender 
 	DO SUSPEND;
-END
+END;
 COMMIT;
 
 -- Person_Insert
@@ -474,7 +475,7 @@ BEGIN
 	SELECT MAX(PersonID) FROM person
 		INTO :PersonID;
 	SUSPEND;
-END
+END;
 COMMIT;
 
 -- Person_Insert_OutputParameter
@@ -497,7 +498,7 @@ BEGIN
 	SELECT max(PersonID) FROM person
 	INTO :PersonID;
 	SUSPEND;
-END
+END;
 COMMIT;
 
 -- Person_Update
@@ -520,7 +521,7 @@ BEGIN
 		Gender     = :Gender
 	WHERE
 		PersonID = :PersonID;
-END
+END;
 COMMIT;
 
 -- Person_Delete
@@ -531,7 +532,7 @@ CREATE PROCEDURE Person_Delete(
 AS
 BEGIN
 	DELETE FROM Person WHERE PersonID = :PersonID;
-END
+END;
 COMMIT;
 
 -- Patient_SelectAll
@@ -567,7 +568,7 @@ BEGIN
 			:Gender,
 			:Diagnosis
 	DO SUSPEND;
-END
+END;
 COMMIT;
 
 -- Patient_SelectByName
@@ -601,7 +602,7 @@ BEGIN
 			:Gender,
 			:Diagnosis
 	DO SUSPEND;
-END
+END;
 COMMIT;
 
 
@@ -634,7 +635,7 @@ BEGIN
 	outputStr      = str;
 	inputOutputStr = str || in_inputOutputStr;
 	SUSPEND;
-END
+END;
 COMMIT;
 
 -- OutRefEnumTest
@@ -652,7 +653,7 @@ BEGIN
 	outputStr      = str;
 	inputOutputStr = str || in_inputOutputStr;
 	SUSPEND;
-END
+END;
 COMMIT;
 
 -- ExecuteScalarTest
@@ -667,7 +668,7 @@ BEGIN
 	intField = 12345;
 	stringField = '54321';
 	SUSPEND;
-END
+END;
 COMMIT;
 
 CREATE PROCEDURE Scalar_OutputParameter
@@ -680,7 +681,7 @@ BEGIN
 	outputInt = 12345;
 	outputString = '54321';
 	SUSPEND;
-END
+END;
 COMMIT;
 
 /*
@@ -693,10 +694,10 @@ AS
 BEGIN
 	Return_Value = 12345;
 	SUSPEND;
-END
+END;
 COMMIT;
 
-DROP TABLE "CamelCaseName"
+DROP TABLE "CamelCaseName";
 COMMIT;
 
 CREATE TABLE "CamelCaseName"
@@ -707,7 +708,7 @@ CREATE TABLE "CamelCaseName"
 	"NAME3"  VARCHAR(20),
 	"_NAME4" VARCHAR(20),
 	"NAME 5" VARCHAR(20)
-)
+);
 COMMIT;
 
 
@@ -768,4 +769,12 @@ CREATE TABLE TestMerge2
 	FieldEnumString VARCHAR(20),
 	FieldEnumNumber INT
 );
+COMMIT;
+
+CREATE PROCEDURE AddIssue792Record
+AS
+BEGIN
+	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+	SUSPEND;
+END;
 COMMIT;

@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (sequence.SelectQuery.Select.IsDistinct       ||
 			    sequence.SelectQuery.GroupBy.Items.Count > 0 ||
-			    groupSql.Any(_ => !(_.Sql is SqlField || _.Sql is SelectQuery.Column)))
+			    groupSql.Any(_ => !(_.Sql is SqlField || _.Sql is SqlColumn)))
 			{
 				sequence = new SubQueryContext(sequence);
 				key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
@@ -641,7 +641,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var expr = SelectQuery.Select.Columns[index].Expression;
 
-				if (!SelectQuery.GroupBy.Items.Any(_ => ReferenceEquals(_, expr) || (expr is SelectQuery.Column && ReferenceEquals(_, ((SelectQuery.Column)expr).Expression))))
+				if (!SelectQuery.GroupBy.Items.Any(_ => ReferenceEquals(_, expr) || (expr is SqlColumn && ReferenceEquals(_, ((SqlColumn)expr).Expression))))
 					SelectQuery.GroupBy.Items.Add(expr);
 
 				return base.ConvertToParentIndex(index, this);

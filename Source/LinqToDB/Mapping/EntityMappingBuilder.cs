@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
@@ -24,9 +24,8 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard configuration names.</param>
 		public EntityMappingBuilder([JetBrains.Annotations.NotNull] FluentMappingBuilder builder, string configuration)
 		{
-			if (builder == null) throw new ArgumentNullException("builder");
+			_builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
-			_builder      = builder;
 			Configuration = configuration;
 
 			// We'll reset cache here, because there is no need to create builder if you don't want to change something
@@ -39,7 +38,7 @@ namespace LinqToDB.Mapping
 		/// Gets mapping schema configuration name, for which this entity builder should be taken into account.
 		/// <see cref="ProviderName"/> for standard configuration names.
 		/// </summary>
-		public string Configuration { get; private set; }
+		public string Configuration { get; }
 
 		#endregion
 
@@ -215,18 +214,66 @@ namespace LinqToDB.Mapping
 		/// <param name="prop">Association member getter expression.</param>
 		/// <param name="thisKey">This association key getter expression.</param>
 		/// <param name="otherKey">Other association key getter expression.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
-			Expression<Func<T, S>> prop,
-			Expression<Func<T, ID1>> thisKey,
-			Expression<Func<S, ID2>> otherKey )
+			[JetBrains.Annotations.NotNull] Expression<Func<T, S>>   prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, ID1>> thisKey,
+			[JetBrains.Annotations.NotNull] Expression<Func<S, ID2>> otherKey,
+			                                bool                     canBeNull = true)
 		{
-			var thisKeyName = ((MemberExpression)thisKey.Body).Member.Name;
-			var otherKeyName = ((MemberExpression)otherKey.Body).Member.Name;
+			if (prop     == null) throw new ArgumentNullException(nameof(prop));
+			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
+			if (otherKey == null) throw new ArgumentNullException(nameof(otherKey));
+
+			var thisKeyName = MemberHelper.GetMemberInfo(thisKey).Name;
+			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
 			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
-			return Property( objProp ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName } );
+			return Property( objProp ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
+		}
+
+		/// <summary>
+		/// Adds one-to-many association mapping to current entity.
+		/// </summary>
+		/// <typeparam name="TOther">Other association side type</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="predicate">Predicate expresssion.</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<TOther>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, IEnumerable<TOther>>> prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther, bool>>        predicate,
+			                                bool                                     canBeNull = true)
+		{
+			if (prop      == null) throw new ArgumentNullException(nameof(prop));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+
+			return Property( objProp ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull, Relationship = Relationship.OneToMany } );
+		}
+
+		/// <summary>
+		/// Adds one-to-one association mapping to current entity.
+		/// </summary>
+		/// <typeparam name="TOther">Other association side type</typeparam>
+		/// <param name="prop">Association member getter expression.</param>
+		/// <param name="predicate">Predicate expresssion</param>
+		/// <param name="canBeNull">Defines type of join. True - left join, False - inner join.</param>
+		/// <returns>Returns fluent property mapping builder.</returns>
+		public PropertyMappingBuilder<T> Association<TOther>(
+			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther>>       prop,
+			[JetBrains.Annotations.NotNull] Expression<Func<T, TOther, bool>> predicate,
+			                                bool                              canBeNull = true)
+		{
+			if (prop      == null) throw new ArgumentNullException(nameof(prop));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
+
+			return Property( objProp ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>
@@ -341,7 +388,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<T> Inheritance<S>(Expression<Func<T, S>> key, S value, Type type, bool isDefault = false)
 		{
-			HasAttribute(new InheritanceMappingAttribute() {Code = value, Type = type, IsDefault = isDefault});
+			HasAttribute(new InheritanceMappingAttribute {Code = value, Type = type, IsDefault = isDefault});
 			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(key.Body, typeof(object)), key.Parameters);
 			Property(objProp).IsDiscriminator();
 
@@ -401,6 +448,27 @@ namespace LinqToDB.Mapping
 		}
 
 		internal EntityMappingBuilder<T> SetAttribute<TA>(
+			Func<TA> getNew,
+			Action<TA> modifyExisting,
+			Func<TA, string> configGetter,
+			Func<IEnumerable<TA>, TA> existingGetter)
+			where TA : Attribute
+		{
+			var attr = existingGetter(GetAttributes(typeof(T), configGetter));
+
+			if (attr == null)
+			{
+				_builder.HasAttribute(typeof(T), getNew());
+			}
+			else
+			{
+				modifyExisting(attr);
+			}
+
+			return this;
+		}
+
+		internal EntityMappingBuilder<T> SetAttribute<TA>(
 			Expression<Func<T,object>> func,
 			bool                       processNewExpression,
 			Func<bool,TA>              getNew,
@@ -421,15 +489,13 @@ namespace LinqToDB.Mapping
 
 			Action<Expression,bool> setAttr = (e,m) =>
 			{
-				var memberInfo =
-					e is MemberExpression     ? ((MemberExpression)    e).Member :
-					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
+				var memberInfo = MemberHelper.GetMemberInfo(e);
 
 				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T))
 					memberInfo = typeof(T).GetMemberEx(memberInfo);
 
 				if (memberInfo == null)
-					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));
+					throw new ArgumentException($"'{e}' cant be converted to a class member.");
 
 				var attr = existingGetter(GetAttributes(memberInfo, configGetter));
 

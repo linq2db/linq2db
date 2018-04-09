@@ -20,20 +20,21 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.Arguments.Count == 2)
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
 
-			sequence.SelectQuery.QueryType = QueryType.Delete;
+			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);
+
+			sequence.Statement = deleteStatement;
 
 			// Check association.
 			//
-			var ctx = sequence as SelectContext;
 
-			if (ctx != null && ctx.IsScalar)
+			if (sequence is SelectContext ctx && ctx.IsScalar)
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
 				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
 				{
 					var atc = (TableBuilder.AssociatedTableContext)res.Context;
-					sequence.SelectQuery.Delete.Table = atc.SqlTable;
+					deleteStatement.Table = atc.SqlTable;
 				}
 				else
 				{
@@ -43,8 +44,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var tc = (TableBuilder.TableContext)res.Context;
 
-						if (sequence.SelectQuery.From.Tables.Count == 0 || sequence.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
-							sequence.SelectQuery.Delete.Table = tc.SqlTable;
+						if (deleteStatement.SelectQuery.From.Tables.Count == 0 || deleteStatement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
+							deleteStatement.Table = tc.SqlTable;
 					}
 				}
 			}

@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.MySql
 	public static class MySqlTools
 	{
 		static readonly MySqlDataProvider _mySqlDataProvider = new MySqlDataProvider();
-		
+
 		static MySqlTools()
 		{
 			DataConnection.AddDataProvider(_mySqlDataProvider);

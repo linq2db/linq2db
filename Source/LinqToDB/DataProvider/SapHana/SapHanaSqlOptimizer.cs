@@ -13,21 +13,21 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			selectQuery = base.Finalize(selectQuery);
+			statement = base.Finalize(statement);
 
-			switch (selectQuery.QueryType)
+			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
-					selectQuery = GetAlternativeDelete(selectQuery);
+					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
 					break;
 				case QueryType.Update:
-					selectQuery = GetAlternativeUpdate(selectQuery);
+					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
 					break;
 			}
 
-			return selectQuery;
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

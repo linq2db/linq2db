@@ -11,21 +11,20 @@ namespace LinqToDB.Linq
 	{
 		public static class DropTable<T>
 		{
-			public static void Query(IDataContext dataContext, string tableName, string databaseName, string ownerName)
+			public static void Query(IDataContext dataContext, string tableName, string databaseName, string schemaName)
 			{
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
+				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
+				var dropTable = new SqlDropTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (ownerName    != null) sqlTable.Owner        = ownerName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
-				sqlQuery.CreateTable.Table  = sqlTable;
-				sqlQuery.CreateTable.IsDrop = true;
+				dropTable.Table  = sqlTable;
 
 				var query = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = dropTable, } }
 				};
 
 				SetNonQueryQuery(query);
@@ -33,21 +32,20 @@ namespace LinqToDB.Linq
 				query.GetElement(dataContext, Expression.Constant(null), null);
 			}
 
-			public static async Task QueryAsync(IDataContext dataContext, string tableName, string databaseName, string ownerName, CancellationToken token)
+			public static async Task QueryAsync(IDataContext dataContext, string tableName, string databaseName, string schemaName, CancellationToken token)
 			{
 				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
-				var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
+				var dropTable = new SqlDropTableStatement();
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (ownerName    != null) sqlTable.Owner        = ownerName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
 
-				sqlQuery.CreateTable.Table  = sqlTable;
-				sqlQuery.CreateTable.IsDrop = true;
+				dropTable.Table  = sqlTable;
 
 				var query = new Query<int>(dataContext, null)
 				{
-					Queries = { new QueryInfo { SelectQuery = sqlQuery, } }
+					Queries = { new QueryInfo { Statement = dropTable, } }
 				};
 
 				SetNonQueryQuery(query);

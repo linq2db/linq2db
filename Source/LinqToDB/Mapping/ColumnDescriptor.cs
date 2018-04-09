@@ -7,15 +7,14 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Data;
 	using Expressions;
-
 	using Extensions;
-
 	using Reflection;
+	using SqlQuery;
 
 	/// <summary>
 	/// Stores mapping entity column descriptor.
 	/// </summary>
-	public class ColumnDescriptor
+	public class ColumnDescriptor : IColumnChangeDescriptor
 	{
 		/// <summary>
 		/// Creates descriptor instance.
@@ -186,11 +185,19 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string         MemberName      { get; private set; }
 
+		string IColumnChangeDescriptor.MemberName => MemberName;
+
 		/// <summary>
 		/// Gets the name of a column in database.
 		/// If not specified, <see cref="MemberName"/> value will be used.
 		/// </summary>
 		public string         ColumnName      { get; private set; }
+
+		string IColumnChangeDescriptor.ColumnName
+		{
+			get => ColumnName;
+			set => ColumnName = value;
+		}
 
 		/// <summary>
 		/// Gets storage property or field to hold the value from a column.
@@ -231,7 +238,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		public bool           SkipOnUpdate    { get; private set; }
@@ -271,7 +278,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Custom template for column definition in create table SQL expression, generated using
-		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, SqlQuery.DefaulNullable)"/> methods.
+		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, DefaultNullable)"/> methods.
 		/// Template accepts following string parameters:
 		/// - {0} - column name;
 		/// - {1} - column type;

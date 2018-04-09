@@ -20,11 +20,14 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected abstract DB2Version Version { get; }
 
-		public override int CommandCount(SelectQuery selectQuery)
+		public override int CommandCount(SqlStatement statement)
 		{
-			if (Version == DB2Version.LUW && selectQuery.IsInsert && selectQuery.Insert.WithIdentity)
+			if (statement is SqlTruncateTableStatement trun)
+				return trun.ResetIdentity ? 1 + trun.Table.Fields.Values.Count(f => f.IsIdentity) : 1;
+
+			if (Version == DB2Version.LUW && statement is SqlInsertStatement insertStatement && insertStatement.Insert.WithIdentity)
 			{
-				_identityField = selectQuery.Insert.Into.GetIdentityField();
+				_identityField = insertStatement.Insert.Into.GetIdentityField();
 
 				if (_identityField == null)
 					return 2;
@@ -33,9 +36,40 @@ namespace LinqToDB.DataProvider.DB2
 			return 1;
 		}
 
-		protected override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			SelectQuery   = selectQuery;
+			if (statement is SqlTruncateTableStatement trun)
+			{
+				var field = trun.Table.Fields.Values.Skip(commandNumber - 1).First(f => f.IsIdentity);
+
+				StringBuilder.Append("ALTER TABLE ");
+				ConvertTableName(StringBuilder, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName);
+				StringBuilder
+					.Append(" ALTER ")
+					.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField))
+					.AppendLine(" RESTART WITH 1")
+					;
+			}
+			else
+			{
+				StringBuilder.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
+			}
+		}
+
+		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
+		{
+			var table = truncateTable.Table;
+
+			AppendIndent();
+			StringBuilder.Append("TRUNCATE TABLE ");
+			BuildPhysicalTable(table, null);
+			StringBuilder.Append(" IMMEDIATE");
+			StringBuilder.AppendLine();
+		}
+
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, int indent, bool skipAlias)
+		{
+			Statement     = statement;
 			StringBuilder = sb;
 			Indent        = indent;
 			SkipAlias     = skipAlias;
@@ -53,13 +87,13 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent().AppendLine("\t(");
 			}
 
-			base.BuildSql(commandNumber, selectQuery, sb, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, indent, skipAlias);
 
 			if (_identityField != null)
 				sb.AppendLine("\t)");
 		}
 
-		protected override void BuildGetIdentity()
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			if (Version == DB2Version.zOS)
 			{
@@ -69,31 +103,26 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override void BuildCommand(int commandNumber)
-		{
-			StringBuilder.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
-		}
-
 		protected override void BuildSql()
 		{
 			AlternativeBuildSql(false, base.BuildSql);
 		}
 
-		protected override void BuildSelectClause()
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
-			if (SelectQuery.From.Tables.Count == 0)
+			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().AppendLine("SELECT");
-				BuildColumns();
+				BuildColumns(selectQuery);
 				AppendIndent().AppendLine("FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 			}
 			else
-				base.BuildSelectClause();
+				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override string LimitFormat
+		protected override string LimitFormat(SelectQuery selectQuery)
 		{
-			get { return SelectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null; }
+			return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
 		}
 
 		protected override void BuildFunction(SqlFunction func)
@@ -102,29 +131,26 @@ namespace LinqToDB.DataProvider.DB2
 			base.BuildFunction(func);
 		}
 
-		protected override void BuildFromClause()
+		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause();
+			if (!statement.IsUpdate())
+				base.BuildFromClause(statement, selectQuery);
 		}
 
-		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SelectQuery.SearchCondition)
+				if (expr is SqlSearchCondition)
 					wrap = true;
 				else
-				{
-					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
-				}
+					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
 			}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
-			base.BuildColumnExpression(expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
@@ -183,16 +209,16 @@ namespace LinqToDB.DataProvider.DB2
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery()
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge("FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 		}
 
-		protected override void BuildEmptyInsert()
+		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
 		{
 			StringBuilder.Append("VALUES ");
 
-			foreach (var col in SelectQuery.Insert.Into.Fields)
+			foreach (var col in insertClause.Into.Fields)
 				StringBuilder.Append("(DEFAULT)");
 
 			StringBuilder.AppendLine();
@@ -203,13 +229,16 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string database, string schema, string table)
 		{
+			if (database != null && database.Length == 0) database = null;
+			if (schema   != null && schema.  Length == 0) schema   = null;
+
 			// "db..table" syntax not supported
-			if (database != null && owner == null)
+			if (database != null && schema == null)
 				throw new LinqToDBException("DB2 requires schema name if database name provided.");
 
-			return base.BuildTableName(sb, database, owner, table);
+			return base.BuildTableName(sb, database, schema, table);
 		}
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)

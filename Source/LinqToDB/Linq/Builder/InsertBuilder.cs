@@ -25,13 +25,19 @@ namespace LinqToDB.Linq.Builder
 			if (isSubQuery)
 				sequence = new SubQueryContext(sequence);
 
+			if (!(sequence.Statement is SqlInsertStatement insertStatement))
+			{
+				insertStatement    = new SqlInsertStatement(sequence.SelectQuery);
+				sequence.Statement = insertStatement;
+			}
+
 			switch (methodCall.Arguments.Count)
 			{
-				case 1 : 
+				case 1 :
 					// static int Insert<T>              (this IValueInsertable<T> source)
 					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 					{
-						foreach (var item in sequence.SelectQuery.Insert.Items)
+						foreach (var item in insertStatement.Insert.Items)
 							sequence.SelectQuery.Select.Expr(item.Expression);
 						break;
 					}
@@ -43,10 +49,10 @@ namespace LinqToDB.Linq.Builder
 							buildInfo,
 							(LambdaExpression)methodCall.Arguments[1].Unwrap(),
 							sequence,
-							sequence.SelectQuery.Insert.Items,
+							insertStatement.Insert.Items,
 							sequence);
 
-						sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
+						insertStatement.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
 						sequence.SelectQuery.From.Tables.Clear();
 
 						break;
@@ -61,21 +67,21 @@ namespace LinqToDB.Linq.Builder
 							buildInfo,
 							(LambdaExpression)methodCall.Arguments[2].Unwrap(),
 							into,
-							sequence.SelectQuery.Insert.Items,
+							insertStatement.Insert.Items,
 							sequence);
 
 						sequence.SelectQuery.Select.Columns.Clear();
 
-						foreach (var item in sequence.SelectQuery.Insert.Items)
-							sequence.SelectQuery.Select.Columns.Add(new SelectQuery.Column(sequence.SelectQuery, item.Expression));
+						foreach (var item in insertStatement.Insert.Items)
+							sequence.SelectQuery.Select.Columns.Add(new SqlColumn(sequence.SelectQuery, item.Expression));
 
-						sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
+						insertStatement.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
 
 						break;
 					}
 			}
 
-			var insert = sequence.SelectQuery.Insert;
+			var insert = insertStatement.Insert;
 
 			var q = insert.Into.Fields.Values
 				.Except(insert.Items.Select(e => e.Column))
@@ -88,19 +94,19 @@ namespace LinqToDB.Linq.Builder
 
 				if (expr != null)
 				{
-					insert.Items.Insert(0, new SelectQuery.SetExpression(field, expr));
+					insert.Items.Insert(0, new SqlSetExpression(field, expr));
 
 					if (methodCall.Arguments.Count == 3)
 					{
-						sequence.SelectQuery.Select.Columns.Insert(0, new SelectQuery.Column(sequence.SelectQuery, insert.Items[0].Expression));
+						sequence.SelectQuery.Select.Columns.Insert(0, new SqlColumn(sequence.SelectQuery, insert.Items[0].Expression));
 					}
 				}
 			}
 
-			sequence.SelectQuery.QueryType           = QueryType.Insert;
-			sequence.SelectQuery.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
+			insertStatement.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
+			sequence.Statement = insertStatement;
 
-			return new InsertContext(buildInfo.Parent, sequence, sequence.SelectQuery.Insert.WithIdentity);
+			return new InsertContext(buildInfo.Parent, sequence, insertStatement.Insert.WithIdentity);
 		}
 
 		protected override SequenceConvertInfo Convert(
@@ -172,6 +178,7 @@ namespace LinqToDB.Linq.Builder
 				var into   = methodCall.Arguments[1].Unwrap();
 
 				IBuildContext sequence;
+				SqlInsertStatement insertStatement;
 
 				// static IValueInsertable<T> Into<T>(this IDataContext dataContext, Table<T> target)
 				//
@@ -182,8 +189,9 @@ namespace LinqToDB.Linq.Builder
 					if (sequence.SelectQuery.Select.IsDistinct)
 						sequence = new SubQueryContext(sequence);
 
-					sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
-					sequence.SelectQuery.From.Tables.Clear();
+					insertStatement = new SqlInsertStatement(sequence.SelectQuery);
+					insertStatement.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
+					insertStatement.SelectQuery.From.Tables.Clear();
 				}
 				// static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target)
 				//
@@ -194,10 +202,13 @@ namespace LinqToDB.Linq.Builder
 					if (sequence.SelectQuery.Select.IsDistinct)
 						sequence = new SubQueryContext(sequence);
 
+					insertStatement = new SqlInsertStatement(sequence.SelectQuery);
+
 					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SelectQuery()));
-					sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
+					insertStatement.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
 				}
 
+				sequence.Statement = insertStatement;
 				sequence.SelectQuery.Select.Columns.Clear();
 
 				return sequence;
@@ -227,10 +238,16 @@ namespace LinqToDB.Linq.Builder
 				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var update   =                   methodCall.Arguments[2].Unwrap();
 
-				if (sequence.SelectQuery.Insert.Into == null)
+				if (!(sequence.Statement is SqlInsertStatement insertStatement))
 				{
-					sequence.SelectQuery.Insert.Into = (SqlTable)sequence.SelectQuery.From.Tables[0].Source;
-					sequence.SelectQuery.From.Tables.Clear();
+					insertStatement    = new SqlInsertStatement(sequence.SelectQuery);
+					sequence.Statement = insertStatement;
+				}
+
+				if (insertStatement.Insert.Into == null)
+				{
+					insertStatement.Insert.Into = (SqlTable)sequence.SelectQuery.From.Tables[0].Source;
+					insertStatement.SelectQuery.From.Tables.Clear();
 				}
 
 				if (update.NodeType == ExpressionType.Lambda)
@@ -240,8 +257,8 @@ namespace LinqToDB.Linq.Builder
 						extract,
 						(LambdaExpression)update,
 						sequence,
-						sequence.SelectQuery.Insert.Into,
-						sequence.SelectQuery.Insert.Items);
+						insertStatement.Insert.Into,
+						insertStatement.Insert.Items);
 				else
 					UpdateBuilder.ParseSet(
 						builder,
@@ -249,7 +266,7 @@ namespace LinqToDB.Linq.Builder
 						extract,
 						update,
 						sequence,
-						sequence.SelectQuery.Insert.Items);
+						insertStatement.Insert.Items);
 
 				return sequence;
 			}

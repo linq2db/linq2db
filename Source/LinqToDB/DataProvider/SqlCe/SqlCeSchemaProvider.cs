@@ -65,13 +65,14 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
 			var data = dataConnection.Query<PrimaryKeyInfo>(
-				@"SELECT
-					COALESCE(TABLE_CATALOG, '') + '.' + COALESCE(TABLE_SCHEMA, '') + '.' + TABLE_NAME AS TableID,
-					INDEX_NAME                                            AS PrimaryKeyName,
-					COLUMN_NAME                                           AS ColumnName,
-					ORDINAL_POSITION                                      AS Ordinal
-				FROM INFORMATION_SCHEMA.INDEXES
-				WHERE PRIMARY_KEY = 1");
+				@"
+SELECT
+	COALESCE(TABLE_CATALOG, '') + '.' + COALESCE(TABLE_SCHEMA, '') + '.' + TABLE_NAME AS TableID,
+	INDEX_NAME                                            AS PrimaryKeyName,
+	COLUMN_NAME                                           AS ColumnName,
+	ORDINAL_POSITION                                      AS Ordinal
+FROM INFORMATION_SCHEMA.INDEXES
+WHERE PRIMARY_KEY = 1");
 
 			return data.ToList();
 		}
@@ -98,19 +99,19 @@ namespace LinqToDB.DataProvider.SqlCe
 			).ToList();
 		}
 
-		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		protected override List<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			var data = dataConnection.Query<ForeingKeyInfo>(
-				@"SELECT
-					COALESCE(rc.CONSTRAINT_CATALOG,        '') + '.' + COALESCE(rc.CONSTRAINT_SCHEMA,        '') + '.' + rc.CONSTRAINT_TABLE_NAME        ThisTableID,
-					COALESCE(rc.UNIQUE_CONSTRAINT_CATALOG, '') + '.' + COALESCE(rc.UNIQUE_CONSTRAINT_SCHEMA, '') + '.' + rc.UNIQUE_CONSTRAINT_TABLE_NAME OtherTableID,
-					rc.CONSTRAINT_NAME                                                                                                                   Name,
-					tc.COLUMN_NAME                                                                                                                       ThisColumn,
-					oc.COLUMN_NAME                                                                                                                       OtherColumn
-				FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
-				INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE tc ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
-				INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNIQUE_CONSTRAINT_NAME
-				");
+			var data = dataConnection.Query<ForeignKeyInfo>(
+				@"
+SELECT
+	COALESCE(rc.CONSTRAINT_CATALOG,        '') + '.' + COALESCE(rc.CONSTRAINT_SCHEMA,        '') + '.' + rc.CONSTRAINT_TABLE_NAME        ThisTableID,
+	COALESCE(rc.UNIQUE_CONSTRAINT_CATALOG, '') + '.' + COALESCE(rc.UNIQUE_CONSTRAINT_SCHEMA, '') + '.' + rc.UNIQUE_CONSTRAINT_TABLE_NAME OtherTableID,
+	rc.CONSTRAINT_NAME                                                                                                                   Name,
+	tc.COLUMN_NAME                                                                                                                       ThisColumn,
+	oc.COLUMN_NAME                                                                                                                       OtherColumn
+FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE tc ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNIQUE_CONSTRAINT_NAME");
 
 			return data.ToList();
 		}

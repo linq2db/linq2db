@@ -47,7 +47,7 @@ namespace LinqToDB
 		/// the current exception.</param>
 		/// <seealso cref="Exception.Message"/>
 		/// <seealso cref="Exception.InnerException"/>
-		public LinqToDBException(string message, Exception innerException) 
+		public LinqToDBException(string message, Exception innerException)
 			: base(message, innerException)
 		{
 		}
@@ -59,7 +59,7 @@ namespace LinqToDB
 		/// <param name="innerException">The InnerException, if any, that threw
 		/// the current exception.</param>
 		/// <seealso cref="Exception.InnerException"/>
-		public LinqToDBException(Exception innerException) 
+		public LinqToDBException(Exception innerException)
 			: base(innerException.Message, innerException)
 		{
 		}
