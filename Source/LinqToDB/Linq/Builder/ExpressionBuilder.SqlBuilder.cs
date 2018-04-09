@@ -1700,7 +1700,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (ce != null)
 						{
-							sqlvalue = new SqlValue(ce.ConvertValueToParameter(origValue));
+							sqlvalue = new SqlValue(ce.ConvertValueToParameter(origValue).Value);
 						}
 						else
 						{
