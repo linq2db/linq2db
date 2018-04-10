@@ -86,5 +86,45 @@ namespace Tests.UserTests
 			}
 		}
 
+		[Test, DataContextSource]
+		public void Test2(string configuration)
+		{
+			using (var db = GetDataContext(configuration))
+			{
+				try
+				{
+					db.CreateTable<Task>();
+					db.CreateTable<TaskStage>();
+				}
+				catch
+				{
+					db.DropTable<Task>(throwExceptionIfNotExists: false);
+					db.DropTable<TaskStage>(throwExceptionIfNotExists: false);
+
+					db.CreateTable<Task>();
+					db.CreateTable<TaskStage>();
+				}
+
+				try
+				{
+					db.Insert(new Task { Id = 1, TargetName = "bda.Requests" });
+					db.Insert(new TaskStage { Id = 1, TaskId = 1, Actual = true });
+
+					var query = db.GetTable<Task>()
+						.Select(p => new
+						{
+							Instance = p,
+							ActualStageId = (p as Task).ActualStage.Id
+						});
+					var res = query.ToArray();
+				}
+				finally
+				{
+					db.DropTable<Task>();
+					db.DropTable<TaskStage>();
+				}
+			}
+		}
+
 	}
 }
