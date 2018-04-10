@@ -8,7 +8,6 @@ namespace Tests.UserTests
 	using LinqToDB;
 	using LinqToDB.Mapping;
 
-	[ActiveIssue(1057)]
 	public class Issue1057Tests : TestBase
 	{
 		[Table, InheritanceMapping(Code = "bda.Requests", Type = typeof(BdaTask))]
