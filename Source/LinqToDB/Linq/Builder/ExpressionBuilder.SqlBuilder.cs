@@ -414,11 +414,11 @@ namespace LinqToDB.Linq.Builder
 							if (expr.Method.IsSqlPropertyMethodEx())
 							{
 								// transform Sql.Property into member access
-								if (expr.Arguments[1].NodeType != ExpressionType.Constant || expr.Arguments[1].Type != typeof(string))
-									throw new ArgumentException("Only constant strings are alowed for member name in Sql.Property expressions.");
+								if (expr.Arguments[1].Type != typeof(string))
+									throw new ArgumentException("Only strings are alowed for member name in Sql.Property expressions.");
 
 								var entity = ConvertExpression(expr.Arguments[0]);
-								var memberName = (string)((ConstantExpression)expr.Arguments[1]).Value;
+								var memberName = (string)expr.Arguments[1].EvaluateExpression();
 								var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
 								var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
 									                 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
