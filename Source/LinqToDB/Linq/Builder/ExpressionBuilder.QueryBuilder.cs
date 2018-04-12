@@ -181,7 +181,14 @@ namespace LinqToDB.Linq.Builder
 						var ctx = GetContext(context, expr);
 
 						if (ctx != null)
-							return new TransformInfo(ctx.BuildExpression(expr, 0, enforceServerSide));
+						{
+							var buildExpr = ctx.BuildExpression(expr, 0, enforceServerSide);
+							if (buildExpr.Type != expr.Type)
+							{
+								buildExpr = Expression.Convert(buildExpr, expr.Type);
+							}
+							return new TransformInfo(buildExpr);
+						}
 
 						break;
 					}
