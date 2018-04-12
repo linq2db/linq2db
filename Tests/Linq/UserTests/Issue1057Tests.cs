@@ -11,6 +11,7 @@ namespace Tests.UserTests
 	public class Issue1057Tests : TestBase
 	{
 		[Table, InheritanceMapping(Code = "bda.Requests", Type = typeof(BdaTask))]
+		[Table, InheritanceMapping(Code = "None",         Type = typeof(NonBdaTask))]
 		class Task
 		{
 			[Column(IsPrimaryKey = true)]
@@ -29,6 +30,11 @@ namespace Tests.UserTests
 		class BdaTask : Task
 		{
 			public const string Code = "bda.Requests";
+		}
+
+		class NonBdaTask : Task
+		{
+			public const string Code = "None";
 		}
 
 		[Table]
@@ -67,7 +73,8 @@ namespace Tests.UserTests
 				try
 				{
 					db.Insert(new Task { Id = 1, TargetName = "bda.Requests" });
-					db.Insert(new TaskStage { Id = 1, TaskId = 1, Actual = true});
+					db.Insert(new Task { Id = 2, TargetName = "None" });
+					db.Insert(new TaskStage { Id = 2, TaskId = 1, Actual = true});
 
 					var query = db.GetTable<Task>()
 						.OfType<BdaTask>()
@@ -77,6 +84,10 @@ namespace Tests.UserTests
 							ActualStageId = p.ActualStage.Id
 						});
 					var res = query.ToArray();
+
+					Assert.AreEqual(1, res.Length);
+					Assert.IsNotNull(  res[0].Instance);
+					Assert.AreEqual(2, res[0].ActualStageId);
 				}
 				finally
 				{
@@ -108,15 +119,37 @@ namespace Tests.UserTests
 				try
 				{
 					db.Insert(new Task { Id = 1, TargetName = "bda.Requests" });
-					db.Insert(new TaskStage { Id = 1, TaskId = 1, Actual = true });
+					db.Insert(new Task { Id = 2, TargetName = "None" });
+					db.Insert(new TaskStage { Id = 2, TaskId = 1, Actual = true });
 
 					var query = db.GetTable<Task>()
+						.OfType<BdaTask>()
 						.Select(p => new
 						{
 							Instance = p,
 							ActualStageId = (p as Task).ActualStage.Id
 						});
 					var res = query.ToArray();
+
+					Assert.AreEqual(1, res.Length);
+					Assert.IsNotNull(  res[0].Instance);
+					Assert.AreEqual(2, res[0].ActualStageId);
+
+
+					var query2 = db.GetTable<Task>()
+						.Select(p => new
+						{
+							Instance = p,
+							ActualStageId = (p as Task).ActualStage.Id
+						});
+
+					var res2 = query2.ToArray();
+
+					Assert.AreEqual(2, res2.Length);
+					Assert.IsNotNull(  res2[0].Instance);
+					Assert.AreEqual(2, res2[0].ActualStageId);
+
+
 				}
 				finally
 				{

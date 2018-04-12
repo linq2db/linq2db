@@ -50,13 +50,9 @@ namespace Tests.ComplexTests2
 		public class Animal
 		{
 			public AnimalType AnimalType { get; set; }
-
 			public AnimalType2 AnimalType2 { get; set; }
-
 			public int Id { get; set; }
-
 			public string Name { get; set; }
-
 			public string Discriminator { get; set; }
 		}
 
@@ -149,7 +145,14 @@ namespace Tests.ComplexTests2
 			db.Insert(test2);
 		}
 
-		private MappingSchema SetMappings()
+		void CleanupData(ITestDataContext db)
+		{
+			db.DropTable<Animal>(throwExceptionIfNotExists: false);
+			db.DropTable<Eye>(throwExceptionIfNotExists: false);
+			db.DropTable<Test>(throwExceptionIfNotExists: false);
+		}
+
+		MappingSchema SetMappings()
 		{
 			var ms = new MappingSchema();
 			ms.SetConverter<AnimalType, string>((obj) =>
@@ -169,21 +172,21 @@ namespace Tests.ComplexTests2
 			var mappingBuilder = ms.GetFluentMappingBuilder();
 			mappingBuilder.Entity<Animal>()
 				.HasTableName("Animals")
-				.Inheritance(x => x.Discriminator, "Dog", typeof(Dog))
-				.Inheritance(x => x.Discriminator, "WildAnimal", typeof(WildAnimal))
+				.Inheritance(x => x.Discriminator, "Dog",             typeof(Dog))
+				.Inheritance(x => x.Discriminator, "WildAnimal",      typeof(WildAnimal))
 				.Inheritance(x => x.Discriminator, "SuperWildAnimal", typeof(SuperWildAnimal))
-				.Property(x => x.Name).IsColumn().IsNullable().HasColumnName("Name")
-				.Property(x => x.AnimalType).IsColumn().HasColumnName("AnimalType").HasDataType(DataType.NVarChar).HasLength(40)
-				.Property(x => x.AnimalType2).IsColumn().HasColumnName("AnimalType2").HasDataType(DataType.NVarChar).HasLength(40)
+				.Property(x => x.Name         ).IsColumn().IsNullable().HasColumnName("Name")
+				.Property(x => x.AnimalType   ).IsColumn().HasColumnName("AnimalType").HasDataType(DataType.NVarChar).HasLength(40)
+				.Property(x => x.AnimalType2  ).IsColumn().HasColumnName("AnimalType2").HasDataType(DataType.NVarChar).HasLength(40)
 				.Property(x => x.Discriminator).IsDiscriminator().IsColumn().IsNullable(false).HasColumnName("Discriminator").HasDataType(DataType.NVarChar).HasLength(40)
-				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
+				.Property(x => x.Id           ).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
 
 			mappingBuilder.Entity<Dog>()
 				.HasTableName("Animals")
-				.Property(x => x.Bla).IsNotColumn()
-				.Property(x => x.EyeId).IsColumn().IsNullable().HasColumnName("EyeId")
+				.Property(x => x.Bla           ).IsNotColumn()
+				.Property(x => x.EyeId         ).IsColumn().IsNullable().HasColumnName("EyeId")
 				.Property(x => x.DogName.Second).HasColumnName("Second").HasDataType(DataType.NVarChar).HasLength(40)
-				.Property(x => x.DogName.First).HasColumnName("First").HasDataType(DataType.NVarChar).HasLength(40)
+				.Property(x => x.DogName.First ).HasColumnName("First").HasDataType(DataType.NVarChar).HasLength(40)
 				.Association(x => x.Bla, x => x.EyeId, x => x.Id);
 
 			mappingBuilder.Entity<WildAnimal>()
@@ -198,10 +201,10 @@ namespace Tests.ComplexTests2
 				.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy").HasDataType(DataType.NVarChar).HasLength(40);
 
 			mappingBuilder.Entity<Test>()
-				.HasTableName("Test")
+				.HasTableName("TestAnimalTable")
 				.Association(x => x.TestAnimal, x => x.TestAnimalId, x => x.Id)
 				.Property(x => x.TestAnimalId).IsColumn().IsNullable().HasColumnName("TestAnimalId")
-				.Property(x => x.TestAnimal).IsNotColumn();
+				.Property(x => x.TestAnimal  ).IsNotColumn();
 
 			return ms;
 		}
@@ -214,8 +217,15 @@ namespace Tests.ComplexTests2
 			using (var db = GetDataContext(context, ms))
 			{
 				InsertData(db);
-				var data =  db.GetTable<Animal>().ToList();
-				Assert.Null(((Dog)data.First()).Bla);
+				try
+				{
+					var data =  db.GetTable<Animal>().ToList();
+					Assert.Null(((Dog)data.First()).Bla);
+				}
+				finally
+				{
+					CleanupData(db);
+				}
 			}
 		}
 
@@ -226,8 +236,15 @@ namespace Tests.ComplexTests2
 			using (var db = GetDataContext(context, ms))
 			{
 				InsertData(db);
-				var data = db.GetTable<Animal>().LoadWith(x => ((Dog)x).Bla).ToList();
-				Assert.NotNull(((Dog)data.First()).Bla);
+				try
+				{
+					var data = db.GetTable<Animal>().LoadWith(x => ((Dog)x).Bla).ToList();
+					Assert.NotNull(((Dog)data.First()).Bla);
+				}
+				finally 
+				{
+					CleanupData(db);
+				}
 			}
 		}
 
@@ -238,15 +255,22 @@ namespace Tests.ComplexTests2
 			using (var db = GetDataContext(context, ms))
 			{
 				InsertData(db);
-				var data = db.GetTable<Test>()
-					.LoadWith(x => ((Dog)x.TestAnimal).Bla)
-					.OrderBy(x => x.Id)
-					.ToList();
+				try
+				{
+					var data = db.GetTable<Test>()
+						.LoadWith(x => ((Dog)x.TestAnimal).Bla)
+						.OrderBy(x => x.Id)
+						.ToList();
 
-				Assert.Null(data.First().TestAnimal);
-				Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal).Bla);
-				Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal).DogName.First);
-				Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal).DogName.Second);
+					Assert.Null(data.First().TestAnimal);
+					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal).Bla);
+					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal).DogName.First);
+					Assert.NotNull(((Dog)data.Skip(1).First().TestAnimal).DogName.Second);
+				}
+				finally
+				{
+					CleanupData(db);
+				}
 			}
 		}
 
@@ -257,10 +281,17 @@ namespace Tests.ComplexTests2
 			using (var db = GetDataContext(context, ms))
 			{
 				InsertData(db);
-				var data = db.GetTable<Dog>().ToList();
+				try
+				{
+					var data = db.GetTable<Dog>().ToList();
 
-				Assert.NotNull(data[0].DogName.First);
-				Assert.NotNull(data[0].DogName.Second);
+					Assert.NotNull(data[0].DogName.First);
+					Assert.NotNull(data[0].DogName.Second);
+				}
+				finally
+				{
+					CleanupData(db);
+				}
 			}
 		}
 
@@ -271,17 +302,24 @@ namespace Tests.ComplexTests2
 			using (var db = GetDataContext(context, ms))
 			{
 				InsertData(db);
-				var d = new Dog() { AnimalType = AnimalType.Big, AnimalType2 = AnimalType2.Big };
+				try
+				{
+					var d = new Dog() { AnimalType = AnimalType.Big, AnimalType2 = AnimalType2.Big };
 
-				var test1 = db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big);
-				var test2 = db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType);
+					var test1 = db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big);
+					var test2 = db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType);
 
-				var test3 = db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big);
-				var test4 = db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2);
+					var test3 = db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big);
+					var test4 = db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2);
 
-				var test6 = db.GetTable<Animal>().First(x => x is SuperWildAnimal);
+					var test6 = db.GetTable<Animal>().First(x => x is SuperWildAnimal);
 
-				var test7 = db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1);
+					var test7 = db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1);
+				}
+				finally
+				{
+					CleanupData(db);
+				}
 			}
 		}
 
@@ -292,12 +330,19 @@ namespace Tests.ComplexTests2
 			using (var db = GetDataContext(context, ms))
 			{
 				InsertData(db);
-				var dog = db.GetTable<Dog>().First();
-				db.Update(dog);
-				db.Update((Animal)dog);
+				try
+				{
+					var dog = db.GetTable<Dog>().First();
+					db.Update(dog);
+					db.Update((Animal)dog);
 
-				//var bdog = new SuperBadDog();
-				//db.Insert((Dog)bdog);   //this is not possible with my change -> ;-( should it be?
+					//var bdog = new SuperBadDog();
+					//db.Insert((Dog)bdog);   //this is not possible with my change -> ;-( should it be?
+				}
+				finally
+				{
+					CleanupData(db);
+				}
 			}
 		}
 	}
