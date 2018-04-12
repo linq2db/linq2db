@@ -16,6 +16,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: [BulkCopy][SAP HANA, SQL CE] BulkCopyOptions.KeepIdentity support added (#1037)
 - feature: Calculated columns support through ExpressionMethodAttribute.IsColumn property (#1004)
 - feature: Dynamic columns support (#964, #507, #744)
+- feature: [PostgreSQL] Added support for native INSERT ON CONFLICT UPDATE statement for InsertOrUpdate operation for PostgreSQL 9.5+ (#948)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)

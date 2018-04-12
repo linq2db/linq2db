@@ -16,6 +16,7 @@ namespace LinqToDB.SqlQuery
 			_reservedWords[ProviderName.PostgreSQL]    = _reservedWordsPostgres;
 			_reservedWords[ProviderName.PostgreSQL92]  = _reservedWordsPostgres;
 			_reservedWords[ProviderName.PostgreSQL93]  = _reservedWordsPostgres;
+			_reservedWords[ProviderName.PostgreSQL95]  = _reservedWordsPostgres;
 			_reservedWords[ProviderName.Oracle]        = _reservedWordsOracle;
 			_reservedWords[ProviderName.OracleManaged] = _reservedWordsOracle;
 			_reservedWords[ProviderName.OracleNative]  = _reservedWordsOracle;
