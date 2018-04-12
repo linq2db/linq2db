@@ -579,6 +579,54 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table("AllTypes")]
+		private class InsertIssueTest
+		{
+			[Column]
+			public int ID;
+
+			[Column]
+			public int? intDataType;
+
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(intDataType), CanBeNull = true)]
+			public IQueryable<InsertIssueTest> Association => throw new InvalidOperationException();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "Test for issue, when second query execution will fail")]
+		[IncludeDataContextSource(ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+		public void InsertFromSelectWithFilter(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Query(true);
+				Query(false);
+
+				void Query(bool isNull)
+				{
+					db.GetTable<InsertIssueTest>()
+						.Where(auto3816 => auto3816.ID == GetId(isNull))
+						.SelectMany(_ => _.Association)
+						.Select(_ => _.ID)
+						.Distinct()
+						.Insert(
+							db.GetTable<InsertIssueTest>(),
+							_ => new InsertIssueTest()
+							{
+								ID = 100501,
+								intDataType = _
+							});
+				}
+
+				
+			}
+		}
+
+		private int? GetId(bool isNull)
+		{
+			return isNull ? (int?)null : 100500;
+		}
+
 	}
 
 }
