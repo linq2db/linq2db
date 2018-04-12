@@ -580,22 +580,27 @@ namespace Tests.Linq
 		}
 
 		[Table("AllTypes")]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		private class InsertIssueTest
 		{
-			[Column]
-			public int ID;
+			[Column("smallintDataType")]
+			[Column("SMALLINTDATATYPE", Configuration = ProviderName.DB2)]
+			[Column("smallintdatatype", Configuration = ProviderName.PostgreSQL)]
+			public short ID;
 
 			[Column]
+			[Column("INTDATATYPE", Configuration = ProviderName.DB2)]
+			[Column("intdatatype", Configuration = ProviderName.PostgreSQL)]
 			public int? intDataType;
 
 			[Association(ThisKey = nameof(ID), OtherKey = nameof(intDataType), CanBeNull = true)]
 			public IQueryable<InsertIssueTest> Association => throw new InvalidOperationException();
 		}
 
-		[ActiveIssue]
-		[Test(Description = "Test for issue, when second query execution will fail")]
-		[IncludeDataContextSource(ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
-		public void InsertFromSelectWithFilter(string context)
+		// Sybase: we need to get rid of bit field from AllTypes table as it creates a lot of issues with testing
+		[Test, DataContextSource(ProviderName.Sybase)]
+		public void InsertFromSelectWithNullableFilter(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -605,7 +610,7 @@ namespace Tests.Linq
 				void Query(bool isNull)
 				{
 					db.GetTable<InsertIssueTest>()
-						.Where(auto3816 => auto3816.ID == GetId(isNull))
+						.Where(_ => _.ID == GetId(isNull))
 						.SelectMany(_ => _.Association)
 						.Select(_ => _.ID)
 						.Distinct()
@@ -613,18 +618,43 @@ namespace Tests.Linq
 							db.GetTable<InsertIssueTest>(),
 							_ => new InsertIssueTest()
 							{
-								ID = 100501,
+								ID = 123,
 								intDataType = _
 							});
 				}
-
-				
 			}
 		}
 
-		private int? GetId(bool isNull)
+		[ActiveIssue("Generates bad SQL")]
+		[Test, DataContextSource(ProviderName.Sybase)]
+		public void UpdateFromSelectWithNullableFilter(string context)
 		{
-			return isNull ? (int?)null : 100500;
+			using (var db = GetDataContext(context))
+			{
+				Query(true);
+				Query(false);
+
+				void Query(bool isNull)
+				{
+					db.GetTable<InsertIssueTest>()
+						.Where(_ => _.ID == GetId(isNull))
+						.SelectMany(_ => _.Association)
+						.Select(_ => _.ID)
+						.Distinct()
+						.Update(
+							db.GetTable<InsertIssueTest>(),
+							_ => new InsertIssueTest()
+							{
+								ID = 123,
+								intDataType = _
+							});
+				}
+			}
+		}
+
+		private short? GetId(bool isNull)
+		{
+			return isNull ? (short?)null : 1234;
 		}
 
 	}
