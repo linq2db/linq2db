@@ -625,33 +625,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Generates bad SQL")]
-		[Test, DataContextSource(ProviderName.Sybase)]
-		public void UpdateFromSelectWithNullableFilter(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				Query(true);
-				Query(false);
-
-				void Query(bool isNull)
-				{
-					db.GetTable<InsertIssueTest>()
-						.Where(_ => _.ID == GetId(isNull))
-						.SelectMany(_ => _.Association)
-						.Select(_ => _.ID)
-						.Distinct()
-						.Update(
-							db.GetTable<InsertIssueTest>(),
-							_ => new InsertIssueTest()
-							{
-								ID = 123,
-								intDataType = _
-							});
-				}
-			}
-		}
-
 		private short? GetId(bool isNull)
 		{
 			return isNull ? (short?)null : 1234;
