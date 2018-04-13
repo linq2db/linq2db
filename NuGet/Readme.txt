@@ -56,6 +56,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: LoadWith do not support type casts in load expression (#1069)
 - fix: [Inheritance mapping] Support for loading of derived entities in LoadWith (#994)
 - fix: [Inheritance mapping] Fixed support for `is` operator in filters (#1065)
+- fix: Fix issue when insert query from subquery data source with nullable parameter called first with null value fails for subsequential calls with non-null parameters (#1098)
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)
