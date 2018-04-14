@@ -153,7 +153,7 @@ namespace LinqToDB.SqlProvider
 				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                     break;
 				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                     break;
 				case QueryType.Update        : BuildUpdateQuery           (Statement, Statement.SelectQuery, ((SqlUpdateStatement)Statement).Update); break;
-				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert); break;
+				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert, false); break;
 				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);             break;
 				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                break;
 				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                  break;
@@ -207,9 +207,9 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(selectQuery);
 		}
 
-		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClasuse)
+		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClasuse);
+			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery.From.Tables.Count != 0)
 			{
@@ -222,8 +222,8 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.OffsetLimit;   BuildOffsetLimit(statement.SelectQuery);
 			}
 
-			if (insertClasuse.WithIdentity)
-				BuildGetIdentity(insertClasuse);
+			if (insertClause.WithIdentity)
+				BuildGetIdentity(insertClause);
 		}
 
 		protected virtual void BuildUnknownQuery()
@@ -466,9 +466,9 @@ namespace LinqToDB.SqlProvider
 
 		#region Build Insert
 
-		protected void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause)
+		protected void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			BuildInsertClause(statement, insertClause, "INSERT INTO ", true);
+			BuildInsertClause(statement, insertClause, "INSERT INTO ", true, addAlias);
 		}
 
 		protected virtual void BuildEmptyInsert(SqlInsertClause insertClause)
@@ -484,15 +484,29 @@ namespace LinqToDB.SqlProvider
 		{
 			Statement     = statement;
 			StringBuilder = sb;
-			BuildInsertClause(statement, statement.RequireInsertClause(), null, false);
+			BuildInsertClause(statement, statement.RequireInsertClause(), null, false, false);
 		}
 
-		protected virtual void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, string insertText, bool appendTableName)
+		protected virtual void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, string insertText, bool appendTableName, bool addAlias)
 		{
 			AppendIndent().Append(insertText);
 
 			if (appendTableName)
+			{
 				BuildPhysicalTable(insertClause.Into, null);
+
+				if (addAlias)
+				{
+					var ts = Statement.SelectQuery.GetTableSource(insertClause.Into);
+					var alias = GetTableAlias(ts);
+					if (alias != null)
+					{
+						StringBuilder
+							.Append(" AS ")
+							.Append(Convert(alias, ConvertType.NameToQueryTableAlias));
+					}
+				}
+			}
 
 			if (insertClause.Items.Count == 0)
 			{
@@ -639,7 +653,7 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().AppendLine("WHEN NOT MATCHED THEN");
 
 			Indent++;
-			BuildInsertClause(insertOrUpdate, insertOrUpdate.Insert, "INSERT", false);
+			BuildInsertClause(insertOrUpdate, insertOrUpdate.Insert, "INSERT", false, false);
 			Indent--;
 
 			while (EndLine.Contains(StringBuilder[StringBuilder.Length - 1]))
@@ -746,7 +760,7 @@ namespace LinqToDB.SqlProvider
 
 			Indent++;
 
-			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert);
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, false);
 
 			Indent--;
 

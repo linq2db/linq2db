@@ -303,7 +303,7 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (statement)
 			{
 				case SqlTruncateTableStatement truncateTable:
-					return truncateTable.ResetIdentity ? 2 : 1;
+					return truncateTable.ResetIdentity && truncateTable.Table.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
 					_identityField = createTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
