@@ -44,6 +44,7 @@ namespace Tests.xUpdate
 				ProviderName.PostgreSQL,
 				ProviderName.PostgreSQL92,
 				ProviderName.PostgreSQL93,
+				ProviderName.PostgreSQL95,
 				ProviderName.MySql,
 				TestProvName.MySql57,
 				TestProvName.MariaDB

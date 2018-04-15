@@ -751,6 +751,30 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
+		public static Expression UnwrapWithAs(this Expression ex)
+		{
+			if (ex == null)
+				return null;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.Quote: return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert:
+				case ExpressionType.TypeAs:
+					{
+						var ue = (UnaryExpression)ex;
+
+						if (!ue.Operand.Type.IsEnumEx())
+							return ue.Operand.Unwrap();
+
+						break;
+					}
+			}
+
+			return ex;
+		}
+
 		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
 		{
 			var accessors = new Dictionary<Expression,Expression>();
@@ -821,7 +845,7 @@ namespace LinqToDB.Expressions
 						var e = (MemberExpression)expr;
 
 						if (e.Expression != null)
-							return GetRootObject(e.Expression.Unwrap(), mapping);
+							return GetRootObject(e.Expression.UnwrapWithAs(), mapping);
 
 						break;
 					}
@@ -944,7 +968,7 @@ namespace LinqToDB.Expressions
 
 						if (e.Expression != null)
 						{
-							var expr = FindLevel(e.Expression.Unwrap(), mapping, level, ref current);
+							var expr = FindLevel(e.Expression.UnwrapWithAs(), mapping, level, ref current);
 
 							if (level == current)
 								return expr;

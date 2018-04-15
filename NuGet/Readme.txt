@@ -8,7 +8,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: support creation of query parameters in extension builders (#964)
 - feature: new configuration flag LinqToDB.Common.Configuration.PrefereApply
 - feature: new In/NotIn extension methods added to LinqToDB.Tools.Extensions
-- feature: [Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, MS SQL] CTE (common table expressions) support implemented including WCF support (see DataExtensions.GetCte(),  LinqExtensions.AsCte() methods)
+[Not fully functional yet]- feature: [Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, MS SQL] CTE (common table expressions) support implemented including WCF support (see DataExtensions.GetCte(),  LinqExtensions.AsCte() methods)
 - feature: IBM.Data.DB2.Core provider support
 - feature: Oracle Data Provider for .NET Core provider support
 - feature: parameters to override table, schema/owner and database names added to InsertOrReplace*, InsertWith*Identity*, Update* and Delete* IDataContext extension methods
@@ -16,6 +16,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: [BulkCopy][SAP HANA, SQL CE] BulkCopyOptions.KeepIdentity support added (#1037)
 - feature: Calculated columns support through ExpressionMethodAttribute.IsColumn property (#1004)
 - feature: Dynamic columns support (#964, #507, #744)
+- feature: [PostgreSQL] Added support for native INSERT ON CONFLICT UPDATE statement for InsertOrUpdate operation for PostgreSQL 9.5+ (#948)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
@@ -27,6 +28,7 @@ LINQ to DB 2.0.0  Release Notes
 - improvement: [BulkCopy][Firebird] BulkCopy operation will throw LinqToDBException if BulkCopyOptions.KeepIdentity set to true to avoid unexpected results (#1037)
 - improvement: Reading of schema for procedures will be wrapped into transaction with rollback if called without ambient transaction
 - improvement: Allow basic mappings modifications using MappingSchema.EntityDescriptorCreatedCallback callback (#1074)
+- improvement: Exception during column mapping will be wrappped into LinqToDBException with information which column failed with original error as InnerException (#1065)
 
 - fix: fixed another case of defect #170, where default(T) value could be selected for non-nullable field instead of NULL from left join, if SelectMany() call used in source (#1012)
 - fix: [MS SQL, Sybase] updated Merge insert operation to respect SkipOnInsert mapping flag for identity fields when no custom insert expression specified. With this fix merge operation will allow database to generate identity value instead of use of value from source (#914)
@@ -53,12 +55,14 @@ LINQ to DB 2.0.0  Release Notes
 - fix: Adding multiple metadata readers to default mapping schema could result in use of only last added reader (#1066)
 - fix: LoadWith do not support type casts in load expression (#1069)
 - fix: [Inheritance mapping] Support for loading of derived entities in LoadWith (#994)
+- fix: [Inheritance mapping] Fixed different cases of type conversions using type cast or `is` operator between base and derived entities (#1065, #1057)
+- fix: Fix issue when insert query from subquery data source with nullable parameter called first with null value fails for subsequential calls with non-null parameters (#1098)
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)
 
 - for developers: SelectQuery class refactoring (#936, #938)
-- for developers: *DataProviders.txt tests configuration file replaced with JSON-based *DataProviders.json files (TODO: add link to readme when it is updated)
+- for developers: *DataProviders.txt tests configuration file replaced with JSON-based *DataProviders.json files
 - for developers: migrated to latest C# version
 - for developers: moved methods SchemaProviderBase.ToTypeName(), SchemaProviderBase.ToValidName() to public API (#944, #963)
 - for developers: dual owner/schema naming replaced with schema name in code
