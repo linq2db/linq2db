@@ -417,14 +417,14 @@ namespace LinqToDB.Linq.Builder
 								if (expr.Arguments[1].Type != typeof(string))
 									throw new ArgumentException("Only strings are alowed for member name in Sql.Property expressions.");
 
-								var entity = ConvertExpression(expr.Arguments[0]);
-								var memberName = (string)expr.Arguments[1].EvaluateExpression();
+								var entity           = ConvertExpression(expr.Arguments[0]);
+								var memberName       = (string)expr.Arguments[1].EvaluateExpression();
 								var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
+
 								var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
 									                 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
-								
 								if (memberInfo == null)
-									throw new ArgumentException("Unknown/unmapped member name used in Sql.Property expression.");
+									memberInfo = MemberHelper.GetMemberInfo(expr);
 
 								return new TransformInfo(ConvertExpression(Expression.MakeMemberAccess(entity, memberInfo)));
 							}
