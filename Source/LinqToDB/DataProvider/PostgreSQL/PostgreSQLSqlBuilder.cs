@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Common;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Globalization;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
@@ -80,7 +81,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 					if (type.Length > 0)
-						StringBuilder.Append('(').Append(type.Length).Append(')');
+						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
 					break;
 				case DataType.Undefined      :
 					if (type.Type == typeof(string))
@@ -89,6 +90,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
 				case DataType.Guid           : StringBuilder.Append("uuid");           break;
+				case DataType.VarBinary      : StringBuilder.Append("bytea");          break;
+				case DataType.NChar          :
+					StringBuilder.Append("character");
+					if (type.Length > 1) // this is correct condition
+						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+					break;
 				default                      : base.BuildDataType(type, createDbType); break;
 			}
 		}
@@ -225,6 +232,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			if (field.IsIdentity)
 			{
+				if (field.DataType == DataType.Int16)
+				{
+					StringBuilder.Append("SMALLSERIAL");
+					return;
+				}
+
 				if (field.DataType == DataType.Int32)
 				{
 					StringBuilder.Append("SERIAL");

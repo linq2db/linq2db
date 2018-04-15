@@ -261,9 +261,16 @@ CREATE TABLE AllTypes
 	pathDataType        path                     NULL,
 	polygonDataType     polygon                  NULL,
 	circleDataType      circle                   NULL,
+	lineDataType        line                     NULL,
 
 	inetDataType        inet                     NULL,
+	cidrDataType        cidr                     NULL,
 	macaddrDataType     macaddr                  NULL,
+	--PGSQL 10+
+	--macaddr8DataType    macaddr8                 NULL,
+
+	jsonDataType        json                     NULL,
+	jsonbDataType       jsonb                    NULL,
 
 	xmlDataType         xml                      NULL,
 	varBitDataType      varbit                   NULL

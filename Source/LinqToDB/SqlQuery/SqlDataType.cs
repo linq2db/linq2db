@@ -324,7 +324,7 @@ namespace LinqToDB.SqlQuery
 				case DataType.Dictionary       : return DbDictionary;
 			}
 
-			throw new InvalidOperationException();
+			throw new InvalidOperationException($"Unexpected type: {type}");
 		}
 
 		public static bool TypeCanBeNull(Type type)

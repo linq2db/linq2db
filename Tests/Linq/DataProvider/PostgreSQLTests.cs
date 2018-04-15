@@ -753,5 +753,156 @@ namespace Tests.DataProvider
 			Assert.AreEqual(o, c2.Compile()(d).Value);
 		}
 #endif
+
+		[Table]
+		public class AllTypes
+		{
+			[Column, PrimaryKey, Identity]
+			public int ID { get; set; }
+
+			[Column] public long?    BigintDataType   { get; set; }
+			[Column] public decimal? NumericDataType  { get; set; }
+			[Column] public short?   SmallintDataType { get; set; }
+			[Column] public int?     IntDataType      { get; set; }
+			[Column] public decimal? MoneyDataType    { get; set; }
+			[Column] public double?  DoubleDataType   { get; set; }
+			[Column] public float?   RealDataType     { get; set; }
+
+			[Column] public DateTime?       TimestampDataType   { get; set; }
+			[Column] public DateTimeOffset? TimestampTZDataType { get; set; }
+			[Column] public DateTime?       DateDataType        { get; set; }
+			[Column] public TimeSpan?       TimeDataType        { get; set; }
+			[Column] public DateTimeOffset? TimeTZDataType      { get; set; }
+			[Column] public TimeSpan?       IntervalDataType    { get; set; }
+
+			[Column] public char?  CharDataType    { get; set; }
+			[Column] public string Char20DataType  { get; set; }
+			[Column] public string VarcharDataType { get; set; }
+			[Column] public string TextDataType    { get; set; }
+
+			[Column] public byte[]   BinaryDataType  { get; set; }
+			[Column] public Guid?    UuidDataType    { get; set; }
+			[Column] public BitArray BitDataType     { get; set; }
+			[Column] public bool?    BooleanDataType { get; set; }
+			[Column] public string   ColorDataType   { get; set; }
+			[Column] public string   XmlDataType     { get; set; }
+			[Column] public BitArray VarBitDataType  { get; set; }
+
+			[Column] public NpgsqlPoint?   PointDataType   { get; set; }
+			[Column] public NpgsqlLSeg?    LsegDataType    { get; set; }
+			[Column] public NpgsqlBox?     BoxDataType     { get; set; }
+			[Column] public NpgsqlPath?    PathDataType    { get; set; }
+			[Column] public NpgsqlPolygon? PolygonDataType { get; set; }
+			[Column] public NpgsqlCircle?  CircleDataType  { get; set; }
+			[Column] public NpgsqlLine?    LineDataType    { get; set; }
+
+			[Column] public NpgsqlInet?     InetDataType     { get; set; }
+			[Column] public NpgsqlInet?     CidrDataType     { get; set; }
+			[Column] public PhysicalAddress MacaddrDataType  { get; set; }
+			// PGSQL10+
+			/*[Column]*/ public PhysicalAddress Macaddr8DataType { get; set; }
+
+			[Column] public string JsonDataType  { get; set; }
+			[Column] public string JsonbDataType { get; set; }
+		}
+
+		public enum BulkTestMode
+		{
+			WithoutTransaction,
+			WithTransaction,
+			WithRollback
+		}
+
+		// test that native bulk copy method inserts data properly
+		[Test]
+		[Combinatorial]
+		public void BulkCopyTest([Values]BulkTestMode mode, [IncludeDataSources(false, CurrentProvider)] string context)
+		{
+			var testData = new[]
+			{
+				// test null values
+				new AllTypes(),
+				// test non-null values
+				new AllTypes()
+				{
+					BigintDataType      = null,
+					NumericDataType     = null,
+					SmallintDataType    = null,
+					IntDataType         = null,
+					MoneyDataType       = null,
+					DoubleDataType      = null,
+					RealDataType        = null,
+
+					TimestampDataType   = null,
+					TimestampTZDataType = null,
+					DateDataType        = null,
+					TimeDataType        = null,
+					TimeTZDataType      = null,
+					IntervalDataType    = null,
+
+					CharDataType        = null,
+					Char20DataType      = null,
+					VarcharDataType     = null,
+					TextDataType        = null,
+
+					BinaryDataType      = null,
+					UuidDataType        = null,
+					BitDataType         = null,
+					BooleanDataType     = null,
+					ColorDataType       = null,
+					XmlDataType         = null,
+					VarBitDataType      = null,
+
+					PointDataType       = null,
+					LsegDataType        = null,
+					BoxDataType         = null,
+					PathDataType        = null,
+					PolygonDataType     = null,
+					CircleDataType      = null,
+					LineDataType        = null,
+
+					InetDataType        = null,
+					CidrDataType        = null,
+					MacaddrDataType     = null,
+					Macaddr8DataType    = null,
+
+					JsonDataType        = null,
+					JsonbDataType       = null
+				}
+			};
+
+			using (var db = new DataConnection(context))
+			{
+				DataConnectionTransaction ts = null;
+
+				if (mode != BulkTestMode.WithoutTransaction)
+					ts = db.BeginTransaction();
+
+				int[] ids = null;
+				try
+				{
+					var result = db.BulkCopy(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, testData);
+
+					Assert.AreEqual(testData.Length, result.RowsCopied);
+
+					var data = db.GetTable<AllTypes>().OrderByDescending(_ => _.ID).Take(2).AsEnumerable().Reverse().ToArray();
+
+					ids = data.Select(_ => _.ID).ToArray();
+
+					AreEqual(testData, data);
+				}
+				finally
+				{
+					if (mode != BulkTestMode.WithoutTransaction)
+						ts.Rollback();
+					else
+						db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Delete();
+
+				}
+
+				if (mode == BulkTestMode.WithRollback)
+					Assert.AreEqual(0, db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Count());
+			}
+		}
 	}
 }

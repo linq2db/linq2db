@@ -17,6 +17,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: Calculated columns support through ExpressionMethodAttribute.IsColumn property (#1004)
 - feature: Dynamic columns support (#964, #507, #744)
 - feature: [PostgreSQL] Added support for native INSERT ON CONFLICT UPDATE statement for InsertOrUpdate operation for PostgreSQL 9.5+ (#948)
+- feature: [PostgreSQL][BulkCopy] Provider-specific copy method implemented (#935)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
@@ -57,6 +58,8 @@ LINQ to DB 2.0.0  Release Notes
 - fix: [Inheritance mapping] Support for loading of derived entities in LoadWith (#994)
 - fix: [Inheritance mapping] Fixed different cases of type conversions using type cast or `is` operator between base and derived entities (#1065, #1057)
 - fix: Fix issue when insert query from subquery data source with nullable parameter called first with null value fails for subsequential calls with non-null parameters (#1098)
+- fix: [PostgreSQL] Proper type names generated for: System.Int16 identity fields, DataType.VarBinary/System.Linq.Binary, DataType.NChar/System.Char. Those type names used by CreateTable method (#1091)
+- fix: Default System.Char mapping changed to use length = 1 instead of unspecified (#1091)
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)
