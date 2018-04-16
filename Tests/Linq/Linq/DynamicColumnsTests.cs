@@ -444,11 +444,11 @@ namespace Tests.Linq
 
 			ms.GetFluentMappingBuilder()
 				.Entity<PersonWithDynamicStore>().HasTableName("Person")
-				.HasPrimaryKey(x => Sql.Property<int>(x, IDColumn))
+				.HasPrimaryKey(x => Sql.Property<int>(x, "ID"))
 				.Property(x => Sql.Property<string>(x, "FirstName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "LastName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "MiddleName"))
-				.Association(x => Sql.Property<Patient>(x, PatientColumn), x => Sql.Property<int>(x, IDColumn), x => x.PersonID);
+				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID);
 
 			return ms;
 		}
@@ -465,14 +465,14 @@ namespace Tests.Linq
 		[Table("Person")]
 		public class PersonWithoutDynamicStore
 		{
-			[Column("PersonID"), Identity]
+			[Column("PersonID"), Identity, PrimaryKey]
 			public int ID { get; set; }
 		}
 
 		[Table("DynamicTable")]
 		public class DynamicTablePrototype
 		{
-			[Column, Identity]
+			[Column, Identity, PrimaryKey]
 			public int ID { get; set; }
 			
 			[Column("Not Identifier")]
@@ -485,7 +485,7 @@ namespace Tests.Linq
 		[Table("DynamicTable")]
 		public class DynamicTable
 		{
-			[Column, Identity]
+			[Column, Identity, PrimaryKey]
 			public int ID { get; set; }
 		}
 	}
