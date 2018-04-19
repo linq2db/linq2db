@@ -62,7 +62,8 @@ namespace LinqToDB.Reflection
 							var info = infos[i];
 							var next = Expression.MakeMemberAccess(ex, info.member);
 
-							if (i == infos.Length - 1) return Expression.Assign(ret, next);
+							if (i == infos.Length - 1) 
+								return Expression.Assign(ret, next);
 
 							if (next.Type.IsClassEx() || next.Type.IsNullable())
 							{
@@ -71,7 +72,9 @@ namespace LinqToDB.Reflection
 								return Expression.Block(
 									new[] { local }, 
 									Expression.Assign(local, next) as Expression,
-									Expression.IfThen(Expression.NotEqual(local, Expression.Constant(null)), MakeGetter(local, i + 1)));
+									Expression.IfThen(
+										Expression.NotEqual(local, Expression.Constant(null)), 
+										MakeGetter(local, i + 1)));
 							}
 
 							return MakeGetter(next, i + 1);
@@ -125,7 +128,12 @@ namespace LinqToDB.Reflection
 										vars.Add(local);
 
 										exprs.Add(Expression.Assign(local, next));
-										exprs.Add(Expression.IfThen(Expression.Equal(local, Expression.Constant(null)), Expression.Block(Expression.Assign(local, Expression.New(local.Type)), Expression.Assign(next, local))));
+										exprs.Add(
+											Expression.IfThen(
+												Expression.Equal(local, Expression.Constant(null)),
+												Expression.Block(
+													Expression.Assign(local, Expression.New(local.Type)),
+													Expression.Assign(next, local))));
 
 										MakeSetter(local, i + 1);
 									}
