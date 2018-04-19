@@ -208,6 +208,12 @@ namespace LinqToDB.Linq.Builder
 
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
+				// choosing type that can be instantiated
+				if ((objectType.IsInterfaceEx() || objectType.IsAbstractEx()) && !(ObjectType.IsInterfaceEx() || objectType.IsAbstractEx()))
+				{
+					objectType = ObjectType;
+				}
+
 				var isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType));
 
 				var expr = isRecord == false
