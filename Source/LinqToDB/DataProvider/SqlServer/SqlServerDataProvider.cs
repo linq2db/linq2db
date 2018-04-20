@@ -213,6 +213,29 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 
 					break;
+				case DataType.NText:
+					if (value is DateTimeOffset) value = ((DateTimeOffset)value).ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					else if (value is DateTime)
+					{
+						var dt = (DateTime)value;
+						value = dt.ToString(
+							dt.Millisecond == 0
+								? "yyyy-MM-ddTHH:mm:ss"
+								: "yyyy-MM-ddTHH:mm:ss.fff");
+					}
+					else if (value is TimeSpan)
+					{
+						var ts = (TimeSpan)value;
+						value = ts.ToString(
+							ts.Days > 0
+								? ts.Milliseconds > 0
+									? "d\\.hh\\:mm\\:ss\\.fff"
+									: "d\\.hh\\:mm\\:ss"
+								: ts.Milliseconds > 0
+									? "hh\\:mm\\:ss\\.fff"
+									: "hh\\:mm\\:ss");
+					}
+					break;
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
