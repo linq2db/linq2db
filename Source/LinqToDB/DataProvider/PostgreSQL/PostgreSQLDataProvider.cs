@@ -52,6 +52,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		internal Type NpgsqlTimeType;
 		internal Type NpgsqlTimeTZType;
 		internal Type NpgsqlPointType;
+		internal Type NpgsqlLineType;
 		internal Type NpgsqlLSegType;
 		internal Type NpgsqlBoxType;
 		internal Type NpgsqlPathType;
@@ -97,93 +98,94 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var npgSql = connectionType.AssemblyEx();
 
-			BitStringType = npgSql.GetType("NpgsqlTypes.BitString", false);
-			NpgsqlIntervalType = npgSql.GetType("NpgsqlTypes.NpgsqlInterval", false);
-			NpgsqlInetType = npgSql.GetType("NpgsqlTypes.NpgsqlInet", true);
-			NpgsqlTimeType = npgSql.GetType("NpgsqlTypes.NpgsqlTime", false);
-			NpgsqlTimeTZType = npgSql.GetType("NpgsqlTypes.NpgsqlTimeTZ", false);
-			NpgsqlPointType = npgSql.GetType("NpgsqlTypes.NpgsqlPoint", true);
-			NpgsqlLSegType = npgSql.GetType("NpgsqlTypes.NpgsqlLSeg", true);
-			NpgsqlBoxType = npgSql.GetType("NpgsqlTypes.NpgsqlBox", true);
-			NpgsqlPathType = npgSql.GetType("NpgsqlTypes.NpgsqlPath", true);
-			_npgsqlTimeStamp = npgSql.GetType("NpgsqlTypes.NpgsqlTimeStamp", false);
-			_npgsqlTimeStampTZ = npgSql.GetType("NpgsqlTypes.NpgsqlTimeStampTZ", false);
-			_npgsqlDate = npgSql.GetType("NpgsqlTypes.NpgsqlDate", true);
-			_npgsqlDateTime = npgSql.GetType("NpgsqlTypes.NpgsqlDateTime", false);
-			NpgsqlMacAddressType = npgSql.GetType("NpgsqlTypes.NpgsqlMacAddress", false);
-			NpgsqlCircleType = npgSql.GetType("NpgsqlTypes.NpgsqlCircle", true);
-			NpgsqlPolygonType = npgSql.GetType("NpgsqlTypes.NpgsqlPolygon", true);
-			NpgsqlDbType = npgSql.GetType("NpgsqlTypes.NpgsqlDbType", true);
+			BitStringType        = npgSql.GetType("NpgsqlTypes.BitString"        , false);
+			NpgsqlIntervalType   = npgSql.GetType("NpgsqlTypes.NpgsqlInterval"   , false);
+			NpgsqlInetType       = npgSql.GetType("NpgsqlTypes.NpgsqlInet"       , true);
+			NpgsqlTimeType       = npgSql.GetType("NpgsqlTypes.NpgsqlTime"       , false);
+			NpgsqlTimeTZType     = npgSql.GetType("NpgsqlTypes.NpgsqlTimeTZ"     , false);
+			NpgsqlPointType      = npgSql.GetType("NpgsqlTypes.NpgsqlPoint"      , true);
+			NpgsqlLineType       = npgSql.GetType("NpgsqlTypes.NpgsqlLine"       , false);
+			NpgsqlLSegType       = npgSql.GetType("NpgsqlTypes.NpgsqlLSeg"       , true);
+			NpgsqlBoxType        = npgSql.GetType("NpgsqlTypes.NpgsqlBox"        , true);
+			NpgsqlPathType       = npgSql.GetType("NpgsqlTypes.NpgsqlPath"       , true);
+			_npgsqlTimeStamp     = npgSql.GetType("NpgsqlTypes.NpgsqlTimeStamp"  , false);
+			_npgsqlTimeStampTZ   = npgSql.GetType("NpgsqlTypes.NpgsqlTimeStampTZ", false);
+			_npgsqlDate          = npgSql.GetType("NpgsqlTypes.NpgsqlDate"       , true);
+			_npgsqlDateTime      = npgSql.GetType("NpgsqlTypes.NpgsqlDateTime"   , false);
+			NpgsqlMacAddressType = npgSql.GetType("NpgsqlTypes.NpgsqlMacAddress" , false);
+			NpgsqlCircleType     = npgSql.GetType("NpgsqlTypes.NpgsqlCircle"     , true);
+			NpgsqlPolygonType    = npgSql.GetType("NpgsqlTypes.NpgsqlPolygon"    , true);
+			NpgsqlDbType         = npgSql.GetType("NpgsqlTypes.NpgsqlDbType"     , true);
 
 			// https://www.postgresql.org/docs/current/static/datatype.html
 			// not all types are supported now
 			// numeric types
-			TryAddType("smallint",         "Smallint");
-			TryAddType("integer",          "Integer");
-			TryAddType("bigint",           "Bigint");
-			TryAddType("numeric",          "Numeric");
-			TryAddType("real",             "Real");
-			TryAddType("double precision", "Double");
+			TryAddType("smallint"                     , "Smallint");
+			TryAddType("integer"                      , "Integer");
+			TryAddType("bigint"                       , "Bigint");
+			TryAddType("numeric"                      , "Numeric");
+			TryAddType("real"                         , "Real");
+			TryAddType("double precision"             , "Double");
 			// monetary types
-			TryAddType("money",            "Money");
+			TryAddType("money"                        , "Money");
 			// character types
-			TryAddType("character",         "Char");
-			TryAddType("character varying", "Varchar");
-			TryAddType("text",              "Text");
-			TryAddType("name",              "Name");
-			TryAddType("char",              "InternalChar");
+			TryAddType("character"                    , "Char");
+			TryAddType("character varying"            , "Varchar");
+			TryAddType("text"                         , "Text");
+			TryAddType("name"                         , "Name");
+			TryAddType("char"                         , "InternalChar");
 			// binary types
-			TryAddType("bytea",       "Bytea");
+			TryAddType("bytea"                        , "Bytea");
 			// date/time types (reltime missing from enum)
-			TryAddType("timestamp",   "Timestamp");
+			TryAddType("timestamp"                    , "Timestamp");
 			if (!TryAddType("timestamp with time zone", "TimestampTz"))
-				TryAddType("timestamp with time zone", "TimestampTZ");
-			TryAddType("date",        "Date");
-			TryAddType("time",        "Time");
-			if (!TryAddType("time with time zone", "TimeTz"))
-				TryAddType("time with time zone", "TimeTZ");
-			TryAddType("interval",    "Interval");
-			TryAddType("abstime",     "Abstime");
+				TryAddType("timestamp with time zone" , "TimestampTZ");
+			TryAddType("date"                         , "Date");
+			TryAddType("time"                         , "Time");
+			if (!TryAddType("time with time zone"     , "TimeTz"))
+				TryAddType("time with time zone"      , "TimeTZ");
+			TryAddType("interval"                     , "Interval");
+			TryAddType("abstime"                      , "Abstime");
 			// boolean type
-			TryAddType("boolean",     "Boolean");
+			TryAddType("boolean"                      , "Boolean");
 			// geometric types
-			TryAddType("point",       "Point");
-			TryAddType("line",        "Line");
-			TryAddType("lseg",        "LSeg");
-			TryAddType("box",         "Box");
-			TryAddType("path",        "Path");
-			TryAddType("polygon",     "Polygon");
-			TryAddType("circle",      "Circle");
+			TryAddType("point"                        , "Point");
+			TryAddType("line"                         , "Line");
+			TryAddType("lseg"                         , "LSeg");
+			TryAddType("box"                          , "Box");
+			TryAddType("path"                         , "Path");
+			TryAddType("polygon"                      , "Polygon");
+			TryAddType("circle"                       , "Circle");
 			// network address types
-			TryAddType("cidr",        "Cidr");
-			TryAddType("inet",        "Inet");
-			TryAddType("macaddr",     "MacAddr");
-			TryAddType("macaddr8",    "MacAddr8");
+			TryAddType("cidr"                         , "Cidr");
+			TryAddType("inet"                         , "Inet");
+			TryAddType("macaddr"                      , "MacAddr");
+			TryAddType("macaddr8"                     , "MacAddr8");
 			// bit string types
-			TryAddType("bit",         "Bit");
-			TryAddType("bit varying", "Varbit");
+			TryAddType("bit"                          , "Bit");
+			TryAddType("bit varying"                  , "Varbit");
 			// text search types
-			TryAddType("tsvector",    "TsVector");
-			TryAddType("tsquery",     "TsQuery");
+			TryAddType("tsvector"                     , "TsVector");
+			TryAddType("tsquery"                      , "TsQuery");
 			// UUID type
-			TryAddType("uuid",        "Uuid");
+			TryAddType("uuid"                         , "Uuid");
 			// XML type
-			TryAddType("xml",         "Xml");
+			TryAddType("xml"                          , "Xml");
 			// JSON types
-			TryAddType("json",        "Json");
-			TryAddType("jsonb",       "Jsonb");
+			TryAddType("json"                         , "Json");
+			TryAddType("jsonb"                        , "Jsonb");
 			// Object Identifier Types (only supported by npgsql)
-			TryAddType("oid",         "Oid");
-			TryAddType("regtype",     "Regtype");
-			TryAddType("xid",         "Xid");
-			TryAddType("cid",         "Cid");
-			TryAddType("tid",         "Tid");
+			TryAddType("oid"                          , "Oid");
+			TryAddType("regtype"                      , "Regtype");
+			TryAddType("xid"                          , "Xid");
+			TryAddType("cid"                          , "Cid");
+			TryAddType("tid"                          , "Tid");
 			// other types
-			TryAddType("citext",      "Citext");
-			TryAddType("hstore",      "Hstore");
-			TryAddType("refcursor",   "Refcursor");
-			TryAddType("oidvector",   "Oidvector");
-			TryAddType("int2vector",  "Int2Vector");
+			TryAddType("citext"                       , "Citext");
+			TryAddType("hstore"                       , "Hstore");
+			TryAddType("refcursor"                    , "Refcursor");
+			TryAddType("oidvector"                    , "Oidvector");
+			TryAddType("int2vector"                   , "Int2Vector");
 
 			_npgsqlTypeArrayFlag = (int)Enum.Parse(NpgsqlDbType, "Array");
 			_npgsqlTypeRangeFlag = (int)Enum.Parse(NpgsqlDbType, "Range");
@@ -194,14 +196,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			//	_commandBehavior = CommandBehavior.KeyInfo;
 			//}
 
-			if (BitStringType != null) SetProviderField(BitStringType, BitStringType, "GetBitString");
-			if (NpgsqlIntervalType != null) SetProviderField(NpgsqlIntervalType, NpgsqlIntervalType, "GetInterval");
-			if (NpgsqlTimeType != null) SetProviderField(NpgsqlTimeType, NpgsqlTimeType, "GetTime");
-			if (NpgsqlTimeTZType != null) SetProviderField(NpgsqlTimeTZType, NpgsqlTimeTZType, "GetTimeTZ");
-			if (_npgsqlTimeStamp != null) SetProviderField(_npgsqlTimeStamp, _npgsqlTimeStamp, "GetTimeStamp");
-			if (_npgsqlTimeStampTZ != null) SetProviderField(_npgsqlTimeStampTZ, _npgsqlTimeStampTZ, "GetTimeStampTZ");
+			if (BitStringType        != null) SetProviderField(BitStringType       , BitStringType,        "GetBitString");
+			if (NpgsqlIntervalType   != null) SetProviderField(NpgsqlIntervalType  , NpgsqlIntervalType,   "GetInterval");
+			if (NpgsqlTimeType       != null) SetProviderField(NpgsqlTimeType      , NpgsqlTimeType,       "GetTime");
+			if (NpgsqlTimeTZType     != null) SetProviderField(NpgsqlTimeTZType    , NpgsqlTimeTZType,     "GetTimeTZ");
+			if (_npgsqlTimeStamp     != null) SetProviderField(_npgsqlTimeStamp    , _npgsqlTimeStamp,     "GetTimeStamp");
+			if (_npgsqlTimeStampTZ   != null) SetProviderField(_npgsqlTimeStampTZ  , _npgsqlTimeStampTZ,   "GetTimeStampTZ");
 			if (NpgsqlMacAddressType != null) SetProviderField(NpgsqlMacAddressType, NpgsqlMacAddressType, "GetProviderSpecificValue");
-			if (_npgsqlDateTime != null) SetProviderField(_npgsqlDateTime, _npgsqlDateTime, "GetTimeStamp");
+			if (_npgsqlDateTime      != null) SetProviderField(_npgsqlDateTime     , _npgsqlDateTime,      "GetTimeStamp");
 
 			SetProviderField(NpgsqlInetType, NpgsqlInetType, "GetProviderSpecificValue");
 			SetProviderField(_npgsqlDate, _npgsqlDate, "GetDate");
@@ -222,33 +224,36 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						indexParameter);
 			}
 
-			_setMoney = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Money");
+			_setMoney     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Money");
 			_setVarBinary = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Bytea");
-			_setBoolean = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Boolean");
-			_setXml = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Xml");
-			_setText = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Text");
-			_setBit = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Bit");
-			_setHstore = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Hstore");
-			_setJson = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Json");
-			_setJsonb = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Jsonb");
+			_setBoolean   = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Boolean");
+			_setXml       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Xml");
+			_setText      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Text");
+			_setBit       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Bit");
+			_setHstore    = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Hstore");
+			_setJson      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Json");
+			_setJsonb     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Jsonb");
 
-			if (BitStringType != null) MappingSchema.AddScalarType(BitStringType);
-			if (NpgsqlIntervalType != null) MappingSchema.AddScalarType(NpgsqlIntervalType);
-			if (NpgsqlTimeType != null) MappingSchema.AddScalarType(NpgsqlTimeType);
-			if (NpgsqlTimeTZType != null) MappingSchema.AddScalarType(NpgsqlTimeTZType);
-			if (_npgsqlTimeStamp != null) MappingSchema.AddScalarType(_npgsqlTimeStamp);
-			if (_npgsqlTimeStampTZ != null) MappingSchema.AddScalarType(_npgsqlTimeStampTZ);
+			if (BitStringType        != null) MappingSchema.AddScalarType(BitStringType);
+			if (NpgsqlIntervalType   != null) MappingSchema.AddScalarType(NpgsqlIntervalType);
+			if (NpgsqlTimeType       != null) MappingSchema.AddScalarType(NpgsqlTimeType);
+			if (NpgsqlTimeTZType     != null) MappingSchema.AddScalarType(NpgsqlTimeTZType);
+			if (_npgsqlTimeStamp     != null) MappingSchema.AddScalarType(_npgsqlTimeStamp);
+			if (_npgsqlTimeStampTZ   != null) MappingSchema.AddScalarType(_npgsqlTimeStampTZ);
 			if (NpgsqlMacAddressType != null) MappingSchema.AddScalarType(NpgsqlMacAddressType);
-			if (_npgsqlDateTime != null) MappingSchema.AddScalarType(_npgsqlDateTime);
+			if (_npgsqlDateTime      != null) MappingSchema.AddScalarType(_npgsqlDateTime);
 
-			MappingSchema.AddScalarType(NpgsqlInetType);
-			MappingSchema.AddScalarType(NpgsqlPointType);
-			MappingSchema.AddScalarType(NpgsqlLSegType);
-			MappingSchema.AddScalarType(NpgsqlBoxType);
-			MappingSchema.AddScalarType(NpgsqlPathType);
-			MappingSchema.AddScalarType(NpgsqlCircleType);
 			MappingSchema.AddScalarType(_npgsqlDate);
-			MappingSchema.AddScalarType(NpgsqlPolygonType);
+
+			AddUdtType(NpgsqlInetType);
+
+			AddUdtType(NpgsqlPointType);
+			AddUdtType(NpgsqlLSegType);
+			AddUdtType(NpgsqlBoxType);
+			AddUdtType(NpgsqlPathType);
+			AddUdtType(NpgsqlCircleType);
+			AddUdtType(NpgsqlPolygonType);
+			AddUdtType(NpgsqlLineType);
 
 			if (_npgsqlTimeStampTZ != null)
 			{
@@ -292,6 +297,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
+		private void AddUdtType(Type type)
+		{
+			if (type == null)
+				return;
+
+			if (!type.IsValueTypeEx())
+				MappingSchema.AddScalarType(type, null, true, DataType.Udt);
+			else
+			{
+				MappingSchema.AddScalarType(type, DataType.Udt);
+				MappingSchema.AddScalarType(type.AsNullable(), null, true, DataType.Udt);
+			}
+		}
+
 		private bool TryAddType(string dbType, string enumName)
 		{
 			try
@@ -312,7 +331,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new PostgreSQLSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+			return new PostgreSQLSqlBuilder(this, GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

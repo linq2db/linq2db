@@ -9,9 +9,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlQuery;
 	using SqlProvider;
 	using System.Globalization;
+	using LinqToDB.Extensions;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
+		private readonly PostgreSQLDataProvider _provider;
+		public PostgreSQLSqlBuilder(PostgreSQLDataProvider provider, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: this(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		{
+			_provider = provider;
+		}
+
+		// used by linq service
 		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
@@ -52,7 +61,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new PostgreSQLSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new PostgreSQLSqlBuilder(_provider, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -96,6 +105,25 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (type.Length > 1) // this is correct condition
 						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
 					break;
+				case DataType.Udt            :
+					if (type.Type != null)
+					{
+						var udtType = type.Type.ToNullableUnderlying();
+
+						if      (udtType == _provider.NpgsqlPointType)   StringBuilder.Append("point");
+						else if (udtType == _provider.NpgsqlLineType)    StringBuilder.Append("line");
+						else if (udtType == _provider.NpgsqlBoxType)     StringBuilder.Append("box");
+						else if (udtType == _provider.NpgsqlLSegType)    StringBuilder.Append("lseg");
+						else if (udtType == _provider.NpgsqlCircleType)  StringBuilder.Append("circle");
+						else if (udtType == _provider.NpgsqlPolygonType) StringBuilder.Append("polygon");
+						else if (udtType == _provider.NpgsqlPathType)    StringBuilder.Append("path");
+						else                                             base.BuildDataType(type, createDbType);
+					}
+					else
+						base.BuildDataType(type, createDbType);
+
+					break;
+
 				default                      : base.BuildDataType(type, createDbType); break;
 			}
 		}

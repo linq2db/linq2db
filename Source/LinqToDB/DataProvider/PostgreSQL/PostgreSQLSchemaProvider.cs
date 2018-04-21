@@ -45,6 +45,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (PostgreSQLTools.GetNpgsqlInetType()       != null) list.Add(new DataTypeInfo { TypeName = "inet",                   DataType = PostgreSQLTools.GetNpgsqlInetType().      FullName });
 			if (PostgreSQLTools.GetNpgsqlPointType()      != null) list.Add(new DataTypeInfo { TypeName = "point",                  DataType = PostgreSQLTools.GetNpgsqlPointType().     FullName });
+			if (PostgreSQLTools.GetNpgsqlLineType()       != null) list.Add(new DataTypeInfo { TypeName = "line",                   DataType = PostgreSQLTools.GetNpgsqlLineType().      FullName });
 			if (PostgreSQLTools.GetNpgsqlLSegType()       != null) list.Add(new DataTypeInfo { TypeName = "lseg",                   DataType = PostgreSQLTools.GetNpgsqlLSegType().      FullName });
 			if (PostgreSQLTools.GetNpgsqlBoxType()        != null) list.Add(new DataTypeInfo { TypeName = "box",                    DataType = PostgreSQLTools.GetNpgsqlBoxType().       FullName });
 			if (PostgreSQLTools.GetNpgsqlPathType()       != null) list.Add(new DataTypeInfo { TypeName = "path",                   DataType = PostgreSQLTools.GetNpgsqlPathType().      FullName });

@@ -581,17 +581,14 @@ namespace Tests.Linq
 
 		[Table("AllTypes")]
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		private class InsertIssueTest
 		{
 			[Column("smallintDataType")]
 			[Column("SMALLINTDATATYPE", Configuration = ProviderName.DB2)]
-			[Column("smallintdatatype", Configuration = ProviderName.PostgreSQL)]
 			public short ID;
 
 			[Column]
 			[Column("INTDATATYPE", Configuration = ProviderName.DB2)]
-			[Column("intdatatype", Configuration = ProviderName.PostgreSQL)]
 			public int? intDataType;
 
 			[Association(ThisKey = nameof(ID), OtherKey = nameof(intDataType), CanBeNull = true)]

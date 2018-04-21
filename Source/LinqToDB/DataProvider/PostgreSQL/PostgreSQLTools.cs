@@ -143,6 +143,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static Type GetNpgsqlTimeTZType    () { return _postgreSQLDataProvider92.NpgsqlTimeTZType;     }
 		public static Type GetNpgsqlTimeType      () { return _postgreSQLDataProvider92.NpgsqlTimeType;       }
 		public static Type GetNpgsqlPointType     () { return _postgreSQLDataProvider92.NpgsqlPointType;      }
+		public static Type GetNpgsqlLineType      () { return _postgreSQLDataProvider92.NpgsqlLineType;       }
 		public static Type GetNpgsqlLSegType      () { return _postgreSQLDataProvider92.NpgsqlLSegType;       }
 		public static Type GetNpgsqlBoxType       () { return _postgreSQLDataProvider92.NpgsqlBoxType;        }
 		public static Type GetNpgsqlPathType      () { return _postgreSQLDataProvider92.NpgsqlPathType;       }

@@ -34,9 +34,11 @@ namespace Tests.DataProvider
 	{
 		public PostgreSQLTests()
 		{
-			PassNullSql  = "SELECT ID FROM AllTypes WHERE :p IS NULL AND {0} IS NULL OR :p IS NOT NULL AND {0} = :p";
-			PassValueSql = "SELECT ID FROM AllTypes WHERE {0} = :p";
-		}
+			PassNullSql  = "SELECT \"ID\" FROM \"AllTypes\" WHERE :p IS NULL AND \"{0}\" IS NULL OR :p IS NOT NULL AND \"{0}\" = :p";
+			PassValueSql = "SELECT \"ID\" FROM \"AllTypes\" WHERE \"{0}\" = :p";
+			GetNullSql = "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 1";
+			GetValueSql = "SELECT \"{0}\" FROM \"{1}\" WHERE \"ID\" = 2";
+	}
 
 		const string CurrentProvider = ProviderName.PostgreSQL;
 
@@ -760,50 +762,52 @@ namespace Tests.DataProvider
 			[Column, PrimaryKey, Identity]
 			public int ID { get; set; }
 
-			[Column] public long?    BigintDataType   { get; set; }
-			[Column] public decimal? NumericDataType  { get; set; }
-			[Column] public short?   SmallintDataType { get; set; }
-			[Column] public int?     IntDataType      { get; set; }
-			[Column] public decimal? MoneyDataType    { get; set; }
-			[Column] public double?  DoubleDataType   { get; set; }
-			[Column] public float?   RealDataType     { get; set; }
+			[Column] public long?    bigintDataType   { get; set; }
+			[Column] public decimal? numericDataType  { get; set; }
+			[Column] public short?   smallintDataType { get; set; }
+			[Column] public int?     intDataType      { get; set; }
+			[Column] public decimal? moneyDataType    { get; set; }
+			[Column] public double?  doubleDataType   { get; set; }
+			[Column] public float?   realDataType     { get; set; }
 
-			[Column] public DateTime?       TimestampDataType   { get; set; }
-			[Column] public DateTimeOffset? TimestampTZDataType { get; set; }
-			[Column] public DateTime?       DateDataType        { get; set; }
-			[Column] public TimeSpan?       TimeDataType        { get; set; }
-			[Column] public DateTimeOffset? TimeTZDataType      { get; set; }
-			[Column] public TimeSpan?       IntervalDataType    { get; set; }
+			[Column] public DateTime?       timestampDataType   { get; set; }
+			[Column] public DateTimeOffset? timestampTZDataType { get; set; }
+			[Column] public DateTime?       dateDataType        { get; set; }
+			[Column] public TimeSpan?       timeDataType        { get; set; }
+			[Column] public DateTimeOffset? timeTZDataType      { get; set; }
+			[Column] public TimeSpan?       intervalDataType    { get; set; }
 
-			[Column] public char?  CharDataType    { get; set; }
-			[Column] public string Char20DataType  { get; set; }
-			[Column] public string VarcharDataType { get; set; }
-			[Column] public string TextDataType    { get; set; }
+			[Column] public char?  charDataType    { get; set; }
+			[Column] public string char20DataType  { get; set; }
+			[Column] public string varcharDataType { get; set; }
+			[Column] public string textDataType    { get; set; }
 
-			[Column] public byte[]   BinaryDataType  { get; set; }
-			[Column] public Guid?    UuidDataType    { get; set; }
-			[Column] public BitArray BitDataType     { get; set; }
-			[Column] public bool?    BooleanDataType { get; set; }
-			[Column] public string   ColorDataType   { get; set; }
-			[Column] public string   XmlDataType     { get; set; }
-			[Column] public BitArray VarBitDataType  { get; set; }
+			[Column] public byte[]   binaryDataType  { get; set; }
+			[Column] public Guid?    uuidDataType    { get; set; }
+			[Column] public BitArray bitDataType     { get; set; }
+			[Column] public bool?    booleanDataType { get; set; }
+			[Column] public string   colorDataType   { get; set; }
+			[Column] public string   xmlDataType     { get; set; }
+			[Column] public BitArray varBitDataType  { get; set; }
 
-			[Column] public NpgsqlPoint?   PointDataType   { get; set; }
-			[Column] public NpgsqlLSeg?    LsegDataType    { get; set; }
-			[Column] public NpgsqlBox?     BoxDataType     { get; set; }
-			[Column] public NpgsqlPath?    PathDataType    { get; set; }
-			[Column] public NpgsqlPolygon? PolygonDataType { get; set; }
-			[Column] public NpgsqlCircle?  CircleDataType  { get; set; }
-			[Column] public NpgsqlLine?    LineDataType    { get; set; }
+			[Column] public NpgsqlPoint?   pointDataType   { get; set; }
+			[Column] public NpgsqlLSeg?    lsegDataType    { get; set; }
+			[Column] public NpgsqlBox?     boxDataType     { get; set; }
+			[Column] public NpgsqlPath?    pathDataType    { get; set; }
+			[Column] public NpgsqlPolygon? polygonDataType { get; set; }
+			[Column] public NpgsqlCircle?  circleDataType  { get; set; }
+			[Column] public NpgsqlLine?    lineDataType    { get; set; }
 
-			[Column] public NpgsqlInet?     InetDataType     { get; set; }
-			[Column] public NpgsqlInet?     CidrDataType     { get; set; }
-			[Column] public PhysicalAddress MacaddrDataType  { get; set; }
+			[Column(DbType = "inet")      ]   public NpgsqlInet?     inetDataType     { get; set; }
+			[Column(DbType = "cidr")      ]   public NpgsqlInet?     cidrDataType     { get; set; }
+			[Column(DbType = "macaddr")   ]   public PhysicalAddress macaddrDataType  { get; set; }
 			// PGSQL10+
-			/*[Column]*/ public PhysicalAddress Macaddr8DataType { get; set; }
+			/*[Column(DbType = "macaddr8")]*/ public PhysicalAddress macaddr8DataType { get; set; }
 
-			[Column] public string JsonDataType  { get; set; }
-			[Column] public string JsonbDataType { get; set; }
+			[Column] public string jsonDataType  { get; set; }
+			[Column] public string jsonbDataType { get; set; }
+
+			public static IEqualityComparer<AllTypes> Comparer = Tools.ComparerBuilder<AllTypes>.GetEqualityComparer();
 		}
 
 		public enum BulkTestMode
@@ -825,49 +829,49 @@ namespace Tests.DataProvider
 				// test non-null values
 				new AllTypes()
 				{
-					BigintDataType      = null,
-					NumericDataType     = null,
-					SmallintDataType    = null,
-					IntDataType         = null,
-					MoneyDataType       = null,
-					DoubleDataType      = null,
-					RealDataType        = null,
+					bigintDataType      = long.MaxValue,
+					numericDataType     = 12345.6789M,
+					smallintDataType    = short.MaxValue,
+					intDataType         = int.MaxValue,
+					//moneyDataType       = 9876.54321M,
+					doubleDataType      = double.MaxValue,
+					realDataType        = float.MaxValue,
 
-					TimestampDataType   = null,
-					TimestampTZDataType = null,
-					DateDataType        = null,
-					TimeDataType        = null,
-					TimeTZDataType      = null,
-					IntervalDataType    = null,
+					//!timestampDataType   = DateTime.Now,
+					//!timestampTZDataType = DateTimeOffset.Now,
+					//dateDataType        = DateTime.Now.Date,
+					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
+					//!timeTZDataType      = DateTimeOffset.Now,
+					//intervalDataType    = TimeSpan.FromTicks(-123456789),
 
-					CharDataType        = null,
-					Char20DataType      = null,
-					VarcharDataType     = null,
-					TextDataType        = null,
+					charDataType        = 'ы',
+					char20DataType      = "тест1",
+					varcharDataType     = "тест2",
+					textDataType        = "текст",
 
-					BinaryDataType      = null,
-					UuidDataType        = null,
-					BitDataType         = null,
-					BooleanDataType     = null,
-					ColorDataType       = null,
-					XmlDataType         = null,
-					VarBitDataType      = null,
+					//binaryDataType      = new byte[] { 1, 2, 3 },
+					uuidDataType        = Guid.NewGuid(),
+					//bitDataType         = new BitArray(new []{ true, false }),
+					booleanDataType     = true,
+					colorDataType       = "Green",
+					xmlDataType         = "<test>data</test>",
+					//varBitDataType      = new BitArray(new []{ true, false, true }),
 
-					PointDataType       = null,
-					LsegDataType        = null,
-					BoxDataType         = null,
-					PathDataType        = null,
-					PolygonDataType     = null,
-					CircleDataType      = null,
-					LineDataType        = null,
+					pointDataType       = new NpgsqlPoint(1.4, 4.3),
+					lsegDataType        = new NpgsqlLSeg(1.1, 2.2, 3.3, 4.4),
+					//boxDataType         = new NpgsqlBox(3.3, 4.4, 5.5, 6.6),
+					pathDataType        = new NpgsqlPath(new NpgsqlPoint(1.4, 4.3), new NpgsqlPoint(2.4, 2.3), new NpgsqlPoint(3.4, 3.3)),
+					polygonDataType     = new NpgsqlPolygon(new NpgsqlPoint(1.4, 4.3), new NpgsqlPoint(6.4, 2.3), new NpgsqlPoint(3.4, 7.3)),
+					circleDataType      = new NpgsqlCircle(1.1, 2.2, 3.3),
+					lineDataType        = new NpgsqlLine(3.3, 4.4, 5.5),
 
-					InetDataType        = null,
-					CidrDataType        = null,
-					MacaddrDataType     = null,
-					Macaddr8DataType    = null,
+					inetDataType        = new NpgsqlInet("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
+					//cidrDataType        = new NpgsqlInet("2001:1db8:85a3:1142:1000:8a2e:1370:7334/32"),
+					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
+					//macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
 
-					JsonDataType        = null,
-					JsonbDataType       = null
+					//jsonDataType        = "{test: 1}",
+					jsonbDataType       = "{test: 2}"
 				}
 			};
 
@@ -889,15 +893,15 @@ namespace Tests.DataProvider
 
 					ids = data.Select(_ => _.ID).ToArray();
 
-					AreEqual(testData, data);
+					AreEqual(r => { r.ID = 0; return r; }, testData, data, AllTypes.Comparer);
+
+					if (mode != BulkTestMode.WithoutTransaction)
+						ts.Rollback();
 				}
 				finally
 				{
-					if (mode != BulkTestMode.WithoutTransaction)
-						ts.Rollback();
-					else
+					if (mode == BulkTestMode.WithoutTransaction)
 						db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Delete();
-
 				}
 
 				if (mode == BulkTestMode.WithRollback)

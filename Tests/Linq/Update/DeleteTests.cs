@@ -381,30 +381,38 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
-
-				Assert.AreEqual(tableName,  table.TableName);
-				Assert.AreEqual(schemaName, table.SchemaName);
-
-				var person = new Person()
+				try
 				{
-					FirstName = "Steven",
-					LastName  = "King",
-					Gender    = Gender.Male,
-				};
+					var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
 
-				// insert a row into the table
-				db.Insert(person, tableName: tableName, schemaName: schemaName);
-				var newCount  = table.Count();
-				Assert.AreEqual(1, newCount);
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
 
-				var personForDelete = table.Single();
+					var person = new Person()
+					{
+						FirstName = "Steven",
+						LastName  = "King",
+						Gender    = Gender.Male,
+					};
 
-				db.Delete(personForDelete, tableName: tableName, schemaName: schemaName);
+					// insert a row into the table
+					db.Insert(person, tableName: tableName, schemaName: schemaName);
+					var newCount = table.Count();
+					Assert.AreEqual(1, newCount);
 
-				Assert.AreEqual(0, table.Count());
+					var personForDelete = table.Single();
 
-				table.Drop();
+					db.Delete(personForDelete, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(0, table.Count());
+
+					table.Drop();
+				}
+				catch
+				{
+					db.DropTable<Person>(tableName, schemaName: schemaName);
+					throw;
+				}
 			}
 		}
 
@@ -416,30 +424,38 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
-
-				Assert.AreEqual(tableName,  table.TableName);
-				Assert.AreEqual(schemaName, table.SchemaName);
-
-				var person = new Person()
+				try
 				{
-					FirstName = "Steven",
-					LastName  = "King",
-					Gender    = Gender.Male,
-				};
+					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
 
-				// insert a row into the table
-				await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
-				var newCount  = await table.CountAsync();
-				Assert.AreEqual(1, newCount);
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
 
-				var personForDelete = await table.SingleAsync();
+					var person = new Person()
+					{
+						FirstName = "Steven",
+						LastName  = "King",
+						Gender    = Gender.Male,
+					};
 
-				await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
+					// insert a row into the table
+					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+					var newCount = await table.CountAsync();
+					Assert.AreEqual(1, newCount);
 
-				Assert.AreEqual(0, await table.CountAsync());
+					var personForDelete = await table.SingleAsync();
 
-				await table.DropAsync();
+					await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(0, await table.CountAsync());
+
+					await table.DropAsync();
+				}
+				catch
+				{
+					await db.DropTableAsync<Person>(tableName, schemaName: schemaName);
+					throw;
+				}
 			}
 		}
 	}

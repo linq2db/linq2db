@@ -13,7 +13,7 @@ namespace Tests.Model
 {
 	public class TestDataConnection : DataConnection, ITestDataContext
 	{
-		static int _counter;
+		//static int _counter;
 
 		public TestDataConnection(string configString)
 			: base(configString)
