@@ -70,7 +70,6 @@ namespace LinqToDB
 		/// <summary>
 		/// A simple type representing Boolean values of true or false.
 		/// </summary>
-		/// </summary>
 		Boolean,
 
 		/// <summary>
