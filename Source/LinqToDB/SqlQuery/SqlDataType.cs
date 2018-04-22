@@ -198,6 +198,8 @@ namespace LinqToDB.SqlQuery
 			new TypeInfo(DataType.NChar,             4000,                    -1,                    -1,                    4000),
 			new TypeInfo(DataType.NVarChar,          4000,                    -1,                    -1,                    4000),
 			new TypeInfo(DataType.NText,     int.MaxValue,                    -1,                    -1,        int.MaxValue / 2),
+			new TypeInfo(DataType.Json,      int.MaxValue,                    -1,                    -1,        int.MaxValue / 2),
+			new TypeInfo(DataType.BinaryJson,int.MaxValue,                    -1,                    -1,        int.MaxValue / 2),
 
 			new TypeInfo(DataType.Binary,            8000,                    -1,                    -1,                      -1),
 			new TypeInfo(DataType.VarBinary,         8000,                    -1,                    -1,                      -1),
@@ -322,6 +324,8 @@ namespace LinqToDB.SqlQuery
 				case DataType.UInt32           : return DbUInt32;
 				case DataType.UInt64           : return DbUInt64;
 				case DataType.Dictionary       : return DbDictionary;
+				case DataType.Json             : return DbJson;
+				case DataType.BinaryJson       : return DbBinaryJson;
 			}
 
 			throw new InvalidOperationException($"Unexpected type: {type}");
@@ -389,6 +393,8 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType DbNChar          = new SqlDataType(DataType.NChar,          typeof(String),      GetMaxLength,               0,  0);
 		public static readonly SqlDataType DbNVarChar       = new SqlDataType(DataType.NVarChar,       typeof(String),      GetMaxLength,               0,  0);
 		public static readonly SqlDataType DbNText          = new SqlDataType(DataType.NText,          typeof(String),      GetMaxLength,               0,  0);
+		public static readonly SqlDataType DbJson           = new SqlDataType(DataType.Json,           typeof(String),      GetMaxLength,               0,  0);
+		public static readonly SqlDataType DbBinaryJson     = new SqlDataType(DataType.BinaryJson,     typeof(String),      GetMaxLength,               0,  0);
 
 		public static readonly SqlDataType DbBinary         = new SqlDataType(DataType.Binary,         typeof(Byte[]),      GetMaxLength,               0,  0);
 		public static readonly SqlDataType DbVarBinary      = new SqlDataType(DataType.VarBinary,      typeof(Byte[]),      GetMaxLength,               0,  0);

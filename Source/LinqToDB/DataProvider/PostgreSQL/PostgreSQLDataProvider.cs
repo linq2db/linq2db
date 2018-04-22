@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
+using System.Net;
+using System.Net.NetworkInformation;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -59,6 +61,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		internal Type NpgsqlPolygonType;
 		internal Type NpgsqlCircleType;
 		internal Type NpgsqlMacAddressType;
+		internal Type NpgsqlDateType;
+		internal Type NpgsqlDateTimeType;
+
+		internal bool HasMacAddr8 { get; private set; }
 
 		/// <summary>
 		/// PostgreSQL parameter type enum type.
@@ -76,8 +82,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		Type _npgsqlTimeStamp;
 		Type _npgsqlTimeStampTZ;
-		Type _npgsqlDate;
-		Type _npgsqlDateTime;
 
 		CommandBehavior _commandBehavior = CommandBehavior.Default;
 
@@ -98,8 +102,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var npgSql = connectionType.AssemblyEx();
 
-			BitStringType        = npgSql.GetType("NpgsqlTypes.BitString"        , false);
+			// NpgsqlInterval was renamed to NpgsqlTimeSpan
 			NpgsqlIntervalType   = npgSql.GetType("NpgsqlTypes.NpgsqlInterval"   , false);
+			NpgsqlIntervalType   = NpgsqlIntervalType ?? npgSql.GetType("NpgsqlTypes.NpgsqlTimeSpan"   , false);
+
+			BitStringType        = npgSql.GetType("NpgsqlTypes.BitString"        , false);
 			NpgsqlInetType       = npgSql.GetType("NpgsqlTypes.NpgsqlInet"       , true);
 			NpgsqlTimeType       = npgSql.GetType("NpgsqlTypes.NpgsqlTime"       , false);
 			NpgsqlTimeTZType     = npgSql.GetType("NpgsqlTypes.NpgsqlTimeTZ"     , false);
@@ -110,8 +117,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlPathType       = npgSql.GetType("NpgsqlTypes.NpgsqlPath"       , true);
 			_npgsqlTimeStamp     = npgSql.GetType("NpgsqlTypes.NpgsqlTimeStamp"  , false);
 			_npgsqlTimeStampTZ   = npgSql.GetType("NpgsqlTypes.NpgsqlTimeStampTZ", false);
-			_npgsqlDate          = npgSql.GetType("NpgsqlTypes.NpgsqlDate"       , true);
-			_npgsqlDateTime      = npgSql.GetType("NpgsqlTypes.NpgsqlDateTime"   , false);
+			NpgsqlDateType       = npgSql.GetType("NpgsqlTypes.NpgsqlDate"       , true);
+			NpgsqlDateTimeType   = npgSql.GetType("NpgsqlTypes.NpgsqlDateTime"   , false);
 			NpgsqlMacAddressType = npgSql.GetType("NpgsqlTypes.NpgsqlMacAddress" , false);
 			NpgsqlCircleType     = npgSql.GetType("NpgsqlTypes.NpgsqlCircle"     , true);
 			NpgsqlPolygonType    = npgSql.GetType("NpgsqlTypes.NpgsqlPolygon"    , true);
@@ -160,7 +167,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			TryAddType("cidr"                         , "Cidr");
 			TryAddType("inet"                         , "Inet");
 			TryAddType("macaddr"                      , "MacAddr");
-			TryAddType("macaddr8"                     , "MacAddr8");
+			HasMacAddr8 = TryAddType("macaddr8"       , "MacAddr8");
 			// bit string types
 			TryAddType("bit"                          , "Bit");
 			TryAddType("bit varying"                  , "Varbit");
@@ -203,10 +210,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (_npgsqlTimeStamp     != null) SetProviderField(_npgsqlTimeStamp    , _npgsqlTimeStamp,     "GetTimeStamp");
 			if (_npgsqlTimeStampTZ   != null) SetProviderField(_npgsqlTimeStampTZ  , _npgsqlTimeStampTZ,   "GetTimeStampTZ");
 			if (NpgsqlMacAddressType != null) SetProviderField(NpgsqlMacAddressType, NpgsqlMacAddressType, "GetProviderSpecificValue");
-			if (_npgsqlDateTime      != null) SetProviderField(_npgsqlDateTime     , _npgsqlDateTime,      "GetTimeStamp");
+			if (NpgsqlDateTimeType   != null) SetProviderField(NpgsqlDateTimeType  , NpgsqlDateTimeType,   "GetTimeStamp");
 
 			SetProviderField(NpgsqlInetType, NpgsqlInetType, "GetProviderSpecificValue");
-			SetProviderField(_npgsqlDate, _npgsqlDate, "GetDate");
+			SetProviderField(NpgsqlDateType, NpgsqlDateType, "GetDate");
 
 			if (_npgsqlTimeStampTZ != null)
 			{
@@ -235,17 +242,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_setJsonb     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Jsonb");
 
 			if (BitStringType        != null) MappingSchema.AddScalarType(BitStringType);
-			if (NpgsqlIntervalType   != null) MappingSchema.AddScalarType(NpgsqlIntervalType);
 			if (NpgsqlTimeType       != null) MappingSchema.AddScalarType(NpgsqlTimeType);
 			if (NpgsqlTimeTZType     != null) MappingSchema.AddScalarType(NpgsqlTimeTZType);
 			if (_npgsqlTimeStamp     != null) MappingSchema.AddScalarType(_npgsqlTimeStamp);
 			if (_npgsqlTimeStampTZ   != null) MappingSchema.AddScalarType(_npgsqlTimeStampTZ);
 			if (NpgsqlMacAddressType != null) MappingSchema.AddScalarType(NpgsqlMacAddressType);
-			if (_npgsqlDateTime      != null) MappingSchema.AddScalarType(_npgsqlDateTime);
 
-			MappingSchema.AddScalarType(_npgsqlDate);
+			AddUdtType(NpgsqlIntervalType);
+			AddUdtType(NpgsqlDateType);
+			AddUdtType(NpgsqlDateTimeType);
 
 			AddUdtType(NpgsqlInetType);
+			AddUdtType(typeof(IPAddress));
+			AddUdtType(typeof(PhysicalAddress));
 
 			AddUdtType(NpgsqlPointType);
 			AddUdtType(NpgsqlLSegType);
@@ -277,9 +286,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					));
 			}
 
-			if (_npgsqlDateTime != null)
+			if (NpgsqlDateTimeType != null)
 			{
-				var p = Expression.Parameter(_npgsqlDateTime, "p");
+				var p = Expression.Parameter(NpgsqlDateTimeType, "p");
 				var pi = p.Type.GetPropertyEx("DateTime");
 
 				Expression expr;
@@ -289,7 +298,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				else
 					expr = Expression.Call(p, "ToDateTime", null);
 
-				MappingSchema.SetConvertExpression(_npgsqlDateTime, typeof(DateTimeOffset),
+				MappingSchema.SetConvertExpression(NpgsqlDateTimeType, typeof(DateTimeOffset),
 					Expression.Lambda(
 						Expression.New(
 							MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
@@ -473,6 +482,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "tstzrange":
 					dbType  = "timestamp with time zone";
 					isRange = true;
+					break;
+				case "timestamptz":
+					dbType = "timestamp with time zone";
 					break;
 				case "daterange":
 					dbType  = "date";

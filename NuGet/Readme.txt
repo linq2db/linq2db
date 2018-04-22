@@ -3,6 +3,7 @@ LINQ to DB 2.0.0  Release Notes
 *IMPORTANT: LINQ to DB 2.0 is not released yet*
 - breaking change: dropped support for .NET 4.0, Silverlight 4-5 and Windows 8 Store frameworks. New target frameworks list is netcoreapp2.0, netstandard1.6, netstandard2.0 and net45
 - breaking change: behavior of enum mapping to a text type for enum without configured mappings changed to use ToString() instead of (enum underlying type).ToString(). To return old behavior, you should set Configuration.UseEnumValueNameForStringColumns to false (#1006, #1071)
+- breaking change: [PostgreSQL] If you used BulkCopy with ProviderSpecific method specified, check https://github.com/linq2db/linq2db/wiki/Bulk-Copy for important notes regarding provider-specific support notes
 
 - feature: predicate expression support added for associations configuration using fluent mapping (#961)
 - feature: support creation of query parameters in extension builders (#964)
@@ -30,7 +31,7 @@ LINQ to DB 2.0.0  Release Notes
 - improvement: Reading of schema for procedures will be wrapped into transaction with rollback if called without ambient transaction
 - improvement: Allow basic mappings modifications using MappingSchema.EntityDescriptorCreatedCallback callback (#1074)
 - improvement: Exception during column mapping will be wrappped into LinqToDBException with information which column failed with original error as InnerException (#1065)
-- improvement: [PostgreSQL] Improved suppport for geometry types in CreateTable() method (#1091)
+- improvement: [PostgreSQL] Improved suppport for some types (#1091)
 
 - fix: fixed another case of defect #170, where default(T) value could be selected for non-nullable field instead of NULL from left join, if SelectMany() call used in source (#1012)
 - fix: [MS SQL, Sybase] updated Merge insert operation to respect SkipOnInsert mapping flag for identity fields when no custom insert expression specified. With this fix merge operation will allow database to generate identity value instead of use of value from source (#914)
@@ -61,6 +62,8 @@ LINQ to DB 2.0.0  Release Notes
 - fix: Fix issue when insert query from subquery data source with nullable parameter called first with null value fails for subsequential calls with non-null parameters (#1098)
 - fix: [PostgreSQL] Proper type names generated for: System.Int16 identity fields, DataType.VarBinary/System.Linq.Binary, DataType.NChar/System.Char. Those type names used by CreateTable() method (#1091)
 - fix: Default System.Char mapping changed to use length = 1 instead of unspecified (#1091)
+- fix: [PostgreSQL] Interval type supports both NpgsqlTimeSpan and NpgsqlInterval (#1091)
+
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)

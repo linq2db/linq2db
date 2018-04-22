@@ -139,6 +139,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static Type GetBitStringType       () { return _postgreSQLDataProvider92.BitStringType;        }
 		public static Type GetNpgsqlIntervalType  () { return _postgreSQLDataProvider92.NpgsqlIntervalType;   }
+		public static Type GetNpgsqlDateType      () { return _postgreSQLDataProvider92.NpgsqlDateType;       }
+		public static Type GetNpgsqlDateTimeType  () { return _postgreSQLDataProvider92.NpgsqlDateTimeType;   }
 		public static Type GetNpgsqlInetType      () { return _postgreSQLDataProvider92.NpgsqlInetType;       }
 		public static Type GetNpgsqlTimeTZType    () { return _postgreSQLDataProvider92.NpgsqlTimeTZType;     }
 		public static Type GetNpgsqlTimeType      () { return _postgreSQLDataProvider92.NpgsqlTimeType;       }

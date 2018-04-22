@@ -2,6 +2,8 @@
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Net;
+using System.Net.NetworkInformation;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -80,7 +82,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");       break;
-				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");  break;
+				case DataType.Money         : StringBuilder.Append("money");          break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");  break;
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
@@ -100,6 +102,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
 				case DataType.Guid           : StringBuilder.Append("uuid");           break;
 				case DataType.VarBinary      : StringBuilder.Append("bytea");          break;
+				case DataType.BitArray       :
+					if (type.Length == 1)
+						StringBuilder.Append("bit");
+					if (type.Length > 1)
+						StringBuilder.Append("bit(").Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+					else
+						StringBuilder.Append("bit varying");
+					break;
 				case DataType.NChar          :
 					StringBuilder.Append("character");
 					if (type.Length > 1) // this is correct condition
@@ -110,14 +120,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					{
 						var udtType = type.Type.ToNullableUnderlying();
 
-						if      (udtType == _provider.NpgsqlPointType)   StringBuilder.Append("point");
-						else if (udtType == _provider.NpgsqlLineType)    StringBuilder.Append("line");
-						else if (udtType == _provider.NpgsqlBoxType)     StringBuilder.Append("box");
-						else if (udtType == _provider.NpgsqlLSegType)    StringBuilder.Append("lseg");
-						else if (udtType == _provider.NpgsqlCircleType)  StringBuilder.Append("circle");
-						else if (udtType == _provider.NpgsqlPolygonType) StringBuilder.Append("polygon");
-						else if (udtType == _provider.NpgsqlPathType)    StringBuilder.Append("path");
-						else                                             base.BuildDataType(type, createDbType);
+						if      (udtType == _provider.NpgsqlPointType)    StringBuilder.Append("point");
+						else if (udtType == _provider.NpgsqlLineType)     StringBuilder.Append("line");
+						else if (udtType == _provider.NpgsqlBoxType)      StringBuilder.Append("box");
+						else if (udtType == _provider.NpgsqlLSegType)     StringBuilder.Append("lseg");
+						else if (udtType == _provider.NpgsqlCircleType)   StringBuilder.Append("circle");
+						else if (udtType == _provider.NpgsqlPolygonType)  StringBuilder.Append("polygon");
+						else if (udtType == _provider.NpgsqlPathType)     StringBuilder.Append("path");
+						else if (udtType == _provider.NpgsqlIntervalType) StringBuilder.Append("interval");
+						else if (udtType == _provider.NpgsqlDateType)     StringBuilder.Append("date");
+						else if (udtType == _provider.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
+						else if (udtType == typeof(IPAddress))            StringBuilder.Append("inet");
+						else if (udtType == typeof(PhysicalAddress)
+							&& !_provider.HasMacAddr8)                    StringBuilder.Append("macaddr");
+						else                                              base.BuildDataType(type, createDbType);
 					}
 					else
 						base.BuildDataType(type, createDbType);
