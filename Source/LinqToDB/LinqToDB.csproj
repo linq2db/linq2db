@@ -32,9 +32,12 @@
 		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
 
 		<Compile Remove="Compatibility\**\*.cs" />
+
+		<None Remove="SqlQuery\ReservedWordsFirebird.txt" />
 
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 

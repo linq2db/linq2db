@@ -20,6 +20,7 @@ namespace LinqToDB.SqlQuery
 			_reservedWords[ProviderName.Oracle]        = _reservedWordsOracle;
 			_reservedWords[ProviderName.OracleManaged] = _reservedWordsOracle;
 			_reservedWords[ProviderName.OracleNative]  = _reservedWordsOracle;
+			_reservedWords[ProviderName.Firebird]      = _reservedWordsFirebird;
 
 
 			var assembly = typeof(SelectQuery).AssemblyEx();
@@ -58,11 +59,25 @@ namespace LinqToDB.SqlQuery
 					_reservedWordsAll   .Add(s);
 				}
 			}
+
+			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsFirebird.txt"));
+
+			using (var stream = assembly.GetManifestResourceStream(name))
+			using (var reader = new StreamReader(stream))
+			{
+				string s;
+				while ((s = reader.ReadLine()) != null)
+				{
+					_reservedWordsFirebird.Add(s);
+				}
+			}
 		}
 
 		static readonly HashSet<string> _reservedWordsAll      = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 		static readonly HashSet<string> _reservedWordsPostgres = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 		static readonly HashSet<string> _reservedWordsOracle   = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly HashSet<string> _reservedWordsFirebird = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
 
 		static readonly ConcurrentDictionary<string,HashSet<string>> _reservedWords =
 			new ConcurrentDictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
