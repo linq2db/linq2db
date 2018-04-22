@@ -884,6 +884,10 @@ namespace Tests.DataProvider
 				int[] ids = null;
 				try
 				{
+					// color enum type will not work without this call if _create test was run in the same session
+					// More details here: https://github.com/npgsql/npgsql/issues/1357
+					((dynamic)db.Connection).ReloadTypes();
+
 					var result = db.BulkCopy(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, testData);
 
 					Assert.AreEqual(testData.Length, result.RowsCopied);
