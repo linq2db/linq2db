@@ -151,6 +151,11 @@ namespace LinqToDB.DataProvider.Firebird
 				base.BuildFromClause(statement, selectQuery);
 		}
 
+		protected sealed override bool IsReserved(string word)
+		{
+			return ReservedWords.IsReserved(word, ProviderName.Firebird);
+		}
+
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
@@ -187,17 +192,21 @@ namespace LinqToDB.DataProvider.Firebird
 				case ConvertType.NameToQueryFieldAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
-					if (value != null && IdentifierQuoteMode != FirebirdIdentifierQuoteMode.None)
+					if (value != null)
 					{
 						var name = value.ToString();
+						var reserved = IsReserved(name);
+						if (IdentifierQuoteMode != FirebirdIdentifierQuoteMode.None || reserved)
+						{
+							if (name.Length > 0 && name[0] == '"')
+								return name;
 
-						if (name.Length > 0 && name[0] == '"')
-							return name;
-
-						if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-							name.StartsWith("_") ||
-							name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
-							return '"' + name + '"';
+							if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+								name.StartsWith("_") ||
+								reserved ||
+								name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+								return '"' + name + '"';
+						}
 					}
 
 					break;
