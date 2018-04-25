@@ -244,6 +244,11 @@ namespace LinqToDB.DataProvider.Oracle
 				base.BuildFromClause(statement, selectQuery);
 		}
 
+		protected sealed override bool IsReserved(string word)
+		{
+			return ReservedWords.IsReserved(word, ProviderName.Oracle);
+		}
+
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
@@ -271,6 +276,23 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				case ConvertType.NameToQueryParameter:
 					return ":" + value;
+				case ConvertType.NameToQueryFieldAlias:
+				case ConvertType.NameToQueryField:
+				case ConvertType.NameToQueryTable:
+					if (value != null)
+					{
+						var name = value.ToString();
+
+						if (name.Length > 0 && name[0] == '"')
+							return name;
+
+						if (IsReserved(name))
+						{
+							return '"' + name + '"';
+						}
+					}
+
+					break;
 			}
 
 			return value;
