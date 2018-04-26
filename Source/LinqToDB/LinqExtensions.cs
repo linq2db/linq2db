@@ -311,11 +311,13 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return source.Provider.Execute<int>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_deleteMethodInfo.MakeGenericMethod(typeof(T)),
-					source.Expression));
+					currentSource.Expression));
 		}
 
 		/// <summary>
@@ -329,15 +331,17 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				_deleteMethodInfo.MakeGenericMethod(typeof(T)),
-				source.Expression);
+				currentSource.Expression);
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		static readonly MethodInfo _deleteMethodInfo2 = MemberHelper.MethodOf(() => Delete<int>(null, null)).GetGenericMethodDefinition();
@@ -356,11 +360,13 @@ namespace LinqToDB
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return source.Provider.Execute<int>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_deleteMethodInfo2.MakeGenericMethod(typeof(T)),
-					new[] { source.Expression, Expression.Quote(predicate) }));
+					new[] { currentSource.Expression, Expression.Quote(predicate) }));
 		}
 
 		/// <summary>
@@ -379,15 +385,17 @@ namespace LinqToDB
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				_deleteMethodInfo2.MakeGenericMethod(typeof(T)),
-				new[] { source.Expression, Expression.Quote(predicate) });
+				new[] { currentSource.Expression, Expression.Quote(predicate) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		#endregion
@@ -415,11 +423,13 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			return source.Provider.Execute<int>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					UpdateMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
+					new[] { currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
 		/// <summary>
@@ -442,15 +452,17 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				UpdateMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-				new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
+				new[] { currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		internal static readonly MethodInfo UpdateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
@@ -467,11 +479,13 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			return source.Provider.Execute<int>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					UpdateMethodInfo2.MakeGenericMethod(typeof(T)),
-					new[] { source.Expression, Expression.Quote(setter) }));
+					new[] { currentSource.Expression, Expression.Quote(setter) }));
 		}
 
 		/// <summary>
@@ -490,15 +504,17 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				UpdateMethodInfo2.MakeGenericMethod(typeof(T)),
-				new[] { source.Expression, Expression.Quote(setter) });
+				new[] { currentSource.Expression, Expression.Quote(setter) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		static readonly MethodInfo _updateMethodInfo3 = MemberHelper.MethodOf(() => Update<int>(null, null, null)).GetGenericMethodDefinition();
@@ -520,11 +536,13 @@ namespace LinqToDB
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 			if (setter    == null) throw new ArgumentNullException(nameof(setter));
 
-			return source.Provider.Execute<int>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_updateMethodInfo3.MakeGenericMethod(typeof(T)),
-					new[] { source.Expression, Expression.Quote(predicate), Expression.Quote(setter) }));
+					new[] { currentSource.Expression, Expression.Quote(predicate), Expression.Quote(setter) }));
 		}
 
 		/// <summary>
@@ -546,15 +564,17 @@ namespace LinqToDB
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 			if (setter    == null) throw new ArgumentNullException(nameof(setter));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				_updateMethodInfo3.MakeGenericMethod(typeof(T)),
-				new[] { source.Expression, Expression.Quote(predicate), Expression.Quote(setter) });
+				new[] { currentSource.Expression, Expression.Quote(predicate), Expression.Quote(setter) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		static readonly MethodInfo _updateMethodInfo4 = MemberHelper.MethodOf(() => Update<int>(null)).GetGenericMethodDefinition();
@@ -571,11 +591,13 @@ namespace LinqToDB
 
 			var query = ((Updatable<T>)source).Query;
 
-			return query.Provider.Execute<int>(
+			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+
+			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_updateMethodInfo4.MakeGenericMethod(typeof(T)),
-					query.Expression));
+					currentQuery.Expression));
 		}
 
 		/// <summary>
@@ -591,15 +613,17 @@ namespace LinqToDB
 
 			var q = ((Updatable<T>)source).Query;
 
+			var currentQuery = ProcessInputQueryable?.Invoke(q) ?? q;
+
 			var expr = Expression.Call(
 				null,
 				_updateMethodInfo4.MakeGenericMethod(typeof(T)),
-				q.Expression);
+				currentQuery.Expression);
 
-			if (q is IQueryProviderAsync query)
+			if (currentQuery is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => q.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentQuery.Provider.Execute<int>(expr), token);
 		}
 
 		static readonly MethodInfo _updateMethodInfo5 = MemberHelper.MethodOf(()
@@ -624,11 +648,13 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			return source.Provider.Execute<int>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_updateMethodInfo5.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-					new[] { source.Expression, Expression.Quote(target), Expression.Quote(setter) }));
+					new[] { currentSource.Expression, Expression.Quote(target), Expression.Quote(setter) }));
 		}
 
 		/// <summary>
@@ -652,15 +678,17 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				_updateMethodInfo5.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-				new[] { source.Expression, Expression.Quote(target), Expression.Quote(setter) });
+				new[] { currentSource.Expression, Expression.Quote(target), Expression.Quote(setter) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		class Updatable<T> : IUpdatable<T>
@@ -907,11 +935,13 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			return query.Provider.Execute<int>(
+			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+
+			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_insertMethodInfo.MakeGenericMethod(typeof(T)),
-					new[] { query.Expression, Expression.Quote(setter) }));
+					new[] { currentQuery.Expression, Expression.Quote(setter) }));
 		}
 
 		/// <summary>
@@ -932,15 +962,17 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				_insertMethodInfo.MakeGenericMethod(typeof(T)),
-				new[] { source.Expression, Expression.Quote(setter) });
+				new[] { currentSource.Expression, Expression.Quote(setter) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null,null)).GetGenericMethodDefinition();
@@ -961,11 +993,13 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			return query.Provider.Execute<object>(
+			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+
+			return currentQuery.Provider.Execute<object>(
 				Expression.Call(
 					null,
 					_insertWithIdentityMethodInfo.MakeGenericMethod(typeof(T)),
-					new[] { query.Expression, Expression.Quote(setter) }));
+					new[] { currentQuery.Expression, Expression.Quote(setter) }));
 		}
 
 		/// <summary>
@@ -1028,15 +1062,17 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				_insertWithIdentityMethodInfo.MakeGenericMethod(typeof(T)),
-				new[] { source.Expression, Expression.Quote(setter) });
+				new[] { currentSource.Expression, Expression.Quote(setter) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<object>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<object>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<object>(expr), token);
 		}
 
 		/// <summary>
@@ -1268,11 +1304,13 @@ namespace LinqToDB
 
 			var query = ((ValueInsertable<T>)source).Query;
 
-			return query.Provider.Execute<int>(
+			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+
+			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_insertMethodInfo2.MakeGenericMethod(typeof(T)),
-					query.Expression));
+					currentQuery.Expression));
 		}
 
 		/// <summary>
@@ -1288,14 +1326,16 @@ namespace LinqToDB
 
 			var queryable = ((ValueInsertable<T>)source).Query;
 
+			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+
 			var expr = Expression.Call(
 				null,
-				_insertMethodInfo2.MakeGenericMethod(typeof(T)), queryable.Expression);
+				_insertMethodInfo2.MakeGenericMethod(typeof(T)), currentQueryable.Expression);
 
-			if (queryable is IQueryProviderAsync query)
+			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => queryable.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentQueryable.Provider.Execute<int>(expr), token);
 		}
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo2 = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null)).GetGenericMethodDefinition();
@@ -1312,11 +1352,13 @@ namespace LinqToDB
 
 			var queryable = ((ValueInsertable<T>)source).Query;
 
-			return queryable.Provider.Execute<object>(
+			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+
+			return currentQueryable.Provider.Execute<object>(
 				Expression.Call(
 					null,
 					_insertWithIdentityMethodInfo2.MakeGenericMethod(typeof(T)),
-					queryable.Expression));
+					currentQueryable.Expression));
 		}
 
 		/// <summary>
@@ -1366,15 +1408,17 @@ namespace LinqToDB
 
 			var queryable = ((ValueInsertable<T>)source).Query;
 
+			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+
 			var expr = Expression.Call(
 				null,
 				_insertWithIdentityMethodInfo2.MakeGenericMethod(typeof(T)),
-				queryable.Expression);
+				currentQueryable.Expression);
 
-			if (queryable is IQueryProviderAsync query)
+			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<object>(expr, token);
 
-			return await TaskEx.Run(() => queryable.Provider.Execute<object>(expr), token);
+			return await TaskEx.Run(() => currentQueryable.Provider.Execute<object>(expr), token);
 		}
 
 		/// <summary>
@@ -1445,11 +1489,13 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			return source.Provider.Execute<int>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					InsertMethodInfo3.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
+					new[] { currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
 		/// <summary>
@@ -1473,15 +1519,17 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				InsertMethodInfo3.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-				new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
+				new[] { currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo3 =
@@ -1506,11 +1554,13 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			return source.Provider.Execute<object>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<object>(
 				Expression.Call(
 					null,
 					_insertWithIdentityMethodInfo3.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
+					new[] { currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
 		/// <summary>
@@ -1591,16 +1641,18 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr =
 				Expression.Call(
 					null,
 					_insertWithIdentityMethodInfo3.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
+					new[] { currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<object>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<object>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<object>(expr), token);
 		}
 
 		/// <summary>
@@ -1819,11 +1871,13 @@ namespace LinqToDB
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
-			return query.Provider.Execute<int>(
+			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+
+			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_insertMethodInfo4.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-					query.Expression));
+					currentQuery.Expression));
 		}
 
 		/// <summary>
@@ -1841,14 +1895,16 @@ namespace LinqToDB
 
 			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
+			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+
 			var expr = Expression.Call(
 				null,
-				_insertMethodInfo4.MakeGenericMethod(typeof(TSource), typeof(TTarget)), queryable.Expression);
+				_insertMethodInfo4.MakeGenericMethod(typeof(TSource), typeof(TTarget)), currentQueryable.Expression);
 
-			if (queryable is IQueryProviderAsync query)
+			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => queryable.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentQueryable.Provider.Execute<int>(expr), token);
 		}
 
 		static readonly MethodInfo _insertWithIdentityMethodInfo4 =
@@ -1867,11 +1923,13 @@ namespace LinqToDB
 
 			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
-			return queryable.Provider.Execute<object>(
+			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+
+			return currentQueryable.Provider.Execute<object>(
 				Expression.Call(
 					null,
 					_insertWithIdentityMethodInfo4.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-					queryable.Expression));
+					currentQueryable.Expression));
 		}
 
 		/// <summary>
@@ -1928,15 +1986,17 @@ namespace LinqToDB
 
 			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
+			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+
 			var expr = Expression.Call(
 				null,
 				_insertWithIdentityMethodInfo4.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
-				queryable.Expression);
+				currentQueryable.Expression);
 
-			if (queryable is IQueryProviderAsync query)
+			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<object>(expr, token);
 
-			return await TaskEx.Run(() => queryable.Provider.Execute<object>(expr), token);
+			return await TaskEx.Run(() => currentQueryable.Provider.Execute<object>(expr), token);
 		}
 
 		/// <summary>
@@ -2015,11 +2075,13 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			return query.Provider.Execute<int>(
+			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+
+			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_insertOrUpdateMethodInfo.MakeGenericMethod(typeof(T)),
-					new[] { query.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) }));
+					new[] { currentQuery.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) }));
 		}
 
 		/// <summary>
@@ -2046,15 +2108,17 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				_insertOrUpdateMethodInfo.MakeGenericMethod(typeof(T)),
-				new[] { source.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) });
+				new[] { currentSource.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		static readonly MethodInfo _insertOrUpdateMethodInfo2 =
@@ -2086,11 +2150,13 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			return query.Provider.Execute<int>(
+			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+
+			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
 					_insertOrUpdateMethodInfo2.MakeGenericMethod(typeof(T)),
-					query.Expression,
+					currentQuery.Expression,
 					Expression.Quote(insertSetter),
 					Expression.Quote(onDuplicateKeyUpdateSetter),
 					Expression.Quote(keySelector)));
@@ -2124,18 +2190,20 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				_insertOrUpdateMethodInfo2.MakeGenericMethod(typeof(T)),
-				source.Expression,
+				currentSource.Expression,
 				Expression.Quote(insertSetter),
 				Expression.Quote(onDuplicateKeyUpdateSetter),
 				Expression.Quote(keySelector));
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		#endregion
@@ -2160,19 +2228,21 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
+			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+
 			var expr = Expression.Call(
 				null,
 				_dropMethodInfo2.MakeGenericMethod(typeof(T)),
-				new[] { query.Expression, Expression.Constant(throwExceptionIfNotExists) });
+				new[] { currentQuery.Expression, Expression.Constant(throwExceptionIfNotExists) });
 
 			if (throwExceptionIfNotExists)
 			{
-				return query.Provider.Execute<int>(expr);
+				return currentQuery.Provider.Execute<int>(expr);
 			}
 
 			try
 			{
-				return query.Provider.Execute<int>(expr);
+				return currentQuery.Provider.Execute<int>(expr);
 			}
 			catch
 			{
@@ -2201,19 +2271,21 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 					null,
 					_dropMethodInfo2.MakeGenericMethod(typeof(T)),
-				new[] { source.Expression, Expression.Constant(throwExceptionIfNotExists)  });
+				new[] { currentSource.Expression, Expression.Constant(throwExceptionIfNotExists)  });
 
-			var query = source as IQueryProviderAsync;
+			var query = currentSource as IQueryProviderAsync;
 
 			if (throwExceptionIfNotExists)
 			{
 				if (query != null)
 					return await query.ExecuteAsync<int>(expr, token);
 
-				return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+				return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 			}
 
 			try
@@ -2221,7 +2293,7 @@ namespace LinqToDB
 				if (query != null)
 					return await query.ExecuteAsync<int>(expr, token);
 
-				return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+				return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 			}
 			catch
 			{
@@ -2249,12 +2321,14 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
+			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+
 			var expr = Expression.Call(
 				null,
 				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
-				new[] { query.Expression, Expression.Constant(resetIdentity) });
+				new[] { currentQuery.Expression, Expression.Constant(resetIdentity) });
 
-			return query.Provider.Execute<int>(expr);
+			return currentQuery.Provider.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -2274,15 +2348,17 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr = Expression.Call(
 				null,
 				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
-				new[] { source.Expression, Expression.Constant(resetIdentity) });
+				new[] { currentSource.Expression, Expression.Constant(resetIdentity) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<int>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token);
 		}
 
 		#endregion
@@ -2413,11 +2489,13 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (index  == null) throw new ArgumentNullException(nameof(index));
 
-			return source.Provider.Execute<TSource>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<TSource>(
 				Expression.Call(
 					null,
 					_elementAtMethodInfo.MakeGenericMethod(typeof(TSource)),
-					new[] { source.Expression, Expression.Quote(index) }));
+					new[] { currentSource.Expression, Expression.Quote(index) }));
 		}
 
 		/// <summary>
@@ -2439,16 +2517,18 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (index  == null) throw new ArgumentNullException(nameof(index));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr =
 				Expression.Call(
 					null,
 					_elementAtMethodInfo.MakeGenericMethod(typeof(TSource)),
-					new[] { source.Expression, Expression.Quote(index) });
+					new[] { currentSource.Expression, Expression.Quote(index) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<TSource>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<TSource>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<TSource>(expr), token);
 		}
 
 		static readonly MethodInfo _elementAtOrDefaultMethodInfo = MemberHelper.MethodOf(() => ElementAtOrDefault<int>(null,null)).GetGenericMethodDefinition();
@@ -2468,11 +2548,13 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (index  == null) throw new ArgumentNullException(nameof(index));
 
-			return source.Provider.Execute<TSource>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<TSource>(
 				Expression.Call(
 					null,
 					_elementAtOrDefaultMethodInfo.MakeGenericMethod(typeof(TSource)),
-					new[] { source.Expression, Expression.Quote(index) }));
+					new[] { currentSource.Expression, Expression.Quote(index) }));
 		}
 
 		/// <summary>
@@ -2492,16 +2574,18 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (index  == null) throw new ArgumentNullException(nameof(index));
 
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
 			var expr =
 				Expression.Call(
 					null,
 					_elementAtOrDefaultMethodInfo.MakeGenericMethod(typeof(TSource)),
-					new[] { source.Expression, Expression.Quote(index) });
+					new[] { currentSource.Expression, Expression.Quote(index) });
 
-			if (source is IQueryProviderAsync query)
+			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<TSource>(expr, token);
 
-			return await TaskEx.Run(() => source.Provider.Execute<TSource>(expr), token);
+			return await TaskEx.Run(() => currentSource.Provider.Execute<TSource>(expr), token);
 		}
 
 		#endregion
@@ -2613,11 +2697,13 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return source.Provider.Execute<ContextParser.Context>(
+			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<ContextParser.Context>(
 				Expression.Call(
 					null,
 					SetMethodInfo8.MakeGenericMethod(typeof(TSource)),
-					source.Expression));
+					currentSource.Expression));
 		}
 
 		#endregion
@@ -2776,6 +2862,16 @@ namespace LinqToDB
 		{
 			return new ExpressionTestGenerator(mangleNames).GenerateSourceString(query.Expression);
 		}
+
+		#endregion
+
+		#region Queryable Helpers
+
+		/// <summary>
+		/// Gets or sets callback for preprocessing query before execution.
+		/// Useful for intercepting queries.
+		/// </summary>
+		public static Func<IQueryable, IQueryable> ProcessInputQueryable { get; set; } 
 
 		#endregion
 	}

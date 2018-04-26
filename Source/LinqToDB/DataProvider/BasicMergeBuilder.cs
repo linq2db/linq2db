@@ -1429,11 +1429,13 @@ namespace LinqToDB.DataProvider
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return source.Provider.Execute<MergeContextParser.Context>(
+			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.Execute<MergeContextParser.Context>(
 				Expression.Call(
 					null,
 					_methodInfo.MakeGenericMethod(typeof(TSource)),
-					new[] { source.Expression }));
+					new[] { currentSource.Expression }));
 		}
 	}
 
