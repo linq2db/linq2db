@@ -420,7 +420,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<double>(
 				Expression.Call(
@@ -462,7 +462,7 @@ namespace LinqToDB
 			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
 			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<Decimal>(
 				Expression.Call(
@@ -500,7 +500,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<long>(
 				Expression.Call(
@@ -547,7 +547,7 @@ namespace LinqToDB
 			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
 			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<Decimal>(
 				Expression.Call(
@@ -583,7 +583,7 @@ namespace LinqToDB
 			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
 			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<Decimal>(
 				Expression.Call(
@@ -686,7 +686,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<TV>(
 				Expression.Call(
@@ -724,7 +724,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<long>(
 				Expression.Call(
@@ -756,7 +756,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<TV>(
 				Expression.Call(
@@ -931,7 +931,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<double>(
 				Expression.Call(
@@ -971,7 +971,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
@@ -1003,7 +1003,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
@@ -1047,7 +1047,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
@@ -1079,7 +1079,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<decimal>(
 				Expression.Call(
@@ -1117,7 +1117,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<TV>(
 				Expression.Call(

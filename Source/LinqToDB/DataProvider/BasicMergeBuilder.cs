@@ -1429,7 +1429,7 @@ namespace LinqToDB.DataProvider
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = LinqExtensions.ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<MergeContextParser.Context>(
 				Expression.Call(

@@ -311,7 +311,7 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
@@ -331,7 +331,7 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -360,7 +360,7 @@ namespace LinqToDB
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
@@ -385,7 +385,7 @@ namespace LinqToDB
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -423,7 +423,7 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
@@ -452,7 +452,7 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -479,7 +479,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
@@ -504,7 +504,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -536,7 +536,7 @@ namespace LinqToDB
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 			if (setter    == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
@@ -564,7 +564,7 @@ namespace LinqToDB
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 			if (setter    == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -591,7 +591,7 @@ namespace LinqToDB
 
 			var query = ((Updatable<T>)source).Query;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
@@ -613,7 +613,7 @@ namespace LinqToDB
 
 			var q = ((Updatable<T>)source).Query;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(q) ?? q;
+			var currentQuery = ProcessSourceQueryable?.Invoke(q) ?? q;
 
 			var expr = Expression.Call(
 				null,
@@ -648,7 +648,7 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
@@ -678,7 +678,7 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -935,7 +935,7 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
@@ -962,7 +962,7 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -993,7 +993,7 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentQuery.Provider.Execute<object>(
 				Expression.Call(
@@ -1062,7 +1062,7 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -1304,7 +1304,7 @@ namespace LinqToDB
 
 			var query = ((ValueInsertable<T>)source).Query;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
@@ -1326,7 +1326,7 @@ namespace LinqToDB
 
 			var queryable = ((ValueInsertable<T>)source).Query;
 
-			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+			var currentQueryable = ProcessSourceQueryable?.Invoke(queryable) ?? queryable;
 
 			var expr = Expression.Call(
 				null,
@@ -1352,7 +1352,7 @@ namespace LinqToDB
 
 			var queryable = ((ValueInsertable<T>)source).Query;
 
-			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+			var currentQueryable = ProcessSourceQueryable?.Invoke(queryable) ?? queryable;
 
 			return currentQueryable.Provider.Execute<object>(
 				Expression.Call(
@@ -1408,7 +1408,7 @@ namespace LinqToDB
 
 			var queryable = ((ValueInsertable<T>)source).Query;
 
-			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+			var currentQueryable = ProcessSourceQueryable?.Invoke(queryable) ?? queryable;
 
 			var expr = Expression.Call(
 				null,
@@ -1489,7 +1489,7 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
@@ -1519,7 +1519,7 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -1554,7 +1554,7 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<object>(
 				Expression.Call(
@@ -1641,7 +1641,7 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr =
 				Expression.Call(
@@ -1871,7 +1871,7 @@ namespace LinqToDB
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
@@ -1895,7 +1895,7 @@ namespace LinqToDB
 
 			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
-			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+			var currentQueryable = ProcessSourceQueryable?.Invoke(queryable) ?? queryable;
 
 			var expr = Expression.Call(
 				null,
@@ -1923,7 +1923,7 @@ namespace LinqToDB
 
 			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
-			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+			var currentQueryable = ProcessSourceQueryable?.Invoke(queryable) ?? queryable;
 
 			return currentQueryable.Provider.Execute<object>(
 				Expression.Call(
@@ -1986,7 +1986,7 @@ namespace LinqToDB
 
 			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
-			var currentQueryable = ProcessInputQueryable?.Invoke(queryable) ?? queryable;
+			var currentQueryable = ProcessSourceQueryable?.Invoke(queryable) ?? queryable;
 
 			var expr = Expression.Call(
 				null,
@@ -2075,7 +2075,7 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
@@ -2108,7 +2108,7 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -2150,7 +2150,7 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
@@ -2190,7 +2190,7 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -2228,7 +2228,7 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			var expr = Expression.Call(
 				null,
@@ -2271,7 +2271,7 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 					null,
@@ -2321,7 +2321,7 @@ namespace LinqToDB
 
 			IQueryable<T> query = target;
 
-			var currentQuery = ProcessInputQueryable?.Invoke(query) ?? query;
+			var currentQuery = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			var expr = Expression.Call(
 				null,
@@ -2348,7 +2348,7 @@ namespace LinqToDB
 
 			IQueryable<T> source = target;
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr = Expression.Call(
 				null,
@@ -2489,7 +2489,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (index  == null) throw new ArgumentNullException(nameof(index));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<TSource>(
 				Expression.Call(
@@ -2517,7 +2517,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (index  == null) throw new ArgumentNullException(nameof(index));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr =
 				Expression.Call(
@@ -2548,7 +2548,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (index  == null) throw new ArgumentNullException(nameof(index));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<TSource>(
 				Expression.Call(
@@ -2574,7 +2574,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (index  == null) throw new ArgumentNullException(nameof(index));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var expr =
 				Expression.Call(
@@ -2697,7 +2697,7 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = ProcessInputQueryable?.Invoke(source) ?? source;
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			return currentSource.Provider.Execute<ContextParser.Context>(
 				Expression.Call(
@@ -2871,7 +2871,7 @@ namespace LinqToDB
 		/// Gets or sets callback for preprocessing query before execution.
 		/// Useful for intercepting queries.
 		/// </summary>
-		public static Func<IQueryable, IQueryable> ProcessInputQueryable { get; set; } 
+		public static Func<IQueryable, IQueryable> ProcessSourceQueryable { get; set; } 
 
 		#endregion
 	}
