@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
@@ -226,8 +226,8 @@ namespace LinqToDB.Mapping
 			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
 			if (otherKey == null) throw new ArgumentNullException(nameof(otherKey));
 
-			var thisKeyName  = ((MemberExpression)thisKey.Body).Member.Name;
-			var otherKeyName = ((MemberExpression)otherKey.Body).Member.Name;
+			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
+			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
 			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
@@ -448,6 +448,27 @@ namespace LinqToDB.Mapping
 		}
 
 		internal EntityMappingBuilder<T> SetAttribute<TA>(
+			Func<TA> getNew,
+			Action<TA> modifyExisting,
+			Func<TA, string> configGetter,
+			Func<IEnumerable<TA>, TA> existingGetter)
+			where TA : Attribute
+		{
+			var attr = existingGetter(GetAttributes(typeof(T), configGetter));
+
+			if (attr == null)
+			{
+				_builder.HasAttribute(typeof(T), getNew());
+			}
+			else
+			{
+				modifyExisting(attr);
+			}
+
+			return this;
+		}
+
+		internal EntityMappingBuilder<T> SetAttribute<TA>(
 			Expression<Func<T,object>> func,
 			bool                       processNewExpression,
 			Func<bool,TA>              getNew,
@@ -466,17 +487,13 @@ namespace LinqToDB.Mapping
 			if (existingGetter == null)
 				existingGetter = GetExisting;
 
-			Action<Expression,bool> setAttr = (e,m) =>
+			void SetAttr(Expression e, bool m)
 			{
-				var memberInfo =
-					e is MemberExpression     ? ((MemberExpression)    e).Member :
-					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
+				var memberInfo = MemberHelper.GetMemberInfo(e);
 
-				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T))
-					memberInfo = typeof(T).GetMemberEx(memberInfo);
+				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T)) memberInfo = typeof(T).GetMemberEx(memberInfo);
 
-				if (memberInfo == null)
-					throw new ArgumentException($"'{e}' cant be converted to a class member.");
+				if (memberInfo == null) throw new ArgumentException($"'{e}' cant be converted to a class member.");
 
 				var attr = existingGetter(GetAttributes(memberInfo, configGetter));
 
@@ -501,7 +518,7 @@ namespace LinqToDB.Mapping
 				}
 				else
 					modifyExisting(m, attr);
-			};
+			}
 
 			if (processNewExpression && ex.NodeType == ExpressionType.New)
 			{
@@ -510,12 +527,12 @@ namespace LinqToDB.Mapping
 				if (nex.Arguments.Count > 0)
 				{
 					foreach (var arg in nex.Arguments)
-						setAttr(arg, true);
+						SetAttr(arg, true);
 					return this;
 				}
 			}
 
-			setAttr(ex, false);
+			SetAttr(ex, false);
 
 			return this;
 		}

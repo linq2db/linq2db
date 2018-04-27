@@ -409,7 +409,27 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Call:
 						{
-							var cm = ConvertMethod((MethodCallExpression)e);
+							var expr = (MethodCallExpression)e;
+
+							if (expr.Method.IsSqlPropertyMethodEx())
+							{
+								// transform Sql.Property into member access
+								if (expr.Arguments[1].Type != typeof(string))
+									throw new ArgumentException("Only strings are alowed for member name in Sql.Property expressions.");
+
+								var entity           = ConvertExpression(expr.Arguments[0]);
+								var memberName       = (string)expr.Arguments[1].EvaluateExpression();
+								var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
+
+								var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
+									                 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
+								if (memberInfo == null)
+									memberInfo = MemberHelper.GetMemberInfo(expr);
+
+								return new TransformInfo(ConvertExpression(Expression.MakeMemberAccess(entity, memberInfo)));
+							}
+
+							var cm = ConvertMethod(expr);
 							if (cm != null)
 								return new TransformInfo(ConvertExpression(cm));
 							break;
@@ -934,6 +954,9 @@ namespace LinqToDB.Linq.Builder
 
 							return Convert(context, attr.GetExpression(e.Method, parms.ToArray()));
 						}
+
+						if (e.Method.IsSqlPropertyMethodEx())
+							return ConvertToSql(context, ConvertExpression(expression), unwrap);
 
 						break;
 					}
@@ -1668,19 +1691,31 @@ namespace LinqToDB.Linq.Builder
 						var origValue = Enum.Parse(type, name, false);
 
 						if (!dic.TryGetValue(origValue, out var mapValue))
-							mapValue = ((ConstantExpression)value).Value;
+							mapValue = origValue;
 
 						ISqlExpression l, r;
+
+						SqlValue sqlvalue;
+						var ce = MappingSchema.GetConverter(type, typeof(DataParameter), false);
+
+						if (ce != null)
+						{
+							sqlvalue = new SqlValue(ce.ConvertValueToParameter(origValue).Value);
+						}
+						else
+						{
+							sqlvalue = MappingSchema.GetSqlValue(type, mapValue);
+						}
 
 						if (left.NodeType == ExpressionType.Convert)
 						{
 							l = ConvertToSql(context, operand);
-							r = MappingSchema.GetSqlValue(type, mapValue);
+							r = sqlvalue;
 						}
 						else
 						{
 							r = ConvertToSql(context, operand);
-							l = MappingSchema.GetSqlValue(type, mapValue);
+							l = sqlvalue;
 						}
 
 						return Convert(context, new SqlPredicate.ExprExpr(l, op, r));
@@ -1964,13 +1999,6 @@ namespace LinqToDB.Linq.Builder
 			BuildParameterType  buildParameterType = BuildParameterType.Default)
 		{
 			var type        = accessorExpression.Type;
-			var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
-
-			if (defaultType != null)
-			{
-				var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
-				accessorExpression = enumMapExpr.GetBody(accessorExpression);
-			}
 
 			LambdaExpression expr = null;
 			if (buildParameterType != BuildParameterType.InPredicate)
@@ -1982,6 +2010,16 @@ namespace LinqToDB.Linq.Builder
 
 				accessorExpression         = Expression.PropertyOrField(body, "Value");
 				dataTypeAccessorExpression = Expression.PropertyOrField(body, "DataType");
+			}
+			else
+			{
+				var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
+
+				if (defaultType != null)
+				{
+					var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
+					accessorExpression = enumMapExpr.GetBody(accessorExpression);
+				}
 			}
 
 			// see #820
@@ -2330,7 +2368,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return Convert(table, new SqlPredicate.Expr(new SqlValue(true)));
 
-			var mapping = table.InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m.Type == typeOperand && !m.m.IsDefault).ToList();
+			var mapping = table.InheritanceMapping.Select((m, i) => new { m, i }).Where(m => typeOperand.IsAssignableFrom(m.m.Type) && !m.m.IsDefault).ToList();
 			var isEqual = true;
 
 			if (mapping.Count == 0)
@@ -2362,7 +2400,10 @@ namespace LinqToDB.Linq.Builder
 
 				var e = isEqual ? Expression.Equal(left, right) : Expression.NotEqual(left, right);
 
-				expr = expr != null ? Expression.AndAlso(expr, e) : e;
+				if (!isEqual)
+					expr = expr != null ? Expression.AndAlso(expr, e) : e;
+				else
+					expr = expr != null ? Expression.OrElse(expr, e) : e;
 			}
 
 			return ConvertPredicate(context, expr);

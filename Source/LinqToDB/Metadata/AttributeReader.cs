@@ -34,5 +34,9 @@ namespace LinqToDB.Metadata
 
 			return arr;
 		}
+
+		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
+		public MemberInfo[] GetDynamicColumns(Type type)
+			=> new MemberInfo[0];
 	}
 }

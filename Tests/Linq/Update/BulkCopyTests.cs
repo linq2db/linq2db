@@ -3,6 +3,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Tests.Model;
 
@@ -13,17 +14,14 @@ namespace Tests.xUpdate
 	public class BulkCopyTests : TestBase
 	{
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
-		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class TestTable1
 		{
 			[Identity]
-			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
-			[Column("intdatatype", Configuration = ProviderName.PostgreSQL)]
 			public int Value { get; set; }
 
 			[Column("bitDataType", Configuration = ProviderName.Sybase)]
@@ -31,17 +29,14 @@ namespace Tests.xUpdate
 		}
 
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
-		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class TestTable2
 		{
 			[Identity, Column(SkipOnInsert = true)]
-			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int ID { get; set; }
 
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
-			[Column("intdatatype", Configuration = ProviderName.PostgreSQL)]
 			public int Value { get; set; }
 
 			[Column("bitDataType", Configuration = ProviderName.Sybase)]
@@ -56,6 +51,7 @@ namespace Tests.xUpdate
 		{
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable2());
 				try
@@ -117,12 +113,16 @@ namespace Tests.xUpdate
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType)
 		{
+			List<TestTable1> list = null;
+
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using (var db = new TestDataConnection(context))
+			//using (db.BeginTransaction())
 			{
 				var lastId = db.InsertWithInt32Identity(new TestTable1());
 				try
 				{
+					list = db.GetTable<TestTable1>().ToList();
 					db.GetTable<TestTable1>().Delete();
 
 					var options = new BulkCopyOptions()
@@ -172,6 +172,9 @@ namespace Tests.xUpdate
 				{
 					// cleanup
 					db.GetTable<TestTable2>().Delete(_ => _.ID >= lastId);
+					if (list != null)
+						foreach (var item in list)
+							db.Insert(item);
 				}
 			}
 		}

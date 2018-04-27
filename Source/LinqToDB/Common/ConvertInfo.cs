@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using LinqToDB.Data;
 
 namespace LinqToDB.Common
 {
@@ -28,6 +29,25 @@ namespace LinqToDB.Common
 			public LambdaExpression CheckNullLambda;
 			public Delegate         Delegate;
 			public bool             IsSchemaSpecific;
+
+			private Func<object, DataParameter> _convertValueToParameter = null;
+			public Func<object, DataParameter> ConvertValueToParameter
+			{
+				get
+				{
+					if (_convertValueToParameter == null)
+					{
+						var type = this.Lambda.Parameters[0].Type;
+						var parameterExpression = Expression.Parameter(typeof(object));
+						var lambdaExpression = Expression.Lambda<Func<object, DataParameter>>(
+							Expression.Invoke(this.Lambda, Expression.Convert(parameterExpression, type)), parameterExpression);
+						var convertFunc = lambdaExpression.Compile();
+						_convertValueToParameter = convertFunc;
+					}
+
+					return _convertValueToParameter;
+				}
+			}
 		}
 
 		readonly ConcurrentDictionary<Type,ConcurrentDictionary<Type,LambdaInfo>> _expressions =

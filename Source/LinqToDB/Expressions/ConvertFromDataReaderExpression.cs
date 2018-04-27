@@ -151,7 +151,15 @@ namespace LinqToDB.Expressions
 					_columnConverters[fromType] = func = lex.Compile();
 				}
 
-				return func(dataReader);
+				try
+				{
+					return func(dataReader);
+				}
+				catch (Exception ex)
+				{
+					var name = dataReader.GetName(_columnIndex);
+					throw new LinqToDBException($"Mapping of column {name} value failed, see inner exception for details", ex);
+				}
 
 				/*
 				var value = dataReader.GetValue(_columnIndex);

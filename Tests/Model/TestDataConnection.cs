@@ -6,16 +6,19 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace Tests.Model
 {
 	public class TestDataConnection : DataConnection, ITestDataContext
 	{
+		//static int _counter;
+
 		public TestDataConnection(string configString)
 			: base(configString)
 		{
-//			if (configString == ProviderName.MySql)
+//			if (configString == ProviderName.SqlServer2008 && ++_counter > 1000)
 //				OnClosing += TestDataConnection_OnClosing;
 		}
 
@@ -23,17 +26,21 @@ namespace Tests.Model
 		{
 		}
 
+		static object _sync = new object();
+
+		[Table("AllTypes")]
+		class AllTypes
+		{
+			[Column("ID")] public int ID;
+		}
+
 		void TestDataConnection_OnClosing(object sender, EventArgs e)
 		{
-			using (var db = new DataConnection(ProviderName.MySql))
+			lock (_sync)
+			using (var db = new DataConnection(ProviderName.SqlServer2008))
 			{
-				var name =
-				(
-					from p in db.GetTable<Person>()
-					select p.FirstName
-				).First();
-
-				if (string.IsNullOrEmpty(name))
+				var n = db.GetTable<AllTypes>().Count();
+				if (n == 0)
 				{
 				}
 			}

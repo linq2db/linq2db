@@ -14,9 +14,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool NeedsIdentity(this SqlStatement statement)
 		{
-			return
-				statement.QueryType == QueryType.Insert && ((SqlInsertStatement)statement).Insert.WithIdentity ||
-				statement.QueryType == QueryType.InsertOrUpdate;
+			return statement.QueryType == QueryType.Insert && ((SqlInsertStatement)statement).Insert.WithIdentity;
 		}
 
 		public static bool IsUpdate(this SqlStatement statement)
