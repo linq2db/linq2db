@@ -25,7 +25,6 @@ namespace Tests._Create
 	{
 		static void RunScript(string configString, string divider, string name, Action<IDbConnection> action = null)
 		{
-			Assert.Fail("let's just fail");
 			Console.WriteLine("=== " + name + " === \n");
 
 			var scriptFolder = Path.Combine(Path.GetFullPath("."), "Database", "Create Scripts");
