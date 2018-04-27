@@ -68,6 +68,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: [Oracle, Firebird] Support escaping of identifiers that use reserved words (#1110, #1095)
 - fix: Improved support for mappings to interfaces (#1099)
 - fix: [MSSQL] DateTime string literal generation fix (#1107)
+- fix: Fixed T4 templates to work with .NET Core projects out-of-box using nuget package (#1067)
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)

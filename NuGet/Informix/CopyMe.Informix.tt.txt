@@ -1,7 +1,9 @@
 <#@ template language="C#" debug="True" hostSpecific="True"                          #>
 <#@ output extension=".generated.cs"                                                 #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Informix.Tools.ttinclude" #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"    #>
+<#@ include file="$(LinqToDBT4InformixTemplatesDirectory)LinqToDB.Informix.Tools.ttinclude" #>
+<#@ include file="$(LinqToDBT4InformixTemplatesDirectory)PluralizationService.ttinclude"    #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Informix.Tools.ttinclude" #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"    #>
 <#
 	/*
 		1. Download and install IBM Data Server Provider for .NET.
