@@ -19,7 +19,7 @@ namespace LinqToDB.SqlProvider
 			BaseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
 		}
 
-		internal void SetDefauls()
+		internal void SetDefaults()
 		{
 			SetConverter(typeof(Boolean),    (sb,dt,v) => sb.Append((bool)v       ? "1" : "0"));
 			SetConverter(typeof(Char),       (sb,dt,v) => BuildChar(sb, (char)  v));

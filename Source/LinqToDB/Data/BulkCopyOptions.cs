@@ -2,6 +2,9 @@
 
 namespace LinqToDB.Data
 {
+	/// <summary>
+	/// Defines behavior of <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, BulkCopyOptions, System.Collections.Generic.IEnumerable{T})"/> method.
+	/// </summary>
 	public class BulkCopyOptions
 	{
 		/// <summary>Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server.</summary>
@@ -27,12 +30,32 @@ namespace LinqToDB.Data
 		public bool?        FireTriggers           { get; set; }
 		public bool?        UseInternalTransaction { get; set; }
 
+		/// <summary>
+		/// Gets or sets explicit name of target database instead of one, configured for copied entity in mapping schema.
+		/// See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
 		public string       DatabaseName           { get; set; }
+		/// <summary>
+		/// Gets or sets explicit name of target schema/owner instead of one, configured for copied entity in mapping schema.
+		/// See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
+		/// </summary>
 		public string       SchemaName             { get; set; }
+		/// <summary>
+		/// Gets or sets explicit name of target table instead of one, configured for copied entity in mapping schema.
+		/// </summary>
 		public string       TableName              { get; set; }
 
+		/// <summary>
+		/// Gets or sets counter after how many copied records <see cref="RowsCopiedCallback"/> should be called.
+		/// E.g. if you set it to 10, callback will be called after each 10 copied records.
+		/// To disable callback, set this option to 0 (default value).
+		/// </summary>
 		public int          NotifyAfter            { get; set; }
 
+		/// <summary>
+		/// Gets or sets callback method that will be called by BulkCopy operation after each <see cref="NotifyAfter"/> rows copied.
+		/// This callback will not be used if <see cref="NotifyAfter"/> set to 0.
+		/// </summary>
 		public Action<BulkCopyRowsCopied> RowsCopiedCallback { get; set; }
 	}
 }

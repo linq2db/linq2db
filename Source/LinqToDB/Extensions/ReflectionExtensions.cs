@@ -570,6 +570,19 @@ namespace LinqToDB.Extensions
 			return Nullable.GetUnderlyingType(type) ?? type;
 		}
 
+		/// <summary>
+		/// Wraps type into <see cref="Nullable{T}"/> class.
+		/// </summary>
+		/// <param name="type">Value type to wrap.</param>
+		/// <returns>Type, wrapped by <see cref="Nullable{T}"/>.</returns>
+		public static Type AsNullable([NotNull] this Type type)
+		{
+			if (type == null)          throw new ArgumentNullException("type");
+			if (!type.IsValueTypeEx()) throw new ArgumentException($"{type} is not a value type");
+
+			return typeof(Nullable<>).MakeGenericType(type);
+		}
+
 		public static IEnumerable<Type> GetDefiningTypes(this Type child, MemberInfo member)
 		{
 			if (member.IsPropertyEx())
