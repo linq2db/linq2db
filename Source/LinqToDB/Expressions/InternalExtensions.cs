@@ -1014,6 +1014,9 @@ namespace LinqToDB.Expressions
 
 		public static object EvaluateExpression(this Expression expr)
 		{
+			if (expr == null)
+				return null;
+
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Constant:

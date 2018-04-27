@@ -177,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 					if (member.MemberInfo.IsDynamicColumnPropertyEx())
 					{
 						var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
-						var setter = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
+						var setter  = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
 
 						exprs.Add(Expression.Invoke(setter, parentObject, ex));
 					}
@@ -1152,6 +1152,27 @@ namespace LinqToDB.Linq.Builder
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
+
+								if (memberExpression.Member.IsDynamicColumnPropertyEx())
+								{
+									var fieldName = memberExpression.Member.Name;
+
+									// do not add association columns
+									if (!EntityDescriptor.Associations.Any(a => a.MemberInfo == memberExpression.Member))
+									{
+										if (!SqlTable.Fields.TryGetValue(fieldName, out var newField))
+										{
+											newField = new SqlField();
+											newField.Name             = fieldName;
+											newField.PhysicalName     = fieldName;
+											newField.ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
+												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member));
+											SqlTable.Add(newField);
+										}
+
+										return newField;
+									}
+								}
 
 							}
 
