@@ -20,6 +20,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: [PostgreSQL] Added support for native INSERT ON CONFLICT UPDATE statement for InsertOrUpdate operation for PostgreSQL 9.5+ (#948)
 - feature: [PostgreSQL][BulkCopy] Provider-specific copy method implemented (#935)
 - feature: Added IQueryable interceptor callback. This feature could be used to attach linq2db to other IQueryable providers (#1116)
+- feature: Extra overrides to Join* extensions that accept two queryable sources, join predicate and result selector expression (#1076, #1088)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)

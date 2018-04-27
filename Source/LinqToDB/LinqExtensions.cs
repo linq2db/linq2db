@@ -2734,16 +2734,63 @@ namespace LinqToDB
 		public static IQueryable<TSource> Join<TSource>(
 			[NotNull]           this IQueryable<TSource>        source,
 			[SqlQueryDependent] SqlJoinType                     joinType,
-			[CanBeNull]         Expression<Func<TSource, bool>> predicate)
+			[NotNull]           Expression<Func<TSource, bool>> predicate)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
 			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Join, source, joinType, predicate),
-					new[] {source.Expression, Expression.Constant(joinType), predicate != null ? Expression.Quote(predicate) : null}));
+					new[]
+					{
+						source.Expression, 
+						Expression.Constant(joinType), 
+						Expression.Quote(predicate)
+					}));
 		}
+
+		/// <summary>
+		/// Defines inner or outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TOuter">Type of record for left join operand.</typeparam>
+		/// <typeparam name="TInner">Type of record for right join operand.</typeparam>
+		/// <typeparam name="TResult">The type of the result elements.</typeparam>
+		/// <param name="outer">Left join operand.</param>
+		/// <param name="inner">Right join operand.</param>
+		/// <param name="joinType">Type of join.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <param name="resultSelector">A function to create a result element from two matching elements.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TResult> Join<TOuter, TInner, TResult>(
+			[NotNull]           this IQueryable<TOuter>                   outer,
+			[NotNull]           IQueryable<TInner>                        inner,
+			[SqlQueryDependent] SqlJoinType                               joinType,
+			[NotNull]           Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull]           Expression<Func<TOuter, TInner, TResult>> resultSelector)
+		{
+			if (outer          == null) throw new ArgumentNullException(nameof(outer));
+			if (inner          == null) throw new ArgumentNullException(nameof(inner));
+			if (predicate      == null) throw new ArgumentNullException(nameof(predicate));
+			if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+
+			return outer.Provider.CreateQuery<TResult>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(Join, outer, inner, joinType, predicate, resultSelector),
+					new[]
+					{
+						outer.Expression, 
+						inner.Expression, 
+						Expression.Constant(joinType),
+						Expression.Quote(predicate), 
+						Expression.Quote(resultSelector)
+					}));
+		}
+
 
 		/// <summary>
 		/// Defines inner join between two sub-queries or tables.
@@ -2755,10 +2802,32 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> InnerJoin<TSource>(
-			[NotNull]   this IQueryable<TSource>        source,
-			[CanBeNull] Expression<Func<TSource, bool>> predicate)
+			[NotNull] this IQueryable<TSource>        source,
+			[NotNull] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Inner, predicate);
+		}
+
+		/// <summary>
+		/// Defines inner or outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TOuter">Type of record for left join operand.</typeparam>
+		/// <typeparam name="TInner">Type of record for right join operand.</typeparam>
+		/// <typeparam name="TResult">The type of the result elements.</typeparam>
+		/// <param name="outer">Left join operand.</param>
+		/// <param name="inner">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <param name="resultSelector">A function to create a result element from two matching elements.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TResult> InnerJoin<TOuter, TInner, TResult>(
+			[NotNull] this IQueryable<TOuter>                   outer,
+			[NotNull] IQueryable<TInner>                        inner,
+			[NotNull] Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+		{
+			return Join(outer, inner, SqlJoinType.Inner, predicate, resultSelector);
 		}
 
 		/// <summary>
@@ -2771,10 +2840,32 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> LeftJoin<TSource>(
-			[NotNull]   this IQueryable<TSource>        source,
-			[CanBeNull] Expression<Func<TSource, bool>> predicate)
+			[NotNull] this IQueryable<TSource>        source,
+			[NotNull] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Left, predicate);
+		}
+
+		/// <summary>
+		/// Defines left outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TOuter">Type of record for left join operand.</typeparam>
+		/// <typeparam name="TInner">Type of record for right join operand.</typeparam>
+		/// <typeparam name="TResult">The type of the result elements.</typeparam>
+		/// <param name="outer">Left join operand.</param>
+		/// <param name="inner">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <param name="resultSelector">A function to create a result element from two matching elements.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TResult> LeftJoin<TOuter, TInner, TResult>(
+			[NotNull] this IQueryable<TOuter>                   outer,
+			[NotNull] IQueryable<TInner>                        inner,
+			[NotNull] Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+		{
+			return Join(outer, inner, SqlJoinType.Left, predicate, resultSelector);
 		}
 
 		/// <summary>
@@ -2787,10 +2878,32 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> RightJoin<TSource>(
-			[NotNull]   this IQueryable<TSource>        source,
-			[CanBeNull] Expression<Func<TSource, bool>> predicate)
+			[NotNull] this IQueryable<TSource>        source,
+			[NotNull] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Right, predicate);
+		}
+
+		/// <summary>
+		/// Defines right outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TOuter">Type of record for left join operand.</typeparam>
+		/// <typeparam name="TInner">Type of record for right join operand.</typeparam>
+		/// <typeparam name="TResult">The type of the result elements.</typeparam>
+		/// <param name="outer">Left join operand.</param>
+		/// <param name="inner">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <param name="resultSelector">A function to create a result element from two matching elements.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TResult> RightJoin<TOuter, TInner, TResult>(
+			[NotNull] this IQueryable<TOuter>                   outer,
+			[NotNull] IQueryable<TInner>                        inner,
+			[NotNull] Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+		{
+			return Join(outer, inner, SqlJoinType.Right, predicate, resultSelector);
 		}
 
 		/// <summary>
@@ -2803,10 +2916,65 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> FullJoin<TSource>(
-			[NotNull]   this IQueryable<TSource>        source,
-			[CanBeNull] Expression<Func<TSource, bool>> predicate)
+			[NotNull] this IQueryable<TSource>        source,
+			[NotNull] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Full, predicate);
+		}
+
+		/// <summary>
+		/// Defines full outer join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TOuter">Type of record for left join operand.</typeparam>
+		/// <typeparam name="TInner">Type of record for right join operand.</typeparam>
+		/// <typeparam name="TResult">The type of the result elements.</typeparam>
+		/// <param name="outer">Left join operand.</param>
+		/// <param name="inner">Right join operand.</param>
+		/// <param name="predicate">Join predicate.</param>
+		/// <param name="resultSelector">A function to create a result element from two matching elements.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TResult> FullJoin<TOuter, TInner, TResult>(
+			[NotNull] this IQueryable<TOuter>                   outer,
+			[NotNull] IQueryable<TInner>                        inner,
+			[NotNull] Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+		{
+			return Join(outer, inner, SqlJoinType.Full, predicate, resultSelector);
+		}
+
+		/// <summary>
+		/// Defines cross join between two sub-queries or tables.
+		/// </summary>
+		/// <typeparam name="TOuter">Type of record for left join operand.</typeparam>
+		/// <typeparam name="TInner">Type of record for right join operand.</typeparam>
+		/// <typeparam name="TResult">The type of the result elements.</typeparam>
+		/// <param name="outer">Left join operand.</param>
+		/// <param name="inner">Right join operand.</param>
+		/// <param name="resultSelector">A function to create a result element from two matching elements.</param>
+		/// <returns>Right operand.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TResult> CrossJoin<TOuter, TInner, TResult>(
+			[NotNull] this IQueryable<TOuter>                   outer,
+			[NotNull] IQueryable<TInner>                        inner,
+			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+		{
+			if (outer          == null) throw new ArgumentNullException(nameof(outer));
+			if (inner          == null) throw new ArgumentNullException(nameof(inner));
+			if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+
+			return outer.Provider.CreateQuery<TResult>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(CrossJoin, outer, inner, resultSelector),
+					new[]
+					{
+						outer.Expression, 
+						inner.Expression, 
+						Expression.Quote(resultSelector)
+					}));
 		}
 
 		#endregion

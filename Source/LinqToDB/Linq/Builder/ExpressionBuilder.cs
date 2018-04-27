@@ -31,6 +31,7 @@ namespace LinqToDB.Linq.Builder
 			new GroupByBuilder             (),
 			new JoinBuilder                (),
 			new AllJoinsBuilder            (),
+			new AllJoinsLinqBuilder        (),
 			new TakeSkipBuilder            (),
 			new DefaultIfEmptyBuilder      (),
 			new DistinctBuilder            (),
