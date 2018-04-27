@@ -1379,11 +1379,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var expected = from p in Parent.Where(p => p.ParentID > 0).Take(10)
-						.SqlJoinInternal(Child, SqlJoinType.Inner, (p, c) => true, (p, c) => new { p, c })
+						.SqlJoinInternal(Child.Take(10), SqlJoinType.Inner, (p, c) => true, (p, c) => new { p, c })
 					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
 
 				var actual = db.Parent.Where(p => p.ParentID > 0).Take(10)
-					.CrossJoin(db.Child, (p, c) => new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID });
+					.CrossJoin(db.Child.Take(10), (p, c) => new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID });
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));

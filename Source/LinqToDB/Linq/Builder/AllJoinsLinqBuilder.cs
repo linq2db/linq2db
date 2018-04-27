@@ -23,11 +23,7 @@ namespace LinqToDB.Linq.Builder
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			outerContext = new SubQueryContext(outerContext);
-
-			if (innerContext.SelectQuery.Select.IsDistinct ||
-				innerContext.SelectQuery.Select.TakeValue != null ||
-				innerContext.SelectQuery.Select.SkipValue != null)
-				innerContext = new SubQueryContext(innerContext);
+			innerContext = new SubQueryContext(innerContext);
 
 			var selector = (LambdaExpression)methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap();
 

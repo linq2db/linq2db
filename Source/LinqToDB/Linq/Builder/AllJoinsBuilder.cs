@@ -19,6 +19,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
+			sequence = new SubQueryContext(sequence);
+
 			JoinType joinType;
 			var conditionIndex = 1;
 
@@ -50,11 +52,6 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.Arguments[conditionIndex] != null)
 			{
 				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
-
-				if (sequence.SelectQuery.Select.IsDistinct ||
-					sequence.SelectQuery.Select.TakeValue != null ||
-					sequence.SelectQuery.Select.SkipValue != null)
-					sequence = new SubQueryContext(sequence);
 
 				var result = builder.BuildWhere(buildInfo.Parent, sequence, condition, false, false);
 
