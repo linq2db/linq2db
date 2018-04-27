@@ -233,7 +233,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var position = StringBuilder.Length;
 
-			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert);
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, false);
 
 			if (insertOrUpdate.Update.Items.Count > 0)
 			{

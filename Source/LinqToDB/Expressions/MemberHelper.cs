@@ -39,7 +39,7 @@ namespace LinqToDB.Expressions
 		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
 		public static MemberInfo GetMemberInfo(Expression expr)
 		{
-			while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked)
+			while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked || expr.NodeType == ExpressionType.TypeAs)
 				expr = ((UnaryExpression)expr).Operand;
 
 			if (expr.NodeType == ExpressionType.New)
@@ -52,10 +52,10 @@ namespace LinqToDB.Expressions
 					? ((UnaryExpression)methodCall.Arguments[0]).Operand
 					: methodCall.Arguments[0];
 
-				if (arg1.NodeType != ExpressionType.Constant && arg1.NodeType != ExpressionType.Parameter || methodCall.Arguments[1].NodeType != ExpressionType.Constant)
+				if (arg1.NodeType != ExpressionType.Constant && arg1.NodeType != ExpressionType.Parameter)
 					throw new ArgumentException("Only simple, non-navigational, member names are supported in this context (e.g.: x => Sql.Property(x, \"SomeProperty\")).");
 
-				var memberName = (string)((ConstantExpression)methodCall.Arguments[1]).Value;
+				var memberName = (string)methodCall.Arguments[1].EvaluateExpression();
 
 				// check if member exists on type
 				var existingMember = TypeAccessor.GetAccessor(arg1.Type).Members.SingleOrDefault(m =>
@@ -99,13 +99,13 @@ namespace LinqToDB.Expressions
 		public static MethodInfo MethodOf<T>(Expression<Func<T,object>> func)
 		{
 			var mi = GetMemberInfo(func);
-			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethodEx() : (MethodInfo)mi;
+			return mi is PropertyInfo info ? info.GetGetMethodEx() : (MethodInfo)mi;
 		}
 
 		public static MethodInfo MethodOf(Expression<Func<object>> func)
 		{
 			var mi = GetMemberInfo(func);
-			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethodEx() : (MethodInfo)mi;
+			return mi is PropertyInfo info ? info.GetGetMethodEx() : (MethodInfo)mi;
 		}
 
 		public static ConstructorInfo ConstructorOf<T>(Expression<Func<T,object>> func)

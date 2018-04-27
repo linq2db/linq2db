@@ -66,7 +66,7 @@ public class ConnectionStringSettings : IConnectionStringSettings
 
 public class MySettings : ILinqToDBSettings
 {
-    public IEnumerable<IDataProviderSettings> DataProviders => yield break;
+    public IEnumerable<IDataProviderSettings> DataProviders => Enumerable.Empty<IDataProviderSettings>();
 
     public string DefaultConfiguration => "SqlServer";
     public string DefaultDataProvider => "SqlServer";
@@ -88,7 +88,7 @@ public class MySettings : ILinqToDBSettings
 
 ```
 
-And later just set:
+And later just set on program startup before the first query is done (Startup.cs for example):
 
 ```cs
 DataConnection.DefaultSettings = new MySettings();

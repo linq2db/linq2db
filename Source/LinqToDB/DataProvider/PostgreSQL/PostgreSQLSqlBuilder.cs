@@ -2,15 +2,27 @@
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Net;
+using System.Net.NetworkInformation;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
 	using SqlQuery;
 	using SqlProvider;
+	using System.Globalization;
+	using LinqToDB.Extensions;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
+		private readonly PostgreSQLDataProvider _provider;
+		public PostgreSQLSqlBuilder(PostgreSQLDataProvider provider, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: this(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
+		{
+			_provider = provider;
+		}
+
+		// used by linq service
 		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
@@ -51,7 +63,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new PostgreSQLSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
+			return new PostgreSQLSqlBuilder(_provider, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -70,7 +82,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");       break;
-				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");  break;
+				case DataType.Money         : StringBuilder.Append("money");          break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");  break;
 				case DataType.DateTime2     :
 				case DataType.SmallDateTime :
@@ -80,7 +92,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 					if (type.Length > 0)
-						StringBuilder.Append('(').Append(type.Length).Append(')');
+						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
 					break;
 				case DataType.Undefined      :
 					if (type.Type == typeof(string))
@@ -89,6 +101,45 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
 				case DataType.Guid           : StringBuilder.Append("uuid");           break;
+				case DataType.VarBinary      : StringBuilder.Append("bytea");          break;
+				case DataType.BitArray       :
+					if (type.Length == 1)
+						StringBuilder.Append("bit");
+					if (type.Length > 1)
+						StringBuilder.Append("bit(").Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+					else
+						StringBuilder.Append("bit varying");
+					break;
+				case DataType.NChar          :
+					StringBuilder.Append("character");
+					if (type.Length > 1) // this is correct condition
+						StringBuilder.Append('(').Append(type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+					break;
+				case DataType.Udt            :
+					if (type.Type != null)
+					{
+						var udtType = type.Type.ToNullableUnderlying();
+
+						if      (udtType == _provider.NpgsqlPointType)    StringBuilder.Append("point");
+						else if (udtType == _provider.NpgsqlLineType)     StringBuilder.Append("line");
+						else if (udtType == _provider.NpgsqlBoxType)      StringBuilder.Append("box");
+						else if (udtType == _provider.NpgsqlLSegType)     StringBuilder.Append("lseg");
+						else if (udtType == _provider.NpgsqlCircleType)   StringBuilder.Append("circle");
+						else if (udtType == _provider.NpgsqlPolygonType)  StringBuilder.Append("polygon");
+						else if (udtType == _provider.NpgsqlPathType)     StringBuilder.Append("path");
+						else if (udtType == _provider.NpgsqlIntervalType) StringBuilder.Append("interval");
+						else if (udtType == _provider.NpgsqlDateType)     StringBuilder.Append("date");
+						else if (udtType == _provider.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
+						else if (udtType == typeof(IPAddress))            StringBuilder.Append("inet");
+						else if (udtType == typeof(PhysicalAddress)
+							&& !_provider.HasMacAddr8)                    StringBuilder.Append("macaddr");
+						else                                              base.BuildDataType(type, createDbType);
+					}
+					else
+						base.BuildDataType(type, createDbType);
+
+					break;
+
 				default                      : base.BuildDataType(type, createDbType); break;
 			}
 		}
@@ -153,6 +204,53 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return value;
 		}
 
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
+		{
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, true);
+
+			AppendIndent();
+			StringBuilder.Append("ON CONFLICT (");
+
+			var firstKey = true;
+			foreach (var expr in insertOrUpdate.Update.Keys)
+			{
+				if (!firstKey)
+					StringBuilder.Append(',');
+				firstKey = false;
+
+				BuildExpression(expr.Column, false, true);
+			}
+
+			if (insertOrUpdate.Update.Items.Count > 0)
+			{
+				StringBuilder.AppendLine(") DO UPDATE SET");
+
+				Indent++;
+
+				var first = true;
+
+				foreach (var expr in insertOrUpdate.Update.Items)
+				{
+					if (!first)
+						StringBuilder.Append(',').AppendLine();
+					first = false;
+
+					AppendIndent();
+					BuildExpression(expr.Column, false, true);
+					StringBuilder.Append(" = ");
+					BuildExpression(expr.Expression, true, true);
+				}
+
+				Indent--;
+
+				StringBuilder.AppendLine();
+			}
+			else
+			{
+				StringBuilder.AppendLine(") DO NOTHING");
+			}
+		}
+
 		public override ISqlExpression GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
@@ -178,6 +276,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			if (field.IsIdentity)
 			{
+				if (field.DataType == DataType.Int16)
+				{
+					StringBuilder.Append("SMALLSERIAL");
+					return;
+				}
+
 				if (field.DataType == DataType.Int32)
 				{
 					StringBuilder.Append("SERIAL");

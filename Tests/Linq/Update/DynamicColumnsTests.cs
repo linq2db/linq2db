@@ -10,6 +10,10 @@ namespace Tests.Update
 	[TestFixture]
 	public class DynamicColumnsTests : TestBase
 	{
+		// Introduced to ensure that we process not only constants in column names
+		private static string ChildIDColumn  = "ChildID";
+		private static string ParentIDColumn = "ParentID";
+
 		[Test, DataContextSource]
 		public void InsertViaSqlProperty(string context)
 		{
@@ -19,19 +23,19 @@ namespace Tests.Update
 				{
 					var id = 1001;
 
-					db.Child.Delete(c => Sql.Property<int>(c, "ChildID") > 1000);
+					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
 
 					Assert.AreEqual(1,
 						db
 							.Into(db.Child)
-							.Value(c => Sql.Property<int>(c, "ParentID"), () => 1)
-							.Value(c => Sql.Property<int>(c, "ChildID"), () => id)
+							.Value(c => Sql.Property<int>(c, ParentIDColumn), () => 1)
+							.Value(c => Sql.Property<int>(c, ChildIDColumn), () => id)
 							.Insert());
-					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, "ChildID") == id));
+					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
 				}
 				finally
 				{
-					db.Child.Delete(c => Sql.Property<int>(c, "ChildID") > 1000);
+					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
 				}
 			}
 		}
@@ -45,20 +49,20 @@ namespace Tests.Update
 				{
 					var id = 1001;
 
-					db.Child.Delete(c => Sql.Property<int>(c, "ChildID") > 1000);
+					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
 					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
 
-					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, "ChildID") == id));
+					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id));
 					Assert.AreEqual(1,
 						db.Child
-							.Where(c => Sql.Property<int>(c, "ChildID") == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
-							.Set(c => Sql.Property<int>(c, "ChildID"), c => Sql.Property<int>(c, "ChildID") + 1)
+							.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
+							.Set(c => Sql.Property<int>(c, ChildIDColumn), c => Sql.Property<int>(c, ChildIDColumn) + 1)
 							.Update());
-					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, "ChildID") == id + 1));
+					Assert.AreEqual(1, db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id + 1));
 				}
 				finally
 				{
-					db.Child.Delete(c => Sql.Property<int>(c, "ChildID") > 1000);
+					db.Child.Delete(c => Sql.Property<int>(c, ChildIDColumn) > 1000);
 				}
 			}
 		}
@@ -66,6 +70,8 @@ namespace Tests.Update
 		[Test, DataContextSource]
 		public void InsertDynamicColumns(string context)
 		{
+			var firstNameColumn = "FirstName";
+			var lastNameColumn  = "LastName";
 			using (var db = GetDataContext(context, ConfigureDynamicMyClass()))
 			{
 				try
@@ -73,18 +79,18 @@ namespace Tests.Update
 					Assert.AreEqual(1,
 						db
 							.GetTable<MyClass>()
-							.Value(c => Sql.Property<string>(c, "FirstName"), () => "John")
-							.Value(c => Sql.Property<string>(c, "LastName"), () => "The Dynamic")
+							.Value(c => Sql.Property<string>(c, firstNameColumn), () => "John")
+							.Value(c => Sql.Property<string>(c, lastNameColumn), () => "The Dynamic")
 							.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
 							.Insert());
 					Assert.AreEqual(1,
 						db.GetTable<MyClass>().Count(c =>
-							Sql.Property<string>(c, "FirstName") == "John" &&
-							Sql.Property<string>(c, "LastName") == "The Dynamic"));
+							Sql.Property<string>(c, firstNameColumn) == "John" &&
+							Sql.Property<string>(c, lastNameColumn) == "The Dynamic"));
 				}
 				finally
 				{
-					db.GetTable<MyClass>().Delete(c => Sql.Property<string>(c, "LastName") == "The Dynamic");
+					db.GetTable<MyClass>().Delete(c => Sql.Property<string>(c, lastNameColumn) == "The Dynamic");
 				}
 			}
 		}
