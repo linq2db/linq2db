@@ -16,9 +16,10 @@ LINQ to DB 2.0.0  Release Notes
 - feature: [MySQL] Procedures and function support added to schema provider (#991)
 - feature: [BulkCopy][SAP HANA, SQL CE] BulkCopyOptions.KeepIdentity support added (#1037)
 - feature: Calculated columns support through ExpressionMethodAttribute.IsColumn property (#1004)
-- feature: Dynamic columns support (#964, #507, #744)
+- feature: Dynamic columns support (#964, #507, #744, #1083)
 - feature: [PostgreSQL] Added support for native INSERT ON CONFLICT UPDATE statement for InsertOrUpdate operation for PostgreSQL 9.5+ (#948)
 - feature: [PostgreSQL][BulkCopy] Provider-specific copy method implemented (#935)
+- feature: Added IQueryable interceptor callback. This feature could be used to attach linq2db to other IQueryable providers (#1116)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
@@ -63,7 +64,9 @@ LINQ to DB 2.0.0  Release Notes
 - fix: [PostgreSQL] Proper type names generated for: System.Int16 identity fields, DataType.VarBinary/System.Linq.Binary, DataType.NChar/System.Char. Those type names used by CreateTable() method (#1091)
 - fix: Default System.Char mapping changed to use length = 1 instead of unspecified (#1091)
 - fix: [PostgreSQL] Interval type supports both NpgsqlTimeSpan and NpgsqlInterval (#1091)
-
+- fix: [Oracle, Firebird] Support escaping of identifiers that use reserved words (#1110, #1095)
+- fix: Improved support for mappings to interfaces (#1099)
+- fix: [MSSQL] DateTime string literal generation fix (#1107)
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)
