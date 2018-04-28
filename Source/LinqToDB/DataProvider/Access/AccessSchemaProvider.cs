@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.Access
 	{
 		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
 		// we create separate connection for GetSchema calls to workaround provider bug
-		// logic not applied if active transaction present - user must remove transaction if he have issues
+		// logic not applied if active transaction present - user must remove transaction if he has issues
 		private TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
 		{
 			if (dataConnection.Transaction != null)
