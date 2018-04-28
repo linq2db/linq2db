@@ -773,10 +773,12 @@ namespace LinqToDB.Data
 			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-			_configurations[configuration] = new ConfigurationInfo(
+			var info = new ConfigurationInfo(
 				configuration,
 				connectionString,
 				dataProvider ?? FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]));
+
+			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
 		}
 
 		class ConnectionStringSettings : IConnectionStringSettings
