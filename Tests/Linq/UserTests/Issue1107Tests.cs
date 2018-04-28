@@ -20,7 +20,7 @@ namespace Tests.UserTests
 		}
 
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(false)]
 		public void Test(string configuration)
 		{
 			using (var db = GetDataContext(configuration))
