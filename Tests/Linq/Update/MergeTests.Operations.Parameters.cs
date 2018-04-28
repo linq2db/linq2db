@@ -3,10 +3,10 @@ using System.Data.SqlClient;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
+// ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
 {
 	using Model;

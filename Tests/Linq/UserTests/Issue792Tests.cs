@@ -14,12 +14,12 @@ namespace Tests.UserTests
 	/// - check if procedure schema works as it is or it executes procedures for real and should be wrapped in transaction and rolled back
 	/// - check it it works in existing transaction or not
 	/// - DB2 zOS not tested due to unavailability
-	/// 
+	///
 	/// What is not tested:
 	/// - support for procedure schema read and correctness of received data. For this we need a separate per-provider
 	/// tests like we have for MySQL already. If schema provider that lacks procedures support will add this support,
 	/// tests below should be reexaminated for this provider.
-	/// 
+	///
 	/// Summary on tests below:
 	/// 1. SQL CE and SQLite excluded, as they don't support stored procedures
 	/// 2. SAP HANA 2 provider schema calls are slow and cannot be automated as provider shows c++ assert messagebox from time
