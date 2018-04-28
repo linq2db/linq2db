@@ -70,7 +70,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: [MSSQL] DateTime string literal generation fix (#1107)
 - fix: Fixed T4 templates to work with .NET Core projects out-of-box using nuget package (#1067)
 - fix: [Access] Fixed schema read failure when ACE OleDb provider used (https://github.com/linq2db/linq2db.LINQPad/issues/10)
-- fix: [Access] Schema provider will now return system tables too (TableInfo.IsProviderSpecific == true) (#TODO_PR)
+- fix: [Access] Schema provider will now return system tables too (TableInfo.IsProviderSpecific == true) (#1119)
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)
