@@ -47,9 +47,9 @@ namespace Tests.UserTests
 			public int TaskId { get; set; }
 
 			[Column]
+			[Column(Configuration = ProviderName.DB2, DbType = "char")]
 			public bool Actual { get; set; }
 		}
-
 
 		[Test, DataContextSource]
 		public void Test(string configuration)
@@ -61,7 +61,7 @@ namespace Tests.UserTests
 					db.CreateTable<Task>();
 					db.CreateTable<TaskStage>();
 				}
-				catch 
+				catch
 				{
 					db.DropTable<Task>(throwExceptionIfNotExists: false);
 					db.DropTable<TaskStage>(throwExceptionIfNotExists: false);

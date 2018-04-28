@@ -1621,7 +1621,7 @@ namespace Tests.xUpdate
 		#endregion
 
 
-		[Test, MergeDataContextSource(ProviderName.Sybase)]
+		[Test, MergeDataContextSource]//(ProviderName.Sybase)]
 		public void CrossJoinedSourceWithSingleFieldSelection(string context)
 		{
 			using (var db = new TestDataConnection(context))
