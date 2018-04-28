@@ -22,6 +22,9 @@ namespace Tests.UserTests
 				var schema = schemaProvider.GetSchema(db);
 				schema     = schemaProvider.GetSchema(db);
 
+				// and query known table to be completely sure connection is not broken
+				db.Execute("SELECT * FROM CLONECODE");
+
 				// all returned primary keys are defined on system/access tables
 				Assert.True(schema.Tables.Any(t => t.Columns.Any(c => c.IsPrimaryKey)));
 			}
