@@ -83,8 +83,7 @@ before_build:
     iex "& $cmd"
 
     # Access ACE provider
-    (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/f/d/8/fd8c20d8-e38a-48b6-8691-542403b91da1/AccessDatabaseEngine.exe
-', "$env:APPVEYOR_BUILD_FOLDER\AccessDatabaseEngine.exe")
+    (New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/f/d/8/fd8c20d8-e38a-48b6-8691-542403b91da1/AccessDatabaseEngine.exe", "$env:APPVEYOR_BUILD_FOLDER\AccessDatabaseEngine.exe")
     "$env:APPVEYOR_BUILD_FOLDER\AccessDatabaseEngine.exe" /quiet
 
 - ps: Update-AppveyorBuild -Version $env:buildVersion
