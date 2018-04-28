@@ -860,54 +860,36 @@ namespace Tests
 
 		#endregion
 
-		[Sql.Function("VERSION", ServerSideOnly = true)]
-		private static string MySqlVersion()
-		{
-			throw new InvalidOperationException();
-		}
-
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{
-			if (db.ContextID == "MySql" || db.ContextID == "MySql.LinqService")
+			if (db.ProviderNeedsTimeFix(db.ContextID))
 			{
-				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
-				// them from expected data too
-				var version = db.Types.Select(_ => MySqlVersion()).First();
-				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
-				if (match.Success)
+				var adjusted = new List<LinqDataTypes2>();
+				foreach (var record in data)
 				{
-					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
-
-					if (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604)
+					var copy = new LinqDataTypes2()
 					{
-						var adjusted = new List<LinqDataTypes2>();
-						foreach (var record in data)
-						{
-							var copy = new LinqDataTypes2()
-							{
-								ID             = record.ID,
-								MoneyValue     = record.MoneyValue,
-								DateTimeValue  = record.DateTimeValue,
-								DateTimeValue2 = record.DateTimeValue2,
-								BoolValue      = record.BoolValue,
-								GuidValue      = record.GuidValue,
-								SmallIntValue  = record.SmallIntValue,
-								IntValue       = record.IntValue,
-								BigIntValue    = record.BigIntValue,
-								StringValue    = record.StringValue
-							};
+						ID             = record.ID,
+						MoneyValue     = record.MoneyValue,
+						DateTimeValue  = record.DateTimeValue,
+						DateTimeValue2 = record.DateTimeValue2,
+						BoolValue      = record.BoolValue,
+						GuidValue      = record.GuidValue,
+						SmallIntValue  = record.SmallIntValue,
+						IntValue       = record.IntValue,
+						BigIntValue    = record.BigIntValue,
+						StringValue    = record.StringValue
+					};
 
-							if (copy.DateTimeValue != null)
-							{
-								copy.DateTimeValue = copy.DateTimeValue.Value.AddMilliseconds(-copy.DateTimeValue.Value.Millisecond);
-							}
-
-							adjusted.Add(copy);
-						}
-
-						return adjusted;
+					if (copy.DateTimeValue != null)
+					{
+						copy.DateTimeValue = copy.DateTimeValue.Value.AddMilliseconds(-copy.DateTimeValue.Value.Millisecond);
 					}
+
+					adjusted.Add(copy);
 				}
+
+				return adjusted;
 			}
 
 			return data;

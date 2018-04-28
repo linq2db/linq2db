@@ -1,14 +1,21 @@
 ﻿using LinqToDB;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Tests.Model;
 
 namespace Tests
 {
-	public class TestUtils
+	public static class TestUtils
 	{
 		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
+
+		[Sql.Function("VERSION", ServerSideOnly = true)]
+		private static string MySqlVersion()
+		{
+			throw new InvalidOperationException();
+		}
 
 		[Sql.Function("DBINFO", ServerSideOnly = true)]
 		private static string DbInfo(string property)
@@ -112,6 +119,31 @@ namespace Tests
 			}
 
 			return NO_DATABASE_NAME;
+		}
+
+		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
+		{
+			if (context == "MySql" || context == "MySql.LinqService")
+			{
+				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
+				// them from expected data too
+				var version = db.GetTable<LinqDataTypes>().Select(_ => MySqlVersion()).First();
+				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
+				if (match.Success)
+				{
+					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
+
+					return (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604);
+				}
+			}
+
+			return false;
+		}
+
+		// see ProviderNeedsTimeFix
+		public static DateTime FixTime(DateTime value, bool fix)
+		{
+			return fix ? value.AddMilliseconds(-value.Millisecond) : value;
 		}
 	}
 }
