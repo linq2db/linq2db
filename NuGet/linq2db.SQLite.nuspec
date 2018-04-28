@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
+	<metadata minClientVersion="3.3.0">
 		<id>linq2db.SQLite</id>
 		<version>2.0.0-rc</version>
 		<title>LINQ to SQLite</title>
@@ -19,13 +19,27 @@
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="System.Data.SQLite.Core" version="1.0.107"  />
-			<dependency id="linq2db.t4models"        version="2.0.0-rc" />
+			<dependency id="linq2db"                 version="2.0.0-*"/>
 		</dependencies>
+		<contentFiles>
+			<files include="**\*" buildAction="None"/>
+		</contentFiles>
 	</metadata>
 	<files>
-		<file src="Init.ps1"                                                 target="tools" />
 		<file src="..\Tests\Linq\bin\AppVeyor\net452\System.Data.SQLite.dll" target="tools" />
 		<file src="..\Tests\Linq\bin\AppVeyor\net452\x86\SQLite.Interop.dll" target="tools" />
-		<file src="SQLite\*.*"                                               target="content\LinqToDB.Templates" />
+		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"         target="tools" />
+		
+		<file src="SQLite\linq2db.SQLite.props"                              target="build" />
+		
+		<file src="SQLite\*.*"                                               target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="t4models\*.ttinclude"                                     target="contentFiles\any\any\LinqToDB.Templates"/>
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                 target="contentFiles\any\any\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
+		<file src="..\Source\LinqToDB.Templates\*.SQLite.ttinclude"          target="contentFiles\any\any\LinqToDB.Templates" />
+		
+		<file src="SQLite\*.*"                                               target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="t4models\*.ttinclude"                                     target="content\LinqToDB.Templates"/>
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                 target="content\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
+		<file src="..\Source\LinqToDB.Templates\*.SQLite.ttinclude"          target="content\LinqToDB.Templates" />
 	</files>
 </package>

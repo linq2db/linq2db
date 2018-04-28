@@ -1,7 +1,9 @@
 <#@ template language="C#" debug="True" hostSpecific="True"                       #>
 <#@ output extension=".generated.cs"                                              #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlCe.Tools.ttinclude" #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#@ include file="$(LinqToDBT4SqlCeTemplatesDirectory)LinqToDB.SqlCe.Tools.ttinclude" #>
+<#@ include file="$(LinqToDBT4SqlCeTemplatesDirectory)PluralizationService.ttinclude" #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlCe.Tools.ttinclude" #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
 <#
 	/*
 		1. Copy this file to a folder where you would like to generate your data model,

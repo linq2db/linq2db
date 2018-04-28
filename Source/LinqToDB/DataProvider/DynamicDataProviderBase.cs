@@ -81,12 +81,10 @@ namespace LinqToDB.DataProvider
 
 		protected Action<IDbDataParameter> GetSetParameter(
 			Type connectionType,
-			//   ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
-			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
+			string parameterTypeName, string propertyName, Type dbType, string valueName)
 		{
-			var pType  = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
-			var dbType = connectionType.AssemblyEx().GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
-			var value  = Enum.Parse(dbType, valueName);
+			var pType = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var value = Enum.Parse(dbType, valueName);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
 			var l = Expression.Lambda<Action<IDbDataParameter>>(
@@ -98,6 +96,14 @@ namespace LinqToDB.DataProvider
 				p);
 
 			return l.Compile();
+		}
+
+		protected Action<IDbDataParameter> GetSetParameter(
+			Type connectionType,
+			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
+		{
+			var dbType = connectionType.AssemblyEx().GetType(dbTypeName.Contains(".") ? dbTypeName : connectionType.Namespace + "." + dbTypeName, true);
+			return GetSetParameter(connectionType, parameterTypeName, propertyName, dbType, valueName);
 		}
 
 		protected Func<IDbDataParameter,bool> IsGetParameter(

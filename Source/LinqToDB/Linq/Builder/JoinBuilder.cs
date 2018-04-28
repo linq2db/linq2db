@@ -15,7 +15,11 @@ namespace LinqToDB.Linq.Builder
 			if (!methodCall.IsQueryable("Join", "GroupJoin") || methodCall.Arguments.Count != 5)
 				return false;
 
-			var body = ((LambdaExpression)methodCall.Arguments[2].Unwrap()).Body.Unwrap();
+			// other overload for Join
+			if (!(methodCall.Arguments[2].Unwrap() is LambdaExpression lambda))
+				return false;
+
+			var body = lambda.Body.Unwrap();
 
 			if (body.NodeType == ExpressionType	.MemberInit)
 			{

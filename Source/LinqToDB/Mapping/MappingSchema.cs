@@ -1004,8 +1004,8 @@ namespace LinqToDB.Mapping
 			public DefaultMappingSchema()
 				: base(new MappingSchemaInfo("") { MetadataReader = Metadata.MetadataReader.Default })
 			{
-				AddScalarType(typeof(char),            DataType.NChar);
-				AddScalarType(typeof(char?),           DataType.NChar);
+				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null));
+				AddScalarType(typeof(char?),           new SqlDataType(DataType.NChar, typeof(char?), 1, null, null));
 				AddScalarType(typeof(string),          DataType.NVarChar);
 				AddScalarType(typeof(decimal),         DataType.Decimal);
 				AddScalarType(typeof(decimal?),        DataType.Decimal);
@@ -1047,7 +1047,7 @@ namespace LinqToDB.Mapping
 
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
-				ValueToSqlConverter.SetDefauls();
+				ValueToSqlConverter.SetDefaults();
 			}
 		}
 
@@ -1142,6 +1142,18 @@ namespace LinqToDB.Mapping
 
 			if (dataType != DataType.Undefined)
 				SetDataType(type, dataType);
+		}
+
+		/// <summary>
+		/// Configure provided type mapping to scalar database type.
+		/// </summary>
+		/// <param name="type">Type to configure.</param>
+		/// <param name="dataType">Database data type.</param>
+		public void AddScalarType(Type type, SqlDataType dataType)
+		{
+			SetScalarType(type);
+
+			SetDataType(type, dataType);
 		}
 
 		#endregion

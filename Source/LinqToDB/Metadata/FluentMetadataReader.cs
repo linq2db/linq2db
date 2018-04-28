@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using LinqToDB.Extensions;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Metadata
 {
@@ -12,8 +11,8 @@ namespace LinqToDB.Metadata
 
 	public class FluentMetadataReader : IMetadataReader
 	{
-		readonly ConcurrentDictionary<Type,List<Attribute>> _types = new ConcurrentDictionary<Type,List<Attribute>>();
-		private readonly ConcurrentDictionary<Type, ConcurrentDictionary<MemberInfo, byte>> _dynamicColumns = new ConcurrentDictionary<Type, ConcurrentDictionary<MemberInfo, byte>>();
+		readonly ConcurrentDictionary<Type,List<Attribute>>                       _types = new ConcurrentDictionary<Type,List<Attribute>>();
+		readonly ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>> _dynamicColumns = new ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>>();
 
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
