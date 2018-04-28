@@ -16,6 +16,17 @@ namespace LinqToDB.DataProvider.Access
 
 	class AccessSchemaProvider : SchemaProviderBase
 	{
+		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
+		// we create separate connection for GetSchema calls to workaround provider bug
+		// logic not applied if active transaction present - user must remove transaction if he has issues
+		private TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
+		{
+			if (dataConnection.Transaction != null)
+				return action(dataConnection);
+			else using (var newConnection = (DataConnection)dataConnection.Clone())
+					return action(newConnection);
+		}
+
 		protected override string GetDatabaseName(DbConnection dbConnection)
 		{
 			var name = base.GetDatabaseName(dbConnection);
@@ -28,7 +39,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = base.GetDataTypes(dataConnection);
+			var dts = ExecuteOnNewConnection(dataConnection, cn => base.GetDataTypes(cn));
 
 			if (dts.All(dt => dt.ProviderDbType != 128))
 			{
@@ -59,12 +70,11 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var tables = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Tables"));
 
 			return
 			(
 				from t in tables.AsEnumerable()
-				where new[] {"TABLE", "VIEW"}.Contains(t.Field<string>("TABLE_TYPE"))
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
@@ -84,7 +94,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			var idxs = ((DbConnection)dataConnection.Connection).GetSchema("Indexes");
+			var idxs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Indexes"));
 
 			return
 			(
@@ -102,7 +112,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var cs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Columns"));
 
 			return
 			(
@@ -153,7 +163,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			var ps = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Procedures"));
 
 			return _procedures =
 			(
