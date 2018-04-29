@@ -28,6 +28,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.FirstAsync<TSource>(source, token);
+
 			return GetTask(source.First, token);
 		}
 
@@ -50,6 +53,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.FirstAsync<TSource>(source, predicate, token);
 
 			return GetTask(() => source.First(predicate), token);
 		}
@@ -74,6 +80,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.FirstOrDefaultAsync<TSource>(source, token);
+
 			return GetTask(source.FirstOrDefault, token);
 		}
 
@@ -96,6 +105,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.FirstOrDefaultAsync<TSource>(source, predicate, token);
 
 			return GetTask(() => source.FirstOrDefault(predicate), token);
 		}
@@ -120,6 +132,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SingleAsync<TSource>(source, token);
+
 			return GetTask(source.Single, token);
 		}
 
@@ -142,6 +157,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SingleAsync<TSource>(source, predicate, token);
 
 			return GetTask(() => source.Single(predicate), token);
 		}
@@ -166,6 +184,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SingleOrDefaultAsync<TSource>(source, token);
+
 			return GetTask(source.SingleOrDefault, token);
 		}
 
@@ -188,6 +209,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SingleOrDefaultAsync<TSource>(source, predicate, token);
 
 			return GetTask(() => source.SingleOrDefault(predicate), token);
 		}
@@ -212,6 +236,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.ContainsAsync<TSource>(source, item, token);
+
 			return GetTask(() => source.Contains(item), token);
 		}
 
@@ -234,6 +261,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AnyAsync<TSource>(source, token);
 
 			return GetTask(source.Any, token);
 		}
@@ -258,6 +288,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AnyAsync<TSource>(source, predicate, token);
+
 			return GetTask(() => source.Any(predicate), token);
 		}
 
@@ -280,6 +313,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AllAsync<TSource>(source, predicate, token);
 
 			return GetTask(() => source.All(predicate), token);
 		}
@@ -304,6 +340,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.CountAsync<TSource>(source, token);
+
 			return GetTask(source.Count, token);
 		}
 
@@ -326,6 +365,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.CountAsync<TSource>(source, predicate, token);
 
 			return GetTask(() => source.Count(predicate), token);
 		}
@@ -350,6 +392,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.LongCountAsync<TSource>(source, token);
+
 			return GetTask(source.LongCount, token);
 		}
 
@@ -372,6 +417,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(predicate) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.LongCountAsync<TSource>(source, predicate, token);
 
 			return GetTask(() => source.LongCount(predicate), token);
 		}
@@ -396,6 +444,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.MinAsync<TSource>(source, token);
+
 			return GetTask(source.Min, token);
 		}
 
@@ -418,6 +469,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.MinAsync<TSource,TResult>(source, selector, token);
 
 			return GetTask(() => source.Min(selector), token);
 		}
@@ -442,6 +496,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.MaxAsync<TSource>(source, token);
+
 			return GetTask(source.Max, token);
 		}
 
@@ -464,6 +521,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.MaxAsync<TSource,TResult>(source, selector, token);
 
 			return GetTask(() => source.Max(selector), token);
 		}
@@ -488,6 +548,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
+
 			return GetTask(source.Sum, token);
 		}
 
@@ -510,6 +573,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
 			return GetTask(source.Sum, token);
 		}
@@ -534,6 +600,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
+
 			return GetTask(source.Sum, token);
 		}
 
@@ -556,6 +625,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
 			return GetTask(source.Sum, token);
 		}
@@ -580,6 +652,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
+
 			return GetTask(source.Sum, token);
 		}
 
@@ -602,6 +677,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
 			return GetTask(source.Sum, token);
 		}
@@ -626,6 +704,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
+
 			return GetTask(source.Sum, token);
 		}
 
@@ -648,6 +729,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
 			return GetTask(source.Sum, token);
 		}
@@ -672,6 +756,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
+
 			return GetTask(source.Sum, token);
 		}
 
@@ -694,6 +781,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync(source, token);
 
 			return GetTask(source.Sum, token);
 		}
@@ -718,6 +808,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -740,6 +833,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Sum(selector), token);
 		}
@@ -764,6 +860,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -786,6 +885,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Sum(selector), token);
 		}
@@ -810,6 +912,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -832,6 +937,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Sum(selector), token);
 		}
@@ -856,6 +964,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -878,6 +989,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Sum(selector), token);
 		}
@@ -902,6 +1016,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Sum(selector), token);
 		}
 
@@ -924,6 +1041,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.SumAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Sum(selector), token);
 		}
@@ -948,6 +1068,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
+
 			return GetTask(source.Average, token);
 		}
 
@@ -970,6 +1093,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
 			return GetTask(source.Average, token);
 		}
@@ -994,6 +1120,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
+
 			return GetTask(source.Average, token);
 		}
 
@@ -1016,6 +1145,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
 			return GetTask(source.Average, token);
 		}
@@ -1040,6 +1172,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
+
 			return GetTask(source.Average, token);
 		}
 
@@ -1062,6 +1197,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
 			return GetTask(source.Average, token);
 		}
@@ -1086,6 +1224,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
+
 			return GetTask(source.Average, token);
 		}
 
@@ -1108,6 +1249,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
 			return GetTask(source.Average, token);
 		}
@@ -1132,6 +1276,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
+
 			return GetTask(source.Average, token);
 		}
 
@@ -1154,6 +1301,9 @@ namespace LinqToDB
 						arguments: new Expression[1] { source.Expression }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync(source, token);
 
 			return GetTask(source.Average, token);
 		}
@@ -1178,6 +1328,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1200,6 +1353,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Average(selector), token);
 		}
@@ -1224,6 +1380,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1246,6 +1405,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Average(selector), token);
 		}
@@ -1270,6 +1432,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1292,6 +1457,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Average(selector), token);
 		}
@@ -1316,6 +1484,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1338,6 +1509,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Average(selector), token);
 		}
@@ -1362,6 +1536,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
+
 			return GetTask(() => source.Average(selector), token);
 		}
 
@@ -1384,6 +1561,9 @@ namespace LinqToDB
 						arguments: new Expression[2] { source.Expression, Expression.Quote(selector) }) as Expression,
 					token);
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.AverageAsync<TSource>(source, selector, token);
 
 			return GetTask(() => source.Average(selector), token);
 		}

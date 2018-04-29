@@ -3041,6 +3041,8 @@ namespace LinqToDB
 		/// </summary>
 		public static Func<IQueryable, IQueryable> ProcessSourceQueryable { get; set; } 
 
+		public static IExtensionsAdapter ExtensionsAdapter { get; set; } 
+
 		#endregion
 	}
 }
