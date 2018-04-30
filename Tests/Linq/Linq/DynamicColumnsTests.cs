@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using LinqToDB;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
@@ -364,20 +365,14 @@ namespace Tests.Linq
 
 		public void CreateTestTable<T>(IDataContext db, string tableName = null)
 		{
-			try
-			{
-				db.CreateTable<T>(tableName);
-			}
-			catch 
-			{
-				db.DropTable<T>();
-				db.CreateTable<T>(tableName);
-			}
+			db.DropTable<T>(tableName, throwExceptionIfNotExists: false);
+			db.CreateTable<T>(tableName);
 		}
 
 		[Test, DataContextSource]
 		public void SqlPropertyNoStoreNonIdentifier(string context)
 		{
+			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			using (var db = GetDataContext(context))
 			{
 				CreateTestTable<DynamicTablePrototype>(db);
@@ -406,13 +401,14 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void SqlPropertyNoStoreNonIdentifierGrouping(string context)
 		{
+			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			using (var db = GetDataContext(context))
 			{
 				CreateTestTable<DynamicTablePrototype>(db);
 				try
 				{
-					db.Insert(new DynamicTablePrototype { NotIdentifier = 77, Value = 5});
-					db.Insert(new DynamicTablePrototype { NotIdentifier = 77, Value = 5});
+					db.Insert(new DynamicTablePrototype { NotIdentifier = 77, Value = 5 });
+					db.Insert(new DynamicTablePrototype { NotIdentifier = 77, Value = 5 });
 
 					var query =
 						from d in db.GetTable<DynamicTable>()
@@ -424,7 +420,7 @@ namespace Tests.Linq
 							Count = g.Count(),
 							Sum = g.Sum(i => Sql.Property<int>(i, "Some Value"))
 						};
-					
+
 					var result = query.ToArray();
 
 					Assert.AreEqual(77, result[0].NI);

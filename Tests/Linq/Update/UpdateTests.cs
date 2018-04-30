@@ -1189,6 +1189,11 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
+				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+			}
+
+			using (var db = GetDataContext(context))
+			{
 				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
 
 				Assert.AreEqual(tableName,  table.TableName);
@@ -1224,6 +1229,11 @@ namespace Tests.xUpdate
 		{
 			const string schemaName = null;
 			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+			}
 
 			using (var db = GetDataContext(context))
 			{

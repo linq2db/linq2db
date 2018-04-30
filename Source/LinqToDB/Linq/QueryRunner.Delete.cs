@@ -59,7 +59,7 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-                var type = obj.GetType();
+				var type = obj.GetType();
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
 				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 

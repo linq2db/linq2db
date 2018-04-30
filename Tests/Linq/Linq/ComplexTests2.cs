@@ -4,6 +4,7 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
 using System.Linq;
+using System.Threading;
 using Tests.Model;
 
 
@@ -23,6 +24,8 @@ namespace Tests.ComplexTests2
 	[TestFixture]
 	public class ComplexTests2 : TestBase
 	{
+		private static int _cnt;
+
 		public enum AnimalType
 		{
 			Small,
@@ -49,11 +52,11 @@ namespace Tests.ComplexTests2
 
 		public class Animal
 		{
-			public AnimalType AnimalType { get; set; }
-			public AnimalType2 AnimalType2 { get; set; }
-			public int Id { get; set; }
-			public string Name { get; set; }
-			public string Discriminator { get; set; }
+			public AnimalType  AnimalType    { get; set; }
+			public AnimalType2 AnimalType2   { get; set; }
+			public int         Id            { get; set; }
+			public string      Name          { get; set; }
+			public string      Discriminator { get; set; }
 		}
 
 		public class WildAnimal : Animal
@@ -103,6 +106,8 @@ namespace Tests.ComplexTests2
 
 		private void InsertData(ITestDataContext db)
 		{
+			CleanupData(db);
+
 			var eye = new Eye
 			{
 				Id = 1,
@@ -132,9 +137,6 @@ namespace Tests.ComplexTests2
 				TestAnimalId = 1
 			};
 
-			db.DropTable<Animal>(throwExceptionIfNotExists: false);
-			db.DropTable<Eye>(throwExceptionIfNotExists: false);
-			db.DropTable<Test>(throwExceptionIfNotExists: false);
 			db.CreateTable<Animal>();
 			db.CreateTable<Eye>();
 			db.CreateTable<Test>();
@@ -148,13 +150,18 @@ namespace Tests.ComplexTests2
 		void CleanupData(ITestDataContext db)
 		{
 			db.DropTable<Animal>(throwExceptionIfNotExists: false);
-			db.DropTable<Eye>(throwExceptionIfNotExists: false);
-			db.DropTable<Test>(throwExceptionIfNotExists: false);
+			db.DropTable<Eye>   (throwExceptionIfNotExists: false);
+			db.DropTable<Test>  (throwExceptionIfNotExists: false);
 		}
 
 		MappingSchema SetMappings()
 		{
-			var ms = new MappingSchema();
+			// counter added to fix this issue with tests in Firebird
+			// https://stackoverflow.com/questions/44353607
+			// it was only working solution for Firebird3
+			var cnt = Interlocked.Increment(ref _cnt).ToString();
+
+			var ms = new MappingSchema(cnt);
 			ms.SetConverter<AnimalType, string>((obj) =>
 			{
 				return obj.ToString();
@@ -169,9 +176,11 @@ namespace Tests.ComplexTests2
 			});
 			ms.SetDefaultFromEnumType(typeof(AnimalType2), typeof(string));
 
+			var animalsTableName = "Animals" + cnt;
+
 			var mappingBuilder = ms.GetFluentMappingBuilder();
 			mappingBuilder.Entity<Animal>()
-				.HasTableName("Animals")
+				.HasTableName(animalsTableName)
 				.Inheritance(x => x.Discriminator, "Dog",             typeof(Dog))
 				.Inheritance(x => x.Discriminator, "WildAnimal",      typeof(WildAnimal))
 				.Inheritance(x => x.Discriminator, "SuperWildAnimal", typeof(SuperWildAnimal))
@@ -182,7 +191,7 @@ namespace Tests.ComplexTests2
 				.Property(x => x.Id           ).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
 
 			mappingBuilder.Entity<Dog>()
-				.HasTableName("Animals")
+				.HasTableName(animalsTableName)
 				.Property(x => x.Bla           ).IsNotColumn()
 				.Property(x => x.EyeId         ).IsColumn().IsNullable().HasColumnName("EyeId")
 				.Property(x => x.DogName.Second).HasColumnName("Second").HasDataType(DataType.NVarChar).HasLength(40)
@@ -190,10 +199,10 @@ namespace Tests.ComplexTests2
 				.Association(x => x.Bla, x => x.EyeId, x => x.Id);
 
 			mappingBuilder.Entity<WildAnimal>()
-				.HasTableName("Animals");
+				.HasTableName(animalsTableName);
 
 			mappingBuilder.Entity<SuperWildAnimal>()
-				.HasTableName("Animals");
+				.HasTableName(animalsTableName);
 
 			mappingBuilder.Entity<Eye>()
 				.HasTableName("Eyes")
@@ -216,9 +225,9 @@ namespace Tests.ComplexTests2
 
 			using (var db = GetDataContext(context, ms))
 			{
-				InsertData(db);
 				try
 				{
+					InsertData(db);
 					var data =  db.GetTable<Animal>().ToList();
 					Assert.Null(((Dog)data.First()).Bla);
 				}
@@ -233,15 +242,16 @@ namespace Tests.ComplexTests2
 		public void TestLoadWithWithCast(string context)
 		{
 			var ms = SetMappings();
+
 			using (var db = GetDataContext(context, ms))
 			{
-				InsertData(db);
 				try
 				{
+					InsertData(db);
 					var data = db.GetTable<Animal>().LoadWith(x => ((Dog)x).Bla).ToList();
 					Assert.NotNull(((Dog)data.First()).Bla);
 				}
-				finally 
+				finally
 				{
 					CleanupData(db);
 				}
@@ -252,11 +262,12 @@ namespace Tests.ComplexTests2
 		public void TestNestedLoadWithWithCast(string context)
 		{
 			var ms = SetMappings();
+
 			using (var db = GetDataContext(context, ms))
 			{
-				InsertData(db);
 				try
 				{
+					InsertData(db);
 					var data = db.GetTable<Test>()
 						.LoadWith(x => ((Dog)x.TestAnimal).Bla)
 						.OrderBy(x => x.Id)
@@ -278,11 +289,12 @@ namespace Tests.ComplexTests2
 		public void TestComplexPropertyLoading(string context)
 		{
 			var ms = SetMappings();
+
 			using (var db = GetDataContext(context, ms))
 			{
-				InsertData(db);
 				try
 				{
+					InsertData(db);
 					var data = db.GetTable<Dog>().ToList();
 
 					Assert.NotNull(data[0].DogName.First);
@@ -299,11 +311,12 @@ namespace Tests.ComplexTests2
 		public void TestStringAndConverterEnums(string context)
 		{
 			var ms = SetMappings();
+
 			using (var db = GetDataContext(context, ms))
 			{
-				InsertData(db);
 				try
 				{
+					InsertData(db);
 					var d = new Dog() { AnimalType = AnimalType.Big, AnimalType2 = AnimalType2.Big };
 
 					var test1 = db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big);
@@ -324,14 +337,15 @@ namespace Tests.ComplexTests2
 		}
 
 		[Test, DataContextSource]
-		public void TestUpdateWithTypeAndBasetype(string context)
+		public void TestUpdateWithTypeAndBaseType(string context)
 		{
 			var ms = SetMappings();
+
 			using (var db = GetDataContext(context, ms))
 			{
-				InsertData(db);
 				try
 				{
+					InsertData(db);
 					var dog = db.GetTable<Dog>().First();
 					db.Update(dog);
 					db.Update((Animal)dog);

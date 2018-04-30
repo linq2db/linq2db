@@ -1116,7 +1116,7 @@ namespace Tests
 
 		public void Dispose()
 		{
-			_db.DropTable<T>();
+			_db.DropTable<T>(throwExceptionIfNotExists: false);
 		}
 	}
 
