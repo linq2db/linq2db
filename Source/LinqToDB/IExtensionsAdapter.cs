@@ -21,10 +21,20 @@ namespace LinqToDB
 			IQueryable<TSource> source, 
 			CancellationToken   token);
 
+		Task<TSource[]> ToArrayAsync<TSource>(
+			IQueryable<TSource> source, 
+			CancellationToken   token);
+
 		Task<Dictionary<TKey, TSource>> ToDictionaryAsync<TSource, TKey>(
 			IQueryable<TSource> source,
 			Func<TSource, TKey> keySelector, 
 			CancellationToken   token);
+
+		Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
+			IQueryable<TSource>      source,
+			Func<TSource,TKey>       keySelector,
+			IEqualityComparer<TKey>  comparer,
+			CancellationToken        token);
 
 		Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
 			IQueryable<TSource>      source,
@@ -114,7 +124,7 @@ namespace LinqToDB
 
 		Task<TSource> MinAsync<TSource>(
 			IQueryable<TSource> source,
-			CancellationToken token);
+			CancellationToken   token);
 
 		Task<TResult> MinAsync<TSource,TResult>(
 			IQueryable<TSource>               source, 
@@ -123,7 +133,7 @@ namespace LinqToDB
 
 		Task<TSource> MaxAsync<TSource>(
 			IQueryable<TSource> source,
-			CancellationToken token);
+			CancellationToken   token);
 
 		Task<TResult> MaxAsync<TSource,TResult>(
 			IQueryable<TSource>               source, 
@@ -137,40 +147,40 @@ namespace LinqToDB
 			CancellationToken token);
 
 		Task<int?> SumAsync(
-			IQueryable<int?>   source,
+			IQueryable<int?>  source,
 			CancellationToken token);
 
 		Task<long> SumAsync(
-			IQueryable<long>   source,
+			IQueryable<long>  source,
 			CancellationToken token);
 
 		Task<long?> SumAsync(
-			IQueryable<long?>   source,
+			IQueryable<long?> source,
 			CancellationToken token);
 
 		Task<float> SumAsync(
-			IQueryable<float>   source,
+			IQueryable<float> source,
 			CancellationToken token);
 
 		Task<float?> SumAsync(
-			IQueryable<float?>   source,
-			CancellationToken token);
+			IQueryable<float?> source,
+			CancellationToken  token);
 
 		Task<double> SumAsync(
-			IQueryable<double>   source,
-			CancellationToken token);
+			IQueryable<double> source,
+			CancellationToken  token);
 
 		Task<double?> SumAsync(
-			IQueryable<double?>   source,
-			CancellationToken token);
+			IQueryable<double?> source,
+			CancellationToken   token);
 
 		Task<decimal> SumAsync(
-			IQueryable<decimal>   source,
-			CancellationToken token);
+			IQueryable<decimal> source,
+			CancellationToken   token);
 
 		Task<decimal?> SumAsync(
-			IQueryable<decimal?>   source,
-			CancellationToken token);
+			IQueryable<decimal?> source,
+			CancellationToken    token);
 
 		Task<int> SumAsync<TSource>(
 			IQueryable<TSource>           source,
@@ -231,40 +241,40 @@ namespace LinqToDB
 			CancellationToken token);
 
 		Task<double?> AverageAsync(
-			IQueryable<int?>   source,
+			IQueryable<int?>  source,
 			CancellationToken token);
 
 		Task<double> AverageAsync(
-			IQueryable<long>   source,
+			IQueryable<long>  source,
 			CancellationToken token);
 
 		Task<double?> AverageAsync(
-			IQueryable<long?>   source,
+			IQueryable<long?> source,
 			CancellationToken token);
 
 		Task<float> AverageAsync(
-			IQueryable<float>   source,
+			IQueryable<float> source,
 			CancellationToken token);
 
 		Task<float?> AverageAsync(
-			IQueryable<float?>   source,
-			CancellationToken token);
+			IQueryable<float?> source,
+			CancellationToken  token);
 
 		Task<double> AverageAsync(
-			IQueryable<double>   source,
-			CancellationToken token);
+			IQueryable<double> source,
+			CancellationToken  token);
 
 		Task<double?> AverageAsync(
-			IQueryable<double?>   source,
-			CancellationToken token);
+			IQueryable<double?> source,
+			CancellationToken   token);
 
 		Task<decimal> AverageAsync(
-			IQueryable<decimal>   source,
-			CancellationToken token);
+			IQueryable<decimal> source,
+			CancellationToken   token);
 
 		Task<decimal?> AverageAsync(
-			IQueryable<decimal?>   source,
-			CancellationToken token);
+			IQueryable<decimal?> source,
+			CancellationToken    token);
 
 		Task<double> AverageAsync<TSource>(
 			IQueryable<TSource>           source,

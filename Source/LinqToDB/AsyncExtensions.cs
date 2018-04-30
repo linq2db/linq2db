@@ -173,6 +173,9 @@ namespace LinqToDB
 				return list.ToArray();
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToArrayAsync(source, token);
+
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(), token);
 		}
 
@@ -229,6 +232,9 @@ namespace LinqToDB
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token);
 				return dic;
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, comparer, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer), token);
 		}
