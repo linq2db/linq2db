@@ -8,26 +8,26 @@ using System.Threading.Tasks;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Provides a way to handle custom extensions
+	/// Interface to override default implementation of LINQ To DB async operations.
 	/// </summary>
 	public interface IExtensionsAdapter
 	{
 		Task ForEachAsync<TSource>(
-			IQueryable<TSource> source, 
-			Action<TSource>     action, 
+			IQueryable<TSource> source,
+			Action<TSource>     action,
 			CancellationToken   token);
 
 		Task<List<TSource>> ToListAsync<TSource>(
-			IQueryable<TSource> source, 
+			IQueryable<TSource> source,
 			CancellationToken   token);
 
 		Task<TSource[]> ToArrayAsync<TSource>(
-			IQueryable<TSource> source, 
+			IQueryable<TSource> source,
 			CancellationToken   token);
 
 		Task<Dictionary<TKey, TSource>> ToDictionaryAsync<TSource, TKey>(
 			IQueryable<TSource> source,
-			Func<TSource, TKey> keySelector, 
+			Func<TSource, TKey> keySelector,
 			CancellationToken   token);
 
 		Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
@@ -54,7 +54,7 @@ namespace LinqToDB
 			CancellationToken   token);
 
 		Task<TSource> FirstAsync<TSource>(
-			IQueryable<TSource>            source, 
+			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
@@ -63,7 +63,7 @@ namespace LinqToDB
 			CancellationToken   token);
 
 		Task<TSource> FirstOrDefaultAsync<TSource>(
-			IQueryable<TSource>            source, 
+			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
@@ -72,7 +72,7 @@ namespace LinqToDB
 			CancellationToken   token);
 
 		Task<TSource> SingleAsync<TSource>(
-			IQueryable<TSource>            source, 
+			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
@@ -81,12 +81,12 @@ namespace LinqToDB
 			CancellationToken   token);
 
 		Task<TSource> SingleOrDefaultAsync<TSource>(
-			IQueryable<TSource>            source, 
+			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
 		Task<bool> ContainsAsync<TSource>(
-			IQueryable<TSource> source, 
+			IQueryable<TSource> source,
 			TSource             item,
 			CancellationToken   token);
 
@@ -95,12 +95,12 @@ namespace LinqToDB
 			CancellationToken   token);
 
 		Task<bool> AnyAsync<TSource>(
-			IQueryable<TSource>            source, 
+			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
 		Task<bool> AllAsync<TSource>(
-			IQueryable<TSource>            source, 
+			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
@@ -109,7 +109,7 @@ namespace LinqToDB
 			CancellationToken   token);
 
 		Task<int> CountAsync<TSource>(
-			IQueryable<TSource>            source, 
+			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
@@ -118,7 +118,7 @@ namespace LinqToDB
 			CancellationToken   token);
 
 		Task<long> LongCountAsync<TSource>(
-			IQueryable<TSource>            source, 
+			IQueryable<TSource>            source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token);
 
@@ -127,7 +127,7 @@ namespace LinqToDB
 			CancellationToken   token);
 
 		Task<TResult> MinAsync<TSource,TResult>(
-			IQueryable<TSource>               source, 
+			IQueryable<TSource>               source,
 			Expression<Func<TSource,TResult>> selector,
 			CancellationToken                 token);
 
@@ -136,7 +136,7 @@ namespace LinqToDB
 			CancellationToken   token);
 
 		Task<TResult> MaxAsync<TSource,TResult>(
-			IQueryable<TSource>               source, 
+			IQueryable<TSource>               source,
 			Expression<Func<TSource,TResult>> selector,
 			CancellationToken                 token);
 
