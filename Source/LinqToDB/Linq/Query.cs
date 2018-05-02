@@ -32,6 +32,7 @@ namespace LinqToDB.Linq
 		protected Query(IDataContext dataContext, Expression expression)
 		{
 			ContextID        = dataContext.ContextID;
+			ContextType      = dataContext.GetType();
 			Expression       = expression;
 			MappingSchema    = dataContext.MappingSchema;
 			ConfigurationID  = dataContext.MappingSchema.ConfigurationID;
@@ -45,6 +46,7 @@ namespace LinqToDB.Linq
 		#region Compare
 
 		internal readonly string           ContextID;
+		internal readonly Type             ContextType;
 		internal readonly Expression       Expression;
 		internal readonly MappingSchema    MappingSchema;
 		internal readonly string           ConfigurationID;
@@ -60,6 +62,7 @@ namespace LinqToDB.Linq
 				ConfigurationID.Length == dataContext.MappingSchema.ConfigurationID.Length &&
 				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
 				InlineParameters       == dataContext.InlineParameters &&
+				ContextType            == dataContext.GetType()        &&
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 

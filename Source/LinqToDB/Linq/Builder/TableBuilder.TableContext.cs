@@ -163,34 +163,34 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (member.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
 					{
-					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
+						var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
 
-					if (member.NextLoadWith.Count > 0)
-					{
-						var table = FindTable(ma, 1, false, true);
-						table.Table.LoadWith = member.NextLoadWith;
-					}
+						if (member.NextLoadWith.Count > 0)
+						{
+							var table = FindTable(ma, 1, false, true);
+							table.Table.LoadWith = member.NextLoadWith;
+						}
 
-					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
+						var ex   = BuildExpression(ma, 1, parentObject);
 
-					var ex = BuildExpression(ma, 1, parentObject);
-					if (member.MemberInfo.IsDynamicColumnPropertyEx())
-					{
-						var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
-						var setter  = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
+						if (member.MemberInfo.IsDynamicColumnPropertyEx())
+						{
+							var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
+							var setter  = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
 
-						exprs.Add(Expression.Invoke(setter, parentObject, ex));
-					}
-					else
-					{
-						exprs.Add(Expression.Assign(
-							attr?.Storage != null
-								? Expression.PropertyOrField(parentObject, attr.Storage)
-								: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
-							ex));
+							exprs.Add(Expression.Invoke(setter, parentObject, ex));
+						}
+						else
+						{
+							exprs.Add(Expression.Assign(
+								attr?.Storage != null
+									? Expression.PropertyOrField(parentObject, attr.Storage)
+									: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
+								ex));
+						}
 					}
 				}
-			}
 			}
 
 			static bool IsRecord(Attribute[] attrs)
@@ -221,13 +221,31 @@ namespace LinqToDB.Linq.Builder
 					: BuildRecordConstructor (entityDescriptor, objectType, index);
 
 				expr = BuildCalculatedColumns(entityDescriptor, expr);
-
 				expr = ProcessExpression(expr);
+				expr = NotifyEntityCreated(expr);
 
 				if (!buildBlock)
 					return expr;
 
 				return _variable = Builder.BuildVariable(expr);
+			}
+
+			Expression NotifyEntityCreated(Expression expr)
+			{
+				if (Builder.DataContext is INotifyEntityCreated)
+				{
+					var cex = Expression.Convert(ExpressionBuilder.DataContextParam, typeof(INotifyEntityCreated));
+
+					expr =
+						Expression.Convert(
+							Expression.Call(
+								cex,
+								MemberHelper.MethodOf((INotifyEntityCreated n) => n.EntityCreated(null)),
+								expr),
+							expr.Type);
+				}
+
+				return expr;
 			}
 
 			Expression BuildCalculatedColumns(EntityDescriptor entityDescriptor, Expression expr)

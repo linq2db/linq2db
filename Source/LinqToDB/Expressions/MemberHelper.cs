@@ -64,7 +64,7 @@ namespace LinqToDB.Expressions
 
 				if (existingMember != null)
 					return existingMember.MemberInfo;
-				
+
 #if !NETSTANDARD1_6
 				// create dynamic column info
 				return new DynamicColumnInfo(arg1.Type, methodCall.Method.GetGenericArguments()[0], memberName);
