@@ -269,6 +269,9 @@ namespace LinqToDB
 		/// </summary>
 		public event EventHandler OnClosing;
 
+		/// <inheritdoc />
+		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+
 		void IDisposable.Dispose()
 		{
 			Close();

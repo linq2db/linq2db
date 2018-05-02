@@ -331,6 +331,9 @@ namespace LinqToDB.ServiceModel
 
 		public event EventHandler OnClosing;
 
+		/// <inheritdoc/>
+		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+
 		protected bool Disposed { get; private set; }
 
 		protected void ThrowOnDisposed()

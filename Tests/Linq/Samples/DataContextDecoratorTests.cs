@@ -15,7 +15,7 @@ namespace Tests.Samples
 {
 	using Model;
 	/// <summary>
-	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration 
+	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration
 	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="IDbConnection"/>
 	/// </summary>
 	[TestFixture]
@@ -38,7 +38,7 @@ namespace Tests.Samples
 			public List<string>        NextQueryHints    => _context.NextQueryHints;
 			public List<string>        QueryHints        => _context.QueryHints;
 			public SqlProviderFlags    SqlProviderFlags  => _context.SqlProviderFlags;
-			
+
 			public MappingSchema       MappingSchema { get; }
 			public bool                CloseAfterUse { get; set; }
 
@@ -51,6 +51,8 @@ namespace Tests.Samples
 #pragma warning disable 0067
 			public event EventHandler OnClosing;
 #pragma warning restore 0067
+
+			public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
 
 			public IDataContext Clone(bool forNestedQuery)
 			{

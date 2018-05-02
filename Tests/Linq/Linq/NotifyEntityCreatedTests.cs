@@ -13,11 +13,28 @@ namespace Tests.Linq
 	[TestFixture]
 	public class NotifyEntityCreatedTests : TestBase
 	{
-		class EntityCreatedDataContext : TestDataConnection, INotifyEntityCreated
+		class EntityCreatedDataContext : TestDataConnection//, INotifyEntityCreated
 		{
 			public EntityCreatedDataContext(string configString)
 				: base(configString)
 			{
+				OnEntityCreated = EntityCreated;
+			}
+
+			void EntityCreated(EntityCreatedEventArgs args)
+			{
+				if (CheckEntityIdentity && args.Entity is Parent p)
+				{
+					if (_parents.TryGetValue(p.ParentID, out var pr))
+					{
+						args.Entity = pr;
+						return;
+					}
+
+					_parents[p.ParentID] = p;
+				}
+
+				EntitiesCreated++;
 			}
 
 			public int  EntitiesCreated;

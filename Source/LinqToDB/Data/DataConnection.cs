@@ -889,6 +889,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		public event EventHandler OnClosed;
 
+		/// <inheritdoc />
+		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
 		/// </summary>

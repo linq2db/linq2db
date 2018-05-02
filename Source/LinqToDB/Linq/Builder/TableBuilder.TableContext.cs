@@ -230,20 +230,48 @@ namespace LinqToDB.Linq.Builder
 				return _variable = Builder.BuildVariable(expr);
 			}
 
+			static object OnEntityCreated(IDataContext context, object entity)
+			{
+				var action = context.OnEntityCreated;
+
+				if (action != null)
+				{
+					var args = new EntityCreatedEventArgs
+					{
+						Entity      = entity,
+						DataContext = context
+					};
+
+					action(args);
+
+					return args.Entity;
+				}
+
+				return entity;
+			}
+
 			Expression NotifyEntityCreated(Expression expr)
 			{
-				if (Builder.DataContext is INotifyEntityCreated)
-				{
-					var cex = Expression.Convert(ExpressionBuilder.DataContextParam, typeof(INotifyEntityCreated));
+//				if (Builder.DataContext is INotifyEntityCreated)
+//				{
+//					var cex = Expression.Convert(ExpressionBuilder.DataContextParam, typeof(INotifyEntityCreated));
+//
+//					expr =
+//						Expression.Convert(
+//							Expression.Call(
+//								cex,
+//								MemberHelper.MethodOf((INotifyEntityCreated n) => n.EntityCreated(null)),
+//								expr),
+//							expr.Type);
+//				}
 
 					expr =
 						Expression.Convert(
 							Expression.Call(
-								cex,
-								MemberHelper.MethodOf((INotifyEntityCreated n) => n.EntityCreated(null)),
+								MemberHelper.MethodOf(() => OnEntityCreated(null, null)),
+								ExpressionBuilder.DataContextParam,
 								expr),
 							expr.Type);
-				}
 
 				return expr;
 			}
