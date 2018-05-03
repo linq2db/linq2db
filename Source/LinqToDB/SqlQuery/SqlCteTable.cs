@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string    Name
 		{
-			get => Cte.Name ?? base.Name;
+			get => Cte?.Name ?? base.Name;
 			set => base.Name = value;
 		}
 

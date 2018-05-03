@@ -198,13 +198,21 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
-			BuildStep = Step.SelectClause;  BuildSelectClause(selectQuery);
-			BuildStep = Step.FromClause;    BuildFromClause(null, selectQuery);
-			BuildStep = Step.WhereClause;   BuildWhereClause(selectQuery);
-			BuildStep = Step.GroupByClause; BuildGroupByClause(selectQuery);
-			BuildStep = Step.HavingClause;  BuildHavingClause(selectQuery);
-			BuildStep = Step.OrderByClause; BuildOrderByClause(selectQuery);
-			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(selectQuery);
+			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, Indent, SkipAlias);
+
+			if (selectQuery.HasUnion)
+			{
+				foreach (var union in selectQuery.Unions)
+				{
+					AppendIndent();
+					StringBuilder.Append("UNION");
+					if (union.IsAll) StringBuilder.Append(" ALL");
+					StringBuilder.AppendLine();
+
+					((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(union.SelectQuery), StringBuilder, Indent, SkipAlias);
+				}
+			}
+
 		}
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -303,9 +311,8 @@ namespace LinqToDB.SqlProvider
 				if (cte.Fields.Count > 0) 
 					StringBuilder.AppendLine(")");
 
-				Indent--;
 				AppendIndent();
-				StringBuilder.AppendLine(" AS");
+				StringBuilder.AppendLine("AS");
 				AppendIndent();
 				StringBuilder.AppendLine("(");
 
@@ -316,8 +323,10 @@ namespace LinqToDB.SqlProvider
 				Indent--;
 
 				AppendIndent();
-				StringBuilder.AppendLine(")");
+				StringBuilder.Append(")");
 			}
+
+			Indent--;
 
 			StringBuilder.AppendLine();
 		}
