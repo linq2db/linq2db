@@ -5,7 +5,8 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-#if !NETSTANDARD
+
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using LinqToDB.DataProvider.Access;
 #endif
 
@@ -52,7 +53,8 @@ namespace Tests._Create
 				.Where  (c => !string.IsNullOrEmpty(c))
 				.ToArray();
 
-			Console.WriteLine("Commands count: {0}", cmds.Length);
+			if (DataConnection.TraceSwitch.TraceInfo)
+				Console.WriteLine("Commands count: {0}", cmds.Length);
 
 			Exception exception = null;
 
@@ -62,25 +64,46 @@ namespace Tests._Create
 
 				foreach (var command in cmds)
 				{
-					try 
+					try
 					{
-						Console.WriteLine(command);
+						if (DataConnection.TraceSwitch.TraceInfo)
+							Console.WriteLine(command);
+
 						db.Execute(command);
-						Console.WriteLine("\nOK\n");
+
+						if (DataConnection.TraceSwitch.TraceInfo)
+							Console.WriteLine("\nOK\n");
 					}
 					catch (Exception ex)
 					{
-						Console.WriteLine(ex.Message);
-
-						if (command.TrimStart().StartsWith("DROP")
-							|| command.TrimStart().StartsWith("CALL DROP"))
-							Console.WriteLine("\nnot too OK\n");
-						else
+						if (DataConnection.TraceSwitch.TraceError)
 						{
-							Console.WriteLine("\nFAILED\n");
+							if (!DataConnection.TraceSwitch.TraceInfo)
+								Console.WriteLine(command);
 
-							if (exception == null)
-								exception = ex;
+							var isDrop =
+								command.TrimStart().StartsWith("DROP") ||
+								command.TrimStart().StartsWith("CALL DROP");
+
+#if APPVEYOR
+							if (!isDrop)
+#endif
+							Console.WriteLine(ex.Message);
+
+							if (isDrop)
+							{
+#if !APPVEYOR
+								Console.WriteLine("\nnot too OK\n");
+#endif
+							}
+							else
+							{
+								Console.WriteLine("\nFAILED\n");
+
+								if (exception == null)
+									exception = ex;
+							}
+
 						}
 					}
 				}
@@ -88,14 +111,10 @@ namespace Tests._Create
 				if (exception != null)
 					throw exception;
 
-				Console.WriteLine("\nBulkCopy LinqDataTypes\n");
+				if (DataConnection.TraceSwitch.TraceInfo)
+					Console.WriteLine("\nBulkCopy LinqDataTypes\n");
 
-				var options = new BulkCopyOptions
-				{
-#if MONO
-					BulkCopyType = BulkCopyType.MultipleRows
-#endif
-				};
+				var options = new BulkCopyOptions();
 
 				db.BulkCopy(
 					options,
@@ -115,7 +134,8 @@ namespace Tests._Create
 						new LinqDataTypes2 { ID = 12, MoneyValue = 11.45m, DateTimeValue = new DateTime(2012, 11,   7, 19, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("03021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 12, StringValue = "0"  }
 					});
 
-				Console.WriteLine("\nBulkCopy Parent\n");
+				if (DataConnection.TraceSwitch.TraceInfo)
+					Console.WriteLine("\nBulkCopy Parent\n");
 
 				db.BulkCopy(
 					options,
@@ -130,7 +150,8 @@ namespace Tests._Create
 						new Parent { ParentID = 7, Value1 = 1    }
 					});
 
-				Console.WriteLine("\nBulkCopy Child\n");
+				if (DataConnection.TraceSwitch.TraceInfo)
+					Console.WriteLine("\nBulkCopy Child\n");
 
 				db.BulkCopy(
 					options,
@@ -155,7 +176,8 @@ namespace Tests._Create
 						new Child { ParentID = 7, ChildID = 77 }
 					});
 
-				Console.WriteLine("\nBulkCopy GrandChild\n");
+				if (DataConnection.TraceSwitch.TraceInfo)
+					Console.WriteLine("\nBulkCopy GrandChild\n");
 
 				db.BulkCopy(
 					options,
@@ -190,9 +212,9 @@ namespace Tests._Create
 					options,
 					new[]
 					{
-						new InheritanceParent2() {InheritanceParentId = 1, TypeDiscriminator = null, Name = null },
-						new InheritanceParent2() {InheritanceParentId = 2, TypeDiscriminator = 1,    Name = null },
-						new InheritanceParent2() {InheritanceParentId = 3, TypeDiscriminator = 2,    Name = "InheritanceParent2" }
+						new InheritanceParent2 {InheritanceParentId = 1, TypeDiscriminator = null, Name = null },
+						new InheritanceParent2 {InheritanceParentId = 2, TypeDiscriminator = 1,    Name = null },
+						new InheritanceParent2 {InheritanceParentId = 3, TypeDiscriminator = 2,    Name = "InheritanceParent2" }
 					});
 
 				db.BulkCopy(
@@ -204,39 +226,42 @@ namespace Tests._Create
 						new InheritanceChild2() {InheritanceChildId = 3, TypeDiscriminator = 2,    InheritanceParentId = 3, Name = "InheritanceParent2" }
 					});
 
-				if (action != null)
-					action(db.Connection);
+				action?.Invoke(db.Connection);
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2          (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
-		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix     (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void Oracle       (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
-		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
-		[Test, IncludeDataContextSource(TestProvName.Firebird3)]     public void Firebird3    (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
-		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL   (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
-		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql        (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
-		[Test, IncludeDataContextSource(TestProvName.MySql57)]       public void MySql57      (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
-		[Test, IncludeDataContextSource(TestProvName.MariaDB)]       public void MariaDB      (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2000)] public void Sql2000      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer2000"); }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2005)] public void Sql2005      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
-		[Test, IncludeDataContextSource(ProviderName.Sybase)]        public void Sybase       (string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase");        }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)] public void Sql2008      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)] public void Sql2012      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2014)] public void Sql2014      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
-		[Test, IncludeDataContextSource(TestProvName.SqlAzure)]      public void SqlAzure2012 (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCe        (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");         }
-		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCeData    (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");         }
-		[Test, IncludeDataContextSource(TestProvName.SQLiteMs)]      public void SQLiteMs     (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]        public void SQLite       (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]        public void SQLiteData   (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
-		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access       (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction); }
-		[Test, IncludeDataContextSource(ProviderName.Access)]        public void AccessData   (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access",   AccessAction); }
-		[Test, IncludeDataContextSource(ProviderName.SapHana)]       public void SapHana      (string ctx) { RunScript(ctx,          ";;\n"  ,  "SapHana");       }
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird         (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
+		[Test, IncludeDataContextSource(TestProvName.Firebird3)]     public void Firebird3        (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird", FirebirdAction); }
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL       (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
+		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql            (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
+		[Test, IncludeDataContextSource(TestProvName.MySql57)]       public void MySql57          (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
+		[Test, IncludeDataContextSource(TestProvName.MariaDB)]       public void MariaDB          (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000)] public void Sql2000          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer2000"); }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2005)] public void Sql2005          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)] public void Sql2008          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)] public void Sql2012          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2014)] public void Sql2014          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(TestProvName.SqlAzure)]      public void SqlAzure2012     (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]      public void SQLiteMS         (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
+		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]      public void SQLiteMSData     (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
+
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)] public void SQLiteClassic    (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic)] public void SQLiteClassicData(string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
+		[Test, IncludeDataContextSource(ProviderName.Sybase)]        public void Sybase           (string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase");        }
+		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2              (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
+		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix         (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
+		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void Oracle           (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCe            (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");         }
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCeData        (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");         }
+		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access           (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction); }
+		[Test, IncludeDataContextSource(ProviderName.Access)]        public void AccessData       (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access",   AccessAction); }
+		[Test, IncludeDataContextSource(ProviderName.SapHana)]       public void SapHana          (string ctx) { RunScript(ctx,          ";;\n"  ,  "SapHana");       }
 
 		static void AccessAction(IDbConnection connection)
 		{
-#if !NETSTANDARD
+
 			using (var conn = AccessTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
@@ -268,8 +293,9 @@ namespace Tests._Create
 						uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
 					});
 			}
-#endif
 		}
+
+#endif
 
 		void FirebirdAction(IDbConnection connection)
 		{

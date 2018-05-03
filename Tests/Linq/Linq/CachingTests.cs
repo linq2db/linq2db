@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Data.Linq;
+
+using LinqToDB;
 using LinqToDB.Expressions;
+
 using NUnit.Framework;
-using Tests.DataProvider;
-using Tests.Model;
 
 namespace Tests.Linq
 {
-	using LinqToDB;
+	using DataProvider;
+	using Model;
 
 	public class CachingTests: TestBase
 	{
@@ -46,12 +47,12 @@ namespace Tests.Linq
 				nameof(ALLTYPE.TIMEDATATYPE)
 			)] string fieldName)
 		{
-			if (!UserProviders.ContainsKey(ProviderName.SQLite))
+			if (!UserProviders.Contains(ProviderName.SQLite))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SQLite))
 			{
-				var query = 
+				var query =
 					from t in db.GetTable<ALLTYPE>()
 					from c in db.GetTable<Child>()
 					select new
@@ -66,14 +67,13 @@ namespace Tests.Linq
 			}
 		}
 
-		static IQueryable<T> GetTestTable<T>(IDataContext context, 
+		static IQueryable<T> GetTestTable<T>(IDataContext context,
 			string tableName,
 			string databaseName,
-			string ownerName,
 			string schemaName)
 		where T : class
 		{
-			return context.GetTable<T>().DatabaseName(databaseName).OwnerName(ownerName).SchemaName(schemaName)
+			return context.GetTable<T>().DatabaseName(databaseName).SchemaName(schemaName)
 				.TableName(tableName);
 		}
 
@@ -99,18 +99,10 @@ namespace Tests.Linq
 		public void TestByCall(
 			[Values("tableName1", "tableName2")] string tableName,
 			[Values("database1",  "database2")]  string databaseName,
-			[Values("owner1",     "owner2")]     string ownerName,
 			[Values("schema1",    "schema2")]    string schemaName
 		)
-//		[Test]
-//		public void TestByCall(
-//			[Values("tableName1", "tableName1")] string tableName,
-//			[Values("database1",  "database1")]  string databaseName,
-//			[Values("owner1",     "owner1")]     string ownerName,
-//			[Values("schema1",    "schema1")]    string schemaName
-//		)
 		{
-			if (!UserProviders.ContainsKey(ProviderName.SqlServer))
+			if (!UserProviders.Contains(ProviderName.SqlServer))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SqlServer))
@@ -118,8 +110,8 @@ namespace Tests.Linq
 				var query =
 					from c in db.Child
 					from cc in (
-						from c1 in GetTestTable<Child>(db, tableName, databaseName, ownerName, schemaName)
-						from c2 in GetTestTable<Child>(db, tableName, databaseName, ownerName, schemaName)
+						from c1 in GetTestTable<Child>(db, tableName, databaseName, schemaName)
+						from c2 in GetTestTable<Child>(db, tableName, databaseName, schemaName)
 						select new {c1, c2}
 					)
 					select cc;
@@ -129,20 +121,18 @@ namespace Tests.Linq
 
 				Assert.That(CountOccurences(sql, tableName),    Is.EqualTo(2));
 				Assert.That(CountOccurences(sql, databaseName), Is.EqualTo(2));
-				// Assert.That(CountOccurences(sql, ownerName),    Is.EqualTo(2));
 				Assert.That(CountOccurences(sql, schemaName),   Is.EqualTo(2));
 			}
 		}
-		
+
 		[Test]
 		public void TestInlined(
 			[Values("tableName1", "tableName2")] string tableName,
 			[Values("database1",  "database2")]  string databaseName,
-			[Values("owner1",     "owner2")]     string ownerName,
 			[Values("schema1",    "schema2")]    string schemaName
 		)
 		{
-			if (!UserProviders.ContainsKey(ProviderName.SqlServer))
+			if (!UserProviders.Contains(ProviderName.SqlServer))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SqlServer))
@@ -151,10 +141,8 @@ namespace Tests.Linq
 					from c in db.Child
 					from cc in
 					(
-						from c1 in db.Child.DatabaseName(databaseName).OwnerName(ownerName).SchemaName(schemaName)
-							.TableName(tableName)
-						from c2 in db.Child.DatabaseName(databaseName).OwnerName(ownerName).SchemaName(schemaName)
-							.TableName(tableName)
+						from c1 in db.Child.DatabaseName(databaseName).SchemaName(schemaName).TableName(tableName)
+						from c2 in db.Child.DatabaseName(databaseName).SchemaName(schemaName).TableName(tableName)
 						select new {c1, c2}
 					)
 					select cc;
@@ -164,17 +152,16 @@ namespace Tests.Linq
 
 				Assert.That(CountOccurences(sql, tableName),    Is.EqualTo(2));
 				Assert.That(CountOccurences(sql, databaseName), Is.EqualTo(2));
-				// Assert.That(CountOccurences(sql, ownerName),    Is.EqualTo(2));
 				Assert.That(CountOccurences(sql, schemaName),   Is.EqualTo(2));
 			}
 		}
-		
+
 		[Test]
 		public void TakeHint(
 			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint
 		)
 		{
-			if (!UserProviders.ContainsKey(ProviderName.SqlServer))
+			if (!UserProviders.Contains(ProviderName.SqlServer))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SqlServer))

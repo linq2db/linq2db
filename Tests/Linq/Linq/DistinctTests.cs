@@ -112,7 +112,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TakeDistinct(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -135,8 +135,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q1 = Types;
-				var q2 = db.Types.Select(_ => new LinqDataTypes() {ID = _.ID, SmallIntValue = _.SmallIntValue }).Distinct();
+				var q1 = GetTypes(context);
+				var q2 = db.Types.Select(_ => new LinqDataTypes {ID = _.ID, SmallIntValue = _.SmallIntValue }).Distinct();
 
 				AreEqual(
 					from e in q1
@@ -148,6 +148,5 @@ namespace Tests.Linq
 					);
 			}
 		}
-
 	}
 }

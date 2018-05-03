@@ -140,6 +140,18 @@ namespace Tests.Linq
 					select p);
 		}
 
+		[Test, DataContextSource]
+		public void TestGetBaseClass(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = db.GetTable<ParentInheritanceBase3>()
+					.Where(x => x is ParentInheritance13)
+					.ToList();
+				Assert.AreEqual(2, q.Count);
+			}
+		}
+
 		[Test, NorthwindDataContext]
 		public void TypeCastAsTest1(string context)
 		{
@@ -209,8 +221,6 @@ namespace Tests.Linq
 					db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>());
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Cast1Async(string context)
 		{
@@ -219,8 +229,6 @@ namespace Tests.Linq
 					      ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>(),
 					await db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>().ToListAsync());
 		}
-
-#endif
 
 		class ParentEx : Parent
 		{
@@ -323,7 +331,7 @@ namespace Tests.Linq
 					from od in db.OrderDetail
 					where od.Product.Category.CategoryName == "Seafood"
 					select new { od.Order, od.Product };
-				
+
 				var list = result.ToList();
 
 				Assert.AreEqual(330, list.Count);
@@ -480,7 +488,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class InheritanceA1 : InheritanceA
+		public class InheritanceA1 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode
@@ -489,7 +497,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class InheritanceA2 : InheritanceA
+		public class InheritanceA2 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode
@@ -500,6 +508,19 @@ namespace Tests.Linq
 
 		public class InheritanceB : InheritanceBase
 		{
+		}
+
+		[Table(Name="LinqDataTypes")]
+		public class InheritanceAssociation
+		{
+			[Column] public Guid GuidValue { get; set; }
+
+			[JetBrains.Annotations.NotNull]
+			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
+			public InheritanceA1 A1 { get; set; }
+
+			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
+			public InheritanceA2 A2 { get; set; }
 		}
 
 		[Test]
@@ -587,8 +608,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Test18Async(string context)
 		{
@@ -605,8 +624,6 @@ namespace Tests.Linq
 			}
 		}
 
-#endif
-
 		[Test, DataContextSource]
 		public void Test19(string context)
 		{
@@ -621,6 +638,30 @@ namespace Tests.Linq
 
 				IQueryable iq   = q.Distinct();
 				var        list = iq.OfType<Test18Female>().ToList();
+			}
+		}
+
+		[Test, DataContextSource]
+		public void InheritanceAssociationTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.GetTable<InheritanceAssociation>().Select(ia =>
+					new
+					{
+						TC1 = ia.A1.TypeCode,
+						TC2 = ia.A2.TypeCode
+					});
+
+				var items = db.GetTable<LinqDataTypes>().ToList();
+				var expected = items.Select(ia =>
+					new
+					{
+						TC1 = items.Where(i => i.ID == ia.ID).Select(i => (TypeCodeEnum)i.ID).FirstOrDefault(i => i == TypeCodeEnum.A1),
+						TC2 = items.Where(i => i.ID == ia.ID).Select(i => (TypeCodeEnum)i.ID).FirstOrDefault(i => i != TypeCodeEnum.A1)
+					});
+
+				AreEqual(expected, result);
 			}
 		}
 

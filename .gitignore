@@ -27,7 +27,7 @@ obj/
 _ReSharper*/
 [Tt]est[Rr]esult*
 linq2db.sln.docstates
-Tests/**/UserDataProviders*.txt
+Tests/**/UserDataProviders*.*
 NuGet/*.nupkg
 !*.dll
 !*.exe
@@ -35,8 +35,11 @@ NuGet/*.nupkg
 linq2db.sln.ide/graph
 linq2db.sln.ide/
 !Redist/**
-!packages/**
-.vs/*
+/packages
+/.vs/*
 *.lock.json
 /api
 /linq2db.github.io
+#cake
+/tools
+/.idea/

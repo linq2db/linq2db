@@ -37,7 +37,7 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind)]
 		public void Test1(string context)
 		{
 			try

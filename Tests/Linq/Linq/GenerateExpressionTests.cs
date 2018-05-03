@@ -22,7 +22,7 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = false;
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -46,7 +46,10 @@ namespace Tests.Linq
 
 
 				var test = result.GenerateTestString();
+
+#if !APPVEYOR
 				Console.WriteLine(test);
+#endif
 
 				result.ToList();
 			}

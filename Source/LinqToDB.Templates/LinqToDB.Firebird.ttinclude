@@ -1,0 +1,71 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.Firebird.FirebirdTools.ResolveFirebird(
+		typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);
+
+	{
+		var afterLoadMetadata = AfterLoadMetadata;
+		AfterLoadMetadata = () =>
+		{
+			afterLoadMetadata();
+			CheckNameCasing();
+		};
+	}
+#>
+<#+
+void CheckNameCasing()
+{
+	foreach (var t in Tables.Values)
+	{
+		var name = t.TableName;
+
+		if (!name.StartsWith("\""))
+			if (name.StartsWith("_") || name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+				t.TableName = "\\\"" + name + "\\\"";
+
+		foreach (var col in t.Columns.Values)
+		{
+			name = col.ColumnName;
+
+			if (!name.StartsWith("\""))
+				if (name.StartsWith("_") || name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+					col.ColumnName = "\\\"" + name + "\\\"";
+		}
+	}
+}
+
+LinqToDB.Data.DataConnection GetFirebirdConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string database)
+{
+	return GetFirebirdConnection(server, database, "SYSDBA", "masterkey");
+}
+
+LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string database, string uid, string password)
+{
+	return GetFirebirdConnection(string.Format(
+		"DataSource={0};Database={1};User Id={2};Password={3}",
+		server, database, uid, password));
+}
+
+void LoadFirebirdMetadata(string connectionString)
+{
+	var dataConnection = GetFirebirdConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadFirebirdMetadata(string server, string database, string uid, string password)
+{
+	var dataConnection = GetFirebirdConnection(server, database, uid, password);
+	LoadMetadata(dataConnection);
+}
+
+void LoadFirebirdMetadata(string server, string database)
+{
+	var dataConnection = GetFirebirdConnection(server, database);
+	LoadMetadata(dataConnection);
+}
+#>

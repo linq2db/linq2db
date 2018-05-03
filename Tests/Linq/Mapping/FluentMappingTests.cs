@@ -52,6 +52,29 @@ namespace Tests.Mapping
 		}
 
 		[Test]
+		public void LowerCaseMappingTest()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
+			{
+				entityDescriptor.TableName = entityDescriptor.TableName.ToLower();
+				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
+				{
+					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLower();
+				}
+			};
+
+			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn();
+
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That(ed.TableName, Is.EqualTo("newname"));
+			Assert.That(ed.Columns.First().ColumnName, Is.EqualTo("id1"));
+		}
+
+		[Test]
 		public void AddAtribute1()
 		{
 			var ms = new MappingSchema();
@@ -198,7 +221,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentAssociation()
+		public void FluentAssociation1()
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -207,6 +230,34 @@ namespace Tests.Mapping
 				.Association( e => e.Parent, e => e.ID, o => o.ID1 );
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+		}
+
+		[Test]
+		public void FluentAssociation2()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyClass>()
+				.Association( e => e.Parent, (e, o) => e.ID == o.ID1 );
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+		}
+
+		[Test]
+		public void FluentAssociation3()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyInheritedClass>()
+				.Association( e => e.Assosiations, (e, o) => e.Id == o.ID1 );
+
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
 
 			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
 		}

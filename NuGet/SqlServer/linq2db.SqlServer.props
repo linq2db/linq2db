@@ -1,0 +1,7 @@
+<Project>
+	<PropertyGroup>
+		<LinqToDBT4SqlServerTemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SqlServerTemplatesDirectory>
+		<LinqToDBT4SqlServerToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SqlServerToolsDirectory>
+		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
+	</PropertyGroup>
+</Project>

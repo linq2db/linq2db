@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.DB2</id>
+		<version>2.0.0-rc</version>
+		<title>LINQ to IBM DB2</title>
+		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
+		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
+		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
+		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
+		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>
+			LINQ to DB2 is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+		</description>
+		<summary>
+			This package includes a T4 template to generate data models for DB2 database and a reference to the linq2db nugets.
+			IBM Data Server Provider for .NET will still need to be installed on the production or development machine in order to connect to DB2.
+		</summary>
+		<tags>linq linq2db DB2 LinqToDB ORM database DB SQL</tags>
+		<dependencies>
+			<dependency id="linq2db" version="2.0.0-*"/>
+		</dependencies>
+		<contentFiles>
+			<files include="**\*" buildAction="None"/>
+		</contentFiles>
+	</metadata>
+	<files>
+		<file src="..\Redist\IBM\IBM.Data.DB2.dll"                      target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"    target="tools" />
+		
+		<file src="DB2\linq2db.DB2.props"                               target="build" />
+		
+		<file src="DB2\*.*"                                             target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="t4models\*.ttinclude"                                target="contentFiles\any\any\LinqToDB.Templates"/>
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"            target="contentFiles\any\any\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
+		<file src="..\Source\LinqToDB.Templates\*.DB2.ttinclude"        target="contentFiles\any\any\LinqToDB.Templates" />
+		
+		<file src="DB2\*.*"                                             target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="t4models\*.ttinclude"                                target="content\LinqToDB.Templates"/>
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"            target="content\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
+		<file src="..\Source\LinqToDB.Templates\*.DB2.ttinclude"        target="content\LinqToDB.Templates" />
+	</files>
+</package>
