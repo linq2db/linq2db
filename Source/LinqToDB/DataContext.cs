@@ -16,7 +16,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
-	public class DataContext : IDataContext
+	public class DataContext : IDataContext, IEntityServices
 	{
 		/// <summary>
 		/// Creates data context using default database configuration.

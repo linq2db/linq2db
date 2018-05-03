@@ -91,11 +91,6 @@ namespace LinqToDB
 		event EventHandler  OnClosing;
 
 		/// <summary>
-		/// Occurs when a new entity is created.
-		/// </summary>
-		Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
-
-		/// <summary>
 		/// Returns query runner service for current context.
 		/// </summary>
 		/// <param name="query">Query batch object.</param>

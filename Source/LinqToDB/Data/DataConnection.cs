@@ -26,7 +26,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable
+	public partial class DataConnection : ICloneable, IEntityServices
 	{
 		#region .ctor
 

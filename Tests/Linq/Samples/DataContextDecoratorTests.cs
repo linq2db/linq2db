@@ -52,8 +52,6 @@ namespace Tests.Samples
 			public event EventHandler OnClosing;
 #pragma warning restore 0067
 
-			public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
-
 			public IDataContext Clone(bool forNestedQuery)
 			{
 				return _context.Clone(forNestedQuery);
