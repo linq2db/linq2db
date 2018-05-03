@@ -8,6 +8,7 @@ LINQ to DB 2.0.0  Release Notes
 - breaking change: dropped support for .NET 4.0, Silverlight 4-5 and Windows 8 Store frameworks. New target frameworks list is netcoreapp2.0, netstandard1.6, netstandard2.0 and net45
 - breaking change: behavior of enum mapping to a text type for enum without configured mappings changed to use ToString() instead of (enum underlying type).ToString(). To return old behavior, you should set Configuration.UseEnumValueNameForStringColumns to false (#1006, #1071)
 - breaking change: [PostgreSQL] If you used BulkCopy with ProviderSpecific method specified, check https://github.com/linq2db/linq2db/wiki/Bulk-Copy for important notes regarding provider-specific support notes
+- breaking change: [Firebird] Changed default identifier quotation mode to FirebirdIdentifierQuoteMode.Auto from None (#1120)
 
 - feature: predicate expression support added for associations configuration using fluent mapping (#961)
 - feature: support creation of query parameters in extension builders (#964)
@@ -39,6 +40,7 @@ LINQ to DB 2.0.0  Release Notes
 - improvement: Allow basic mappings modifications using MappingSchema.EntityDescriptorCreatedCallback callback (#1074)
 - improvement: Exception during column mapping will be wrappped into LinqToDBException with information which column failed with original error as InnerException (#1065)
 - improvement: [PostgreSQL] Improved suppport for some types (#1091)
+- improvement: [Firebird] Check table existence in DropTable (#1120)
 
 - fix: fixed another case of defect #170, where default(T) value could be selected for non-nullable field instead of NULL from left join, if SelectMany() call used in source (#1012)
 - fix: [MS SQL, Sybase] updated Merge insert operation to respect SkipOnInsert mapping flag for identity fields when no custom insert expression specified. With this fix merge operation will allow database to generate identity value instead of use of value from source (#914)
@@ -76,6 +78,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: Fixed T4 templates to work with .NET Core projects out-of-box using nuget package (#1067)
 - fix: [Access] Fixed schema read failure when ACE OleDb provider used (https://github.com/linq2db/linq2db.LINQPad/issues/10)
 - fix: [Access] Schema provider will now return system tables too (TableInfo.IsProviderSpecific == true) (#1119)
+- fix: [Firebird] Use proper identifiers quotation for create/drop/truncate table for tables with generators and fix detection of cases when quotation is required (#1120)
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)

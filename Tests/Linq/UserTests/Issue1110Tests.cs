@@ -18,7 +18,6 @@ namespace Tests.UserTests
 			public DateTime TimeStamp { get; set; }
 		}
 
-
 		[Test, DataContextSource]
 		public void Test(string configuration)
 		{
@@ -26,9 +25,16 @@ namespace Tests.UserTests
 			{
 				db.DropTable<Issue1110TestsClass>(throwExceptionIfNotExists: false);
 
-				db.CreateTable<Issue1110TestsClass>();
+				try
+				{
+					db.CreateTable<Issue1110TestsClass>();
 
-				db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = DateTime.UtcNow });
+					db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = DateTime.UtcNow });
+				}
+				finally
+				{
+					db.DropTable<Issue1110TestsClass>(throwExceptionIfNotExists: false);
+				}
 			}
 		}
 	}
