@@ -276,23 +276,26 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				case ConvertType.NameToQueryParameter:
 					return ":" + value;
-				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryField:
-				case ConvertType.NameToQueryTable:
-					if (value != null)
-					{
-						var name = value.ToString();
+					// needs proper list of reserved words and name validation
+					// something like we did for Firebird
+					// right now reserved words list contains garbage
+				//case ConvertType.NameToQueryFieldAlias:
+				//case ConvertType.NameToQueryField:
+				//case ConvertType.NameToQueryTable:
+				//	if (value != null)
+				//	{
+				//		var name = value.ToString();
 
-						if (name.Length > 0 && name[0] == '"')
-							return name;
+				//		if (name.Length > 0 && name[0] == '"')
+				//			return name;
 
-						if (IsReserved(name))
-						{
-							return '"' + name + '"';
-						}
-					}
+				//		if (IsReserved(name))
+				//		{
+				//			return '"' + name + '"';
+				//		}
+				//	}
 
-					break;
+				//	break;
 			}
 
 			return value;
