@@ -36,8 +36,8 @@ namespace LinqToDB.SqlProvider
 
 		#region Support Flags
 
-		public virtual bool IsNestedJoinSupported           { get { return true; } }
-		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
+		public virtual bool IsNestedJoinSupported           => true;
+		public virtual bool IsNestedJoinParenthesisRequired => false;
 
 		/// <summary>
 		/// True if it is needed to wrap join condition with ()
@@ -45,7 +45,7 @@ namespace LinqToDB.SqlProvider
 		/// <example>
 		/// INNER JOIN Table2 t2 ON (t1.Value = t2.Value)
 		/// </example>
-		public virtual bool WrapJoinCondition               { get { return false; } }
+		public virtual bool WrapJoinCondition => false;
 
 		#endregion
 
@@ -1192,7 +1192,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		void BuildJoinTable(SelectQuery selectQuery, SqlJoinedTable @join, ref int joinCounter)
+		void BuildJoinTable(SelectQuery selectQuery, SqlJoinedTable join, ref int joinCounter)
 		{
 			StringBuilder.AppendLine();
 			Indent++;
@@ -1614,7 +1614,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var p = (SqlPredicate.NotExpr)predicate;
 
-						if (((SqlPredicate.NotExpr)predicate).IsNot)
+						if (p.IsNot)
 							StringBuilder.Append("NOT ");
 
 						BuildExpression(
@@ -1630,13 +1630,13 @@ namespace LinqToDB.SqlProvider
 					{
 						var p = (SqlPredicate.Expr)predicate;
 
-						if (p.Expr1 is SqlValue)
+						if (p.Expr1 is SqlValue sqlValue)
 						{
-							var value = ((SqlValue)p.Expr1).Value;
+							var value = sqlValue.Value;
 
-							if (value is bool)
+							if (value is bool b)
 							{
-								StringBuilder.Append((bool)value ? "1 = 1" : "1 = 0");
+								StringBuilder.Append(b ? "1 = 1" : "1 = 0");
 								return;
 							}
 						}
@@ -1660,9 +1660,9 @@ namespace LinqToDB.SqlProvider
 				{
 					ISqlExpression e = null;
 
-					if (expr.Expr1 is IValueContainer && ((IValueContainer) expr.Expr1).Value == null)
+					if (expr.Expr1 is IValueContainer container && container.Value == null)
 						e = expr.Expr2;
-					else if (expr.Expr2 is IValueContainer && ((IValueContainer) expr.Expr2).Value == null)
+					else if (expr.Expr2 is IValueContainer c && c.Value == null)
 						e = expr.Expr1;
 
 					if (e != null)
@@ -1716,10 +1716,9 @@ namespace LinqToDB.SqlProvider
 			{
 				ICollection values = p.Values;
 
-				if (p.Values.Count == 1 && p.Values[0] is SqlParameter &&
-					!(p.Expr1.SystemType == typeof(string) && ((SqlParameter)p.Values[0]).Value is string))
+				if (p.Values.Count == 1 && p.Values[0] is SqlParameter pr &&
+					!(p.Expr1.SystemType == typeof(string) && pr.Value is string))
 				{
-					var pr      = (SqlParameter)p.Values[0];
 					var prValue = pr.Value;
 
 					if (prValue == null)
@@ -1728,14 +1727,11 @@ namespace LinqToDB.SqlProvider
 						return;
 					}
 
-					if (prValue is IEnumerable)
+					if (prValue is IEnumerable items)
 					{
-						var items = (IEnumerable)prValue;
-
-						if (p.Expr1 is ISqlTableSource)
+						if (p.Expr1 is ISqlTableSource table)
 						{
 							var firstValue = true;
-							var table      = (ISqlTableSource)p.Expr1;
 							var keys       = table.GetKeys(true);
 
 							if (keys == null || keys.Count == 0)
@@ -1755,8 +1751,8 @@ namespace LinqToDB.SqlProvider
 									var field = GetUnderlayingField(keys[0]);
 									var value = field.ColumnDescriptor.MemberAccessor.GetValue(item);
 
-									if (value is ISqlExpression)
-										BuildExpression((ISqlExpression)value);
+									if (value is ISqlExpression expression)
+										BuildExpression(expression);
 									else
 										BuildValue(
 											new SqlDataType(
@@ -1912,8 +1908,8 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				if (value is ISqlExpression)
-					BuildExpression((ISqlExpression)value);
+				if (value is ISqlExpression expression)
+					BuildExpression(expression);
 				else
 					BuildValue(sqlDataType, value);
 
@@ -2981,9 +2977,9 @@ namespace LinqToDB.SqlProvider
 							{
 								var value = parameter.Value;
 
-								if (value is decimal)
+								if (value is decimal dec)
 								{
-									var d = new SqlDecimal((decimal)value);
+									var d = new SqlDecimal(dec);
 									sb.Append('(').Append(d.Precision).Append(',').Append(d.Scale).Append(')');
 								}
 
@@ -2991,9 +2987,7 @@ namespace LinqToDB.SqlProvider
 							}
 						case DbType.Binary:
 							{
-								var value = parameter.Value as byte[];
-
-								if (value != null)
+								if (parameter.Value is byte[] value)
 									sb.Append('(').Append(value.Length).Append(')');
 
 								break;

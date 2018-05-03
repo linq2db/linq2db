@@ -232,9 +232,9 @@ namespace LinqToDB.Linq.Builder
 
 			static object OnEntityCreated(IDataContext context, object entity)
 			{
-				var action = context.OnEntityCreated;
+				var onEntityCreated = ((IEntityServices)context).OnEntityCreated;
 
-				if (action != null)
+				if (onEntityCreated != null)
 				{
 					var args = new EntityCreatedEventArgs
 					{
@@ -242,7 +242,7 @@ namespace LinqToDB.Linq.Builder
 						DataContext = context
 					};
 
-					action(args);
+					onEntityCreated(args);
 
 					return args.Entity;
 				}
@@ -252,8 +252,8 @@ namespace LinqToDB.Linq.Builder
 
 			Expression NotifyEntityCreated(Expression expr)
 			{
-//				if (Builder.DataContext is INotifyEntityCreated)
-//				{
+				if (Builder.DataContext is IEntityServices)
+				{
 //					var cex = Expression.Convert(ExpressionBuilder.DataContextParam, typeof(INotifyEntityCreated));
 //
 //					expr =
@@ -263,8 +263,6 @@ namespace LinqToDB.Linq.Builder
 //								MemberHelper.MethodOf((INotifyEntityCreated n) => n.EntityCreated(null)),
 //								expr),
 //							expr.Type);
-//				}
-
 					expr =
 						Expression.Convert(
 							Expression.Call(
@@ -272,6 +270,8 @@ namespace LinqToDB.Linq.Builder
 								ExpressionBuilder.DataContextParam,
 								expr),
 							expr.Type);
+				}
+
 
 				return expr;
 			}
@@ -1021,7 +1021,7 @@ namespace LinqToDB.Linq.Builder
 
 			public int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				return Parent == null ? index : Parent.ConvertToParentIndex(index, this);
+				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
 
 			#endregion
@@ -1204,15 +1204,18 @@ namespace LinqToDB.Linq.Builder
 									var fieldName = memberExpression.Member.Name;
 
 									// do not add association columns
-									if (!EntityDescriptor.Associations.Any(a => a.MemberInfo == memberExpression.Member))
+									if (EntityDescriptor.Associations.All(a => a.MemberInfo != memberExpression.Member))
 									{
 										if (!SqlTable.Fields.TryGetValue(fieldName, out var newField))
 										{
-											newField = new SqlField();
-											newField.Name             = fieldName;
-											newField.PhysicalName     = fieldName;
-											newField.ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
-												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member));
+											newField = new SqlField
+											{
+												Name             = fieldName,
+												PhysicalName     = fieldName,
+												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
+													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member))
+											};
+
 											SqlTable.Add(newField);
 										}
 

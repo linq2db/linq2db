@@ -3,7 +3,7 @@
 namespace LinqToDB
 {
 	/// <summary>
-	/// Provides data for the <see cref="IDataContext.OnEntityCreated"/> event.
+	/// Provides data for the <see cref="IEntityServices.OnEntityCreated"/> event.
 	/// </summary>
 	public class EntityCreatedEventArgs
 	{

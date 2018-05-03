@@ -26,7 +26,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable
+	public partial class DataConnection : ICloneable, IEntityServices
 	{
 		#region .ctor
 
@@ -281,9 +281,8 @@ namespace LinqToDB.Data
 				if (!_id.HasValue)
 				{
 					var key = MappingSchema.ConfigurationID + "." + (ConfigurationString ?? ConnectionString ?? Connection.ConnectionString);
-					int id;
 
-					if (!_configurationIDs.TryGetValue(key, out id))
+					if (!_configurationIDs.TryGetValue(key, out var id))
 						_configurationIDs[key] = id = Interlocked.Increment(ref _maxID);
 
 					_id = id;
@@ -1184,8 +1183,7 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (Transaction != null)
-				Transaction.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -1210,8 +1208,7 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (Transaction != null)
-				Transaction.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -1327,9 +1324,9 @@ namespace LinqToDB.Data
 		public object Clone()
 		{
 			var connection =
-				_connection == null       ? null :
-				_connection is ICloneable ? (IDbConnection)((ICloneable)_connection).Clone() :
-				                            null;
+				_connection == null                 ? null :
+				_connection is ICloneable cloneable ? (IDbConnection)cloneable.Clone() :
+				                                      null;
 
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}

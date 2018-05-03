@@ -42,7 +42,8 @@
 
 	NamespaceName = "DataModels";
 
-	LoadSybaseMetadata("MyServer", "MyDatabase", "TestUser", "TestPassword");
+	LoadSapHanaMetadata("MyServer", "MyDatabase", "TestUser", "TestPassword");
+//	LoadSapHanaMetadata(string connectionString);
 
 	GenerateModel();
 #>
