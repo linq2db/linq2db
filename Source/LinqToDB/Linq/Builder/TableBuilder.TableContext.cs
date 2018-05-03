@@ -1021,7 +1021,7 @@ namespace LinqToDB.Linq.Builder
 
 			public int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				return Parent == null ? index : Parent.ConvertToParentIndex(index, this);
+				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
 
 			#endregion
@@ -1204,15 +1204,18 @@ namespace LinqToDB.Linq.Builder
 									var fieldName = memberExpression.Member.Name;
 
 									// do not add association columns
-									if (!EntityDescriptor.Associations.Any(a => a.MemberInfo == memberExpression.Member))
+									if (EntityDescriptor.Associations.All(a => a.MemberInfo != memberExpression.Member))
 									{
 										if (!SqlTable.Fields.TryGetValue(fieldName, out var newField))
 										{
-											newField = new SqlField();
-											newField.Name             = fieldName;
-											newField.PhysicalName     = fieldName;
-											newField.ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
-												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member));
+											newField = new SqlField
+											{
+												Name             = fieldName,
+												PhysicalName     = fieldName,
+												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
+													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member))
+											};
+
 											SqlTable.Add(newField);
 										}
 

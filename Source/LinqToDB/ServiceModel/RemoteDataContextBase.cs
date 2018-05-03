@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.ServiceModel
 {
 	using Expressions;
@@ -14,6 +16,7 @@ namespace LinqToDB.ServiceModel
 	using Mapping;
 	using SqlProvider;
 
+	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext, IEntityServices
 	{
 		public string Configuration { get; set; }
@@ -82,16 +85,14 @@ namespace LinqToDB.ServiceModel
 		protected abstract string       ContextIDPrefix { get; }
 
 		string             _contextID;
-		string IDataContext.ContextID
-		{
-			get { return _contextID ?? (_contextID = GetConfigurationInfo().MappingSchema.ConfigurationList[0]); }
-		}
+		string IDataContext.ContextID =>
+			_contextID ?? (_contextID = GetConfigurationInfo().MappingSchema.ConfigurationList[0]);
 
 		private MappingSchema _mappingSchema;
 		public  MappingSchema  MappingSchema
 		{
-			get { return _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchema); }
-			set { _mappingSchema = value; }
+			get => _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchema);
+			set => _mappingSchema = value;
 		}
 
 		public  bool InlineParameters { get; set; }
@@ -99,16 +100,10 @@ namespace LinqToDB.ServiceModel
 
 
 		private List<string> _queryHints;
-		public  List<string>  QueryHints
-		{
-			get { return _queryHints ?? (_queryHints = new List<string>()); }
-		}
+		public  List<string>  QueryHints => _queryHints ?? (_queryHints = new List<string>());
 
 		private List<string> _nextQueryHints;
-		public  List<string>  NextQueryHints
-		{
-			get { return _nextQueryHints ?? (_nextQueryHints = new List<string>()); }
-		}
+		public  List<string>  NextQueryHints => _nextQueryHints ?? (_nextQueryHints = new List<string>());
 
 		private        Type _sqlProviderType;
 		public virtual Type  SqlProviderType
@@ -124,7 +119,7 @@ namespace LinqToDB.ServiceModel
 				return _sqlProviderType;
 			}
 
-			set { _sqlProviderType = value;  }
+			set => _sqlProviderType = value;
 		}
 
 		private        Type _sqlOptimizerType;
@@ -141,18 +136,12 @@ namespace LinqToDB.ServiceModel
 				return _sqlOptimizerType;
 			}
 
-			set { _sqlOptimizerType = value;  }
+			set => _sqlOptimizerType = value;
 		}
 
-		SqlProviderFlags IDataContext.SqlProviderFlags
-		{
-			get { return GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags; }
-		}
+		SqlProviderFlags IDataContext.SqlProviderFlags => GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags;
 
-		Type IDataContext.DataReaderType
-		{
-			get { return typeof(ServiceModelDataReader); }
-		}
+		Type IDataContext.DataReaderType => typeof(ServiceModelDataReader);
 
 		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
@@ -349,8 +338,7 @@ namespace LinqToDB.ServiceModel
 
 		void Close()
 		{
-			if (OnClosing != null)
-				OnClosing(this, EventArgs.Empty);
+			OnClosing?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void Dispose()

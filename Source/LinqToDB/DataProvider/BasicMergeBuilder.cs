@@ -21,12 +21,12 @@ namespace LinqToDB.DataProvider
 	/// Basic merge builder's validation options set to validate merge operation on SQL:2008 level without specific
 	/// database limitations or extensions.
 	/// </summary>
-	public class BasicMergeBuilder<TTarget, TSource>
+	public class BasicMergeBuilder<TTarget,TSource>
 		where TTarget : class
 		where TSource : class
 	{
 		#region .ctor
-		protected MergeDefinition<TTarget, TSource> Merge { get; private set; }
+		protected MergeDefinition<TTarget, TSource> Merge { get; }
 
 		public BasicMergeBuilder(DataConnection dataConnection, IMergeable<TTarget, TSource> merge)
 		{
@@ -407,12 +407,10 @@ namespace LinqToDB.DataProvider
 
 				var statement = ctx.GetResultStatement();
 
-				for (var i = 0; i < ctx.Columns.Length; i++)
+				foreach (var columnInfo in ctx.Columns)
 				{
-					var columnInfo = ctx.Columns[i];
 					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.Members[0]);
-
-					var column = statement.SelectQuery.Select.Columns[columnInfo.Index];
+					var column           = statement.SelectQuery.Select.Columns[columnInfo.Index];
 
 					SetColumnAlias(column.Alias, columnDescriptor.ColumnName);
 				}
@@ -695,7 +693,7 @@ namespace LinqToDB.DataProvider
 		{
 			Expression insertExpression = Expression.Call(
 				null,
-				LinqExtensions.InsertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+				LinqExtensions.InsertMethodInfo3.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				new[]
 				{
 					_connection.GetTable<TSource>().Expression,
@@ -720,7 +718,7 @@ namespace LinqToDB.DataProvider
 			SaveParameters(newInsert.Parameters);
 
 			if (IsIdentityInsertSupported
-				&& newInsert.Insert.Items.Any(_ => _.Column is SqlField && ((SqlField)_.Column).IsIdentity))
+				&& newInsert.Insert.Items.Any(_ => _.Column is SqlField field && field.IsIdentity))
 				OnInsertWithIdentity();
 
 			SqlBuilder.BuildInsertClauseHelper(newInsert, Command);
@@ -858,7 +856,7 @@ namespace LinqToDB.DataProvider
 			var target   = query.From.Tables[0];
 			target.Alias = _targetAlias;
 
-			SqlTableSource source = null;
+			SqlTableSource source;
 
 			if (subQuery.From.Tables.Count == 2)
 			{
@@ -1082,14 +1080,14 @@ namespace LinqToDB.DataProvider
 			return Tuple.Create(table1, table2);
 		}
 
-		private Expression<Func<TTuple, TTarget>> RewriteUpdatePredicateParameters<TTuple>(
-			IQueryable<TTuple>                          query,
-			Expression<Func<TTarget, TSource, TTarget>> predicate)
+		Expression<Func<TTuple, TTarget>> RewriteUpdatePredicateParameters<TTuple>(
+			IQueryable<TTuple>                        query,
+			Expression<Func<TTarget,TSource,TTarget>> predicate)
 		{
 			var p        = Expression.Parameter(typeof(TTuple));
 			var rewriter = new ExpressionParameterRewriter(p, predicate.Parameters[0], predicate.Parameters[1]);
 
-			return Expression.Lambda<Func<TTuple, TTarget>>(rewriter.Visit(predicate.Body), p);
+			return Expression.Lambda<Func<TTuple,TTarget>>(rewriter.Visit(predicate.Body), p);
 		}
 		#endregion
 
@@ -1112,7 +1110,7 @@ namespace LinqToDB.DataProvider
 
 			Expression updateExpression = Expression.Call(
 				null,
-				LinqExtensions.UpdateMethodInfo2.MakeGenericMethod(new[] { typeof(TTarget) }),
+				LinqExtensions.UpdateMethodInfo2.MakeGenericMethod(typeof(TTarget)),
 				new[] { _connection.GetTable<TTarget>().Expression, Expression.Quote(update) });
 
 			var qry = Query<int>.GetQuery(DataContext, ref updateExpression);
@@ -1168,9 +1166,9 @@ namespace LinqToDB.DataProvider
 		#region Query Generation
 		protected readonly string SourceAlias = "Source";
 
-		private readonly string           _targetAlias = "Target";
-		private          DataConnection   _connection;
-		private          EntityDescriptor _sourceDescriptor;
+		readonly string           _targetAlias = "Target";
+		readonly DataConnection   _connection;
+		         EntityDescriptor _sourceDescriptor;
 
 		protected StringBuilder Command { get; } = new StringBuilder();
 
@@ -1265,20 +1263,20 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Validation
-		private static MergeOperationType[] _matchedTypes = new[]
-						{
+		static readonly MergeOperationType[] _matchedTypes =
+		{
 			MergeOperationType.Delete,
 			MergeOperationType.Update,
 			MergeOperationType.UpdateWithDelete
 		};
 
-		private static MergeOperationType[] _notMatchedBySourceTypes = new[]
+		static readonly MergeOperationType[] _notMatchedBySourceTypes =
 		{
 			MergeOperationType.DeleteBySource,
 			MergeOperationType.UpdateBySource
 		};
 
-		private static MergeOperationType[] _notMatchedTypes = new[]
+		static readonly MergeOperationType[] _notMatchedTypes =
 		{
 			MergeOperationType.Insert
 		};
@@ -1351,46 +1349,49 @@ namespace LinqToDB.DataProvider
 					case MergeOperationType.Delete:
 						hasDelete = true;
 						if (!DeleteOperationSupported)
-							throw new LinqToDBException(string.Format("Merge Delete operation is not supported by {0} provider.", ProviderName));
+							throw new LinqToDBException($"Merge Delete operation is not supported by {ProviderName} provider.");
 						if (!OperationPredicateSupported && operation.MatchedPredicate != null)
-							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", ProviderName));
+							throw new LinqToDBException($"Merge operation conditions are not supported by {ProviderName} provider.");
 						break;
 					case MergeOperationType.Insert:
 						if (!OperationPredicateSupported && operation.NotMatchedPredicate != null)
-							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", ProviderName));
+							throw new LinqToDBException($"Merge operation conditions are not supported by {ProviderName} provider.");
 						break;
 					case MergeOperationType.Update:
 						hasUpdate = true;
 						if (!OperationPredicateSupported && operation.MatchedPredicate != null)
-							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", ProviderName));
+							throw new LinqToDBException($"Merge operation conditions are not supported by {ProviderName} provider.");
 						break;
 					case MergeOperationType.DeleteBySource:
 						if (!BySourceOperationsSupported)
-							throw new LinqToDBException(string.Format("Merge Delete By Source operation is not supported by {0} provider.", ProviderName));
+							throw new LinqToDBException($"Merge Delete By Source operation is not supported by {ProviderName} provider.");
 						if (!OperationPredicateSupported && operation.BySourcePredicate != null)
-							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", ProviderName));
+							throw new LinqToDBException($"Merge operation conditions are not supported by {ProviderName} provider.");
 						break;
 					case MergeOperationType.UpdateBySource:
 						if (!BySourceOperationsSupported)
-							throw new LinqToDBException(string.Format("Merge Update By Source operation is not supported by {0} provider.", ProviderName));
+							throw new LinqToDBException($"Merge Update By Source operation is not supported by {ProviderName} provider.");
 						if (!OperationPredicateSupported && operation.BySourcePredicate != null)
-							throw new LinqToDBException(string.Format("Merge operation conditions are not supported by {0} provider.", ProviderName));
+							throw new LinqToDBException($"Merge operation conditions are not supported by {ProviderName} provider.");
 						break;
 					case MergeOperationType.UpdateWithDelete:
 						hasUpdateWithDelete = true;
 						if (!UpdateWithDeleteOperationSupported)
-							throw new LinqToDBException(string.Format("UpdateWithDelete operation not supported by {0} provider.", ProviderName));
+							throw new LinqToDBException($"UpdateWithDelete operation not supported by {ProviderName} provider.");
 						break;
 				}
 			}
 
 			// update/delete/updatewithdelete combinations validation
 			if (hasUpdateWithDelete && hasUpdate)
-				throw new LinqToDBException(string.Format("Update operation with UpdateWithDelete operation in the same Merge command not supported by {0} provider.", ProviderName));
+				throw new LinqToDBException(
+					$"Update operation with UpdateWithDelete operation in the same Merge command not supported by {ProviderName} provider.");
 			if (hasUpdateWithDelete && hasDelete)
-				throw new LinqToDBException(string.Format("Delete operation with UpdateWithDelete operation in the same Merge command not supported by {0} provider.", ProviderName));
+				throw new LinqToDBException(
+					$"Delete operation with UpdateWithDelete operation in the same Merge command not supported by {ProviderName} provider.");
 			if (UpdateWithDeleteOperationSupported && hasUpdate && hasDelete)
-				throw new LinqToDBException(string.Format("Delete and Update operations in the same Merge command not supported by {0} provider.", ProviderName));
+				throw new LinqToDBException(
+					$"Delete and Update operations in the same Merge command not supported by {ProviderName} provider.");
 
 			// - operations without conditions not placed before operations with conditions in each match group
 			// - there is no multiple operations without condition in each match group
@@ -1400,7 +1401,7 @@ namespace LinqToDB.DataProvider
 
 			// validate that there is no duplicate operations (by type) if provider doesn't support them
 			if (!SameTypeOperationsAllowed && Merge.Operations.GroupBy(_ => _.Type).Any(_ => _.Count() > 1))
-				throw new LinqToDBException(string.Format("Multiple operations of the same type are not supported by {0} provider.", ProviderName));
+				throw new LinqToDBException($"Multiple operations of the same type are not supported by {ProviderName} provider.");
 		}
 
 		private void ValidateGroupConditions(MergeOperationType[] groupTypes)

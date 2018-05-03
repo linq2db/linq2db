@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace LinqToDB.Linq
@@ -15,7 +16,7 @@ namespace LinqToDB.Linq
 			Init(dataContext, expression);
 		}
 
-		public string TableName    { get; set; }
+		public string TableName { get; set; }
 
 		public string GetTableName() =>
 			DataContext.CreateSqlProvider()
