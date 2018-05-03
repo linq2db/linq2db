@@ -14,7 +14,6 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
 	using Data;
 	using Expressions;
 	using Mapping;
@@ -76,13 +75,13 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		///     The maximum number of retry attempts.
 		/// </summary>
-		protected virtual int MaxRetryCount { get; private set; }
+		protected virtual int MaxRetryCount { get; }
 
-		public          string           Name                { get; private set; }
+		public          string           Name                { get; }
 		public abstract string           ConnectionNamespace { get; }
 		public abstract Type             DataReaderType      { get; }
-		public virtual  MappingSchema    MappingSchema       { get; private set; }
-		public          SqlProviderFlags SqlProviderFlags    { get; private set; }
+		public virtual  MappingSchema    MappingSchema       { get; }
+		public          SqlProviderFlags SqlProviderFlags    { get; }
 
 		public static Func<IDataProvider,IDbConnection,IDbConnection> OnConnectionCreated { get; set; }
 
@@ -216,9 +215,7 @@ namespace LinqToDB.DataProvider
 			}
 #endif
 
-			Expression expr;
-
-			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
@@ -283,10 +280,9 @@ namespace LinqToDB.DataProvider
 				case DataType.NVarChar  :
 				case DataType.Text      :
 				case DataType.NText     :
-					if      (value is DateTimeOffset) value = ((DateTimeOffset)value).ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
-					else if (value is DateTime)
+					if      (value is DateTimeOffset dto) value = dto.ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					else if (value is DateTime dt)
 					{
-						var dt = (DateTime)value;
 						value = dt.ToString(
 							dt.Millisecond == 0
 								? dt.Hour == 0 && dt.Minute == 0 && dt.Second == 0
@@ -294,9 +290,8 @@ namespace LinqToDB.DataProvider
 									: "yyyy-MM-ddTHH:mm:ss"
 								: "yyyy-MM-ddTHH:mm:ss.fff");
 					}
-					else if (value is TimeSpan)
+					else if (value is TimeSpan ts)
 					{
-						var ts = (TimeSpan)value;
 						value = ts.ToString(
 							ts.Days > 0
 								? ts.Milliseconds > 0

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
@@ -1403,7 +1405,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		MethodInfo GetQueriableMethodInfo(MethodCallExpression method, Func<MethodInfo,bool,bool> predicate)
+		MethodInfo GetQueriableMethodInfo(MethodCallExpression method, [InstantHandle] Func<MethodInfo,bool,bool> predicate)
 		{
 			return method.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods.FirstOrDefault(m => predicate(m, false)) ?? EnumerableMethods.First(m => predicate(m, true)):

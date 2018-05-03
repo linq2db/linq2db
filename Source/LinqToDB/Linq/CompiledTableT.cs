@@ -21,6 +21,7 @@ namespace LinqToDB.Linq
 		readonly object           _sync = new object();
 
 		string        _lastContextID;
+		Type          _lastContextType;
 		MappingSchema _lastMappingSchema;
 		Query<T>      _lastQuery;
 
@@ -29,25 +30,28 @@ namespace LinqToDB.Linq
 		Query<T> GetInfo(IDataContext dataContext)
 		{
 			string        lastContextID;
+			Type          lastContextType;
 			MappingSchema lastMappingSchema;
 			Query<T>      query;
 
 			lock (_sync)
 			{
 				lastContextID     = _lastContextID;
+				lastContextType   = _lastContextType;
 				lastMappingSchema = _lastMappingSchema;
 				query             = _lastQuery;
 			}
 
 			var contextID     = dataContext.ContextID;
+			var contextType   = dataContext.GetType();
 			var mappingSchema = dataContext.MappingSchema;
 
-			if (lastContextID != contextID || lastMappingSchema != mappingSchema)
+			if (lastContextID != contextID || lastContextType != contextType || lastMappingSchema != mappingSchema)
 				query = null;
 
 			if (query == null)
 			{
-				var key = new { contextID, mappingSchema };
+				var key = new { contextID, contextType, mappingSchema };
 
 				lock (_sync)
 					_infos.TryGetValue(key, out query);
@@ -68,6 +72,7 @@ namespace LinqToDB.Linq
 							_infos.Add(key, query);
 
 							_lastContextID     = contextID;
+							_lastContextType   = contextType;
 							_lastMappingSchema = mappingSchema;
 							_lastQuery         = query;
 						}

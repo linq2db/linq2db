@@ -1122,7 +1122,7 @@ namespace Tests
 
 	public class DeletePerson : IDisposable
 	{
-		IDataContext _db;
+		readonly IDataContext _db;
 
 		public DeletePerson(IDataContext db)
 		{
@@ -1135,7 +1135,7 @@ namespace Tests
 			Delete(_db);
 		}
 
-		private readonly Func<IDataContext, int> Delete =
+		readonly Func<IDataContext,int> Delete =
 			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
 
 	}
@@ -1156,10 +1156,10 @@ namespace Tests
 
 	public abstract class DataSourcesBase : DataAttribute, IParameterDataSource
 	{
-		public bool IncludeLinqService { get; private set; }
-		public string[] Providers { get; private set; }
+		public bool     IncludeLinqService { get; }
+		public string[] Providers          { get; }
 
-		public DataSourcesBase(bool includeLinqService, string[] providers)
+		protected DataSourcesBase(bool includeLinqService, string[] providers)
 		{
 			IncludeLinqService = includeLinqService;
 			Providers = providers;

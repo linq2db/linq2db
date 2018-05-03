@@ -133,7 +133,7 @@ namespace LinqToDB.SchemaProvider
 						SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
 						SkipOnUpdate         = column.c.SkipOnUpdate || column.c.IsIdentity,
 						IsPrimaryKey         = column.pk != null,
-						PrimaryKeyOrder      = column.pk != null ? column.pk.Ordinal : -1,
+						PrimaryKeyOrder      = column.pk?.Ordinal ?? -1,
 						IsIdentity           = column.c.IsIdentity,
 						Description          = column.c.Description,
 						Length               = column.c.Length,
@@ -420,8 +420,7 @@ namespace LinqToDB.SchemaProvider
 
 		protected DataTypeInfo GetDataType(string typeName)
 		{
-			DataTypeInfo dt;
-			return DataTypesDic.TryGetValue(typeName, out dt) ? dt : null;
+			return DataTypesDic.TryGetValue(typeName, out var dt) ? dt : null;
 		}
 
 		protected virtual DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
@@ -645,10 +644,6 @@ namespace LinqToDB.SchemaProvider
 						key.CanBeNull = key.ThisColumns.All(_ => _.IsNullable);
 					}
 				}
-
-if (t.TableName == "Employees")
-{
-}
 
 				foreach (var key in t.ForeignKeys)
 				{

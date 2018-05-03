@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB
 {
 	using Data;
@@ -16,7 +18,8 @@ namespace LinqToDB
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
-	public class DataContext : IDataContext
+	[PublicAPI]
+	public class DataContext : IDataContext, IEntityServices
 	{
 		/// <summary>
 		/// Creates data context using default database configuration.
@@ -33,10 +36,10 @@ namespace LinqToDB
 		/// In case of <c>null</c> value, context will use default configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
-		public DataContext(string configurationString)
+		public DataContext([CanBeNull] string configurationString)
 		{
-			DataProvider        = DataConnection.GetDataProvider(configurationString);
 			ConfigurationString = configurationString ?? DataConnection.DefaultConfiguration;
+			DataProvider        = DataConnection.GetDataProvider(ConfigurationString);
 			ContextID           = DataProvider.Name;
 			MappingSchema       = DataProvider.MappingSchema;
 		}
@@ -269,6 +272,9 @@ namespace LinqToDB
 		/// </summary>
 		public event EventHandler OnClosing;
 
+		/// <inheritdoc />
+		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+
 		void IDisposable.Dispose()
 		{
 			Close();
@@ -281,8 +287,7 @@ namespace LinqToDB
 		{
 			if (_dataConnection != null)
 			{
-				if (OnClosing != null)
-					OnClosing(this, EventArgs.Empty);
+				OnClosing?.Invoke(this, EventArgs.Empty);
 
 				if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints);
 				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints);

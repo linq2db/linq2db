@@ -477,7 +477,7 @@ namespace LinqToDB.Linq.Builder
 				expr = Expression.Convert(expr, type);
 
 			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>>(
-				BuildBlock(expr), new []
+				BuildBlock(expr), new[]
 				{
 					QueryRunnerParam,
 					DataContextParam,

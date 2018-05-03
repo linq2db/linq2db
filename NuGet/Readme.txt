@@ -1,3 +1,7 @@
+LINQ to DB 2.vNEXT  Release Notes
+---------------------------------
+feature: [Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, MS SQL] CTE (common table expressions) support implemented including WCF support (see DataExtensions.GetCte(),  LinqExtensions.AsCte() methods)
+
 LINQ to DB 2.0.0  Release Notes
 ---------------------------------
 *IMPORTANT: LINQ to DB 2.0 is not released yet*
@@ -10,7 +14,6 @@ LINQ to DB 2.0.0  Release Notes
 - feature: support creation of query parameters in extension builders (#964)
 - feature: new configuration flag LinqToDB.Common.Configuration.PrefereApply
 - feature: new In/NotIn extension methods added to LinqToDB.Tools.Extensions
-[Not fully functional yet]- feature: [Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, MS SQL] CTE (common table expressions) support implemented including WCF support (see DataExtensions.GetCte(),  LinqExtensions.AsCte() methods)
 - feature: IBM.Data.DB2.Core provider support
 - feature: Oracle Data Provider for .NET Core provider support
 - feature: parameters to override table, schema/owner and database names added to InsertOrReplace*, InsertWith*Identity*, Update* and Delete* IDataContext extension methods
@@ -22,6 +25,8 @@ LINQ to DB 2.0.0  Release Notes
 - feature: [PostgreSQL][BulkCopy] Provider-specific copy method implemented (#935)
 - feature: Added IQueryable interceptor callback. This feature could be used to attach linq2db to other IQueryable providers (#1116)
 - feature: Extra overrides to Join* extensions that accept two queryable sources, join predicate and result selector expression (#1076, #1088)
+- feature: Added extension point LinqExtensions.ExtensionsAdapter to override LINQ To DB async extensions with custom implementation
+- feature: You can post-process instantiated entities by subscribing on new IEntityServices.OnEntityCreated event, implemented by DataContext/DataCOnnection and RemoteDataContextBase contexts (#1112)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
