@@ -18,7 +18,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlCteTable(
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
-			[JetBrains.Annotations.NotNull] CteClause cte) : base(mappingSchema, cte.ObjectType)
+			[JetBrains.Annotations.NotNull] CteClause cte) : base(mappingSchema, cte.ObjectType, cte.Name)
 		{
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
 		}

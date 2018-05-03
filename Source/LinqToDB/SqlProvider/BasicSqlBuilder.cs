@@ -287,9 +287,9 @@ namespace LinqToDB.SqlProvider
 				first = false;
 
 				AppendIndent();
-				StringBuilder
-					.Append(cte.Name)
-					.Append(" (");
+				StringBuilder.Append(cte.Name);
+				if (cte.Fields.Count > 0) 
+					StringBuilder.Append(" (");
 
 				var firstField = true;
 				foreach (var field in cte.Fields.Values)
@@ -299,11 +299,13 @@ namespace LinqToDB.SqlProvider
 					firstField = false;
 					StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
 				}
+				
+				if (cte.Fields.Count > 0) 
+					StringBuilder.AppendLine(")");
 
-				StringBuilder.AppendLine(")");
 				Indent--;
 				AppendIndent();
-				StringBuilder.AppendLine("AS");
+				StringBuilder.AppendLine(" AS");
 				AppendIndent();
 				StringBuilder.AppendLine("(");
 

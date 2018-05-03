@@ -58,7 +58,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Init from type
 
-		public SqlTable([JetBrains.Annotations.NotNull] MappingSchema mappingSchema, Type objectType) : this()
+		public SqlTable([JetBrains.Annotations.NotNull] MappingSchema mappingSchema, Type objectType, string physicalName = null) : this()
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
@@ -68,7 +68,7 @@ namespace LinqToDB.SqlQuery
 			Schema       = ed.SchemaName;
 			Name         = ed.TableName;
 			ObjectType   = objectType;
-			PhysicalName = Name;
+			PhysicalName = physicalName ?? Name;
 
 			foreach (var column in ed.Columns)
 			{
