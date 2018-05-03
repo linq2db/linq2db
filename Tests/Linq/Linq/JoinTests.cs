@@ -1390,5 +1390,93 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void SqlFullJoinWithCount1([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var areEqual =
+					(from left in db.Parent
+					from right in db.Parent.FullJoin(p => p.ParentID == left.ParentID)
+					select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					&& Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.True(areEqual);
+			}
+		}
+
+		[Test]
+		public void SqlFullJoinWithCount2([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = Parent.First().ParentID;
+
+				var areEqual =
+					(from left in db.Parent.Where(p => p.ParentID != id)
+					 from right in db.Parent.FullJoin(p => p.ParentID == left.ParentID)
+					 select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.False(areEqual);
+			}
+		}
+
+		[Test]
+		public void SqlFullJoinWithCount3([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = Parent.First().ParentID;
+
+				var areEqual =
+					(from left in db.Parent
+					 from right in db.Parent.Where(p => p.ParentID != id).FullJoin(p => p.ParentID == left.ParentID)
+					 select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.False(areEqual);
+			}
+		}
+
+		[Test]
+		public void SqlFullJoinWithCount4([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+				var id2 = Parent.Skip(1).First().ParentID;
+
+				var areEqual =
+					(from left in db.Parent.Where(p => p.ParentID != id1)
+					 from right in db.Parent.Where(p => p.ParentID != id2).FullJoin(p => p.ParentID == left.ParentID)
+					 select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.False(areEqual);
+			}
+		}
+
+		[Test]
+		public void SqlFullJoinWithCount5([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = Parent.First().ParentID;
+
+				var areEqual =
+					(from left in db.Parent.Where(p => p.ParentID != id)
+					 from right in db.Parent.Where(p => p.ParentID != id).FullJoin(p => p.ParentID == left.ParentID)
+					 select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.True(areEqual);
+			}
+		}
 	}
 }

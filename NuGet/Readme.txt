@@ -79,6 +79,7 @@ LINQ to DB 2.0.0  Release Notes
 - fix: [Access] Fixed schema read failure when ACE OleDb provider used (https://github.com/linq2db/linq2db.LINQPad/issues/10)
 - fix: [Access] Schema provider will now return system tables too (TableInfo.IsProviderSpecific == true) (#1119)
 - fix: [Firebird] Use proper identifiers quotation for create/drop/truncate table for tables with generators and fix detection of cases when quotation is required (#1120)
+- fix: Fixed issue when joined subquery condition were moved to outer query's condition (#922)
 
 - other changes: t4models repository moved to main repository
 - other changes: [Firebird] Made changes to Firebird provider/sql optimizer to allow subclassing (#1000)

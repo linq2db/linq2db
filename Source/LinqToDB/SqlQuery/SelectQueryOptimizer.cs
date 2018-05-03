@@ -671,6 +671,18 @@ namespace LinqToDB.SqlQuery
 			{
 				var canRemove = !CorrectCrossJoinQuery(select);
 				if (canRemove)
+				{
+					if (source.Joins.Count > 0)
+					{
+						// We can not remove subquery that is left side for FULL and RIGHT joins and there is filter
+						var join = source.Joins[0];
+						if (join.JoinType == JoinType.Full ||
+						    join.JoinType == JoinType.Right
+							&& !select.Where.IsEmpty)
+						canRemove = false;
+					}
+				}
+				if (canRemove)
 					return RemoveSubQuery(source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns);
 			}
 
