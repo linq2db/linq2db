@@ -60,7 +60,7 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : Attribute
 		{
-			return _reader.GetAttributes<T>(type, memberInfo, false);
+			return _reader.GetAttributes<T>(type, memberInfo);
 		}
 
 		#endregion
