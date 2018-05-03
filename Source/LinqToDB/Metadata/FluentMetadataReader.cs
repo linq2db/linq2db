@@ -21,7 +21,7 @@ namespace LinqToDB.Metadata
 			if (_types.TryGetValue(type, out attrs))
 				return attrs.OfType<T>().ToArray();
 
-			if (type.GetTypeInfo().BaseType != typeof(object))
+			if (type.GetTypeInfo().BaseType != typeof(object) && inherit)
 				return GetAttributes<T>(type.GetTypeInfo().BaseType, inherit);
 
 			return Array<T>.Empty;
