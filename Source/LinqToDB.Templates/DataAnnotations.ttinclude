@@ -1,0 +1,65 @@
+<#
+	{
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			beforeGenerateModel();
+			DataAnnotationsImpl();
+		};
+	}
+#>
+<#+
+void DataAnnotationsImpl()
+{
+	foreach (Class cl in GetTreeNodes(Model).OfType<Class>())
+	{
+		foreach (var p in GetTreeNodes(cl).OfType<Property>())
+		{
+			if (p.DisplayName != null)
+			{
+				p.Attributes.Add(new Attribute("Display", "Name=\"" + p.DisplayName + "\"") { IsSeparated = true });
+			}
+
+			if (p.IsRequired)
+			{
+				var attr = new Attribute("Required") { IsSeparated = true };
+
+				if (p.IsRequiredMessage != null)
+					attr.Parameters.Add(string.Format("ErrorMessage=\"" + p.IsRequiredMessage + "\"", p.DisplayName ?? p.Name));
+
+				p.Attributes.Add(attr);
+			}
+
+			if (p.StringLength > 0)
+			{
+				var attr = new Attribute("StringLength", p.StringLength.ToString()) { IsSeparated = true };
+
+				if (p.StringLengthMessage != null)
+					attr.Parameters.Add(string.Format("ErrorMessage=\"" + p.StringLengthMessage + "\"", p.DisplayName ?? p.Name));
+
+				p.Attributes.Add(attr);
+
+//				p.Attributes.Add(
+//					new Attribute("StringLength",
+//						p.StringLength.ToString(),
+//						string.Format(
+//							"ErrorMessage=\"The {0} must be a string with a maximum lenfth of {1}.\"",
+//							p.DisplayName ?? "field",
+//							p.StringLength))
+//					{
+//						IsSeparated = true
+//					});
+			}
+		}
+	}
+}
+
+partial class Property
+{
+	public string DisplayName;
+	public bool   IsRequired;
+	public string IsRequiredMessage;
+	public int    StringLength;
+	public string StringLengthMessage;
+}
+#>

@@ -3,10 +3,10 @@ using System.Data.SqlClient;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
+// ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
 {
 	using Model;
@@ -67,7 +67,7 @@ namespace Tests.xUpdate
 				var parametersCount = 8;
 
 				if (context == ProviderName.DB2)
-					parametersCount = 6;
+					parametersCount = 1;
 				else if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
 					parametersCount = 4;
 
@@ -129,7 +129,7 @@ namespace Tests.xUpdate
 				var parametersCount = 7;
 
 				if (context == ProviderName.DB2)
-					parametersCount = 5;
+					parametersCount = 1;
 				else if (context == ProviderName.Firebird || context == TestProvName.Firebird3)
 					parametersCount = 3;
 
@@ -242,7 +242,11 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var paramcount = 1;
+				if (context == ProviderName.DB2 || context == ProviderName.Informix)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -282,7 +286,11 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var paramcount = 1;
+				if (context == ProviderName.DB2)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -331,7 +339,11 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+				var paramcount = 1;
+				if (context == ProviderName.DB2)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 			}
 		}
 
@@ -485,7 +497,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				Assert.AreEqual(1, rows);
-				Assert.AreEqual(1, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
+
+				var paramcount = 1;
+				if (context == ProviderName.DB2)
+					paramcount = 0;
+
+				Assert.AreEqual(paramcount, db.LastQuery.Count(_ => _ == GetParameterToken(context)));
 
 				var result = GetTarget(db).Where(_ => _.Id == 1).ToList();
 
@@ -518,8 +535,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// FB, INFORMIX: doesn't support parameters in source select list
-		[Test, MergeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix)]
+		// FB, INFORMIX, Oracle: doesn't support parameters in source select list
+		[Test, MergeDataContextSource(
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Informix,
+			ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void TestParametersInSourceSelect(string context)
 		{
 			using (var db = new TestDataConnection(context))

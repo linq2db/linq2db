@@ -77,7 +77,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(true, ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestFail(string context)
 		{
 			try

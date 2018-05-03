@@ -59,7 +59,7 @@ namespace Tests.Linq
 				db.Update(t1);
 			}
 		}
-#if !NETSTANDARD
+#if !NETSTANDARD1_6
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test, IncludeDataContextSource(
@@ -460,7 +460,7 @@ namespace Tests.Linq
 			                                           public char   Gender;
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void Issue88(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -516,6 +516,117 @@ namespace Tests.Linq
 				AreEqual(expected, result);
 			}
 		}
+
+		[Test, DataContextSource]
+		public void Issue909(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = new int?[] { 123 };
+
+				var expected = from p in Parent
+					where !values.Contains(p.Value1)
+					select p;
+
+				var actual = from p in db.GetTable<Parent>()
+						where !values.Contains(p.Value1)
+						select p;
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Issue909Join(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = new int?[] { 123 };
+
+				var expected = from c in Child
+					from p in Parent
+					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
+					select c;
+
+				var actual = from c in db.GetTable<Child>()
+					from p in db.GetTable<Parent>()
+					where p.ParentID == c.ParentID && !values.Contains(p.Value1)
+					select c;
+
+				AreEqual(expected, actual);
+			}
+		}
+		[Test, DataContextSource]
+		public void Issue909Subquery(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = new int[] { 123 };
+
+				var expected = from c in Child
+					where (from p in Parent
+						where p.ParentID == c.ParentID && (p.Value1 == null || !values.Contains(p.Value1.Value))
+						select p).Any()
+					select c;
+
+				var actual = from c in db.GetTable<Child>()
+					where (from p in db.GetTable<Parent>()
+						where p.ParentID == c.ParentID && !values.Contains(p.Value1.Value)
+						select p).Any()
+					select c;
+
+				AreEqual(expected, actual);
+			}
+		}
+
+		[Table("AllTypes")]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		private class InsertIssueTest
+		{
+			[Column("smallintDataType")]
+			[Column("SMALLINTDATATYPE", Configuration = ProviderName.DB2)]
+			public short ID;
+
+			[Column]
+			[Column("INTDATATYPE", Configuration = ProviderName.DB2)]
+			public int? intDataType;
+
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(intDataType), CanBeNull = true)]
+			public IQueryable<InsertIssueTest> Association => throw new InvalidOperationException();
+		}
+
+		// Sybase: we need to get rid of bit field from AllTypes table as it creates a lot of issues with testing
+		[Test, DataContextSource(ProviderName.Sybase)]
+		public void InsertFromSelectWithNullableFilter(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Query(true);
+				Query(false);
+
+				void Query(bool isNull)
+				{
+					db.GetTable<InsertIssueTest>()
+						.Where(_ => _.ID == GetId(isNull))
+						.SelectMany(_ => _.Association)
+						.Select(_ => _.ID)
+						.Distinct()
+						.Insert(
+							db.GetTable<InsertIssueTest>(),
+							_ => new InsertIssueTest()
+							{
+								ID = 123,
+								intDataType = _
+							});
+				}
+			}
+		}
+
+		private short? GetId(bool isNull)
+		{
+			return isNull ? (short?)null : 1234;
+		}
+
 	}
 
 }

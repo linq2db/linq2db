@@ -13,76 +13,80 @@ namespace Tests.Linq
 
 	public static class EnumerableExtesions
 	{
-		class Results<T, TKey>
+		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
+			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
+			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner,
+			                                SqlJoinType                   joinType, 
+			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, bool>    predicate,
+			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
 		{
-			public TKey Key;
-			public List<T> Items = new List<T>();
-		}
-
-		public static IEnumerable<TResult> SqlJoinInternal<TFirst, TSecond, TResult>(this IEnumerable<TFirst> first,
-			[JetBrains.Annotations.NotNull] IEnumerable<TSecond> second, Func<TFirst, TSecond, bool> predicate,
-			Func<TFirst, TSecond, TResult> resultSelector,
-			SqlJoinType joinType)
-		{
-			if (first  == null) throw new ArgumentNullException("first");
-			if (second == null) throw new ArgumentNullException("second");
+			if (outer          == null) throw new ArgumentNullException(nameof(outer));
+			if (inner          == null) throw new ArgumentNullException(nameof(inner));
+			if (predicate      == null) throw new ArgumentNullException(nameof(predicate));
+			if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
 
 			switch (joinType)
 			{
 				case SqlJoinType.Inner:
-					return first.SelectMany(f => second.Where(s => predicate(f, s)).Select(s => resultSelector(f, s)));
+					return outer.SelectMany(f => inner.Where(s => predicate(f, s)).Select(s => resultSelector(f, s)));
 				case SqlJoinType.Left:
-					return first.SelectMany(f => second.Where(s => predicate(f, s)).DefaultIfEmpty().Select(s => resultSelector(f, s)));
+					return outer.SelectMany(f => inner.Where(s => predicate(f, s)).DefaultIfEmpty().Select(s => resultSelector(f, s)));
 				case SqlJoinType.Right:
-					return second.SelectMany(s => first.Where(f => predicate(f, s)).DefaultIfEmpty().Select(f => resultSelector(f, s)));
+					return inner.SelectMany(s => outer.Where(f => predicate(f, s)).DefaultIfEmpty().Select(f => resultSelector(f, s)));
 				case SqlJoinType.Full:
-					var firstItems = first.ToList();
-					var secondItems = second.ToList();
+					var firstItems = outer.ToList();
+					var secondItems = inner.ToList();
 					var firstResult = firstItems.SelectMany(f =>
 						secondItems.Where(s => predicate(f, s)).DefaultIfEmpty().Select(s => new {First = f, Second = s}));
 
 					var secondResult = secondItems.Where(s => !firstItems.Any(f => predicate(f, s)))
-						.Select(s => new {First = default(TFirst), Second = s});
+						.Select(s => new {First = default(TOuter), Second = s});
 
 					var res = firstResult.Concat(secondResult).Select(r => resultSelector(r.First, r.Second));
 					return res;
 				default:
-					throw new ArgumentOutOfRangeException("joinType", joinType, null);
+					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
 			}
 		}
 
-		public static IEnumerable<TResult> SqlJoinInternal<TFirst, TSecond, TKey, TResult>(this IEnumerable<TFirst> first,
-			[JetBrains.Annotations.NotNull] IEnumerable<TSecond> second, Func<TFirst, TKey> firstKeySelector, Func<TSecond, TKey> secondKeySelector,
-			Func<TFirst, TSecond, TResult> resultSelector,
-			SqlJoinType joinType)
+		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TKey, TResult>(
+			[JetBrains.Annotations.NotNull] this IEnumerable<TOuter>      outer,
+			[JetBrains.Annotations.NotNull] IEnumerable<TInner>           inner, 
+			                                SqlJoinType                   joinType,
+			[JetBrains.Annotations.NotNull] Func<TOuter, TKey>            outerKeySelector, 
+			[JetBrains.Annotations.NotNull] Func<TInner, TKey>            innerKeySelector,
+			[JetBrains.Annotations.NotNull] Func<TOuter, TInner, TResult> resultSelector)
 		{
-			if (first == null) throw new ArgumentNullException("first");
-			if (second == null) throw new ArgumentNullException("second");
+			if (outer            == null) throw new ArgumentNullException(nameof(outer));
+			if (inner            == null) throw new ArgumentNullException(nameof(inner));
+			if (outerKeySelector == null) throw new ArgumentNullException(nameof(outerKeySelector));
+			if (innerKeySelector == null) throw new ArgumentNullException(nameof(innerKeySelector));
+			if (resultSelector   == null) throw new ArgumentNullException(nameof(resultSelector));
 
 			switch (joinType)
 			{
 				case SqlJoinType.Inner:
-					return first.Join(second, firstKeySelector, secondKeySelector, resultSelector);
+					return outer.Join(inner, outerKeySelector, innerKeySelector, resultSelector);
 				case SqlJoinType.Left:
-					return first
-						.GroupJoin(second, firstKeySelector, secondKeySelector, (o, gr) => new {o, gr})
+					return outer
+						.GroupJoin(inner, outerKeySelector, innerKeySelector, (o, gr) => new {o, gr})
 						.SelectMany(t => t.gr.DefaultIfEmpty(), (t1, t2) => resultSelector(t1.o, t2));
 				case SqlJoinType.Right:
-					return second
-						.GroupJoin(first, secondKeySelector, firstKeySelector, (o, gr) => new { o, gr })
+					return inner
+						.GroupJoin(outer, innerKeySelector, outerKeySelector, (o, gr) => new { o, gr })
 						.SelectMany(t => t.gr.DefaultIfEmpty(), (t1, t2) => resultSelector(t2, t1.o));
 				case SqlJoinType.Full:
-					var keys1 = first.ToLookup(firstKeySelector);
-					var keys2 = second.ToLookup(secondKeySelector);
+					var keys1 = outer.ToLookup(outerKeySelector);
+					var keys2 = inner.ToLookup(innerKeySelector);
 					var res = new List<TResult>();
 					foreach (var pair1 in keys1)
 					{
 						if (keys2.Contains(pair1.Key))
 						{
-							res.AddRange(pair1.Join(keys2[pair1.Key], firstKeySelector, secondKeySelector, resultSelector));
+							res.AddRange(pair1.Join(keys2[pair1.Key], outerKeySelector, innerKeySelector, resultSelector));
 							continue;
 						}
-						res.AddRange(pair1.Select(r => resultSelector(r, default(TSecond))));
+						res.AddRange(pair1.Select(r => resultSelector(r, default)));
 					}
 
 					foreach (var pair2 in keys2)
@@ -91,12 +95,12 @@ namespace Tests.Linq
 						{
 							continue;
 						}
-						res.AddRange(pair2.Select(r => resultSelector(default(TFirst), r)));
+						res.AddRange(pair2.Select(r => resultSelector(default, r)));
 					}
 
 					return res;
 				default:
-					throw new ArgumentOutOfRangeException("joinType", joinType, null);
+					throw new ArgumentOutOfRangeException(nameof(joinType), joinType, null);
 			}
 		}
 	}
@@ -821,6 +825,32 @@ namespace Tests.Linq
 					select new { p, ch });
 		}
 
+		[ActiveIssue(577)]
+		[Test, DataContextSource]
+		public void MultipleLeftJoin(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result =
+					from parent             in db.Parent
+					join child              in db.Child      on parent.ParentID equals child.ParentID      into childTemp
+					join grandChild         in db.GrandChild on parent.ParentID equals grandChild.ParentID into grandChildTemp
+					from grandChildLeftJoin in grandChildTemp.DefaultIfEmpty()
+					from childLeftJoin      in childTemp.DefaultIfEmpty()
+					select new { parent.ParentID, ChildID = (int?)childLeftJoin.ChildID, GrandChildID = (int?)grandChildLeftJoin.GrandChildID };
+
+				var expected =
+					from parent             in Parent
+					join child              in Child      on parent.ParentID equals child.ParentID      into childTemp
+					join grandChild         in GrandChild on parent.ParentID equals grandChild.ParentID into grandChildTemp
+					from grandChildLeftJoin in grandChildTemp.DefaultIfEmpty()
+					from childLeftJoin      in childTemp.DefaultIfEmpty()
+					select new { parent.ParentID, childLeftJoin?.ChildID, grandChildLeftJoin?.GrandChildID };
+
+				AreEqual(expected, result);
+			}
+		}
+
 		[Test, DataContextSource]
 		public void SubQueryJoin(string context)
 		{
@@ -931,7 +961,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void LeftJoinTest2(string context)
 		{
 			// THIS TEST MUST BE RUN IN RELEASE CONFIGURATION (BECAUSE IT PASSES UNDER DEBUG CONFIGURATION)
@@ -951,7 +981,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		[Test, Explicit, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
 		public void StackOverflow(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1097,19 +1127,43 @@ namespace Tests.Linq
 					);
 		}
 
-		[Test]
-		public void SqlJoinSimple(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-					SqlJoinType.Left,
-					SqlJoinType.Right,
-					SqlJoinType.Full)] SqlJoinType joinType)
+		[Test, IncludeDataContextSource(true, ProviderName.SqlServer2012)]
+		public void FromLeftJoinTest(string context)
 		{
-			using (new DisableQueryCache())
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					from g in db.GrandChild
+						.Where(t =>
+							db.Person
+								.Select(r => r.ID)
+								.Contains(c.ChildID))
+						.DefaultIfEmpty()
+					select new { p.ParentID }
+					;
+
+				var list = q.ToList();
+			}
+		}
+
+		public class AllJoinsSource : IncludeDataSources
+		{
+			public AllJoinsSource() : base(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird, ProviderName.PostgreSQL)
+			{
+			}
+		}
+
+		[Test]
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlJoinSimple([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		{
 			using (var db = GetDataContext(context))
 			{
 				var expected = from p in Parent
-						.SqlJoinInternal(Child, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c}, joinType)
+						.SqlJoinInternal(Child, joinType, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c})
 					select new { ParentID = p.p == null ? (int?) null : p.p.ParentID, ChildID = p.c == null ? (int?) null : p.c.ChildID};
 
 				var actual = from p in db.Parent
@@ -1122,12 +1176,12 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void SqlJoinSimple3(string context)
+		public void SqlLeftJoinSimple1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var expected =
-					from p in Parent.SqlJoinInternal(Child, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c}, SqlJoinType.Left)
+					from p in Parent.SqlJoinInternal(Child, SqlJoinType.Left, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c})
 					select new { p.p?.ParentID, p.c?.ChildID };
 
 				var actual =
@@ -1141,12 +1195,12 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void SqlJoinSimple2(string context)
+		public void SqlLeftJoinSimple2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var expected =
-					from p in Parent.SqlJoinInternal(Child, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c}, SqlJoinType.Left)
+					from p in Parent.SqlJoinInternal(Child, SqlJoinType.Left, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c})
 					select new { p.p?.ParentID, p.c?.ChildID };
 
 				var actual =
@@ -1159,27 +1213,14 @@ namespace Tests.Linq
 			}
 		}
 
-		public class AllJoinsSource : IncludeDataSources
-		{
-			public AllJoinsSource() : base(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative, ProviderName.Firebird, ProviderName.PostgreSQL)
-			{
-			}
-		}
-
 		[Test]
-		public void SqlJoinSubQuery(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-				SqlJoinType.Left,
-				SqlJoinType.Right,
-				SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlJoinSubQuery([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
-			using (new DisableQueryCache())
 			using (var db = GetDataContext(context))
 			{
 				var expected = from p in Parent.Where(p => p.ParentID > 0).Take(10)
-						.SqlJoinInternal(Child, (p, c) => p.ParentID == c.ParentID, (p, c) => new { p, c }, joinType)
+						.SqlJoinInternal(Child, joinType, (p, c) => p.ParentID == c.ParentID, (p, c) => new { p, c })
 					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
 
 				var actual = from p in db.Parent.Where(p => p.ParentID > 0).Take(10)
@@ -1192,18 +1233,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereJoin(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-				SqlJoinType.Left,
-				SqlJoinType.Right,
-				SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
-			using (new DisableQueryCache())
 			using (var db = GetDataContext(context))
 			{
-				var expected = Parent.SqlJoinInternal(Parent, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1,
-					(p1, p2) => p2, joinType);
+				var expected = Parent.SqlJoinInternal(Parent, joinType, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1, (p1, p2) => p2);
 
 				var actual =
 					from p1 in db.Parent
@@ -1216,18 +1251,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlNullWhereSubqueryJoin(
-			[AllJoinsSource] string context,
-			[Values(SqlJoinType.Inner,
-				SqlJoinType.Left,
-				SqlJoinType.Right,
-				SqlJoinType.Full)] SqlJoinType joinType)
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
-			using (new DisableQueryCache())
 			using (var db = GetDataContext(context))
 			{
-				var expected = Parent.Take(10).SqlJoinInternal(Parent.Take(10), (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1,
-					(p1, p2) => p2, joinType);
+				var expected = Parent.Take(10).SqlJoinInternal(Parent.Take(10), joinType, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1, (p1, p2) => p2);
 
 				var actual =
 					from p1 in db.Parent.Take(10)
@@ -1236,6 +1265,222 @@ namespace Tests.Linq
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
+			}
+		}
+
+		[Test]
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlLinqJoinSimple([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected = from p in Parent
+						.SqlJoinInternal(Child, joinType, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c})
+					select new { ParentID = p.p == null ? (int?) null : p.p.ParentID, ChildID = p.c == null ? (int?) null : p.c.ChildID};
+
+				var actual = db.Parent.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID,
+					(p, c) => new {ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID});
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void SqlLinqLeftJoinSimple1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					from p in Parent.SqlJoinInternal(Child, SqlJoinType.Left, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c})
+					select new { p.p?.ParentID, p.c?.ChildID };
+
+				var actual = db.Parent.Join(db.Child, SqlJoinType.Left, (p, c) => p.ParentID == c.ParentID,
+					(p, c) => new {ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID});
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void SqlLinqLeftJoinSimple2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected =
+					from p in Parent.SqlJoinInternal(Child, SqlJoinType.Left, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c})
+					select new { p.p?.ParentID, p.c?.ChildID };
+
+				var actual = db.Parent.LeftJoin(db.Child, (p, c) => p.ParentID == c.ParentID,
+					(p, c) => new {ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID});
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
+			}
+		}
+
+		[Test]
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlLinqJoinSubQuery([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected = from p in Parent.Where(p => p.ParentID > 0).Take(10)
+						.SqlJoinInternal(Child, joinType, (p, c) => p.ParentID == c.ParentID, (p, c) => new { p, c })
+					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
+
+				var actual = db.Parent.Where(p => p.ParentID > 0).Take(10)
+					.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID, 
+						(p, c) => new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID });
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
+			}
+		}
+
+		[Test]
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlLinqNullWhereJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected = Parent.SqlJoinInternal(Parent, joinType, (p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1, (p1, p2) => p2);
+
+				var actual = db.Parent.Join(db.Parent, joinType, (p1, p2) => p1.ParentID == p2.ParentID && p1.Value1 == p2.Value1,
+					(p1, p2) => p2);
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
+			}
+		}
+
+		[Test]
+		[Combinatorial] // see https://github.com/nunit/nunit/issues/2759
+		public void SqlLinqNullWhereSubqueryJoin([AllJoinsSource] string context, [Values] SqlJoinType joinType)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected = Parent.Take(10).SqlJoinInternal(Parent.Take(10), joinType,
+					(p1, p) => p1.ParentID == p.ParentID && p1.Value1 == p.Value1, (p1, p2) => p2);
+
+				var actual = db.Parent.Take(10).Join(db.Parent.Take(10), joinType,
+					(p1, p2) => p1.ParentID == p2.ParentID && p1.Value1 == p2.Value1, (p1, p2) => p2);
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.Value1));
+			}
+		}
+
+		[Test]
+		[DataContextSource] 
+		public void SqlLinqCrossJoinSubQuery(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var expected = from p in Parent.Where(p => p.ParentID > 0).Take(10)
+						.SqlJoinInternal(Child.Take(10), SqlJoinType.Inner, (p, c) => true, (p, c) => new { p, c })
+					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
+
+				var actual = db.Parent.Where(p => p.ParentID > 0).Take(10)
+					.CrossJoin(db.Child.Take(10), (p, c) => new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID });
+
+				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
+					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
+			}
+		}
+
+		[Test]
+		[Combinatorial]
+		public void SqlFullJoinWithCount1([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var areEqual =
+					(from left in db.Parent
+					from right in db.Parent.FullJoin(p => p.ParentID == left.ParentID)
+					select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					&& Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.True(areEqual);
+			}
+		}
+
+		[Test]
+		[Combinatorial]
+		public void SqlFullJoinWithCount2([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = Parent.First().ParentID;
+
+				var areEqual =
+					(from left in db.Parent.Where(p => p.ParentID != id)
+					 from right in db.Parent.FullJoin(p => p.ParentID == left.ParentID)
+					 select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.False(areEqual);
+			}
+		}
+
+		[Test]
+		[Combinatorial]
+		public void SqlFullJoinWithCount3([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = Parent.First().ParentID;
+
+				var areEqual =
+					(from left in db.Parent
+					 from right in db.Parent.Where(p => p.ParentID != id).FullJoin(p => p.ParentID == left.ParentID)
+					 select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.False(areEqual);
+			}
+		}
+
+		[Test]
+		[Combinatorial]
+		public void SqlFullJoinWithCount4([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+				var id2 = Parent.Skip(1).First().ParentID;
+
+				var areEqual =
+					(from left in db.Parent.Where(p => p.ParentID != id1)
+					 from right in db.Parent.Where(p => p.ParentID != id2).FullJoin(p => p.ParentID == left.ParentID)
+					 select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.False(areEqual);
+			}
+		}
+
+		[Test]
+		[Combinatorial]
+		public void SqlFullJoinWithCount5([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = Parent.First().ParentID;
+
+				var areEqual =
+					(from left in db.Parent.Where(p => p.ParentID != id)
+					 from right in db.Parent.Where(p => p.ParentID != id).FullJoin(p => p.ParentID == left.ParentID)
+					 select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					 && Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
+					.Single();
+
+				Assert.True(areEqual);
 			}
 		}
 	}

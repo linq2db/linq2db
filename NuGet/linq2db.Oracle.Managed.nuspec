@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.Oracle.Managed</id>
+		<version>2.0.0-rc</version>
+		<title>LINQ to Oracle (ODP.NET) Managed</title>
+		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
+		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
+		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
+		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
+		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>
+			LINQ to Oracle is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+		</description>
+		<summary>
+			This package includes a T4 template to generate data models for Oracle database and references to the linq2db and odp.net.managed nugets.
+			Oracle data provider for .NET will still need to be installed on the production or development machine in order to connect to Oracle.
+		</summary>
+		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
+		<dependencies>
+			<dependency id="Oracle.ManagedDataAccess" version="12.2.1100"/>
+			<dependency id="linq2db"                  version="2.0.0-*"/>
+		</dependencies>
+		<contentFiles>
+			<files include="**\*" buildAction="None"/>
+		</contentFiles>
+	</metadata>
+	<files>
+		<file src="..\Tests\Linq\bin\AppVeyor\net452\Oracle.ManagedDataAccess.dll" target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"               target="tools" />
+		
+		<file src="Oracle\linq2db.Oracle.props"                                    target="build\linq2db.Oracle.Managed.props" />
+		
+		<file src="Oracle\*.*"                                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="t4models\*.ttinclude"                                           target="contentFiles\any\any\LinqToDB.Templates"/>
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
+		<file src="..\Source\LinqToDB.Templates\*.Oracle.ttinclude"                target="contentFiles\any\any\LinqToDB.Templates" />
+		
+		<file src="Oracle\*.*"                                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="t4models\*.ttinclude"                                           target="content\LinqToDB.Templates"/>
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                       target="content\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
+		<file src="..\Source\LinqToDB.Templates\*.Oracle.ttinclude"                target="content\LinqToDB.Templates" />
+	</files>
+</package>

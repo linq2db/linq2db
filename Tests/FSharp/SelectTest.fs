@@ -4,9 +4,9 @@ open Tests.FSharp.Models
 
 open LinqToDB
 open LinqToDB.Mapping
-open NUnit.Framework
+open Tests.Tools
 
-let SelectField (db : IDataContext) = 
+let SelectField (db : IDataContext) =
     let persons = db.GetTable<Person>()
     let q = query {
         for p in persons do
@@ -14,10 +14,10 @@ let SelectField (db : IDataContext) =
     }
 
     let sql = q.ToString()
-    Assert.That(sql.IndexOf("First"), Is.LessThan(0))
-    Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0))
+    NUnitAssert.ThatIsLessThan(sql.IndexOf("First"), 0)
+    NUnitAssert.ThatIsGreaterThan(sql.IndexOf("LastName"), 0)
 
-let SelectFieldDeeplyComplexPerson (db : IDataContext) = 
+let SelectFieldDeeplyComplexPerson (db : IDataContext) =
     let persons = db.GetTable<DeeplyComplexPerson>()
     let q = query {
         for p in persons do
@@ -25,5 +25,5 @@ let SelectFieldDeeplyComplexPerson (db : IDataContext) =
     }
 
     let sql = q.ToString()
-    Assert.That(sql.IndexOf("First"), Is.LessThan(0))
-    Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0))
+    NUnitAssert.ThatIsLessThan(sql.IndexOf("First"), 0)
+    NUnitAssert.ThatIsGreaterThan(sql.IndexOf("LastName"), 0)

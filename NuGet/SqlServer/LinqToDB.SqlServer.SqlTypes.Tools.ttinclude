@@ -1,0 +1,3 @@
+<#@ assembly name="$(LinqToDBT4SqlServerToolsDirectory)Microsoft.SqlServer.Types.dll" #>
+<#@ include file="LinqToDB.Tools.ttinclude" #>
+<#@ include file="LinqToDB.SqlServer.SqlTypes.ttinclude" #>

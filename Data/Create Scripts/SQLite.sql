@@ -21,9 +21,12 @@ CREATE TABLE InheritanceChild
 	TypeDiscriminator   integer          NULL,
 	Name                nvarchar(50)     NULL
 );
+
 --
 -- Person Table
 --
+DROP TABLE IF EXISTS Doctor;
+DROP TABLE IF EXISTS Patient;
 DROP TABLE IF EXISTS Person;
 CREATE TABLE Person
 (
@@ -42,7 +45,6 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jürgen', 'König',   
 --
 -- Doctor Table Extension
 --
-DROP TABLE IF EXISTS Doctor;
 CREATE TABLE Doctor
 (
 	PersonID integer      NOT NULL CONSTRAINT PK_Doctor PRIMARY KEY,
@@ -55,7 +57,6 @@ INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
 --
 -- Patient Table Extension
 --
-DROP TABLE IF EXISTS Patient;
 CREATE TABLE Patient
 (
 	PersonID  integer       NOT NULL CONSTRAINT PK_Patient PRIMARY KEY,
@@ -147,16 +148,16 @@ INSERT INTO AllTypes
 	objectDataType
 )
 SELECT
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,  NULL,   NULL,  NULL, NULL,
-	     NULL,
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
-	     NULL
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,  NULL,   NULL,  NULL, NULL,
+		 NULL,
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
+		 NULL
 UNION ALL
 SELECT
 	 1000000,    9999999,     1,   25555, 2222222, 7777777,  100, 100000, 20.31, 16.2,
 	'2012-12-12 12:12:12',
-	      '1',     '234', '567', '23233',  '3323',  '111',
-	       10
+		  '1',     '234', '567', '23233',  '3323',  '111',
+		   10
 
 GO
 
@@ -197,14 +198,14 @@ GO
 
 CREATE TABLE FKTestPosition
 (
-    Company      integer      NOT NULL,
-    Department   integer      NOT NULL,
-    PositionID   integer      NOT NULL,
-    Name         nvarchar(50) NOT NULL,
-    PRIMARY KEY(Company, Department, PositionID),
-    -- Test: one level deeper, this should link to both fields in the 
-    -- primary key of the FKTestDepartment table
-    CONSTRAINT FK_Position_Department FOREIGN KEY(Company, Department) REFERENCES FKTestDepartment ON DELETE CASCADE
+	Company      integer      NOT NULL,
+	Department   integer      NOT NULL,
+	PositionID   integer      NOT NULL,
+	Name         nvarchar(50) NOT NULL,
+	PRIMARY KEY(Company, Department, PositionID),
+	-- Test: one level deeper, this should link to both fields in the 
+	-- primary key of the FKTestDepartment table
+	CONSTRAINT FK_Position_Department FOREIGN KEY(Company, Department) REFERENCES FKTestDepartment ON DELETE CASCADE
 	-- A simpler foreign key for the above would be:
 	--    FOREIGN KEY(Department) REFERENCES FKTestDepartment(DepartmentID) ON DELETE CASCADE
 )
