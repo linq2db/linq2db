@@ -2452,8 +2452,8 @@ namespace LinqToDB.SqlProvider
 					{
 						AppendIndent().Append("ORDER BY").AppendLine();
 
-						if (SelectQuery.Select.Columns.Count > 0)
-							BuildAliases(aliases[0], SelectQuery.Select.Columns.Take(1).ToList(), null);
+						if (selectQuery.Select.Columns.Count > 0)
+							BuildAliases(aliases[0], selectQuery.Select.Columns.Take(1).ToList(), null);
 						else
 							AppendIndent().Append(emptyOrderByValue).AppendLine();
 					}
