@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 
 			var joinType = collectionInfo.JoinType;
 
-			if (joinType == SelectQuery.JoinType.Full || joinType == SelectQuery.JoinType.Right)
+			if (joinType == JoinType.Full || joinType == JoinType.Right)
 			{
 				// Subquery is needed for FULL and RIGHT joins.
 				if (!sequence.SelectQuery.Where.IsEmpty)
