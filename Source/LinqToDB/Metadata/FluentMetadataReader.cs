@@ -18,7 +18,13 @@ namespace LinqToDB.Metadata
 			where T : Attribute
 		{
 			List<Attribute> attrs;
-			return _types.TryGetValue(type, out attrs) ? attrs.OfType<T>().ToArray() : Array<T>.Empty;
+			if (_types.TryGetValue(type, out attrs))
+				return attrs.OfType<T>().ToArray();
+
+			if (type.GetTypeInfo().BaseType != typeof(object))
+				return GetAttributes<T>(type.GetTypeInfo().BaseType, inherit);
+
+			return Array<T>.Empty;
 		}
 
 		public void AddAttribute(Type type, Attribute attribute)
