@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildSql()
 		{
 			if (BuildAlternativeSql)
-				AlternativeBuildSql(true, base.BuildSql);
+				AlternativeBuildSql(true, base.BuildSql, "\t(SELECT NULL)");
 			else
 				base.BuildSql();
 		}

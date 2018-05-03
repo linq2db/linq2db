@@ -158,7 +158,7 @@ namespace LinqToDB.SqlProvider
 				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                break;
 				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                  break;
 				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);              break;
-				default                      : BuildUnknownQuery();                                                            break;
+				default                      : BuildUnknownQuery();        break;
 			}
 		}
 
@@ -208,7 +208,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
-		{
+			{
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery.From.Tables.Count != 0)
@@ -2420,7 +2420,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		protected void AlternativeBuildSql(bool implementOrderBy, Action buildSql)
+		protected void AlternativeBuildSql(bool implementOrderBy, Action buildSql, string emptyOrderByValue)
 		{
 			var selectQuery = Statement.SelectQuery;
 			if (selectQuery != null && NeedSkip(selectQuery))
@@ -2451,7 +2451,11 @@ namespace LinqToDB.SqlProvider
 					if (selectQuery.OrderBy.IsEmpty)
 					{
 						AppendIndent().Append("ORDER BY").AppendLine();
-						BuildAliases(aliases[0], selectQuery.Select.Columns.Take(1).ToList(), null);
+
+						if (selectQuery.Select.Columns.Count > 0)
+							BuildAliases(aliases[0], selectQuery.Select.Columns.Take(1).ToList(), null);
+						else
+							AppendIndent().Append(emptyOrderByValue).AppendLine();
 					}
 					else
 						BuildAlternativeOrderBy(true);
