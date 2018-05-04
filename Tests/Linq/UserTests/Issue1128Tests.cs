@@ -65,7 +65,6 @@ namespace Tests.UserTests
 
 			Assert.AreEqual(ed1.TableName, ed2.TableName);
 			Assert.AreEqual(ed3.TableName, ed4.TableName);
-			Assert.AreEqual(ed1.TableName, ed4.TableName);
 		}
 
 		[Test, DataContextSource]
@@ -76,7 +75,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(configuration, ms))
 			using (new LocalTable<FluentBase>(db))
 			{
-				var res = db.Insert(new FluentDerived { Id = 1 });
+				var res = db.Insert<FluentBase>(new FluentDerived { Id = 1 });
 				Assert.AreEqual(1, res);
 			}
 		}
@@ -89,7 +88,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(configuration, ms))
 			using (new LocalTable<AttributeBase>(db))
 			{
-				var res = db.Insert(new AttributeDerived { Id = 1 });
+				var res = db.Insert<AttributeBase>(new AttributeDerived { Id = 1 });
 				Assert.AreEqual(1, res);
 			}
 		}
