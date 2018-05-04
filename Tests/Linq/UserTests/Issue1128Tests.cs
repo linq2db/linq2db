@@ -20,7 +20,7 @@ namespace Tests.UserTests
 			public string BlaBla { get; set; }
 		}
 
-		[Table("Issue1128TableA")]
+		[Table("Issue1128TableA", IsColumnAttributeRequired = false)]
 		class Issue1128TableA
 		{
 			[Column(IsPrimaryKey = true)]
