@@ -35,18 +35,11 @@ namespace Tests.UserTests
 
 		MappingSchema SetFluentMappings()
 		{
-			// counter added to fix this issue with tests in Firebird
-			// https://stackoverflow.com/questions/44353607
-			// it was only working solution for Firebird3
-			var cnt = Interlocked.Increment(ref _cnt).ToString();
+			var ms            = new MappingSchema();
+			var tableName     = nameof(AttributeBase);
+			var fluentBuilder = ms.GetFluentMappingBuilder();
 
-			var ms = new MappingSchema(cnt);
-			
-			var tableName = nameof(AttributeBase) + cnt;
-
-			var mappingBuilder = ms.GetFluentMappingBuilder();
-
-			mappingBuilder.Entity<FluentBase>()
+			fluentBuilder.Entity<FluentBase>()
 				.HasTableName(tableName)
 				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
 
@@ -65,6 +58,7 @@ namespace Tests.UserTests
 
 			Assert.AreEqual(ed1.TableName, ed2.TableName);
 			Assert.AreEqual(ed3.TableName, ed4.TableName);
+			Assert.AreEqual(ed1.TableName, ed4.TableName);
 		}
 
 		[Test, DataContextSource]

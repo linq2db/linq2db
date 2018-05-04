@@ -24,9 +24,19 @@ namespace LinqToDB.Metadata
 			if (_types.TryGetValue(type, out attrs))
 				return attrs.OfType<T>().ToArray();
 
-			var parent = type.BaseTypeEx();
-			if (inherit && !IsSystemOrNullType(parent))
-				return GetAttributes<T>(parent, inherit);
+			if (!inherit)
+				return Array<T>.Empty;
+
+			var parents = new [] { type.BaseTypeEx() }
+				.Where(_ => !IsSystemOrNullType(_))
+				.Concat(type.GetInterfacesEx());
+
+			foreach(var p in parents)
+			{
+				var pattrs = GetAttributes<T>(p, inherit);
+				if (pattrs.Length > 0)
+					return pattrs;
+			}
 
 			return Array<T>.Empty;
 		}
@@ -51,15 +61,20 @@ namespace LinqToDB.Metadata
 			if (inherit == false)
 				return Array<T>.Empty;
 
-			var parent = type.BaseTypeEx();
-			if (IsSystemOrNullType(parent))
-				return Array<T>.Empty;
+			var parents = new [] { type.BaseTypeEx() }
+				.Where(_ => !IsSystemOrNullType(_))
+				.Concat(type.GetInterfacesEx())
+				.Select(_ => new { Type = _, Member = _.GetMemberEx(memberInfo) })
+				.Where(_ => _.Member != null);
 
-			var mi = parent.GetMemberEx(memberInfo);
-			if (mi == null)
-				return Array<T>.Empty;
+			foreach(var p in parents)
+			{
+				var pattrs = GetAttributes<T>(p.Type, p.Member, inherit);
+				if (pattrs.Length > 0)
+					return pattrs;
+			}
 
-			return GetAttributes<T>(parent, mi, inherit);
+			return Array<T>.Empty;
 		}
 
 		public void AddAttribute(MemberInfo memberInfo, Attribute attribute)
