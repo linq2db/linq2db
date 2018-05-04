@@ -17,6 +17,7 @@ namespace Tests.UserTests
 
 		class Issue1128TableDerived : Issue1128Table
 		{
+			public string BlaBla { get; set; }
 		}
 
 
@@ -59,12 +60,12 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					db.CreateTable<Issue1128TableDerived>();
+					db.CreateTable<Issue1128Table>();
 				}
 				catch
 				{
-					db.DropTable<Issue1128TableDerived>(throwExceptionIfNotExists: false);
-					db.CreateTable<Issue1128TableDerived>();
+					db.DropTable<Issue1128Table>(throwExceptionIfNotExists: false);
+					db.CreateTable<Issue1128Table>();
 				}
 
 				try
@@ -73,7 +74,7 @@ namespace Tests.UserTests
 				}
 				finally
 				{
-					db.DropTable<Issue1128TableDerived>();
+					db.DropTable<Issue1128Table>();
 				}
 			}
 		}
