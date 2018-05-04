@@ -21,7 +21,7 @@ namespace Tests.UserTests
 			public string StringValue { get; set; }
 		}
 
-		[Table(IsColumnAttributeRequired = false)]
+		[Table(nameof(AttributeBase), IsColumnAttributeRequired = false)]
 		class AttributeBase
 		{
 			[Column(IsPrimaryKey = true)]
@@ -42,7 +42,7 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema(cnt);
 			
-			var tableName = "Issue1128Table" + cnt;
+			var tableName = nameof(AttributeBase) + cnt;
 
 			var mappingBuilder = ms.GetFluentMappingBuilder();
 
