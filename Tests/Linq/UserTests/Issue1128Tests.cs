@@ -81,7 +81,7 @@ namespace Tests.UserTests
 
 				try
 				{
-					db.Insert(new Issue1128TableDerived { Id = 1 });
+					db.Insert<Issue1128Table>(new Issue1128TableDerived { Id = 1 });
 				}
 				finally
 				{
@@ -109,7 +109,7 @@ namespace Tests.UserTests
 
 				try
 				{
-					db.Insert(new Issue1128TableDerivedA { Id = 1 });
+					db.Insert<Issue1128TableA>(new Issue1128TableDerivedA { Id = 1 });
 				}
 				finally
 				{
