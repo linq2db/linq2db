@@ -6,33 +6,34 @@ namespace Tests.UserTests
 	using LinqToDB;
 	using LinqToDB.Mapping;
 
+	[TestFixture]
 	public class Issue1128Tests : TestBase
 	{
 		private static int _cnt;
 
-		class Issue1128Table
+		class FluentBase
 		{
 			public int Id { get; set; }
 		}
 
-		class Issue1128TableDerived : Issue1128Table
+		class FluentDerived : FluentBase
 		{
-			public string BlaBla { get; set; }
+			public string StringValue { get; set; }
 		}
 
-		[Table("Issue1128TableA", IsColumnAttributeRequired = false)]
-		class Issue1128TableA
+		[Table(IsColumnAttributeRequired = false)]
+		class AttributeBase
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
 		}
 
-		class Issue1128TableDerivedA : Issue1128TableA
+		class AttributeDerived : AttributeBase
 		{
-			public string BlaBla { get; set; }
+			public string StringValue { get; set; }
 		}
 
-		MappingSchema SetMappings()
+		MappingSchema SetFluentMappings()
 		{
 			// counter added to fix this issue with tests in Firebird
 			// https://stackoverflow.com/questions/44353607
@@ -44,77 +45,52 @@ namespace Tests.UserTests
 			var tableName = "Issue1128Table" + cnt;
 
 			var mappingBuilder = ms.GetFluentMappingBuilder();
-			mappingBuilder.Entity<Issue1128Table>()
+
+			mappingBuilder.Entity<FluentBase>()
 				.HasTableName(tableName)
 				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
 
 			return ms;
 		}
 
-		[Test, DataContextSource]
-		public void TestED(string configuration)
+		[Test]
+		public void TestEntityDescriptor()
 		{
-			var ms = SetMappings();
+			var ms = SetFluentMappings();
 
-			var ed1 = ms.GetEntityDescriptor(typeof(Issue1128Table));
-			var ed2 = ms.GetEntityDescriptor(typeof(Issue1128TableDerived));
+			var ed1 = ms.GetEntityDescriptor(typeof(FluentBase));
+			var ed2 = ms.GetEntityDescriptor(typeof(FluentDerived));
+			var ed3 = ms.GetEntityDescriptor(typeof(AttributeBase));
+			var ed4 = ms.GetEntityDescriptor(typeof(AttributeBase));
 
 			Assert.AreEqual(ed1.TableName, ed2.TableName);
+			Assert.AreEqual(ed3.TableName, ed4.TableName);
+			Assert.AreEqual(ed1.TableName, ed4.TableName);
 		}
 
 		[Test, DataContextSource]
-		public void Test(string configuration)
+		public void TestFluent(string configuration)
 		{
-			var ms = SetMappings();
+			var ms = SetFluentMappings();
 
 			using (var db = GetDataContext(configuration, ms))
+			using (new LocalTable<FluentBase>(db))
 			{
-				try
-				{
-					db.CreateTable<Issue1128Table>();
-				}
-				catch
-				{
-					db.DropTable<Issue1128Table>(throwExceptionIfNotExists: false);
-					db.CreateTable<Issue1128Table>();
-				}
-
-				try
-				{
-					db.Insert<Issue1128Table>(new Issue1128TableDerived { Id = 1 });
-				}
-				finally
-				{
-					db.DropTable<Issue1128Table>();
-				}
+				var res = db.Insert(new FluentDerived { Id = 1 });
+				Assert.AreEqual(1, res);
 			}
 		}
 
 		[Test, DataContextSource]
-		public void Test2(string configuration)
+		public void TestAttribute(string configuration)
 		{
-			var ms = SetMappings();
+			var ms = SetFluentMappings();
 
 			using (var db = GetDataContext(configuration, ms))
+			using (new LocalTable<AttributeBase>(db))
 			{
-				try
-				{
-					db.CreateTable<Issue1128TableA>();
-				}
-				catch
-				{
-					db.DropTable<Issue1128TableA>(throwExceptionIfNotExists: false);
-					db.CreateTable<Issue1128TableA>();
-				}
-
-				try
-				{
-					db.Insert<Issue1128TableA>(new Issue1128TableDerivedA { Id = 1 });
-				}
-				finally
-				{
-					db.DropTable<Issue1128TableA>();
-				}
+				var res = db.Insert(new AttributeDerived { Id = 1 });
+				Assert.AreEqual(1, res);
 			}
 		}
 	}

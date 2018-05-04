@@ -11,8 +11,11 @@ namespace LinqToDB.Metadata
 
 	public class FluentMetadataReader : IMetadataReader
 	{
-		readonly ConcurrentDictionary<Type,List<Attribute>>                       _types = new ConcurrentDictionary<Type,List<Attribute>>();
+		readonly ConcurrentDictionary<Type,List<Attribute>>                       _types          = new ConcurrentDictionary<Type,List<Attribute>>();
 		readonly ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>> _dynamicColumns = new ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>>();
+
+		private static bool IsSystemOrNullType(Type type)
+			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
 
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
@@ -21,8 +24,9 @@ namespace LinqToDB.Metadata
 			if (_types.TryGetValue(type, out attrs))
 				return attrs.OfType<T>().ToArray();
 
-			if (inherit && type.GetTypeInfo().BaseType != null && type.GetTypeInfo().BaseType != typeof(object))
-				return GetAttributes<T>(type.GetTypeInfo().BaseType, inherit);
+			var parent = type.BaseTypeEx();
+			if (inherit && !IsSystemOrNullType(parent))
+				return GetAttributes<T>(parent, inherit);
 
 			return Array<T>.Empty;
 		}
@@ -48,7 +52,7 @@ namespace LinqToDB.Metadata
 				return Array<T>.Empty;
 
 			var parent = type.BaseTypeEx();
-			if (parent == null || parent == typeof(object) || parent == typeof(ValueType) || parent == typeof(Enum))
+			if (IsSystemOrNullType(parent))
 				return Array<T>.Empty;
 
 			var mi = parent.GetMemberEx(memberInfo);
