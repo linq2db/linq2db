@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -199,6 +200,19 @@ namespace LinqToDB.Linq.Builder
 					&& attrs.All(attr => attr.GetType().FullName != "Microsoft.FSharp.Core.CLIMutableAttribute");
 			}
 
+			bool IsAnonymous(Type type)
+			{
+				if (!type.IsPublicEx() &&
+					 type.IsGenericTypeEx() &&
+					(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
+					 type.Name.StartsWith("VB$AnonymousType",   StringComparison.Ordinal)))
+				{
+					return Builder.MappingSchema.GetAttribute<CompilerGeneratedAttribute>(type) != null;
+				}
+
+				return false;
+			}
+
 			ParameterExpression _variable;
 
 			Expression BuildTableExpression(bool buildBlock, Type objectType, int[] index)
@@ -214,11 +228,12 @@ namespace LinqToDB.Linq.Builder
 					objectType = ObjectType;
 				}
 
-				var isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType));
-
-				var expr = isRecord == false
-					? BuildDefaultConstructor(entityDescriptor, objectType, index)
-					: BuildRecordConstructor (entityDescriptor, objectType, index);
+				var expr =
+					IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType)) ?
+						BuildRecordConstructor (entityDescriptor, objectType, index, true) :
+					IsAnonymous(objectType) ?
+						BuildRecordConstructor (entityDescriptor, objectType, index, false) :
+						BuildDefaultConstructor(entityDescriptor, objectType, index);
 
 				expr = BuildCalculatedColumns(entityDescriptor, expr);
 				expr = ProcessExpression(expr);
@@ -372,11 +387,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				var members = isRecordType ?
 					typeAccessor.Members.Where(m =>
-						IsRecord( Builder.MappingSchema.GetAttributes<Attribute>(typeAccessor.Type, m.MemberInfo))) :
+						IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(typeAccessor.Type, m.MemberInfo))) :
 					typeAccessor.Members;
 
-				var loadWith = GetLoadWith();
+				var loadWith      = GetLoadWith();
 				var loadWithItems = loadWith == null ? new List<LoadWithItem>() : GetLoadWith(loadWith);
+
 				foreach (var member in members)
 				{
 					var column = columns.FirstOrDefault(c => !c.IsComplex && c.Name == member.Name);
@@ -388,7 +404,8 @@ namespace LinqToDB.Linq.Builder
 					else
 					{
 						var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(typeAccessor.Type, member.MemberInfo).FirstOrDefault();
-						bool isAssociation = assocAttr != null;
+						var isAssociation = assocAttr != null;
+
 						if (isAssociation)
 						{
 							var loadWithItem = loadWithItems.FirstOrDefault(_ => _.MemberInfo == member.MemberInfo);
@@ -457,15 +474,15 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
+			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index, bool isRecord)
 			{
 				var ctor = objectType.GetConstructorsEx().Single();
 
-				var exprs = GetExpressions(entityDescriptor.TypeAccessor, true,
+				var exprs = GetExpressions(entityDescriptor.TypeAccessor, isRecord,
 					(
 						from idx in index.Select((n,i) => new { n, i })
 						where idx.n >= 0
-						let   cd   = entityDescriptor.Columns[idx.i]
+						let   cd = entityDescriptor.Columns[idx.i]
 						select new ColumnInfo
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
