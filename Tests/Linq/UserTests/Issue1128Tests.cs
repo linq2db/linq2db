@@ -20,6 +20,17 @@ namespace Tests.UserTests
 			public string BlaBla { get; set; }
 		}
 
+		[Table("Issue1128TableA")]
+		class Issue1128TableA
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+		}
+
+		class Issue1128TableDerivedA : Issue1128TableA
+		{
+			public string BlaBla { get; set; }
+		}
 
 		MappingSchema SetMappings()
 		{
@@ -75,6 +86,34 @@ namespace Tests.UserTests
 				finally
 				{
 					db.DropTable<Issue1128Table>();
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test2(string configuration)
+		{
+			var ms = SetMappings();
+
+			using (var db = GetDataContext(configuration, ms))
+			{
+				try
+				{
+					db.CreateTable<Issue1128TableA>();
+				}
+				catch
+				{
+					db.DropTable<Issue1128TableA>(throwExceptionIfNotExists: false);
+					db.CreateTable<Issue1128TableA>();
+				}
+
+				try
+				{
+					db.Insert(new Issue1128TableDerivedA { Id = 1 });
+				}
+				finally
+				{
+					db.DropTable<Issue1128TableA>();
 				}
 			}
 		}
