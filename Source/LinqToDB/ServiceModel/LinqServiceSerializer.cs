@@ -58,9 +58,10 @@ namespace LinqToDB.ServiceModel
 
 		class SerializerBase
 		{
-			protected readonly StringBuilder          Builder = new StringBuilder();
-			protected readonly Dictionary<object,int> Dic     = new Dictionary<object,int>();
-			protected int                             Index;
+			protected readonly StringBuilder             Builder        = new StringBuilder();
+			protected readonly Dictionary<object,int>    ObjectIndices  = new Dictionary<object,int>();
+			protected readonly Dictionary<object,string> DelayedObjects = new Dictionary<object,string>();
+			protected int                                Index;
 
 			static string ConvertToString(Type type, object value)
 			{
@@ -142,7 +143,27 @@ namespace LinqToDB.ServiceModel
 
 			protected void Append(IQueryElement element)
 			{
-				Builder.Append(' ').Append(element == null ? 0 : Dic[element]);
+				Builder.Append(' ').Append(element == null ? 0 : ObjectIndices[element]);
+			}
+
+			protected void AppendDelayed(IQueryElement element)
+			{
+				Builder.Append(' ');
+
+				if (element == null)
+					Builder.Append(0);
+				else
+				{
+					if (ObjectIndices.TryGetValue(element, out var idx))
+						Builder.Append(idx);
+					else
+					{
+						if (!DelayedObjects.TryGetValue(element, out var id))
+							DelayedObjects.Add(element, id = Guid.NewGuid().ToString("B"));
+
+						Builder.Append(id);
+					}
+				}
 			}
 
 			protected void Append(string str)
@@ -171,15 +192,13 @@ namespace LinqToDB.ServiceModel
 				if (type == null)
 					return 0;
 
-				int idx;
-
-				if (!Dic.TryGetValue(type, out idx))
+				if (!ObjectIndices.TryGetValue(type, out var idx))
 				{
 					if (type.IsArray)
 					{
 						var elementType = GetType(type.GetElementType());
 
-						Dic.Add(type, idx = ++Index);
+						ObjectIndices.Add(type, idx = ++Index);
 
 						Builder
 							.Append(idx)
@@ -190,7 +209,7 @@ namespace LinqToDB.ServiceModel
 					}
 					else
 					{
-						Dic.Add(type, idx = ++Index);
+						ObjectIndices.Add(type, idx = ++Index);
 
 						Builder
 							.Append(idx)
@@ -213,7 +232,8 @@ namespace LinqToDB.ServiceModel
 
 		public class DeserializerBase
 		{
-			protected readonly Dictionary<int,object> Dic = new Dictionary<int,object>();
+			protected readonly Dictionary<int,object>         ObjectIndices  = new Dictionary<int,object>();
+			protected readonly Dictionary<int,Action<object>> DelayedObjects = new Dictionary<int,Action<object>>();
 
 			protected string Str;
 			protected int    Pos;
@@ -326,14 +346,32 @@ namespace LinqToDB.ServiceModel
 				where T : class
 			{
 				var idx = ReadInt();
-				return idx == 0 ? null : (T)Dic[idx];
+				return idx == 0 ? null : (T)ObjectIndices[idx];
+			}
+
+			protected void ReadDelayedObject(Action<object> action)
+			{
+				var idx = ReadInt();
+
+				if (idx == 0)
+					action(null);
+				else
+				{
+					if (ObjectIndices.TryGetValue(idx, out var obj))
+						action(obj);
+					else
+						if (DelayedObjects.TryGetValue(idx, out var a))
+							DelayedObjects[idx] = o => { a(o); action(o); };
+						else
+							DelayedObjects[idx] = action;
+				}
 			}
 
 			protected Type ReadType()
 			{
 				var idx = ReadInt();
 
-				if (!Dic.TryGetValue(idx, out var type))
+				if (!ObjectIndices.TryGetValue(idx, out var type))
 				{
 					Pos++;
 					var typecode = ReadInt();
@@ -349,7 +387,7 @@ namespace LinqToDB.ServiceModel
 								$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}");
 					}
 
-					Dic.Add(idx, type);
+					ObjectIndices.Add(idx, type);
 
 					NextLine();
 
@@ -524,8 +562,11 @@ namespace LinqToDB.ServiceModel
 
 				visitor.Visit(statement, Visit);
 
+				if (DelayedObjects.Count > 0)
+					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
+
 				foreach (var parameter in parameters)
-					if (!Dic.ContainsKey(parameter))
+					if (!ObjectIndices.ContainsKey(parameter))
 						Visit(parameter);
 
 				Builder
@@ -586,12 +627,21 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.CteClause           : GetType(((CteClause)          e).ObjectType); break;
 				}
 
-				Dic.Add(e, ++Index);
+				ObjectIndices.Add(e, ++Index);
 
 				Builder
 					.Append(Index)
 					.Append(' ')
 					.Append((int)e.ElementType);
+
+				if (DelayedObjects.Count > 0)
+				{
+					if (DelayedObjects.TryGetValue(e, out var id))
+					{
+						Builder.Replace(id, Index.ToString());
+						DelayedObjects.Remove(e);
+					}
+				}
 
 				switch (e.ElementType)
 				{
@@ -732,11 +782,11 @@ namespace LinqToDB.ServiceModel
 								}
 							}
 
-							Append(Dic[elem.All]);
+							Append(ObjectIndices[elem.All]);
 							Append(elem.Fields.Count);
 
 							foreach (var field in elem.Fields)
-								Append(Dic[field.Value]);
+								Append(ObjectIndices[field.Value]);
 
 							Append((int)elem.SqlTableType);
 
@@ -749,7 +799,7 @@ namespace LinqToDB.ServiceModel
 									Append(elem.TableArguments.Length);
 
 									foreach (var expr in elem.TableArguments)
-										Append(Dic[expr]);
+										Append(ObjectIndices[expr]);
 								}
 							}
 
@@ -762,13 +812,14 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.SourceID);
 							Append(elem.Alias);
-							Append(elem.Cte);
 
-							Append(Dic[elem.All]);
+							AppendDelayed(elem.Cte);
+
+							Append(ObjectIndices[elem.All]);
 							Append(elem.Fields.Count);
 
 							foreach (var field in elem.Fields)
-								Append(Dic[field.Value]);
+								Append(ObjectIndices[field.Value]);
 
 							break;
 						}
@@ -889,8 +940,8 @@ namespace LinqToDB.ServiceModel
 							else
 								Append(elem.Unions);
 
-							if (Dic.ContainsKey(elem.All))
-								Append(Dic[elem.All]);
+							if (ObjectIndices.ContainsKey(elem.All))
+								Append(ObjectIndices[elem.All]);
 							else
 								Builder.Append(" -");
 
@@ -1143,7 +1194,7 @@ namespace LinqToDB.ServiceModel
 					Append(exprs.Count);
 
 					foreach (var e in exprs)
-						Append(Dic[e]);
+						Append(ObjectIndices[e]);
 				}
 			}
 		}
@@ -1381,7 +1432,21 @@ namespace LinqToDB.ServiceModel
 						{
 							var sourceID  = ReadInt();
 							var alias     = ReadString();
-							var cte       = Read<CteClause>();
+
+							//CteClause cte       = Read<CteClause>();
+							SqlCteTable cteTable = null;
+							CteClause   cte      = null;
+							var isDelayed = true;
+
+							ReadDelayedObject(o =>
+							{
+								cte = (CteClause)o;
+
+								if (cteTable == null)
+									isDelayed = false;
+								else
+									cteTable.SetDelayedCteObject(cte);
+							});
 
 							var all    = Read<SqlField>();
 							var fields = ReadArray<SqlField>();
@@ -1390,7 +1455,11 @@ namespace LinqToDB.ServiceModel
 							flds[0] = all;
 							Array.Copy(fields, 0, flds, 1, fields.Length);
 
-							obj = new SqlCteTable(sourceID, alias, flds, cte);
+							cteTable = isDelayed ?
+								new SqlCteTable(sourceID, alias, flds) :
+								new SqlCteTable(sourceID, alias, flds, cte);
+
+							obj = cteTable;
 
 							break;
 						}
@@ -1794,7 +1863,16 @@ namespace LinqToDB.ServiceModel
 						}
 				}
 
-				Dic.Add(idx, obj);
+				ObjectIndices.Add(idx, obj);
+
+				if (DelayedObjects.Count > 0)
+				{
+					if (DelayedObjects.TryGetValue(idx, out var action))
+					{
+						action(obj);
+						DelayedObjects.Remove(idx);
+					}
+				}
 
 				return true;
 			}
