@@ -63,7 +63,10 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = obj.GetType();
+				var type = typeof(T);
+				var ed = dataContext.MappingSchema.GetEntityDescriptor(type);
+				if (ed != null && ed.InheritanceMapping != null && ed.InheritanceMapping.Count > 0)
+					type = obj.GetType();
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
 				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
@@ -76,7 +79,10 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = obj.GetType();
+				var type = typeof(T);
+				var ed = dataContext.MappingSchema.GetEntityDescriptor(type);
+				if (ed != null && ed.InheritanceMapping != null && ed.InheritanceMapping.Count > 0)
+					type = obj.GetType();
 				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
 				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
