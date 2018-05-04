@@ -16,6 +16,12 @@ namespace LinqToDB.SqlQuery
 			set => base.Name = value;
 		}
 
+		public override string    PhysicalName
+		{
+			get => Cte?.Name ?? base.PhysicalName;
+			set => base.PhysicalName = value;
+		}
+
 		public SqlCteTable(
 			[JetBrains.Annotations.NotNull] MappingSchema mappingSchema,
 			[JetBrains.Annotations.NotNull] CteClause cte) : base(mappingSchema, cte.ObjectType, cte.Name)

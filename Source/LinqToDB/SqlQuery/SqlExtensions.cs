@@ -39,6 +39,16 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public static SqlWithClause GetWithClause(this SqlStatement statement)
+		{
+			switch (statement)
+			{
+				case SqlStatementWithQueryBase query:
+					return query.With;
+			}
+			return null;
+		}
+
 		public static SqlInsertClause RequireInsertClause(this SqlStatement statement)
 		{
 			var result = statement.GetInsertClause();

@@ -164,6 +164,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
 		{
+			BuildStep = Step.WithClause;    BuildWithClause(deleteStatement.With);
 			BuildStep = Step.DeleteClause;  BuildDeleteClause(deleteStatement);
 			BuildStep = Step.FromClause;    BuildFromClause(Statement, deleteStatement.SelectQuery);
 			BuildStep = Step.WhereClause;   BuildWhereClause(deleteStatement.SelectQuery);
@@ -175,6 +176,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
+			BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.UpdateClause;  BuildUpdateClause(Statement, selectQuery, updateClause);
 			BuildStep = Step.FromClause;    BuildFromClause(Statement, selectQuery);
 			BuildStep = Step.WhereClause;   BuildWhereClause(selectQuery);
@@ -199,24 +201,11 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
 			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, Indent, SkipAlias);
-
-			if (selectQuery.HasUnion)
-			{
-				foreach (var union in selectQuery.Unions)
-				{
-					AppendIndent();
-					StringBuilder.Append("UNION");
-					if (union.IsAll) StringBuilder.Append(" ALL");
-					StringBuilder.AppendLine();
-
-					((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(union.SelectQuery), StringBuilder, Indent, SkipAlias);
-				}
-			}
-
 		}
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery.From.Tables.Count != 0)
@@ -295,21 +284,41 @@ namespace LinqToDB.SqlProvider
 				first = false;
 
 				AppendIndent();
-				StringBuilder.Append(cte.Name);
-				if (cte.Fields.Count > 0) 
+				ConvertTableName(StringBuilder, null, null, cte.Name);
+				if (cte.Fields.Count > 3)
+				{
+					StringBuilder.AppendLine();
+					AppendIndent(); StringBuilder.AppendLine("(");
+					++Indent;
+
+					var firstField = true;
+					foreach (var field in cte.Fields.Values)
+					{
+						if (!firstField)
+							StringBuilder.AppendLine(", ");
+						firstField = false;
+						AppendIndent();
+						StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+					}
+
+					--Indent;
+					StringBuilder.AppendLine();
+					AppendIndent(); StringBuilder.AppendLine(")");
+				}
+				else if (cte.Fields.Count > 0)
+				{
 					StringBuilder.Append(" (");
 
-				var firstField = true;
-				foreach (var field in cte.Fields.Values)
-				{
-					if (!firstField)
-						StringBuilder.Append(", ");
-					firstField = false;
-					StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
-				}
-				
-				if (cte.Fields.Count > 0) 
+					var firstField = true;
+					foreach (var field in cte.Fields.Values)
+					{
+						if (!firstField)
+							StringBuilder.Append(", ");
+						firstField = false;
+						StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+					}
 					StringBuilder.AppendLine(")");
+				}
 
 				AppendIndent();
 				StringBuilder.AppendLine("AS");
@@ -2865,7 +2874,7 @@ namespace LinqToDB.SqlProvider
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
 
 				case QueryElementType.SqlCteTable:
-					return ((SqlCteTable)table).Name;
+					return GetTablePhysicalName((SqlCteTable)table);
 
 				default:
 					throw new InvalidOperationException();
