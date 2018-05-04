@@ -238,6 +238,39 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
+		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
+		{
+			if (deleteStatement.With?.Clauses.Count > 0)
+			{
+				BuildStep = Step.DeleteClause;  BuildDeleteClause(deleteStatement);
+				InternalBuildSubqueryWithCte(deleteStatement.GetWithClause(), deleteStatement.SelectQuery);
+			}
+			else
+			{
+				base.BuildDeleteQuery(deleteStatement);
+			}
+		}
+
+		void InternalBuildSubqueryWithCte(SqlWithClause withClause, SelectQuery selectQuery)
+		{
+			++Indent;
+
+			StringBuilder.AppendLine();
+			AppendIndent().AppendLine("(");
+
+			++Indent;
+			var selectStatement = new SqlSelectStatement(selectQuery);
+			selectStatement.With = withClause;
+			new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter).BuildSql(0, selectStatement, StringBuilder,
+				Indent);
+			--Indent;
+
+			StringBuilder.AppendLine();
+			AppendIndent().AppendLine(")");
+
+			--Indent;
+		}
+
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
 			if (!statement.IsUpdate())
