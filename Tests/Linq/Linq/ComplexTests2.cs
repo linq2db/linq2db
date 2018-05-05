@@ -209,12 +209,12 @@ namespace Tests.ComplexTests2
 
 			mappingBuilder.Entity<Eye>()
 				.HasTableName("Eyes")
-				.Property(x => x.Id).IsColumn().HasColumnName("Id")
+				.Property(x => x.Id).IsColumn().HasColumnName("Id").IsPrimaryKey()
 				.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy").HasDataType(DataType.NVarChar).HasLength(40);
 
 			mappingBuilder.Entity<SauronsEye>()
 				.HasTableName("Eyes")
-				.Property(x => x.Id).IsColumn().HasColumnName("Id")
+				.Property(x => x.Id).IsColumn().HasColumnName("Id").IsPrimaryKey()
 				.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy").HasDataType(DataType.NVarChar).HasLength(40)
 				.Property(x => x.Power).IsColumn().HasColumnName("power");
 
