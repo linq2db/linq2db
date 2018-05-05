@@ -87,6 +87,12 @@ namespace LinqToDB
 		/// </summary>
 		public string        LastQuery           { get; set; }
 
+		/// <summary>
+		/// Gets or sets trace handler, used for data connection instance.
+		/// </summary>
+		[CanBeNull]
+		public Action<TraceInfo> OnTraceConnection { get; set; } 
+
 		private bool _keepConnectionAlive;
 		/// <summary>
 		/// Gets or sets option to dispose underlying connection after use.
@@ -194,6 +200,9 @@ namespace LinqToDB
 					_dataConnection.NextQueryHints.AddRange(_nextQueryHints);
 					_nextQueryHints = null;
 				}
+
+				if (OnTraceConnection != null)
+					_dataConnection.OnTraceConnection = OnTraceConnection;
 			}
 
 			return _dataConnection;
