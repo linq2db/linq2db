@@ -222,7 +222,7 @@ if (!(Test-Path $CAKE_EXE)) {
 $cakeArguments = @("$Script");
 if ($Target) { $cakeArguments += "-target=$Target" }
 if ($Configuration) { $cakeArguments += "-configuration=$Configuration" }
-if ($Verbosity) { $cakeArguments += "-verbosity=Verbose" }
+if ($Verbosity) { $cakeArguments += "-verbosity=Diagnostic" }
 if ($ShowDescription) { $cakeArguments += "-showdescription" }
 if ($DryRun) { $cakeArguments += "-dryrun" }
 if ($Experimental) { $cakeArguments += "-experimental" }
