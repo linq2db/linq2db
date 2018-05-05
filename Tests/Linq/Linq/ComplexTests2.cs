@@ -208,20 +208,13 @@ namespace Tests.ComplexTests2
 				.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy").HasDataType(DataType.NVarChar).HasLength(40);
 
 			mappingBuilder.Entity<SauronsEye>()
-				.Property(x => x.Power).IsNotColumn();
+				.Property(x => x.Power).IsColumn().HasColumnName("power");
 
 			mappingBuilder.Entity<Test>()
 				.HasTableName("TestAnimalTable")
 				.Association(x => x.TestAnimal, x => x.TestAnimalId, x => x.Id)
 				.Property(x => x.TestAnimalId).IsColumn().IsNullable().HasColumnName("TestAnimalId")
 				.Property(x => x.TestAnimal  ).IsNotColumn();
-
-			mappingBuilder.Entity<Person>()
-				.HasTableName(nameof(Person));
-
-			mappingBuilder.Entity<PersonDerived>()
-				.Property(_ => _.ColumnForOtherDB).IsNotColumn();
-
 
 			return ms;
 		}

@@ -21,7 +21,7 @@ namespace Tests.UserTests
 			public string StringValue { get; set; }
 		}
 
-		[Table(nameof(AttributeBase), IsColumnAttributeRequired = true)]
+		[Table(nameof(AttributeBase), IsColumnAttributeRequired = false)]
 		class AttributeBase
 		{
 			[Column(IsPrimaryKey = true)]
@@ -40,7 +40,7 @@ namespace Tests.UserTests
 			var fluentBuilder = ms.GetFluentMappingBuilder();
 
 			fluentBuilder.Entity<FluentBase>()
-				.HasTableName(tableName).IsColumnRequired()
+				.HasTableName(tableName)
 				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
 
 			return ms;

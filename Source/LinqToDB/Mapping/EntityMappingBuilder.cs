@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using JetBrains.Annotations;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 
@@ -12,6 +13,7 @@ namespace LinqToDB.Mapping
 	/// Fluent mapping entity builder.
 	/// </summary>
 	/// <typeparam name="T">Entity mapping type.</typeparam>
+	[PublicAPI]
 	public class EntityMappingBuilder<T>
 	{
 		#region Init
@@ -371,7 +373,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<T> IsColumnNotRequired()
 		{
-			return SetTable(a => a.IsColumnAttributeRequired = true);
+			return SetTable(a => a.IsColumnAttributeRequired = false);
 		}
 
 		/// <summary>
@@ -399,13 +401,13 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Adds inheritance mapping for specified discriminator value.
 		/// </summary>
-		/// <typeparam name="S">Discriminator value type.</typeparam>
+		/// <typeparam name="TS">Discriminator value type.</typeparam>
 		/// <param name="key">Discriminator member getter expression.</param>
 		/// <param name="value">Discriminator value.</param>
 		/// <param name="type">Mapping type, used with specified discriminator value.</param>
 		/// <param name="isDefault">If <c>true</c>, current mapping type used by default.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> Inheritance<S>(Expression<Func<T, S>> key, S value, Type type, bool isDefault = false)
+		public EntityMappingBuilder<T> Inheritance<TS>(Expression<Func<T, TS>> key, TS value, Type type, bool isDefault = false)
 		{
 			HasAttribute(new InheritanceMappingAttribute {Code = value, Type = type, IsDefault = isDefault});
 			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(key.Body, typeof(object)), key.Parameters);
