@@ -210,7 +210,7 @@ namespace LinqToDB.Linq.Builder
 
 					var pe = Expression.MakeMemberAccess(path, member);
 
-					if (argument is NewExpression newExpr)
+					if (argument is NewExpression newExpr && newExpr.Type.IsAnonymous())
 					{
 						BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
 					}
@@ -238,7 +238,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var pe = Expression.MakeMemberAccess(path, member);
 
-						if (ma.Expression is NewExpression newExpr)
+						if (ma.Expression is NewExpression newExpr && newExpr.Type.IsAnonymous())
 						{
 							BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
 						}
@@ -259,7 +259,7 @@ namespace LinqToDB.Linq.Builder
 			var bodyPath = Expression.Parameter(setter.Body.Type, "p");
 			var bodyExpr = setter.Body;
 
-			if (bodyExpr.NodeType == ExpressionType.New)
+			if (bodyExpr.NodeType == ExpressionType.New && bodyExpr.Type.IsAnonymous())
 			{
 				var ex = (NewExpression)bodyExpr;
 				var p  = sequence.Parent;
