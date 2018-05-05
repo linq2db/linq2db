@@ -15,8 +15,8 @@ namespace Tests.xUpdate
 			public int ID;
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
-		public void CreateTable1(string context)
+		[Test]
+		public void CreateTable1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -28,15 +28,16 @@ namespace Tests.xUpdate
 				{
 					var list =
 					(
-						from t in tmp
+						from p in db.Parent
+						join t in tmp on p.ParentID equals t.ID
 						select t
 					).ToList();
 				}
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.OracleNative)]
-		public void CreateTable2(string context)
+		[Test]
+		public void CreateTable2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -48,7 +49,32 @@ namespace Tests.xUpdate
 				{
 					var list =
 					(
-						from t in tmp
+						from p in db.Parent
+						join t in tmp on p.ParentID equals t.ID
+						select t
+					).ToList();
+				}
+			}
+		}
+
+		[Test]
+		public void CreateTable3([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.DropTable<int>("TempTable", throwExceptionIfNotExists:false);
+
+				using (var tmp = db.CreateTempTable(
+					"TempTable",
+					db.Parent.Select(p => new { ID = p.ParentID }),
+					em => em
+						.Property(e => e.ID)
+							.IsPrimaryKey()))
+				{
+					var list =
+					(
+						from p in db.Parent
+						join t in tmp on p.ParentID equals t.ID
 						select t
 					).ToList();
 				}

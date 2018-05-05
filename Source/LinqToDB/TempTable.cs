@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -103,36 +104,37 @@ namespace LinqToDB
 			return count.RowsCopied;
 		}
 
+		static ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ConcurrentDictionary<Type,Expression<Func<T,T>>>();
+
 		public long Insert(IQueryable<T> items)
 		{
 			var type = typeof(T);
 			var ed   = _table.DataContext.MappingSchema.GetEntityDescriptor(type);
 			var p    = Expression.Parameter(type, "t");
 
-			Expression<Func<T,T>> l;
-
-			if (type.IsAnonymous())
+			var l = _setterDic.GetOrAdd(type, t =>
 			{
-				var nctor   = (NewExpression)items.Expression.Find(e => e.NodeType == ExpressionType.New && e.Type == type);
-				var members = nctor.Members
-					.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
-					.ToList();
+				if (t.IsAnonymous())
+				{
+					var nctor   = (NewExpression)items.Expression.Find(e => e.NodeType == ExpressionType.New && e.Type == t);
+					var members = nctor.Members
+						.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
+						.ToList();
 
-				l = Expression.Lambda<Func<T,T>>(
-					Expression.New(
-						nctor.Constructor,
-						members.Select(m => Expression.PropertyOrField(p, m.Name)),
-						members),
-					p);
-			}
-			else
-			{
-				l = Expression.Lambda<Func<T,T>>(
+					return Expression.Lambda<Func<T,T>>(
+						Expression.New(
+							nctor.Constructor,
+							members.Select(m => Expression.PropertyOrField(p, m.Name)),
+							members),
+						p);
+				}
+
+				return Expression.Lambda<Func<T,T>>(
 					Expression.MemberInit(
-						Expression.New(type),
+						Expression.New(t),
 						ed.Columns.Select(c => Expression.Bind(c.MemberInfo, Expression.MakeMemberAccess(p, c.MemberInfo)))),
 					p);
-			}
+			});
 
 			var count = items.Insert(_table, l);
 
