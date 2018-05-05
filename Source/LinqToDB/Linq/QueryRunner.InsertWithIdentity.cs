@@ -63,12 +63,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = typeof(T);
-				var ed = dataContext.MappingSchema.GetEntityDescriptor(type);
-				if (ed != null && ed.InheritanceMapping != null && ed.InheritanceMapping.Count > 0)
-					type = obj.GetType();
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
+				var type = GetType<T>(obj, dataContext);
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -79,12 +76,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = typeof(T);
-				var ed = dataContext.MappingSchema.GetEntityDescriptor(type);
-				if (ed != null && ed.InheritanceMapping != null && ed.InheritanceMapping.Count > 0)
-					type = obj.GetType();
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
-				var ei  = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
+				var type = GetType<T>(obj, dataContext);
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 			}

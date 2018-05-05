@@ -356,6 +356,25 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Sets if it is required to use <see cref="PropertyMappingBuilder{T}.IsColumn"/> to treat property or field as column
+		/// </summary>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> IsColumnRequired()
+		{
+			return SetTable(a => a.IsColumnAttributeRequired = true);
+		}
+
+		/// <summary>
+		/// Sets if it is not required to use <see cref="PropertyMappingBuilder{T}.IsColumn"/> - all public fields and properties are treated as columns
+		/// This is the default behaviour
+		/// </summary>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> IsColumnNotRequired()
+		{
+			return SetTable(a => a.IsColumnAttributeRequired = true);
+		}
+
+		/// <summary>
 		/// Sets database schema/owner name for current entity, to override default name.
 		/// See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>

@@ -102,9 +102,9 @@ namespace Tests.ComplexTests2
 
 		public class Test
 		{
-			public int Id { get; set; }
-			public int? TestAnimalId { get; set; }
-			public Animal TestAnimal { get; set; }
+			public int    Id           { get; set; }
+			public int?   TestAnimalId { get; set; }
+			public Animal TestAnimal   { get; set; }
 		}
 
 		private void InsertData(ITestDataContext db)
@@ -121,22 +121,22 @@ namespace Tests.ComplexTests2
 			{
 				Id = 1,
 				Discriminator = "Dog",
-				EyeId = 1,
-				Name = "FirstDog",
-				DogName = new Name { First = "a", Second = "b" },
-				AnimalType = AnimalType.Big,
-				AnimalType2 = AnimalType2.Big
+				EyeId         = 1,
+				Name          = "FirstDog",
+				DogName       = new Name { First = "a", Second = "b" },
+				AnimalType    = AnimalType.Big,
+				AnimalType2   = AnimalType2.Big
 			};
 
 			var test = new Test
 			{
-				Id = 1,
+				Id           = 1,
 				TestAnimalId = null
 			};
 
 			var test2 = new Test
 			{
-				Id = 2,
+				Id           = 2,
 				TestAnimalId = 1
 			};
 
@@ -165,28 +165,23 @@ namespace Tests.ComplexTests2
 			var cnt = Interlocked.Increment(ref _cnt).ToString();
 
 			var ms = new MappingSchema(cnt);
-			ms.SetConverter<AnimalType, string>((obj) =>
-			{
-				return obj.ToString();
-			});
-			ms.SetConverter<AnimalType, DataParameter>((obj) =>
-			{
-				return new DataParameter { Value = obj.ToString() };
-			});
-			ms.SetConverter<string, AnimalType>((txt) =>
-			{
-				return (AnimalType)Enum.Parse(typeof(AnimalType), txt, true);
-			});
+
+			ms.SetConverter<AnimalType, string>       (obj => obj.ToString());
+			ms.SetConverter<AnimalType, DataParameter>(obj => new DataParameter { Value = obj.ToString() });
+			ms.SetConverter<string, AnimalType>       (txt => (AnimalType)Enum.Parse(typeof(AnimalType), txt, true));
+
 			ms.SetDefaultFromEnumType(typeof(AnimalType2), typeof(string));
 
 			var animalsTableName = "Animals" + cnt;
 
 			var mappingBuilder = ms.GetFluentMappingBuilder();
+
 			mappingBuilder.Entity<Animal>()
 				.HasTableName(animalsTableName)
 				.Inheritance(x => x.Discriminator, "Dog",             typeof(Dog))
 				.Inheritance(x => x.Discriminator, "WildAnimal",      typeof(WildAnimal))
 				.Inheritance(x => x.Discriminator, "SuperWildAnimal", typeof(SuperWildAnimal))
+
 				.Property(x => x.Name         ).IsColumn().IsNullable().HasColumnName("Name")
 				.Property(x => x.AnimalType   ).IsColumn().HasColumnName("AnimalType").HasDataType(DataType.NVarChar).HasLength(40)
 				.Property(x => x.AnimalType2  ).IsColumn().HasColumnName("AnimalType2").HasDataType(DataType.NVarChar).HasLength(40)
@@ -213,16 +208,20 @@ namespace Tests.ComplexTests2
 				.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy").HasDataType(DataType.NVarChar).HasLength(40);
 
 			mappingBuilder.Entity<SauronsEye>()
-				.HasTableName("Eyes")
-				.Property(x => x.Id).IsColumn().HasColumnName("Id").IsPrimaryKey()
-				.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy").HasDataType(DataType.NVarChar).HasLength(40)
-				.Property(x => x.Power).IsColumn().HasColumnName("power");
+				.Property(x => x.Power).IsNotColumn();
 
 			mappingBuilder.Entity<Test>()
 				.HasTableName("TestAnimalTable")
 				.Association(x => x.TestAnimal, x => x.TestAnimalId, x => x.Id)
 				.Property(x => x.TestAnimalId).IsColumn().IsNullable().HasColumnName("TestAnimalId")
 				.Property(x => x.TestAnimal  ).IsNotColumn();
+
+			mappingBuilder.Entity<Person>()
+				.HasTableName(nameof(Person));
+
+			mappingBuilder.Entity<PersonDerived>()
+				.Property(_ => _.ColumnForOtherDB).IsNotColumn();
+
 
 			return ms;
 		}
@@ -328,15 +327,15 @@ namespace Tests.ComplexTests2
 					InsertData(db);
 					var d = new Dog() { AnimalType = AnimalType.Big, AnimalType2 = AnimalType2.Big };
 
-					var test1 = db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big);
-					var test2 = db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType);
+					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big));
+					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType));
 
-					var test3 = db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big);
-					var test4 = db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2);
+					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType2 == AnimalType2.Big));
+					Assert.NotNull(db.GetTable<Dog>().First(x => x.AnimalType2 == d.AnimalType2));
 
-					var test6 = db.GetTable<Animal>().First(x => x is SuperWildAnimal);
+					Assert.NotNull(db.GetTable<Animal>().First(x => x is SuperWildAnimal));
 
-					var test7 = db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1);
+					Assert.NotNull(db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1));
 				}
 				finally
 				{
@@ -355,7 +354,9 @@ namespace Tests.ComplexTests2
 				try
 				{
 					InsertData(db);
+					
 					var dog = db.GetTable<Dog>().First();
+					
 					db.Update(dog);
 					db.Update((Animal)dog);
 
@@ -378,7 +379,8 @@ namespace Tests.ComplexTests2
 		[Test, DataContextSource]
 		public void TestInsertUsingDerivedObjectUsingAttributes(string context)
 		{
-			using (var db = GetDataContext(context))
+			var ms = SetMappings();
+			using (var db = GetDataContext(context, ms))
 			{
 				try
 				{
@@ -392,14 +394,16 @@ namespace Tests.ComplexTests2
 					};
 
 					person.ID = db.InsertWithInt32Identity(person);
-					validate();
+					Validate();
+
 					db.Update(person);
-					validate();
+					Validate();
+
 					db.Delete(person);
 
-					void validate()
+					void Validate()
 					{
-						var data = db.GetTable<Person>().Where(_ => _.FirstName == "test_inherited_insert").FirstOrDefault();
+						var data = db.GetTable<Person>().FirstOrDefault(_ => _.FirstName == "test_inherited_insert");
 						Assert.IsNotNull(data);
 						Assert.AreEqual(person.ID        , data.ID);
 						Assert.AreEqual(person.FirstName , data.FirstName);
@@ -433,14 +437,17 @@ namespace Tests.ComplexTests2
 					};
 
 					var cnt = db.Insert(eye);
-					validate();
+					Validate();
+
 					cnt = db.InsertOrReplace(eye);
-					validate();
+					Validate();
+
 					cnt = db.Update(eye);
-					validate();
+					Validate();
+
 					db.Delete(eye);
 
-					void validate()
+					void Validate()
 					{
 						Assert.AreEqual(1, cnt);
 
@@ -470,27 +477,30 @@ namespace Tests.ComplexTests2
 
 					var dog = new Dog()
 					{
-						Id = 666,
-						AnimalType = AnimalType.Big,
+						Id          = 666,
+						AnimalType  = AnimalType.Big,
 						AnimalType2 = AnimalType2.Small,
-						Name = "Cerberus",
-						DogName = new Name()
+						Name        = "Cerberus",
+						DogName     = new Name()
 						{
-							First = "Good",
+							First  = "Good",
 							Second = "Dog"
 						},
 						EyeId = 2
 					};
 
 					var cnt = db.Insert((Animal)dog);
-					validate();
+					Validate();
+
 					cnt = db.InsertOrReplace((Animal)dog);
-					validate();
+					Validate();
+
 					cnt = db.Update((Animal)dog);
-					validate();
+					Validate();
+
 					db.Delete((Animal)dog);
 
-					void validate()
+					void Validate()
 					{
 						Assert.AreEqual(1, cnt);
 
