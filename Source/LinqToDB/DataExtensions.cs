@@ -18,7 +18,7 @@ namespace LinqToDB
 	/// Data context extension methods.
 	/// </summary>
 	[PublicAPI]
-	public static class DataExtensions
+	public static partial class DataExtensions
 	{
 		#region Table Helpers
 
