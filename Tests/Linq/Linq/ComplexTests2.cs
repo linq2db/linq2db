@@ -40,13 +40,18 @@ namespace Tests.ComplexTests2
 
 		public class Eye
 		{
-			public int Id { get; set; }
+			public int    Id { get; set; }
 			public string Xy { get; set; }
+		}
+
+		public class SauronsEye : Eye
+		{
+			public int Power { get; set; }
 		}
 
 		public class Name
 		{
-			public string First { get; set; }
+			public string First  { get; set; }
 			public string Second { get; set; }
 		}
 
@@ -82,10 +87,8 @@ namespace Tests.ComplexTests2
 				Discriminator = "Dog";
 			}
 
-			public Eye Bla { get; set; }
-
-			public int? EyeId { get; set; }
-
+			public Eye  Bla     { get; set; }
+			public int? EyeId   { get; set; }
 			public Name DogName { get; set; }
 		}
 
@@ -208,6 +211,12 @@ namespace Tests.ComplexTests2
 				.HasTableName("Eyes")
 				.Property(x => x.Id).IsColumn().HasColumnName("Id")
 				.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy").HasDataType(DataType.NVarChar).HasLength(40);
+
+			mappingBuilder.Entity<SauronsEye>()
+				.HasTableName("Eyes")
+				.Property(x => x.Id).IsColumn().HasColumnName("Id")
+				.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy").HasDataType(DataType.NVarChar).HasLength(40)
+				.Property(x => x.Power).IsColumn().HasColumnName("power");
 
 			mappingBuilder.Entity<Test>()
 				.HasTableName("TestAnimalTable")
@@ -350,8 +359,151 @@ namespace Tests.ComplexTests2
 					db.Update(dog);
 					db.Update((Animal)dog);
 
-					//var bdog = new SuperBadDog();
-					//db.Insert((Dog)bdog);   //this is not possible with my change -> ;-( should it be?
+					var bdog = new SuperBadDog();
+					db.Insert((Dog)bdog);
+				}
+				finally
+				{
+					CleanupData(db);
+				}
+			}
+		}
+
+		public class PersonDerived : Person
+		{
+			[Column]
+			public int ColumnForOtherDB;
+		}
+
+		[Test, DataContextSource]
+		public void TestInsertUsingDerivedObjectUsingAttributes(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					Person person = new PersonDerived()
+					{
+						FirstName        = "test_inherited_insert",
+						LastName         = "test",
+						MiddleName       = "test",
+						Gender           = Gender.Unknown,
+						ColumnForOtherDB = 100500
+					};
+
+					person.ID = db.InsertWithInt32Identity(person);
+					validate();
+					db.Update(person);
+					validate();
+					db.Delete(person);
+
+					void validate()
+					{
+						var data = db.GetTable<Person>().Where(_ => _.FirstName == "test_inherited_insert").FirstOrDefault();
+						Assert.IsNotNull(data);
+						Assert.AreEqual(person.ID        , data.ID);
+						Assert.AreEqual(person.FirstName , data.FirstName);
+						Assert.AreEqual(person.LastName  , data.LastName);
+						Assert.AreEqual(person.MiddleName, data.MiddleName);
+						Assert.AreEqual(person.Gender    , data.Gender);
+					}
+				}
+				finally
+				{
+					db.GetTable<Person>().Where(_ => _.FirstName == "test_inherited_insert").Delete();
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void TestInsertUsingDerivedObjectUsingFluentMapping(string context)
+		{
+			var ms = SetMappings();
+
+			using (var db = GetDataContext(context, ms))
+			{
+				try
+				{
+					InsertData(db);
+
+					Eye eye = new SauronsEye()
+					{
+						Id = 123,
+						Xy = "test321"
+					};
+
+					var cnt = db.Insert(eye);
+					validate();
+					cnt = db.InsertOrReplace(eye);
+					validate();
+					cnt = db.Update(eye);
+					validate();
+					db.Delete(eye);
+
+					void validate()
+					{
+						Assert.AreEqual(1, cnt);
+
+						var data = db.GetTable<Eye>().Where(_ => _.Id == 123).FirstOrDefault();
+						Assert.IsNotNull(data);
+						Assert.AreEqual(eye.Id, data.Id);
+						Assert.AreEqual(eye.Xy, data.Xy);
+					}
+				}
+				finally
+				{
+					CleanupData(db);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void TestInheritanceByBaseType(string context)
+		{
+			var ms = SetMappings();
+
+			using (var db = GetDataContext(context, ms))
+			{
+				try
+				{
+					InsertData(db);
+
+					var dog = new Dog()
+					{
+						Id = 666,
+						AnimalType = AnimalType.Big,
+						AnimalType2 = AnimalType2.Small,
+						Name = "Cerberus",
+						DogName = new Name()
+						{
+							First = "Good",
+							Second = "Dog"
+						},
+						EyeId = 2
+					};
+
+					var cnt = db.Insert((Animal)dog);
+					validate();
+					cnt = db.InsertOrReplace((Animal)dog);
+					validate();
+					cnt = db.Update((Animal)dog);
+					validate();
+					db.Delete((Animal)dog);
+
+					void validate()
+					{
+						Assert.AreEqual(1, cnt);
+
+						var data = db.GetTable<Dog>().Where(_ => _.Id == 666).FirstOrDefault();
+						Assert.IsNotNull(data);
+						Assert.AreEqual(dog.Id            , data.Id);
+						Assert.AreEqual(dog.AnimalType    , data.AnimalType);
+						Assert.AreEqual(dog.AnimalType2   , data.AnimalType2);
+						Assert.AreEqual(dog.Name          , data.Name);
+						Assert.AreEqual(dog.DogName.First , data.DogName.First);
+						Assert.AreEqual(dog.DogName.Second, data.DogName.Second);
+						Assert.AreEqual(dog.EyeId         , data.EyeId);
+					}
 				}
 				finally
 				{
