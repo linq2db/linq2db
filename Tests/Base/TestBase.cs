@@ -1097,15 +1097,8 @@ namespace Tests
 	}
 
 	public class LocalTable<T> : IDisposable
+		where T : class
 	{
-		static System.Reflection.MethodInfo _clearAllFirebirdConnectionPools = null;
-		static LocalTable()
-		{
-			var fbConnectionType = Type.GetType("FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient", false);
-			if (fbConnectionType != null)
-				_clearAllFirebirdConnectionPools = fbConnectionType.GetMethodEx("ClearAllPools"); 
-		}
-
 		private IDataContext _db;
 
 		public LocalTable(IDataContext db)
@@ -1117,22 +1110,21 @@ namespace Tests
 			}
 			catch
 			{
-				_db.DropTable<T>();
-				_db.CreateTable<T>();
+				_db.DropTable<T>(throwExceptionIfNotExists: false);
+				try
+				{
+					_db.CreateTable<T>();
+				}
+				catch
+				{
+					_db.GetTable<T>().Delete();
+				}
 			}
 		}
 
 		public void Dispose()
 		{
 			_db.DropTable<T>(throwExceptionIfNotExists: false);
-
-			
-			// counter added to fix this issue with tests in Firebird
-			// https://stackoverflow.com/questions/44353607
-			// it was only working solution for Firebird3
-			if (_clearAllFirebirdConnectionPools != null)
-				_clearAllFirebirdConnectionPools.Invoke(null, Array<object>.Empty);
-
 		}
 	}
 
