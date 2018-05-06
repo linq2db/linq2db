@@ -716,7 +716,7 @@ namespace LinqToDB
 
 		#region CTE
 
-		public static IQueryable<T> GetCte<T>(
+		internal static IQueryable<T> GetCte<T>(
 			[NotNull]   this IDataContext                 dataContext,
 			[NotNull]   Func<IQueryable<T>,IQueryable<T>> cteBody,
 			[CanBeNull] string                            cteTableName = null)
