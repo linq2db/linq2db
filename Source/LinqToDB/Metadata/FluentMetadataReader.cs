@@ -11,14 +11,34 @@ namespace LinqToDB.Metadata
 
 	public class FluentMetadataReader : IMetadataReader
 	{
-		readonly ConcurrentDictionary<Type,List<Attribute>>                       _types = new ConcurrentDictionary<Type,List<Attribute>>();
+		readonly ConcurrentDictionary<Type,List<Attribute>>                       _types          = new ConcurrentDictionary<Type,List<Attribute>>();
 		readonly ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>> _dynamicColumns = new ConcurrentDictionary<Type,ConcurrentDictionary<MemberInfo,byte>>();
+
+		private static bool IsSystemOrNullType(Type type)
+			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
 
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
 			List<Attribute> attrs;
-			return _types.TryGetValue(type, out attrs) ? attrs.OfType<T>().ToArray() : Array<T>.Empty;
+			if (_types.TryGetValue(type, out attrs))
+				return attrs.OfType<T>().ToArray();
+
+			if (!inherit)
+				return Array<T>.Empty;
+
+			var parents = new [] { type.BaseTypeEx() }
+				.Where(_ => !IsSystemOrNullType(_))
+				.Concat(type.GetInterfacesEx());
+
+			foreach(var p in parents)
+			{
+				var pattrs = GetAttributes<T>(p, inherit);
+				if (pattrs.Length > 0)
+					return pattrs;
+			}
+
+			return Array<T>.Empty;
 		}
 
 		public void AddAttribute(Type type, Attribute attribute)
@@ -41,15 +61,20 @@ namespace LinqToDB.Metadata
 			if (inherit == false)
 				return Array<T>.Empty;
 
-			var parent = type.BaseTypeEx();
-			if (parent == null || parent == typeof(object) || parent == typeof(ValueType) || parent == typeof(Enum))
-				return Array<T>.Empty;
+			var parents = new [] { type.BaseTypeEx() }
+				.Where(_ => !IsSystemOrNullType(_))
+				.Concat(type.GetInterfacesEx())
+				.Select(_ => new { Type = _, Member = _.GetMemberEx(memberInfo) })
+				.Where(_ => _.Member != null);
 
-			var mi = parent.GetMemberEx(memberInfo);
-			if (mi == null)
-				return Array<T>.Empty;
+			foreach(var p in parents)
+			{
+				var pattrs = GetAttributes<T>(p.Type, p.Member, inherit);
+				if (pattrs.Length > 0)
+					return pattrs;
+			}
 
-			return GetAttributes<T>(parent, mi, inherit);
+			return Array<T>.Empty;
 		}
 
 		public void AddAttribute(MemberInfo memberInfo, Attribute attribute)
