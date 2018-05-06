@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy2(dataConnection, options, false, source, "");
+			return MultipleRowsCopy2(dataConnection, options, source, "");
 		}
 	}
 }

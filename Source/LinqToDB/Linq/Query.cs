@@ -32,6 +32,7 @@ namespace LinqToDB.Linq
 		protected Query(IDataContext dataContext, Expression expression)
 		{
 			ContextID        = dataContext.ContextID;
+			ContextType      = dataContext.GetType();
 			Expression       = expression;
 			MappingSchema    = dataContext.MappingSchema;
 			ConfigurationID  = dataContext.MappingSchema.ConfigurationID;
@@ -45,6 +46,7 @@ namespace LinqToDB.Linq
 		#region Compare
 
 		internal readonly string           ContextID;
+		internal readonly Type             ContextType;
 		internal readonly Expression       Expression;
 		internal readonly MappingSchema    MappingSchema;
 		internal readonly string           ConfigurationID;
@@ -60,6 +62,7 @@ namespace LinqToDB.Linq
 				ConfigurationID.Length == dataContext.MappingSchema.ConfigurationID.Length &&
 				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
 				InlineParameters       == dataContext.InlineParameters &&
+				ContextType            == dataContext.GetType()        &&
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
@@ -158,7 +161,7 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public          bool            DoNotCache;
+		public bool DoNotCache;
 
 		public Func<IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
 		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
@@ -173,11 +176,11 @@ namespace LinqToDB.Linq
 		/// LINQ query cache version. Changed when query added or removed from cache.
 		/// Not changed when cache reordered.
 		/// </summary>
-		static          int            _cacheVersion;
+		static int _cacheVersion;
 		/// <summary>
 		/// LINQ query cache synchronization object.
 		/// </summary>
-		static readonly object         _sync;
+		static readonly object _sync;
 
 		/// <summary>
 		/// LINQ query cache size (per entity type).

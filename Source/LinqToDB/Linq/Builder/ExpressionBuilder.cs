@@ -6,6 +6,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
@@ -31,6 +33,7 @@ namespace LinqToDB.Linq.Builder
 			new GroupByBuilder             (),
 			new JoinBuilder                (),
 			new AllJoinsBuilder            (),
+			new AllJoinsLinqBuilder        (),
 			new TakeSkipBuilder            (),
 			new DefaultIfEmptyBuilder      (),
 			new DistinctBuilder            (),
@@ -56,6 +59,7 @@ namespace LinqToDB.Linq.Builder
 			new AsUpdatableBuilder         (),
 			new LoadWithBuilder            (),
 			new DropBuilder                (),
+			new TruncateBuilder            (),
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
 			new ContextParser              (),
@@ -131,10 +135,7 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
-		public MappingSchema MappingSchema
-		{
-			get { return DataContext.MappingSchema; }
-		}
+		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
 		#endregion
 
@@ -199,7 +200,7 @@ namespace LinqToDB.Linq.Builder
 			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 		}
 
-		public SequenceConvertInfo ConvertSequence(BuildInfo buildInfo, ParameterExpression param)
+		public SequenceConvertInfo ConvertSequence(BuildInfo buildInfo, ParameterExpression param, bool throwExceptionIfCantConvert)
 		{
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
@@ -207,7 +208,10 @@ namespace LinqToDB.Linq.Builder
 				if (builder.CanBuild(this, buildInfo))
 					return builder.Convert(this, buildInfo, param);
 
-			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+			if (throwExceptionIfCantConvert)
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+
+			return null;
 		}
 
 		public bool IsSequence(BuildInfo buildInfo)
@@ -227,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ParameterExpression SequenceParameter;
 
-		Expression ConvertExpressionTree(Expression expression)
+		public Expression ConvertExpressionTree(Expression expression)
 		{
 			var expr = expression;
 
@@ -261,7 +265,7 @@ namespace LinqToDB.Linq.Builder
 
 			SequenceParameter = Expression.Parameter(paramType, "cp");
 
-			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SelectQuery()), SequenceParameter);
+			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SelectQuery()), SequenceParameter, false);
 
 			if (sequence != null)
 			{
@@ -324,7 +328,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								// having N items will lead to NxM recursive calls in expression visitors and
 								// will result in stack overflow on relatively small numbers (~1000 items).
-								// To fix it we will rebalance condition tree here which will result in 
+								// To fix it we will rebalance condition tree here which will result in
 								// LOG2(N)*M recursive calls, or 10*M calls for 1000 items.
 								//
 								// E.g. we have condition A OR B OR C OR D OR E
@@ -462,9 +466,9 @@ namespace LinqToDB.Linq.Builder
 							//if (c.Value is IExpressionQuery)
 							//	return ((IQueryable)c.Value).Expression;
 
-							if (c.Value is IQueryable && !(c.Value is ITable))
+							if (c.Value is IQueryable queryable && !(queryable is ITable))
 							{
-								var e = ((IQueryable)c.Value).Expression;
+								var e = queryable.Expression;
 
 								if (!_visitedExpressions.Contains(e))
 								{
@@ -486,24 +490,16 @@ namespace LinqToDB.Linq.Builder
 		#region OptimizeExpression
 
 		private MethodInfo[] _enumerableMethods;
-		public  MethodInfo[]  EnumerableMethods
-		{
-			get { return _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethodsEx()); }
-		}
+		public  MethodInfo[]  EnumerableMethods => _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethodsEx());
 
 		private MethodInfo[] _queryableMethods;
-		public  MethodInfo[]  QueryableMethods
-		{
-			get { return _queryableMethods ?? (_queryableMethods = typeof(Queryable).GetMethodsEx()); }
-		}
+		public  MethodInfo[]  QueryableMethods  => _queryableMethods  ?? (_queryableMethods  = typeof(Queryable). GetMethodsEx());
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
 
 		Expression OptimizeExpression(Expression expression)
 		{
-			Expression expr;
-
-			if (_optimizedExpressions.TryGetValue(expression, out expr))
+			if (_optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
 			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
@@ -618,12 +614,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (mi is MethodInfo && ((MethodInfo)mi).IsGenericMethod)
+				if (mi is MethodInfo method && method.IsGenericMethod)
 				{
-					var method = (MethodInfo)mi;
-					var args   = method.GetGenericArguments();
-					var names  = args.Select(t => (object)t.Name).ToArray();
-					var name   = string.Format(attr.MethodName, names);
+					var args  = method.GetGenericArguments();
+					var names = args.Select(t => (object)t.Name).ToArray();
+					var name  = string.Format(attr.MethodName, names);
 
 					expr = Expression.Call(
 						mi.DeclaringType,
@@ -1410,7 +1405,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		MethodInfo GetQueriableMethodInfo(MethodCallExpression method, Func<MethodInfo,bool,bool> predicate)
+		MethodInfo GetQueriableMethodInfo(MethodCallExpression method, [InstantHandle] Func<MethodInfo,bool,bool> predicate)
 		{
 			return method.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods.FirstOrDefault(m => predicate(m, false)) ?? EnumerableMethods.First(m => predicate(m, true)):

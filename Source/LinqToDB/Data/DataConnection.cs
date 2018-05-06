@@ -26,7 +26,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable
+	public partial class DataConnection : ICloneable, IEntityServices
 	{
 		#region .ctor
 
@@ -175,7 +175,7 @@ namespace LinqToDB.Data
 			[JetBrains.Annotations.NotNull] IDbConnection connection)
 			: this(dataProvider, connection, false)
 		{
-			
+
 		}
 
 		/// <summary>
@@ -281,9 +281,8 @@ namespace LinqToDB.Data
 				if (!_id.HasValue)
 				{
 					var key = MappingSchema.ConfigurationID + "." + (ConfigurationString ?? ConnectionString ?? Connection.ConnectionString);
-					int id;
 
-					if (!_configurationIDs.TryGetValue(key, out id))
+					if (!_configurationIDs.TryGetValue(key, out var id))
 						_configurationIDs[key] = id = Interlocked.Increment(ref _maxID);
 
 					_id = id;
@@ -307,7 +306,7 @@ namespace LinqToDB.Data
 
 				return _isMarsEnabled.Value;
 			}
-			set { _isMarsEnabled = value; }
+			set => _isMarsEnabled = value;
 		}
 
 		/// <summary>
@@ -321,7 +320,7 @@ namespace LinqToDB.Data
 		public  static string DefaultConfiguration
 		{
 			get { InitConfig(); return _defaultConfiguration; }
-			set {                      _defaultConfiguration = value; }
+			set => _defaultConfiguration = value;
 		}
 
 		/// <summary>
@@ -333,7 +332,7 @@ namespace LinqToDB.Data
 		public  static string DefaultDataProvider
 		{
 			get { InitConfig(); return _defaultDataProvider; }
-			set {                      _defaultDataProvider = value; }
+			set => _defaultDataProvider = value;
 		}
 
 		private static Action<TraceInfo> _onTrace = OnTraceInternal;
@@ -357,20 +356,24 @@ namespace LinqToDB.Data
 			switch (info.TraceInfoStep)
 			{
 				case TraceInfoStep.BeforeExecute:
-					WriteTraceLine(info.SqlText, TraceSwitch.DisplayName);
+					WriteTraceLine(
+						$"{info.TraceInfoStep}{Environment.NewLine}{info.SqlText}",
+						TraceSwitch.DisplayName);
 					break;
 
 				case TraceInfoStep.AfterExecute:
 					WriteTraceLine(
 						info.RecordsAffected != null
-							? $"Query Execution Time{(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
-							: $"Query Execution Time{(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
+							? $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
+							: $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
 						TraceSwitch.DisplayName);
 					break;
 
 				case TraceInfoStep.Error:
 				{
 					var sb = new StringBuilder();
+
+					sb.Append(info.TraceInfoStep);
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
@@ -405,6 +408,8 @@ namespace LinqToDB.Data
 				{
 					var sb = new StringBuilder();
 
+					sb.AppendLine(info.TraceInfoStep.ToString());
+
 					if (Configuration.Linq.TraceMapperExpression && info.MapperExpression != null)
 						sb.AppendLine(info.MapperExpression.GetDebugView());
 
@@ -417,7 +422,7 @@ namespace LinqToDB.Data
 				{
 					var sb = new StringBuilder();
 
-					sb.Append($"Total Execution Time{(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
+					sb.Append($"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
 						sb.Append($" Rows Count: {info.RecordsAffected}.");
@@ -427,8 +432,8 @@ namespace LinqToDB.Data
 					WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
 
 					break;
+				}
 			}
-		}
 		}
 
 		private static TraceSwitch _traceSwitch;
@@ -767,10 +772,12 @@ namespace LinqToDB.Data
 			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-			_configurations[configuration] = new ConfigurationInfo(
+			var info = new ConfigurationInfo(
 				configuration,
 				connectionString,
 				dataProvider ?? FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]));
+
+			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
 		}
 
 		class ConnectionStringSettings : IConnectionStringSettings
@@ -880,6 +887,9 @@ namespace LinqToDB.Data
 		/// Event, triggered after connection closed using <see cref="Close"/> method.
 		/// </summary>
 		public event EventHandler OnClosed;
+
+		/// <inheritdoc />
+		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
@@ -1173,8 +1183,7 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (Transaction != null)
-				Transaction.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -1199,8 +1208,7 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (Transaction != null)
-				Transaction.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -1316,9 +1324,9 @@ namespace LinqToDB.Data
 		public object Clone()
 		{
 			var connection =
-				_connection == null       ? null :
-				_connection is ICloneable ? (IDbConnection)((ICloneable)_connection).Clone() :
-				                            null;
+				_connection == null                 ? null :
+				_connection is ICloneable cloneable ? (IDbConnection)cloneable.Clone() :
+				                                      null;
 
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
@@ -1327,11 +1335,12 @@ namespace LinqToDB.Data
 
 		#region System.IDisposable Members
 
-		protected bool Disposed { get; private set; }
+		protected bool  Disposed        { get; private set; }
+		public    bool? ThrowOnDisposed { get; set; }
 
-		protected void ThrowOnDisposed()
+		protected void CheckAndThrowOnDisposed()
 		{
-			if (Disposed)
+			if (Disposed && (ThrowOnDisposed ?? Configuration.Data.ThrowOnDisposed))
 				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 

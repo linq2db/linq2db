@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq
 {
@@ -125,7 +126,7 @@ namespace LinqToDB.Linq
 							: query.MappingSchema.GetDataType(p.Value.GetType()).DataType, p))
 				);
 
-				sql.Parameters  = parameters.ToList();
+				sql.Parameters = parameters.ToList();
 			}
 		}
 
@@ -247,6 +248,11 @@ namespace LinqToDB.Linq
 
 			return param;
 		}
+
+		private static Type GetType<T>(T obj, IDataContext db)
+			//=> typeof(T);
+			//=> obj.GetType();
+			=> db.MappingSchema.GetEntityDescriptor(typeof(T)).InheritanceMapping?.Count > 0 ? obj.GetType() : typeof(T);
 
 		#endregion
 

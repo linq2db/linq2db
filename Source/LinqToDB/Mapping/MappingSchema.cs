@@ -499,7 +499,7 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		ConvertInfo.LambdaInfo GetConverter(Type from, Type to, bool create)
+		internal ConvertInfo.LambdaInfo GetConverter(Type from, Type to, bool create)
 		{
 			for (var i = 0; i < Schemas.Length; i++)
 			{
@@ -758,6 +758,12 @@ namespace LinqToDB.Mapping
 			lock (_metadataReadersSyncRoot)
 			{
 				var currentReader = MetadataReader;
+				if (currentReader is MetadataReader metadataReader)
+				{
+					metadataReader.AddReader(reader);
+					return;
+				}
+
 				MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
 			}
 		}
@@ -923,6 +929,14 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Gets the dynamic columns defined on given type.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		/// <returns>All dynamic columns defined on given type.</returns>
+		public MemberInfo[] GetDynamicColumns(Type type)
+			=> MetadataReaders.SelectMany(mr => mr.GetDynamicColumns(type)).ToArray();
+
+		/// <summary>
 		/// Gets fluent mapping builder for current schema.
 		/// </summary>
 		/// <returns>Fluent mapping builder.</returns>
@@ -990,8 +1004,8 @@ namespace LinqToDB.Mapping
 			public DefaultMappingSchema()
 				: base(new MappingSchemaInfo("") { MetadataReader = Metadata.MetadataReader.Default })
 			{
-				AddScalarType(typeof(char),            DataType.NChar);
-				AddScalarType(typeof(char?),           DataType.NChar);
+				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null));
+				AddScalarType(typeof(char?),           new SqlDataType(DataType.NChar, typeof(char?), 1, null, null));
 				AddScalarType(typeof(string),          DataType.NVarChar);
 				AddScalarType(typeof(decimal),         DataType.Decimal);
 				AddScalarType(typeof(decimal?),        DataType.Decimal);
@@ -1033,7 +1047,7 @@ namespace LinqToDB.Mapping
 
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
-				ValueToSqlConverter.SetDefauls();
+				ValueToSqlConverter.SetDefaults();
 			}
 		}
 
@@ -1128,6 +1142,18 @@ namespace LinqToDB.Mapping
 
 			if (dataType != DataType.Undefined)
 				SetDataType(type, dataType);
+		}
+
+		/// <summary>
+		/// Configure provided type mapping to scalar database type.
+		/// </summary>
+		/// <param name="type">Type to configure.</param>
+		/// <param name="dataType">Database data type.</param>
+		public void AddScalarType(Type type, SqlDataType dataType)
+		{
+			SetScalarType(type);
+
+			SetDataType(type, dataType);
 		}
 
 		#endregion
@@ -1328,6 +1354,12 @@ namespace LinqToDB.Mapping
 		#endregion
 
 		#region EntityDescriptor
+
+		/// <summary>
+		/// Gets or sets action, called when the EntityDescriptor is created.
+		/// Could be used to adjust created descriptor before use.
+		/// </summary>
+		public Action<MappingSchema, IEntityChangeDescriptor> EntityDescriptorCreatedCallback { get; set; }
 
 		/// <summary>
 		/// Returns mapped entity descriptor.

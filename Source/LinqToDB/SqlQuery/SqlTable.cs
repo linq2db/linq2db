@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -57,7 +58,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Init from type
 
-		public SqlTable([JetBrains.Annotations.NotNull] MappingSchema mappingSchema, Type objectType) : this()
+		public SqlTable([JetBrains.Annotations.NotNull] MappingSchema mappingSchema, Type objectType, string physicalName = null) : this()
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
@@ -67,7 +68,7 @@ namespace LinqToDB.SqlQuery
 			Schema       = ed.SchemaName;
 			Name         = ed.TableName;
 			ObjectType   = objectType;
-			PhysicalName = Name;
+			PhysicalName = physicalName ?? Name;
 
 			foreach (var column in ed.Columns)
 			{
@@ -137,7 +138,8 @@ namespace LinqToDB.SqlQuery
 
 		#region Init from Table
 
-		public SqlTable(SqlTable table) : this()
+		public SqlTable(SqlTable table)
+			: this()
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
@@ -154,7 +156,8 @@ namespace LinqToDB.SqlQuery
 			TableArguments = table.TableArguments;
 		}
 
-		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments) : this()
+		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
+			: this()
 		{
 			Alias              = table.Alias;
 			Database           = table.Database;
@@ -311,7 +314,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
+		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

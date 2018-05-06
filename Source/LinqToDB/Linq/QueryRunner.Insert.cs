@@ -12,11 +12,11 @@ namespace LinqToDB.Linq
 	{
 		public static class Insert<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryChache = new ConcurrentDictionary<object,Query<int>>();
+			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
-			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName)
+			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
+				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
@@ -33,7 +33,7 @@ namespace LinqToDB.Linq
 				{
 					if (field.Value.IsInsertable)
 					{
-						var param = GetParameter(typeof(T), dataContext, field.Value);
+						var param = GetParameter(type, dataContext, field.Value);
 
 						ei.Queries[0].Parameters.Add(param);
 
@@ -59,8 +59,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
+				var type = GetType<T>(obj, dataContext);
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -71,8 +72,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName));
+				var type = GetType<T>(obj, dataContext);
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schemaName, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 

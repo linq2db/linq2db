@@ -17,6 +17,11 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugType>pdbonly</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 		<DefineConstants>OVERRIDETOSTRING1;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
@@ -27,9 +32,12 @@
 		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
 
 		<Compile Remove="Compatibility\**\*.cs" />
+
+		<None Remove="SqlQuery\ReservedWordsFirebird.txt" />
 
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
 

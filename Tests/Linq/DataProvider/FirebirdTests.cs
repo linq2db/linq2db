@@ -478,43 +478,74 @@ namespace Tests.DataProvider
 			[Column] public string Caption   { get; set; } 
 			[Column] public long?  ParentId  { get; set; } 
 
-			         public bool HasChildren { get; set; }
+					 public bool HasChildren { get; set; }
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
 		public void Issue76(string context)
 		{
-			var saveQuoteIdentifiers = FirebirdSqlBuilder.IdentifierQuoteMode;
-			FirebirdSqlBuilder.IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Quote;
-
-			try
+			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Quote))
+			using (var db = GetDataContext(context))
+			using (new LocalTable<Issue76Entity>(db))
 			{
-				using (var db = GetDataContext(context))
-				using (new LocalTable<Issue76Entity>(db))
+				var folders = db.GetTable<Issue76Entity>().Select(f => new Issue76Entity()
 				{
-					var folders = db.GetTable<Issue76Entity>().Select(f => new Issue76Entity()
-					{
-						Id          = f.Id,
-						Caption     = f.Caption,
-						HasChildren = db.GetTable<Issue76Entity>().Any(f2 => f2.ParentId == f.Id)
-					});
+					Id          = f.Id,
+					Caption     = f.Caption,
+					HasChildren = db.GetTable<Issue76Entity>().Any(f2 => f2.ParentId == f.Id)
+				});
 
-					folders =
-						from folder  in folders
-						join folder2 in db.GetTable<Issue76Entity>() on folder.ParentId equals folder2.Id
-						where folder2.Caption == "dewde"
-						select folder;
+				folders =
+					from folder in folders
+					join folder2 in db.GetTable<Issue76Entity>() on folder.ParentId equals folder2.Id
+					where folder2.Caption == "dewde"
+					select folder;
 
 
-					Assert.DoesNotThrow(() => folders.ToList());
-				}
-			}
-			finally
-			{
-				FirebirdSqlBuilder.IdentifierQuoteMode = saveQuoteIdentifiers;
-				
+				Assert.DoesNotThrow(() => folders.ToList());
 			}
 		}
 
+		[Table]
+		class TestDropTable
+		{
+			[Column]
+			public int Field;
+		}
+
+		[Table]
+		class TestIdentityDropTable
+		{
+			[Column, Identity]
+			public int Field;
+		}
+
+		[Test]
+		[Combinatorial]
+		public void DropTableTest(
+			[IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context,
+			[Values] FirebirdIdentifierQuoteMode quoteMode,
+			[Values] bool withIdentity,
+			[Values] bool throwIfNotExists)
+		{
+			using (new FirebirdQuoteMode(quoteMode))
+			using (var db = GetDataContext(context))
+			{
+				if (withIdentity)
+					test<TestIdentityDropTable>();
+				else
+					test<TestDropTable>();
+
+				void test<TTable>()
+				{
+					// first drop deletes table if it remains from previous test run
+					// second drop deletes non-existing table
+					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
+					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
+					db.CreateTable<TTable>();
+					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
+				}
+			}
+		}
 	}
 }

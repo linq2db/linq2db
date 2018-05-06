@@ -14,8 +14,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		public long RowsCopied { get; set; }
 
-		readonly DateTime _startTime = DateTime.Now;
-
-		public DateTime StartTime { get { return _startTime; } }
+		/// <summary>
+		/// Gets operation execution start time.
+		/// </summary>
+		public DateTime StartTime { get; } = DateTime.Now;
 	}
 }

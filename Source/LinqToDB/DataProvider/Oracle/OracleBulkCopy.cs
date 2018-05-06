@@ -132,10 +132,10 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		BulkCopyRowsCopied MultipleRowsCopy1<T>(
+		new BulkCopyRowsCopied MultipleRowsCopy1<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options, options.KeepIdentity ?? false);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options);
 
 			helper.StringBuilder.AppendLine("INSERT ALL");
 			helper.SetHeader();
@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.Oracle
 		BulkCopyRowsCopied MultipleRowsCopy2<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options, options.KeepIdentity ?? false);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options);
 
 			helper.StringBuilder.AppendFormat("INSERT INTO {0} (", helper.TableName);
 
@@ -227,7 +227,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options, options.KeepIdentity ?? false);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options);
 
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()

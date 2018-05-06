@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
+using JetBrains.Annotations;
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
@@ -12,6 +13,7 @@ namespace LinqToDB.Mapping
 	/// Fluent mapping entity builder.
 	/// </summary>
 	/// <typeparam name="T">Entity mapping type.</typeparam>
+	[PublicAPI]
 	public class EntityMappingBuilder<T>
 	{
 		#region Init
@@ -226,8 +228,8 @@ namespace LinqToDB.Mapping
 			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
 			if (otherKey == null) throw new ArgumentNullException(nameof(otherKey));
 
-			var thisKeyName  = ((MemberExpression)thisKey.Body).Member.Name;
-			var otherKeyName = ((MemberExpression)otherKey.Body).Member.Name;
+			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
+			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
 			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(prop.Body, typeof(object)), prop.Parameters );
 
@@ -356,6 +358,25 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Sets if it is required to use <see cref="PropertyMappingBuilder{T}.IsColumn"/> to treat property or field as column
+		/// </summary>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> IsColumnRequired()
+		{
+			return SetTable(a => a.IsColumnAttributeRequired = true);
+		}
+
+		/// <summary>
+		/// Sets if it is not required to use <see cref="PropertyMappingBuilder{T}.IsColumn"/> - all public fields and properties are treated as columns
+		/// This is the default behaviour
+		/// </summary>
+		/// <returns>Returns current fluent entity mapping builder.</returns>
+		public EntityMappingBuilder<T> IsColumnNotRequired()
+		{
+			return SetTable(a => a.IsColumnAttributeRequired = false);
+		}
+
+		/// <summary>
 		/// Sets database schema/owner name for current entity, to override default name.
 		/// See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
@@ -380,13 +401,13 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Adds inheritance mapping for specified discriminator value.
 		/// </summary>
-		/// <typeparam name="S">Discriminator value type.</typeparam>
+		/// <typeparam name="TS">Discriminator value type.</typeparam>
 		/// <param name="key">Discriminator member getter expression.</param>
 		/// <param name="value">Discriminator value.</param>
 		/// <param name="type">Mapping type, used with specified discriminator value.</param>
 		/// <param name="isDefault">If <c>true</c>, current mapping type used by default.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<T> Inheritance<S>(Expression<Func<T, S>> key, S value, Type type, bool isDefault = false)
+		public EntityMappingBuilder<T> Inheritance<TS>(Expression<Func<T, TS>> key, TS value, Type type, bool isDefault = false)
 		{
 			HasAttribute(new InheritanceMappingAttribute {Code = value, Type = type, IsDefault = isDefault});
 			var objProp = Expression.Lambda<Func<T, object>>(Expression.Convert(key.Body, typeof(object)), key.Parameters);
@@ -448,6 +469,27 @@ namespace LinqToDB.Mapping
 		}
 
 		internal EntityMappingBuilder<T> SetAttribute<TA>(
+			Func<TA> getNew,
+			Action<TA> modifyExisting,
+			Func<TA, string> configGetter,
+			Func<IEnumerable<TA>, TA> existingGetter)
+			where TA : Attribute
+		{
+			var attr = existingGetter(GetAttributes(typeof(T), configGetter));
+
+			if (attr == null)
+			{
+				_builder.HasAttribute(typeof(T), getNew());
+			}
+			else
+			{
+				modifyExisting(attr);
+			}
+
+			return this;
+		}
+
+		internal EntityMappingBuilder<T> SetAttribute<TA>(
 			Expression<Func<T,object>> func,
 			bool                       processNewExpression,
 			Func<bool,TA>              getNew,
@@ -466,17 +508,13 @@ namespace LinqToDB.Mapping
 			if (existingGetter == null)
 				existingGetter = GetExisting;
 
-			Action<Expression,bool> setAttr = (e,m) =>
+			void SetAttr(Expression e, bool m)
 			{
-				var memberInfo =
-					e is MemberExpression     ? ((MemberExpression)    e).Member :
-					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
+				var memberInfo = MemberHelper.GetMemberInfo(e);
 
-				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T))
-					memberInfo = typeof(T).GetMemberEx(memberInfo);
+				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T)) memberInfo = typeof(T).GetMemberEx(memberInfo);
 
-				if (memberInfo == null)
-					throw new ArgumentException($"'{e}' cant be converted to a class member.");
+				if (memberInfo == null) throw new ArgumentException($"'{e}' cant be converted to a class member.");
 
 				var attr = existingGetter(GetAttributes(memberInfo, configGetter));
 
@@ -501,7 +539,7 @@ namespace LinqToDB.Mapping
 				}
 				else
 					modifyExisting(m, attr);
-			};
+			}
 
 			if (processNewExpression && ex.NodeType == ExpressionType.New)
 			{
@@ -510,12 +548,12 @@ namespace LinqToDB.Mapping
 				if (nex.Arguments.Count > 0)
 				{
 					foreach (var arg in nex.Arguments)
-						setAttr(arg, true);
+						SetAttr(arg, true);
 					return this;
 				}
 			}
 
-			setAttr(ex, false);
+			SetAttr(ex, false);
 
 			return this;
 		}

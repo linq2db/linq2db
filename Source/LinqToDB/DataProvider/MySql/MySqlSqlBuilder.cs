@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.MySql
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber)
+		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
 		}
@@ -233,7 +233,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var position = StringBuilder.Length;
 
-			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert);
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, false);
 
 			if (insertOrUpdate.Update.Items.Count > 0)
 			{
@@ -303,6 +303,14 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			dynamic p = parameter;
 			return p.MySqlDbType.ToString();
+		}
+
+		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
+		{
+			if (truncateTable.ResetIdentity || truncateTable.Table.Fields.Values.All(f => !f.IsIdentity))
+				StringBuilder.Append("TRUNCATE TABLE ");
+			else
+				StringBuilder.Append("DELETE FROM ");
 		}
 	}
 }

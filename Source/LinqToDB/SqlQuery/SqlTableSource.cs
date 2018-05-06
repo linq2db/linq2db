@@ -8,7 +8,9 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlTableSource : ISqlTableSource
 	{
-		private int id = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+#if DEBUG
+		int id = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+#endif
 
 		public SqlTableSource(ISqlTableSource source, string alias)
 			: this(source, alias, null)

@@ -11,7 +11,7 @@ branches:
 
 environment:
   assemblyVersion: 2.0.0
-  packageVersion: 2.0.0-beta4
+  packageVersion: 2.0.0-beta5
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
 ##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
@@ -81,6 +81,11 @@ before_build:
     $env:PGPASSWORD="Password12!"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
+
+    # Access ACE provider
+    (New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/f/d/8/fd8c20d8-e38a-48b6-8691-542403b91da1/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
+    .\AccessDatabaseEngine.exe /quiet
+
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
 

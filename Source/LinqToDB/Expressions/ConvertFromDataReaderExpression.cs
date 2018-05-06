@@ -3,10 +3,10 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
+	using Common;
 	using LinqToDB.Extensions;
 	using Mapping;
 
@@ -26,9 +26,9 @@ namespace LinqToDB.Expressions
 		readonly IDataContext _dataContext;
 		readonly Type         _type;
 
-		public override Type           Type      { get { return _type;                    } }
-		public override ExpressionType NodeType  { get { return ExpressionType.Extension; } }
-		public override bool           CanReduce { get { return true;                     } }
+		public override Type           Type      => _type;
+		public override ExpressionType NodeType  => ExpressionType.Extension;
+		public override bool           CanReduce => true;
 
 		static readonly MethodInfo _columnReaderGetValueInfo = MemberHelper.MethodOf<ColumnReader>(r => r.GetValue(null));
 
@@ -137,9 +137,7 @@ namespace LinqToDB.Expressions
 
 				var fromType = dataReader.GetFieldType(_columnIndex);
 
-				Func<IDataReader,object> func;
-
-				if (!_columnConverters.TryGetValue(fromType, out func))
+				if (!_columnConverters.TryGetValue(fromType, out var func))
 				{
 					var parameter      = Parameter(typeof(IDataReader));
 					var dataReaderExpr = Convert(parameter, dataReader.GetType());
@@ -153,7 +151,15 @@ namespace LinqToDB.Expressions
 					_columnConverters[fromType] = func = lex.Compile();
 				}
 
-				return func(dataReader);
+				try
+				{
+					return func(dataReader);
+				}
+				catch (Exception ex)
+				{
+					var name = dataReader.GetName(_columnIndex);
+					throw new LinqToDBException($"Mapping of column {name} value failed, see inner exception for details", ex);
+				}
 
 				/*
 				var value = dataReader.GetValue(_columnIndex);

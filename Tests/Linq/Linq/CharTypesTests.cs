@@ -12,12 +12,10 @@ namespace Tests.Linq
 	public class CharTypesTests : TestBase
 	{
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class StringTestTable
 		{
 			[Column("ID")]
-			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int Id;
 
 			[Column("char20DataType")]
@@ -32,7 +30,7 @@ namespace Tests.Linq
 			[Column("ncharDataType")]
 			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
 			[Column("CHAR20DATATYPE" , Configuration = ProviderName.DB2)]
-			[Column("char20datatype" , Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType" , Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , Configuration = ProviderName.MySql)]
 			[Column("char20DataType" , Configuration = TestProvName.MySql57)]
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
@@ -44,12 +42,10 @@ namespace Tests.Linq
 		}
 
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class CharTestTable
 		{
 			[Column("ID")]
-			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int Id;
 
 			[Column("char20DataType")]
@@ -64,7 +60,7 @@ namespace Tests.Linq
 			[Column("ncharDataType"  , DataType = DataType.NChar)]
 			[Column("nchar20DataType", DataType = DataType.NChar, Configuration = ProviderName.SapHana)]
 			[Column("CHAR20DATATYPE" , DataType = DataType.NChar, Configuration = ProviderName.DB2)]
-			[Column("char20datatype" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql57)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]

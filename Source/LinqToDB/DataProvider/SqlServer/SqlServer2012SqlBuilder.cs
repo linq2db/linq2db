@@ -30,21 +30,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2012SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		protected override void BuildSql()
-		{
-			var selectQuery = Statement.SelectQuery;
-			if (selectQuery != null)
-			{
-				if (NeedSkip(selectQuery) && selectQuery.OrderBy.IsEmpty)
-				{
-					for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
-						selectQuery.OrderBy.ExprAsc(new SqlValue(i + 1));
-				}
-			}
-
-			base.BuildSql();
-		}
-
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, null);
@@ -77,7 +62,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
 						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-							new SqlFunction(func.SystemType, func.Name, parms)));
+						              new SqlFunction(func.SystemType, func.Name, parms)));
 						return;
 					}
 

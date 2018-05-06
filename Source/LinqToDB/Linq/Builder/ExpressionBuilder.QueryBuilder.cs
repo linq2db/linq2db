@@ -20,6 +20,30 @@ namespace LinqToDB.Linq.Builder
 		readonly HashSet<Expression>                    _skippedExpressions   = new HashSet<Expression>();
 		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new Dictionary<Expression,UnaryExpression>();
 
+		public void UpdateConvertedExpression(Expression oldExpression, Expression newExpression)
+		{
+			if (_convertedExpressions.TryGetValue(oldExpression, out var conversion)
+				&& !_convertedExpressions.ContainsKey(newExpression))
+			{
+				UnaryExpression newConversion;
+				if (conversion.NodeType == ExpressionType.Convert)
+				{
+					newConversion = Expression.Convert(newExpression, conversion.Type);
+				}
+				else
+				{
+					newConversion = Expression.ConvertChecked(newExpression, conversion.Type);
+				}
+
+				_convertedExpressions.Add(newExpression, newConversion);
+			}
+		}
+
+		public void RemoveConvertedExpression(Expression ex)
+		{
+			_convertedExpressions.Remove(ex);
+		}
+
 		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide)
 		{
 			var newExpr = expression.Transform(expr => TransformExpression(context, expr, enforceServerSide));
@@ -53,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 
 						var ret = new TransformInfo(nex, true);
 
-						_convertedExpressions.Remove(cex.Operand);
+						RemoveConvertedExpression(cex.Operand);
 
 						return ret;
 					}
@@ -65,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 
 						var ma = (MemberExpression)expr;
 
-						var l  = Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member);
+						var l  = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
 						if (l != null)
 						{
 							// In Grouping KeyContext we have to perform calculation on server side
@@ -120,10 +144,8 @@ namespace LinqToDB.Linq.Builder
 						while (ex is MemberExpression)
 							ex = ((MemberExpression)ex).Expression;
 
-						if (ex is MethodCallExpression)
+						if (ex is MethodCallExpression ce)
 						{
-							var ce = (MethodCallExpression)ex;
-
 							if (IsSubQuery(context, ce))
 							{
 								if (!IsMultipleQuery(ce))
@@ -159,7 +181,14 @@ namespace LinqToDB.Linq.Builder
 						var ctx = GetContext(context, expr);
 
 						if (ctx != null)
-							return new TransformInfo(ctx.BuildExpression(expr, 0, enforceServerSide));
+						{
+							var buildExpr = ctx.BuildExpression(expr, 0, enforceServerSide);
+							if (buildExpr.Type != expr.Type)
+							{
+								buildExpr = Expression.Convert(buildExpr, expr.Type);
+							}
+							return new TransformInfo(buildExpr);
+						}
 
 						break;
 					}
@@ -233,7 +262,7 @@ namespace LinqToDB.Linq.Builder
 							return new TransformInfo(GetSubQueryExpression(context, ce, enforceServerSide));
 						}
 
-						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide))
+						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
 							return new TransformInfo(BuildSql(context, expr));
 					}
 
@@ -275,9 +304,7 @@ namespace LinqToDB.Linq.Builder
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
-			List<SubQueryContextInfo> sbi;
-
-			if (!_buildContextCache.TryGetValue(context, out sbi))
+			if (!_buildContextCache.TryGetValue(context, out var sbi))
 				_buildContextCache[context] = sbi = new List<SubQueryContextInfo>();
 
 			foreach (var item in sbi)
@@ -324,11 +351,9 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Expression expression, int idx)
 		{
-			UnaryExpression cex;
-
 			var type = expression.Type;
 
-			if (_convertedExpressions.TryGetValue(expression, out cex))
+			if (_convertedExpressions.TryGetValue(expression, out var cex))
 			{
 				if (cex.Type.IsNullable() && !type.IsNullable() && type.IsSameOrParentOf(cex.Type.ToNullableUnderlying()))
 					type = cex.Type;
@@ -378,7 +403,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						var pi = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, pi.Expression == null ? null : pi.Expression.Type, pi.Member);
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Expression?.Type, pi.Member);
 
 						if (l != null)
 						{
@@ -397,7 +422,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Call:
 					{
 						var pi = (MethodCallExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, pi.Object == null ? null : pi.Object.Type, pi.Method);
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 						if (l != null)
 							return l.Body.Unwrap().Find(e => PreferServerSide(e, enforceServerSide)) != null;
@@ -421,12 +446,12 @@ namespace LinqToDB.Linq.Builder
 
 			BlockExpressions.Add(expression);
 
-			expression = Expression.Block(BlockVariables, BlockExpressions);
+			var blockExpression = Expression.Block(BlockVariables, BlockExpressions);
 
 			while (BlockVariables.  Count > 1) BlockVariables.  RemoveAt(BlockVariables.  Count - 1);
 			while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
 
-			return expression;
+			return blockExpression;
 		}
 
 		public ParameterExpression BuildVariable(Expression expr, string name = null)
@@ -452,7 +477,7 @@ namespace LinqToDB.Linq.Builder
 				expr = Expression.Convert(expr, type);
 
 			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>>(
-				BuildBlock(expr), new []
+				BuildBlock(expr), new[]
 				{
 					QueryRunnerParam,
 					DataContextParam,

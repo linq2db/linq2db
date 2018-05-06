@@ -46,8 +46,8 @@ namespace LinqToDB.Data
 
 		#region IDataContext Members
 
-		SqlProviderFlags IDataContext.SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
-		Type             IDataContext.DataReaderType   { get { return DataProvider.DataReaderType;   } }
+		SqlProviderFlags IDataContext.SqlProviderFlags => DataProvider.SqlProviderFlags;
+		Type             IDataContext.DataReaderType   => DataProvider.DataReaderType;
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 
@@ -63,7 +63,7 @@ namespace LinqToDB.Data
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
-			ThrowOnDisposed();
+			CheckAndThrowOnDisposed();
 
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
 				return new DataConnection(DataProvider, _connection)
@@ -77,30 +77,21 @@ namespace LinqToDB.Data
 			return (DataConnection)Clone();
 		}
 
-		string IDataContext.ContextID
-		{
-			get { return DataProvider.Name; }
-		}
+		string IDataContext.ContextID => DataProvider.Name;
 
 		static Func<ISqlBuilder> GetCreateSqlProvider(IDataProvider dp)
 		{
 			return dp.CreateSqlBuilder;
 		}
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider
-		{
-			get { return GetCreateSqlProvider(DataProvider); }
-		}
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider => GetCreateSqlProvider(DataProvider);
 
 		static Func<ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
 		{
 			return dp.GetSqlOptimizer;
 		}
 
-		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer
-		{
-			get { return GetGetSqlOptimizer(DataProvider); }
-		}
+		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
 
 		#endregion
 	}

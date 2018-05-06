@@ -131,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = originalMethodCall;
 			var selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var info       = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), selector.Parameters[0]);
+			var info       = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), selector.Parameters[0], true);
 
 			if (info != null)
 			{
@@ -196,21 +196,18 @@ namespace LinqToDB.Linq.Builder
 						};
 					}
 
-					if (info != null)
+					if (info?.ExpressionsToReplace != null)
 					{
-						if (info.ExpressionsToReplace != null)
+						foreach (var path in info.ExpressionsToReplace)
 						{
-							foreach (var path in info.ExpressionsToReplace)
-							{
-								path.Path = path.Path.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
-								path.Expr = path.Expr.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
-								path.Level += p.Level;
+							path.Path = path.Path.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
+							path.Expr = path.Expr.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
+							path.Level += p.Level;
 
-								list.Add(path);
-							}
-
-							list = list.OrderByDescending(path => path.Level).ToList();
+							list.Add(path);
 						}
+
+						list = list.OrderByDescending(path => path.Level).ToList();
 					}
 
 					if (list.Count > 1)

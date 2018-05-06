@@ -78,12 +78,13 @@ namespace LinqToDB
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static Task ForEachAsync<TSource>(
 			this IQueryable<TSource> source, Action<TSource> action,
-			CancellationToken token = default(CancellationToken))
+			CancellationToken token = default)
 		{
-
-			var query = source as ExpressionQuery<TSource>;
-			if (query != null)
+			if (source is ExpressionQuery<TSource> query)
 				return query.GetForEachAsync(action, token);
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.ForEachAsync(source, action, token);
 
 			return GetActionTask(() =>
 			{
@@ -108,10 +109,9 @@ namespace LinqToDB
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static Task ForEachUntilAsync<TSource>(
 			this IQueryable<TSource> source, Func<TSource,bool> func,
-			CancellationToken token = default(CancellationToken))
+			CancellationToken token = default)
 		{
-			var query = source as ExpressionQuery<TSource>;
-			if (query != null)
+			if (source is ExpressionQuery<TSource> query)
 				return query.GetForEachUntilAsync(func, token);
 
 			return GetActionTask(() =>
@@ -136,16 +136,17 @@ namespace LinqToDB
 		/// <returns>List with query results.</returns>
 		public static async Task<List<TSource>> ToListAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken token = default(CancellationToken))
+			CancellationToken token = default)
 		{
-			var query = source as ExpressionQuery<TSource>;
-
-			if (query != null)
+			if (source is ExpressionQuery<TSource> query)
 			{
 				var list = new List<TSource>();
 				await query.GetForEachAsync(list.Add, token);
 				return list;
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToListAsync(source, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(), token);
 		}
@@ -163,16 +164,17 @@ namespace LinqToDB
 		/// <returns>Array with query results.</returns>
 		public static async Task<TSource[]> ToArrayAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken token = default(CancellationToken))
+			CancellationToken token = default)
 		{
-			var query = source as ExpressionQuery<TSource>;
-
-			if (query != null)
+			if (source is ExpressionQuery<TSource> query)
 			{
 				var list = new List<TSource>();
 				await query.GetForEachAsync(list.Add, token);
 				return list.ToArray();
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToArrayAsync(source, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(), token);
 		}
@@ -193,16 +195,17 @@ namespace LinqToDB
 		public static async Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
-			CancellationToken        token   = default(CancellationToken))
+			CancellationToken        token   = default)
 		{
-			var query = source as ExpressionQuery<TSource>;
-
-			if (query != null)
+			if (source is ExpressionQuery<TSource> query)
 			{
 				var dic = new Dictionary<TKey,TSource>();
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token);
 				return dic;
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector), token);
 		}
@@ -221,15 +224,17 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			IEqualityComparer<TKey>  comparer,
-			CancellationToken        token = default(CancellationToken))
+			CancellationToken        token = default)
 		{
-			var query = source as ExpressionQuery<TSource>;
-			if (query != null)
+			if (source is ExpressionQuery<TSource> query)
 			{
 				var dic = new Dictionary<TKey,TSource>(comparer);
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token);
 				return dic;
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, comparer, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer), token);
 		}
@@ -249,15 +254,17 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
-			CancellationToken        token = default(CancellationToken))
+			CancellationToken        token = default)
 		{
-			var query = source as ExpressionQuery<TSource>;
-			if (query != null)
+			if (source is ExpressionQuery<TSource> query)
 			{
 				var dic = new Dictionary<TKey,TElement>();
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token);
 				return dic;
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector), token);
 		}
@@ -279,15 +286,17 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
 			IEqualityComparer<TKey>  comparer,
-			CancellationToken        token = default(CancellationToken))
+			CancellationToken        token = default)
 		{
-			var query = source as ExpressionQuery<TSource>;
-			if (query != null)
+			if (source is ExpressionQuery<TSource> query)
 			{
 				var dic = new Dictionary<TKey,TElement>();
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token);
 				return dic;
 			}
+
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, comparer, token);
 
 			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer), token);
 		}

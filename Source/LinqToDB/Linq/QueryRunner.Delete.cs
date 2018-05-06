@@ -13,11 +13,16 @@ namespace LinqToDB.Linq
 	{
 		public static class Delete<T>
 		{
-			static readonly ConcurrentDictionary<object,Query<int>> _queryChache = new ConcurrentDictionary<object,Query<int>>();
+			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
-			static Query<int> CreateQuery(IDataContext dataContext)
+			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
+				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
+
+				if (tableName    != null) sqlTable.PhysicalName = tableName;
+				if (databaseName != null) sqlTable.Database     = databaseName;
+				if (schemaName   != null) sqlTable.Schema       = schemaName;
+
 				var deleteStatement = new SqlDeleteStatement();
 
 				deleteStatement.SelectQuery.From.Table(sqlTable);
@@ -34,7 +39,7 @@ namespace LinqToDB.Linq
 
 				foreach (var field in keys)
 				{
-					var param = GetParameter(typeof(T), dataContext, field);
+					var param = GetParameter(type, dataContext, field);
 
 					ei.Queries[0].Parameters.Add(param);
 
@@ -49,24 +54,27 @@ namespace LinqToDB.Linq
 				return ei;
 			}
 
-			public static int Query(IDataContext dataContext, T obj)
+			public static int Query(IDataContext dataContext, T obj, string tableName, string databaseName = null, string schemaName = null)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
+				var type = GetType<T>(obj, dataContext);
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
 
-			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, CancellationToken token)
+			public static async Task<int> QueryAsync(IDataContext dataContext, T obj, string tableName = null,
+				string databaseName = null, string schemaName = null, CancellationToken token = default)
 			{
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID };
-				var ei  = _queryChache.GetOrAdd(key, o => CreateQuery(dataContext));
+				var type = GetType<T>(obj, dataContext);
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schemaName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 

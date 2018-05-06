@@ -18,10 +18,12 @@ namespace LinqToDB.DataProvider.SapHana
 			_connectionType = connectionType;
 		}
 
+		private const string KeepIdentityOptionName = "KeepIdentity";
+
 		readonly SapHanaDataProvider _dataProvider;
 		readonly Type _connectionType;
-
 		Func<IDbConnection,int,IDbTransaction,IDisposable> _bulkCopyCreator;
+		Type                                               _bulkCopyOptionType;
 		Func<int,string,object>                            _columnMappingCreator;
 		Action<object,Action<object>>                      _bulkCopySubscriber;
 
@@ -49,13 +51,13 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				var clientNamespace    = _dataProvider.ConnectionNamespace;
 				var bulkCopyType       = _connectionType.AssemblyEx().GetType(clientNamespace + ".HanaBulkCopy", false);
-				var bulkCopyOptionType = _connectionType.AssemblyEx().GetType(clientNamespace + ".HanaBulkCopyOptions", false);
+				_bulkCopyOptionType    = _connectionType.AssemblyEx().GetType(clientNamespace + ".HanaBulkCopyOptions", false);
 				var columnMappingType  = _connectionType.AssemblyEx().GetType(clientNamespace + ".HanaBulkCopyColumnMapping", false);
 				var transactionType    = _connectionType.AssemblyEx().GetType(clientNamespace + ".HanaTransaction", false);
 
 				if (bulkCopyType != null)
 				{
-					_bulkCopyCreator      = SapHanaCreateBulkCopyCreator(_connectionType, bulkCopyType, bulkCopyOptionType, transactionType);
+					_bulkCopyCreator      = SapHanaCreateBulkCopyCreator(_connectionType, bulkCopyType, _bulkCopyOptionType, transactionType);
 					_columnMappingCreator = CreateColumnMappingCreator(columnMappingType);
 				}
 			}
@@ -63,7 +65,17 @@ namespace LinqToDB.DataProvider.SapHana
 			if (_bulkCopyCreator == null) 
 				return MultipleRowsCopy(dataConnection, options, source);
 
-			const int hanaOptions = 0; //default;
+			int hanaOptions = 0; //default;
+
+			if (options.KeepIdentity == true)
+			{
+				// instead of adding new option in HANA 2 provider to a free bit to preserve compatibility,
+				// SAP reused value, assigned to TableLock before
+				if (Enum.GetNames(_bulkCopyOptionType).Any(_ => _ == KeepIdentityOptionName))
+					hanaOptions = hanaOptions | (int)Enum.Parse(_bulkCopyOptionType, KeepIdentityOptionName);
+				else
+					throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by your SAP HANA provider version");
+			}
 
 			using (var bc = _bulkCopyCreator(connection, hanaOptions, transaction))
 			{

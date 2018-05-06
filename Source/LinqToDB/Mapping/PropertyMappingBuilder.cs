@@ -88,7 +88,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<T> Association<S, ID1, ID2>(
 			Expression<Func<T, S>> prop,
 			Expression<Func<T, ID1>> thisKey,
-			Expression<Func<S, ID2>> otherKey )
+			Expression<Func<S, ID2>> otherKey)
 		{
 			return _entity.Association( prop, thisKey, otherKey );
 		}
@@ -124,14 +124,21 @@ namespace LinqToDB.Mapping
 			{
 				for (var m = me; m != null; m = m.Expression as MemberExpression)
 				{
-					if (me != m)
-						memberName = me.Member.Name + (string.IsNullOrEmpty(memberName) ? "" : "." + memberName);
-
-					me = m;
+					memberName = m.Member.Name + (memberName != null ? "." + memberName : "");
 				}
 
-				var p  = Expression.Parameter(typeof(T));
-				getter = Expression.Lambda<Func<T, object>>(Expression.PropertyOrField(p, me.Member.Name), p);
+				_entity.SetAttribute(
+					() =>
+					{
+						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName };
+						setColumn(a);
+						return a;
+					},
+					setColumn,
+					a => a.Configuration,
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
+
+				return this;
 			}
 
 			_entity.SetAttribute(
@@ -235,7 +242,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Sets whether a column is updatable.
 		/// This flag will affect only update operations with implicit columns specification like
-		/// <see cref="DataExtensions.Update{T}(IDataContext, T)"/>
+		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string, string, string)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
 		/// <param name="skipOnUpdate">If <c>true</c> - column will be ignored for implicit update operations.</param>

@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 
 		public class DefaultIfEmptyContext : SequenceContextBase
 		{
-			public DefaultIfEmptyContext(IBuildContext parent, IBuildContext sequence, Expression defaultValue) 
+			public DefaultIfEmptyContext(IBuildContext parent, IBuildContext sequence, Expression defaultValue)
 				: base(parent, sequence, null)
 			{
 				_defaultValue = defaultValue;

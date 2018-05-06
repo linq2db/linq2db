@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -161,31 +162,55 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in members)
 				{
-					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
-
-					if (member.NextLoadWith.Count > 0)
+					if (member.MemberInfo.DeclaringType.IsAssignableFrom(objectType))
 					{
-						var table = FindTable(ma, 1, false, true);
-						table.Table.LoadWith = member.NextLoadWith;
+						var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
+
+						if (member.NextLoadWith.Count > 0)
+						{
+							var table = FindTable(ma, 1, false, true);
+							table.Table.LoadWith = member.NextLoadWith;
+						}
+
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
+						var ex   = BuildExpression(ma, 1, parentObject);
+
+						if (member.MemberInfo.IsDynamicColumnPropertyEx())
+						{
+							var typeAcc = TypeAccessor.GetAccessor(member.MemberInfo.ReflectedTypeEx());
+							var setter  = new MemberAccessor(typeAcc, member.MemberInfo).SetterExpression;
+
+							exprs.Add(Expression.Invoke(setter, parentObject, ex));
+						}
+						else
+						{
+							exprs.Add(Expression.Assign(
+								attr?.Storage != null
+									? Expression.PropertyOrField(parentObject, attr.Storage)
+									: Expression.MakeMemberAccess(parentObject, member.MemberInfo),
+								ex));
+						}
 					}
-
-					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo.ReflectedTypeEx(), member.MemberInfo);
-
-					var ex = BuildExpression(ma, 1, parentObject);
-					var ax = Expression.Assign(
-						attr?.Storage != null ?
-							Expression.PropertyOrField (parentObject, attr.Storage) :
-							Expression.MakeMemberAccess(parentObject, member.MemberInfo),
-						ex);
-
-					exprs.Add(ax);
 				}
 			}
 
-			static bool IsRecord(IEnumerable<Attribute> attrs)
+			static bool IsRecord(Attribute[] attrs)
 			{
-				return  attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute")
-					&& !attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
+				return attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute")
+					&& attrs.All(attr => attr.GetType().FullName != "Microsoft.FSharp.Core.CLIMutableAttribute");
+			}
+
+			bool IsAnonymous(Type type)
+			{
+				if (!type.IsPublicEx() &&
+					 type.IsGenericTypeEx() &&
+					(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
+					 type.Name.StartsWith("VB$AnonymousType",   StringComparison.Ordinal)))
+				{
+					return Builder.MappingSchema.GetAttribute<CompilerGeneratedAttribute>(type) != null;
+				}
+
+				return false;
 			}
 
 			ParameterExpression _variable;
@@ -197,18 +222,106 @@ namespace LinqToDB.Linq.Builder
 
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
-				bool isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType));
+				// choosing type that can be instantiated
+				if ((objectType.IsInterfaceEx() || objectType.IsAbstractEx()) && !(ObjectType.IsInterfaceEx() || objectType.IsAbstractEx()))
+				{
+					objectType = ObjectType;
+				}
 
-				var expr = isRecord == false
-					? BuildDefaultConstructor(entityDescriptor, objectType, index)
-					: BuildRecordConstructor (entityDescriptor, objectType, index);
+				var expr =
+					IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType)) ?
+						BuildRecordConstructor (entityDescriptor, objectType, index, true) :
+					IsAnonymous(objectType) ?
+						BuildRecordConstructor (entityDescriptor, objectType, index, false) :
+						BuildDefaultConstructor(entityDescriptor, objectType, index);
 
+				expr = BuildCalculatedColumns(entityDescriptor, expr);
 				expr = ProcessExpression(expr);
+				expr = NotifyEntityCreated(expr);
 
 				if (!buildBlock)
 					return expr;
 
 				return _variable = Builder.BuildVariable(expr);
+			}
+
+			static object OnEntityCreated(IDataContext context, object entity)
+			{
+				var onEntityCreated = ((IEntityServices)context).OnEntityCreated;
+
+				if (onEntityCreated != null)
+				{
+					var args = new EntityCreatedEventArgs
+					{
+						Entity      = entity,
+						DataContext = context
+					};
+
+					onEntityCreated(args);
+
+					return args.Entity;
+				}
+
+				return entity;
+			}
+
+			Expression NotifyEntityCreated(Expression expr)
+			{
+				if (Builder.DataContext is IEntityServices)
+				{
+//					var cex = Expression.Convert(ExpressionBuilder.DataContextParam, typeof(INotifyEntityCreated));
+//
+//					expr =
+//						Expression.Convert(
+//							Expression.Call(
+//								cex,
+//								MemberHelper.MethodOf((INotifyEntityCreated n) => n.EntityCreated(null)),
+//								expr),
+//							expr.Type);
+					expr =
+						Expression.Convert(
+							Expression.Call(
+								MemberHelper.MethodOf(() => OnEntityCreated(null, null)),
+								ExpressionBuilder.DataContextParam,
+								expr),
+							expr.Type);
+				}
+
+
+				return expr;
+			}
+
+			Expression BuildCalculatedColumns(EntityDescriptor entityDescriptor, Expression expr)
+			{
+				if (!entityDescriptor.HasCalculatedMembers)
+					return expr;
+
+				var isBlockDisable = Builder.IsBlockDisable;
+
+				Builder.IsBlockDisable = true;
+
+				var variable    = Expression.Variable(expr.Type, expr.Type.ToString());
+				var expressions = new List<Expression>
+				{
+					Expression.Assign(variable, expr)
+				};
+
+				foreach (var member in entityDescriptor.CalculatedMembers)
+				{
+					var accessExpression    = Expression.MakeMemberAccess(variable, member.MemberInfo);
+					var convertedExpression = Builder.ConvertExpressionTree(accessExpression);
+					var selectorLambda      = Expression.Lambda(convertedExpression, variable);
+					var context             = new SelectContext(null, selectorLambda, this);
+					var expression          = context.BuildExpression(null, 0, false);
+
+					expressions.Add(Expression.Assign(accessExpression, expression));
+				}
+
+				expressions.Add(variable);
+
+				Builder.IsBlockDisable = isBlockDisable;
+
+				return Expression.Block(new[] { variable }, expressions);
 			}
 
 			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
@@ -274,11 +387,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				var members = isRecordType ?
 					typeAccessor.Members.Where(m =>
-						IsRecord( Builder.MappingSchema.GetAttributes<Attribute>(typeAccessor.Type, m.MemberInfo))) :
+						IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(typeAccessor.Type, m.MemberInfo))) :
 					typeAccessor.Members;
 
-				var loadWith = GetLoadWith();
+				var loadWith      = GetLoadWith();
 				var loadWithItems = loadWith == null ? new List<LoadWithItem>() : GetLoadWith(loadWith);
+
 				foreach (var member in members)
 				{
 					var column = columns.FirstOrDefault(c => !c.IsComplex && c.Name == member.Name);
@@ -290,7 +404,8 @@ namespace LinqToDB.Linq.Builder
 					else
 					{
 						var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(typeAccessor.Type, member.MemberInfo).FirstOrDefault();
-						bool isAssociation = assocAttr != null;
+						var isAssociation = assocAttr != null;
+
 						if (isAssociation)
 						{
 							var loadWithItem = loadWithItems.FirstOrDefault(_ => _.MemberInfo == member.MemberInfo);
@@ -338,7 +453,7 @@ namespace LinqToDB.Linq.Builder
 										join e in exprs.Select((e, i) => new { e, i }) on p.i equals e.i into j
 											from e in j.DefaultIfEmpty()
 											select
-											(e == null ? null : e.e) ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+											e?.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
 										).ToList();
 
 									yield return Expression.New(ctor, parms);
@@ -359,15 +474,15 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
+			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index, bool isRecord)
 			{
 				var ctor = objectType.GetConstructorsEx().Single();
 
-				var exprs = GetExpressions(entityDescriptor.TypeAccessor, true,
+				var exprs = GetExpressions(entityDescriptor.TypeAccessor, isRecord,
 					(
 						from idx in index.Select((n,i) => new { n, i })
 						where idx.n >= 0
-						let   cd   = entityDescriptor.Columns[idx.i]
+						let   cd = entityDescriptor.Columns[idx.i]
 						select new ColumnInfo
 						{
 							IsComplex  = cd.MemberAccessor.IsComplex,
@@ -452,6 +567,12 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
+					if (tableContext is AssociatedTableContext)
+					{
+						expr = Expression.Constant(null, ObjectType);
+					}
+					else
+					{
 					var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
 					var dindex          =
 						(
@@ -468,6 +589,7 @@ namespace LinqToDB.Linq.Builder
 								Expression.Constant(dindex)),
 							Expression.Constant(ObjectType)),
 						ObjectType);
+				}
 				}
 
 				foreach (var mapping in InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
@@ -548,7 +670,7 @@ namespace LinqToDB.Linq.Builder
 							EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 						{
 							throw new LinqException("Member '{0}.{1}' is not a table column.",
-								memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
+								memberExpression.Member.DeclaringType?.Name, memberExpression.Member.Name);
 						}
 					}
 
@@ -916,7 +1038,7 @@ namespace LinqToDB.Linq.Builder
 
 			public int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				return Parent == null ? index : Parent.ConvertToParentIndex(index, this);
+				return Parent?.ConvertToParentIndex(index, this) ?? index;
 			}
 
 			#endregion
@@ -1062,7 +1184,8 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 								{
-									if (field.ColumnDescriptor.MemberAccessor.IsComplex)
+									if (field.ColumnDescriptor.MemberAccessor.IsComplex
+										&& !field.ColumnDescriptor.MemberAccessor.MemberInfo.IsDynamicColumnPropertyEx())
 									{
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;
@@ -1092,6 +1215,30 @@ namespace LinqToDB.Linq.Builder
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
+
+								if (memberExpression.Member.IsDynamicColumnPropertyEx())
+								{
+									var fieldName = memberExpression.Member.Name;
+
+									// do not add association columns
+									if (EntityDescriptor.Associations.All(a => a.MemberInfo != memberExpression.Member))
+									{
+										if (!SqlTable.Fields.TryGetValue(fieldName, out var newField))
+										{
+											newField = new SqlField
+											{
+												Name             = fieldName,
+												PhysicalName     = fieldName,
+												ColumnDescriptor = new ColumnDescriptor(Builder.MappingSchema, new ColumnAttribute(fieldName),
+													new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member))
+											};
+
+											SqlTable.Add(newField);
+										}
+
+										return newField;
+									}
+								}
 
 							}
 

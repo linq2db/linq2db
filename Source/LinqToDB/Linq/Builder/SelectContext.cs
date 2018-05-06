@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -25,16 +26,16 @@ namespace LinqToDB.Linq.Builder
 		public MethodCallExpression MethodCall;
 #endif
 
-		public IBuildContext[]   Sequence    { get; private set; }
-		public LambdaExpression  Lambda      { get; set; }
-		public Expression        Body        { get; set; }
-		public ExpressionBuilder Builder     { get; private set; }
-		public SelectQuery       SelectQuery { get; set; }
-		public SqlStatement      Statement   { get; set; }
-		public IBuildContext     Parent      { get; set; }
-		public bool              IsScalar    { get; private set; }
+		public IBuildContext[]   Sequence    { [DebuggerStepThrough] get; }
+		public LambdaExpression  Lambda      { [DebuggerStepThrough] get; set; }
+		public Expression        Body        { [DebuggerStepThrough] get; set; }
+		public ExpressionBuilder Builder     { [DebuggerStepThrough] get; }
+		public SelectQuery       SelectQuery { [DebuggerStepThrough] get; set; }
+		public SqlStatement      Statement   { [DebuggerStepThrough] get; set; }
+		public IBuildContext     Parent      { [DebuggerStepThrough] get; set; }
+		public bool              IsScalar    { [DebuggerStepThrough] get; }
 
-		Expression IBuildContext.Expression { get { return Lambda; } }
+		Expression IBuildContext.Expression => Lambda;
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
 
@@ -93,17 +94,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				var key = Tuple.Create(expression, level, ConvertFlags.Field);
 
-				SqlInfo[] info;
-
-				if (_expressionIndex.TryGetValue(key, out info))
+				if (_expressionIndex.TryGetValue(key, out var info))
 				{
-					var idx  = Parent == null ? info[0].Index : Parent.ConvertToParentIndex(info[0].Index, this);
+					var idx  = Parent?.ConvertToParentIndex(info[0].Index, this) ?? info[0].Index;
 
-					var expr = (expression ?? Body);
+					var expr = expression ?? Body;
+
 					if (IsExpression(expr, level, RequestFor.Object).Result)
 						return Builder.BuildExpression(this, expr, enforceServerSide);
 
-					return Builder.BuildSql((expression ?? Body).Type, idx);
+					return Builder.BuildSql(expr.Type, idx);
 				}
 			}
 
@@ -131,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 						if (IsSubQuery() && IsExpression(null, 0, RequestFor.Expression).Result)
 						{
 							var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
-							var idx = Parent == null ? info.Index : Parent.ConvertToParentIndex(info.Index, this);
+							var idx = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
 
 							return Builder.BuildSql(expression.Type, idx);
 						}
@@ -186,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 																	!sequence.IsExpression(e, 0, RequestFor.Field). Result)
 																{
 																	var info = ConvertToIndex(e, 0, ConvertFlags.Field).Single();
-																	var idx  = Parent == null ? info.Index : Parent.ConvertToParentIndex(info.Index, this);
+																	var idx  = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
 
 																	return Builder.BuildSql(e.Type, idx);
 																}
@@ -209,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 										!IsExpression(me, 0, RequestFor.Field). Result)
 									{
 										var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
-										var idx  = Parent == null ? info.Index : Parent.ConvertToParentIndex(info.Index, this);
+										var idx  = Parent?.ConvertToParentIndex(info.Index, this) ?? info.Index;
 
 										return Builder.BuildSql(expression.Type, idx);
 									}
@@ -337,9 +337,7 @@ namespace LinqToDB.Linq.Builder
 										{
 											var member = ((MemberExpression)levelExpression).Member;
 
-											SqlInfo[] sql;
-
-											if (!_sql.TryGetValue(member, out sql))
+											if (!_sql.TryGetValue(member, out var sql))
 											{
 												var memberExpression = GetMemberExpression(
 													member, levelExpression == expression, levelExpression.Type, expression);
@@ -427,9 +425,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var key = Tuple.Create(expression, level, flags);
 
-			SqlInfo[] info;
-
-			if (!_expressionIndex.TryGetValue(key, out info))
+			if (!_expressionIndex.TryGetValue(key, out var info))
 			{
 				info = ConvertToIndexInternal(expression, level, flags);
 
@@ -476,9 +472,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var key = Tuple.Create((MemberInfo)null, flags);
 
-					SqlInfo[] idx;
-
-					if (!_memberIndex.TryGetValue(key, out idx))
+					if (!_memberIndex.TryGetValue(key, out var idx))
 					{
 						idx = ConvertToSql(null, 0, flags);
 
@@ -555,9 +549,7 @@ namespace LinqToDB.Linq.Builder
 										{
 											var member = Tuple.Create(((MemberExpression)levelExpression).Member, flags);
 
-											SqlInfo[] idx;
-
-											if (!_memberIndex.TryGetValue(member, out idx))
+											if (!_memberIndex.TryGetValue(member, out var idx))
 											{
 												idx = ConvertToSql(expression, level, flags);
 
@@ -700,9 +692,7 @@ namespace LinqToDB.Linq.Builder
 									{
 										var member = ((MemberExpression)levelExpression).Member;
 
-										Expression memberExpression;
-
-										if (!Members.TryGetValue(member, out memberExpression))
+										if (!Members.TryGetValue(member, out var memberExpression))
 										{
 											var nm = Members.Keys.FirstOrDefault(m => m.Name == member.Name);
 
@@ -790,7 +780,7 @@ namespace LinqToDB.Linq.Builder
 					expression,
 					level,
 					(ctx, ex, l) => ctx.GetContext(ex, l, buildInfo),
-					() => { throw new NotImplementedException(); });
+					() => throw new NotImplementedException());
 			}
 			else
 			{
@@ -861,7 +851,7 @@ namespace LinqToDB.Linq.Builder
 			if (!ReferenceEquals(context.SelectQuery, SelectQuery))
 				index = SelectQuery.Select.Add(context.SelectQuery.Select.Columns[index]);
 
-			return Parent == null ? index : Parent.ConvertToParentIndex(index, this);
+			return Parent?.ConvertToParentIndex(index, this) ?? index;
 		}
 
 		#endregion
@@ -935,7 +925,13 @@ namespace LinqToDB.Linq.Builder
 					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
 					var newExpression   = GetExpression(expression, levelExpression, Body);
 
-					return action(this, newExpression, 0);
+					Builder.UpdateConvertedExpression(expression, newExpression);
+
+					var result = action(this, newExpression, 0);
+
+					Builder.RemoveConvertedExpression(newExpression);
+
+					return result;
 				}
 			}
 
@@ -1117,9 +1113,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected Expression GetMemberExpression(MemberInfo member, bool add, Type type, Expression sourceExpression)
 		{
-			Expression memberExpression;
-
-			if (!Members.TryGetValue(member, out memberExpression))
+			if (!Members.TryGetValue(member, out var memberExpression))
 			{
 				foreach (var m in Members)
 				{
@@ -1138,9 +1132,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (ed.Aliases != null)
 						{
-							string value;
-
-							if (ed.Aliases.TryGetValue(member.Name, out value))
+							if (ed.Aliases.TryGetValue(member.Name, out var value))
 								return GetMemberExpression(ed.TypeAccessor[value].MemberInfo, add, type, sourceExpression);
 
 							foreach (var a in ed.Aliases)

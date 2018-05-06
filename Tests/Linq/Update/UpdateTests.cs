@@ -1180,5 +1180,92 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+		[Test, DataContextSource]
+		public void UpdateByTableName(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+			}
+
+			using (var db = GetDataContext(context))
+			{
+				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				db.Insert(person, tableName: tableName, schemaName: schemaName);
+				var newCount  = table.Count();
+				Assert.AreEqual(1, newCount);
+
+				var personForUpdate = table.Single();
+
+				// update that row
+				personForUpdate.MiddleName = "None";
+				db.Update(personForUpdate, tableName: tableName, schemaName: schemaName);
+
+				var updatedPerson = table.Single();
+				Assert.AreEqual("None", updatedPerson.MiddleName);
+
+				table.Drop();
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task UpdateByTableNameAsync(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+			}
+
+			using (var db = GetDataContext(context))
+			{
+				var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+				var newCount  = await table.CountAsync();
+				Assert.AreEqual(1, newCount);
+
+				var personForUpdate = await table.SingleAsync();
+
+				// update that row
+				personForUpdate.MiddleName = "None";
+				await db.UpdateAsync(personForUpdate, tableName: tableName, schemaName: schemaName);
+
+				var updatedPerson = await table.SingleAsync();
+				Assert.AreEqual("None", updatedPerson.MiddleName);
+
+				await table.DropAsync();
+			}
+		}
+
 	}
 }

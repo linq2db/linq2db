@@ -132,7 +132,7 @@ namespace Tests
 				File.Copy(file, destination, true);
 			}
 
-			UserProviders = new HashSet<string>(testSettings.Providers);
+			UserProviders = new HashSet<string>(testSettings.Providers, StringComparer.OrdinalIgnoreCase);
 
 			var logLevel   = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
@@ -860,54 +860,36 @@ namespace Tests
 
 		#endregion
 
-		[Sql.Function("VERSION", ServerSideOnly = true)]
-		private static string MySqlVersion()
-		{
-			throw new InvalidOperationException();
-		}
-
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{
-			if (db.ContextID == "MySql" || db.ContextID == "MySql.LinqService")
+			if (db.ProviderNeedsTimeFix(db.ContextID))
 			{
-				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
-				// them from expected data too
-				var version = db.Types.Select(_ => MySqlVersion()).First();
-				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
-				if (match.Success)
+				var adjusted = new List<LinqDataTypes2>();
+				foreach (var record in data)
 				{
-					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
-
-					if (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604)
+					var copy = new LinqDataTypes2()
 					{
-						var adjusted = new List<LinqDataTypes2>();
-						foreach (var record in data)
-						{
-							var copy = new LinqDataTypes2()
-							{
-								ID             = record.ID,
-								MoneyValue     = record.MoneyValue,
-								DateTimeValue  = record.DateTimeValue,
-								DateTimeValue2 = record.DateTimeValue2,
-								BoolValue      = record.BoolValue,
-								GuidValue      = record.GuidValue,
-								SmallIntValue  = record.SmallIntValue,
-								IntValue       = record.IntValue,
-								BigIntValue    = record.BigIntValue,
-								StringValue    = record.StringValue
-							};
+						ID             = record.ID,
+						MoneyValue     = record.MoneyValue,
+						DateTimeValue  = record.DateTimeValue,
+						DateTimeValue2 = record.DateTimeValue2,
+						BoolValue      = record.BoolValue,
+						GuidValue      = record.GuidValue,
+						SmallIntValue  = record.SmallIntValue,
+						IntValue       = record.IntValue,
+						BigIntValue    = record.BigIntValue,
+						StringValue    = record.StringValue
+					};
 
-							if (copy.DateTimeValue != null)
-							{
-								copy.DateTimeValue = copy.DateTimeValue.Value.AddMilliseconds(-copy.DateTimeValue.Value.Millisecond);
-							}
-
-							adjusted.Add(copy);
-						}
-
-						return adjusted;
+					if (copy.DateTimeValue != null)
+					{
+						copy.DateTimeValue = copy.DateTimeValue.Value.AddMilliseconds(-copy.DateTimeValue.Value.Millisecond);
 					}
+
+					adjusted.Add(copy);
 				}
+
+				return adjusted;
 			}
 
 			return data;
@@ -915,10 +897,20 @@ namespace Tests
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
-			AreEqual(t => t, expected, result);
+			AreEqual(t => t, expected, result, EqualityComparer<T>.Default);
+		}
+
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
+		{
+			AreEqual(t => t, expected, result, comparer);
 		}
 
 		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result)
+		{
+			AreEqual(fixSelector, expected, result, EqualityComparer<T>.Default);
+		}
+
+		protected void AreEqual<T>(Func<T,T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
 			var expectedList = expected.Select(fixSelector).ToList();
@@ -926,8 +918,8 @@ namespace Tests
 			Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
 			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
 
-			var exceptExpectedList = resultList.  Except(expectedList).ToList();
-			var exceptResultList   = expectedList.Except(resultList).  ToList();
+			var exceptExpectedList = resultList.  Except(expectedList, comparer).ToList();
+			var exceptResultList   = expectedList.Except(resultList,   comparer).ToList();
 
 			var exceptExpected = exceptExpectedList.Count;
 			var exceptResult   = exceptResultList.  Count;
@@ -936,8 +928,8 @@ namespace Tests
 			if (exceptResult != 0 || exceptExpected != 0)
 				for (var i = 0; i < resultList.Count; i++)
 				{
-					Debug.  WriteLine   ("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
-					message.AppendFormat("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					Debug.  WriteLine   ("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					message.AppendFormat("{0} {1} --- {2}", comparer.Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 					message.AppendLine  ();
 				}
 
@@ -1105,6 +1097,7 @@ namespace Tests
 	}
 
 	public class LocalTable<T> : IDisposable
+		where T : class
 	{
 		private IDataContext _db;
 
@@ -1117,20 +1110,27 @@ namespace Tests
 			}
 			catch
 			{
-				_db.DropTable<T>();
-				_db.CreateTable<T>();
+				_db.DropTable<T>(throwExceptionIfNotExists: false);
+				try
+				{
+					_db.CreateTable<T>();
+				}
+				catch
+				{
+					_db.GetTable<T>().Delete();
+				}
 			}
 		}
 
 		public void Dispose()
 		{
-			_db.DropTable<T>();
+			_db.DropTable<T>(throwExceptionIfNotExists: false);
 		}
 	}
 
 	public class DeletePerson : IDisposable
 	{
-		IDataContext _db;
+		readonly IDataContext _db;
 
 		public DeletePerson(IDataContext db)
 		{
@@ -1143,7 +1143,7 @@ namespace Tests
 			Delete(_db);
 		}
 
-		private readonly Func<IDataContext, int> Delete =
+		readonly Func<IDataContext,int> Delete =
 			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
 
 	}
@@ -1164,10 +1164,10 @@ namespace Tests
 
 	public abstract class DataSourcesBase : DataAttribute, IParameterDataSource
 	{
-		public bool IncludeLinqService { get; private set; }
-		public string[] Providers { get; private set; }
+		public bool     IncludeLinqService { get; }
+		public string[] Providers          { get; }
 
-		public DataSourcesBase(bool includeLinqService, string[] providers)
+		protected DataSourcesBase(bool includeLinqService, string[] providers)
 		{
 			IncludeLinqService = includeLinqService;
 			Providers = providers;
@@ -1197,7 +1197,7 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			return TestBase.UserProviders.Where(p => !Providers.Contains(p));
+			return TestBase.UserProviders.Where(p => !Providers.Contains(p) && TestBase.Providers.Contains(p));
 		}
 	}
 
