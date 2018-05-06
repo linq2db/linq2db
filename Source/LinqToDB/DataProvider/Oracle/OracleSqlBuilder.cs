@@ -246,6 +246,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected sealed override bool IsReserved(string word)
 		{
+			// TODO: now we use static 11g list
+			// proper solution will be use version-based list or load it from V$RESERVED_WORDS (needs research)
+			// right now list is a merge of two lists:
+			// SQL reserved words: https://docs.oracle.com/database/121/SQLRF/ap_keywd001.htm
+			// PL/SQL reserved words: https://docs.oracle.com/cd/B28359_01/appdev.111/b28370/reservewords.htm
+			// keywords are not included as they are keywords :)
+			//
+			// V$RESERVED_WORDS: https://docs.oracle.com/cd/B28359_01/server.111/b28320/dynviews_2126.htm
 			return ReservedWords.IsReserved(word, ProviderName.Oracle);
 		}
 
@@ -270,32 +278,50 @@ namespace LinqToDB.DataProvider.Oracle
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
+		/// <summary>
+		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
+		/// </summary>
+		private bool IsValidIdentifier(string name)
+		{
+			// https://docs.oracle.com/cd/B28359_01/server.111/b28286/sql_elements008.htm#SQLRF00223
+			// TODO: "Nonquoted identifiers can contain only alphanumeric characters from your database character set"
+			// now we check only for latin letters
+			return !IsReserved(name) &&
+				((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
+				name.All(c =>
+					(c >= 'a' && c <= 'z') ||
+					(c >= 'A' && c <= 'Z') ||
+					(c >= '0' && c <= '9') ||
+					c == '$' ||
+					c == '#' ||
+					c == '_');
+		}
+
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
 					return ":" + value;
-					// needs proper list of reserved words and name validation
-					// something like we did for Firebird
-					// right now reserved words list contains garbage
-				//case ConvertType.NameToQueryFieldAlias:
-				//case ConvertType.NameToQueryField:
-				//case ConvertType.NameToQueryTable:
-				//	if (value != null)
-				//	{
-				//		var name = value.ToString();
+				// needs proper list of reserved words and name validation
+				// something like we did for Firebird
+				// right now reserved words list contains garbage
+				case ConvertType.NameToQueryFieldAlias:
+				case ConvertType.NameToQueryField:
+				case ConvertType.NameToQueryTable:
+					if (value != null)
+					{
+						var name = value.ToString();
 
-				//		if (name.Length > 0 && name[0] == '"')
-				//			return name;
+						if (!IsValidIdentifier(name))
+						{
+							return '"' + name + '"';
+						}
 
-				//		if (IsReserved(name))
-				//		{
-				//			return '"' + name + '"';
-				//		}
-				//	}
+						return name;
+					}
 
-				//	break;
+					break;
 			}
 
 			return value;
