@@ -46,7 +46,7 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type)
 			where T : Attribute
 		{
-			return _reader.GetAttributes<T>(type);
+			return _reader.GetAttributes<T>(type, false);
 		}
 
 		/// <summary>

@@ -1097,6 +1097,7 @@ namespace Tests
 	}
 
 	public class LocalTable<T> : IDisposable
+		where T : class
 	{
 		private IDataContext _db;
 
@@ -1109,8 +1110,15 @@ namespace Tests
 			}
 			catch
 			{
-				_db.DropTable<T>();
-				_db.CreateTable<T>();
+				_db.DropTable<T>(throwExceptionIfNotExists: false);
+				try
+				{
+					_db.CreateTable<T>();
+				}
+				catch
+				{
+					_db.GetTable<T>().Delete();
+				}
 			}
 		}
 

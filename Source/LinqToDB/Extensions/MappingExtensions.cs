@@ -25,8 +25,10 @@ namespace LinqToDB.Extensions
 				if (value != null || systemType == underlyingType)
 				{
 					var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType);
-					if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string))
+
+					if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) && mappingSchema.GetMapValues(underlyingType) == null)
 						return new SqlValue(type, value.ToString());
+
 					return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema));
 				}
 			}
