@@ -1,10 +1,5 @@
-LINQ to DB 2.vNEXT  Release Notes
----------------------------------
-feature: [Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, MS SQL] CTE (common table expressions) support implemented including WCF support (see DataExtensions.GetCte(),  LinqExtensions.AsCte() methods)
-
 LINQ to DB 2.0.0  Release Notes
 ---------------------------------
-*IMPORTANT: LINQ to DB 2.0 is not released yet*
 - breaking change: dropped support for .NET 4.0, Silverlight 4-5 and Windows 8 Store frameworks. New target frameworks list is netcoreapp2.0, netstandard1.6, netstandard2.0 and net45
 - breaking change: behavior of enum mapping to a text type for enum without configured mappings changed to use ToString() instead of (enum underlying type).ToString(). To return old behavior, you should set Configuration.UseEnumValueNameForStringColumns to false (#1006, #1071)
 - breaking change: [PostgreSQL] If you used BulkCopy with ProviderSpecific method specified, check https://github.com/linq2db/linq2db/wiki/Bulk-Copy for important notes regarding provider-specific support notes
@@ -27,6 +22,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: Extra overrides to Join* extensions that accept two queryable sources, join predicate and result selector expression (#1076, #1088)
 - feature: Added extension point LinqExtensions.ExtensionsAdapter to override LINQ To DB async extensions with custom implementation
 - feature: You can post-process instantiated entities by subscribing on new IEntityServices.OnEntityCreated event, implemented by DataContext/DataCOnnection and RemoteDataContextBase contexts (#1112)
+- feature: You can set trace callback on DataContext instance using DataContext.OnTraceConnection property (#1131)
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
