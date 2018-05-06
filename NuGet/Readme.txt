@@ -7,7 +7,7 @@ LINQ to DB 2.0.0  Release Notes
 
 - feature: predicate expression support added for associations configuration using fluent mapping (#961)
 - feature: support creation of query parameters in extension builders (#964)
-- feature: new configuration flag LinqToDB.Common.Configuration.PrefereApply
+- feature: new configuration flag LinqToDB.Common.Configuration.PreferApply
 - feature: new In/NotIn extension methods added to LinqToDB.Tools.Extensions
 - feature: IBM.Data.DB2.Core provider support
 - feature: Oracle Data Provider for .NET Core provider support
