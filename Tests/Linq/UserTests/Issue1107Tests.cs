@@ -25,24 +25,9 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(configuration))
 			{
-				try
-				{
-					db.CreateTable<Issue1107TestsClass>();
-				}
-				catch
-				{
-					db.DropTable<Issue1107TestsClass>(throwExceptionIfNotExists: false);
-
-					db.CreateTable<Issue1107TestsClass>();
-				}
-
-				try
+				using (new LocalTable<Issue1107TestsClass>(db))
 				{
 					((DataConnection)db).BulkCopy(new[] { new Issue1107TestsClass() { TestDate = new DateTime(2018, 1, 1) } });
-				}
-				finally
-				{
-					db.DropTable<Issue1107TestsClass>();
 				}
 			}
 		}

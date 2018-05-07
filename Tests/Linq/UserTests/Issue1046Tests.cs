@@ -51,16 +51,7 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				try
-				{
-					db.CreateTable<TaskTable>();
-				}
-				catch 
-				{
-					db.DropTable<TaskTable>();
-					db.CreateTable<TaskTable>();
-				}
-				try
+				using (new LocalTable<TaskTable>(db))
 				{
 					db.Insert(new BdaTask
 					{
@@ -93,11 +84,6 @@ namespace Tests.UserTests
 
 					Assert.AreEqual(1, items2.Length);
 					Assert.AreEqual("Bda value", items2[0].Instance.BdaValue);
-
-				}
-				finally
-				{
-					db.DropTable<TaskTable>();
 				}
 			}
 		}
