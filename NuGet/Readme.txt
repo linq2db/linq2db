@@ -1,17 +1,17 @@
 LINQ to DB 2.0.0  Release Notes
 ---------------------------------
-- breaking change: dropped support for .NET 4.0, Silverlight 4-5 and Windows 8 Store frameworks. New target frameworks list is netcoreapp2.0, netstandard1.6, netstandard2.0 and net45
-- breaking change: behavior of enum mapping to a text type for enum without configured mappings changed to use ToString() instead of (enum underlying type).ToString(). To return old behavior, you should set Configuration.UseEnumValueNameForStringColumns to false (#1006, #1071)
+- breaking change: Dropped support for .NET 4.0, Silverlight 4-5 and Windows 8 Store frameworks. New target frameworks list is netcoreapp2.0, netstandard1.6, netstandard2.0 and net45
+- breaking change: Behavior of enum mapping to a text type for enum without configured mappings changed to use ToString() instead of (enum underlying type).ToString(). To return old behavior, you should set Configuration.UseEnumValueNameForStringColumns to false (#1006, #1071)
 - breaking change: [PostgreSQL] If you used BulkCopy with ProviderSpecific method specified, check https://github.com/linq2db/linq2db/wiki/Bulk-Copy for important notes regarding provider-specific support notes
 - breaking change: [Firebird] Changed default identifier quotation mode to FirebirdIdentifierQuoteMode.Auto from None (#1120)
 
-- feature: predicate expression support added for associations configuration using fluent mapping (#961)
-- feature: support creation of query parameters in extension builders (#964)
-- feature: new configuration flag LinqToDB.Common.Configuration.PreferApply
-- feature: new In/NotIn extension methods added to LinqToDB.Tools.Extensions
+- feature: Predicate expression support added for associations configuration using fluent mapping (#961)
+- feature: Support creation of query parameters in extension builders (#964)
+- feature: New configuration flag LinqToDB.Common.Configuration.PreferApply
+- feature: New In/NotIn extension methods added to LinqToDB.Tools.Extensions
 - feature: IBM.Data.DB2.Core provider support
 - feature: Oracle Data Provider for .NET Core provider support
-- feature: parameters to override table, schema/owner and database names added to InsertOrReplace*, InsertWith*Identity*, Update* and Delete* IDataContext extension methods
+- feature: Parameters to override table, schema/owner and database names added to InsertOrReplace*, InsertWith*Identity*, Update* and Delete* IDataContext extension methods
 - feature: [MySQL] Procedures and functions support added to schema provider (#991)
 - feature: [BulkCopy][SAP HANA, SQL CE] BulkCopyOptions.KeepIdentity support added (#1037)
 - feature: Calculated columns support through ExpressionMethodAttribute.IsColumn property (#1004)
@@ -25,8 +25,8 @@ LINQ to DB 2.0.0  Release Notes
 - feature: You can set trace callback on DataContext instance using DataContext.OnTraceConnection property (#1131)
 - feature: CreateTempTable API to work with temporary tables. Available as IDataContext extension methods
 
-- improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
-- improvement: [Oracle] corrected date literal generation (#969)
+- improvement: [MS SQL] Query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
+- improvement: [Oracle] Corrected date literal generation (#969)
 - improvement: [Merge] Support partial projection in source query
 - improvement: [Merge] Merge operation will throw LinqToDBException: "Column <column_name> doesn't exist in source" if projection in source query doesn't select needed field
 - improvement: [Merge][MS SQL] Prefer parameters over literals for binary types in client-side source to avoid generation of huge SQL queries
