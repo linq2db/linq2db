@@ -19,7 +19,7 @@ namespace LinqToDB
 	using Mapping;
 
 	[PublicAPI]
-	internal class TempTable<T> : ITable<T>, IDisposable
+	public class TempTable<T> : ITable<T>, IDisposable
 	{
 		readonly ITable<T> _table;
 
@@ -243,7 +243,7 @@ namespace LinqToDB
 
 	public static partial class DataExtensions
 	{
-		internal static TempTable<T> CreateTempTable<T>(
+		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			string tableName    = null,
 			string databaseName = null,
@@ -252,7 +252,7 @@ namespace LinqToDB
 			return new TempTable<T>(db, tableName, databaseName, schemaName);
 		}
 
-		internal static TempTable<T> CreateTempTable<T>(
+		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
 			BulkCopyOptions options = null,
@@ -263,7 +263,7 @@ namespace LinqToDB
 			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName);
 		}
 
-		internal static TempTable<T> CreateTempTable<T>(
+		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] string tableName,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
@@ -274,7 +274,7 @@ namespace LinqToDB
 			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName);
 		}
 
-		internal static TempTable<T> CreateTempTable<T>(
+		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
 			string tableName    = null,
@@ -285,7 +285,7 @@ namespace LinqToDB
 			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action);
 		}
 
-		internal static TempTable<T> CreateTempTable<T>(
+		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
 			[JetBrains.Annotations.NotNull] Action<EntityMappingBuilder<T>> setTable,
@@ -301,7 +301,7 @@ namespace LinqToDB
 			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action);
 		}
 
-		internal static TempTable<T> CreateTempTable<T>(
+		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] string tableName,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
@@ -312,7 +312,7 @@ namespace LinqToDB
 			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action);
 		}
 
-		internal static TempTable<T> CreateTempTable<T>(
+		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] string tableName,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,

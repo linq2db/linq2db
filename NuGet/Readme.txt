@@ -23,6 +23,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: Added extension point LinqExtensions.ExtensionsAdapter to override LINQ To DB async extensions with custom implementation
 - feature: You can post-process instantiated entities by subscribing on new IEntityServices.OnEntityCreated event, implemented by DataContext/DataCOnnection and RemoteDataContextBase contexts (#1112)
 - feature: You can set trace callback on DataContext instance using DataContext.OnTraceConnection property (#1131)
+- feature: CreateTempTable API to work with temporary tables. Available as IDataContext extension methods
 
 - improvement: [MS SQL] query parameters for varchar/nvarchar types will use fixed size 8000/4000 to improve query plans caching by server (#989)
 - improvement: [Oracle] corrected date literal generation (#969)
