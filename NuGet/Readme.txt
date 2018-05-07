@@ -12,7 +12,7 @@ LINQ to DB 2.0.0  Release Notes
 - feature: IBM.Data.DB2.Core provider support
 - feature: Oracle Data Provider for .NET Core provider support
 - feature: parameters to override table, schema/owner and database names added to InsertOrReplace*, InsertWith*Identity*, Update* and Delete* IDataContext extension methods
-- feature: [MySQL] Procedures and function support added to schema provider (#991)
+- feature: [MySQL] Procedures and functions support added to schema provider (#991)
 - feature: [BulkCopy][SAP HANA, SQL CE] BulkCopyOptions.KeepIdentity support added (#1037)
 - feature: Calculated columns support through ExpressionMethodAttribute.IsColumn property (#1004)
 - feature: Dynamic columns support (#964, #507, #744, #1083)
