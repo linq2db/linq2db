@@ -145,5 +145,18 @@ namespace Tests
 		{
 			return fix ? value.AddMilliseconds(-value.Millisecond) : value;
 		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName = null)
+		{
+			try
+			{
+				return new TempTable<T>(db, tableName);
+			}
+			catch
+			{
+				db.DropTable<T>(tableName);
+				return new TempTable<T>(db, tableName);
+			}
+		}
 	}
 }

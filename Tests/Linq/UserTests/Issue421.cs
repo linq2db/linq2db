@@ -30,7 +30,7 @@ namespace Tests.UserTests
 		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<BlobClass>(db))
+			using (db.CreateLocalTable<BlobClass>())
 			{
 
 				db.Into(db.GetTable<BlobClass>())
@@ -58,7 +58,7 @@ namespace Tests.UserTests
 		public void Test2(string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<BlobClass>(db))
+			using (db.CreateLocalTable<BlobClass>())
 			{
 				db.InlineParameters = true;
 
@@ -86,7 +86,7 @@ namespace Tests.UserTests
 		public void Test3(string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<BlobClass>(db))
+			using (db.CreateLocalTable<BlobClass>())
 			{
 
 				var e = new BlobClass() {Id = 1, BlobValue = new byte[] {1, 2, 3}};
@@ -110,7 +110,7 @@ namespace Tests.UserTests
 		public void Test4(string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<BlobClass>(db))
+			using (db.CreateLocalTable<BlobClass>())
 			{
 				db.InlineParameters = true;
 

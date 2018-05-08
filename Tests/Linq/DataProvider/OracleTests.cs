@@ -1933,7 +1933,7 @@ namespace Tests.DataProvider
 		public void Issue723Test2(string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<Issue723Table>(db))
+			using (db.CreateLocalTable<Issue723Table>())
 			{
 				Assert.True(true);
 			}
@@ -1955,7 +1955,7 @@ namespace Tests.DataProvider
 		public void Issue731Test(string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<Issue731Table>(db))
+			using (db.CreateLocalTable<Issue731Table>())
 			{
 				var origin = new Issue731Table()
 				{
