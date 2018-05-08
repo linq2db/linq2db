@@ -7,6 +7,7 @@ using System.Data.Linq;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Xml;
 
 using JetBrains.Annotations;
@@ -813,7 +814,7 @@ namespace LinqToDB.Extensions
 		/// <param name="type">A <see cref="System.Type"/> instance. </param>
 		/// <param name="checkArrayElementType">True if needed to check element type for arrays</param>
 		/// <returns> True, if the type parameter is a primitive type; otherwise, False.</returns>
-		/// <remarks><see cref="System.String"/>. <see cref="Stream"/>. 
+		/// <remarks><see cref="System.String"/>. <see cref="Stream"/>.
 		/// <see cref="XmlReader"/>. <see cref="XmlDocument"/>. are specially handled by the library
 		/// and, therefore, can be treated as scalar types.</remarks>
 		public static bool IsScalar(this Type type, bool checkArrayElementType = true)
@@ -937,7 +938,7 @@ namespace LinqToDB.Extensions
 		{
 			return type.GetEvent(eventName);
 		}
-		
+
 		#endregion
 
 		#region MethodInfo extensions
@@ -1018,7 +1019,7 @@ namespace LinqToDB.Extensions
 			var tc = TypeDescriptor.GetConverter(fromType);
 
 			if (toType.IsAssignableFrom(fromType))
-				return true; 
+				return true;
 
 			if (tc.CanConvertTo(toType))
 				return true;
@@ -1105,5 +1106,16 @@ namespace LinqToDB.Extensions
 
 		#endregion
 
+		public static bool IsAnonymous([NotNull] this Type type)
+		{
+			if (type == null) throw new ArgumentNullException(nameof(type));
+
+			return
+				!type.IsPublicEx() &&
+				 type.IsGenericTypeEx() &&
+				(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
+				 type.Name.StartsWith("VB$AnonymousType", StringComparison.Ordinal)) &&
+				type.GetCustomAttributesEx(typeof(CompilerGeneratedAttribute), true).Any();
+		}
 	}
 }

@@ -1391,6 +1391,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[Combinatorial]
 		public void SqlFullJoinWithCount1([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1407,6 +1408,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[Combinatorial]
 		public void SqlFullJoinWithCount2([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1425,6 +1427,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[Combinatorial]
 		public void SqlFullJoinWithCount3([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1443,6 +1446,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[Combinatorial]
 		public void SqlFullJoinWithCount4([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1462,6 +1466,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[Combinatorial]
 		public void SqlFullJoinWithCount5([AllJoinsSource] string context)
 		{
 			using (var db = GetDataContext(context))

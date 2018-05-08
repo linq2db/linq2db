@@ -51,4 +51,5 @@ before_script:
 script:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mysql -e 'CREATE DATABASE TestData DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;'; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then psql -c 'create database testdata;' -U postgres; fi
-  - ./build.sh 
+#  - ./build.sh 
+  - dotnet test ./Tests/Linq/Tests.csproj -c Travis -f netcoreapp2.0 --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"

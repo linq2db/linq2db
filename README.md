@@ -12,6 +12,8 @@ Visit our [blog](http://blog.linq2db.com/) and see [Github.io documentation](htt
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
 
+T4 model generation help is [here](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.Templates/README.md).
+
 ## How to help the project
 
 No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/How-can-i-help.html).
