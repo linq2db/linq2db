@@ -9,8 +9,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1128Tests : TestBase
 	{
-		private static int _cnt;
-
 		class FluentBase
 		{
 			public int Id { get; set; }
@@ -67,7 +65,7 @@ namespace Tests.UserTests
 			var ms = SetFluentMappings();
 
 			using (var db = GetDataContext(configuration, ms))
-			using (new LocalTable<FluentBase>(db))
+			using (db.CreateLocalTable<FluentBase>())
 			{
 				var res = db.Insert<FluentBase>(new FluentDerived { Id = 1 });
 				Assert.AreEqual(1, res);
@@ -80,7 +78,7 @@ namespace Tests.UserTests
 			var ms = SetFluentMappings();
 
 			using (var db = GetDataContext(configuration, ms))
-			using (new LocalTable<AttributeBase>(db))
+			using (db.CreateLocalTable<AttributeBase>())
 			{
 				var res = db.Insert<AttributeBase>(new AttributeDerived { Id = 1 });
 				Assert.AreEqual(1, res);

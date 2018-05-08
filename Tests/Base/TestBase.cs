@@ -1096,38 +1096,6 @@ namespace Tests
 		}
 	}
 
-	public class LocalTable<T> : IDisposable
-		where T : class
-	{
-		private IDataContext _db;
-
-		public LocalTable(IDataContext db)
-		{
-			try
-			{
-				_db = db;
-				_db.CreateTable<T>();
-			}
-			catch
-			{
-				_db.DropTable<T>(throwExceptionIfNotExists: false);
-				try
-				{
-					_db.CreateTable<T>();
-				}
-				catch
-				{
-					_db.GetTable<T>().Delete();
-				}
-			}
-		}
-
-		public void Dispose()
-		{
-			_db.DropTable<T>(throwExceptionIfNotExists: false);
-		}
-	}
-
 	public class DeletePerson : IDisposable
 	{
 		readonly IDataContext _db;
