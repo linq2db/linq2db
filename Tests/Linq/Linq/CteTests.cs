@@ -366,25 +366,6 @@ namespace Tests.Linq
 			}
 		}
 
-		private ITable<T> CreateTestTable<T>(IDataContext context, string tableName = null)
-		{
-			using (new DisableLogging())
-			{
-				ITable<T> table;
-				try
-				{
-					table = context.CreateTable<T>(tableName);
-				}
-				catch 
-				{
-					context.DropTable<T>(tableName);
-					table = context.CreateTable<T>(tableName);
-				}
-
-				return table;
-			}
-		}
-
 		private class CteDMLTests
 		{
 			protected bool Equals(CteDMLTests other)
@@ -416,40 +397,32 @@ namespace Tests.Linq
 		public void TestInsert([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
 			{
-				var testTable = CreateTestTable<CteDMLTests>(db, "CteChild");
-				try
-				{
-					var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
-					var toInsert = from p in cte1
-						from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
-						select new CteDMLTests
-						{
-							ChildID = c4.ChildID,
-							ParentID = c4.ParentID
-						};
+				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
+				var toInsert = from p in cte1
+					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
+					select new CteDMLTests
+					{
+						ChildID = c4.ChildID,
+						ParentID = c4.ParentID
+					};
 
-					var affected = toInsert.Insert(testTable, c => c);
+				var affected = toInsert.Insert(testTable, c => c);
 
-					var _cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
-					var expected = from p in _cte1
-						from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
-						select new CteDMLTests
-						{
-							ChildID = c4.ChildID,
-							ParentID = c4.ParentID
-						};
+				var _cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
+				var expected = from p in _cte1
+					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
+					select new CteDMLTests
+					{
+						ChildID = c4.ChildID,
+						ParentID = c4.ParentID
+					};
 
-					var result = testTable.OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
-					expected   = expected. OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
+				var result = testTable.OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
+				expected   = expected. OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
 
-					AreEqual(expected, result);
-
-				}
-				finally
-				{
-					testTable.DropTable();
-				}
+				AreEqual(expected, result);
 			}
 		}
 
@@ -457,31 +430,24 @@ namespace Tests.Linq
 		public void TestDelete([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
 			{
-				var testTable = CreateTestTable<CteDMLTests>(db, "CteChild");
-				try
-				{
-					var items = Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i });
+				var items = Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i });
 
-					using (new DisableLogging())
+				using (new DisableLogging())
 					foreach (var item in items)
 					{
 						db.Insert(item, "CteChild");
 					}
 
-					var cte = testTable.Where(c => c.ParentID % 2 == 0).AsCte();
-					var toDelete =
-						from c in testTable
-						from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
-						select c;
+				var cte = testTable.Where(c => c.ParentID % 2 == 0).AsCte();
+				var toDelete =
+					from c in testTable
+					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
+					select c;
 
-					var recordsAffected = toDelete.Delete();
-					Assert.AreEqual(5, recordsAffected);
-				}
-				finally
-				{
-					testTable.DropTable();
-				}
+				var recordsAffected = toDelete.Delete();
+				Assert.AreEqual(5, recordsAffected);
 			}
 		}
 
@@ -489,37 +455,30 @@ namespace Tests.Linq
 		public void TestUpdate([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
 			{
-				var testTable = CreateTestTable<CteDMLTests>(db, "CteChild");
-				try
+				var items = Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i });
+
+				using (new DisableLogging())
+				foreach (var item in items)
 				{
-					var items = Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i });
-
-					using (new DisableLogging())
-					foreach (var item in items)
-					{
-						db.Insert(item, "CteChild");
-					}
-
-					var cte = testTable.Where(c => c.ParentID % 2 == 0).AsCte();
-					var toUpdate =
-						from c in testTable
-						from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
-						select c;
-
-					toUpdate.Update(prev => new CteDMLTests {ParentID = prev.ChildID});
-
-					var expected = testTable.Where(c => c.ParentID % 2 == 0)
-						.Select(c => new CteDMLTests { ParentID = c.ChildID, ChildID = c.ChildID });
-
-					var result = testTable.Where(c => c.ParentID % 2 == 0);
-
-					AreEqual(expected, result);
+					db.Insert(item, "CteChild");
 				}
-				finally
-				{
-					testTable.DropTable();
-				}
+
+				var cte = testTable.Where(c => c.ParentID % 2 == 0).AsCte();
+				var toUpdate =
+					from c in testTable
+					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
+					select c;
+
+				toUpdate.Update(prev => new CteDMLTests {ParentID = prev.ChildID});
+
+				var expected = testTable.Where(c => c.ParentID % 2 == 0)
+					.Select(c => new CteDMLTests { ParentID = c.ChildID, ChildID = c.ChildID });
+
+				var result = testTable.Where(c => c.ParentID % 2 == 0);
+
+				AreEqual(expected, result);
 			}
 		}
 
