@@ -72,9 +72,9 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				using (new LocalTable<Task>(db))
-				using (new LocalTable<TaskStage>(db))
-				using (new LocalTable<Assignment>(db))
+				using (db.CreateLocalTable<Task>())
+				using (db.CreateLocalTable<TaskStage>())
+				using (db.CreateLocalTable<Assignment>())
 				{
 					var directionId = Guid.NewGuid();
 					var taskId = db.GetTable<Task>().InsertWithInt32Identity(() => new Task

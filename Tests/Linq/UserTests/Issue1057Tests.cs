@@ -57,8 +57,8 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(configuration))
 			{
-				using (new LocalTable<Task>(db))
-				using (new LocalTable<TaskStage>(db))
+				using (db.CreateLocalTable<Task>())
+				using (db.CreateLocalTable<TaskStage>())
 				{
 					db.Insert(new Task {Id = 1, TargetName = "bda.Requests"});
 					db.Insert(new Task {Id = 2, TargetName = "None"});
@@ -85,8 +85,8 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(configuration))
 			{
-				using (new LocalTable<Task>(db))
-				using (new LocalTable<TaskStage>(db))
+				using (db.CreateLocalTable<Task>())
+				using (db.CreateLocalTable<TaskStage>())
 				{
 					db.Insert(new Task {Id = 1, TargetName = "bda.Requests"});
 					db.Insert(new Task {Id = 2, TargetName = "None"});

@@ -51,7 +51,7 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				using (new LocalTable<TaskTable>(db))
+				using (db.CreateLocalTable<TaskTable>())
 				{
 					db.Insert(new BdaTask
 					{

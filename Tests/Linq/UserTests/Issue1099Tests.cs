@@ -33,7 +33,7 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				using (new LocalTable<BackgroundTask>(db))
+				using (db.CreateLocalTable<BackgroundTask>())
 				{
 					var personId = 1;
 

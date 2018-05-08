@@ -25,7 +25,7 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(configuration))
 			{
-				using (new LocalTable<Issue1107TestsClass>(db))
+				using (db.CreateLocalTable<Issue1107TestsClass>())
 				{
 					((DataConnection)db).BulkCopy(new[] { new Issue1107TestsClass() { TestDate = new DateTime(2018, 1, 1) } });
 				}

@@ -23,7 +23,7 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(configuration))
 			{
-				using (new LocalTable<Issue1110TestsClass>(db))
+				using (db.CreateLocalTable<Issue1110TestsClass>())
 				{
 					db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = DateTime.UtcNow });
 				}
