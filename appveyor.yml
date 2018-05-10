@@ -11,7 +11,7 @@ branches:
 
 environment:
   assemblyVersion: 2.0.0
-  packageVersion: 2.0.0-rc0
+  packageVersion: 2.0.0
   access_token:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
 ##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
