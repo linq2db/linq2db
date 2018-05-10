@@ -179,7 +179,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// </summary>
-			public static bool PrefereApply = true;
+			public static bool PreferApply = true;
 		}
 
 		/// <summary>

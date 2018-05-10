@@ -2988,7 +2988,7 @@ namespace LinqToDB
 
 		[Pure]
 		[LinqTunnel]
-		public static IQueryable<TSource> AsCte<TSource>(
+		internal static IQueryable<TSource> AsCte<TSource>(
 			[NotNull] this IQueryable<TSource> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -3002,7 +3002,7 @@ namespace LinqToDB
 
 		[Pure]
 		[LinqTunnel]
-		public static IQueryable<TSource> AsCte<TSource>(
+		internal static IQueryable<TSource> AsCte<TSource>(
 			[NotNull]   this IQueryable<TSource> source,
 			[CanBeNull] string                   name)
 		{

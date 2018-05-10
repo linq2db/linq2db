@@ -922,7 +922,7 @@ namespace LinqToDB.SqlQuery
 							}
 							else if (parentTableSources.Any(ts => ContainsTable(ts, condition)))
 							{
-								if (isApplySupported && Common.Configuration.Linq.PrefereApply)
+								if (isApplySupported && Common.Configuration.Linq.PreferApply)
 									return;
 
 								searchCondition.Insert(0, condition);
