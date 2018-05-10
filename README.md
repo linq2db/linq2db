@@ -14,7 +14,7 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 
 T4 model generation help is [here](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.Templates/README.md).
 
-[[Releases and Roadmap]].
+[Releases and Roadmap](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap).
 
 ## How to help the project
 
