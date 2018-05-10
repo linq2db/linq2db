@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using LinqToDB.Configuration;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -25,7 +26,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-			var connection = dataConnection.Connection as SqlConnection;
+			var connection = Proxy.GetUnderlyingObject(dataConnection.Connection) as SqlConnection;
 
 			if (connection != null)
 			{
