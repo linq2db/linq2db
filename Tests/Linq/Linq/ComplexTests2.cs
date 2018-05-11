@@ -109,8 +109,6 @@ namespace Tests.ComplexTests2
 
 		private void InsertData(ITestDataContext db)
 		{
-			CleanupData(db);
-
 			var eye = new Eye
 			{
 				Id = 1,
@@ -140,21 +138,28 @@ namespace Tests.ComplexTests2
 				TestAnimalId = 1
 			};
 
-			db.CreateTable<Animal>();
-			db.CreateTable<Eye>();
-			db.CreateTable<Test>();
+			using (new DisableLogging())
+			{
+				db.CreateLocalTable<Animal>();
+				db.CreateLocalTable<Animal>();
+				db.CreateLocalTable<Eye>();
+				db.CreateLocalTable<Test>();
 
-			db.Insert(eye);
-			db.Insert(dog);
-			db.Insert(test);
-			db.Insert(test2);
+				db.Insert(eye);
+				db.Insert(dog);
+				db.Insert(test);
+				db.Insert(test2);
+			}
 		}
 
 		void CleanupData(ITestDataContext db)
 		{
-			db.DropTable<Animal>(throwExceptionIfNotExists: false);
-			db.DropTable<Eye>   (throwExceptionIfNotExists: false);
-			db.DropTable<Test>  (throwExceptionIfNotExists: false);
+			using (new DisableLogging())
+			{ 
+				db.DropTable<Animal>(throwExceptionIfNotExists: false);
+				db.DropTable<Eye>   (throwExceptionIfNotExists: false);
+				db.DropTable<Test>  (throwExceptionIfNotExists: false);
+			}
 		}
 
 		MappingSchema SetMappings()
