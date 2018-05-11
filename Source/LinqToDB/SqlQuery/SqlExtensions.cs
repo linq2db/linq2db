@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	static class SqlExtensions
+	public static class SqlExtensions
 	{
 		public static bool IsInsert(this SqlStatement statement)
 		{
