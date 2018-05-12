@@ -23,17 +23,9 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(configuration))
 			{
-				db.DropTable<Issue1110TestsClass>(throwExceptionIfNotExists: false);
-
-				try
+				using (db.CreateLocalTable<Issue1110TestsClass>())
 				{
-					db.CreateTable<Issue1110TestsClass>();
-
 					db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = DateTime.UtcNow });
-				}
-				finally
-				{
-					db.DropTable<Issue1110TestsClass>(throwExceptionIfNotExists: false);
 				}
 			}
 		}

@@ -51,7 +51,7 @@ namespace Tests.UserTests
 		public void Test(string context)
 		{
 			using (var db = new TestDataConnection(context))
-			using (new LocalTable<Parent564>(db))
+			using (db.CreateLocalTable<Parent564>())
 			{
 				db.Insert(new Child564A() {StringValue = "SomeValue"});
 				db.Insert(new Child564B() {IntValue    = 911});

@@ -719,7 +719,7 @@ namespace Tests.DataProvider
 		public void CreateTableTest(string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<CreateTableTestClass>(db))
+			using (db.CreateLocalTable<CreateTableTestClass>())
 			{
 				var e = new CreateTableTestClass
 				{

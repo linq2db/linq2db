@@ -486,7 +486,7 @@ namespace Tests.DataProvider
 		{
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Quote))
 			using (var db = GetDataContext(context))
-			using (new LocalTable<Issue76Entity>(db))
+			using (db.CreateLocalTable<Issue76Entity>())
 			{
 				var folders = db.GetTable<Issue76Entity>().Select(f => new Issue76Entity()
 				{
