@@ -9,8 +9,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-    using LinqToDB.Common;
-    using Model;
+	using LinqToDB.Common;
+	using Model;
 
 	[TestFixture, Category("MapValue")]
 	public class EnumMappingTests : TestBase
