@@ -1622,7 +1622,9 @@ namespace Tests.xUpdate
 		#endregion
 
 
-		[Test, MergeDataContextSource]//(ProviderName.Sybase)]
+		// https://imgflip.com/i/2a6oc8
+		[ActiveIssue(Configuration = ProviderName.Sybase, Details = "Cross-join doesn't work in Sybase. Also see SqlLinqCrossJoinSubQuery test")]
+		[Test, MergeDataContextSource]
 		public void CrossJoinedSourceWithSingleFieldSelection(string context)
 		{
 			using (var db = new TestDataConnection(context))
