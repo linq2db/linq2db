@@ -3,8 +3,17 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	static class SqlExtensions
+	/// <summary>
+	/// This is internal API and is not intended for use by Linq To DB applications.
+	/// It may change or be removed without further notice.
+	/// </summary>
+	public static class SqlExtensions
 	{
+
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static bool IsInsert(this SqlStatement statement)
 		{
 			return
@@ -12,21 +21,37 @@ namespace LinqToDB.SqlQuery
 				statement.QueryType == QueryType.InsertOrUpdate;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static bool NeedsIdentity(this SqlStatement statement)
 		{
 			return statement.QueryType == QueryType.Insert && ((SqlInsertStatement)statement).Insert.WithIdentity;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static bool IsUpdate(this SqlStatement statement)
 		{
 			return statement != null && statement.QueryType == QueryType.Update;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlField GetIdentityField(this SqlStatement statement)
 		{
 			return statement.GetInsertClause()?.Into.GetIdentityField();
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlInsertClause GetInsertClause(this SqlStatement statement)
 		{
 			switch (statement)
@@ -49,6 +74,10 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlInsertClause RequireInsertClause(this SqlStatement statement)
 		{
 			var result = statement.GetInsertClause();
@@ -57,6 +86,10 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlUpdateClause GetUpdateClause(this SqlStatement statement)
 		{
 			switch (statement)
@@ -69,6 +102,10 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlUpdateClause RequireUpdateClause(this SqlStatement statement)
 		{
 			var result = statement.GetUpdateClause();
@@ -77,6 +114,10 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SelectQuery EnsureQuery(this SqlStatement statement)
 		{
 			var selectQuery = statement.SelectQuery;
@@ -85,12 +126,20 @@ namespace LinqToDB.SqlQuery
 				return selectQuery;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static T Clone<T>(this T cloneable)
 			where T: ICloneableElement
 		{
 			return (T)cloneable.Clone(new Dictionary<ICloneableElement,ICloneableElement>(), _ => true);
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static T Clone<T>(this T cloneable, Predicate<ICloneableElement> doClone)
 			where T: ICloneableElement
 		{

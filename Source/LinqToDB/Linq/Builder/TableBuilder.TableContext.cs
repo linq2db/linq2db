@@ -223,7 +223,7 @@ namespace LinqToDB.Linq.Builder
 				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
 				// choosing type that can be instantiated
-				if ((objectType.IsInterfaceEx() || objectType.IsAbstractEx()) && !(ObjectType.IsInterfaceEx() || objectType.IsAbstractEx()))
+				if ((objectType.IsInterfaceEx() || objectType.IsAbstractEx()) && !(ObjectType.IsInterfaceEx() || ObjectType.IsAbstractEx()))
 				{
 					objectType = ObjectType;
 				}
