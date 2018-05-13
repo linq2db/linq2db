@@ -2,12 +2,29 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Tests.Model;
 
 namespace Tests
 {
 	public static class TestUtils
 	{
+		private static int _cnt;
+
+		/// <summary>
+		/// Returns unique per-testrun sequence number.
+		/// E.g. it can be used to generate unique table names for tests to workaround Firebird's
+		/// issues with DDL operations.
+		/// </summary>
+		public static int GetNext()
+		{
+			// Firebird issue details:
+			// https://stackoverflow.com/questions/44353607
+			// another solution with pools cleanup doesn't work well with Firebird3 and
+			// also breaks provider
+			return Interlocked.Increment(ref _cnt);
+		}
+
 		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 

@@ -377,42 +377,32 @@ namespace Tests.xUpdate
 		public void DeleteByTableName(string context)
 		{
 			const string schemaName = null;
-			const string tableName  = "xxPerson";
+			var tableName  = "xxPerson" + TestUtils.GetNext().ToString();
 
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateTempTable<Person>(tableName, schemaName: schemaName))
 			{
-				try
+				var iTable = (ITable<Person>)table;
+				Assert.AreEqual(tableName, iTable.TableName);
+				Assert.AreEqual(schemaName, iTable.SchemaName);
+
+				var person = new Person()
 				{
-					var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
+					FirstName = "Steven",
+					LastName = "King",
+					Gender = Gender.Male,
+				};
 
-					Assert.AreEqual(tableName, table.TableName);
-					Assert.AreEqual(schemaName, table.SchemaName);
+				// insert a row into the table
+				db.Insert(person, tableName: tableName, schemaName: schemaName);
+				var newCount = table.Count();
+				Assert.AreEqual(1, newCount);
 
-					var person = new Person()
-					{
-						FirstName = "Steven",
-						LastName  = "King",
-						Gender    = Gender.Male,
-					};
+				var personForDelete = table.Single();
 
-					// insert a row into the table
-					db.Insert(person, tableName: tableName, schemaName: schemaName);
-					var newCount = table.Count();
-					Assert.AreEqual(1, newCount);
+				db.Delete(personForDelete, tableName: tableName, schemaName: schemaName);
 
-					var personForDelete = table.Single();
-
-					db.Delete(personForDelete, tableName: tableName, schemaName: schemaName);
-
-					Assert.AreEqual(0, table.Count());
-
-					table.Drop();
-				}
-				catch
-				{
-					db.DropTable<Person>(tableName, schemaName: schemaName);
-					throw;
-				}
+				Assert.AreEqual(0, table.Count());
 			}
 		}
 
