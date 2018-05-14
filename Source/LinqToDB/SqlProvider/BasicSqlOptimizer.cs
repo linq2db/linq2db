@@ -958,7 +958,7 @@ namespace LinqToDB.SqlProvider
 			return cond;
 		}
 
-		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool skipEqual)
+		internal static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool skipEqual)
 		{
 			switch (op)
 			{
