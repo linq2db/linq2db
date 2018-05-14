@@ -2471,8 +2471,8 @@ namespace LinqToDB.Linq.Builder
 							}
 							else 
 							{
-								sqlCondition.Predicate = OptimizePredicate(sqlCondition.Predicate, ref isNot);
-								var checkIsNullLocal = CheckIsNull(sqlCondition.Predicate, isNot);
+								sqlCondition.Predicate = BasicSqlOptimizer.OptimizePredicate(sqlCondition.Predicate, ref isNot);
+								var checkIsNullLocal   = CheckIsNull(sqlCondition.Predicate, isNot);
 								conditions.Add(checkIsNullLocal ?? new SqlCondition(isNot, sqlCondition.Predicate));
 								break;
 							}
@@ -2536,24 +2536,6 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		static ISqlPredicate OptimizePredicate(ISqlPredicate predicate, ref bool isNot)
-		{
-			if (isNot)
-			{
-				if (predicate is SqlPredicate.ExprExpr expr)
-				{
-					var newOperator = BasicSqlOptimizer.InvertOperator(expr.Operator, false);
-					if (newOperator != expr.Operator)
-					{ 
-						predicate = new SqlPredicate.ExprExpr(expr.Expr1, newOperator, expr.Expr2);
-						isNot     = false;
-					}
-				}
-			}
-
-			return predicate;
-		}
-
 		static SqlCondition CheckIsNull(ISqlPredicate predicate, bool isNot)
 		{
 			if (Configuration.Linq.CompareNullsAsValues == false)
@@ -2615,7 +2597,7 @@ namespace LinqToDB.Linq.Builder
 							var checkNullPredicate = new SqlPredicate.IsNull(nullableField, false);
 
 							var perdicateIsNot = isNot && inList == null;
-							predicate = OptimizePredicate(predicate, ref perdicateIsNot);
+							predicate = BasicSqlOptimizer.OptimizePredicate(predicate, ref perdicateIsNot);
 
 							var orCondition = new SqlSearchCondition(
 								new SqlCondition(false,          checkNullPredicate),

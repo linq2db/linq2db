@@ -958,7 +958,7 @@ namespace LinqToDB.SqlProvider
 			return cond;
 		}
 
-		internal static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool skipEqual)
+		static SqlPredicate.Operator InvertOperator(SqlPredicate.Operator op, bool skipEqual)
 		{
 			switch (op)
 			{
@@ -972,6 +972,24 @@ namespace LinqToDB.SqlProvider
 				case SqlPredicate.Operator.LessOrEqual    : return SqlPredicate.Operator.Greater;
 				default: throw new InvalidOperationException();
 			}
+		}
+
+		internal static ISqlPredicate OptimizePredicate(ISqlPredicate predicate, ref bool isNot)
+		{
+			if (isNot)
+			{
+				if (predicate is SqlPredicate.ExprExpr expr)
+				{
+					var newOperator = InvertOperator(expr.Operator, false);
+					if (newOperator != expr.Operator)
+					{ 
+						predicate = new SqlPredicate.ExprExpr(expr.Expr1, newOperator, expr.Expr2);
+						isNot     = false;
+					}
+				}
+			}
+
+			return predicate;
 		}
 
 		ISqlPredicate OptimizeCase(SelectQuery selectQuery, SqlPredicate.ExprExpr expr)
