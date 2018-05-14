@@ -28,7 +28,18 @@ namespace Tests.Linq
 			{
 			}
 
-			public CteContextSourceAttribute(bool includeLinqService) : base(includeLinqService, CteSupportedProviders)
+			public CteContextSourceAttribute(bool includeLinqService)
+				: base(includeLinqService, CteSupportedProviders)
+			{
+			}
+
+			public CteContextSourceAttribute(params string[] excludedProviders)
+				: base(CteSupportedProviders.Except(excludedProviders).ToArray())
+			{
+			}
+
+			public CteContextSourceAttribute(bool includeLinqService, params string[] excludedProviders)
+				: base(includeLinqService, CteSupportedProviders.Except(excludedProviders).ToArray())
 			{
 			}
 		}
@@ -427,22 +438,16 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void TestDelete([CteContextSource] string context)
+		public void TestDelete([CteContextSource(ProviderName.Firebird)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
+			using (var db  = GetDataContext(context))
+			using (var tmp = db.CreateLocalTable("CteChild",
+				Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i })))
 			{
-				var items = Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i });
+				var cte = tmp.Where(c => c.ParentID % 2 == 0).AsCte();
 
-				using (new DisableLogging())
-					foreach (var item in items)
-					{
-						db.Insert(item, "CteChild");
-					}
-
-				var cte = testTable.Where(c => c.ParentID % 2 == 0).AsCte();
 				var toDelete =
-					from c in testTable
+					from c in tmp
 					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
 					select c;
 
@@ -455,16 +460,9 @@ namespace Tests.Linq
 		public void TestUpdate([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
+			using (var testTable = db.CreateLocalTable("CteChild",
+				Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i })))
 			{
-				var items = Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i });
-
-				using (new DisableLogging())
-				foreach (var item in items)
-				{
-					db.Insert(item, "CteChild");
-				}
-
 				var cte = testTable.Where(c => c.ParentID % 2 == 0).AsCte();
 				var toUpdate =
 					from c in testTable

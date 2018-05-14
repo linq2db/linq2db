@@ -272,8 +272,7 @@ namespace LinqToDB.SqlProvider
 				return;
 
 			AppendIndent();
-			StringBuilder.AppendLine("WITH");
-			Indent++;
+			StringBuilder.Append("WITH ");
 
 			var first = true;
 
@@ -283,7 +282,6 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(',').AppendLine();
 				first = false;
 
-				AppendIndent();
 				ConvertTableName(StringBuilder, null, null, cte.Name);
 				if (cte.Fields.Count > 3)
 				{
@@ -332,10 +330,8 @@ namespace LinqToDB.SqlProvider
 				Indent--;
 
 				AppendIndent();
-				StringBuilder.Append(")");
+				StringBuilder.AppendLine(")");
 			}
-
-			Indent--;
 
 			StringBuilder.AppendLine();
 		}

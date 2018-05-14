@@ -242,7 +242,8 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (deleteStatement.With?.Clauses.Count > 0)
 			{
-				BuildStep = Step.DeleteClause;  BuildDeleteClause(deleteStatement);
+				BuildStep = Step.DeleteClause;
+				BuildDeleteClause(deleteStatement);
 				InternalBuildSubqueryWithCte(deleteStatement.GetWithClause(), deleteStatement.SelectQuery);
 			}
 			else
@@ -253,22 +254,24 @@ namespace LinqToDB.DataProvider.Oracle
 
 		void InternalBuildSubqueryWithCte(SqlWithClause withClause, SelectQuery selectQuery)
 		{
-			++Indent;
+			while (StringBuilder[StringBuilder.Length - 1] == ' ')
+				StringBuilder.Length--;
 
 			StringBuilder.AppendLine();
 			AppendIndent().AppendLine("(");
 
 			++Indent;
-			var selectStatement = new SqlSelectStatement(selectQuery);
-			selectStatement.With = withClause;
-			new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter).BuildSql(0, selectStatement, StringBuilder,
-				Indent);
+
+			var selectStatement = new SqlSelectStatement(selectQuery) { With = withClause };
+
+			new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter)
+				.BuildSql(0, selectStatement, StringBuilder, Indent);
+
 			--Indent;
 
-			StringBuilder.AppendLine();
 			AppendIndent().AppendLine(")");
+		}
 
-			--Indent;
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
