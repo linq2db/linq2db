@@ -550,7 +550,7 @@ namespace LinqToDB.ServiceModel
 		{
 			public string Serialize(SqlStatement statement, SqlParameter[] parameters, List<string> queryHints)
 			{
-				var queryHintCount = queryHints == null ? 0 : queryHints.Count;
+				var queryHintCount = queryHints?.Count ?? 0;
 
 				Builder.AppendLine(queryHintCount.ToString());
 
@@ -1050,6 +1050,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Body);
 							Append(elem.ObjectType);
 							Append(elem.Fields.Values);
+							Append(elem.IsRecursive);
 
 							break;
 						}
@@ -1703,12 +1704,13 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.CteClause:
 						{
-							var name       = ReadString();
-							var body       = Read<SelectQuery>();
-							var objectType = Read<Type>();
-							var fields     = ReadArray<SqlField>();
+							var name        = ReadString();
+							var body        = Read<SelectQuery>();
+							var objectType  = Read<Type>();
+							var fields      = ReadArray<SqlField>();
+							var isRecursive = ReadBool();
 
-							var c = new CteClause(body, fields, objectType, name);
+							var c = new CteClause(body, fields, objectType, name) { IsRecursive = isRecursive };
 
 							obj = c;
 
