@@ -8,6 +8,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Explicit data context <see cref="DataContext"/> transaction wrapper.
 	/// </summary>
+	[PublicAPI]
 	public class DataContextTransaction : IDisposable
 	{
 		/// <summary>

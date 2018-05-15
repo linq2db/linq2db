@@ -1,5 +1,7 @@
 ﻿using System;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB
 {
 	/// <summary>
@@ -26,6 +28,7 @@ namespace LinqToDB
 	/// - last method parameters could be ommited from expression method, but only if you don't add database connection context parameter.
 	/// </para>
 	/// </summary>
+	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
 	public class ExpressionMethodAttribute : Attribute
 	{
