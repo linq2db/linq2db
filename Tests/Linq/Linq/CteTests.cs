@@ -457,7 +457,9 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void TestUpdate([CteContextSource] string context)
+		public void TestUpdate(
+			[CteContextSource(ProviderName.Firebird, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var testTable = db.CreateLocalTable("CteChild",

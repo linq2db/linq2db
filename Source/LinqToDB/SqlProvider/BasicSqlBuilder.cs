@@ -174,6 +174,28 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(deleteStatement.SelectQuery);
 		}
 
+		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
+		{
+			BuildStep = Step.DeleteClause; BuildDeleteClause(deleteStatement);
+
+			while (StringBuilder[StringBuilder.Length - 1] == ' ')
+				StringBuilder.Length--;
+
+			StringBuilder.AppendLine();
+			AppendIndent().AppendLine("(");
+
+			++Indent;
+
+			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery) { With = deleteStatement.GetWithClause() };
+
+			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, selectStatement, StringBuilder, Indent);
+
+			--Indent;
+
+			AppendIndent().AppendLine(")");
+
+		}
+
 		protected virtual void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
@@ -221,6 +243,37 @@ namespace LinqToDB.SqlProvider
 
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
+		}
+
+		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
+		{
+			BuildStep = Step.InsertClause;
+			BuildInsertClause(statement, insertClause, addAlias);
+
+			AppendIndent().AppendLine("SELECT * FROM");
+			AppendIndent().AppendLine("(");
+
+			++Indent;
+
+			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
+
+			if (statement.QueryType == QueryType.Insert && statement.SelectQuery.From.Tables.Count != 0)
+			{
+				BuildStep = Step.SelectClause;  BuildSelectClause(statement.SelectQuery);
+				BuildStep = Step.FromClause;    BuildFromClause(statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;   BuildWhereClause(statement.SelectQuery);
+				BuildStep = Step.GroupByClause; BuildGroupByClause(statement.SelectQuery);
+				BuildStep = Step.HavingClause;  BuildHavingClause(statement.SelectQuery);
+				BuildStep = Step.OrderByClause; BuildOrderByClause(statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;   BuildOffsetLimit(statement.SelectQuery);
+			}
+
+			if (insertClause.WithIdentity)
+				BuildGetIdentity(insertClause);
+
+			--Indent;
+
+			AppendIndent().AppendLine(")");
 		}
 
 		protected virtual void BuildUnknownQuery()
@@ -271,18 +324,25 @@ namespace LinqToDB.SqlProvider
 			if (with == null || with.Clauses.Count == 0)
 				return;
 
-			AppendIndent();
-			StringBuilder.Append("WITH ");
-
 			var first = true;
 
 			foreach (var cte in with.Clauses)
 			{
-				if (!first)
+				AppendIndent();
+
+				if (first)
+				{
+					StringBuilder.Append("WITH ");
+					first = false;
+				}
+				else
+				{
 					StringBuilder.Append(',').AppendLine();
-				first = false;
+					AppendIndent();
+				}
 
 				ConvertTableName(StringBuilder, null, null, cte.Name);
+
 				if (cte.Fields.Count > 3)
 				{
 					StringBuilder.AppendLine();

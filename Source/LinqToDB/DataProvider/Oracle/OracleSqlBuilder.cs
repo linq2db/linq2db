@@ -242,9 +242,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (deleteStatement.With?.Clauses.Count > 0)
 			{
-				BuildStep = Step.DeleteClause;
-				BuildDeleteClause(deleteStatement);
-				InternalBuildSubqueryWithCte(deleteStatement.GetWithClause(), deleteStatement.SelectQuery);
+				BuildDeleteQuery2(deleteStatement);
 			}
 			else
 			{
@@ -252,26 +250,16 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		void InternalBuildSubqueryWithCte(SqlWithClause withClause, SelectQuery selectQuery)
+		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			while (StringBuilder[StringBuilder.Length - 1] == ' ')
-				StringBuilder.Length--;
-
-			StringBuilder.AppendLine();
-			AppendIndent().AppendLine("(");
-
-			++Indent;
-
-			var selectStatement = new SqlSelectStatement(selectQuery) { With = withClause };
-
-			new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter)
-				.BuildSql(0, selectStatement, StringBuilder, Indent);
-
-			--Indent;
-
-			AppendIndent().AppendLine(")");
-		}
-
+			if (statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
+			{
+				BuildInsertQuery2(statement, insertClause, addAlias);
+			}
+			else
+			{
+				base.BuildInsertQuery(statement, insertClause, addAlias);
+			}
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
