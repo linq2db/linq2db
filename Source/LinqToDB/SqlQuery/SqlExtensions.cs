@@ -64,6 +64,16 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public static SqlWithClause GetWithClause(this SqlStatement statement)
+		{
+			switch (statement)
+			{
+				case SqlStatementWithQueryBase query:
+					return query.With;
+			}
+			return null;
+		}
+
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB
 {
 	using Linq;
@@ -12,6 +14,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Database connection abstraction interface.
 	/// </summary>
+	[PublicAPI]
 	public interface IDataContext : IDisposable
 	{
 		/// <summary>

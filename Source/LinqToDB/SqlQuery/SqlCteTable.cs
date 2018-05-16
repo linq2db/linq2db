@@ -8,12 +8,18 @@ namespace LinqToDB.SqlQuery
 	public class SqlCteTable : SqlTable
 	{
 		[JetBrains.Annotations.NotNull]
-		public          CteClause Cte  { get; }
+		public          CteClause Cte  { get; private set; }
 
 		public override string    Name
 		{
-			get => Cte.Name ?? base.Name;
+			get => Cte?.Name ?? base.Name;
 			set => base.Name = value;
+		}
+
+		public override string    PhysicalName
+		{
+			get => Cte?.Name ?? base.PhysicalName;
+			set => base.PhysicalName = value;
 		}
 
 		public SqlCteTable(
@@ -27,6 +33,19 @@ namespace LinqToDB.SqlQuery
 			: base(id, cte.Name, alias, string.Empty, string.Empty, cte.Name, cte.ObjectType, null, fields, SqlTableType.Cte, null)
 		{
 			Cte = cte ?? throw new ArgumentNullException(nameof(cte));
+		}
+
+		internal SqlCteTable(int id, string alias, SqlField[] fields)
+			: base(id, null, alias, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null)
+		{
+		}
+
+		internal void SetDelayedCteObject([JetBrains.Annotations.NotNull] CteClause cte)
+		{
+			Cte          = cte ?? throw new ArgumentNullException(nameof(cte));
+			Name         = cte.Name;
+			PhysicalName = cte.Name;
+			ObjectType   = cte.ObjectType;
 		}
 
 		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)

@@ -11,10 +11,12 @@ using System.Runtime.CompilerServices;
 using System.Xml;
 
 using JetBrains.Annotations;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Extensions
 {
+	using Expressions;
+
+	[PublicAPI]
 	public static class ReflectionExtensions
 	{
 		#region Type extensions

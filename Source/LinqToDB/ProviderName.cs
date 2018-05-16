@@ -1,11 +1,14 @@
 ﻿using System;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB
 {
 #pragma warning disable 1574
 	/// <summary>
 	/// Default names for providers.
 	/// </summary>
+	[PublicAPI]
 	public static class ProviderName
 	{
 		/// <summary>
