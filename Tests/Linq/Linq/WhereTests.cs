@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -1249,6 +1252,93 @@ namespace Tests.Linq
 					db.Types2
 						.Where(_ => _.DateTimeValue.Value.Date == new DateTime(2009, 9, 20).Date)
 						.Select(_ => _));
+			}
+		}
+
+		class WhereCases
+		{
+			[PrimaryKey]
+			public int Id{ get; set; }
+			[Column]
+			public bool BoolValue { get; set; }
+			[Column]
+			public bool? NullableBoolValue { get; set; }
+
+			public static readonly IEqualityComparer<WhereCases> Comparer = Tools.ComparerBuilder<WhereCases>.GetEqualityComparer();
+		}
+
+		[Test, Combinatorial, Ignore("Bug")]
+		public void WhereBooleanTest1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new[]
+			{
+				new WhereCases { Id = 1,  BoolValue = true,  NullableBoolValue = null  },
+				new WhereCases { Id = 2,  BoolValue = true,  NullableBoolValue = true  },
+				new WhereCases { Id = 3,  BoolValue = true,  NullableBoolValue = null  },
+
+				new WhereCases { Id = 11, BoolValue = false, NullableBoolValue = null  },
+				new WhereCases { Id = 12, BoolValue = false, NullableBoolValue = false },
+				new WhereCases { Id = 13, BoolValue = false, NullableBoolValue = null  },
+			}))
+			{
+				AreEqual(
+					table.ToList().Where(t => !(!t.BoolValue && t.NullableBoolValue == false)),
+					table.         Where(t => !(!t.BoolValue && t.NullableBoolValue == false)));
+			}
+		}
+
+		[Test, Combinatorial]
+		public void WhereBooleanTest2([DataSources] string context)
+		{
+			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases,bool>> predicate)
+			{
+				var exp = expected.Where(predicate.Compile());
+				var act = actual.  Where(predicate);
+				AreEqual(exp, act, WhereCases.Comparer);
+			}
+
+			void AreEqualLocalPredicate(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases,bool>> predicate, Expression<Func<WhereCases,bool>> localPredicate)
+			{
+				AreEqual(expected.Where(localPredicate.Compile()), actual.Where(predicate), WhereCases.Comparer);
+			}
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new[]
+			{
+				new WhereCases { Id = 1,  BoolValue = true,  NullableBoolValue = null  },
+				new WhereCases { Id = 2,  BoolValue = true,  NullableBoolValue = true  },
+				new WhereCases { Id = 3,  BoolValue = true,  NullableBoolValue = null  },
+				new WhereCases { Id = 4,  BoolValue = true,  NullableBoolValue = true  },
+				new WhereCases { Id = 5,  BoolValue = true,  NullableBoolValue = true  },
+
+				new WhereCases { Id = 11, BoolValue = false, NullableBoolValue = null  },
+				new WhereCases { Id = 12, BoolValue = false, NullableBoolValue = false },
+				new WhereCases { Id = 13, BoolValue = false, NullableBoolValue = null  },
+				new WhereCases { Id = 14, BoolValue = false, NullableBoolValue = false },
+				new WhereCases { Id = 15, BoolValue = false, NullableBoolValue = false },
+			}))
+			{
+				var local = table.ToArray();
+
+				AreEqualLocal(local, table, t => !t.BoolValue && t.Id > 0);
+				AreEqualLocal(local, table, t => !(t.BoolValue != true) && t.Id > 0);
+				AreEqualLocal(local, table, t => t.BoolValue == true && t.Id > 0);
+				AreEqualLocal(local, table, t => t.BoolValue != true && t.Id > 0);
+				AreEqualLocal(local, table, t => t.BoolValue == false && t.Id > 0);
+				AreEqualLocalPredicate(local, table,
+					t => !t.NullableBoolValue.Value && t.Id > 0,
+					t => (!t.NullableBoolValue.HasValue || !t.NullableBoolValue.Value) && t.Id > 0);
+				AreEqualLocal(local, table, t => !(t.NullableBoolValue != true) && t.Id > 0);
+				AreEqualLocal(local, table, t => t.NullableBoolValue == true && t.Id > 0);
+
+				AreEqualLocal(local, table, t => (!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
+				AreEqualLocal(local, table, t => !(!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
+
+				AreEqualLocal(local, table, t => (!t.BoolValue && t.NullableBoolValue == false) && t.Id > 0);
+
+				//TODO: looks like bug in Query provider for IEnumerable
+				//AreEqualLocal(local, table, t => !(!t.BoolValue && t.NullableBoolValue == false) && t.Id > 0);
 			}
 		}
 	}

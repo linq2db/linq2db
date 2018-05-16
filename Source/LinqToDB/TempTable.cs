@@ -207,11 +207,11 @@ namespace LinqToDB
 
 		#region ITable<T> implementation
 
-		string ITable<T>.DatabaseName => _table.DatabaseName;
-		string ITable<T>.SchemaName   => _table.SchemaName;
-		string ITable<T>.TableName    => _table.TableName;
+		public string DatabaseName => _table.DatabaseName;
+		public string SchemaName   => _table.SchemaName;
+		public string TableName    => _table.TableName;
 
-		string ITable<T>.GetTableName()
+		public string GetTableName()
 		{
 			return _table.GetTableName();
 		}

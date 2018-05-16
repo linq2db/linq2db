@@ -1,7 +1,9 @@
 ﻿using LinqToDB;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using LinqToDB.Data;
 using System.Threading;
 using Tests.Model;
 
@@ -174,6 +176,29 @@ namespace Tests
 				db.DropTable<T>(tableName);
 				return new TempTable<T>(db, tableName);
 			}
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName, IEnumerable<T> items)
+		{
+			var table = CreateLocalTable<T>(db, tableName);
+
+			if (db is DataConnection)
+				using (new DisableLogging())
+					table.Copy(items
+						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
+						);
+			else
+				using (new DisableLogging())
+					foreach (var item in items)
+						db.Insert(item, table.TableName);
+
+
+			return table;
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
+		{
+			return CreateLocalTable(db, null, items);
 		}
 	}
 }

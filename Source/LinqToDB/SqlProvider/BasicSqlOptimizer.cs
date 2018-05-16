@@ -1240,6 +1240,7 @@ namespace LinqToDB.SqlProvider
 
 				newDeleteStatement.SelectQuery.From.Table(copy).Where.Exists(deleteStatement.SelectQuery);
 				newDeleteStatement.Parameters.AddRange(deleteStatement.Parameters);
+				newDeleteStatement.With = deleteStatement.With;
 
 				deleteStatement.Parameters.Clear();
 
@@ -1293,6 +1294,7 @@ namespace LinqToDB.SqlProvider
 
 					newUpdateStatement.Parameters.AddRange(updateStatement.Parameters);
 					newUpdateStatement.Update.Table = updateStatement.Update.Table;
+					newUpdateStatement.With         = updateStatement.With;
 
 					updateStatement.Parameters.Clear();
 					updateStatement.Update.Items.Clear();

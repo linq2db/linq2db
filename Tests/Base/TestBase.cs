@@ -1130,12 +1130,12 @@ namespace Tests
 		}
 	}
 
-	public abstract class DataSourcesBase : DataAttribute, IParameterDataSource
+	public abstract class DataSourcesBaseAttribute : DataAttribute, IParameterDataSource
 	{
 		public bool     IncludeLinqService { get; }
 		public string[] Providers          { get; }
 
-		protected DataSourcesBase(bool includeLinqService, string[] providers)
+		protected DataSourcesBaseAttribute(bool includeLinqService, string[] providers)
 		{
 			IncludeLinqService = includeLinqService;
 			Providers = providers;
@@ -1153,13 +1153,13 @@ namespace Tests
 	}
 
 	[AttributeUsage(AttributeTargets.Parameter)]
-	public class DataSources : DataSourcesBase
+	public class DataSourcesAttribute : DataSourcesBaseAttribute
 	{
-		public DataSources(params string[] excludeProviders) : base(true, excludeProviders)
+		public DataSourcesAttribute(params string[] excludeProviders) : base(true, excludeProviders)
 		{
 		}
 
-		public DataSources(bool includeLinqService, params string[] excludeProviders) : base(includeLinqService, excludeProviders)
+		public DataSourcesAttribute(bool includeLinqService, params string[] excludeProviders) : base(includeLinqService, excludeProviders)
 		{
 		}
 
@@ -1170,13 +1170,13 @@ namespace Tests
 	}
 
 	[AttributeUsage(AttributeTargets.Parameter)]
-	public class IncludeDataSources : DataSourcesBase
+	public class IncludeDataSourcesAttribute : DataSourcesBaseAttribute
 	{
-		public IncludeDataSources(params string[] includeProviders) : base(true, includeProviders)
+		public IncludeDataSourcesAttribute(params string[] includeProviders) : base(true, includeProviders)
 		{
 		}
 
-		public IncludeDataSources(bool includeLinqService, params string[] includeProviders) : base(includeLinqService, includeProviders)
+		public IncludeDataSourcesAttribute(bool includeLinqService, params string[] includeProviders) : base(includeLinqService, includeProviders)
 		{
 		}
 

@@ -1,11 +1,14 @@
 ﻿using System;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB
 {
 	/// <summary>
 	/// Explicit <see cref="DataContext"/> connection reuse scope.
 	/// See <see cref="DataContext.KeepConnectionAlive"/> for more details.
 	/// </summary>
+	[PublicAPI]
 	public class KeepConnectionAliveScope : IDisposable
 	{
 		readonly DataContext _dataContext;

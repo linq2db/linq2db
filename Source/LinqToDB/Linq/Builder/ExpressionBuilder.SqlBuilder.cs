@@ -2598,6 +2598,10 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 			}
+			else
+			{
+
+			}
 
 			return null;
 		}
