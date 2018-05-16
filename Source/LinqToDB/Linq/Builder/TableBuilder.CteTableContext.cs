@@ -17,6 +17,7 @@ namespace LinqToDB.Linq.Builder
 			Expression bodyExpr;
 			IQueryable query = null;
 			string     name  = null;
+			bool       isRecursive = false;
 
 			switch (methodCall.Arguments.Count)
 			{
@@ -31,12 +32,13 @@ namespace LinqToDB.Linq.Builder
 					query    = methodCall.Arguments[0].EvaluateExpression() as IQueryable;
 					bodyExpr = methodCall.Arguments[1].Unwrap();
 					name     = methodCall.Arguments[2].EvaluateExpression() as string;
+					isRecursive = true;
 					break;
 				default:
 					throw new InvalidOperationException();
 			}
 
-			builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArgumentsEx()[0], name));
+			builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArgumentsEx()[0], isRecursive, name));
 
 			var cte = builder.BuildCte(bodyExpr,
 				cteClause =>
@@ -45,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 					var sequence  = builder.BuildSequence(info);
 
 					if (cteClause == null)
-						cteClause = new CteClause(sequence.SelectQuery, bodyExpr.Type.GetGenericArgumentsEx()[0], name);
+						cteClause = new CteClause(sequence.SelectQuery, bodyExpr.Type.GetGenericArgumentsEx()[0], isRecursive, name);
 					else
 					{
 						cteClause.Body = sequence.SelectQuery;
@@ -65,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 		static CteTableContext BuildCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var queryable    = (IQueryable)buildInfo.Expression.EvaluateExpression();
-			var cteInfo      = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, ""));
+			var cteInfo      = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
 			var cteBuildInfo = new BuildInfo(buildInfo, cteInfo.Item3, buildInfo.SelectQuery);
 			var cteContext   = new CteTableContext(builder, cteBuildInfo, cteInfo.Item1, cteInfo.Item3);
 
@@ -77,8 +79,6 @@ namespace LinqToDB.Linq.Builder
 			private readonly CteClause     _cte;
 			private readonly Expression    _cteExpression;
 			private          IBuildContext _cteQueryContext;
-
-			private bool     _calculatingIndex;
 
 			public CteTableContext(ExpressionBuilder builder, BuildInfo buildInfo, CteClause cte, Expression cteExpression)
 				: base(builder, buildInfo, new SqlCteTable(builder.MappingSchema, cte))
@@ -92,49 +92,37 @@ namespace LinqToDB.Linq.Builder
 				return _cteQueryContext ?? (_cteQueryContext = Builder.GetCteContext(_cteExpression));
 			}
 
-			public override Expression BuildExpression(Expression expression, int level, bool enforceServerSide)
-			{
-				var queryContext = GetQueryContext();
-				if (queryContext == null)
-					return base.BuildExpression(expression, level, enforceServerSide);
-				return queryContext.BuildExpression(expression, level, enforceServerSide);
-			}
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				var queryContext = GetQueryContext();
-				if (queryContext == null)
-					base.BuildQuery(query, queryParameter);
-				else
-					queryContext.BuildQuery(query, queryParameter);
-			}
-
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 			{
-				var info = base.ConvertToSql(expression, level, flags);
+				var queryContext = GetQueryContext();
+				if (queryContext == null)
+					return base.ConvertToSql(expression, level, flags);
 
-				if (!_calculatingIndex)
+				SqlInfo[] ConverConvertToSqlAndRegister(Expression exp, int lvl, ConvertFlags fl)
 				{
-					_calculatingIndex = true;
+					var baseInfos = base.ConvertToSql(exp, lvl, fl);
+					var subInfos = queryContext.ConvertToIndex(exp, lvl, fl);
 
-					var queryContext = GetQueryContext();
-					// If Field is needed we have to populate it in CTE
-					if (queryContext != null)
+					var pairs = from bi in baseInfos
+						from si in subInfos.Where(si =>
+							si.Members.Count == bi.Members.Count && si.Members.Count == 1 && si.Members[0] == bi.Members[0])
+						select new { bi, si };
+
+					foreach (var pair in pairs)
 					{
-						var subInfo = queryContext.ConvertToSql(expression, level, flags);
-						if (subInfo.Any(si => si.Index < 0))
-							subInfo = queryContext.ConvertToIndex(expression, level, flags);
-
-						for (int i = 0; i < info.Length; i++)
-						{
-							_cte.RegisterFieldMapping((SqlField)info[i].Sql, subInfo[i].Index);
-						}
+						_cte.RegisterFieldMapping((SqlField)pair.bi.Sql);
 					}
 
-					_calculatingIndex = false;
+					return baseInfos;
 				}
 
-				return info;
+				if (_cte.IsRecursive)
+				{
+					ConverConvertToSqlAndRegister(null, 0, ConvertFlags.All);
+				}
+
+				var result = ConverConvertToSqlAndRegister(expression, level, flags);
+				return result;
 			}
 		}
 	}

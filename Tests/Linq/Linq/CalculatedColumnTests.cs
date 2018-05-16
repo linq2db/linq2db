@@ -48,6 +48,17 @@ namespace Tests.Linq
 			public static IEqualityComparer<PersonCalculated> Comparer = Tools.ComparerBuilder<PersonCalculated>.GetEqualityComparer();
 		}
 
+		[Table("Doctor")]
+		public class DoctorCalculated
+		{
+			[Column, PrimaryKey, Identity] public int    PersonID { get; set; } // Long
+			[Column(Length = 50), NotNull] public string Taxonomy { get; set; } // text(50)
+
+			// Many associsation for test
+			[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull = false, KeyName="PersonDoctor", BackReferenceName="PersonDoctor")]
+			public IEnumerable<PersonCalculated> PersonDoctor { get; set; }
+		}
+
 		[Test, DataContextSource]
 		public void CalculatedColumnTest1(string context)
 		{
@@ -103,5 +114,22 @@ namespace Tests.Linq
 				Assert.That(l[0].t.DoctorCount,   Is.EqualTo(l[0].cnt));
 			}
 		}
+
+		[Test, DataContextSource]
+		public void CalculatedColumnTest4(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					db.GetTable<DoctorCalculated>()
+						.SelectMany(d => d.PersonDoctor);
+				var l = q.ToList();
+
+				Assert.That(l,                  Is.Not.Empty);
+				Assert.That(l[0].AsSqlFullName, Is.Not.Null);
+				Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
+			}
+		}
+
 	}
 }

@@ -237,6 +237,7 @@ namespace LinqToDB
 		#endregion
 
 		#region Scalar Select
+
 		/// <summary>
 		/// Loads scalar value or record from database without explicit table source.
 		/// Could be usefull for function calls, querying of database variables or properties, subqueries, execution of code on server side.
@@ -2732,9 +2733,9 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> Join<TSource>(
-			[NotNull]           this IQueryable<TSource>        source,
-			[SqlQueryDependent] SqlJoinType                     joinType,
-			[NotNull]           Expression<Func<TSource, bool>> predicate)
+			[NotNull]                this IQueryable<TSource>        source,
+			[SqlQueryDependent]      SqlJoinType                     joinType,
+			[NotNull, InstantHandle] Expression<Func<TSource, bool>> predicate)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
@@ -2745,8 +2746,8 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(Join, source, joinType, predicate),
 					new[]
 					{
-						source.Expression, 
-						Expression.Constant(joinType), 
+						source.Expression,
+						Expression.Constant(joinType),
 						Expression.Quote(predicate)
 					}));
 		}
@@ -2766,11 +2767,11 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TResult> Join<TOuter, TInner, TResult>(
-			[NotNull]           this IQueryable<TOuter>                   outer,
-			[NotNull]           IQueryable<TInner>                        inner,
-			[SqlQueryDependent] SqlJoinType                               joinType,
-			[NotNull]           Expression<Func<TOuter, TInner, bool>>    predicate,
-			[NotNull]           Expression<Func<TOuter, TInner, TResult>> resultSelector)
+			[NotNull]                this IQueryable<TOuter>                   outer,
+			[NotNull]                IQueryable<TInner>                        inner,
+			[SqlQueryDependent]      SqlJoinType                               joinType,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, TResult>> resultSelector)
 		{
 			if (outer          == null) throw new ArgumentNullException(nameof(outer));
 			if (inner          == null) throw new ArgumentNullException(nameof(inner));
@@ -2783,10 +2784,10 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(Join, outer, inner, joinType, predicate, resultSelector),
 					new[]
 					{
-						outer.Expression, 
-						inner.Expression, 
+						outer.Expression,
+						inner.Expression,
 						Expression.Constant(joinType),
-						Expression.Quote(predicate), 
+						Expression.Quote(predicate),
 						Expression.Quote(resultSelector)
 					}));
 		}
@@ -2802,8 +2803,8 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> InnerJoin<TSource>(
-			[NotNull] this IQueryable<TSource>        source,
-			[NotNull] Expression<Func<TSource, bool>> predicate)
+			[NotNull]                this IQueryable<TSource>        source,
+			[NotNull, InstantHandle] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Inner, predicate);
 		}
@@ -2822,10 +2823,10 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TResult> InnerJoin<TOuter, TInner, TResult>(
-			[NotNull] this IQueryable<TOuter>                   outer,
-			[NotNull] IQueryable<TInner>                        inner,
-			[NotNull] Expression<Func<TOuter, TInner, bool>>    predicate,
-			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+			[NotNull]                this IQueryable<TOuter>                   outer,
+			[NotNull]                IQueryable<TInner>                        inner,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, TResult>> resultSelector)
 		{
 			return Join(outer, inner, SqlJoinType.Inner, predicate, resultSelector);
 		}
@@ -2840,8 +2841,8 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> LeftJoin<TSource>(
-			[NotNull] this IQueryable<TSource>        source,
-			[NotNull] Expression<Func<TSource, bool>> predicate)
+			[NotNull]                this IQueryable<TSource>        source,
+			[NotNull, InstantHandle] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Left, predicate);
 		}
@@ -2860,10 +2861,10 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TResult> LeftJoin<TOuter, TInner, TResult>(
-			[NotNull] this IQueryable<TOuter>                   outer,
-			[NotNull] IQueryable<TInner>                        inner,
-			[NotNull] Expression<Func<TOuter, TInner, bool>>    predicate,
-			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+			[NotNull]                this IQueryable<TOuter>                   outer,
+			[NotNull]                IQueryable<TInner>                        inner,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, TResult>> resultSelector)
 		{
 			return Join(outer, inner, SqlJoinType.Left, predicate, resultSelector);
 		}
@@ -2878,8 +2879,8 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> RightJoin<TSource>(
-			[NotNull] this IQueryable<TSource>        source,
-			[NotNull] Expression<Func<TSource, bool>> predicate)
+			[NotNull]                this IQueryable<TSource>        source,
+			[NotNull, InstantHandle] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Right, predicate);
 		}
@@ -2898,10 +2899,10 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TResult> RightJoin<TOuter, TInner, TResult>(
-			[NotNull] this IQueryable<TOuter>                   outer,
-			[NotNull] IQueryable<TInner>                        inner,
-			[NotNull] Expression<Func<TOuter, TInner, bool>>    predicate,
-			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+			[NotNull]                this IQueryable<TOuter>                   outer,
+			[NotNull]                IQueryable<TInner>                        inner,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, TResult>> resultSelector)
 		{
 			return Join(outer, inner, SqlJoinType.Right, predicate, resultSelector);
 		}
@@ -2916,8 +2917,8 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> FullJoin<TSource>(
-			[NotNull] this IQueryable<TSource>        source,
-			[NotNull] Expression<Func<TSource, bool>> predicate)
+			[NotNull]                this IQueryable<TSource>        source,
+			[NotNull, InstantHandle] Expression<Func<TSource, bool>> predicate)
 		{
 			return Join(source, SqlJoinType.Full, predicate);
 		}
@@ -2936,10 +2937,10 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TResult> FullJoin<TOuter, TInner, TResult>(
-			[NotNull] this IQueryable<TOuter>                   outer,
-			[NotNull] IQueryable<TInner>                        inner,
-			[NotNull] Expression<Func<TOuter, TInner, bool>>    predicate,
-			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+			[NotNull]                this IQueryable<TOuter>                   outer,
+			[NotNull]                IQueryable<TInner>                        inner,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, bool>>    predicate,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, TResult>> resultSelector)
 		{
 			return Join(outer, inner, SqlJoinType.Full, predicate, resultSelector);
 		}
@@ -2957,9 +2958,9 @@ namespace LinqToDB
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TResult> CrossJoin<TOuter, TInner, TResult>(
-			[NotNull] this IQueryable<TOuter>                   outer,
-			[NotNull] IQueryable<TInner>                        inner,
-			[NotNull] Expression<Func<TOuter, TInner, TResult>> resultSelector)
+			[NotNull]                this IQueryable<TOuter>                   outer,
+			[NotNull]                IQueryable<TInner>                        inner,
+			[NotNull, InstantHandle] Expression<Func<TOuter, TInner, TResult>> resultSelector)
 		{
 			if (outer          == null) throw new ArgumentNullException(nameof(outer));
 			if (inner          == null) throw new ArgumentNullException(nameof(inner));
@@ -2971,8 +2972,8 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(CrossJoin, outer, inner, resultSelector),
 					new[]
 					{
-						outer.Expression, 
-						inner.Expression, 
+						outer.Expression,
+						inner.Expression,
 						Expression.Quote(resultSelector)
 					}));
 		}
@@ -2986,10 +2987,15 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
+		/// <summary>
+		/// Specifies a temporary named result set, known as a common table expression (CTE).
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <returns>Common table expression.</returns>
 		[Pure]
 		[LinqTunnel]
-		public static IQueryable<TSource> AsCte<TSource>(
-			[NotNull] this IQueryable<TSource> source)
+		public static IQueryable<TSource> AsCte<TSource>([NotNull] this IQueryable<TSource> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -3000,6 +3006,13 @@ namespace LinqToDB
 					source.Expression));
 		}
 
+		/// <summary>
+		/// Specifies a temporary named result set, known as a common table expression (CTE).
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="name">Common table expression name.</param>
+		/// <returns>Common table expression.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsCte<TSource>(
@@ -3039,9 +3052,9 @@ namespace LinqToDB
 		/// Gets or sets callback for preprocessing query before execution.
 		/// Useful for intercepting queries.
 		/// </summary>
-		public static Func<IQueryable, IQueryable> ProcessSourceQueryable { get; set; } 
+		public static Func<IQueryable, IQueryable> ProcessSourceQueryable { get; set; }
 
-		public static IExtensionsAdapter ExtensionsAdapter { get; set; } 
+		public static IExtensionsAdapter ExtensionsAdapter { get; set; }
 
 		#endregion
 	}
