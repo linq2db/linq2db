@@ -9,6 +9,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture, Category("MapValue")]
@@ -35,6 +36,14 @@ namespace Tests.Linq
 		enum TestEnum3
 		{
 			Value1 = 3,
+			Value2,
+		}
+
+		enum UndefinedEnum
+		{
+			[MapValue(ProviderName.Access, 11), MapValue(11L)]
+			Value1,
+			[MapValue(ProviderName.Access, 12), MapValue(12L)]
 			Value2,
 		}
 
@@ -74,6 +83,13 @@ namespace Tests.Linq
 			[PrimaryKey, Column("ID")] public int  Id;
 			[Column("BigIntValue")]    public long TestField;
 			[Column("IntValue")]       public int  Int32Field;
+		}
+
+		[Table("LinqDataTypes")]
+		class UndefinedValueTest
+		{
+			[PrimaryKey, Column("ID")] public int?          Id;
+			[Column("BigIntValue")]    public UndefinedEnum TestField;
 		}
 
 		class Cleaner : IDisposable
@@ -1673,6 +1689,52 @@ namespace Tests.Linq
 				Assert.AreEqual(RID + 3, rawRecords[3].Id);
 				Assert.IsNull(records[3].Value);
 				Assert.IsNull(rawRecords[3].Int32);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void EnumMappingWriteUndefinedValue(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (new Cleaner(db))
+				{
+					db.GetTable<UndefinedValueTest>().Insert(() => new UndefinedValueTest
+					{
+						Id = RID,
+						TestField = (UndefinedEnum)5
+					});
+
+					var result = db.GetTable<RawTable>()
+						.Select(r => new { r.Id, r.TestField })
+						.Where(r => r.Id == RID)
+						.ToList();
+
+					Assert.AreEqual(1, result.Count);
+					Assert.AreEqual(5, result[0].TestField);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void EnumMappingReadUndefinedValue(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				using (new Cleaner(db))
+				{
+					db.GetTable<RawTable>().Insert(() => new RawTable
+					{
+						Id = RID,
+						TestField = 5
+					});
+
+					Assert.Throws<LinqToDBConvertException>(() =>
+						db.GetTable<UndefinedValueTest>()
+							.Select(r => new { r.Id, r.TestField })
+							.Where(r => r.Id == RID)
+							.ToList());
+				}
 			}
 		}
 	}
