@@ -309,8 +309,14 @@ namespace LinqToDB.DataProvider
 
 			Command
 				.AppendLine()
-				.Append("\tFROM ")
-				.AppendLine(TargetTableName)
+				.Append("\tFROM ");
+
+			if (FakeSourceTable != null)
+				AddFakeSourceTableName();
+			else // we don't select anything, so it is ok to use target table
+				Command.AppendLine(TargetTableName);
+
+			Command
 				.AppendLine("\tWHERE 1 = 0")
 				.Append(") ")
 				.AppendLine((string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias));
