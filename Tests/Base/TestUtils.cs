@@ -166,7 +166,10 @@ namespace Tests
 			var table = CreateLocalTable<T>(db, tableName);
 
 			if (db is DataConnection)
-				table.Copy(items);
+				using (new DisableLogging())
+					table.Copy(items
+						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
+						);
 			else
 				using (new DisableLogging())
 					foreach (var item in items)
@@ -174,6 +177,11 @@ namespace Tests
 
 
 			return table;
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
+		{
+			return CreateLocalTable(db, null, items);
 		}
 	}
 }
