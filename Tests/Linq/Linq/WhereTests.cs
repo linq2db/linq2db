@@ -1267,7 +1267,7 @@ namespace Tests.Linq
 			public static readonly IEqualityComparer<WhereCases> Comparer = Tools.ComparerBuilder<WhereCases>.GetEqualityComparer();
 		}
 
-		[Test, Combinatorialб Ignore]
+		[Test, Combinatorial, Ignore("Bug")]
 		public void WhereBooleanTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
