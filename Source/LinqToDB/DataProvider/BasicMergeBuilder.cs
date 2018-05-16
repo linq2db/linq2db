@@ -291,7 +291,7 @@ namespace LinqToDB.DataProvider
 
 			var columnTypes = GetSourceColumnTypes();
 
-			for (var i = 0; i < TargetDescriptor.Columns.Count; i++)
+			for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
 			{
 				if (i > 0)
 					Command.Append(", ");
@@ -304,7 +304,7 @@ namespace LinqToDB.DataProvider
 
 				Command
 					.Append(" ")
-					.Append(CreateSourceColumnAlias(TargetDescriptor.Columns[i].ColumnName, true));
+					.Append(CreateSourceColumnAlias(_sourceDescriptor.Columns[i].ColumnName, true));
 			}
 
 			Command
