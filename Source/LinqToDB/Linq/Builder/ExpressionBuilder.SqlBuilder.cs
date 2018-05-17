@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -2457,21 +2458,29 @@ namespace LinqToDB.Linq.Builder
 
 						BuildSearchCondition(context, e.Operand, notCondition.Conditions);
 
-						if (notCondition.Conditions.Count == 1 && notCondition.Conditions[0].Predicate is SqlPredicate.NotExpr)
+						var isNot = true;
+						var sqlCondition = notCondition.Conditions[0];
+						if (notCondition.Conditions.Count == 1)
 						{
-							var p           = notCondition.Conditions[0].Predicate as SqlPredicate.NotExpr;
-							p.IsNot         = !p.IsNot;
-
-							var checkIsNull = CheckIsNull(notCondition.Conditions[0].Predicate, true);
-
-							conditions.Add(checkIsNull ?? notCondition.Conditions[0]);
+							if (sqlCondition.Predicate is SqlPredicate.NotExpr p)
+							{
+								p.IsNot = !p.IsNot;
+								var checkIsNullLocal = CheckIsNull(sqlCondition.Predicate, true);
+								conditions.Add(checkIsNullLocal ?? sqlCondition);
+								break;
+							}
+							else 
+							{
+								sqlCondition.Predicate = BasicSqlOptimizer.OptimizePredicate(sqlCondition.Predicate, ref isNot);
+								var checkIsNullLocal   = CheckIsNull(sqlCondition.Predicate, isNot);
+								conditions.Add(checkIsNullLocal ?? new SqlCondition(isNot, sqlCondition.Predicate));
+								break;
+							}
 						}
-						else
-						{
-							var checkIsNull = CheckIsNull(notCondition.Conditions[0].Predicate, true);
 
-							conditions.Add(checkIsNull ?? new SqlCondition(true, notCondition));
-						}
+						var checkIsNull = CheckIsNull(sqlCondition.Predicate, true);
+
+						conditions.Add(checkIsNull ?? new SqlCondition(true, notCondition));
 
 						break;
 					}
@@ -2587,9 +2596,12 @@ namespace LinqToDB.Linq.Builder
 						{
 							var checkNullPredicate = new SqlPredicate.IsNull(nullableField, false);
 
+							var perdicateIsNot = isNot && inList == null;
+							predicate = BasicSqlOptimizer.OptimizePredicate(predicate, ref perdicateIsNot);
+
 							var orCondition = new SqlSearchCondition(
-								new SqlCondition(false,                   checkNullPredicate),
-								new SqlCondition(isNot && inList == null, predicate));
+								new SqlCondition(false,          checkNullPredicate),
+								new SqlCondition(perdicateIsNot, predicate));
 
 							orCondition.Conditions[0].IsOr = true;
 

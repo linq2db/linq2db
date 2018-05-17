@@ -974,6 +974,24 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		internal static ISqlPredicate OptimizePredicate(ISqlPredicate predicate, ref bool isNot)
+		{
+			if (isNot)
+			{
+				if (predicate is SqlPredicate.ExprExpr expr)
+				{
+					var newOperator = InvertOperator(expr.Operator, false);
+					if (newOperator != expr.Operator)
+					{ 
+						predicate = new SqlPredicate.ExprExpr(expr.Expr1, newOperator, expr.Expr2);
+						isNot     = false;
+					}
+				}
+			}
+
+			return predicate;
+		}
+
 		ISqlPredicate OptimizeCase(SelectQuery selectQuery, SqlPredicate.ExprExpr expr)
 		{
 			var value = expr.Expr1 as SqlValue;
