@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.SqlProvider
 {
@@ -60,5 +61,10 @@ namespace LinqToDB.SqlProvider
 
 			return (TakeHintsSupported.Value & hints) == hints;
 		}
+
+		/// <summary>
+		/// Flags for use by external providers
+		/// </summary>
+		public List<string> CustomFlags => new List<string>();
 	}
 }
