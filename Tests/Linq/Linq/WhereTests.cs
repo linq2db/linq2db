@@ -1284,6 +1284,8 @@ namespace Tests.Linq
 				new WhereCases { Id = 13, BoolValue = false, NullableBoolValue = null  },
 			}))
 			{
+				// "t.NullableBoolValue == false" generated as "field = 0"
+				// but should be "field is not null and field = 0"
 				AreEqual(
 					table.ToList().Where(t => !(!t.BoolValue && t.NullableBoolValue == false)),
 					table.         Where(t => !(!t.BoolValue && t.NullableBoolValue == false)));
