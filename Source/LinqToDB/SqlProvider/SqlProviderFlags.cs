@@ -3,6 +3,7 @@
 namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
+	using System.Collections.Generic;
 
 	public class SqlProviderFlags
 	{
@@ -60,5 +61,10 @@ namespace LinqToDB.SqlProvider
 
 			return (TakeHintsSupported.Value & hints) == hints;
 		}
+
+		/// <summary>
+		/// Flags for use by external providers.
+		/// </summary>
+		public List<string> CustomFlags { get; } = new List<string>();
 	}
 }
