@@ -19,13 +19,10 @@ namespace Tests.xUpdate
 {
 	using Model;
 	using System.Collections.Generic;
-	using System.Threading;
 
 	[TestFixture]
 	public class InsertTests : TestBase
 	{
-		private static int _cnt;
-
 		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DistinctInsert1(string context)
 		{
@@ -1640,7 +1637,7 @@ namespace Tests.xUpdate
 		public void InsertOrReplaceByTableName(string context)
 		{
 			const string schemaName = null;
-			var tableName  = "xxPatient" + Interlocked.Increment(ref _cnt).ToString();
+			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
 
 			using (var db = GetDataContext(context))
 			{
@@ -1686,7 +1683,7 @@ namespace Tests.xUpdate
 		public async Task InsertOrReplaceByTableNameAsync(string context)
 		{
 			const string schemaName = null;
-			var tableName  = "xxPatient" + Interlocked.Increment(ref _cnt).ToString();
+			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
 
 			using (var db = GetDataContext(context))
 			{

@@ -92,6 +92,15 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
+		/* If this test fails for you with
+		 
+		 "ORA-22288: file or LOB operation FILEOPEN failed
+		 The system cannot find the path specified."
+
+			Copy file Data\Oracle\bfile.txt to C:\DataFiles on machine with oracle server
+			(of course only if it is Windows machine)
+
+		*/
 		[Test, OracleDataContext]
 		public void TestDataTypes(string context)
 		{

@@ -1258,17 +1258,19 @@ namespace Tests.Linq
 		class WhereCases
 		{
 			[PrimaryKey]
-			public int Id{ get; set; }
+			public int Id                  { get; set; }
 			[Column]
-			public bool BoolValue { get; set; }
+			[Column(Configuration = ProviderName.DB2, DbType = "smallint")]
+			public bool BoolValue          { get; set; }
 			[Column]
+			[Column(Configuration = ProviderName.DB2, DbType = "smallint")]
 			public bool? NullableBoolValue { get; set; }
 
 			public static readonly IEqualityComparer<WhereCases> Comparer = Tools.ComparerBuilder<WhereCases>.GetEqualityComparer();
 		}
 
-		[Test, Combinatorial, Ignore("Bug")]
-		public void WhereBooleanTest1([DataSources] string context)
+		[Test, Combinatorial, ActiveIssue("Bug")]
+		public void WhereBooleanTest1([DataSources(ProviderName.Sybase, ProviderName.Firebird, TestProvName.Firebird3)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new[]
@@ -1282,6 +1284,8 @@ namespace Tests.Linq
 				new WhereCases { Id = 13, BoolValue = false, NullableBoolValue = null  },
 			}))
 			{
+				// "t.NullableBoolValue == false" generated as "field = 0"
+				// but should be "field is not null and field = 0"
 				AreEqual(
 					table.ToList().Where(t => !(!t.BoolValue && t.NullableBoolValue == false)),
 					table.         Where(t => !(!t.BoolValue && t.NullableBoolValue == false)));
@@ -1289,7 +1293,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void WhereBooleanTest2([DataSources] string context)
+		public void WhereBooleanTest2([DataSources(ProviderName.Sybase, ProviderName.Firebird, TestProvName.Firebird3)] string context)
 		{
 			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases,bool>> predicate)
 			{
