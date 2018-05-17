@@ -38,8 +38,7 @@ No, this is not the donate link. We do need something really more valuable - you
 ## Let's get started
 
 From **NuGet**:
-* `Install-Package linq2db` - .NET
-* `Install-Package linq2db.core` - .NET Core (for versions prior to 2.0)
+* `Install-Package linq2db` - .NET & .NET Core
 
 ## Configuring connection strings
 
