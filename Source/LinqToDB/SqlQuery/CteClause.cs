@@ -14,17 +14,20 @@ namespace LinqToDB.SqlQuery
 		public int                          CteID  { get; } = Interlocked.Increment(ref CteIDCounter);
 		public Dictionary<string, SqlField> Fields { get; } = new Dictionary<string, SqlField>();
 
-		public string      Name       { get; set; }
-		public SelectQuery Body       { get; set; }
-		public Type        ObjectType { get; set; }
+		public string      Name        { get; set; }
+		public SelectQuery Body        { get; set; }
+		public Type        ObjectType  { get; set; }
+		public bool        IsRecursive { get; set; }
 
 		public CteClause(
 			[JetBrains.Annotations.CanBeNull] SelectQuery body,
 			[JetBrains.Annotations.NotNull]   Type        objectType,
-			string name)
+			                                  bool        isRecursive,
+			                                  string      name)
 		{
 			ObjectType = objectType ?? throw new ArgumentNullException(nameof(objectType));
 			Body       = body;
+			IsRecursive = isRecursive;
 			Name       = name;
 		}
 
@@ -53,7 +56,7 @@ namespace LinqToDB.SqlQuery
 
 		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
-			return new CteClause((SelectQuery) Body.Clone(objectTree, doClone), ObjectType, Name);
+			return new CteClause((SelectQuery) Body.Clone(objectTree, doClone), ObjectType, IsRecursive, Name);
 		}
 
 		public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
@@ -63,13 +66,10 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		readonly Dictionary<string, int> _fieldMapping = new Dictionary<string, int>();
-
-		public void RegisterFieldMapping(SqlField field, int columnIndex)
+		public void RegisterFieldMapping(SqlField field)
 		{
-			if (!_fieldMapping.ContainsKey(field.PhysicalName))
+			if (!Fields.ContainsKey(field.PhysicalName))
 			{
-				_fieldMapping[field.PhysicalName] = columnIndex;
 				Fields.Add(field.PhysicalName, new SqlField(field));
 			}
 		}

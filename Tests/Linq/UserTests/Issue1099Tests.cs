@@ -33,9 +33,7 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.DropTable<BackgroundTask>(throwExceptionIfNotExists: false);
-				db.CreateTable<BackgroundTask>();
-				try
+				using (db.CreateLocalTable<BackgroundTask>())
 				{
 					var personId = 1;
 
@@ -60,11 +58,6 @@ namespace Tests.UserTests
 					Assert.AreEqual(2, items[0].DurationID);
 					Assert.AreEqual(3, items[0].ID);
 					Assert.AreEqual(4, items[0].DurationInterval);
-
-				}
-				catch 
-				{
-					db.DropTable<BackgroundTask>(throwExceptionIfNotExists: false);
 				}
 			}
 		}

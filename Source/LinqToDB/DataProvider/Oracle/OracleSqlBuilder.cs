@@ -238,6 +238,30 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
+		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
+		{
+			if (deleteStatement.With?.Clauses.Count > 0)
+			{
+				BuildDeleteQuery2(deleteStatement);
+			}
+			else
+			{
+				base.BuildDeleteQuery(deleteStatement);
+			}
+		}
+
+		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
+		{
+			if (statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
+			{
+				BuildInsertQuery2(statement, insertClause, addAlias);
+			}
+			else
+			{
+				base.BuildInsertQuery(statement, insertClause, addAlias);
+			}
+		}
+
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
 			if (!statement.IsUpdate())

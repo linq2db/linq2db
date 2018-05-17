@@ -92,6 +92,15 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
+		/* If this test fails for you with
+		 
+		 "ORA-22288: file or LOB operation FILEOPEN failed
+		 The system cannot find the path specified."
+
+			Copy file Data\Oracle\bfile.txt to C:\DataFiles on machine with oracle server
+			(of course only if it is Windows machine)
+
+		*/
 		[Test, OracleDataContext]
 		public void TestDataTypes(string context)
 		{
@@ -1933,7 +1942,7 @@ namespace Tests.DataProvider
 		public void Issue723Test2(string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<Issue723Table>(db))
+			using (db.CreateLocalTable<Issue723Table>())
 			{
 				Assert.True(true);
 			}
@@ -1955,7 +1964,7 @@ namespace Tests.DataProvider
 		public void Issue731Test(string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new LocalTable<Issue731Table>(db))
+			using (db.CreateLocalTable<Issue731Table>())
 			{
 				var origin = new Issue731Table()
 				{

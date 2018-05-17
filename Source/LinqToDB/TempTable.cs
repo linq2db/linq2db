@@ -18,13 +18,28 @@ namespace LinqToDB
 	using Linq;
 	using Mapping;
 
+	/// <summary>
+	/// Temporary table. Temporary table is a table, created when you create instance of this class and deleted when
+	/// you dispose it. It uses regular tables even if underlying database supports temporary tables concept.
+	/// </summary>
+	/// <typeparam name="T">Table record mapping class.</typeparam>
 	[PublicAPI]
 	public class TempTable<T> : ITable<T>, IDisposable
 	{
 		readonly ITable<T> _table;
 
+		/// <summary>
+		/// Gets total number of records, inserted into table using BulkCopy.
+		/// </summary>
 		public long TotalCopied;
 
+		/// <summary>
+		/// Creates new temporary table.
+		/// </summary>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			string tableName    = null,
 			string databaseName = null,
@@ -35,6 +50,15 @@ namespace LinqToDB
 			_table = db.CreateTable<T>(tableName, databaseName, schemaName);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using BulkCopy.
+		/// </summary>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="items">Initial records to insert into created table.</param>
+		/// <param name="options">Optional BulkCopy options.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
 			BulkCopyOptions options = null,
@@ -49,6 +73,15 @@ namespace LinqToDB
 			Copy(items, options);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using BulkCopy.
+		/// </summary>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="items">Initial records to insert into created table.</param>
+		/// <param name="options">Optional BulkCopy options.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			string tableName,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
@@ -63,6 +96,15 @@ namespace LinqToDB
 			Copy(items, options);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using data from provided query.
+		/// </summary>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="items">Query to get records to populate created table with initial data.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
 			string tableName    = null,
@@ -78,6 +120,15 @@ namespace LinqToDB
 			Insert(items);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using data from provided query.
+		/// </summary>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="items">Query to get records to populate created table with initial data.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		public TempTable([JetBrains.Annotations.NotNull] IDataContext db,
 			string tableName,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
@@ -93,6 +144,12 @@ namespace LinqToDB
 			Insert(items);
 		}
 
+		/// <summary>
+		/// Insert new records into table using BulkCopy.
+		/// </summary>
+		/// <param name="items">Records to insert into table.</param>
+		/// <param name="options">Optional BulkCopy options.</param>
+		/// <returns>Number of records, inserted into table.</returns>
 		public long Copy(IEnumerable<T> items, BulkCopyOptions options = null)
 		{
 			var count = options != null ?
@@ -106,6 +163,11 @@ namespace LinqToDB
 
 		static ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ConcurrentDictionary<Type,Expression<Func<T,T>>>();
 
+		/// <summary>
+		/// Insert data into table using records, returned by provided query.
+		/// </summary>
+		/// <param name="items">Query with records to insert into temporary table.</param>
+		/// <returns>Number of records, inserted into table.</returns>
 		public long Insert(IQueryable<T> items)
 		{
 			var type = typeof(T);
@@ -145,11 +207,11 @@ namespace LinqToDB
 
 		#region ITable<T> implementation
 
-		string ITable<T>.DatabaseName => _table.DatabaseName;
-		string ITable<T>.SchemaName   => _table.SchemaName;
-		string ITable<T>.TableName    => _table.TableName;
+		public string DatabaseName => _table.DatabaseName;
+		public string SchemaName   => _table.SchemaName;
+		public string TableName    => _table.TableName;
 
-		string ITable<T>.GetTableName()
+		public string GetTableName()
 		{
 			return _table.GetTableName();
 		}
@@ -201,6 +263,9 @@ namespace LinqToDB
 
 		#region IExpressionQuery
 
+		/// <summary>
+		/// Gets data connection, associated with current table.
+		/// </summary>
 		public IDataContext DataContext => _table.DataContext;
 
 		string       IExpressionQuery.SqlText    => _table.SqlText;
@@ -243,6 +308,15 @@ namespace LinqToDB
 
 	public static partial class DataExtensions
 	{
+		/// <summary>
+		/// Creates new temporary table.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			string tableName    = null,
@@ -252,6 +326,17 @@ namespace LinqToDB
 			return new TempTable<T>(db, tableName, databaseName, schemaName);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using BulkCopy.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="items">Initial records to insert into created table.</param>
+		/// <param name="options">Optional BulkCopy options.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IEnumerable<T> items,
@@ -263,6 +348,17 @@ namespace LinqToDB
 			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using BulkCopy.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="items">Initial records to insert into created table.</param>
+		/// <param name="options">Optional BulkCopy options.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] string tableName,
@@ -274,6 +370,17 @@ namespace LinqToDB
 			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using data from provided query.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="items">Query to get records to populate created table with initial data.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
@@ -285,6 +392,19 @@ namespace LinqToDB
 			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using data from provided query. Table mapping could be changed
+		/// using fluent mapper.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="items">Query to get records to populate created table with initial data.</param>
+		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] IQueryable<T> items,
@@ -301,6 +421,17 @@ namespace LinqToDB
 			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using data from provided query.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="items">Query to get records to populate created table with initial data.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] string tableName,
@@ -312,6 +443,19 @@ namespace LinqToDB
 			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action);
 		}
 
+		/// <summary>
+		/// Creates new temporary table and populate it using data from provided query. Table mapping could be changed
+		/// using fluent mapper.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="db">Database connection instance.</param>
+		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
+		/// <param name="items">Query to get records to populate created table with initial data.</param>
+		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
+		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
+		/// <param name="schemaName">Optional name of table shema/owner. If not specified, value from mapping will be used.</param>
+		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
+		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			[JetBrains.Annotations.NotNull] this IDataContext db,
 			[JetBrains.Annotations.NotNull] string tableName,

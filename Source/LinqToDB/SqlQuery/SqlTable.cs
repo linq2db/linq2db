@@ -200,7 +200,7 @@ namespace LinqToDB.SqlQuery
 		public         string           Database       { get; set; }
 		public         string           Schema         { get; set; }
 		public         Type             ObjectType     { get; set; }
-		public         string           PhysicalName   { get; set; }
+		public virtual string           PhysicalName   { get; set; }
 		public virtual SqlTableType     SqlTableType   { get; set; }
 		public         ISqlExpression[] TableArguments { get; set; }
 

@@ -126,22 +126,22 @@ namespace LinqToDB.DataProvider.MySql
 		private static string _commandParameterPrefix = string.Empty;
 		public  static string  CommandParameterPrefix
 		{
-			get { return _commandParameterPrefix; }
-			set { _commandParameterPrefix = value ?? string.Empty; }
+			get => _commandParameterPrefix;
+			set => _commandParameterPrefix = value ?? string.Empty;
 		}
 
 		private static string _sprocParameterPrefix = string.Empty;
 		public  static string  SprocParameterPrefix
 		{
-			get { return _sprocParameterPrefix; }
-			set { _sprocParameterPrefix = value ?? string.Empty; }
+			get => _sprocParameterPrefix;
+			set => _sprocParameterPrefix = value ?? string.Empty;
 		}
 
 		private static List<char> _convertParameterSymbols;
 		public  static List<char>  ConvertParameterSymbols
 		{
-			get { return _convertParameterSymbols; }
-			set { _convertParameterSymbols = value ?? new List<char>(); }
+			get => _convertParameterSymbols;
+			set => _convertParameterSymbols = value ?? new List<char>();
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -312,5 +312,16 @@ namespace LinqToDB.DataProvider.MySql
 			else
 				StringBuilder.Append("DELETE FROM ");
 		}
+
+//		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+//		{
+//			var table = dropTable.Table;
+//
+//			AppendIndent().Append("DROP TABLE ");
+//			BuildPhysicalTable(table, null);
+//			StringBuilder.AppendLine(" IF EXISTS");
+//
+//			base.BuildDropTableStatement(dropTable);
+//		}
 	}
 }

@@ -716,9 +716,17 @@ namespace LinqToDB
 
 		#region CTE
 
-		internal static IQueryable<T> GetCte<T>(
+		/// <summary>
+		/// Helps to define a recursive CTE.
+		/// </summary>
+		/// <typeparam name="T">Source query record type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="cteBody">Recursive query body.</param>
+		/// <param name="cteTableName">Common table expression name.</param>
+		/// <returns>Common table expression.</returns>
+		public static IQueryable<T> GetCte<T>(
 			[NotNull]   this IDataContext                 dataContext,
-			[NotNull]   Func<IQueryable<T>,IQueryable<T>> cteBody,
+			[NotNull, InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody,
 			[CanBeNull] string                            cteTableName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -734,6 +742,22 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, cteTableName),
 					new[] {cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)}));
+		}
+
+		/// <summary>
+		/// Helps to define a recursive CTE.
+		/// </summary>
+		/// <typeparam name="T">Source query record type.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="cteBody">Recursive query body.</param>
+		/// <param name="cteTableName">Common table expression name.</param>
+		/// <returns>Common table expression.</returns>
+		public static IQueryable<T> GetCte<T>(
+			[NotNull]                this IDataContext                 dataContext,
+			[CanBeNull]              string                            cteTableName,
+			[NotNull, InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody)
+		{
+			return GetCte(dataContext, cteBody, cteTableName);
 		}
 
 		#endregion

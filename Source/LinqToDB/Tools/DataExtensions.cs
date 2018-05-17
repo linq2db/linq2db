@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Tools
 {
 	using Common;
@@ -9,8 +11,14 @@ namespace LinqToDB.Tools
 
 	public static class DataExtensions
 	{
-		public static IEnumerable<T> RetrieveIdentity<T>(this IEnumerable<T> source, DataConnection context, bool useSequenceName = true)
+		public static IEnumerable<T> RetrieveIdentity<T>(
+			[NotNull] this IEnumerable<T> source,
+			[NotNull] DataConnection      context,
+			bool useSequenceName = true)
 		{
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (context == null) throw new ArgumentNullException(nameof(context));
+
 			IList<T> sourceList = null;
 
 			var entityDescriptor = context.MappingSchema.GetEntityDescriptor(typeof(T));

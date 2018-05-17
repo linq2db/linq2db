@@ -529,9 +529,8 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 				}
-				else if (cond.Predicate is SqlSearchCondition)
+				else if (cond.Predicate is SqlSearchCondition sc)
 				{
-					var sc = (SqlSearchCondition)cond.Predicate;
 					OptimizeSearchCondition(sc);
 					if (sc.Conditions.Count == 0)
 					{

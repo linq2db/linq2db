@@ -639,6 +639,15 @@ namespace LinqToDB.Data
 			return GetConfigurationInfo(configurationString).DataProvider;
 		}
 
+		/// <summary>
+		/// Returns registered database providers.
+		/// </summary>
+		/// <returns>
+		/// Returns copy of registered providers"
+		/// </returns>
+		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
+			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
+
 		class ConfigurationInfo
 		{
 			private readonly bool   _dataProviderSetted;

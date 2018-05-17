@@ -24,8 +24,6 @@ namespace Tests.ComplexTests2
 	[TestFixture]
 	public class ComplexTests2 : TestBase
 	{
-		private static int _cnt;
-
 		public enum AnimalType
 		{
 			Small,
@@ -109,8 +107,6 @@ namespace Tests.ComplexTests2
 
 		private void InsertData(ITestDataContext db)
 		{
-			CleanupData(db);
-
 			var eye = new Eye
 			{
 				Id = 1,
@@ -140,29 +136,32 @@ namespace Tests.ComplexTests2
 				TestAnimalId = 1
 			};
 
-			db.CreateTable<Animal>();
-			db.CreateTable<Eye>();
-			db.CreateTable<Test>();
+			using (new DisableLogging())
+			{
+				db.CreateLocalTable<Animal>();
+				db.CreateLocalTable<Eye>();
+				db.CreateLocalTable<Test>();
 
-			db.Insert(eye);
-			db.Insert(dog);
-			db.Insert(test);
-			db.Insert(test2);
+				db.Insert(eye);
+				db.Insert(dog);
+				db.Insert(test);
+				db.Insert(test2);
+			}
 		}
 
 		void CleanupData(ITestDataContext db)
 		{
-			db.DropTable<Animal>(throwExceptionIfNotExists: false);
-			db.DropTable<Eye>   (throwExceptionIfNotExists: false);
-			db.DropTable<Test>  (throwExceptionIfNotExists: false);
+			using (new DisableLogging())
+			{ 
+				db.DropTable<Animal>(throwExceptionIfNotExists: false);
+				db.DropTable<Eye>   (throwExceptionIfNotExists: false);
+				db.DropTable<Test>  (throwExceptionIfNotExists: false);
+			}
 		}
 
 		MappingSchema SetMappings()
 		{
-			// counter added to fix this issue with tests in Firebird
-			// https://stackoverflow.com/questions/44353607
-			// it was only working solution for Firebird3
-			var cnt = Interlocked.Increment(ref _cnt).ToString();
+			var cnt = TestUtils.GetNext().ToString();
 
 			var ms = new MappingSchema(cnt);
 
@@ -173,6 +172,7 @@ namespace Tests.ComplexTests2
 			ms.SetDefaultFromEnumType(typeof(AnimalType2), typeof(string));
 
 			var animalsTableName = "Animals" + cnt;
+			var eyeTableName     = "Eyes"    + cnt;
 
 			var mappingBuilder = ms.GetFluentMappingBuilder();
 
@@ -203,7 +203,7 @@ namespace Tests.ComplexTests2
 				.HasTableName(animalsTableName);
 
 			mappingBuilder.Entity<Eye>()
-				.HasTableName("Eyes")
+				.HasTableName(eyeTableName)
 				.Property(x => x.Id).IsColumn().HasColumnName("Id").IsPrimaryKey()
 				.Property(x => x.Xy).IsColumn().IsNullable().HasColumnName("Xy").HasDataType(DataType.NVarChar).HasLength(40);
 

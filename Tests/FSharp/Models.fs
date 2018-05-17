@@ -35,6 +35,9 @@ type Child =
     { [<PrimaryKey>] ParentID : int
       [<PrimaryKey>] ChildID : int }
 
+type Parent = 
+    { [<PrimaryKey>] ParentID : int
+      [<Column>]     Value1 : int }
 
 type FullName = { FirstName : string; MiddleName: string; LastName: string}
 type LastName = { Value: string }

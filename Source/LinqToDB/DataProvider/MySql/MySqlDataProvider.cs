@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;

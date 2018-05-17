@@ -1,13 +1,32 @@
 ﻿using LinqToDB;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using LinqToDB.Data;
+using System.Threading;
 using Tests.Model;
 
 namespace Tests
 {
 	public static class TestUtils
 	{
+		private static int _cnt;
+
+		/// <summary>
+		/// Returns unique per-testrun sequence number.
+		/// E.g. it can be used to generate unique table names for tests to workaround Firebird's
+		/// issues with DDL operations.
+		/// </summary>
+		public static int GetNext()
+		{
+			// Firebird issue details:
+			// https://stackoverflow.com/questions/44353607
+			// another solution with pools cleanup doesn't work well with Firebird3 and
+			// also breaks provider
+			return Interlocked.Increment(ref _cnt);
+		}
+
 		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 
@@ -144,6 +163,42 @@ namespace Tests
 		public static DateTime FixTime(DateTime value, bool fix)
 		{
 			return fix ? value.AddMilliseconds(-value.Millisecond) : value;
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName = null)
+		{
+			try
+			{
+				return new TempTable<T>(db, tableName);
+			}
+			catch
+			{
+				db.DropTable<T>(tableName);
+				return new TempTable<T>(db, tableName);
+			}
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName, IEnumerable<T> items)
+		{
+			var table = CreateLocalTable<T>(db, tableName);
+
+			if (db is DataConnection)
+				using (new DisableLogging())
+					table.Copy(items
+						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
+						);
+			else
+				using (new DisableLogging())
+					foreach (var item in items)
+						db.Insert(item, table.TableName);
+
+
+			return table;
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
+		{
+			return CreateLocalTable(db, null, items);
 		}
 	}
 }

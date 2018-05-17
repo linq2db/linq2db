@@ -164,6 +164,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
 		{
+			BuildStep = Step.WithClause;    BuildWithClause(deleteStatement.With);
 			BuildStep = Step.DeleteClause;  BuildDeleteClause(deleteStatement);
 			BuildStep = Step.FromClause;    BuildFromClause(Statement, deleteStatement.SelectQuery);
 			BuildStep = Step.WhereClause;   BuildWhereClause(deleteStatement.SelectQuery);
@@ -173,8 +174,31 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(deleteStatement.SelectQuery);
 		}
 
+		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
+		{
+			BuildStep = Step.DeleteClause; BuildDeleteClause(deleteStatement);
+
+			while (StringBuilder[StringBuilder.Length - 1] == ' ')
+				StringBuilder.Length--;
+
+			StringBuilder.AppendLine();
+			AppendIndent().AppendLine("(");
+
+			++Indent;
+
+			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery) { With = deleteStatement.GetWithClause() };
+
+			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, selectStatement, StringBuilder, Indent);
+
+			--Indent;
+
+			AppendIndent().AppendLine(")");
+
+		}
+
 		protected virtual void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
+			BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.UpdateClause;  BuildUpdateClause(Statement, selectQuery, updateClause);
 			BuildStep = Step.FromClause;    BuildFromClause(Statement, selectQuery);
 			BuildStep = Step.WhereClause;   BuildWhereClause(selectQuery);
@@ -198,17 +222,12 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
-			BuildStep = Step.SelectClause;  BuildSelectClause(selectQuery);
-			BuildStep = Step.FromClause;    BuildFromClause(null, selectQuery);
-			BuildStep = Step.WhereClause;   BuildWhereClause(selectQuery);
-			BuildStep = Step.GroupByClause; BuildGroupByClause(selectQuery);
-			BuildStep = Step.HavingClause;  BuildHavingClause(selectQuery);
-			BuildStep = Step.OrderByClause; BuildOrderByClause(selectQuery);
-			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(selectQuery);
+			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, Indent, SkipAlias);
 		}
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
-			{
+		{
+			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery.From.Tables.Count != 0)
@@ -224,6 +243,37 @@ namespace LinqToDB.SqlProvider
 
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
+		}
+
+		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
+		{
+			BuildStep = Step.InsertClause;
+			BuildInsertClause(statement, insertClause, addAlias);
+
+			AppendIndent().AppendLine("SELECT * FROM");
+			AppendIndent().AppendLine("(");
+
+			++Indent;
+
+			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
+
+			if (statement.QueryType == QueryType.Insert && statement.SelectQuery.From.Tables.Count != 0)
+			{
+				BuildStep = Step.SelectClause;  BuildSelectClause(statement.SelectQuery);
+				BuildStep = Step.FromClause;    BuildFromClause(statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;   BuildWhereClause(statement.SelectQuery);
+				BuildStep = Step.GroupByClause; BuildGroupByClause(statement.SelectQuery);
+				BuildStep = Step.HavingClause;  BuildHavingClause(statement.SelectQuery);
+				BuildStep = Step.OrderByClause; BuildOrderByClause(statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;   BuildOffsetLimit(statement.SelectQuery);
+			}
+
+			if (insertClause.WithIdentity)
+				BuildGetIdentity(insertClause);
+
+			--Indent;
+
+			AppendIndent().AppendLine(")");
 		}
 
 		protected virtual void BuildUnknownQuery()
@@ -274,38 +324,62 @@ namespace LinqToDB.SqlProvider
 			if (with == null || with.Clauses.Count == 0)
 				return;
 
-			AppendIndent();
-			StringBuilder.AppendLine("WITH");
-			Indent++;
-
 			var first = true;
 
 			foreach (var cte in with.Clauses)
 			{
-				if (!first)
-					StringBuilder.Append(',').AppendLine();
-				first = false;
-
 				AppendIndent();
-				StringBuilder.Append(cte.Name);
-				if (cte.Fields.Count > 0) 
+
+				if (first)
+				{
+					StringBuilder.Append("WITH ");
+					first = false;
+				}
+				else
+				{
+					StringBuilder.Append(',').AppendLine();
+					AppendIndent();
+				}
+
+				ConvertTableName(StringBuilder, null, null, cte.Name);
+
+				if (cte.Fields.Count > 3)
+				{
+					StringBuilder.AppendLine();
+					AppendIndent(); StringBuilder.AppendLine("(");
+					++Indent;
+
+					var firstField = true;
+					foreach (var field in cte.Fields.Values)
+					{
+						if (!firstField)
+							StringBuilder.AppendLine(", ");
+						firstField = false;
+						AppendIndent();
+						StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+					}
+
+					--Indent;
+					StringBuilder.AppendLine();
+					AppendIndent(); StringBuilder.AppendLine(")");
+				}
+				else if (cte.Fields.Count > 0)
+				{
 					StringBuilder.Append(" (");
 
-				var firstField = true;
-				foreach (var field in cte.Fields.Values)
-				{
-					if (!firstField)
-						StringBuilder.Append(", ");
-					firstField = false;
-					StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
-				}
-				
-				if (cte.Fields.Count > 0) 
+					var firstField = true;
+					foreach (var field in cte.Fields.Values)
+					{
+						if (!firstField)
+							StringBuilder.Append(", ");
+						firstField = false;
+						StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+					}
 					StringBuilder.AppendLine(")");
+				}
 
-				Indent--;
 				AppendIndent();
-				StringBuilder.AppendLine(" AS");
+				StringBuilder.AppendLine("AS");
 				AppendIndent();
 				StringBuilder.AppendLine("(");
 
@@ -2860,7 +2934,7 @@ namespace LinqToDB.SqlProvider
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
 
 				case QueryElementType.SqlCteTable:
-					return ((SqlCteTable)table).Name;
+					return GetTablePhysicalName((SqlCteTable)table);
 
 				default:
 					throw new InvalidOperationException();

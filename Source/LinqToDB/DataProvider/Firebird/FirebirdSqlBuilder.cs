@@ -192,7 +192,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			// https://firebirdsql.org/file/documentation/reference_manuals/fblangref25-en/html/fblangref25-structure-identifiers.html
 			return !IsReserved(name) &&
-				((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) && 
+				((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
 				name.All(c =>
 					(c >= 'a' && c <= 'z') ||
 					(c >= 'A' && c <= 'Z') ||
@@ -384,6 +384,30 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			dynamic p = parameter;
 			return p.FbDbType.ToString();
+		}
+
+		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
+		{
+			if (deleteStatement.With?.Clauses.Count > 0)
+			{
+				BuildDeleteQuery2(deleteStatement);
+			}
+			else
+			{
+				base.BuildDeleteQuery(deleteStatement);
+			}
+		}
+
+		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
+		{
+			if (statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
+			{
+				BuildInsertQuery2(statement, insertClause, addAlias);
+			}
+			else
+			{
+				base.BuildInsertQuery(statement, insertClause, addAlias);
+			}
 		}
 	}
 }
