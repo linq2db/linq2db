@@ -1115,7 +1115,7 @@ namespace Tests.OrmBattle
 			Assert.IsNotNull(customer);
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind)]
 		[Category("Element operations")]
 		public void NestedFirstOrDefaultTest(string context)
 		{
@@ -1135,7 +1135,7 @@ namespace Tests.OrmBattle
 			Assert.Greater(list.Count, 0);
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind)]
 		[Category("Element operations")]
 		public void FirstOrDefaultEntitySetTest(string context)
 		{
@@ -1146,7 +1146,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(customersCount, list.Count);
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind)]
 		[Category("Element operations")]
 		public void NestedSingleOrDefaultTest(string context)
 		{
@@ -1157,7 +1157,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(customersCount, list.Count);
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind)]
 		[Category("Element operations")]
 		public void NestedSingleTest(string context)
 		{
@@ -1177,7 +1177,7 @@ namespace Tests.OrmBattle
 			Assert.AreEqual("CONSH", customer.CustomerID);
 		}
 
-		[Test, IncludeDataContextSource("Northwind")]
+		[Test, IncludeDataContextSource(TestProvName.Northwind)]
 		[Category("Element operations")]
 		public void NestedElementAtTest(string context)
 		{

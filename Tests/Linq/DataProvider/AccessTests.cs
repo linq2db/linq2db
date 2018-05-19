@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -16,8 +17,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Globalization;
-
 	using Model;
 
 	[TestFixture]
@@ -370,6 +369,9 @@ namespace Tests.DataProvider
 
 		[Test, IncludeDataContextSource(ProviderName.Access)]
 		[Explicit("Long running test. Run explicitly.")]
+//#if !NETSTANDARD1_6
+//		[Timeout(60000)]
+//#endif
 		public void DataConnectionTest(string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);

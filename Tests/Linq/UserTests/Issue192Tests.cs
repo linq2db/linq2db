@@ -63,7 +63,7 @@ namespace Tests.UserTests
 
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void Test(string context)
 		{
 			var ms = new MappingSchema();
@@ -76,7 +76,7 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<string, Guid?>(_ => Guid.Parse(_));
 
 			using (var db = GetDataContext(context, ms))
-			using (new LocalTable<TypeConvertTable>(db))
+			using (db.CreateLocalTable<TypeConvertTable>())
 			{
 				var notVerified = new TypeConvertTable
 				{

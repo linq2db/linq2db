@@ -1,29 +1,26 @@
 ﻿// mono 5.0.1.1-0xamarin5+debian7b1 crashes on those tests
 // TODO: try to uncomment, when newer version used on Travis
 #if !MONO
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
-using LinqToDB.Mapping;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Data.Linq;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
+	using Tests.Model;
+
 	[TestFixture]
 	public class Issue278Tests : TestBase
-	{	
+	{
 		private const int TOTAL_QUERIES_PER_RUN = 1000;
 
 		private static readonly int[] ThreadsCount = new[] { 1, 2, 5, 10, 20 };
@@ -234,10 +231,8 @@ namespace Tests.UserTests
 
 		private void TestIt(string context, string caseName, int threadCount, Action<ITestDataContext>[] actions, CacheMode mode)
 		{
-#if !NETSTANDARD
-			int workerThreads;
-			int iocpThreads;
-			ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
+#if !NETSTANDARD1_6
+			ThreadPool.GetMaxThreads(out var workerThreads, out var iocpThreads);
 
 			if (workerThreads < threadCount)
 				ThreadPool.SetMaxThreads(threadCount, iocpThreads);

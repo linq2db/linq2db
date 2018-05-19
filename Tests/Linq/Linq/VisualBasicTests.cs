@@ -1,4 +1,4 @@
-﻿#if !MONO
+﻿#if !MONO && !TRAVIS
 
 using System;
 using System.Linq;

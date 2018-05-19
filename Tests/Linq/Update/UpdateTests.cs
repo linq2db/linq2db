@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -46,8 +43,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Update1Async(string context)
 		{
@@ -70,8 +65,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void Update2(string context)
@@ -96,8 +89,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Update2Async(string context)
 		{
@@ -120,8 +111,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource(ProviderName.Informix)]
 		public void Update3(string context)
@@ -173,8 +162,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource(ProviderName.Informix)]
 		public async Task Update4Async(string context)
 		{
@@ -201,8 +188,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource(ProviderName.Informix)]
 		public void Update5(string context)
@@ -329,8 +314,8 @@ namespace Tests.xUpdate
 			ProviderName.MySql,
 			TestProvName.MariaDB,
 			TestProvName.MySql57,
-			ProviderName.SQLite,
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteClassic,
+			ProviderName.SQLiteMS,
 			ProviderName.Access,
 			ProviderName.SapHana)]
 		public void Update9(string context)
@@ -371,10 +356,10 @@ namespace Tests.xUpdate
 			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
-			TestProvName.MariaDB, 
+			TestProvName.MariaDB,
 			TestProvName.MySql57,
-			ProviderName.SQLite, 
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteClassic,
+			ProviderName.SQLiteMS,
 			ProviderName.Access,
 			ProviderName.SapHana)]
 		public void Update10(string context)
@@ -421,7 +406,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
 			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
 		public void Update12(string context)
 		{
@@ -437,10 +422,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if  !NOASYNC
-
 		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
 			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
 		public async Task Update12Async(string context)
 		{
@@ -455,11 +438,9 @@ namespace Tests.xUpdate
 				.UpdateAsync(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
 			}
 		}
-		
-#endif
 
 		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
 			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
 		public void Update13(string context)
 		{
@@ -510,8 +491,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task UpdateComplex1Async(string context)
 		{
@@ -547,8 +526,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void UpdateComplex2(string context)
@@ -619,8 +596,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
 		public async Task UpdateAssociation1Async(string context)
 		{
@@ -651,8 +626,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
 		public void UpdateAssociation2(string context)
@@ -792,8 +765,8 @@ namespace Tests.xUpdate
 			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.SqlCe,
-			ProviderName.SQLite,
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteClassic,
+			ProviderName.SQLiteMS,
 			ProviderName.SapHana)]
 		public void UpdateAssociation5(string context)
 		{
@@ -879,8 +852,8 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteClassic,
+			ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana)]
@@ -920,8 +893,8 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteClassic,
+			ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana,
@@ -929,6 +902,7 @@ namespace Tests.xUpdate
 			TestProvName.MySql57,
 			TestProvName.MariaDB,
 			ProviderName.Sybase,
+			ProviderName.OracleNative,
 			ProviderName.OracleManaged)]
 		public void TestUpdateTakeOrdered(string context)
 		{
@@ -969,8 +943,8 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteClassic,
+			ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana,
@@ -978,8 +952,8 @@ namespace Tests.xUpdate
 			TestProvName.MySql57,
 			TestProvName.MariaDB,
 			ProviderName.Sybase,
-			ProviderName.OracleManaged
-		 )]
+			ProviderName.OracleNative,
+			ProviderName.OracleManaged)]
 		public void TestUpdateSkipTake(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1022,8 +996,8 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite, 
-			TestProvName.SQLiteMs,
+			ProviderName.SQLiteClassic,
+			ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana
@@ -1084,7 +1058,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase, TestProvName.Firebird3)]
 		public void UpdateIssue319Regression(string context)
 		{
@@ -1138,16 +1112,18 @@ namespace Tests.xUpdate
 
 					db.Insert(new LinqDataTypes2()
 					{
-						ID = id,
+						ID         = id,
 						MoneyValue = value1,
-						IntValue = value3
+						IntValue   = value3
 					});
 
 					db.GetTable<LinqDataTypes2>()
-						.Update(_ => new LinqDataTypes2()
-						{
-							SmallIntValue = (short)(_.MoneyValue / (value2 / _.IntValue))
-						});
+						.Update(
+							_ => _.ID == id,
+							_ => new LinqDataTypes2
+							{
+								SmallIntValue = (short)(_.MoneyValue / (value2 / _.IntValue))
+							});
 
 					var dbResult = db.GetTable<LinqDataTypes2>()
 						.Where(_ => _.ID == id)
@@ -1163,5 +1139,133 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+		[Test, DataContextSource()]
+		public void UpdateMultipleColumns(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ldt = new LinqDataTypes
+				{
+					ID            = 1001,
+					MoneyValue    = 1000,
+					SmallIntValue = 100,
+				};
+
+				try
+				{
+					db.Types.Delete(c => c.ID == ldt.ID);
+					db.Types
+						.Value (t => t.ID,            ldt.ID)
+						.Value (t => t.MoneyValue,    () => ldt.MoneyValue)
+						.Value (t => t.SmallIntValue, () => ldt.SmallIntValue)
+						.Insert()
+						;
+
+					db.Types
+						.Where (t => t.ID == ldt.ID)
+						.Set   (t => t.MoneyValue,    () => 2000)
+						.Set   (t => t.SmallIntValue, () => 200)
+						.Update()
+						;
+
+					var udt = db.Types.Single(t => t.ID == ldt.ID);
+
+					Assert.That(udt.MoneyValue,    Is.Not.EqualTo(ldt.MoneyValue));
+					Assert.That(udt.SmallIntValue, Is.Not.EqualTo(ldt.SmallIntValue));
+				}
+				finally
+				{
+					db.Types.Delete(t => t.ID == ldt.ID);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void UpdateByTableName(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+			}
+
+			using (var db = GetDataContext(context))
+			{
+				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				db.Insert(person, tableName: tableName, schemaName: schemaName);
+				var newCount  = table.Count();
+				Assert.AreEqual(1, newCount);
+
+				var personForUpdate = table.Single();
+
+				// update that row
+				personForUpdate.MiddleName = "None";
+				db.Update(personForUpdate, tableName: tableName, schemaName: schemaName);
+
+				var updatedPerson = table.Single();
+				Assert.AreEqual("None", updatedPerson.MiddleName);
+
+				table.Drop();
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task UpdateByTableNameAsync(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+			}
+
+			using (var db = GetDataContext(context))
+			{
+				var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
+
+				Assert.AreEqual(tableName,  table.TableName);
+				Assert.AreEqual(schemaName, table.SchemaName);
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName  = "King",
+					Gender    = Gender.Male,
+				};
+
+				// insert a row into the table
+				await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+				var newCount  = await table.CountAsync();
+				Assert.AreEqual(1, newCount);
+
+				var personForUpdate = await table.SingleAsync();
+
+				// update that row
+				personForUpdate.MiddleName = "None";
+				await db.UpdateAsync(personForUpdate, tableName: tableName, schemaName: schemaName);
+
+				var updatedPerson = await table.SingleAsync();
+				Assert.AreEqual("None", updatedPerson.MiddleName);
+
+				await table.DropAsync();
+			}
+		}
+
 	}
 }

@@ -17,8 +17,8 @@ namespace Tests.Data
 	{
 		public static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int? @id)
 		{
-			var databaseName = dataConnection.Execute<string>("SELECT DB_NAME()");
-#if !NETSTANDARD
+			var databaseName = TestUtils.GetDatabaseName(dataConnection);
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 			var escapedTableName = new SqlCommandBuilder().QuoteIdentifier(databaseName);
 #else
 			var escapedTableName = "[" + databaseName + "]";

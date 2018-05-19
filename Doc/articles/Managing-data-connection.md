@@ -1,17 +1,20 @@
 # Managing data connection
 
-.NET database providers use connection pooling to work with database connections, where they take connection from pool, use it, and then release connection back to connection pool so it could be reused. When connection is not released correctly after use, connection pool will consider it still used, which will lead to two consequesnces:
-- your application will create more and more connections to database, because there are no _free_ connections to reuse from connection pool manager point of view
-- at some point your application will fail to obtain connection from pool, because pool size limit reached
+.NET database providers use connection pooling to work with database connections, where they take connection from pool, use it, and then release connection back to connection pool so it could be reused. When connection is not released correctly after use, connection pool will consider it still used, which will lead to two consequences:
+
+* your application will create more and more connections to database, because there are no _free_ connections to reuse from connection pool manager point of view
+* at some point your application will fail to obtain connection from pool, because pool size limit reached
 
 To avoid collection leaks you should care about how you are creating and disposing connections. There are to ways to query database with linq2db:
+
 * using `DataConnection` class. Using `DataConnection` you can make several queries in one physical database connection, so you do not have overhead on opening and closing database connection. You should follow few simple rules:
   * **always** dispose `DataConnection` instance (it is recommended to use `using` c# statement);
   * query should be executed **before** `DataConnection` object is disposed. From version 1.8.0 we have introduced protection from wrong usage, and you will get `ObjectDisposedException` trying to perform query on disposed `DataConnection` instance.
-* using `DataContext` class. `DataContext` opens and closes physical connection for **each** query! 
-   * Be careful with `DataContext.KeepConnectionAlive` property, if you set it `true`, it would work the same way as `DataConnection`! So we do not recommend you to set this property to `true`.
+* using `DataContext` class. `DataContext` opens and closes physical connection for **each** query!
+* Be careful with `DataContext.KeepConnectionAlive` property, if you set it `true`, it would work the same way as `DataConnection`! So we do not recommend you to set this property to `true`.
 
 ## Done right
+
 ```cs
 using (var db = new DataConnection())
 {
@@ -54,6 +57,7 @@ public async Task<IEnumerable<Person>> GetPersons()
 ```
 
 ## Done wrong
+
 ```cs
 public IEnumerable<Person> GetPersons()
 {

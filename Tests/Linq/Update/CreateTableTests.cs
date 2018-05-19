@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -46,8 +43,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource(ProviderName.OracleNative)]
 		public async Task CreateTable1Async(string context)
 		{
@@ -70,8 +65,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
 		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
 		public void CreateLocalTempTable1(string context)
 		{
@@ -88,8 +81,8 @@ namespace Tests.xUpdate
 				{
 					switch (context)
 					{
-						case ProviderName.SqlServer2008 : 
-						case ProviderName.SqlServer2012 : 
+						case ProviderName.SqlServer2008 :
+						case ProviderName.SqlServer2012 :
 						case ProviderName.SqlServer2014 : db.DropTable<TestTable>("#" + tableName); break;
 						default                         : db.DropTable<TestTable>(tableName);       break;
 					}
@@ -102,8 +95,8 @@ namespace Tests.xUpdate
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2008 : 
-					case ProviderName.SqlServer2012 : 
+					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
 						table = db.CreateTable<TestTable>("#" + tableName);
 						break;
@@ -120,9 +113,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
+		[Test, IncludeDataContextSource(false, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014 /*, ProviderName.DB2*/)]
 		public async Task CreateLocalTempTable1Async(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -138,8 +129,8 @@ namespace Tests.xUpdate
 				{
 					switch (context)
 					{
-						case ProviderName.SqlServer2008 : 
-						case ProviderName.SqlServer2012 : 
+						case ProviderName.SqlServer2008 :
+						case ProviderName.SqlServer2012 :
 						case ProviderName.SqlServer2014 : await db.DropTableAsync<TestTable>("#" + tableName); break;
 						default                         : await db.DropTableAsync<TestTable>(tableName);       break;
 					}
@@ -152,8 +143,8 @@ namespace Tests.xUpdate
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2008 : 
-					case ProviderName.SqlServer2012 : 
+					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
 						table = await db.CreateTableAsync<TestTable>("#" + tableName);
 						break;
@@ -161,7 +152,8 @@ namespace Tests.xUpdate
 						table = await db.CreateTableAsync<TestTable>(statementHeader:"DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}");
 						break;
 					default:
-						throw new InvalidOperationException();
+						table = await db.CreateTableAsync<TestTable>(tableName);
+						break;
 				}
 
 				var list = await table.ToListAsync();
@@ -169,8 +161,6 @@ namespace Tests.xUpdate
 				await table.DropAsync();
 			}
 		}
-
-#endif
 
 		enum FieldType1
 		{
@@ -245,7 +235,7 @@ namespace Tests.xUpdate
 			public int    bb { get; set; }
 			public string cc { get; set; }
 		}
-		
+
 		public class qq
 		{
 			public int bb { get; set; }
@@ -263,7 +253,7 @@ namespace Tests.xUpdate
 						.Property(t => t.bb).IsPrimaryKey()
 						.Property(t => t.cc)
 						.Property(t => t.dd).IsNotColumn()
-					
+
 					.Entity<qq>()
 						.HasTableName("aa")
 						.Property(t => t.bb).IsPrimaryKey()

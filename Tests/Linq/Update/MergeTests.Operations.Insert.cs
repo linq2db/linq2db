@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
+
 using Tests.Model;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
-
-#if !NOASYNC
-using System.Threading.Tasks;
-#endif
+using LinqToDB.Mapping;
+using System.Collections.Generic;
 
 namespace Tests.xUpdate
 {
@@ -20,7 +19,9 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromTable(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
+
 				PrepareData(db);
 
 				var table = GetTarget(db);
@@ -51,6 +52,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromQuery(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -81,6 +83,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromQueryWithSelect(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -121,6 +124,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromTableWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -151,6 +155,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromTableWithMatchAlternative(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -182,6 +187,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromQueryWithSelectAndMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -226,6 +232,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromQueryWithSelectAndMatchAlternative(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -270,6 +277,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromCollection(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -301,6 +309,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromEmptyCollection(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -331,6 +340,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromCollectionWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -361,6 +371,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromCollectionWithMatchAlternative(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -391,6 +402,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertFromEmptyCollectionWithMatch(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -415,6 +427,314 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[3], result[3], null, null);
 			}
 		}
+
+		[Test, MergeDataContextSource]
+		public void InsertFromCrossJoinedSourceQuery2Workaround(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+							 select new TestMapping1()
+							 {
+								 Id = t1.Id,
+								 // this is workaround
+								 //Fake = t2.Fake,
+								 Field1 = t1.Field1,
+								 Field2 = t2.Field2,
+								 Field3 = t1.Field3,
+								 Field4 = t2.Field4,
+								 Field5 = t1.Field5
+							 };
+
+				var results = source.ToList();
+
+				// 5 commas after selected columns and 1 comma in join
+				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+
+				Assert.AreEqual(16, results.Count);
+			}
+		}
+
+		[ActiveIssue(896, Details = "Selects 10 columns instead of 6. Also see InsertFromCrossJoinedSourceQuery2Workaround for workaround")]
+		[Test, MergeDataContextSource]
+		public void InsertFromCrossJoinedSourceQuery2(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+							 select new TestMapping1()
+							 {
+								 Id = t1.Id,
+								 Fake = t2.Fake,
+								 Field1 = t1.Field1,
+								 Field2 = t2.Field2,
+								 Field3 = t1.Field3,
+								 Field4 = t2.Field4,
+								 Field5 = t1.Field5
+							 };
+
+				var results = source.ToList();
+
+				// 5 commas after selected columns and 1 comma in join
+				Assert.AreEqual(6, db.LastQuery.Count(c => c == ','));
+
+				Assert.AreEqual(16, results.Count);
+			}
+		}
+
+		[Table("Parent")]
+		public class CrossJoinLeft
+		{
+			[Column("ParentID")]
+			public int Id { get; set; }
+		}
+
+		[Table("Child")]
+		public class CrossJoinRight
+		{
+			[Column("ChildID")]
+			public int Id { get; set; }
+		}
+
+		[Table("GrandChild")]
+		public class CrossJoinResult
+		{
+			[Column("GrandChildID")]
+			public int Id { get; set; }
+
+			[Column("ParentID")]
+			public int LeftId { get; set; }
+
+			[Column("ChildID")]
+			public int RightId { get; set; }
+		}
+
+		[Test, MergeDataContextSource]
+		public void InsertFromCrossJoinedSourceQuery(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				// prepare test data
+				db.GetTable<CrossJoinLeft>().Delete();
+				db.GetTable<CrossJoinRight>().Delete();
+				db.GetTable<CrossJoinResult>().Delete();
+
+				db.Insert(new CrossJoinLeft() { Id = 1 });
+				db.Insert(new CrossJoinLeft() { Id = 2 });
+				db.Insert(new CrossJoinRight() { Id = 10 });
+				db.Insert(new CrossJoinRight() { Id = 20 });
+				db.Insert(new CrossJoinResult() { Id = 11, LeftId = 100, RightId = 200 });
+
+				var source = from t1 in db.GetTable<CrossJoinLeft>()
+							 from t2 in db.GetTable<CrossJoinRight>()
+							 select new
+							 {
+								 LeftId = t1.Id,
+								 RightId = t2.Id,
+								 ResultId = t1.Id + t2.Id
+							 };
+
+				var rows = db.GetTable<CrossJoinResult>()
+					.Merge()
+					.Using(source)
+					.On((t, s) => t.Id == s.ResultId)
+					.InsertWhenNotMatched(s => new CrossJoinResult()
+					{
+						Id = s.ResultId,
+						LeftId = s.LeftId,
+						RightId = s.RightId
+					})
+					.Merge();
+
+				var result = db.GetTable<CrossJoinResult>().OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(3, rows, context);
+
+				Assert.AreEqual(4, result.Count);
+
+				Assert.AreEqual(11,  result[0].Id);
+				Assert.AreEqual(100, result[0].LeftId);
+				Assert.AreEqual(200, result[0].RightId);
+
+				Assert.AreEqual(12, result[1].Id);
+				Assert.AreEqual(2,  result[1].LeftId);
+				Assert.AreEqual(10, result[1].RightId);
+
+				Assert.AreEqual(21, result[2].Id);
+				Assert.AreEqual(1,  result[2].LeftId);
+				Assert.AreEqual(20, result[2].RightId);
+
+				Assert.AreEqual(22, result[3].Id);
+				Assert.AreEqual(2,  result[3].LeftId);
+				Assert.AreEqual(20, result[3].RightId);
+			}
+		}
+
+		[ActiveIssue(896, Details = "Regression from 1.x: Member 'TestMapping1.Fake' is not a table column.")]
+		[Test, MergeDataContextSource]
+		public void InsertFromCrossJoinedSourceQuery3(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+							 select new TestMapping1()
+							 {
+								 Id = t1.Id,
+								 Fake = t2.Fake,
+								 Field1 = t1.Field1,
+								 Field2 = t2.Field2,
+								 Field3 = t1.Field3,
+								 Field4 = t2.Field4,
+								 Field5 = t1.Field5
+							 };
+
+				var rows = table
+					.Merge()
+					.Using(source)
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				Assert.Fail("Almost done, uncomment and fix asserts below");
+
+				AssertRowCount(0, rows, context);
+			}
+		}
+
+		[Test, MergeDataContextSource]
+		public void InsertFromSelectManySourceQuery(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				// prepare test data
+				db.GetTable<CrossJoinLeft>().Delete();
+				db.GetTable<CrossJoinRight>().Delete();
+				db.GetTable<CrossJoinResult>().Delete();
+
+				db.Insert(new CrossJoinLeft() { Id = 1 });
+				db.Insert(new CrossJoinLeft() { Id = 2 });
+				db.Insert(new CrossJoinRight() { Id = 10 });
+				db.Insert(new CrossJoinRight() { Id = 20 });
+				db.Insert(new CrossJoinResult() { Id = 11, LeftId = 100, RightId = 200 });
+
+				var source = db.GetTable<CrossJoinLeft>()
+					.SelectMany(
+						r => db.GetTable<CrossJoinRight>(),
+						(t1, t2) =>
+						 new
+							 {
+								 LeftId = t1.Id,
+								 RightId = t2.Id,
+								 ResultId = t1.Id + t2.Id
+							 });
+
+				var rows = db.GetTable<CrossJoinResult>()
+					.Merge()
+					.Using(source)
+					.On((t, s) => t.Id == s.ResultId)
+					.InsertWhenNotMatched(s => new CrossJoinResult()
+					{
+						Id = s.ResultId,
+						LeftId = s.LeftId,
+						RightId = s.RightId
+					})
+					.Merge();
+
+				var result = db.GetTable<CrossJoinResult>().OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(3, rows, context);
+
+				Assert.AreEqual(4, result.Count);
+
+				Assert.AreEqual(11, result[0].Id);
+				Assert.AreEqual(100, result[0].LeftId);
+				Assert.AreEqual(200, result[0].RightId);
+
+				Assert.AreEqual(12, result[1].Id);
+				Assert.AreEqual(2, result[1].LeftId);
+				Assert.AreEqual(10, result[1].RightId);
+
+				Assert.AreEqual(21, result[2].Id);
+				Assert.AreEqual(1, result[2].LeftId);
+				Assert.AreEqual(20, result[2].RightId);
+
+				Assert.AreEqual(22, result[3].Id);
+				Assert.AreEqual(2, result[3].LeftId);
+				Assert.AreEqual(20, result[3].RightId);
+			}
+		}
+
+		[Test, MergeDataContextSource]
+		public void InsertFromPartialSourceProjection_UnknownFieldInDefaultSetter(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var exception = Assert.Catch(
+					() => table
+						.Merge()
+						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
+						.OnTargetKey()
+						.InsertWhenNotMatched()
+						.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+			}
+		}
+
+		[Test, MergeDataContextSource]
+		public void InsertFromPartialSourceProjection_UnknownFieldInSetter(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var exception = Assert.Catch(
+					() => table
+						.Merge()
+						.Using(table.Select(_ => new TestMapping1() { Id = _.Id }))
+						.OnTargetKey()
+						.InsertWhenNotMatched(s => new TestMapping1()
+						{
+							Id = s.Id,
+							Field1 = s.Field3
+						})
+						.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Column Field3 doesn't exist in source", exception.Message);
+			}
+		}
 		#endregion
 
 		#region Insert<TEntity>(predicate)
@@ -422,6 +742,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -468,6 +789,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertWithCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -516,9 +838,63 @@ namespace Tests.xUpdate
 		}
 
 		[Test, MergeDataContextSource]
+		public void InsertPartialSourceProjection_KnownFieldInSetter(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db)
+						.Select(s => new TestMapping1() { Id = s.Id, Field1 = s.Field1, Field2 = s.Field2}))
+					.OnTargetKey()
+					.InsertWhenNotMatched(_ => new TestMapping1()
+					{
+						Id = 10 + _.Id,
+						Field1 = 123,
+						Field2 = _.Field1,
+						Field3 = _.Field2,
+						Field4 = 999,
+						Field5 = 888
+					})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(6, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+
+				Assert.AreEqual(InitialSourceData[2].Id + 10, result[4].Id);
+				Assert.AreEqual(123, result[4].Field1);
+				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
+				Assert.AreEqual(4, result[4].Field3);
+				Assert.AreEqual(999, result[4].Field4);
+				Assert.AreEqual(888, result[4].Field5);
+
+				Assert.AreEqual(InitialSourceData[3].Id + 10, result[5].Id);
+				Assert.AreEqual(123, result[5].Field1);
+				Assert.AreEqual(InitialSourceData[3].Field1, result[5].Field2);
+				Assert.IsNull(result[5].Field3);
+				Assert.AreEqual(999, result[5].Field4);
+				Assert.AreEqual(888, result[5].Field5);
+			}
+		}
+
+		[Test, MergeDataContextSource]
 		public void DataContextTest(string context)
 		{
 			using (var db = new DataContext(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -572,6 +948,7 @@ namespace Tests.xUpdate
 		public void SameSourceInsertWithPredicateAndCreate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -616,6 +993,89 @@ namespace Tests.xUpdate
 				Assert.AreEqual(888, result[4].Field5);
 			}
 		}
+
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		public void InsertWithPredicatePartialSourceProjection_KnownFieldInCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = table
+					.Merge()
+					.Using(GetSource1(db)
+						.Select(s => new TestMapping1() { Id = s.Id, Field2 = s.Field2, Field1 = s.Field1 }))
+					.OnTargetKey()
+					.InsertWhenNotMatchedAnd(
+						_ => _.Field2 != null,
+						_ => new TestMapping1()
+						{
+							Id = 10 + _.Id,
+							Field1 = 123,
+							Field2 = _.Field1,
+							Field3 = _.Field2,
+							Field4 = 999,
+							Field5 = 888
+						})
+					.Merge();
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(1, rows, context);
+
+				Assert.AreEqual(5, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+
+				Assert.AreEqual(InitialSourceData[2].Id + 10, result[4].Id);
+				Assert.AreEqual(123, result[4].Field1);
+				Assert.AreEqual(InitialSourceData[2].Field1, result[4].Field2);
+				// SkipInsert is ignored by explicit insert. Is it correct?
+				//Assert.IsNull(result[4].Field3);
+				Assert.AreEqual(4, result[4].Field3);
+				Assert.AreEqual(999, result[4].Field4);
+				//Assert.IsNull(result[4].Field5);
+				Assert.AreEqual(888, result[4].Field5);
+			}
+		}
+
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+		public void SameSourceInsertWithPredicateAndCreatePartialSourceProjection_UnknownFieldInCondition(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var exception = Assert.Catch(
+					() => table
+					    .Merge()
+					    .Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
+					    .OnTargetKey()
+					    .InsertWhenNotMatchedAnd(
+						_ => _.Field2 != null,
+						_ => new TestMapping1()
+						{
+							Id = 10 + _.Id,
+							Field1 = 123,
+							Field2 = _.Field1,
+							Field4 = 999,
+							Field5 = 888
+						})
+					.Merge());
+
+				Assert.IsInstanceOf<LinqToDBException>(exception);
+				Assert.AreEqual("Column Field2 doesn't exist in source", exception.Message);
+			}
+		}
 		#endregion
 
 		#region Insert<TTarget, TSource>(create) + different source/match combinations
@@ -623,6 +1083,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromTable(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -662,6 +1123,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromQuery(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -706,6 +1168,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromQueryWithSelect(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -765,6 +1228,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -816,6 +1280,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertFromEmptyList(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -854,6 +1319,7 @@ namespace Tests.xUpdate
 		public void OtherSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -894,6 +1360,7 @@ namespace Tests.xUpdate
 		public void AnonymousSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -942,6 +1409,7 @@ namespace Tests.xUpdate
 		public void AnonymousListSourceInsertWithPredicate(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -991,6 +1459,7 @@ namespace Tests.xUpdate
 		public void InsertReservedAndCaseNames(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1039,6 +1508,7 @@ namespace Tests.xUpdate
 		public void InsertReservedAndCaseNamesFromList(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1086,12 +1556,12 @@ namespace Tests.xUpdate
 		}
 		#endregion
 
-#if !NOASYNC
 		#region Async
 		[Test, MergeDataContextSource]
 		public async Task SameSourceInsertFromTableAsyn(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1123,6 +1593,7 @@ namespace Tests.xUpdate
 		public async Task SameSourceInsertFromQueryAsyn(string context)
 		{
 			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
 				PrepareData(db);
 
@@ -1149,6 +1620,136 @@ namespace Tests.xUpdate
 			}
 		}
 		#endregion
-#endif
+
+
+		// https://imgflip.com/i/2a6oc8
+		[ActiveIssue(Configuration = ProviderName.Sybase, Details = "Cross-join doesn't work in Sybase. Also see SqlLinqCrossJoinSubQuery test")]
+		[Test, MergeDataContextSource]
+		public void CrossJoinedSourceWithSingleFieldSelection(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				// prepare test data
+				db.GetTable<CrossJoinLeft>().Delete();
+				db.GetTable<CrossJoinRight>().Delete();
+				db.GetTable<CrossJoinResult>().Delete();
+
+				db.Insert(new CrossJoinLeft() { Id = 1 });
+				db.Insert(new CrossJoinLeft() { Id = 2 });
+				db.Insert(new CrossJoinRight() { Id = 10 });
+				db.Insert(new CrossJoinRight() { Id = 20 });
+				db.Insert(new CrossJoinResult() { Id = 11, LeftId = 100, RightId = 200 });
+
+				var source = from t1 in db.GetTable<CrossJoinLeft>()
+							 from t2 in db.GetTable<CrossJoinRight>()
+							 select new
+							 {
+								 RightId = t2.Id
+							 };
+
+				var rows = db.GetTable<CrossJoinResult>()
+					.Merge()
+					.Using(source)
+					.On((t, s) => t.Id == s.RightId)
+					.InsertWhenNotMatched(s => new CrossJoinResult()
+					{
+						RightId = s.RightId
+					})
+					.Merge();
+
+				// sort on client, see SortedMergeResultsIssue test for details
+				var result = db.GetTable<CrossJoinResult>().AsEnumerable().OrderBy(_ => _.Id).ThenBy(_ => _.RightId).ToList();
+
+				AssertRowCount(4, rows, context);
+
+				Assert.AreEqual(5, result.Count);
+
+				Assert.AreEqual(0, result[0].Id);
+				Assert.AreEqual(0, result[0].LeftId);
+				Assert.AreEqual(10, result[0].RightId);
+
+				Assert.AreEqual(0, result[1].Id);
+				Assert.AreEqual(0, result[1].LeftId);
+				Assert.AreEqual(10, result[1].RightId);
+
+				Assert.AreEqual(0, result[2].Id);
+				Assert.AreEqual(0, result[2].LeftId);
+				Assert.AreEqual(20, result[2].RightId);
+
+				Assert.AreEqual(0, result[3].Id);
+				Assert.AreEqual(0, result[3].LeftId);
+				Assert.AreEqual(20, result[3].RightId);
+
+				Assert.AreEqual(11, result[4].Id);
+				Assert.AreEqual(100, result[4].LeftId);
+				Assert.AreEqual(200, result[4].RightId);
+			}
+		}
+
+		// same as CrossJoinedSourceWithSingleFieldSelection test but with server-side sort
+		// it returns incorrectly ordered data for DB2 and Oracle for some reason
+		[ActiveIssue]
+		[Test, MergeDataContextSource]
+		public void SortedMergeResultsIssue(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				// prepare test data
+				db.GetTable<CrossJoinLeft>().Delete();
+				db.GetTable<CrossJoinRight>().Delete();
+				db.GetTable<CrossJoinResult>().Delete();
+
+				db.Insert(new CrossJoinLeft() { Id = 1 });
+				db.Insert(new CrossJoinLeft() { Id = 2 });
+				db.Insert(new CrossJoinRight() { Id = 10 });
+				db.Insert(new CrossJoinRight() { Id = 20 });
+				db.Insert(new CrossJoinResult() { Id = 11, LeftId = 100, RightId = 200 });
+
+				var source = from t1 in db.GetTable<CrossJoinLeft>()
+							 from t2 in db.GetTable<CrossJoinRight>()
+							 select new
+							 {
+								 RightId = t2.Id
+							 };
+
+				var rows = db.GetTable<CrossJoinResult>()
+					.Merge()
+					.Using(source)
+					.On((t, s) => t.Id == s.RightId)
+					.InsertWhenNotMatched(s => new CrossJoinResult()
+					{
+						RightId = s.RightId
+					})
+					.Merge();
+
+				var result = db.GetTable<CrossJoinResult>().OrderBy(_ => _.Id).ThenBy(_ => _.RightId).ToList();
+
+				AssertRowCount(4, rows, context);
+
+				Assert.AreEqual(5, result.Count);
+
+				Assert.AreEqual(0, result[0].Id);
+				Assert.AreEqual(0, result[0].LeftId);
+				Assert.AreEqual(10, result[0].RightId);
+
+				Assert.AreEqual(0, result[1].Id);
+				Assert.AreEqual(0, result[1].LeftId);
+				Assert.AreEqual(10, result[1].RightId);
+
+				Assert.AreEqual(0, result[2].Id);
+				Assert.AreEqual(0, result[2].LeftId);
+				Assert.AreEqual(20, result[2].RightId);
+
+				Assert.AreEqual(0, result[3].Id);
+				Assert.AreEqual(0, result[3].LeftId);
+				Assert.AreEqual(20, result[3].RightId);
+
+				Assert.AreEqual(11, result[4].Id);
+				Assert.AreEqual(100, result[4].LeftId);
+				Assert.AreEqual(200, result[4].RightId);
+			}
+		}
 	}
 }

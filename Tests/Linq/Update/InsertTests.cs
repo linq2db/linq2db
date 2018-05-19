@@ -1,9 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
-
-#if !NOASYNC
 using System.Threading.Tasks;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -25,7 +23,7 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DistinctInsert1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -56,7 +54,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access)]
 		public void DistinctInsert2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -137,8 +135,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Insert2Async(string context)
 		{
@@ -164,8 +160,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void Insert3(string context)
@@ -195,8 +189,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Insert3Async(string context)
 		{
@@ -224,8 +216,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void Insert31(string context)
@@ -283,8 +273,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Insert4Async(string context)
 		{
@@ -311,8 +299,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void Insert5(string context)
@@ -431,7 +417,7 @@ namespace Tests.xUpdate
 					db.Parent.Delete(p => p.ParentID > 1000);
 
 					db.Insert(new Parent { ParentID = id, Value1 = id });
-		
+
 					Assert.AreEqual(1,
 						db.Parent
 							.Where(p => p.ParentID == id)
@@ -561,7 +547,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(TestProvName.SQLiteMs)]
+		[Test, DataContextSource(ProviderName.SQLiteMS)]
 		public void InsertUnion1(string context)
 		{
 			Child.Count();
@@ -728,8 +714,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertWithIdentity1Async(string context)
 		{
@@ -754,8 +738,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#endif
-
 		[Test, DataContextSource]
 		public void InsertWithIdentity2(string context)
 		{
@@ -778,8 +760,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertWithIdentity2Async(string context)
 		{
@@ -801,8 +781,6 @@ namespace Tests.xUpdate
 				Assert.AreEqual(id, john.ID);
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void InsertWithIdentity3(string context)
@@ -852,8 +830,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertWithIdentity4Async(string context)
 		{
@@ -879,8 +855,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void InsertWithIdentity5(string context)
@@ -912,7 +886,7 @@ namespace Tests.xUpdate
 		class GuidID
 		{
 			[Identity] public Guid ID;
-			           public int  Field1;
+					   public int  Field1;
 		}
 
 		[Test, IncludeDataContextSource(
@@ -1036,7 +1010,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[DataContextSource]
+		[Test, DataContextSource(ProviderName.OracleNative)]
 		public void InsertOrUpdate2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1141,8 +1115,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertOrReplace1Async(string context)
 		{
@@ -1177,8 +1149,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test]
 		public void InsertOrReplaceWithIdentity()
@@ -1247,8 +1217,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task InsertOrUpdate3Async(string context)
 		{
@@ -1297,8 +1265,6 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-
-#endif
 
 		[Test, IncludeDataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void InsertBatch1(string context)
@@ -1558,6 +1524,202 @@ namespace Tests.xUpdate
 				finally
 				{
 					tbl.Delete(r => r.ID >= 1000);
+				}
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+		public void InsertWith(string context)
+		{
+			var m = null as int?;
+
+			using (var db = GetDataContext(context))
+			{
+				(
+					from c in db.Child.With("INDEX(IX_ChildIndex)")
+					join id in db.GrandChild on c.ParentID equals id.ParentID
+					where id.ChildID == m
+					select c.ChildID
+				)
+				.Distinct()
+				.Insert(db.Parent, t => new Parent { ParentID = t });
+			}
+		}
+
+		[Test, DataContextSource]
+		public void InsertByTableName(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
+
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
+
+					var person = new Person()
+					{
+						FirstName = "Steven",
+						LastName = "King",
+						Gender = Gender.Male,
+					};
+
+					// insert a row into the table
+					db.Insert(person, tableName: tableName, schemaName: schemaName);
+					var newId1 = db.InsertWithInt32Identity(person, tableName: tableName, schemaName: schemaName);
+					var newId2 = db.InsertWithIdentity(person, tableName: tableName, schemaName: schemaName);
+
+					var newCount = table.Count();
+					Assert.AreEqual(3, newCount);
+
+					Assert.AreNotEqual(newId1, newId2);
+
+					var integritycount = table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).Count();
+					Assert.AreEqual(3, integritycount);
+
+					table.Drop();
+				}
+				finally
+				{
+					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task InsertByTableNameAsync(string context)
+		{
+			const string schemaName = null;
+			const string tableName  = "xxPerson";
+
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
+
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
+
+					var person = new Person()
+					{
+						FirstName = "Steven",
+						LastName = "King",
+						Gender = Gender.Male,
+					};
+
+					// insert a row into the table
+					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+					var newId1 = await db.InsertWithInt32IdentityAsync(person, tableName: tableName, schemaName: schemaName);
+					var newId2 = await db.InsertWithIdentityAsync(person, tableName: tableName, schemaName: schemaName);
+
+					var newCount = await table.CountAsync();
+					Assert.AreEqual(3, newCount);
+
+					Assert.AreNotEqual(newId1, newId2);
+
+					var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
+					Assert.AreEqual(3, integritycount);
+					await table.DropAsync();
+				}
+				finally
+				{
+					await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public void InsertOrReplaceByTableName(string context)
+		{
+			const string schemaName = null;
+			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
+
+			using (var db = GetDataContext(context))
+			{
+				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				var table = db.CreateTable<Patient>(tableName, schemaName: schemaName);
+
+				try
+				{
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
+
+					var person1 = new Patient()
+					{
+						PersonID = 1,
+						Diagnosis = "ABC1",
+					};
+
+					var person2 = new Patient()
+					{
+						PersonID = 2,
+						Diagnosis = "ABC2",
+					};
+
+
+					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(2, table.Count());
+
+					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(2, table.Count());
+				}
+				finally
+				{
+					table.Drop(throwExceptionIfNotExists: false);
+				}
+			}
+		}
+
+		[Test, DataContextSource]
+		public async Task InsertOrReplaceByTableNameAsync(string context)
+		{
+			const string schemaName = null;
+			var tableName  = "xxPatient" + TestUtils.GetNext().ToString();
+
+			using (var db = GetDataContext(context))
+			{
+				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				var table = await db.CreateTableAsync<Patient>(tableName, schemaName: schemaName);
+				try
+				{
+					Assert.AreEqual(tableName, table.TableName);
+					Assert.AreEqual(schemaName, table.SchemaName);
+
+					var person1 = new Patient()
+					{
+						PersonID = 1,
+						Diagnosis = "ABC1",
+					};
+
+					var person2 = new Patient()
+					{
+						PersonID = 2,
+						Diagnosis = "ABC2",
+					};
+
+
+					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(2, await table.CountAsync());
+
+					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+					Assert.AreEqual(2, await table.CountAsync());
+				}
+				finally
+				{
+					await table.DropAsync(throwExceptionIfNotExists: false);
 				}
 			}
 		}

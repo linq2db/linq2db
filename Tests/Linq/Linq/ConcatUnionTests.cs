@@ -24,8 +24,6 @@ namespace Tests.Linq
 					(from p in db.Parent where p.ParentID == 2 select p)));
 		}
 
-#if !NOASYNC
-
 		[Test, DataContextSource]
 		public async Task Concat1Async(string context)
 		{
@@ -34,13 +32,11 @@ namespace Tests.Linq
 					(from p in Parent where p.ParentID == 1 select p).Concat(
 					(from p in Parent where p.ParentID == 2 select p))
 					,
-					await 
+					await
 					(from p in db.Parent where p.ParentID == 1 select p).Concat(
 					(from p in db.Parent where p.ParentID == 2 select p))
 					.ToListAsync());
 		}
-
-#endif
 
 		[Test, DataContextSource]
 		public void Concat11(string context)
@@ -790,14 +786,14 @@ namespace Tests.Linq
 					.ToList();
 
 				var expected =
-					Types
+					GetTypes(context)
 						.GroupBy(_ => new { month = _.DateTimeValue.Month, year = _.DateTimeValue.Year })
 						.Select(_ => _.Key)
 						.Select(_ => new { _.month, _.year, @int = 1 })
 					.Union(
-						Types.Select(_ => new { month = (int)_.SmallIntValue, year = (int)_.SmallIntValue, @int = 3 }))
+						GetTypes(context).Select(_ => new { month = (int)_.SmallIntValue, year = (int)_.SmallIntValue, @int = 3 }))
 					.Union(
-						Types.Select(_ => new { month = _.DateTimeValue.Year, year = _.DateTimeValue.Year, @int = 2 }))
+						GetTypes(context).Select(_ => new { month = _.DateTimeValue.Year, year = _.DateTimeValue.Year, @int = 2 }))
 //					.AsEnumerable()
 //					.OrderBy(_ => _.month)
 //					.ThenBy (_ => _.year)

@@ -1,0 +1,1 @@
+<#@ assembly name="$(LinqToDBT4ToolsDirectory)linq2db.dll" #>

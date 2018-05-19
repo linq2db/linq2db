@@ -1,0 +1,155 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net452;netcoreapp2.0</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<None Update="Access.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Access.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="Access.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Access.tt</DependentUpon>
+		</Compile>
+
+		<None Update="DB2.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>DB2.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="DB2.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>DB2.tt</DependentUpon>
+		</Compile>
+
+		<None Update="Informix.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Informix.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="Informix.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Informix.tt</DependentUpon>
+		</Compile>
+
+		<None Update="MySql.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MySql.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="MySql.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MySql.tt</DependentUpon>
+		</Compile>
+
+		<None Update="Oracle.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Oracle.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="Oracle.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Oracle.tt</DependentUpon>
+		</Compile>
+
+		<None Update="PostgreSQL.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>PostgreSQL.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="PostgreSQL.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>PostgreSQL.tt</DependentUpon>
+		</Compile>
+
+		<None Update="SapHana.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SapHana.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="SapHana.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SapHana.tt</DependentUpon>
+		</Compile>
+
+		<None Update="SqlCe.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SqlCe.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="SqlCe.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlCe.tt</DependentUpon>
+		</Compile>
+
+		<None Update="SQLite.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SQLite.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="SQLite.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SQLite.tt</DependentUpon>
+		</Compile>
+
+		<None Update="Sybase.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Sybase.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="Sybase.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Sybase.tt</DependentUpon>
+		</Compile>
+
+		<None Update="Firebird.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Firebird.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="Firebird.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Firebird.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'net452'">
+		<None Remove="SqlServer.tt" />
+		<Compile Remove="SqlServer.generated.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net452'">
+		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
+
+		<None Update="SqlServer.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SqlServer.generated.cs</LastGenOutput>
+		</None>
+
+		<Compile Update="SqlServer.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServer.tt</DependentUpon>
+		</Compile>
+
+		<None Update="SqlServerTypes\x64\msvcr120.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x86\msvcr120.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+</Project>

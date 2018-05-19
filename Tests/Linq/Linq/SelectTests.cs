@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 using System.Windows.Forms;
 #endif
 
@@ -455,7 +455,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if !NETSTANDARD
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
 		[Test, DataContextSource]
 		public void ConstractClass(string context)
 		{
@@ -533,14 +533,14 @@ namespace Tests.Linq
 		{
 			public class Factory : IObjectFactory
 			{
-#region IObjectFactory Members
+				#region IObjectFactory Members
 
 				public object CreateInstance(TypeAccessor typeAccessor)
 				{
 					return typeAccessor.CreateInstance();
 				}
 
-#endregion
+				#endregion
 			}
 
 			public int    PersonID;
@@ -630,9 +630,9 @@ namespace Tests.Linq
 			{
 				var r = db.GetTable<ComplexPerson>().First(_ => _.ID == 1);
 
-				Assert.IsNotEmpty(r.Name.FirstName);
-				Assert.IsNotEmpty(r.Name.MiddleName);
-				Assert.IsNotEmpty(r.Name.LastName);
+				Assert.AreEqual("John", r.Name.FirstName);
+				Assert.IsNull(r.Name.MiddleName);
+				Assert.AreEqual("Pupkin", r.Name.LastName);
 			}
 		}
 
@@ -643,9 +643,9 @@ namespace Tests.Linq
 			{
 				var r = db.GetTable<ComplexPerson2>().First(_ => _.ID == 1);
 
-				Assert.IsNotEmpty(r.Name.FirstName);
-				Assert.IsNotEmpty(r.Name.MiddleName);
-				Assert.IsNotEmpty(r.Name.LastName);
+				Assert.AreEqual("John", r.Name.FirstName);
+				Assert.IsNull(r.Name.MiddleName);
+				Assert.AreEqual("Pupkin", r.Name.LastName);
 			}
 		}
 
@@ -666,9 +666,9 @@ namespace Tests.Linq
 			{
 				var r = db.GetTable<ComplexPerson3>().First(_ => _.ID == 1);
 
-				Assert.IsNotEmpty(r.Name.FirstName);
-				Assert.IsNotEmpty(r.Name.MiddleName);
-				Assert.IsNotEmpty(r.Name.LastName);
+				Assert.AreEqual("John", r.Name.FirstName);
+				Assert.IsNull(r.Name.MiddleName);
+				Assert.AreEqual("Pupkin", r.Name.LastName);
 			}
 		}
 
