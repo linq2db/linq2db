@@ -664,25 +664,20 @@ namespace Tests.DataProvider
 			{
 				db.InlineParameters = false;
 
-				var ID      = 1000;
 				var value   = "致我们最爱的母亲";
 
-				db.GetTable<ALLTYPE>()
-					.Insert(() => new ALLTYPE
+				var id = db.GetTable<ALLTYPE>()
+					.InsertWithInt32Identity(() => new ALLTYPE
 					{
-						ID = ID,
-						NVARCHARDATATYPE = value,
+						NVARCHARDATATYPE = value
 					});
 
 				var query = from p in db.GetTable<ALLTYPE>()
-							where p.ID == ID
-							select p;
+							where p.ID == id
+							select new { p.NVARCHARDATATYPE };
 
-				var res = query.FirstOrDefault();
-				if (res != null)
-				{
-					Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
-				}
+				var res = query.Single();
+				Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
 			}
 		}
 
@@ -694,29 +689,24 @@ namespace Tests.DataProvider
 			{
 				db.InlineParameters = false;
 
-				var ID    = 1000;
 				var value = "致我们最爱的母亲";
 
-				db.GetTable<ALLTYPE>()
-					.Insert(() => new ALLTYPE
+				var id = db.GetTable<ALLTYPE>()
+					.InsertWithInt32Identity(() => new ALLTYPE
 					{
-						ID = ID
+						INTDATATYPE = 123
 					});
-
 
 				db.GetTable<ALLTYPE>()
 					.Set(e => e.NVARCHARDATATYPE, () => value)
 					.Update();
 
 				var query = from p in db.GetTable<ALLTYPE>()
-							where p.ID == ID
-							select p;
+							where p.ID == id
+							select new { p.NVARCHARDATATYPE };
 
-				var res = query.FirstOrDefault();
-				if (res != null)
-				{
-					Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
-				}
+				var res = query.Single();
+				Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
 			}
 		}
 
