@@ -646,6 +646,64 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test, OracleDataContext]
+		public void NVarchar2InsertTest(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+
+				db.InlineParameters = false;
+				db.BeginTransaction();
+				
+				var value   = "致我们最爱的母亲";
+				var alltype = new ALLTYPE
+				{
+					ID = 1000,
+					NVARCHARDATATYPE = value,
+				};
+
+				db.Insert(alltype);
+
+				var query = from p in db.GetTable<ALLTYPE>()
+							where p.ID == alltype.ID
+							select p;
+
+				var res = query.FirstOrDefault();
+				if (res != null)
+				{
+					Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
+				}
+			}
+		}
+
+		[Test, OracleDataContext]
+		public void NVarchar2UpdateTest(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.InlineParameters = false;
+				db.BeginTransaction();
+
+				var query = from p in db.GetTable<ALLTYPE>()
+					select p;
+
+				var res = query.FirstOrDefault();
+				if (res != null)
+				{
+					var value = "致我们最爱的母亲";
+					query.Set(e => e.NVARCHARDATATYPE, () => value)
+						.Update();
+
+					res = (from p in db.GetTable<ALLTYPE>()
+						where p.ID == res.ID
+						select p).First();
+
+					Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
+				}
+			}
+		}
+
 		[Test, IncludeDataContextSourceAttribute(ProviderName.OracleNative)]
 		public void SelectDateTime(string context)
 		{
