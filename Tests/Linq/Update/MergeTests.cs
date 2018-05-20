@@ -242,7 +242,7 @@ namespace Tests.xUpdate
 		private void AssertRowCount(int expected, int actual, string context)
 		{
 			// another sybase quirk, nothing surprising
-			if (context == ProviderName.Sybase)
+			if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
 				Assert.LessOrEqual(expected, actual);
 			else if (context == ProviderName.OracleNative && actual == -1)
 			{ }

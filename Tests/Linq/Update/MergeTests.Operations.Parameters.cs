@@ -15,7 +15,7 @@ namespace Tests.xUpdate
 	{
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParameters1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParameters3(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -323,7 +323,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void TestParametersInDeleteCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))

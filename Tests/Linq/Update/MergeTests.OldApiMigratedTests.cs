@@ -16,7 +16,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Sybase)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Merge(string context)
 		{
 			using (var db = new TestDataConnection(context))
