@@ -176,6 +176,7 @@
 			"Oracle.Managed"      : { "Provider" : "Oracle.ManagedDataAccess.Client", "ConnectionString" : "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=DBHost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=TestData)));User Id=TestUser;Password=TestPassword;" },
 			"PostgreSQL"          : { "Provider" : "Npgsql",                          "ConnectionString" : "Server=DBHost;Port=5433;Database=TestData;User Id=postgres;Password=TestPassword;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
 			"Sybase"              : { "Provider" : "Sybase.Data.AseClient",           "ConnectionString" : "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;" },
+			"Sybase.Managed"      : { "Provider" : "AdoNetCore.AseClient",            "ConnectionString" : "Data Source=DBHost;Port=5000;Database=TestDataCore;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;" },
 			"SapHana"             : { "Provider" : "Sap.Data.Hana",                   "ConnectionString" : "Server=hanahost:port;Current Schema=TEST;UserID=Test;Password=TestPassword;"      },
 			"Northwind"           : { "Provider" : "System.Data.SqlClient",           "ConnectionString" : "Server=DBHost\\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword" }
 		}
@@ -238,6 +239,7 @@
 			"Oracle.Managed",
 			"PostgreSQL",
 			"Sybase",
+			"Sybase.Managed",
 			"SapHana",
 			"Northwind",
 			"TestNoopProvider"

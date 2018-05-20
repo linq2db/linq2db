@@ -137,7 +137,7 @@ namespace Tests.UserTests
 		}
 
 		[Test, IncludeDataContextSource(false,
-			ProviderName.Sybase,
+			ProviderName.Sybase, ProviderName.SybaseManaged,
 			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB)]
 		public void TestWithTransactionThrowsFromLinqToDB(string context)
 		{

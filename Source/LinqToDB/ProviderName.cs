@@ -126,10 +126,15 @@ namespace LinqToDB
 		/// </summary>
 		public const string SQLiteMS      = "SQLite.MS";
 		/// <summary>
-		/// Sybase ASE provider.
-		/// Used as configuration name for Sybase ASE mapping schema <see cref="DataProvider.Sybase.SybaseMappingSchema"/>.
+		/// Native SAP/Sybase ASE provider.
+		/// Used as configuration name for Sybase ASE mapping schema <see cref="DataProvider.Sybase.SybaseMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
 		public const string Sybase        = "Sybase";
+		/// <summary>
+		/// Managed Sybase/SAP ASE provider from <a href="https://github.com/DataAction/AdoNetCore.AseClient">DataAction</a>.
+		/// Used as configuration name for Sybase ASE mapping schema <see cref="DataProvider.Sybase.SybaseMappingSchema.ManagedMappingSchema"/>.
+		/// </summary>
+		public const string SybaseManaged = "Sybase.Managed";
 		/// <summary>
 		/// SAP HANA provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema"/>.

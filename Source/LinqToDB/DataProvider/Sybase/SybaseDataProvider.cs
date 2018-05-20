@@ -6,7 +6,6 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Common;
 	using Data;
 	using Mapping;
 	using SchemaProvider;
@@ -17,12 +16,12 @@ namespace LinqToDB.DataProvider.Sybase
 		#region Init
 
 		public SybaseDataProvider()
-			: this(ProviderName.Sybase, new SybaseMappingSchema())
+			: this(SybaseTools.DetectedProviderName)
 		{
 		}
 
-		protected SybaseDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+		public SybaseDataProvider(string name)
+			: base(name, null)
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter    = false;
 			SqlProviderFlags.IsSkipSupported           = false;
@@ -43,9 +42,10 @@ namespace LinqToDB.DataProvider.Sybase
 			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace => SybaseTools.AssemblyName;
-		protected override string ConnectionTypeName  => $"Sybase.Data.AseClient.AseConnection, {ConnectionNamespace}";
-		protected override string DataReaderTypeName  => $"Sybase.Data.AseClient.AseDataReader, {ConnectionNamespace}";
+		public             string AssemblyName        => Name == ProviderName.Sybase ? SybaseTools.NativeAssemblyName : "AdoNetCore.AseClient";
+		public    override string ConnectionNamespace => Name == ProviderName.Sybase ? "Sybase.Data.AseClient" : "AdoNetCore.AseClient";
+		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.AseConnection, {AssemblyName}";
+		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.AseDataReader, {AssemblyName}";
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
 		{
@@ -73,7 +73,6 @@ namespace LinqToDB.DataProvider.Sybase
 			_setTime          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Time");
 			_setSmallDateTime = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallDateTime");
 			_setTimestamp     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "TimeStamp");
-			_isUnsupported    = IsGetParameter (connectionType, "AseParameter", "AseDbType", "AseDbType", "Unsupported");
 		}
 
 		static Action<IDbDataParameter> _setUInt16;
@@ -91,8 +90,6 @@ namespace LinqToDB.DataProvider.Sybase
 		static Action<IDbDataParameter> _setSmallDateTime;
 		static Action<IDbDataParameter> _setTimestamp;
 
-		static Func<IDbDataParameter,bool> _isUnsupported;
-
 		#endregion
 
 		#region Overrides
@@ -101,6 +98,16 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
+
+		static class MappingSchemaInstance
+		{
+			public static readonly SybaseMappingSchema.NativeMappingSchema  NativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
+			public static readonly SybaseMappingSchema.ManagedMappingSchema ManagedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
+		}
+
+		public override MappingSchema MappingSchema => Name == ProviderName.Sybase
+			? MappingSchemaInstance.NativeMappingSchema as MappingSchema
+			: MappingSchemaInstance.ManagedMappingSchema;
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
@@ -173,11 +180,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.SmallDateTime : _setSmallDateTime(parameter);               break;
 				case DataType.Timestamp     : _setTimestamp    (parameter);               break;
 				case DataType.DateTime2     :
-					base.SetParameterType(parameter, dataType);
-
-					if (_isUnsupported(parameter))
-						base.SetParameterType(parameter, DataType.DateTime);
-
+					base.SetParameterType(parameter, DataType.DateTime);
 					break;
 
 				default                     : base.SetParameterType(parameter, dataType); break;

@@ -62,9 +62,10 @@ namespace Tests.xUpdate
 			static string[] Supported = new[]
 			{
 				ProviderName.Sybase,
-					  ProviderName.SqlServer2008,
-					  ProviderName.SqlServer2012,
-					  ProviderName.SqlServer2014
+				ProviderName.SybaseManaged,
+				ProviderName.SqlServer2008,
+				ProviderName.SqlServer2012,
+				ProviderName.SqlServer2014
 			};
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
