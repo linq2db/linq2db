@@ -905,11 +905,10 @@ namespace LinqToDB.Data
 			if (parameters is DataParameter)
 				return new[] { (DataParameter)parameters };
 
-			Func<object,DataParameter[]> func;
 			var type = parameters.GetType();
 			var key  = new ParamKey(type, dataConnection.ID);
 
-			if (!_parameterReaders.TryGetValue(key, out func))
+			if (!_parameterReaders.TryGetValue(key, out Func<object, DataParameter[]> func))
 			{
 				var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
 				var p   = Expression.Parameter(typeof(object), "p");
