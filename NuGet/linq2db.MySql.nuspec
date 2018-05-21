@@ -26,7 +26,7 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net452\MySql.Data.dll" target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\MySql.Data.dll"  target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll" target="tools" />
 		
 		<file src="MySql\linq2db.MySql.props"                        target="build" />

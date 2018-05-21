@@ -27,7 +27,7 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net452\Oracle.ManagedDataAccess.dll" target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\Oracle.ManagedDataAccess.dll"  target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"               target="tools" />
 		
 		<file src="Oracle\linq2db.Oracle.props"                                    target="build\linq2db.Oracle.Managed.props" />

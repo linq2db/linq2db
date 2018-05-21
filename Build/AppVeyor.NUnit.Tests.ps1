@@ -1,8 +1,8 @@
 $wc = New-Object System.Net.WebClient
 $exit = 0
 
-$logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_net452_results.xml"
-nunit3-console Tests\Linq\bin\AppVeyor\net452\linq2db.Tests.dll --result=$logFileName --where "cat != Ignored"
+$logFileName = "$env:APPVEYOR_BUILD_FOLDER\nunit_net46_results.xml"
+nunit3-console Tests\Linq\bin\AppVeyor\net46\linq2db.Tests.dll --result=$logFileName --where "cat != Ignored"
 if ($LastExitCode -ne 0) { $exit = $LastExitCode }
 #$wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$env:APPVEYOR_JOB_ID", "$logFileName")
 

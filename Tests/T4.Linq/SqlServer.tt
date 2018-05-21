@@ -4,8 +4,8 @@
 <#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"           #>
 <#@ include file="..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude"             #>
 <#@ include file="SqlServer.ttinclude"                                                      #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\Microsoft.SqlServer.Types.dll" #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"                   #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\Microsoft.SqlServer.Types.dll"  #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"                    #>
 <#
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
