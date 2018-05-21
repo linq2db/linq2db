@@ -98,7 +98,7 @@ string GetTestTargetFramework()
 {
 	var e = EnvironmentVariable("testTargetFramework")
 		?? Argument<string>("ttf", null)
-		?? "net452";
+		?? "net46";
 
 	return e.ToLower();
 }

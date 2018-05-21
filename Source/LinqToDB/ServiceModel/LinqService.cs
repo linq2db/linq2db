@@ -10,8 +10,8 @@ namespace LinqToDB.ServiceModel
 	using Common;
 	using Data;
 	using Linq;
-    using LinqToDB.Extensions;
-    using SqlQuery;
+	using LinqToDB.Extensions;
+	using SqlQuery;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]
