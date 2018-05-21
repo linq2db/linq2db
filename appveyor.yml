@@ -21,7 +21,7 @@ environment:
 ##  testConfiguration: AppVeyor
 ##  matrix:
 ##    - target: Default
-##      testTargetFramework: net452
+##      testTargetFramework: net46
 ##    - target: Core1
 ##      testTargetFramework: netcoreapp1.0
 ##      testRunner: dotnet
