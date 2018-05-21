@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						TraceAction(
 							dataConnection,
-							"INSERT BULK " + tableName + Environment.NewLine,
+							() => "INSERT BULK " + tableName + Environment.NewLine,
 							() => { dbc.WriteToServer(rd); return rd.Count; });
 					}
 

@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.DB2
 
 						TraceAction(
 							dataConnection,
-							"INSERT BULK " + tableName + Environment.NewLine,
+							() => "INSERT BULK " + tableName + Environment.NewLine,
 							() => { dbc.WriteToServer(rd); return rd.Count; });
 					}
 
