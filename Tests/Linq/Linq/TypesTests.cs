@@ -338,7 +338,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql,
-				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3)]
+				ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3)]
 		public void DateTime22(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -359,7 +359,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql,
-				ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3)]
+				ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.MariaDB, TestProvName.MySql57, TestProvName.Firebird3)]
 		public void DateTime23(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -383,7 +383,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, TestProvName.MariaDB,
-				TestProvName.MariaDB, TestProvName.MySql57, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.Firebird3)]
+				TestProvName.MariaDB, TestProvName.MySql57, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.SqlServer2000, ProviderName.SapHana, TestProvName.Firebird3)]
 		public void DateTime24(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -477,7 +477,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Value = p.Value1.GetValueOrDefault() });
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Sybase), Category("WindowsOnly")]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.Sybase, ProviderName.SybaseManaged), Category("WindowsOnly")]
 		public void Unicode(string context)
 		{
 			using (var db = GetDataContext(context))

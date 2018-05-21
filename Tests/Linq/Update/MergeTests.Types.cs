@@ -661,7 +661,7 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected, actual);
 		}
 
-		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.Sybase)]
+		[Test, MergeDataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void TestTypesInsertByMerge(string context)
 		{
 			using (var db = new TestDataConnection(context))

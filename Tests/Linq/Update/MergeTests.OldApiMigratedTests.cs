@@ -182,10 +182,9 @@ namespace Tests.xUpdate
 			public string nvarcharDataType;
 		}
 
-		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public void MergeChar1(string context)
 		{
 			using (var db = new TestDataConnection(context))

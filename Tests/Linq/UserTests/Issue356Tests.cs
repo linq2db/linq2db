@@ -28,7 +28,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Access)]
 		public void Test2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -49,7 +49,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(true, ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase)]
+		[Test, DataContextSource(true, ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Test3(string context)
 		{
 			using (var db = GetDataContext(context))

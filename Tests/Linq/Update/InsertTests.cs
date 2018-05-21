@@ -1390,7 +1390,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2000,
-			ProviderName.SqlServer2005, ProviderName.Sybase)]
+			ProviderName.SqlServer2005, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Insert14(string context)
 		{
 			using (var db = GetDataContext(context))
