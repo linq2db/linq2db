@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.Sybase
 #if !NETSTANDARD1_6
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new SybaseSchemaProvider();
+			return new SybaseSchemaProvider(Name);
 		}
 #endif
 
