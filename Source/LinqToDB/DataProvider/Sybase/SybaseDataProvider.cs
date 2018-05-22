@@ -63,27 +63,30 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			if (_methods == null && !_providerMethods.ContainsKey(connectionType))
-			{
-				_methods = new SybaseProviderMethods();
+			if (_methods == null)
+				if (!_providerMethods.ContainsKey(connectionType))
+				{
+					_methods = new SybaseProviderMethods();
 
-				_methods.SetUInt16        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedSmallInt");
-				_methods.SetUInt32        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedInt"     );
-				_methods.SetUInt64        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedBigInt"  );
-				_methods.SetText          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Text"            );
-				_methods.SetNText         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Unitext"         );
-				_methods.SetBinary        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Binary"          );
-				_methods.SetVarBinary     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "VarBinary"       );
-				_methods.SetImage         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Image"           );
-				_methods.SetMoney         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Money"           );
-				_methods.SetSmallMoney    = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallMoney"      );
-				_methods.SetDate          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Date"            );
-				_methods.SetTime          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Time"            );
-				_methods.SetSmallDateTime = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallDateTime"   );
-				_methods.SetTimestamp     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "TimeStamp"       );
+					_methods.SetUInt16        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedSmallInt");
+					_methods.SetUInt32        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedInt"     );
+					_methods.SetUInt64        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedBigInt"  );
+					_methods.SetText          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Text"            );
+					_methods.SetNText         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Unitext"         );
+					_methods.SetBinary        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Binary"          );
+					_methods.SetVarBinary     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "VarBinary"       );
+					_methods.SetImage         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Image"           );
+					_methods.SetMoney         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Money"           );
+					_methods.SetSmallMoney    = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallMoney"      );
+					_methods.SetDate          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Date"            );
+					_methods.SetTime          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Time"            );
+					_methods.SetSmallDateTime = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallDateTime"   );
+					_methods.SetTimestamp     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "TimeStamp"       );
 
-				_providerMethods.TryAdd(connectionType, _methods);
-			}
+					_providerMethods.TryAdd(connectionType, _methods);
+				}
+				else
+					_methods = _providerMethods[connectionType];
 		}
 
 		#endregion
@@ -207,5 +210,23 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 		#endregion
+
+		private class SybaseProviderMethods
+		{
+			public Action<IDbDataParameter> SetUInt16;
+			public Action<IDbDataParameter> SetUInt32;
+			public Action<IDbDataParameter> SetUInt64;
+			public Action<IDbDataParameter> SetText;
+			public Action<IDbDataParameter> SetNText;
+			public Action<IDbDataParameter> SetBinary;
+			public Action<IDbDataParameter> SetVarBinary;
+			public Action<IDbDataParameter> SetImage;
+			public Action<IDbDataParameter> SetMoney;
+			public Action<IDbDataParameter> SetSmallMoney;
+			public Action<IDbDataParameter> SetDate;
+			public Action<IDbDataParameter> SetTime;
+			public Action<IDbDataParameter> SetSmallDateTime;
+			public Action<IDbDataParameter> SetTimestamp;
+		}
 	}
 }
