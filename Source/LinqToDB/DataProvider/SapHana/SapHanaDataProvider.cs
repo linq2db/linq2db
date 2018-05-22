@@ -58,9 +58,13 @@ namespace LinqToDB.DataProvider.SapHana
 				if (_dataReaderType != null)
 					return _dataReaderType;
 
-				var assembly = DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly;
+				_dataReaderType = Type.GetType(DataReaderTypeName, false);
 
-				_dataReaderType = Type.GetType($"{ConnectionNamespace}.HanaDataReader, {assembly.GetName()}");
+				if (_dataReaderType == null)
+				{
+					var assembly = DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly;
+					_dataReaderType = Type.GetType($"{ConnectionNamespace}.HanaDataReader, {assembly.GetName()}", true);
+				}
 
 				return _dataReaderType;
 			}
@@ -72,12 +76,14 @@ namespace LinqToDB.DataProvider.SapHana
 				lock (SyncRoot)
 					if (_connectionType == null)
 					{
-						var db = DbProviderFactories.GetFactory("Sap.Data.Hana").CreateConnection();
+						_connectionType = Type.GetType(ConnectionTypeName, false);
 
-						if (db == null)
-							throw new Exception("The Hana Driver is not installed.");
+						if (_connectionType == null)
+						{
+							var db = DbProviderFactories.GetFactory("Sap.Data.Hana").CreateConnection();
 
-						_connectionType = db.GetType();
+							_connectionType = db.GetType();
+						}
 
 						OnConnectionTypeCreated(_connectionType);
 					}
