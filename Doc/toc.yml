@@ -1,5 +1,3 @@
-- name:
-  homepage: ../readme.md
 - name: Articles
   href: articles/
 - name: Api Documentation

@@ -1,22 +1,13 @@
-- name: Contributing
-  href: contrib.md
-- name: Databases
-  href: databases.md
-- name: Packages and frameworks
-  href: supportedfw.md
-- name: Help the project
-  href: How-can-i-help.md
+- name: Release Notes
+  href: releasenotes/toc.yml
+- name: General topics
+  href: general/toc.yml
+- name: SQL
+  href: sql/toc.yml
+  topicHref: sql/Join-operators.md
+- name: T4 templates
+  href: ../../Source/LinqToDB.Templates/README.md
 - name: FAQ
   href: FAQ.md
-- name: Managing Data Connection
-  href: Managing-data-connection.md
-- name: Creating Generic CRUD Class
-  href: Creating-Generic-CRUD-Class.md
-- name: Joins
-  href: Join-Operators.md
-- name: Window Functions (Analytic Functions)
-  href: Window-Functions-(Analytic-Functions).md
-- name: MERGE support
-  href: Merge-API.md
-- name: Videos
-  href: video.md
+- name: Project
+  href: project/toc.yml

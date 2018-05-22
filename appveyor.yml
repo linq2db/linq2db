@@ -12,7 +12,9 @@ branches:
 environment:
   assemblyVersion: 2.1.0
   packageVersion: 2.1.0
-  access_token:
+  docfxuser: "ili"
+  docfxmail: "docfx@linq2db.com"
+  docfxsecret:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
 ##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
 ##  #testFilter: TestCategory=Create
@@ -51,7 +53,7 @@ nuget:
   project_feed: false
 
 build_script:
-  msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
+- cmd: msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
 ##- ps: .\build.ps1
 
 before_build:
@@ -94,6 +96,12 @@ after_build:
     cd NuGet
     PackAV
     cd ..
+- ps: |
+      if ($env:APPVEYOR_REPO_BRANCH -eq "master")
+      {
+        .\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail
+      }
+
 
 test_script:
   - ps: .\Build\AppVeyor.NUnit.Tests.ps1
