@@ -79,11 +79,8 @@ namespace LinqToDB.DataProvider.SapHana
 						_connectionType = Type.GetType(ConnectionTypeName, false);
 
 						if (_connectionType == null)
-						{
-							var db = DbProviderFactories.GetFactory("Sap.Data.Hana").CreateConnection();
-
-							_connectionType = db.GetType();
-						}
+							using (var db = DbProviderFactories.GetFactory("Sap.Data.Hana").CreateConnection())
+								_connectionType = db.GetType();
 
 						OnConnectionTypeCreated(_connectionType);
 					}
