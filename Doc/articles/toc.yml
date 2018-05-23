@@ -4,7 +4,6 @@
   href: general/toc.yml
 - name: SQL
   href: sql/toc.yml
-  topicHref: sql/Join-operators.md
 - name: T4 templates
   href: ../../Source/LinqToDB.Templates/README.md
 - name: FAQ

@@ -4,18 +4,21 @@
       "src": [
         {
           "files": [
-            "Source/LinqToDB/LinqToDB.csproj"
+            "**/*.csproj"
           ],
           "exclude": [
             "**/obj/**",
             "**/bin/**",
             "_site/**"
           ],
-          "src": "../"
+          "src": "../Source"
         }
       ],
       "dest": "./api",
-      "filter": "filterConfig.yml"
+      "filter": "filterConfig.yml",      
+      "properties": {
+        "TargetFramework": "net45"
+      }
     }
   ],
   "build": {
@@ -65,9 +68,12 @@
     ],
     "dest": "_site",
     "globalMetadataFiles": [],
+    "xref": [
+      "../tools/msdn.4.5.2/content/msdn.4.5.2.zip"
+    ],
     "globalMetadata": {
       "_appTitle": "Linq To DB (aka linq2db)",
-      "_appFooter": "Copyright © 2015-2017 linq2db.com",
+      "_appFooter": "Copyright © 2015-2018 linq2db.com",
       "_enableSearch": true,
       "_appLogoPath":"images/icon.png",
       "_appFaviconPath": "images/icon.ico"

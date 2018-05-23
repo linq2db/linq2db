@@ -97,10 +97,8 @@ after_build:
     PackAV
     cd ..
 - ps: |
-      if ($env:APPVEYOR_REPO_BRANCH -eq "master")
-      {
-        .\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail
-      }
+        $gitDeploy = $env:APPVEYOR_REPO_BRANCH -eq "master"
+        .\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
 
 
 test_script:
