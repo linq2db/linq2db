@@ -4,7 +4,7 @@
       "src": [
         {
           "files": [
-            "Source/LinqToDB.csproj"
+            "Source/LinqToDB/LinqToDB.csproj"
           ],
           "exclude": [
             "**/obj/**",
