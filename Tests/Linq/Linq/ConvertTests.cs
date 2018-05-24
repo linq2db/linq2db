@@ -402,8 +402,11 @@ namespace Tests.Linq
 					from t in db.Types select Sql.Convert(Sql.Date, t.DateTimeValue.Year + "-01-01"));
 		}
 
+		// needs debugging, but suspect it fails due to issue 730
+		[ActiveIssue(730, Configuration = ProviderName.Sybase, SkipForNonLinqService = true)]
+		[ActiveIssue(730, Configuration = ProviderName.SybaseManaged, SkipForNonLinqService = true)]
 		[Test, DataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS
-			, ProviderName.Access, ProviderName.Sybase ///////// TODO
+			, ProviderName.Access
 			)]
 		public void ToSqlTime(string context)
 		{
