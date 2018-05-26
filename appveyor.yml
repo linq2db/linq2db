@@ -12,7 +12,9 @@ branches:
 environment:
   assemblyVersion: 2.1.0
   packageVersion: 2.1.0
-  access_token:
+  docfxuser: "ili"
+  docfxmail: "docfx@linq2db.com"
+  docfxsecret:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
 ##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
 ##  #testFilter: TestCategory=Create
@@ -51,7 +53,7 @@ nuget:
   project_feed: false
 
 build_script:
-  msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
+- cmd: msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
 ##- ps: .\build.ps1
 
 before_build:
@@ -86,6 +88,9 @@ before_build:
     (New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/f/d/8/fd8c20d8-e38a-48b6-8691-542403b91da1/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
     .\AccessDatabaseEngine.exe /quiet
 
+    # docfx build & deploy
+    $gitDeploy = $env:APPVEYOR_REPO_BRANCH -eq "master"
+    .\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
 

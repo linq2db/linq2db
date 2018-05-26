@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						TraceAction(
 							dataConnection,
-							"INSERT BULK " + tableName + Environment.NewLine,
+							() => "INSERT BULK " + tableName + "("+ string.Join(", ", bc.ColumnMappings.Cast<SqlBulkCopyColumnMapping>().Select(x=>x.DestinationColumn)) + Environment.NewLine,
 							() => { bc.WriteToServer(rd); return rd.Count; });
 					}
 

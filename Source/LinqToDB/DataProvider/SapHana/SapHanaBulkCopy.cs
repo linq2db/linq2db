@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				TraceAction(
 					dataConnection,
-					"INSERT BULK " + tableName + Environment.NewLine,
+					() => "INSERT BULK " + tableName + Environment.NewLine,
 					() => { dbc.WriteToServer(rd); return rd.Count; });
 
 				if (rc.RowsCopied != rd.Count)

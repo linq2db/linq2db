@@ -1,8 +1,8 @@
 ---
 uid: contrib
 ---
-[!include[intro](../../contributing.md)]
+[!include[intro](../../../contributing.md)]
 
-# See also
+## See also
 
 * [Issue reporting](xref:newissue)

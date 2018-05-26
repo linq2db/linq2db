@@ -156,7 +156,7 @@ namespace LinqToDB.DataProvider
 #endif
 		}
 
-		protected void TraceAction(DataConnection dataConnection, string commandText, Func<int> action)
+		protected void TraceAction(DataConnection dataConnection, Func<string> commandText, Func<int> action)
 		{
 			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 			{
@@ -164,7 +164,7 @@ namespace LinqToDB.DataProvider
 				{
 					TraceLevel     = TraceLevel.Info,
 					DataConnection = dataConnection,
-					CommandText    = commandText,
+					CommandText    = commandText(),
 				});
 			}
 
@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = dataConnection,
-						CommandText     = commandText,
+						CommandText     = commandText(),
 						ExecutionTime   = DateTime.Now - now,
 						RecordsAffected = count,
 					});
@@ -194,7 +194,7 @@ namespace LinqToDB.DataProvider
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = dataConnection,
-						CommandText    = commandText,
+						CommandText    = commandText(),
 						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
