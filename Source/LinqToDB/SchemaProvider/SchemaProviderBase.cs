@@ -483,6 +483,11 @@ namespace LinqToDB.SchemaProvider
 		{
 		}
 
+		/// <summary>
+		/// Returns list of database data types.
+		/// </summary>
+		/// <param name="dataConnection">Database connection instance.</param>
+		/// <returns>List of database data types.</returns>
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 #if !NETSTANDARD
