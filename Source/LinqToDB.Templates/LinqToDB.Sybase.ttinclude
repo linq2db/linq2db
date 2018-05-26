@@ -1,8 +1,5 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(
-		typeof(Sybase.Data.AseClient.AseConnection).Assembly);
-
 	{
 		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
 		BeforeGenerateLinqToDBModel = () =>
