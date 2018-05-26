@@ -167,50 +167,27 @@ WHERE
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
-			try
+			using (var reader = dataConnection.ExecuteReader(
+				"sp_oledb_stored_procedures",
+				CommandType.StoredProcedure,
+				CommandBehavior.Default))
 			{
-				var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+				return reader.Query(rd =>
+				{
+					var catalog = rd.GetString(0);
+					var schema  = rd.GetString(1);
+					var name    = rd.GetString(2).Split(';')[0];
 
-				return
-				(
-					from p in ps.AsEnumerable()
-					let catalog = p.Field<string>("SPECIFIC_CATALOG")
-					let schema  = p.Field<string>("SPECIFIC_SCHEMA")
-					let name    = p.Field<string>("SPECIFIC_NAME").TrimEnd('\0')
-					select new ProcedureInfo
+					return new ProcedureInfo()
 					{
 						ProcedureID     = catalog + "." + schema + "." + name,
 						CatalogName     = catalog,
 						SchemaName      = schema,
 						ProcedureName   = name,
+						IsFunction      = rd.GetInt16(3) == 2,
 						IsDefaultSchema = schema == "dbo"
-					}
-				).ToList();
-			}
-			catch (NotSupportedException)
-			{
-				using (var reader = dataConnection.ExecuteReader(
-					"sp_oledb_stored_procedures",
-					CommandType.StoredProcedure,
-					CommandBehavior.Default))
-				{
-					return reader.Query(rd =>
-					{
-						var catalog = rd.GetString(0);
-						var schema  = rd.GetString(1);
-						var name    = rd.GetString(2).Split(';')[0];
-
-						return new ProcedureInfo()
-						{
-							ProcedureID     = catalog + "." + schema + "." + name,
-							CatalogName     = catalog,
-							SchemaName      = schema,
-							ProcedureName   = name,
-							IsFunction      = rd.GetInt16(3) == 2,
-							IsDefaultSchema = schema == "dbo"
-						};
-					}).ToList();
-				}
+					};
+				}).ToList();
 			}
 		}
 
@@ -220,67 +197,37 @@ WHERE
 			if (dataConnection.Transaction != null)
 				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
-			try
+			using (var reader = dataConnection.ExecuteReader(
+				"sp_oledb_getprocedurecolumns",
+				CommandType.StoredProcedure,
+				CommandBehavior.Default))
 			{
-				var ps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
-
-				return
-				(
-					from p in ps.AsEnumerable()
-					let catalog = p.Field<string>("SPECIFIC_CATALOG")
-					let schema  = p.Field<string>("SPECIFIC_SCHEMA")
-					let name    = p.Field<string>("SPECIFIC_NAME")
-					let mode    = p.Field<string>("PARAMETER_MODE")
-					where mode != "RETURN"
-					select new ProcedureParameterInfo
-					{
-						ProcedureID     = catalog + "." + schema + "." + name,
-						ParameterName   = p.Field<string>("PARAMETER_NAME").TrimStart('@'),
-						IsIn            = mode == "IN" || mode == "INOUT",
-						IsOut           = mode == "OUT" || mode == "INOUT",
-						//Length        = Converter.ChangeTypeTo<int>(p.Field<object>("ORDINAL_POSITION")),
-						Precision       = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_PRECISION")),
-						Scale           = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_SCALE")),
-						Ordinal         = Converter.ChangeTypeTo<int>(p.Field<object>("ORDINAL_POSITION")),
-						IsResult        = p.Field<string>("IS_RESULT") == "YES",
-						DataType        = p.Field<string>("DATA_TYPE")
-					}
-				).ToList();
-			}
-			catch (NotSupportedException)
-			{
-				using (var reader = dataConnection.ExecuteReader(
-					"sp_oledb_getprocedurecolumns",
-					CommandType.StoredProcedure,
-					CommandBehavior.Default))
+				return reader.Query(rd =>
 				{
-					return reader.Query(rd =>
+					var catalog   = rd.GetString(0);
+					var schema    = rd.GetString(1);
+					var name      = rd.GetString(2);
+					var direction = rd.GetInt32(5);
+					var length    = rd.IsDBNull(10) ? (int?)null : rd.GetInt32(10);
+					var type      = rd.GetString(15);
+
+					if (type == "nchar" || type == "nvarchar")
+						length /= 3; // that's right...
+
+					return new ProcedureParameterInfo()
 					{
-						var catalog   = rd.GetString(0);
-						var schema    = rd.GetString(1);
-						var name      = rd.GetString(2);
-						var direction = rd.GetInt32(5);
-						var length    = rd.IsDBNull(10) ? (int?)null : rd.GetInt32(10);
-						var type      = rd.GetString(15);
-
-						if (type == "nchar" || type == "nvarchar")
-							length /= 3; // that's right...
-
-						return new ProcedureParameterInfo()
-						{
-							ProcedureID   = catalog + "." + schema + "." + name,
-							ParameterName = rd.GetString(3).TrimStart('@'),
-							IsIn          = direction == 1 || direction == 2,
-							IsOut         = direction == 3 || direction == 2,
-							Length        = length,
-							Precision     = length, // this is also correct...
-							Scale         = rd.IsDBNull(13) ? (int?)null : rd.GetInt32(13),
-							Ordinal       = rd.GetInt32(4),
-							IsResult      = direction == 4,
-							DataType      = type
-						};
-					}).ToList();
-				}
+						ProcedureID   = catalog + "." + schema + "." + name,
+						ParameterName = rd.GetString(3).TrimStart('@'),
+						IsIn          = direction == 1 || direction == 2,
+						IsOut         = direction == 3 || direction == 2,
+						Length        = length,
+						Precision     = length, // this is also correct...
+						Scale         = rd.IsDBNull(13) ? (int?)null : rd.GetInt32(13),
+						Ordinal       = rd.GetInt32(4),
+						IsResult      = direction == 4,
+						DataType      = type
+					};
+				}).ToList();
 			}
 		}
 

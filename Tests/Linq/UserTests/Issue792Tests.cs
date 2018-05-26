@@ -85,7 +85,7 @@ namespace Tests.UserTests
 			// those providers miss procedure schema load implementation for now
 			ProviderName.Informix, ProviderName.PostgreSQL,
 			// those providers cannot load schema when in transaction
-			ProviderName.DB2, ProviderName.Sybase,
+			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged,
 			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
 			ProviderName.SqlServer2000, ProviderName.SqlServer2005, TestProvName.SqlAzure,
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
