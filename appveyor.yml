@@ -94,6 +94,10 @@ before_build:
       $gitDeploy = $env:APPVEYOR_REPO_BRANCH -eq "master"
       .\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
     }
+    else
+    {
+      Write-Host docfx build skipped... cosmic rays?...
+    }
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
 
