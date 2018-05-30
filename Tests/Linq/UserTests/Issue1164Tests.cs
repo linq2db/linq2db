@@ -17,6 +17,8 @@ namespace Tests.UserTests
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
 				var schema = schemaProvider.GetSchema(db);
+				
+				Assert.IsNotNull(schema);
 			}
 		}
 	}
