@@ -64,5 +64,23 @@ namespace LinqToDB.DataProvider.Sybase
 			var start = value > 127 ? "N'" : "'";
 			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
 		}
+
+		internal static readonly SybaseMappingSchema Instance = new SybaseMappingSchema();
+
+		public class NativeMappingSchema : MappingSchema
+		{
+			public NativeMappingSchema()
+				: base(ProviderName.Sybase, Instance)
+			{
+			}
+		}
+
+		public class ManagedMappingSchema : MappingSchema
+		{
+			public ManagedMappingSchema()
+				: base(ProviderName.SybaseManaged, Instance)
+			{
+			}
+		}
 	}
 }

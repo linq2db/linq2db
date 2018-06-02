@@ -23,9 +23,6 @@ namespace Tests.xUpdate
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
 			public int Value { get; set; }
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
@@ -38,9 +35,6 @@ namespace Tests.xUpdate
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
 			public int Value { get; set; }
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
 		[Test, Combinatorial]

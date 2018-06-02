@@ -25,7 +25,7 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net452\System.Data.SqlServerCe.dll" target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\System.Data.SqlServerCe.dll"  target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"              target="tools" />
 		
 		<file src="SqlCe\linq2db.SqlCe.props"                                     target="build" />

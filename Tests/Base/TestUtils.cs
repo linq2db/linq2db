@@ -81,6 +81,7 @@ namespace Tests
 				case ProviderName.PostgreSQL:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
+				case ProviderName.SybaseManaged:
 				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
@@ -126,6 +127,7 @@ namespace Tests
 				case ProviderName.PostgreSQL:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
+				case ProviderName.SybaseManaged:
 				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:

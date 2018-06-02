@@ -1293,7 +1293,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void WhereBooleanTest2([DataSources(ProviderName.Sybase, ProviderName.Firebird, TestProvName.Firebird3)] string context)
+		public void WhereBooleanTest2([DataSources(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Firebird, TestProvName.Firebird3)] string context)
 		{
 			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases,bool>> predicate)
 			{

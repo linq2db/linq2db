@@ -201,7 +201,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Contains5(string context)
 		{
 			using (var db = GetDataContext(context))

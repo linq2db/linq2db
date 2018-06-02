@@ -99,7 +99,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
 					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))
-						return ProviderName.OracleManaged;;
+						return ProviderName.OracleManaged;
 			}
 			catch
 			{

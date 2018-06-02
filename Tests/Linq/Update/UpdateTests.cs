@@ -565,7 +565,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public void UpdateAssociation1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -596,7 +596,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public async Task UpdateAssociation1Async(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -627,7 +627,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public void UpdateAssociation2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -658,7 +658,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public void UpdateAssociation3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -689,7 +689,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public void UpdateAssociation4(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -902,6 +902,7 @@ namespace Tests.xUpdate
 			TestProvName.MySql57,
 			TestProvName.MariaDB,
 			ProviderName.Sybase,
+			ProviderName.SybaseManaged,
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged)]
 		public void TestUpdateTakeOrdered(string context)
@@ -952,6 +953,7 @@ namespace Tests.xUpdate
 			TestProvName.MySql57,
 			TestProvName.MariaDB,
 			ProviderName.Sybase,
+			ProviderName.SybaseManaged,
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged)]
 		public void TestUpdateSkipTake(string context)
@@ -1059,7 +1061,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
-			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase, TestProvName.Firebird3)]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.Firebird3)]
 		public void UpdateIssue319Regression(string context)
 		{
 			using (var db = GetDataContext(context))

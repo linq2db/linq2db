@@ -62,9 +62,10 @@ namespace Tests.xUpdate
 			static string[] Supported = new[]
 			{
 				ProviderName.Sybase,
-					  ProviderName.SqlServer2008,
-					  ProviderName.SqlServer2012,
-					  ProviderName.SqlServer2014
+				ProviderName.SybaseManaged,
+				ProviderName.SqlServer2008,
+				ProviderName.SqlServer2012,
+				ProviderName.SqlServer2014
 			};
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
@@ -241,7 +242,7 @@ namespace Tests.xUpdate
 		private void AssertRowCount(int expected, int actual, string context)
 		{
 			// another sybase quirk, nothing surprising
-			if (context == ProviderName.Sybase)
+			if (context == ProviderName.Sybase || context == ProviderName.SybaseManaged)
 				Assert.LessOrEqual(expected, actual);
 			else if (context == ProviderName.OracleNative && actual == -1)
 			{ }

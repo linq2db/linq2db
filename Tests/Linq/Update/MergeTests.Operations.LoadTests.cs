@@ -23,7 +23,8 @@ namespace Tests.xUpdate
 				// ASE: you may need to increase memory procedure cache sizes like that:
 				// exec sp_configure 'max memory', NEW_MEMORY_SIZE
 				// exec sp_configure 'procedure cache size', NEW_CACHE_SIZE
-				case ProviderName.Sybase       : batchSize = 500; break;
+				case ProviderName.Sybase       :
+				case ProviderName.SybaseManaged: batchSize = 500; break;
 
 				// hard limit around 100 records
 				// also big queries could kill connection with server

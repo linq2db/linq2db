@@ -26,8 +26,8 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net452\Npgsql.dll"                            target="tools" />
-		<file src="..\Tests\Linq\bin\AppVeyor\net452\System.Threading.Tasks.Extensions.dll" target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\Npgsql.dll"                             target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\System.Threading.Tasks.Extensions.dll"  target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"                        target="tools" />
 		
 		<file src="PostgreSQL\linq2db.PostgreSQL.props"                                     target="build" />

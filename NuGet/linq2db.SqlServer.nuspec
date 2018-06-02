@@ -25,7 +25,7 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Tests\Linq\bin\AppVeyor\net452\Microsoft.SqlServer.Types.dll" target="tools" />
+		<file src="..\Tests\Linq\bin\AppVeyor\net46\Microsoft.SqlServer.Types.dll"  target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"                target="tools" />
 		
 		<file src="SqlServer\linq2db.SqlServer.props"                               target="build" />

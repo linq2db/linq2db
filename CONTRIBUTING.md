@@ -43,12 +43,12 @@ Projects:
 | Project                                          |.NET 4.5 | .NET 4.5.2 | .NET 4.6 | .NET 4.6.2 | .NET Standard 1.6 | .NET Standard 2.0 | .NET Core 1.0 | .NET Core 2.0 |
 |-------------------------------------------------:|:-------:|:----------:|:--------:|:----------:|:-----------------:|:-----------------:|:-------------:|:-------------:|
 | `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |            |          |            |         √         |         √         |               |       √       |
-| `.\Tests\Linq\Tests.Base.csproj`                 |    √    |            |          |            |                   |                   |       √       |       √       |
+| `.\Tests\Linq\Tests.Base.csproj`                 |         |     √      |          |            |                   |                   |       √       |       √       |
 | `.\Tests\IBM.Core\Tests.IBM.Core.csproj`         |         |            |          |     √      |                   |                   |               |       √       |
-| `.\Tests\Linq\Tests.csproj`                      |         |     √      |          |            |                   |                   |       √       |       √       |
+| `.\Tests\Linq\Tests.csproj`                      |         |            |    √     |            |                   |                   |       √       |       √       |
 | `.\Tests\FSharp\Tests.FSharp.fsproj`             |         |     √      |          |            |                   |                   |       √       |       √       |
 | `.\Tests\Model\Tests.Model.csproj`               |    √    |            |          |            |         √         |                   |               |               |
-| `.\Tests\T4.Linq\Tests.T4.Linq.csproj`           |         |     √      |          |            |                   |                   |               |       √       |
+| `.\Tests\T4.Linq\Tests.T4.Linq.csproj`           |         |            |    √     |            |                   |                   |               |       √       |
 | `.\Tests\T4.Model\Tests.T4.Model.csproj`         |    √    |            |          |            |                   |                   |               |               |
 | `.\Tests\T4.Wpf\Tests.T4.Wpf.csproj`             |         |     √      |          |            |                   |                   |               |               |
 | `.\Tests\TestApp\TestApp.csproj`                 |         |     √      |          |            |                   |                   |               |               |
