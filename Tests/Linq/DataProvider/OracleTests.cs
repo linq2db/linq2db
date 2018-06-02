@@ -656,6 +656,60 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test, OracleDataContext]
+		public void NVarchar2InsertTest(string context)
+		{
+			using (var db = new DataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.InlineParameters = false;
+
+				var value   = "致我们最爱的母亲";
+
+				var id = db.GetTable<ALLTYPE>()
+					.InsertWithInt32Identity(() => new ALLTYPE
+					{
+						NVARCHARDATATYPE = value
+					});
+
+				var query = from p in db.GetTable<ALLTYPE>()
+							where p.ID == id
+							select new { p.NVARCHARDATATYPE };
+
+				var res = query.Single();
+				Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
+			}
+		}
+
+		[Test, OracleDataContext]
+		public void NVarchar2UpdateTest(string context)
+		{
+			using (var db = new DataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.InlineParameters = false;
+
+				var value = "致我们最爱的母亲";
+
+				var id = db.GetTable<ALLTYPE>()
+					.InsertWithInt32Identity(() => new ALLTYPE
+					{
+						INTDATATYPE = 123
+					});
+
+				db.GetTable<ALLTYPE>()
+					.Set(e => e.NVARCHARDATATYPE, () => value)
+					.Update();
+
+				var query = from p in db.GetTable<ALLTYPE>()
+							where p.ID == id
+							select new { p.NVARCHARDATATYPE };
+
+				var res = query.Single();
+				Assert.That(res.NVARCHARDATATYPE, Is.EqualTo(value));
+			}
+		}
+
 		[Test, IncludeDataContextSourceAttribute(ProviderName.OracleNative)]
 		public void SelectDateTime(string context)
 		{

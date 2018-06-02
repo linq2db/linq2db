@@ -1,3 +1,6 @@
+---
+uid: Merge
+---
 # Merge API
 
 This API available since linq2db 1.9.0. It superseeds previous version of API with very limited functionality. For migration from old API check link below.
