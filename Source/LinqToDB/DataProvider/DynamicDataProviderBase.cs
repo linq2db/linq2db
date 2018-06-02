@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider
 		protected abstract string ConnectionTypeName { get; }
 		protected abstract string DataReaderTypeName { get; }
 
-		static readonly object _sync = new object();
+		protected static readonly object SyncRoot = new object();
 
 		protected abstract void OnConnectionTypeCreated(Type connectionType);
 
@@ -30,10 +30,10 @@ namespace LinqToDB.DataProvider
 
 		volatile Type _connectionType;
 
-		protected Type GetConnectionType()
+		protected virtual Type GetConnectionType()
 		{
 			if (_connectionType == null)
-				lock (_sync)
+				lock (SyncRoot)
 					if (_connectionType == null)
 					{
 						var connectionType = Type.GetType(ConnectionTypeName, true);
