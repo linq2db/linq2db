@@ -156,8 +156,11 @@ namespace LinqToDB.SchemaProvider
 					if (thisTable == null || otherTable == null)
 						continue;
 
-					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).Single();
-					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).Single();
+					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).SingleOrDefault();
+					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).SingleOrDefault();
+
+					if (thisColumn == null || otherColumn == null)
+						continue;
 
 					var key = thisTable.ForeignKeys.FirstOrDefault(f => f.KeyName == fk.Name);
 

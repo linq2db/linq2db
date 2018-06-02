@@ -18,7 +18,7 @@ T4 model generation help is [here](https://github.com/linq2db/linq2db/blob/maste
 
 ## How to help the project
 
-No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/How-can-i-help.html).
+No, this is not the donate link. We do need something really more valuable - your **time**. If you really want to help us please read this [post](https://linq2db.github.io/articles/project/How-can-i-help.html).
 
 ## Project Build Status
 
