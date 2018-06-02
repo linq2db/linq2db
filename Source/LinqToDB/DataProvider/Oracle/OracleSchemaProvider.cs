@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.Oracle
 							d.NAME  = tc.TABLE_NAME
 					ORDER BY TableID, isView
 					",
-					new { CurrentUser = _currentUser })
+					new DataParameter("CurrentUser", _currentUser, DataType.VarChar))
 				.ToList();
 			}
 			else
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Oracle
 							d.NAME = tc.TABLE_NAME
 					ORDER BY TableID, isView
 					",
-					new { CurrentUser = _currentUser })
+					new DataParameter("CurrentUser", _currentUser, DataType.VarChar))
 				.ToList();
 			}
 		}

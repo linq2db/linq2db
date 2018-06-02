@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
+	using System.Data.Common;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase
 	{
@@ -45,6 +46,48 @@ namespace LinqToDB.DataProvider.SapHana
 		public    override string ConnectionNamespace => "Sap.Data.Hana";
 		protected override string ConnectionTypeName  => $"{ConnectionNamespace}.HanaConnection, {SapHanaTools.AssemblyName}";
 		protected override string DataReaderTypeName  => $"{ConnectionNamespace}.HanaDataReader, {SapHanaTools.AssemblyName}";
+
+#if !NETSTANDARD1_6 && !NETSTANDARD2_0
+		private          Type _dataReaderType;
+		private volatile Type _connectionType;
+
+		public override Type DataReaderType
+		{
+			get
+			{
+				if (_dataReaderType != null)
+					return _dataReaderType;
+
+				_dataReaderType = Type.GetType(DataReaderTypeName, false);
+
+				if (_dataReaderType == null)
+				{
+					var assembly = DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly;
+					_dataReaderType = Type.GetType($"{ConnectionNamespace}.HanaDataReader, {assembly.GetName()}", true);
+				}
+
+				return _dataReaderType;
+			}
+		}
+
+		protected override Type GetConnectionType()
+		{
+			if (_connectionType == null)
+				lock (SyncRoot)
+					if (_connectionType == null)
+					{
+						_connectionType = Type.GetType(ConnectionTypeName, false);
+
+						if (_connectionType == null)
+							using (var db = DbProviderFactories.GetFactory("Sap.Data.Hana").CreateConnection())
+								_connectionType = db.GetType();
+
+						OnConnectionTypeCreated(_connectionType);
+					}
+
+			return _connectionType;
+		}
+#endif
 
 		static Action<IDbDataParameter> _setText;
 		static Action<IDbDataParameter> _setNText;

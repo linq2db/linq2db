@@ -22,15 +22,6 @@ addons:
 
 dotnet: 2.0.0
 
-env:
-  global:
-    - testFilter="TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
-    - testRunner=dotnet
-    - testTargetFramework=netcoreapp2.0
-    - testConfiguration=Travis
-    - builder=dotnet
-    - target=Tests
-
 os:  
   - linux
 #  - osx
@@ -38,7 +29,6 @@ osx_image: xcode7.3
 
 before_install:
   - if test "$TRAVIS_OS_NAME" == "osx"; then brew update; brew install openssl; ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/; ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/; fi
-#  - chmod +x build.sh
 
 before_script:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then sudo service postgresql start; fi
@@ -51,5 +41,4 @@ before_script:
 script:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mysql -e 'CREATE DATABASE TestData DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;'; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then psql -c 'create database testdata;' -U postgres; fi
-#  - ./build.sh 
   - dotnet test ./Tests/Linq/Tests.csproj -c Travis -f netcoreapp2.0 --filter "TestCategory != FreeText & TestCategory != Explicit & TestCategory != Ignored & TestCategory != WindowsOnly & TestCategory != ActiveIssue"
