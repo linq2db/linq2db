@@ -1,62 +1,90 @@
-# Window (Analytic) Functions
+Support of Window Functions also known as Analytic Functions in `LINQ To DB` is based on [Oracle's Documentation](https://docs.oracle.com/cd/E11882_01/server.112/e41084/functions004.htm) and all mentioned functions are supported. 
 
-Starting from version 1.8.0, linq2db supports Window Functions also known as Analytic Functions.
-Implementation is based on [Oracle's Documentation](https://docs.oracle.com/cd/E11882_01/server.112/e41084/functions004.htm) and all mentioned functions are supported.
+Window functions are implemented as extension methods for static `Sql.Ext` property. For defining Partitioning and Ordering fluent syntax is used and it is closest as possible to original SQL syntax.
 
-Window functions are implemented as extension methods for static Sql.Ext property. For defining Partitioning and Ordering fluent syntax is used and it is closest as possible to original SQL syntax.
-
-## C# Syntax
-
+#### C# Syntax:
 ```cs
-Sql.Ext.[Function]([Parameters]).Over().[PartitionPart].[OrderByPart].[WindowingPart].ToValue()
+Sql.Ext.[Function]([Parameters])
+	.Over()
+	.[PartitionPart]
+	.[OrderByPart]
+	.[WindowingPart]
+	.ToValue();
 ```
 
 Last function in method chain **must** be function `ToValue()` - it is a mark that method chain is finished and provides correct DataType for resulting columns.
 
-### Example
+#### Example:
 
 ```c#
-var q =
-    from p in db.Parent
-    join c in db.Child on p.ParentID equals c.ParentID 
-    select new
-    {
-        Rank      = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
-        RowNumber = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1).ThenBy(c.ChildID).ThenByDesc(c.ParentID).ToValue(),
-        DenseRank = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
-        Sum       = Sql.Ext.Sum(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
-        Avg       = Sql.Ext.Average<double>(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
+var q = 
+	from p in db.Parent
+	join c in db.Child on p.ParentID equals c.ParentID 
+	select new
+	{
+		Rank = Sql.Ext.Rank()
+			.Over()
+			.PartitionBy(p.Value1, c.ChildID)
+			.OrderBy(p.Value1)
+			.ThenBy(c.ChildID)
+			.ThenBy(c.ParentID)
+			.ToValue(),
 
-        Count     = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All)
-                    .Over()
-                    .PartitionBy(p.Value1)
-                    .OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
-    };
+		RowNumber = Sql.Ext.RowNumber()
+			.Over()
+			.PartitionBy(p.Value1, c.ChildID)
+			.OrderByDesc(p.Value1)
+			.ThenBy(c.ChildID)
+			.ThenByDesc(c.ParentID)
+			.ToValue(),
+
+		DenseRank = Sql.Ext.DenseRank()
+			.Over()
+			.PartitionBy(p.Value1, c.ChildID)
+			.OrderBy(p.Value1)
+			.ToValue(),
+
+		Sum = Sql.Ext.Sum(p.Value1)
+			.Over()
+			.PartitionBy(p.Value1, c.ChildID)
+			.OrderBy(p.Value1)
+			.ToValue(),
+
+		Avg = Sql.Ext.Average<double>(p.Value1)
+			.Over()
+			.PartitionBy(p.Value1, c.ChildID)
+			.OrderBy(p.Value1)
+			.ToValue(),
+
+		Count = Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All)
+			.Over()
+			.PartitionBy(p.Value1)
+			.OrderBy(p.Value1)
+			.Range.Between.UnboundedPreceding.And.CurrentRow
+			.ToValue(),
+	};
 var res = q.ToArray();
 ```
-
-### Resulting SQL
-
+#### Resulting SQL:
 ```sql
 SELECT
-    RANK() OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1], [c7].[ChildID], [c7].[ParentID]) as [c1],
-    ROW_NUMBER() OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1] DESC, [c7].[ChildID], [c7].[ParentID] DESC) as [c2],
-    DENSE_RANK() OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1]) as [c3],
-    SUM([p].[Value1]) OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1]) as [c4],
-    AVG([p].[Value1]) OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1]) as [c5],
-    COUNT(ALL [p].[ParentID]) OVER(PARTITION BY [p].[Value1] ORDER BY [p].[Value1] RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as [c6]
+	RANK() OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1], [c7].[ChildID], [c7].[ParentID]) as [c1],
+	ROW_NUMBER() OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1] DESC, [c7].[ChildID], [c7].[ParentID] DESC) as [c2],
+	DENSE_RANK() OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1]) as [c3],
+	SUM([p].[Value1]) OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1]) as [c4],
+	AVG([p].[Value1]) OVER(PARTITION BY [p].[Value1], [c7].[ChildID] ORDER BY [p].[Value1]) as [c5],
+	COUNT(ALL [p].[ParentID]) OVER(PARTITION BY [p].[Value1] ORDER BY [p].[Value1] RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as [c6]
 FROM
-    [Parent] [p]
-        INNER JOIN [Child] [c7] ON [p].[ParentID] = [c7].[ParentID]
+	[Parent] [p]
+		INNER JOIN [Child] [c7] ON [p].[ParentID] = [c7].[ParentID]
 ```
 
->**Note** There is no limitation in window functions usage. Linq2db will create SQL and run query, if function is not supported or some part of function is limited in particular Database - error will be thrown on database side.
+>**Note** There is no limitation in window functions usage. `LINQ To DB` will create SQL and run query, if function is not supported or some part of function is limited in particular Database - error will be thrown on database side.
 
-## Functions mapping
+#### Functions mapping
+The following table contains list of supported Window Functions and `LINQ To DB` representation of these functions. Some functions have overloads for supporting full Window Functions syntax.
 
-The following table contains list of supported Window Functions and linq2db representation of these functions. Some functions have overloads for supporting full Window Functions syntax.
-
-SQL Function Name                                                                                              | Linq2db Function Name
+SQL Function Name                                                                                              | Linq2db Function Name 
 ------------------------------------                                                                           |----------------------
 [AVG](https://docs.oracle.com/cd/E11882_01/server.112/e41084/functions018.htm)                                 | `Sql.Ext.Average()`
 [CORR](https://docs.oracle.com/cd/E11882_01/server.112/e41084/functions035.htm)                                | `Sql.Ext.Corr()`
@@ -103,16 +131,16 @@ REGR_SXY                                                                        
 
 >If you have found that your database supports function that is not listed in table above, you can easily create your own extension. Code samples are located in [Sql.Analytic.cs](https://github.com/linq2db/linq2db/blob/master/Source/Sql/Sql.Analytic.cs#L399)
 
-## Engines that support Window Functions
-
-* [Oracle](https://docs.oracle.com/cd/E11882_01/server.112/e41084/functions004.htm),
-* [MSSQL](https://docs.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql),
-* [Postresql](https://www.postgresql.org/docs/current/static/tutorial-window.html),
-* [MariaDB](https://mariadb.com/kb/en/mariadb/window-functions),
-* [DB2 z/OS](https://www.ibm.com/support/knowledgecenter/en/SSEPEK_12.0.0/sqlref/src/tpc/db2z_olapspecification.html),
-* [DB2 LUW](https://www.ibm.com/support/knowledgecenter/en/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0023461.html),
-* [DB2 iSeries](https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_73/sqlp/rbafyolap.htm),
-* [Informix](https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_2584.htm),
-* [SAP HANA](http://help-legacy.sap.com/saphelp_hanaplatform/helpdata/en/20/a353327519101495dfd0a87060a0d3/content.htm),
-* [SAP ASE](http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc38151.1602/doc/html/san1278452950084.html),
-* [Firebird 3](https://www.firebirdsql.org/file/documentation/release_notes/html/en/3_0/rnfb30-dml-windowfuncs.html)
+#### Engines that support Window Functions
+- [Oracle](https://docs.oracle.com/cd/E11882_01/server.112/e41084/functions004.htm)
+- [MSSQL](https://docs.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql)
+- [Postresql](https://www.postgresql.org/docs/current/static/tutorial-window.html)
+- [MariaDB](https://mariadb.com/kb/en/mariadb/window-functions)
+- [MySQL 8](https://dev.mysql.com/doc/refman/8.0/en/window-functions-usage.html)
+- [DB2 z/OS](https://www.ibm.com/support/knowledgecenter/en/SSEPEK_12.0.0/sqlref/src/tpc/db2z_olapspecification.html)
+- [DB2 LUW](https://www.ibm.com/support/knowledgecenter/en/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0023461.html)
+- [DB2 iSeries](https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_73/sqlp/rbafyolap.htm)
+- [Informix](https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_2584.htm)
+- [SAP HANA](http://help-legacy.sap.com/saphelp_hanaplatform/helpdata/en/20/a353327519101495dfd0a87060a0d3/content.htm)
+- [SAP ASE](http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc38151.1602/doc/html/san1278452950084.html)
+- [Firebird 3](https://www.firebirdsql.org/file/documentation/release_notes/html/en/3_0/rnfb30-dml-windowfuncs.html)
