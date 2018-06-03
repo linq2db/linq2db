@@ -88,6 +88,10 @@ GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines o
 GetSchemaOptions.ExcludedCatalogs = new[] { "TestUser", "SYSSTAT" }; // Defines excluded catalogs.
 GetSchemaOptions.IncludedCatalogs = new[] { "TestUser", "SYS" };     // Defines only included catalogs.
 
+GetSchemaOptions.GetAssociationMemberName = key => "Association_" + key.MemberName;     // Defines custom naming logic for generated associations.
+
+// check GetSchemaOptions class for more options
+
 Func<string, bool, string> ToValidName         = ToValidNameDefault;          // Defines function to convert names to valid (My_Table to MyTable) 
 Func<string, bool, string> ConvertToCompilable = ConvertToCompilableDefault;  // Converts name to c# compatible. By default removes uncompatible symbols and converts result with ToValidName
 
