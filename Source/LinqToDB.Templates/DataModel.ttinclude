@@ -824,7 +824,7 @@ string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 static string SplitAndJoin(string value, string join, params char[] split)
 {
 	var ss = value.Split(split, StringSplitOptions.RemoveEmptyEntries)
-		.Select(s => char.ToUpper(s[0]) + s.Substring(1).ToLower());
+		.Select(s => char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1)));
 
 	return string.Join(join, ss.ToArray());
 }
