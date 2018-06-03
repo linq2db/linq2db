@@ -351,7 +351,7 @@ namespace Tests.SchemaProvider
 				table = s.Tables.Single(t => t.TableName == "TestSchemaB");
 				fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
 
-				Assert.That(fks, Is.EqualTo(new[] { "OriginTestSchemaA", "TargetTestSchemaA" }));
+				Assert.That(fks, Is.EqualTo(new[] { "OriginTestSchemaA", "TargetTestSchemaA", "Target_Test_Schema_A" }));
 			}
 		}
 
