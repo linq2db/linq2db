@@ -681,7 +681,7 @@ namespace LinqToDB.SchemaProvider
 				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
 				{
 					name = key.ThisColumns[0].MemberName;
-					name = name.Substring(0, name.Length - "id".Length);
+					name = name.Substring(0, name.Length - "id".Length).TrimEnd('_');
 
 					if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
 						table.Columns.    Select(_ => _.MemberName)).Concat(
