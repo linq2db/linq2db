@@ -207,7 +207,7 @@ WHERE
 					var catalog   = rd.GetString(0);
 					var schema    = rd.GetString(1);
 					var name      = rd.GetString(2);
-					var direction = rd.GetInt32(5);
+					var direction = rd.IsDBNull(5) ? (short?)null : rd.GetInt16(5);
 					var length    = rd.IsDBNull(10) ? (int?)null : rd.GetInt32(10);
 					var type      = rd.GetString(15);
 
