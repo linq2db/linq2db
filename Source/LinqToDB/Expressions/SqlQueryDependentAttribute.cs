@@ -36,6 +36,9 @@ namespace LinqToDB.Expressions
 						if (!enum2.MoveNext() || !object.Equals(enum1.Current, enum2.Current))
 							return false;
 					}
+
+					if (enum2.MoveNext())
+						return false;
 				}
 
 				return true;
