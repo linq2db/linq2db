@@ -394,10 +394,24 @@ namespace LinqToDB.Expressions
 			var parameters = expr1.Method.GetParameters();
 			for (var i = 0; i < expr1.Arguments.Count; i++)
 			{
-				if (parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Any())
+#if !NETSTANDARD1_6
+				var dependedAttributes = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false);
+#else
+				var dependedAttributes = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false)
+					.OfType<SqlQueryDependentAttribute>()
+					.ToArray();
+#endif
+				if (dependedAttributes.Length > 0)
 				{
-					if (!Equals(expr1.Arguments[i].EvaluateExpression(), expr2.Arguments[i].EvaluateExpression()))
-						return false;
+					var obj1 = expr1.Arguments[i].EvaluateExpression();
+					var obj2 = expr2.Arguments[i].EvaluateExpression();
+
+					for (var ai = 0; ai < dependedAttributes.Length; ai++)
+					{
+						var attribute = (SqlQueryDependentAttribute)dependedAttributes[ai];
+						if (!attribute.ObjectsEqual(obj1, obj2))
+							return false;
+					}
 				}
 				else
 					if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
