@@ -47,6 +47,18 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
+		#region Caches
+
+		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]> _queryDependentMethods =
+			new ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]>();
+
+		public static void ClearCaches()
+		{
+			_queryDependentMethods.Clear();
+		}
+
+		#endregion
+
 		#region EqualsTo
 
 		internal static bool EqualsTo(this Expression expr1, Expression expr2, Dictionary<Expression,QueryableAccessor> queryableAccessorDic)
@@ -383,9 +395,6 @@ namespace LinqToDB.Expressions
 
 			return true;
 		}
-
-		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]> _queryDependentMethods =
-			new ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]>();
 
 		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
 		{
