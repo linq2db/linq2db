@@ -319,6 +319,8 @@ namespace LinqToDB.SqlProvider
 
 		#region Build CTE
 
+		protected virtual bool IsRecursiveCteKeywordRequired => false;
+
 		protected virtual void BuildWithClause(SqlWithClause with)
 		{
 			if (with == null || with.Clauses.Count == 0)
@@ -328,10 +330,9 @@ namespace LinqToDB.SqlProvider
 
 			foreach (var cte in with.Clauses)
 			{
-				AppendIndent();
-
 				if (first)
 				{
+					AppendIndent();
 					StringBuilder.Append("WITH ");
 					first = false;
 				}
@@ -340,6 +341,9 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(',').AppendLine();
 					AppendIndent();
 				}
+
+				if (IsRecursiveCteKeywordRequired && cte.IsRecursive)
+					StringBuilder.Append("RECURSIVE ");
 
 				ConvertTableName(StringBuilder, null, null, cte.Name);
 
@@ -390,7 +394,7 @@ namespace LinqToDB.SqlProvider
 				Indent--;
 
 				AppendIndent();
-				StringBuilder.AppendLine(")");
+				StringBuilder.Append(")");
 			}
 
 			StringBuilder.AppendLine();

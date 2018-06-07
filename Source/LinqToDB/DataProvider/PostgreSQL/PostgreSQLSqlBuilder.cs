@@ -28,6 +28,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
+		protected override bool IsRecursiveCteKeywordRequired => true;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity() ? 2 : 1;
