@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
@@ -383,6 +385,9 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
+		static readonly ConcurrentDictionary<MethodInfo,bool[]> _queryDependentMethods =
+			new ConcurrentDictionary<MethodInfo,bool[]>();
+
 		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count || expr1.Method != expr2.Method)
@@ -392,9 +397,20 @@ namespace LinqToDB.Expressions
 				return false;
 
 			var parameters = expr1.Method.GetParameters();
+
+			var dependetParameters = _queryDependentMethods.GetOrAdd(
+				expr1.Method, mi =>
+				{
+					var arr = parameters
+						.Select(p => p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Any())
+						.ToArray();
+
+					return arr.Any(p => p) ? arr : Array<bool>.Empty;
+				});
+
 			for (var i = 0; i < expr1.Arguments.Count; i++)
 			{
-				if (parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Any())
+				if (dependetParameters.Length > 0 && dependetParameters[i])
 				{
 					if (!Equals(expr1.Arguments[i].EvaluateExpression(), expr2.Arguments[i].EvaluateExpression()))
 						return false;
@@ -405,12 +421,8 @@ namespace LinqToDB.Expressions
 			}
 
 			if (info.QueryableAccessorDic.Count > 0)
-			{
-				QueryableAccessor qa;
-
-				if (info.QueryableAccessorDic.TryGetValue(expr1, out qa))
+				if (info.QueryableAccessorDic.TryGetValue(expr1, out var qa))
 					return qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
-			}
 
 			return true;
 		}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -42,6 +43,7 @@ namespace LinqToDB
 		}
 	}
 
+	[PublicAPI]
 	public static class AnalyticFunctions
 	{
 		const string FunctionToken  = "function";
@@ -206,7 +208,7 @@ namespace LinqToDB
 			[Sql.Extension("{expr}", TokenName = "order_item")]
 			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr);
 
-			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))] 
+			[Sql.Extension("{expr}", TokenName = "order_item", BuilderType = typeof(OrderItemBuilder))]
 			IOrderedAcceptOverReadyToFunction<TR> ThenBy<TKey>([ExprParameter] TKey expr, [SqlQueryDependent] Sql.NullsPosition nulls);
 
 			[Sql.Extension("{expr} DESC", TokenName = "order_item")]
@@ -401,7 +403,7 @@ namespace LinqToDB
 		}
 
 		#endregion Full Support
-		
+
 		#endregion API Interfaces
 
 		#region Analytic functions
@@ -441,7 +443,7 @@ namespace LinqToDB
 		{
 			throw new NotImplementedException();
 		}
-		
+
 		#endregion Average
 
 		#region Corr
@@ -454,8 +456,8 @@ namespace LinqToDB
 
 		[Sql.Extension("CORR({expr1}, {expr2})", IsAggregate = true)]
 		public static Decimal Corr<TEntity>(
-			[NotNull]            this IQueryable<TEntity>               source, 
-			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1, 
+			[NotNull]            this IQueryable<TEntity>               source,
+			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1,
 			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr2)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -477,7 +479,7 @@ namespace LinqToDB
 		{
 			throw new NotImplementedException();
 		}
-		
+
 		#endregion Corr
 
 		#region Count
@@ -539,8 +541,8 @@ namespace LinqToDB
 
 		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsAggregate = true)]
 		public static Decimal CovarPop<TEntity>(
-			[NotNull]            this IQueryable<TEntity>               source, 
-			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1, 
+			[NotNull]            this IQueryable<TEntity>               source,
+			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1,
 			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr2)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -556,7 +558,7 @@ namespace LinqToDB
 					new Expression[] { currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
 				));
 		}
-		
+
 		[Sql.Extension("COVAR_POP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> CovarPop<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
 		{
@@ -575,8 +577,8 @@ namespace LinqToDB
 
 		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsAggregate = true)]
 		public static Decimal CovarSamp<TEntity>(
-			[NotNull]            this IQueryable<TEntity>               source, 
-			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1, 
+			[NotNull]            this IQueryable<TEntity>               source,
+			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr1,
 			[NotNull] [ExprParameter] Expression<Func<TEntity, object>> expr2)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -592,14 +594,14 @@ namespace LinqToDB
 					new Expression[] { currentSource.Expression, Expression.Quote(expr1), Expression.Quote(expr2) }
 				));
 		}
-		
+
 		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static IAggregateFunctionSelfContained<T> CovarSamp<T>(this Sql.ISqlExtension ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
 		{
 			throw new NotImplementedException();
 		}
-		
-		#endregion CovarSamp	
+
+		#endregion CovarSamp
 
 		[Sql.Extension("CUME_DIST({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
 		public static INeedsWithinGroupWithOrderOnly<TR> CumeDist<TR>(this Sql.ISqlExtension ext, [ExprParameter] params object[] expr)
@@ -741,7 +743,7 @@ namespace LinqToDB
 		}
 
 		#endregion Median
-		
+
 		#region Min
 
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true)]
@@ -1146,7 +1148,7 @@ namespace LinqToDB
 		{
 			throw new NotImplementedException();
 		}
-		
+
 		[Sql.Extension("{function} KEEP (DENSE_RANK LAST {order_by_clause}){_}{over?}", ChainPrecedence = 10, IsAggregate = true)]
 		public static INeedOrderByAndMaybeOverWithPartition<TR> KeepLast<TR>(this IAggregateFunction<TR> ext)
 		{
