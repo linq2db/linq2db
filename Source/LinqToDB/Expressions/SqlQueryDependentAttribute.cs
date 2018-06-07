@@ -18,7 +18,7 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		/// <param name="obj1"></param>
 		/// <param name="obj2"></param>
-		/// <returns></returns>
+		/// <returns>Result of comparison</returns>
 		public virtual bool ObjectsEqual(object obj1, object obj2)
 		{
 			if (ReferenceEquals(obj1, obj2))
@@ -48,4 +48,3 @@ namespace LinqToDB.Expressions
 		}
 	}
 }
-

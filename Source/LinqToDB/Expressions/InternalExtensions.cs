@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -383,6 +384,9 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
+		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]> _queryDependentMethods =
+			new ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]>();
+
 		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count || expr1.Method != expr2.Method)
@@ -392,39 +396,54 @@ namespace LinqToDB.Expressions
 				return false;
 
 			var parameters = expr1.Method.GetParameters();
-			for (var i = 0; i < expr1.Arguments.Count; i++)
-			{
-#if !NETSTANDARD1_6
-				var dependedAttributes = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false);
-#else
-				var dependedAttributes = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false)
-					.OfType<SqlQueryDependentAttribute>()
-					.ToArray();
-#endif
-				if (dependedAttributes.Length > 0)
-				{
-					var obj1 = expr1.Arguments[i].EvaluateExpression();
-					var obj2 = expr2.Arguments[i].EvaluateExpression();
 
-					for (var ai = 0; ai < dependedAttributes.Length; ai++)
-					{
-						var attribute = (SqlQueryDependentAttribute)dependedAttributes[ai];
-						if (!attribute.ObjectsEqual(obj1, obj2))
-							return false;
-					}
-				}
-				else
+			var dependentParameters = _queryDependentMethods.GetOrAdd(
+				expr1.Method, mi =>
+				{
+					var arr = parameters
+						.Select(p =>
+						{
+							var attrs = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).OfType<SqlQueryDependentAttribute>().ToArray();
+							return attrs.Length > 0 ? attrs : null;
+						})
+						.ToArray();
+
+					return arr.Any(a => a != null) ? arr : null;
+				});
+
+			if (dependentParameters == null)
+			{
+				for (var i = 0; i < expr1.Arguments.Count; i++)
+				{
 					if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
 						return false;
+				}
+			}
+			else 
+			{
+				for (var i = 0; i < expr1.Arguments.Count; i++)
+				{
+					var dependentAttributes = dependentParameters[i];
+					if (dependentAttributes != null)
+					{
+						var obj1 = expr1.Arguments[i].EvaluateExpression();
+						var obj2 = expr2.Arguments[i].EvaluateExpression();
+
+						for (var ai = 0; ai < dependentAttributes.Length; ai++)
+						{
+							if (!dependentAttributes[ai].ObjectsEqual(obj1, obj2))
+								return false;
+						}
+					}
+					else
+						if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+							return false;
+				}
 			}
 
 			if (info.QueryableAccessorDic.Count > 0)
-			{
-				QueryableAccessor qa;
-
-				if (info.QueryableAccessorDic.TryGetValue(expr1, out qa))
+				if (info.QueryableAccessorDic.TryGetValue(expr1, out var qa))
 					return qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
-			}
 
 			return true;
 		}
