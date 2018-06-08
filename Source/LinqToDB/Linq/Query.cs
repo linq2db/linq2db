@@ -128,6 +128,8 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static void ClearCaches()
 		{
+			InternalExtensions.ClearCaches();
+
 			// ConcurrentBag has thread safe enumerator
 			foreach (var cleaner in CacheCleaners)
 			{

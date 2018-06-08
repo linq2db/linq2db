@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
@@ -44,6 +43,18 @@ namespace LinqToDB.Expressions
 				return type.GetGenericArgumentsEx()[0].IsConstantable();
 
 			return false;
+		}
+
+		#endregion
+
+		#region Caches
+
+		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]> _queryDependentMethods =
+			new ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]>();
+
+		public static void ClearCaches()
+		{
+			_queryDependentMethods.Clear();
 		}
 
 		#endregion
@@ -385,9 +396,6 @@ namespace LinqToDB.Expressions
 			return true;
 		}
 
-		static readonly ConcurrentDictionary<MethodInfo,bool[]> _queryDependentMethods =
-			new ConcurrentDictionary<MethodInfo,bool[]>();
-
 		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count || expr1.Method != expr2.Method)
@@ -398,26 +406,48 @@ namespace LinqToDB.Expressions
 
 			var parameters = expr1.Method.GetParameters();
 
-			var dependetParameters = _queryDependentMethods.GetOrAdd(
+			var dependentParameters = _queryDependentMethods.GetOrAdd(
 				expr1.Method, mi =>
 				{
 					var arr = parameters
-						.Select(p => p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Any())
+						.Select(p =>
+						{
+							var attrs = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).OfType<SqlQueryDependentAttribute>().ToArray();
+							return attrs.Length > 0 ? attrs : null;
+						})
 						.ToArray();
 
-					return arr.Any(p => p) ? arr : Array<bool>.Empty;
+					return arr.Any(a => a != null) ? arr : null;
 				});
 
-			for (var i = 0; i < expr1.Arguments.Count; i++)
+			if (dependentParameters == null)
 			{
-				if (dependetParameters.Length > 0 && dependetParameters[i])
+				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
-					if (!Equals(expr1.Arguments[i].EvaluateExpression(), expr2.Arguments[i].EvaluateExpression()))
-						return false;
-				}
-				else
 					if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
 						return false;
+				}
+			}
+			else 
+			{
+				for (var i = 0; i < expr1.Arguments.Count; i++)
+				{
+					var dependentAttributes = dependentParameters[i];
+					if (dependentAttributes != null)
+					{
+						var obj1 = expr1.Arguments[i].EvaluateExpression();
+						var obj2 = expr2.Arguments[i].EvaluateExpression();
+
+						for (var ai = 0; ai < dependentAttributes.Length; ai++)
+						{
+							if (!dependentAttributes[ai].ObjectsEqual(obj1, obj2))
+								return false;
+						}
+					}
+					else
+						if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
+							return false;
+				}
 			}
 
 			if (info.QueryableAccessorDic.Count > 0)
