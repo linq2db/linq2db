@@ -640,7 +640,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Returns database provider associated with provider name, configuration, and connection string.
+		/// Returns database provider associated with provider name, configuration and connection string.
 		/// </summary>
 		/// <param name="providerName">Provider name.</param>
 		/// <param name="configurationString">Connection configuration name.</param>
@@ -659,7 +659,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Returns database provider associated with provider name, configuration, and connection string.
+		/// Returns database provider associated with provider name and connection string.
 		/// </summary>
 		/// <param name="providerName">Provider name.</param>
 		/// <param name="connectionString">Connection string.</param>
