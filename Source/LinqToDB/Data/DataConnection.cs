@@ -640,6 +640,42 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Returns database provider associated with provider name, configuration, and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="configurationString">Connection configuration name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string configurationString,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(configurationString, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
+		/// Returns database provider associated with provider name, configuration, and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(providerName, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
 		/// Returns registered database providers.
 		/// </summary>
 		/// <returns>
@@ -668,7 +704,7 @@ namespace LinqToDB.Data
 			}
 
 			private string _connectionString;
-			public  string ConnectionString
+			public  string  ConnectionString
 			{
 				get => _connectionString;
 				set
@@ -696,7 +732,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
+			public static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
 				var configuration = css.Name;
 				var providerName  = css.ProviderName;
