@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.Expressions
 {
 	/// <summary>
-	/// Used for controlling query caching of custom SQL Functions. 
+	/// Used for controlling query caching of custom SQL Functions.
 	/// Parameter with this attribute will be evaluated on client side before generating SQL.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Parameter)]
