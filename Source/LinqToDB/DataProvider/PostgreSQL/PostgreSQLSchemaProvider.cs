@@ -6,8 +6,11 @@ using System.Net.NetworkInformation;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Common;
 	using Data;
 	using SchemaProvider;
+	using System.Data;
+	using System.Data.Common;
 
 	class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
@@ -20,6 +23,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "xid",                         DataType = typeof(int).           FullName },
 				new DataTypeInfo { TypeName = "smallint",                    DataType = typeof(short).         FullName },
 				new DataTypeInfo { TypeName = "integer",                     DataType = typeof(int).           FullName },
+				new DataTypeInfo { TypeName = "int4",                        DataType = typeof(int).           FullName },
 				new DataTypeInfo { TypeName = "bigint",                      DataType = typeof(long).          FullName },
 				new DataTypeInfo { TypeName = "real",                        DataType = typeof(float).         FullName },
 				new DataTypeInfo { TypeName = "double precision",            DataType = typeof(double).        FullName },
@@ -43,20 +47,31 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      FullName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 			}.ToList();
 
-			if (PostgreSQLTools.GetNpgsqlInetType()       != null) list.Add(new DataTypeInfo { TypeName = "inet",                   DataType = PostgreSQLTools.GetNpgsqlInetType().      FullName });
-			if (PostgreSQLTools.GetNpgsqlPointType()      != null) list.Add(new DataTypeInfo { TypeName = "point",                  DataType = PostgreSQLTools.GetNpgsqlPointType().     FullName });
-			if (PostgreSQLTools.GetNpgsqlLineType()       != null) list.Add(new DataTypeInfo { TypeName = "line",                   DataType = PostgreSQLTools.GetNpgsqlLineType().      FullName });
-			if (PostgreSQLTools.GetNpgsqlLSegType()       != null) list.Add(new DataTypeInfo { TypeName = "lseg",                   DataType = PostgreSQLTools.GetNpgsqlLSegType().      FullName });
-			if (PostgreSQLTools.GetNpgsqlBoxType()        != null) list.Add(new DataTypeInfo { TypeName = "box",                    DataType = PostgreSQLTools.GetNpgsqlBoxType().       FullName });
-			if (PostgreSQLTools.GetNpgsqlPathType()       != null) list.Add(new DataTypeInfo { TypeName = "path",                   DataType = PostgreSQLTools.GetNpgsqlPathType().      FullName });
-			if (PostgreSQLTools.GetNpgsqlPolygonType()    != null) list.Add(new DataTypeInfo { TypeName = "polygon",                DataType = PostgreSQLTools.GetNpgsqlPolygonType().   FullName });
-			if (PostgreSQLTools.GetNpgsqlCircleType()     != null) list.Add(new DataTypeInfo { TypeName = "circle",                 DataType = PostgreSQLTools.GetNpgsqlCircleType().    FullName });
-			if (PostgreSQLTools.GetNpgsqlIntervalType()   != null) list.Add(new DataTypeInfo { TypeName = "interval",               DataType = PostgreSQLTools.GetNpgsqlIntervalType().  FullName, CreateFormat = "interval({0})",               CreateParameters = "precision" });
-			if (PostgreSQLTools.GetNpgsqlTimeType()       != null) list.Add(new DataTypeInfo { TypeName = "time with time zone",    DataType = PostgreSQLTools.GetNpgsqlTimeType().      FullName, CreateFormat = "time with time zone({0})",    CreateParameters = "precision" });
-			if (PostgreSQLTools.GetNpgsqlTimeTZType()     != null) list.Add(new DataTypeInfo { TypeName = "time without time zone", DataType = PostgreSQLTools.GetNpgsqlTimeTZType().    FullName, CreateFormat = "time without time zone({0})", CreateParameters = "precision" });
+			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
 
-			list.Add(new DataTypeInfo { TypeName = "macaddr", DataType = (PostgreSQLTools.GetNpgsqlMacAddressType() ?? typeof(PhysicalAddress)).FullName });
-			list.Add(new DataTypeInfo { TypeName = "bit",     DataType = (PostgreSQLTools.GetBitStringType()        ?? typeof(BitArray)).       FullName, CreateFormat = "bit({0})", CreateParameters = "size" });
+			if (provider.NpgsqlInetType       != null) list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.NpgsqlInetType.      FullName });
+			if (provider.NpgsqlInetType       != null) list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.NpgsqlInetType.      FullName });
+			if (provider.NpgsqlPointType      != null) list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.NpgsqlPointType.     FullName });
+			if (provider.NpgsqlLineType       != null) list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.NpgsqlLineType.      FullName });
+			if (provider.NpgsqlLSegType       != null) list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.NpgsqlLSegType.      FullName });
+			if (provider.NpgsqlBoxType        != null) list.Add(new DataTypeInfo { TypeName = "box"                        , DataType = provider.NpgsqlBoxType.       FullName });
+			if (provider.NpgsqlPathType       != null) list.Add(new DataTypeInfo { TypeName = "path"                       , DataType = provider.NpgsqlPathType.      FullName });
+			if (provider.NpgsqlPolygonType    != null) list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.NpgsqlPolygonType.   FullName });
+			if (provider.NpgsqlCircleType     != null) list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.NpgsqlCircleType.    FullName });
+			if (provider.NpgsqlIntervalType   != null) list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.NpgsqlIntervalType.  FullName, CreateFormat = "interval({0})",                     CreateParameters = "precision" });
+			if (provider.NpgsqlDateType       != null) list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.NpgsqlDateType.      FullName, CreateFormat = "time without time zone({0})",       CreateParameters = "precision" });
+			if (provider.NpgsqlDateTimeType   != null) list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.NpgsqlDateTimeType.  FullName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			if (provider.NpgsqlDateTimeType   != null) list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.NpgsqlDateTimeType.  FullName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" });
+
+			if (provider.NpgsqlTimeType       != null) list.Add(new DataTypeInfo { TypeName = "time with time zone"        , DataType = provider.NpgsqlTimeType.      FullName, CreateFormat = "time with time zone({0})",          CreateParameters = "precision" });
+			else                                       list.Add(new DataTypeInfo { TypeName = "time with time zone"        , DataType = typeof(TimeSpan).             FullName, CreateFormat = "time with time zone({0})",          CreateParameters = "precision" });
+			if (provider.NpgsqlTimeTZType     != null) list.Add(new DataTypeInfo { TypeName = "time without time zone"     , DataType = provider.NpgsqlTimeTZType.    FullName, CreateFormat = "time without time zone({0})",       CreateParameters = "precision" });
+			else                                       list.Add(new DataTypeInfo { TypeName = "time without time zone"     , DataType = typeof(DateTimeOffset).       FullName, CreateFormat = "time without time zone({0})",       CreateParameters = "precision" });
+
+			list.Add(new DataTypeInfo { TypeName = "macaddr",     DataType = (provider.NpgsqlMacAddressType ?? typeof(PhysicalAddress)).FullName });
+			list.Add(new DataTypeInfo { TypeName = "macaddr8",    DataType = (provider.NpgsqlMacAddressType ?? typeof(PhysicalAddress)).FullName });
+			list.Add(new DataTypeInfo { TypeName = "bit",         DataType = (provider.BitStringType        ?? typeof(BitArray)).       FullName, CreateFormat = "bit({0})",         CreateParameters = "size" });
+			list.Add(new DataTypeInfo { TypeName = "bit varying", DataType = (provider.BitStringType        ?? typeof(BitArray)).       FullName, CreateFormat = "bit varying({0})", CreateParameters = "size" });
 
 			return list;
 		}
@@ -219,6 +234,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "character"                   : return DataType.NChar;
 				case "text"                        : return DataType.Text;
 				case "smallint"                    : return DataType.Int16;
+				case "oid"                         :
+				case "int4"                        :
 				case "integer"                     : return DataType.Int32;
 				case "bigint"                      : return DataType.Int64;
 				case "real"                        : return DataType.Single;
@@ -236,16 +253,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "interval"                    : return DataType.Time;
 				case "date"                        : return DataType.Date;
 				case "xml"                         : return DataType.Xml;
-				case "point"                       : return DataType.Udt;
-				case "lseg"                        : return DataType.Udt;
-				case "box"                         : return DataType.Udt;
-				case "circle"                      : return DataType.Udt;
-				case "path"                        : return DataType.Udt;
-				case "line"                        : return DataType.Udt;
-				case "polygon"                     : return DataType.Udt;
-				case "macaddr"                     : return DataType.Udt;
+				case "point"                       :
+				case "lseg"                        :
+				case "box"                         :
+				case "circle"                      :
+				case "path"                        :
+				case "line"                        :
+				case "polygon"                     :
+				case "inet"                        :
+				case "cidr"                        :
+				case "macaddr"                     :
+				case "ARRAY"                       :
+				case "anyarray"                    :
+				case "anyelement"                  :
 				case "USER-DEFINED"                : return DataType.Udt;
 				case "bit"                         :
+				case "bit varying"                 :
 				case "varbit"                      : return DataType.BitArray;
 				case "hstore"                      : return DataType.Dictionary;
 				case "json"                        : return DataType.Json;
@@ -265,7 +288,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			switch (dataType)
 			{
 				case "interval"                    : return "NpgsqlTimeSpan";
-				case "timestamp with time zone"    :
+				case "time without time zone"      : return "NpgsqlTime";
+				case "time with time zone"         : return "NpgsqlTimeTZ";
+				case "timestamp with time zone":
 				case "timestamp without time zone" :
 				case "date"                        : return "NpgsqlDate";
 				case "point"                       : return "NpgsqlPoint";
@@ -275,11 +300,120 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "path"                        : return "NpgsqlPath";
 				case "polygon"                     : return "NpgsqlPolygon";
 				case "line"                        : return "NpgsqlLine";
+				case "cidr":
 				case "inet"                        : return "NpgsqlInet";
 				case "geometry "                   : return "PostgisGeometry";
 			}
 
 			return base.GetProviderSpecificType(dataType);
+		}
+
+		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		{
+			// some notes:
+			// - postgresql 11 adds procedures support, but it is stil in development and not tested
+			// - aggregate function detection based on undocumented behavior
+			// - output parameters of functions returned as record by postgresql (makes sense, as it is not procedure)
+			return dataConnection
+				.Query(rd =>
+				{
+					var catalog  = rd.GetString(0);
+					var schema   = rd.GetString(1);
+					var source   = Converter.ChangeTypeTo<string>(rd[4]);
+					var dataType = Converter.ChangeTypeTo<string>(rd[6]);
+					return new ProcedureInfo()
+					{
+						ProcedureID         = catalog + "." + schema + "." + rd.GetString(5),
+						CatalogName         = catalog,
+						SchemaName          = schema,
+						ProcedureName       = rd.GetString(2),
+						IsFunction          = rd.GetString(3) == "FUNCTION",
+						IsTableFunction     = dataType == "record" || (dataType == "USER-DEFINED" && !rd.IsDBNull(7)),
+						IsAggregateFunction = source == "aggregate_dummy",
+						IsDefaultSchema     = schema == "public",
+						ProcedureDefinition = source
+					};
+				}, @"SELECT r.ROUTINE_CATALOG, r.ROUTINE_SCHEMA, r.ROUTINE_NAME, r.ROUTINE_TYPE, r.ROUTINE_DEFINITION, r.SPECIFIC_NAME, r.DATA_TYPE, t.TABLE_TYPE
+	FROM INFORMATION_SCHEMA.ROUTINES r
+		LEFT OUTER JOIN INFORMATION_SCHEMA.TABLES t
+			ON r.TYPE_UDT_SCHEMA = t.TABLE_SCHEMA AND r.TYPE_UDT_NAME = t.TABLE_NAME")
+				.ToList();
+		}
+
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		{
+			// Notes:
+			// - IsResult not supported by pgsql
+			// - user-defined and array types support not implemented
+			return dataConnection
+				.Query(rd =>
+				{
+					var mode = Converter.ChangeTypeTo<string>(rd[4]);
+					return new ProcedureParameterInfo()
+					{
+						ProcedureID   = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2),
+						ParameterName = Converter.ChangeTypeTo<string>(rd[5]),
+						IsIn          = mode == "IN"  || mode == "INOUT",
+						IsOut         = mode == "OUT" || mode == "INOUT",
+						Ordinal       = Converter.ChangeTypeTo<int>(rd[3]),
+						IsResult      = false,
+						DataType      = rd.GetString(6),
+						// not supported by pgsql
+						Precision     = null,
+						Scale         = null,
+						Length        = null
+					};
+				}, "SELECT SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME, ORDINAL_POSITION, PARAMETER_MODE, PARAMETER_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.parameters")
+				.ToList();
+		}
+
+		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			commandText = "SELECT * FROM " + commandText + "(";
+
+			var first = true;
+			foreach (var parameter in procedure.Parameters.Where(p => p.IsIn))
+			{
+				if (!first)
+					commandText += ",";
+				else
+					first = false;
+
+				commandText += "NULL";
+			}
+
+			commandText += ")";
+
+			return commandText;
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		{
+			return
+				(
+					from r in resultTable.AsEnumerable()
+
+					let columnName   = r.Field<string>("ColumnName")
+					let columnType   = Converter.ChangeTypeTo<string>(r["DataTypeName"])
+					let isNullable   = Converter.ChangeTypeTo<bool>(r["AllowDBNull"])
+					let dataType     = DataTypes.SingleOrDefault(t => t.TypeName == columnType)
+					let providerType = r.IsNull("ProviderType")     ? null       : r.Field<Type>("ProviderType")
+					let length       = r.IsNull("ColumnSize")       ? (int?)null : r.Field<int>("ColumnSize")
+					let precision    = r.IsNull("NumericPrecision") ? (int?)null : r.Field<int>("NumericPrecision")
+					let scale        = r.IsNull("NumericScale")     ? (int?)null : r.Field<int>("NumericScale")
+
+					select new ColumnSchema
+					{
+						ColumnName           = columnName,
+						ColumnType           = GetDbType(columnType, dataType, length, precision, scale),
+						IsNullable           = isNullable,
+						MemberName           = ToValidName(columnName),
+						MemberType           = ToTypeName(providerType, isNullable),
+						ProviderSpecificType = GetProviderSpecificType(columnType),
+						SystemType           = providerType ?? typeof(object),
+						DataType             = GetDataType(columnType, null, length, precision, scale),
+					}
+				).ToList();
 		}
 	}
 }

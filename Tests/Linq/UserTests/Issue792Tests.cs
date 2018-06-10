@@ -47,7 +47,7 @@ namespace Tests.UserTests
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			// those providers miss procedure schema load implementation for now
-			ProviderName.Informix, ProviderName.PostgreSQL)]
+			ProviderName.Informix)]
 		public void TestWithoutTransaction(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -83,10 +83,10 @@ namespace Tests.UserTests
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			// those providers miss procedure schema load implementation for now
-			ProviderName.Informix, ProviderName.PostgreSQL,
+			ProviderName.Informix,
 			// those providers cannot load schema when in transaction
 			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged,
-			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB,
+			ProviderName.MySql, TestProvName.MySql57, TestProvName.MariaDB, ProviderName.PostgreSQL,
 			ProviderName.SqlServer2000, ProviderName.SqlServer2005, TestProvName.SqlAzure,
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
 		public void TestWithTransaction(string context)

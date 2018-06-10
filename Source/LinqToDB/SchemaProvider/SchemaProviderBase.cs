@@ -338,6 +338,25 @@ namespace LinqToDB.SchemaProvider
 			return null;
 		}
 
+		/// <summary>
+		/// Builds table function call command.
+		/// </summary>
+		protected virtual string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			commandText = "SELECT * FROM " + commandText + "(";
+
+			for (var i = 0; i < procedure.Parameters.Count; i++)
+			{
+				if (i != 0)
+					commandText += ",";
+				commandText += "NULL";
+			}
+
+			commandText += ")";
+
+			return commandText;
+		}
+
 		protected virtual void LoadProcedureTableSchema(
 			DataConnection dataConnection, ProcedureSchema procedure, string commandText, List<TableSchema> tables)
 		{
@@ -346,16 +365,7 @@ namespace LinqToDB.SchemaProvider
 
 			if (procedure.IsTableFunction)
 			{
-				commandText = "SELECT * FROM " + commandText + "(";
-
-				for (var i = 0; i < procedure.Parameters.Count; i++)
-				{
-					if (i != 0)
-						commandText += ",";
-					commandText += "NULL";
-				}
-
-				commandText += ")";
+				commandText = BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
 				commandType = CommandType.Text;
 				parameters  = new DataParameter[0];
 			}

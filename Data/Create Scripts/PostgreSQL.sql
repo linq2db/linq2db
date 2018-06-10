@@ -4,6 +4,8 @@ GO
 DROP TABLE IF EXISTS "Patient"
 GO
 
+DROP FUNCTION IF EXISTS "TestTableFunctionSchema"()
+GO
 DROP TABLE IF EXISTS "Person"
 GO
 
@@ -522,5 +524,31 @@ BEGIN
 	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
 END;
 $BODY$
-	LANGUAGE plpgsql;
+	LANGUAGE PLPGSQL;
 GO
+
+CREATE OR REPLACE FUNCTION "TestTableFunctionSchema"() RETURNS SETOF "AllTypes"
+AS $$ SELECT * FROM "AllTypes" $$ LANGUAGE SQL;
+GO
+
+CREATE OR REPLACE FUNCTION "TestFunctionParameters"(param1 INT, INOUT param2 INT, OUT param3 INT)
+AS $$ SELECT param1, param2 $$ LANGUAGE SQL;
+GO
+
+CREATE OR REPLACE FUNCTION "TestTableFunction"(param1 INT) RETURNS TABLE(param2 INT)
+AS $$ SELECT param1 $$ LANGUAGE SQL;
+GO
+
+CREATE OR REPLACE FUNCTION "TestScalarFunction"(param INT) RETURNS VARCHAR(10)
+AS $$ BEGIN RETURN 'done'; END $$ LANGUAGE PLPGSQL;
+GO
+
+DROP AGGREGATE IF EXISTS test_avg (float8)
+CREATE AGGREGATE test_avg (float8)
+(
+	sfunc = float8_accum,
+	stype = float8[],
+	finalfunc = float8_avg,
+	initcond = '{0,0,0}'
+);
+
