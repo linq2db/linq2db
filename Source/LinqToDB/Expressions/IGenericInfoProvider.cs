@@ -10,6 +10,7 @@ namespace LinqToDB.Expressions
 	/// <see cref="SetInfo(MappingSchema)"/> method.
 	/// <example>
 	/// // this conversion provider adds conversion from IEnumerable`T to ImmutableList`T for specific T type parameter
+	/// <code>
 	/// class EnumerableToImmutableListConvertProvider&lt;T&gt; : IGenericInfoProvider
 	/// {
 	///     public void SetInfo(MappingSchema mappingSchema)
@@ -18,6 +19,7 @@ namespace LinqToDB.Expressions
 	///             t =&gt; ImmutableList.Create(t.ToArray()));
 	///     }
 	/// }
+	/// </code>
 	/// </example>
 	/// <see cref="MappingSchema.SetGenericConvertProvider(Type)"/> for more details.
 	/// </summary>

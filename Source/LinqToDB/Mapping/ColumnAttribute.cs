@@ -101,7 +101,7 @@ namespace LinqToDB.Mapping
 		/// If column is mapped to a property or field of composite object, <see cref="MemberName"/> should contain a path to that
 		/// member using dot as separator.
 		/// <example>
-		/// <code language="c#">
+		/// <code>
 		/// public class Address
 		/// {
 		///     public string City     { get; set; }

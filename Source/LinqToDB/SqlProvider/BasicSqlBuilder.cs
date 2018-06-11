@@ -43,7 +43,9 @@ namespace LinqToDB.SqlProvider
 		/// True if it is needed to wrap join condition with ()
 		/// </summary>
 		/// <example>
+		/// <code>
 		/// INNER JOIN Table2 t2 ON (t1.Value = t2.Value)
+		/// </code>
 		/// </example>
 		public virtual bool WrapJoinCondition => false;
 
