@@ -10,7 +10,7 @@ namespace LinqToDB.Expressions
 	/// <see cref="SetInfo(MappingSchema)"/> method.
 	/// <example>
 	/// <code>
-	/// // this conversion provider adds conversion from IEnumerable`T to ImmutableList`T for specific T type parameter
+	/// // this conversion provider adds conversion from IEnumerable&lt;T&gt; to ImmutableList&lt;T&gt; for specific T type parameter
 	/// class EnumerableToImmutableListConvertProvider&lt;T&gt; : IGenericInfoProvider
 	/// {
 	///     public void SetInfo(MappingSchema mappingSchema)
