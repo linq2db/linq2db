@@ -9,8 +9,8 @@ namespace LinqToDB.Expressions
 	/// Implementation class must be generic, as type parameters will be used for conversion initialization in
 	/// <see cref="SetInfo(MappingSchema)"/> method.
 	/// <example>
-	/// // this conversion provider adds conversion from IEnumerable`T to ImmutableList`T for specific T type parameter
 	/// <code>
+	/// // this conversion provider adds conversion from IEnumerable`T to ImmutableList`T for specific T type parameter
 	/// class EnumerableToImmutableListConvertProvider&lt;T&gt; : IGenericInfoProvider
 	/// {
 	///     public void SetInfo(MappingSchema mappingSchema)
