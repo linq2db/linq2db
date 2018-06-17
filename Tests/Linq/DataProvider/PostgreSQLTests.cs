@@ -968,6 +968,7 @@ namespace Tests.DataProvider
 					IsAggregateFunction = false,
 					IsDefaultSchema     = true,
 					IsLoaded            = true,
+					Parameters          = new List<ParameterSchema>(),
 					ResultTable         = new TableSchema()
 					{
 						IsProcedureResult = true,
@@ -976,57 +977,392 @@ namespace Tests.DataProvider
 						{
 							new ColumnSchema()
 							{
-								ColumnName = "PersonID",
-								ColumnType = "INT",
-								MemberName = "PersonID",
-								MemberType = "int",
+								ColumnName = "ID",
+								ColumnType = "int4",
+								MemberName = "ID",
+								MemberType = "int?",
 								SystemType = typeof(int),
+								IsNullable = true, // must be false, but we don't get this information from provider
 								DataType   = DataType.Int32
 							},
 							new ColumnSchema()
 							{
-								ColumnName = "FirstName",
-								ColumnType = "VARCHAR(50)",
-								MemberName = "FirstName",
-								MemberType = "string",
-								SystemType = typeof(string),
-								DataType   = DataType.VarChar
-							},
-							new ColumnSchema()
-							{
-								ColumnName = "LastName",
-								ColumnType = "VARCHAR(50)",
-								MemberName = "LastName",
-								MemberType = "string",
-								SystemType = typeof(string),
-								DataType   = DataType.VarChar
-							},
-							new ColumnSchema()
-							{
-								ColumnName = "MiddleName",
-								ColumnType = "VARCHAR(50)",
+								ColumnName = "bigintDataType",
+								ColumnType = "int8",
+								MemberName = "bigintDataType",
+								MemberType = "long?",
+								SystemType = typeof(long),
 								IsNullable = true,
-								MemberName = "MiddleName",
-								MemberType = "string",
-								SystemType = typeof(string),
-								DataType   = DataType.VarChar
+								DataType   = DataType.Int64
 							},
 							new ColumnSchema()
 							{
-								ColumnName = "Gender",
-								ColumnType = "CHAR(1)",
-								MemberName = "Gender",
-								MemberType = "char",
+								ColumnName = "numericDataType",
+								ColumnType = "numeric(0,0)",
+								MemberName = "numericDataType",
+								MemberType = "decimal?",
+								SystemType = typeof(decimal),
+								IsNullable = true,
+								DataType   = DataType.Decimal
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "smallintDataType",
+								ColumnType = "int2",
+								MemberName = "smallintDataType",
+								MemberType = "short?",
+								SystemType = typeof(short),
+								IsNullable = true,
+								DataType   = DataType.Int16
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "intDataType",
+								ColumnType = "int4",
+								MemberName = "intDataType",
+								MemberType = "int?",
+								SystemType = typeof(int),
+								IsNullable = true,
+								DataType   = DataType.Int32
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "moneyDataType",
+								ColumnType = "money",
+								MemberName = "moneyDataType",
+								MemberType = "decimal?",
+								SystemType = typeof(decimal),
+								IsNullable = true,
+								DataType   = DataType.Money
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "doubleDataType",
+								ColumnType = "float8",
+								MemberName = "doubleDataType",
+								MemberType = "double?",
+								SystemType = typeof(double),
+								IsNullable = true,
+								DataType   = DataType.Double
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "realDataType",
+								ColumnType = "float4",
+								MemberName = "realDataType",
+								MemberType = "float?",
+								SystemType = typeof(float),
+								IsNullable = true,
+								DataType   = DataType.Single
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "timestampDataType",
+								ColumnType = "timestamp (0) without time zone",
+								MemberName = "timestampDataType",
+								MemberType = "DateTime?",
+								SystemType = typeof(DateTime),
+								IsNullable = true,
+								DataType   = DataType.DateTime2
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "timestampTZDataType",
+								ColumnType = "timestamp (0) with time zone",
+								MemberName = "timestampTZDataType",
+								MemberType = "DateTimeOffset?",
+								SystemType = typeof(DateTimeOffset),
+								IsNullable = true,
+								DataType   = DataType.DateTimeOffset
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "dateDataType",
+								ColumnType           = "date",
+								MemberName           = "dateDataType",
+								MemberType           = "DateTime?",
+								SystemType           = typeof(DateTime),
+								ProviderSpecificType = "NpgsqlDate",
+								IsNullable           = true,
+								DataType             = DataType.Date
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "timeDataType",
+								ColumnType = "time (0) without time zone",
+								MemberName = "timeDataType",
+								MemberType = "TimeSpan?",
+								SystemType = typeof(TimeSpan),
+								IsNullable = true,
+								DataType   = DataType.Time
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "timeTZDataType",
+								ColumnType           = "time (0) with time zone",
+								MemberName           = "timeTZDataType",
+								MemberType           = "DateTimeOffset?",
+								SystemType           = typeof(DateTimeOffset),
+								IsNullable           = true,
+								DataType             = DataType.Time
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "intervalDataType",
+								ColumnType           = "interval(0)",
+								MemberName           = "intervalDataType",
+								MemberType           = "TimeSpan?",
+								SystemType           = typeof(TimeSpan),
+								ProviderSpecificType = "NpgsqlTimeSpan",
+								IsNullable           = true,
+								DataType             = DataType.Time
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "charDataType",
+								ColumnType = "character(1)",
+								MemberName = "charDataType",
+								MemberType = "char?",
 								SystemType = typeof(char),
-								DataType   = DataType.Char
-							}
+								IsNullable = true,
+								DataType   = DataType.NChar
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "char20DataType",
+								ColumnType = "character(20)",
+								MemberName = "char20DataType",
+								MemberType = "string",
+								SystemType = typeof(string),
+								IsNullable = true,
+								DataType   = DataType.NChar
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "varcharDataType",
+								ColumnType = "character varying(20)",
+								MemberName = "varcharDataType",
+								MemberType = "string",
+								SystemType = typeof(string),
+								IsNullable = true,
+								DataType   = DataType.NVarChar
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "textDataType",
+								ColumnType = "text",
+								MemberName = "textDataType",
+								MemberType = "string",
+								SystemType = typeof(string),
+								IsNullable = true,
+								DataType   = DataType.Text
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "binaryDataType",
+								ColumnType = "bytea",
+								MemberName = "binaryDataType",
+								MemberType = "byte[]",
+								SystemType = typeof(byte[]),
+								IsNullable = true,
+								DataType   = DataType.Binary
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "uuidDataType",
+								ColumnType = "uuid",
+								MemberName = "uuidDataType",
+								MemberType = "Guid?",
+								SystemType = typeof(Guid),
+								IsNullable = true,
+								DataType   = DataType.Guid
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "bitDataType",
+								ColumnType = "bit(-1)", // TODO: must be 3, but npgsql doesn't return it
+								MemberName = "bitDataType",
+								MemberType = "BitArray",
+								SystemType = typeof(BitArray),
+								IsNullable = true,
+								DataType   = DataType.BitArray
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "booleanDataType",
+								ColumnType = "bool",
+								MemberName = "booleanDataType",
+								MemberType = "bool?",
+								SystemType = typeof(bool),
+								IsNullable = true,
+								DataType   = DataType.Boolean
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "colorDataType",
+								ColumnType = "public.color",
+								MemberName = "colorDataType",
+								MemberType = "string",
+								SystemType = typeof(string),
+								IsNullable = true,
+								DataType   = DataType.Undefined
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "pointDataType",
+								ColumnType           = "point",
+								MemberName           = "pointDataType",
+								MemberType           = "NpgsqlPoint?",
+								SystemType           = typeof(NpgsqlPoint),
+								ProviderSpecificType = "NpgsqlPoint",
+								IsNullable           = true,
+								DataType             = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "lsegDataType",
+								ColumnType           = "lseg",
+								MemberName           = "lsegDataType",
+								MemberType           = "NpgsqlLSeg?",
+								SystemType           = typeof(NpgsqlLSeg),
+								ProviderSpecificType = "NpgsqlLSeg",
+								IsNullable           = true,
+								DataType             = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "boxDataType",
+								ColumnType           = "box",
+								MemberName           = "boxDataType",
+								MemberType           = "NpgsqlBox?",
+								SystemType           = typeof(NpgsqlBox),
+								ProviderSpecificType = "NpgsqlBox",
+								IsNullable           = true,
+								DataType             = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "pathDataType",
+								ColumnType           = "path",
+								MemberName           = "pathDataType",
+								MemberType           = "NpgsqlPath?",
+								SystemType           = typeof(NpgsqlPath),
+								ProviderSpecificType = "NpgsqlPath",
+								IsNullable           = true,
+								DataType             = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "polygonDataType",
+								ColumnType           = "polygon",
+								MemberName           = "polygonDataType",
+								MemberType           = "NpgsqlPolygon?",
+								SystemType           = typeof(NpgsqlPolygon),
+								ProviderSpecificType = "NpgsqlPolygon",
+								IsNullable           = true,
+								DataType             = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "circleDataType",
+								ColumnType           = "circle",
+								MemberName           = "circleDataType",
+								MemberType           = "NpgsqlCircle?",
+								SystemType           = typeof(NpgsqlCircle),
+								ProviderSpecificType = "NpgsqlCircle",
+								IsNullable           = true,
+								DataType             = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "lineDataType",
+								ColumnType           = "line",
+								MemberName           = "lineDataType",
+								MemberType           = "NpgsqlLine?",
+								SystemType           = typeof(NpgsqlLine),
+								ProviderSpecificType = "NpgsqlLine",
+								IsNullable           = true,
+								DataType             = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "inetDataType",
+								ColumnType           = "inet",
+								MemberName           = "inetDataType",
+								MemberType           = "IPAddress",
+								SystemType           = typeof(IPAddress),
+								ProviderSpecificType = "NpgsqlInet",
+								IsNullable           = true,
+								DataType             = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName           = "cidrDataType",
+								ColumnType           = "cidr",
+								MemberName           = "cidrDataType",
+								MemberType           = "NpgsqlInet?",
+								SystemType           = typeof(NpgsqlInet),
+								ProviderSpecificType = "NpgsqlInet",
+								IsNullable           = true,
+								DataType             = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "macaddrDataType",
+								ColumnType = "macaddr",
+								MemberName = "macaddrDataType",
+								MemberType = "PhysicalAddress",
+								SystemType = typeof(PhysicalAddress),
+								IsNullable = true,
+								DataType   = DataType.Udt
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "jsonDataType",
+								ColumnType = "json",
+								MemberName = "jsonDataType",
+								MemberType = "string",
+								SystemType = typeof(string),
+								IsNullable = true,
+								DataType   = DataType.Json
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "jsonbDataType",
+								ColumnType = "jsonb",
+								MemberName = "jsonbDataType",
+								MemberType = "string",
+								SystemType = typeof(string),
+								IsNullable = true,
+								DataType   = DataType.BinaryJson
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "xmlDataType",
+								ColumnType = "xml",
+								MemberName = "xmlDataType",
+								MemberType = "string",
+								SystemType = typeof(string),
+								IsNullable = true,
+								DataType   = DataType.Xml
+							},
+							new ColumnSchema()
+							{
+								ColumnName = "varBitDataType",
+								ColumnType = "bit varying(-1)", // TODO: length missing from npgsql
+								MemberName = "varBitDataType",
+								MemberType = "BitArray",
+								SystemType = typeof(BitArray),
+								IsNullable = true,
+								DataType   = DataType.BitArray
+							},
 						}
 					},
 					SimilarTables = new List<TableSchema>()
 					{
 						new TableSchema()
 						{
-							TableName = "person"
+							TableName = "AllTypes"
 						}
 					}
 				};
@@ -1039,10 +1375,10 @@ namespace Tests.DataProvider
 					ProcedureName       = "TestFunctionParameters",
 					MemberName          = "TestFunctionParameters",
 					IsFunction          = true,
-					IsTableFunction     = true,
+					IsTableFunction     = false,
 					IsAggregateFunction = false,
 					IsDefaultSchema     = true,
-					IsLoaded            = true,
+					IsLoaded            = false,
 					Parameters          = new List<ParameterSchema>()
 					{
 						new ParameterSchema()
@@ -1076,71 +1412,10 @@ namespace Tests.DataProvider
 							SystemType    = typeof(int),
 							DataType      = DataType.Int32
 						}
-					},
-					ResultTable = new TableSchema()
-					{
-						IsProcedureResult = true,
-						TypeName          = "TestFunctionParametersResult",
-						Columns           = new List<ColumnSchema>()
-						{
-							new ColumnSchema()
-							{
-								ColumnName = "PersonID",
-								ColumnType = "INT",
-								MemberName = "PersonID",
-								MemberType = "int",
-								SystemType = typeof(int),
-								DataType   = DataType.Int32
-							},
-							new ColumnSchema()
-							{
-								ColumnName = "FirstName",
-								ColumnType = "VARCHAR(50)",
-								MemberName = "FirstName",
-								MemberType = "string",
-								SystemType = typeof(string),
-								DataType   = DataType.VarChar
-							},
-							new ColumnSchema()
-							{
-								ColumnName = "LastName",
-								ColumnType = "VARCHAR(50)",
-								MemberName = "LastName",
-								MemberType = "string",
-								SystemType = typeof(string),
-								DataType   = DataType.VarChar
-							},
-							new ColumnSchema()
-							{
-								ColumnName = "MiddleName",
-								ColumnType = "VARCHAR(50)",
-								IsNullable = true,
-								MemberName = "MiddleName",
-								MemberType = "string",
-								SystemType = typeof(string),
-								DataType   = DataType.VarChar
-							},
-							new ColumnSchema()
-							{
-								ColumnName = "Gender",
-								ColumnType = "CHAR(1)",
-								MemberName = "Gender",
-								MemberType = "char",
-								SystemType = typeof(char),
-								DataType   = DataType.Char
-							}
-						}
-					},
-					SimilarTables = new List<TableSchema>()
-					{
-						new TableSchema()
-						{
-							TableName = "person"
-						}
 					}
 				};
 
-				// table function with single record result
+				// table function with single column result
 				yield return new ProcedureSchema()
 				{
 					CatalogName         = "SET_BY_TEST",
@@ -1148,7 +1423,43 @@ namespace Tests.DataProvider
 					ProcedureName       = "TestTableFunction",
 					MemberName          = "TestTableFunction",
 					IsFunction          = true,
-					IsTableFunction     = false,
+					IsTableFunction     = true,
+					IsAggregateFunction = false,
+					IsDefaultSchema     = true,
+					IsLoaded            = true,
+					Parameters          = new List<ParameterSchema>()
+					{
+						new ParameterSchema()
+						{
+							SchemaType    = "VARCHAR",
+							IsIn          = true,
+							ParameterName = "param1",
+							ParameterType = "string",
+							SystemType    = typeof(string),
+							DataType      = DataType.VarChar
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "param2",
+							SchemaType    = "INT",
+							IsOut         = true,
+							ParameterName = "param",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						}
+					}
+				};
+
+				// table function with multiple columns result
+				yield return new ProcedureSchema()
+				{
+					CatalogName         = "SET_BY_TEST",
+					SchemaName          = "public",
+					ProcedureName       = "TestTableFunction1",
+					MemberName          = "TestTableFunction1",
+					IsFunction          = true,
+					IsTableFunction     = true,
 					IsAggregateFunction = false,
 					IsDefaultSchema     = true,
 					IsLoaded            = true,
@@ -1187,17 +1498,17 @@ namespace Tests.DataProvider
 					IsTableFunction     = false,
 					IsAggregateFunction = false,
 					IsDefaultSchema     = true,
-					IsLoaded            = true,
+					IsLoaded            = false,
 					Parameters          = new List<ParameterSchema>()
 					{
 						new ParameterSchema()
 						{
 							SchemaType    = "VARCHAR",
 							IsResult      = true,
-							ParameterName = "par1",
+							ParameterName = "par26",
 							ParameterType = "string",
 							SystemType    = typeof(string),
-							DataType      = DataType.VarChar
+							DataType      = DataType.NVarChar
 						},
 						new ParameterSchema()
 						{
@@ -1223,17 +1534,26 @@ namespace Tests.DataProvider
 					IsTableFunction     = false,
 					IsAggregateFunction = true,
 					IsDefaultSchema     = true,
-					IsLoaded            = true,
+					IsLoaded            = false,
 					Parameters          = new List<ParameterSchema>()
 					{
 						new ParameterSchema()
 						{
-							SchemaType    = "VARCHAR",
+							SchemaType    = "double precision",
 							IsResult      = true,
-							ParameterName = "par1",
-							ParameterType = "string",
-							SystemType    = typeof(string),
-							DataType      = DataType.VarChar
+							ParameterName = "par23",
+							ParameterType = "double?",
+							SystemType    = typeof(double),
+							DataType      = DataType.Double
+						},
+						new ParameterSchema()
+						{
+							SchemaType    = "double precision",
+							IsIn          = true,
+							ParameterName = "par24",
+							ParameterType = "double?",
+							SystemType    = typeof(double),
+							DataType      = DataType.Double
 						}
 					}
 				};
@@ -1241,17 +1561,34 @@ namespace Tests.DataProvider
 		}
 
 #if !NETSTANDARD1_6
+		public void SchemaProceduresLoadedTest(
+			[IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				foreach (var proc in schema.Procedures)
+				{
+					Assert.IsNull(proc.ResultException);
+				}
+			}
+		}
+
 		[Test, Combinatorial]
 		public void ProceduresSchemaProviderTest(
 			[IncludeDataSources(false, ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureSchema expectedProc)
 		{
-			// TODO: add aggregate/udf functions test cases
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { ExcludedSchemas = new[] { "pg_catalog" } });
+				// schema load takes too long if system schema included
+				// added SchemaProceduresLoadedTest to test system schema
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(
+					db,
+					new GetSchemaOptions() { ExcludedSchemas = new[] { "pg_catalog" } });
 
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 
@@ -1267,6 +1604,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(expectedProc.IsDefaultSchema    , procedure.IsDefaultSchema);
 				Assert.AreEqual(expectedProc.IsFunction         , procedure.IsFunction);
 				Assert.AreEqual(expectedProc.IsLoaded           , procedure.IsLoaded);
+				Assert.AreEqual(expectedProc.IsResultDynamic    , procedure.IsResultDynamic);
 
 				Assert.IsNull(procedure.ResultException);
 

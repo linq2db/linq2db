@@ -14,6 +14,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
+		private readonly PostgreSQLDataProvider _provider;
+
+		public PostgreSQLSchemaProvider(PostgreSQLDataProvider provider)
+		{
+			_provider = provider;
+		}
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			var list = new[]
@@ -22,17 +29,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "oid",                         DataType = typeof(int).           FullName },
 				new DataTypeInfo { TypeName = "xid",                         DataType = typeof(int).           FullName },
 				new DataTypeInfo { TypeName = "smallint",                    DataType = typeof(short).         FullName },
+				new DataTypeInfo { TypeName = "int2",                        DataType = typeof(short).         FullName },
 				new DataTypeInfo { TypeName = "integer",                     DataType = typeof(int).           FullName },
 				new DataTypeInfo { TypeName = "int4",                        DataType = typeof(int).           FullName },
 				new DataTypeInfo { TypeName = "bigint",                      DataType = typeof(long).          FullName },
+				new DataTypeInfo { TypeName = "int8",                        DataType = typeof(long).          FullName },
 				new DataTypeInfo { TypeName = "real",                        DataType = typeof(float).         FullName },
+				new DataTypeInfo { TypeName = "float4",                      DataType = typeof(float).         FullName },
 				new DataTypeInfo { TypeName = "double precision",            DataType = typeof(double).        FullName },
+				new DataTypeInfo { TypeName = "float8",                      DataType = typeof(double).        FullName },
 				new DataTypeInfo { TypeName = "boolean",                     DataType = typeof(bool).          FullName },
+				new DataTypeInfo { TypeName = "bool",                        DataType = typeof(bool).          FullName },
 				new DataTypeInfo { TypeName = "regproc",                     DataType = typeof(object).        FullName },
 				new DataTypeInfo { TypeName = "money",                       DataType = typeof(decimal).       FullName },
 				new DataTypeInfo { TypeName = "text",                        DataType = typeof(string).        FullName },
 				new DataTypeInfo { TypeName = "xml",                         DataType = typeof(string).        FullName },
-				new DataTypeInfo { TypeName = "date",                        DataType = typeof(DateTime).      FullName },
+				
 				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        FullName },
 				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          FullName },
 
@@ -41,10 +53,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "jsonb",                       DataType = typeof(string).        FullName },
 
 				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        FullName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "varchar",                     DataType = typeof(string).        FullName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        FullName, CreateFormat = "character({0})",                    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "bpchar",                      DataType = typeof(string).        FullName, CreateFormat = "character({0})",                    CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       FullName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
-				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).FullName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
-				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      FullName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
+				
+				new DataTypeInfo { TypeName = "timestamptz",                 DataType = typeof(DateTimeOffset).FullName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
+				
+				new DataTypeInfo { TypeName = "timestamp",                   DataType = typeof(DateTime).      FullName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 			}.ToList();
 
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
@@ -59,19 +75,26 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (provider.NpgsqlPolygonType    != null) list.Add(new DataTypeInfo { TypeName = "polygon"                    , DataType = provider.NpgsqlPolygonType.   FullName });
 			if (provider.NpgsqlCircleType     != null) list.Add(new DataTypeInfo { TypeName = "circle"                     , DataType = provider.NpgsqlCircleType.    FullName });
 			if (provider.NpgsqlIntervalType   != null) list.Add(new DataTypeInfo { TypeName = "interval"                   , DataType = provider.NpgsqlIntervalType.  FullName, CreateFormat = "interval({0})",                     CreateParameters = "precision" });
-			if (provider.NpgsqlDateType       != null) list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.NpgsqlDateType.      FullName, CreateFormat = "time without time zone({0})",       CreateParameters = "precision" });
+			if (provider.NpgsqlDateType       != null) list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = provider.NpgsqlDateType.      FullName });
+			else                                       list.Add(new DataTypeInfo { TypeName = "date"                       , DataType = typeof(DateTime).             FullName });
 			if (provider.NpgsqlDateTimeType   != null) list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = provider.NpgsqlDateTimeType.  FullName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
+			else                                       list.Add(new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).             FullName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" });
 			if (provider.NpgsqlDateTimeType   != null) list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = provider.NpgsqlDateTimeType.  FullName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" });
-
-			if (provider.NpgsqlTimeType       != null) list.Add(new DataTypeInfo { TypeName = "time with time zone"        , DataType = provider.NpgsqlTimeType.      FullName, CreateFormat = "time with time zone({0})",          CreateParameters = "precision" });
-			else                                       list.Add(new DataTypeInfo { TypeName = "time with time zone"        , DataType = typeof(TimeSpan).             FullName, CreateFormat = "time with time zone({0})",          CreateParameters = "precision" });
-			if (provider.NpgsqlTimeTZType     != null) list.Add(new DataTypeInfo { TypeName = "time without time zone"     , DataType = provider.NpgsqlTimeTZType.    FullName, CreateFormat = "time without time zone({0})",       CreateParameters = "precision" });
-			else                                       list.Add(new DataTypeInfo { TypeName = "time without time zone"     , DataType = typeof(DateTimeOffset).       FullName, CreateFormat = "time without time zone({0})",       CreateParameters = "precision" });
+			else                                       list.Add(new DataTypeInfo { TypeName = "timestamp with time zone"   , DataType = typeof(DateTimeOffset).       FullName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" });
+			if (provider.NpgsqlTimeType       != null) list.Add(new DataTypeInfo { TypeName = "time with time zone"        , DataType = provider.NpgsqlTimeType.      FullName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
+			else                                       list.Add(new DataTypeInfo { TypeName = "time with time zone"        , DataType = typeof(DateTimeOffset).       FullName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
+			if (provider.NpgsqlTimeType       != null) list.Add(new DataTypeInfo { TypeName = "timetz"                     , DataType = provider.NpgsqlTimeType.      FullName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
+			else                                       list.Add(new DataTypeInfo { TypeName = "timetz"                     , DataType = typeof(DateTimeOffset).       FullName, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
+			if (provider.NpgsqlTimeTZType     != null) list.Add(new DataTypeInfo { TypeName = "time without time zone"     , DataType = provider.NpgsqlTimeTZType.    FullName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
+			else                                       list.Add(new DataTypeInfo { TypeName = "time without time zone"     , DataType = typeof(TimeSpan).             FullName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
+			if (provider.NpgsqlTimeTZType     != null) list.Add(new DataTypeInfo { TypeName = "time"                       , DataType = provider.NpgsqlTimeTZType.    FullName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
+			else                                       list.Add(new DataTypeInfo { TypeName = "time"                       , DataType = typeof(TimeSpan).             FullName, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
 
 			list.Add(new DataTypeInfo { TypeName = "macaddr",     DataType = (provider.NpgsqlMacAddressType ?? typeof(PhysicalAddress)).FullName });
 			list.Add(new DataTypeInfo { TypeName = "macaddr8",    DataType = (provider.NpgsqlMacAddressType ?? typeof(PhysicalAddress)).FullName });
 			list.Add(new DataTypeInfo { TypeName = "bit",         DataType = (provider.BitStringType        ?? typeof(BitArray)).       FullName, CreateFormat = "bit({0})",         CreateParameters = "size" });
 			list.Add(new DataTypeInfo { TypeName = "bit varying", DataType = (provider.BitStringType        ?? typeof(BitArray)).       FullName, CreateFormat = "bit varying({0})", CreateParameters = "size" });
+			list.Add(new DataTypeInfo { TypeName = "varbit",      DataType = (provider.BitStringType        ?? typeof(BitArray)).       FullName, CreateFormat = "bit varying({0})", CreateParameters = "size" });
 
 			return list;
 		}
@@ -231,25 +254,37 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (dataType)
 			{
+				case "bpchar"                      :
 				case "character"                   : return DataType.NChar;
 				case "text"                        : return DataType.Text;
+				case "int2"                        :
 				case "smallint"                    : return DataType.Int16;
 				case "oid"                         :
+				case "xid"                         :
 				case "int4"                        :
 				case "integer"                     : return DataType.Int32;
+				case "int8"                        :
 				case "bigint"                      : return DataType.Int64;
+				case "float4"                      :
 				case "real"                        : return DataType.Single;
+				case "float8"                      :
 				case "double precision"            : return DataType.Double;
 				case "bytea"                       : return DataType.Binary;
+				case "bool"                        :
 				case "boolean"                     : return DataType.Boolean;
 				case "numeric"                     : return DataType.Decimal;
 				case "money"                       : return DataType.Money;
 				case "uuid"                        : return DataType.Guid;
+				case "varchar"                     :
 				case "character varying"           : return DataType.NVarChar;
+				case "timestamptz"                 :
 				case "timestamp with time zone"    : return DataType.DateTimeOffset;
+				case "timestamp"                   :
 				case "timestamp without time zone" : return DataType.DateTime2;
-				case "time with time zone"         : return DataType.Time;
-				case "time without time zone"      : return DataType.Time;
+				case "timetz"                      :
+				case "time with time zone"         :
+				case "time"                        :
+				case "time without time zone"      :
 				case "interval"                    : return DataType.Time;
 				case "date"                        : return DataType.Date;
 				case "xml"                         : return DataType.Xml;
@@ -263,6 +298,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "inet"                        :
 				case "cidr"                        :
 				case "macaddr"                     :
+				case "macaddr8"                    :
 				case "ARRAY"                       :
 				case "anyarray"                    :
 				case "anyelement"                  :
@@ -287,21 +323,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (dataType)
 			{
-				case "interval"                    : return "NpgsqlTimeSpan";
-				case "time without time zone"      : return "NpgsqlTime";
-				case "time with time zone"         : return "NpgsqlTimeTZ";
+				case "interval"                    : return _provider.NpgsqlIntervalType?.Name;
+				case "time"                        :
+				case "time without time zone"      : return _provider.NpgsqlTimeType    ?.Name;
+				case "timetz"                      :
+				case "time with time zone"         : return _provider.NpgsqlTimeTZType  ?.Name;
 				case "timestamp with time zone":
 				case "timestamp without time zone" :
-				case "date"                        : return "NpgsqlDate";
-				case "point"                       : return "NpgsqlPoint";
-				case "lseg"                        : return "NpgsqlLSeg";
-				case "box"                         : return "NpgsqlBox";
-				case "circle"                      : return "NpgsqlCircle";
-				case "path"                        : return "NpgsqlPath";
-				case "polygon"                     : return "NpgsqlPolygon";
-				case "line"                        : return "NpgsqlLine";
+				case "date"                        : return _provider.NpgsqlDateType    ?.Name;
+				case "point"                       : return _provider.NpgsqlPointType   ?.Name;
+				case "lseg"                        : return _provider.NpgsqlLSegType    ?.Name;
+				case "box"                         : return _provider.NpgsqlBoxType     ?.Name;
+				case "circle"                      : return _provider.NpgsqlCircleType  ?.Name;
+				case "path"                        : return _provider.NpgsqlPathType    ?.Name;
+				case "polygon"                     : return _provider.NpgsqlPolygonType ?.Name;
+				case "line"                        : return _provider.NpgsqlLineType    ?.Name;
 				case "cidr":
-				case "inet"                        : return "NpgsqlInet";
+				case "inet"                        : return _provider.NpgsqlInetType    ?.Name;
 				case "geometry "                   : return "PostgisGeometry";
 			}
 
@@ -310,41 +348,104 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
-			// some notes:
-			// - postgresql 11 adds procedures support, but it is stil in development and not tested
-			// - aggregate function detection based on undocumented behavior
-			// - output parameters of functions returned as record by postgresql (makes sense, as it is not procedure)
-			return dataConnection
-				.Query(rd =>
-				{
-					var catalog  = rd.GetString(0);
-					var schema   = rd.GetString(1);
-					var source   = Converter.ChangeTypeTo<string>(rd[4]);
-					var dataType = Converter.ChangeTypeTo<string>(rd[6]);
-					return new ProcedureInfo()
+			// because information schema doesn't contain information about function kind like aggregate or table function
+			// we need to query additional data from pg_proc
+			// in postgresql 11 pg_proc some requred columns changed, so we need to execute different queries for pre-11 and 11+ versions
+			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
+
+			if (version < 110000)
+			{
+				return dataConnection
+					.Query(rd =>
 					{
-						ProcedureID         = catalog + "." + schema + "." + rd.GetString(5),
-						CatalogName         = catalog,
-						SchemaName          = schema,
-						ProcedureName       = rd.GetString(2),
-						IsFunction          = rd.GetString(3) == "FUNCTION",
-						IsTableFunction     = dataType == "record" || (dataType == "USER-DEFINED" && !rd.IsDBNull(7)),
-						IsAggregateFunction = source == "aggregate_dummy",
-						IsDefaultSchema     = schema == "public",
-						ProcedureDefinition = source
-					};
-				}, @"SELECT r.ROUTINE_CATALOG, r.ROUTINE_SCHEMA, r.ROUTINE_NAME, r.ROUTINE_TYPE, r.ROUTINE_DEFINITION, r.SPECIFIC_NAME, r.DATA_TYPE, t.TABLE_TYPE
+						var catalog       = rd.GetString(0);
+						var schema        = rd.GetString(1);
+						var isTableResult = Converter.ChangeTypeTo<bool>(rd[7]);
+
+						return new ProcedureInfo()
+						{
+							ProcedureID         = catalog + "." + schema + "." + rd.GetString(5),
+							CatalogName         = catalog,
+							SchemaName          = schema,
+							ProcedureName       = rd.GetString(2),
+							// versions prior 11 doesn't support procedures but support functions with void return type
+							// still, we report them as function in metadata. Just without return parameter
+							IsFunction          = rd.GetString(3) == "FUNCTION",
+							IsTableFunction     = isTableResult,
+							IsAggregateFunction = Converter.ChangeTypeTo<bool>(rd[6]),
+							IsDefaultSchema     = schema == "public",
+							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[4]),
+							// record-typed functions should specify result type on call
+							// it is known only for functions with output parameters and is set of those parameters
+							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && (isTableResult || Converter.ChangeTypeTo<int>(rd[9]) > 0)
+						};
+					}, @"
+SELECT	r.ROUTINE_CATALOG,
+		r.ROUTINE_SCHEMA,
+		r.ROUTINE_NAME,
+		r.ROUTINE_TYPE,
+		r.ROUTINE_DEFINITION,
+		r.SPECIFIC_NAME,
+		p.proisagg,
+		p.proretset,
+		r.DATA_TYPE,
+		outp.cnt
 	FROM INFORMATION_SCHEMA.ROUTINES r
-		LEFT OUTER JOIN INFORMATION_SCHEMA.TABLES t
-			ON r.TYPE_UDT_SCHEMA = t.TABLE_SCHEMA AND r.TYPE_UDT_NAME = t.TABLE_NAME")
-				.ToList();
+		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
+		LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
+		LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*)as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
+			ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
+
+")
+					.ToList();
+			}
+			else
+			{
+				return dataConnection
+					.Query(rd =>
+					{
+						var catalog       = rd.GetString(0);
+						var schema        = rd.GetString(1);
+						var isTableResult = Converter.ChangeTypeTo<bool>(rd[7]);
+
+						return new ProcedureInfo()
+						{
+							ProcedureID         = catalog + "." + schema + "." + rd.GetString(5),
+							CatalogName         = catalog,
+							SchemaName          = schema,
+							ProcedureName       = rd.GetString(2),
+							// versions prior 11 doesn't support procedures but support functions with void return type
+							// still, we report them as function in metadata. Just without return parameter
+							IsFunction          = rd.GetString(3) == "FUNCTION",
+							IsTableFunction     = isTableResult,
+							// this is only diffrence starting from v11
+							IsAggregateFunction = Converter.ChangeTypeTo<char>(rd[6]) == 'a',
+							IsDefaultSchema     = schema == "public",
+							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[4]),
+							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && (isTableResult || Converter.ChangeTypeTo<int>(rd[9]) > 0)
+						};
+					}, @"
+SELECT	r.ROUTINE_CATALOG,
+		r.ROUTINE_SCHEMA,
+		r.ROUTINE_NAME,
+		r.ROUTINE_TYPE,
+		r.ROUTINE_DEFINITION,
+		r.SPECIFIC_NAME,
+		p.prokind,
+		p.proretset,
+		r.DATA_TYPE,
+		outp.cnt
+	FROM INFORMATION_SCHEMA.ROUTINES r
+		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
+		LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
+		LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*)as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
+			ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME")
+					.ToList();
+			}
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
 		{
-			// Notes:
-			// - IsResult not supported by pgsql
-			// - user-defined and array types support not implemented
 			return dataConnection
 				.Query(rd =>
 				{
@@ -358,12 +459,34 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						Ordinal       = Converter.ChangeTypeTo<int>(rd[3]),
 						IsResult      = false,
 						DataType      = rd.GetString(6),
-						// not supported by pgsql
+						// those fields not supported by pgsql on parameter level
 						Precision     = null,
 						Scale         = null,
 						Length        = null
 					};
 				}, "SELECT SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME, ORDINAL_POSITION, PARAMETER_MODE, PARAMETER_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.parameters")
+				// populare return parameters for functions
+				.ToList()
+				// there is no separate result parameter for functions (maybe it will be for procedures in v11), so
+				// we need to read data_type of function itself if it is not table/void function to define return parameter
+				.Concat(dataConnection.Query(rd => new ProcedureParameterInfo()
+				{
+					ProcedureID   = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2),
+					ParameterName = null,
+					IsIn          = false,
+					IsOut         = false,
+					Ordinal       = 0,
+					IsResult      = true,
+					DataType      = rd.GetString(3),
+					// not supported by pgsql
+					Precision     = null,
+					Scale         = null,
+					Length        = null
+				}, @"SELECT r.SPECIFIC_CATALOG, r.SPECIFIC_SCHEMA, r.SPECIFIC_NAME, r.DATA_TYPE
+	FROM INFORMATION_SCHEMA.ROUTINES r
+		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
+		LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
+	WHERE r.DATA_TYPE <> 'void' AND p.proretset = false"))
 				.ToList();
 		}
 
@@ -380,6 +503,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					first = false;
 
 				commandText += "NULL";
+
+				// we don't have proper support for any* yet
+				if (parameter.SchemaType == "anyarray")
+					commandText += "::int[]";
+				if (parameter.SchemaType == "anyelement")
+					commandText += "::int";
+				else if (parameter.SchemaType != "ARRAY")
+					// otherwise it will fail on overrides with same parameter count
+					commandText += "::" + parameter.SchemaType;
 			}
 
 			commandText += ")";
@@ -395,12 +527,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					let columnName   = r.Field<string>("ColumnName")
 					let columnType   = Converter.ChangeTypeTo<string>(r["DataTypeName"])
-					let isNullable   = Converter.ChangeTypeTo<bool>(r["AllowDBNull"])
-					let dataType     = DataTypes.SingleOrDefault(t => t.TypeName == columnType)
-					let providerType = r.IsNull("ProviderType")     ? null       : r.Field<Type>("ProviderType")
+					let dataType     = DataTypes.FirstOrDefault(t => t.TypeName == columnType)
+					// AllowDBNull not set even with KeyInfo behavior suggested here:
+					// https://github.com/npgsql/npgsql/issues/1693
+					let isNullable   = r.IsNull("AllowDBNull")      ? true       : r.Field<bool>("AllowDBNull")
 					let length       = r.IsNull("ColumnSize")       ? (int?)null : r.Field<int>("ColumnSize")
 					let precision    = r.IsNull("NumericPrecision") ? (int?)null : r.Field<int>("NumericPrecision")
 					let scale        = r.IsNull("NumericScale")     ? (int?)null : r.Field<int>("NumericScale")
+					let providerType = r.IsNull("ProviderType")     ? null       : r.Field<Type>("ProviderType")
+					let systemType   =  GetSystemType(columnType, null, dataType, length, precision, scale) ?? providerType ?? typeof(object)
 
 					select new ColumnSchema
 					{
@@ -408,9 +543,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						ColumnType           = GetDbType(columnType, dataType, length, precision, scale),
 						IsNullable           = isNullable,
 						MemberName           = ToValidName(columnName),
-						MemberType           = ToTypeName(providerType, isNullable),
+						MemberType           = ToTypeName(systemType, isNullable),
 						ProviderSpecificType = GetProviderSpecificType(columnType),
-						SystemType           = providerType ?? typeof(object),
+						SystemType           = systemType,
 						DataType             = GetDataType(columnType, null, length, precision, scale),
 					}
 				).ToList();

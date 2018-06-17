@@ -44,5 +44,9 @@ namespace LinqToDB.SchemaProvider
 		/// Gets or sets procedure source code.
 		/// </summary>
 		public string ProcedureDefinition;
+		/// <summary>
+		/// Get or sets glag, indicating that procedure returns dynamic (generic) result.
+		/// </summary>
+		public bool IsResultDynamic;
 	}
 }

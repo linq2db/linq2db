@@ -30,6 +30,8 @@ namespace LinqToDB.SchemaProvider
 			return null;
 		}
 
+		// TODO: get rid of list and use dictionary, because now we perform joins on this property and it will produce
+		// invalid results if list contains duplicates
 		protected List<DataTypeInfo> DataTypes;
 		protected HashSet<string>    IncludedSchemas;
 		protected HashSet<string>    ExcludedSchemas;
@@ -223,6 +225,7 @@ namespace LinqToDB.SchemaProvider
 							MemberName          = ToValidName(sp.ProcedureName),
 							IsFunction          = sp.IsFunction,
 							IsTableFunction     = sp.IsTableFunction,
+							IsResultDynamic     = sp.IsResultDynamic,
 							IsAggregateFunction = sp.IsAggregateFunction,
 							IsDefaultSchema     = sp.IsDefaultSchema,
 							Parameters          =
@@ -270,7 +273,7 @@ namespace LinqToDB.SchemaProvider
 					{
 						foreach (var procedure in procedures)
 						{
-							if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
+							if (!procedure.IsResultDynamic && (!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 							{
 								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
 									 procedure.CatalogName,
