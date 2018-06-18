@@ -7,7 +7,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq
 {
@@ -365,7 +364,7 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps))
 			{
-				Func<IDataReader,T> m = dr => mapper.Map(runner, dr);
+				T ReadObject(IDataReader dr) => mapper.Map(runner, dr);
 
 				runner.SkipAction = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
 				runner.TakeAction = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;
@@ -375,7 +374,7 @@ namespace LinqToDB.Linq
 					mapper.QueryRunner = runner;
 
 					var dr = await runner.ExecuteReaderAsync(cancellationToken);
-					await dr.QueryForEachAsync(m, r =>
+					await dr.QueryForEachAsync(ReadObject, r =>
 					{
 						var b = func(r);
 						runner.RowsCount++;
@@ -539,7 +538,7 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
 			{
-				Func<IDataReader,object> m = dr => mapper.Map(runner, dr);
+				object ObjectReader(IDataReader dr) => mapper.Map(runner, dr);
 
 				try
 				{
@@ -551,7 +550,7 @@ namespace LinqToDB.Linq
 					var read = false;
 
 					await dr.QueryForEachAsync(
-						m,
+						ObjectReader,
 						r =>
 						{
 							read = true;

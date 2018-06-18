@@ -108,6 +108,13 @@ namespace LinqToDB.Linq
 				.GetForEachAsync(DataContext, expression, Parameters, func, cancellationToken);
 		}
 
+		public IAsyncEnumerable<T> GetAsyncEnumerable(CancellationToken cancellationToken)
+		{
+			var expression = Expression;
+			return GetQuery(ref expression, true)
+				.GetIAsyncEnumerable(DataContext, expression, Parameters, cancellationToken);
+		}
+
 		#endregion
 
 		#region IQueryable Members
