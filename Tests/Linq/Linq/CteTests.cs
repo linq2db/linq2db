@@ -16,6 +16,8 @@ namespace Tests.Linq
 		{
 			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
 			ProviderName.Firebird,
+			ProviderName.PostgreSQL,
+			ProviderName.DB2,
 			ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
 			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative
 			//ProviderName.Informix,
@@ -405,7 +407,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void TestInsert([CteContextSource] string context)
+		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
@@ -438,7 +440,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void TestDelete([CteContextSource(ProviderName.Firebird)] string context)
+		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2)] string context)
 		{
 			using (var db  = GetDataContext(context))
 			using (var tmp = db.CreateLocalTable("CteChild",
@@ -458,7 +460,7 @@ namespace Tests.Linq
 
 		[Test, Combinatorial]
 		public void TestUpdate(
-			[CteContextSource(ProviderName.Firebird, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -490,7 +492,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void RecursiveTest([IncludeDataSources(true, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context)
+		public void RecursiveTest([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -508,7 +510,7 @@ namespace Tests.Linq
 						(
 							from gc in db.GrandChild
 							from p in db.Parent.InnerJoin(p => p.ParentID == gc.ParentID)
-							from ct in cte.InnerJoin(ct => ct.ChildID == gc.ChildID)
+							from ct in cte.InnerJoin(ct => Sql.AsNotNull(ct.ChildID) == gc.ChildID)
 							where ct.GrandChildID <= 10
 							select new RecursiveCTE
 							{
@@ -523,5 +525,6 @@ namespace Tests.Linq
 				var result = cteRecursive.ToArray();
 			}
 		}
+
 	}
 }
