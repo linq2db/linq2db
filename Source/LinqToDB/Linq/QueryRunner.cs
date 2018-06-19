@@ -392,6 +392,141 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		class AsyncEnumeratorImpl<T> : IAsyncEnumerator<T>
+		{
+			readonly Query                         _query;
+			readonly IDataContext                  _dataContext;
+			readonly Mapper<T>                     _mapper;
+			readonly Expression                    _expression;
+			readonly object[]                      _ps;
+			readonly int                           _queryNumber;
+			readonly Func<Expression,object[],int> _skipAction;
+			readonly Func<Expression,object[],int> _takeAction;
+			readonly CancellationToken             _token;
+
+			IQueryRunner     _queryRunner;
+			IDataReaderAsync _dataReader;
+			int              _take;
+
+			public AsyncEnumeratorImpl(
+				Query                         query,
+				IDataContext                  dataContext,
+				Mapper<T>                     mapper,
+				Expression                    expression,
+				object[]                      ps,
+				int                           queryNumber,
+				Func<Expression,object[],int> skipAction,
+				Func<Expression,object[],int> takeAction,
+				CancellationToken             token)
+			{
+				_query       = query;
+				_dataContext = dataContext;
+				_mapper      = mapper;
+				_expression  = expression;
+				_ps          = ps;
+				_queryNumber = queryNumber;
+				_skipAction  = skipAction;
+				_takeAction  = takeAction;
+				_token       = token;
+			}
+
+			public T Current { get; set; }
+
+			public async Task<bool> MoveNext(CancellationToken cancellationToken)
+			{
+				if (_queryRunner == null)
+				{
+					_queryRunner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _ps);
+
+					_mapper.QueryRunner = _queryRunner;
+
+					_dataReader = await _queryRunner.ExecuteReaderAsync(cancellationToken);
+
+					var skip = _skipAction?.Invoke(_expression, _ps) ?? 0;
+
+					while (skip-- > 0 && await _dataReader.ReadAsync(cancellationToken))
+						{}
+
+					_take = _takeAction?.Invoke(_expression, _ps) ?? int.MaxValue;
+				}
+
+				if (_take-- > 0 && await _dataReader.ReadAsync(cancellationToken))
+				{
+					_queryRunner.RowsCount++;
+
+					Current = _mapper.Map(_queryRunner, _dataReader.DataReader);
+
+					return true;
+				}
+
+				return false;
+			}
+
+			public void Dispose()
+			{
+				_queryRunner?.Dispose();
+				_dataReader ?.Dispose();
+
+				_mapper.QueryRunner = _queryRunner = null;
+			}
+		}
+
+		class AsyncEnumerableImpl<T> : IAsyncEnumerable<T>
+		{
+			readonly Query                         _query;
+			readonly IDataContext                  _dataContext;
+			readonly Mapper<T>                     _mapper;
+			readonly Expression                    _expression;
+			readonly object[]                      _ps;
+			readonly int                           _queryNumber;
+			readonly Func<Expression,object[],int> _skipAction;
+			readonly Func<Expression,object[],int> _takeAction;
+			readonly CancellationToken             _token;
+
+			public AsyncEnumerableImpl(
+				Query                         query,
+				IDataContext                  dataContext,
+				Mapper<T>                     mapper,
+				Expression                    expression,
+				object[]                      ps,
+				int                           queryNumber,
+				Func<Expression,object[],int> skipAction,
+				Func<Expression,object[],int> takeAction,
+				CancellationToken             token)
+			{
+				_query       = query;
+				_dataContext = dataContext;
+				_mapper      = mapper;
+				_expression  = expression;
+				_ps          = ps;
+				_queryNumber = queryNumber;
+				_skipAction  = skipAction;
+				_takeAction  = takeAction;
+				_token       = token;
+			}
+
+			public IAsyncEnumerator<T> GetEnumerator()
+			{
+				return new AsyncEnumeratorImpl<T>(
+					_query, _dataContext, _mapper, _expression, _ps, _queryNumber, _skipAction, _takeAction, _token);
+			}
+		}
+
+		static IAsyncEnumerable<T> ExecuteQueryAsync<T>(
+			Query                         query,
+			IDataContext                  dataContext,
+			Mapper<T>                     mapper,
+			Expression                    expression,
+			object[]                      ps,
+			int                           queryNumber,
+			Func<Expression,object[],int> skipAction,
+			Func<Expression,object[],int> takeAction,
+			CancellationToken             token)
+		{
+			return new AsyncEnumerableImpl<T>(
+				query, dataContext, mapper, expression, ps, queryNumber, skipAction, takeAction, token);
+		}
+
 		static void SetRunQuery<T>(
 			Query<T> query,
 			Expression<Func<IQueryRunner,IDataReader,T>> expression)
@@ -410,6 +545,9 @@ namespace LinqToDB.Linq
 
 			query.GetForEachAsync = (db, expr, ps, action, token) =>
 				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, action, skipAction, takeAction, token);
+
+			query.GetIAsyncEnumerable = (db, expr, ps, token) =>
+				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, skipAction, takeAction, token);
 		}
 
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>( p => p.DataContext);
