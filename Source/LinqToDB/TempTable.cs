@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Async;
 	using Data;
 	using Expressions;
 	using Extensions;
@@ -249,6 +250,11 @@ namespace LinqToDB
 			return _table.ExecuteAsync<TResult>(expression, token);
 		}
 
+		IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
+		{
+			return _table.ExecuteAsync<TResult>(expression);
+		}
+		
 		#endregion
 
 		#region IExpressionQuery<T>

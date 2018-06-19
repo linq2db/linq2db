@@ -92,6 +92,12 @@ namespace LinqToDB.Linq
 			return (TResult)value;
 		}
 
+		IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
+		{
+			return Query<TResult>.GetQuery(DataContext, ref expression)
+				.GetIAsyncEnumerable(DataContext, expression, Parameters);
+		}
+
 		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
 		{
 			var expression = Expression;

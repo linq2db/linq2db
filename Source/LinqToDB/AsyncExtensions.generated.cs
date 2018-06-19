@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
+	using Async;
 	using Linq;
 
 	public static partial class AsyncExtensions
