@@ -364,22 +364,26 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps))
 			{
-				T ReadObject(IDataReader dr) => mapper.Map(runner, dr);
-
-				runner.SkipAction = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
-				runner.TakeAction = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;
-
 				try
 				{
 					mapper.QueryRunner = runner;
 
-					var dr = await runner.ExecuteReaderAsync(cancellationToken);
-					await dr.QueryForEachAsync(ReadObject, r =>
+					using (var dr = await runner.ExecuteReaderAsync(cancellationToken))
 					{
-						var b = func(r);
-						runner.RowsCount++;
-						return b;
-					}, cancellationToken);
+						var skip = skipAction?.Invoke(expression, ps) ?? 0;
+
+						while (skip-- > 0 && await dr.ReadAsync(cancellationToken))
+							{}
+
+						var take = takeAction?.Invoke(expression, ps) ?? int.MaxValue;
+
+						while (take-- > 0 && await dr.ReadAsync(cancellationToken))
+						{
+							runner.RowsCount++;
+							if (!func(mapper.Map(runner, dr.DataReader)))
+								break;
+						}
+					}
 				}
 				finally
 				{
@@ -538,32 +542,23 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
 			{
-				object ObjectReader(IDataReader dr) => mapper.Map(runner, dr);
-
 				try
 				{
 					mapper.QueryRunner = runner;
 
-					var dr = await runner.ExecuteReaderAsync(cancellationToken);
-
-					var item = default(T);
-					var read = false;
-
-					await dr.QueryForEachAsync(
-						ObjectReader,
-						r =>
+					using (var dr = await runner.ExecuteReaderAsync(cancellationToken))
+					{
+						if (await dr.ReadAsync(cancellationToken))
 						{
-							read = true;
-							item = dataContext.MappingSchema.ChangeTypeTo<T>(r);
 							runner.RowsCount++;
-							return false;
-						},
-						cancellationToken);
 
-					if (read)
-						return item;
+							var item = mapper.Map(runner, dr.DataReader);
 
-					return Array<T>.Empty.First();
+							return dataContext.MappingSchema.ChangeTypeTo<T>(item);
+						}
+
+						return Array<T>.Empty.First();
+					}
 				}
 				finally
 				{

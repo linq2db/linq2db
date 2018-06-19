@@ -150,5 +150,18 @@ namespace Tests.Linq
 				var zz = await resultQuery.FirstOrDefaultAsync();
 			}
 		}
+
+		[Test, DataContextSource]
+		public async Task TakeSkipTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var resultQuery = db.Parent.OrderBy(p => p.ParentID).Skip(1).Take(2);
+
+				AreEqual(
+					resultQuery.ToArray(),
+					await resultQuery.ToArrayAsync());
+			}
+		}
 	}
 }
