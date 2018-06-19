@@ -1,8 +1,6 @@
-﻿using System;
+﻿using JetBrains.Annotations;
 
-using JetBrains.Annotations;
-
-namespace LinqToDB.Linq
+namespace LinqToDB.Async
 {
 	/// <summary>
 	/// Asynchronous version of the IEnumerable&lt;T&gt; interface, allowing elements of the

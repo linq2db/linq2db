@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
+	using Async;
 	using Extensions;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>
