@@ -174,7 +174,7 @@ namespace LinqToDB
 
 //				var list = new List<TSource>();
 //
-//				using (var enumerator = query.GetAsyncEnumerable(token).GetEnumerator())
+//				using (var enumerator = query.GetAsyncEnumerable().GetEnumerator())
 //					while (await enumerator.MoveNext(token))
 //						list.Add(enumerator.Current);
 //
@@ -324,9 +324,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			if (source is ExpressionQuery<TSource> query)
-			{
-				return query.GetAsyncEnumerable(token);
-			}
+				return query.GetAsyncEnumerable();
 
 			throw new InvalidOperationException("ExpressionQuery expected.");
 		}

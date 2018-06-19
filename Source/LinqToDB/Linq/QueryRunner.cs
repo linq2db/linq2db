@@ -402,7 +402,6 @@ namespace LinqToDB.Linq
 			readonly int                           _queryNumber;
 			readonly Func<Expression,object[],int> _skipAction;
 			readonly Func<Expression,object[],int> _takeAction;
-			readonly CancellationToken             _token;
 
 			IQueryRunner     _queryRunner;
 			IDataReaderAsync _dataReader;
@@ -416,8 +415,7 @@ namespace LinqToDB.Linq
 				object[]                      ps,
 				int                           queryNumber,
 				Func<Expression,object[],int> skipAction,
-				Func<Expression,object[],int> takeAction,
-				CancellationToken             token)
+				Func<Expression,object[],int> takeAction)
 			{
 				_query       = query;
 				_dataContext = dataContext;
@@ -427,7 +425,6 @@ namespace LinqToDB.Linq
 				_queryNumber = queryNumber;
 				_skipAction  = skipAction;
 				_takeAction  = takeAction;
-				_token       = token;
 			}
 
 			public T Current { get; set; }
@@ -481,7 +478,6 @@ namespace LinqToDB.Linq
 			readonly int                           _queryNumber;
 			readonly Func<Expression,object[],int> _skipAction;
 			readonly Func<Expression,object[],int> _takeAction;
-			readonly CancellationToken             _token;
 
 			public AsyncEnumerableImpl(
 				Query                         query,
@@ -491,8 +487,7 @@ namespace LinqToDB.Linq
 				object[]                      ps,
 				int                           queryNumber,
 				Func<Expression,object[],int> skipAction,
-				Func<Expression,object[],int> takeAction,
-				CancellationToken             token)
+				Func<Expression,object[],int> takeAction)
 			{
 				_query       = query;
 				_dataContext = dataContext;
@@ -502,13 +497,12 @@ namespace LinqToDB.Linq
 				_queryNumber = queryNumber;
 				_skipAction  = skipAction;
 				_takeAction  = takeAction;
-				_token       = token;
 			}
 
 			public IAsyncEnumerator<T> GetEnumerator()
 			{
 				return new AsyncEnumeratorImpl<T>(
-					_query, _dataContext, _mapper, _expression, _ps, _queryNumber, _skipAction, _takeAction, _token);
+					_query, _dataContext, _mapper, _expression, _ps, _queryNumber, _skipAction, _takeAction);
 			}
 		}
 
@@ -520,11 +514,10 @@ namespace LinqToDB.Linq
 			object[]                      ps,
 			int                           queryNumber,
 			Func<Expression,object[],int> skipAction,
-			Func<Expression,object[],int> takeAction,
-			CancellationToken             token)
+			Func<Expression,object[],int> takeAction)
 		{
 			return new AsyncEnumerableImpl<T>(
-				query, dataContext, mapper, expression, ps, queryNumber, skipAction, takeAction, token);
+				query, dataContext, mapper, expression, ps, queryNumber, skipAction, takeAction);
 		}
 
 		static void SetRunQuery<T>(
@@ -546,8 +539,8 @@ namespace LinqToDB.Linq
 			query.GetForEachAsync = (db, expr, ps, action, token) =>
 				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, action, skipAction, takeAction, token);
 
-			query.GetIAsyncEnumerable = (db, expr, ps, token) =>
-				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, skipAction, takeAction, token);
+			query.GetIAsyncEnumerable = (db, expr, ps) =>
+				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, skipAction, takeAction);
 		}
 
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>( p => p.DataContext);
