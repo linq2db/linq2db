@@ -441,8 +441,11 @@ namespace LinqToDB.Linq
 
 					var skip = _skipAction?.Invoke(_expression, _ps) ?? 0;
 
-					while (skip-- > 0 && await _dataReader.ReadAsync(cancellationToken))
-						{}
+					while (skip-- > 0)
+					{
+						if (!await _dataReader.ReadAsync(cancellationToken))
+							return false;
+					}
 
 					_take = _takeAction?.Invoke(_expression, _ps) ?? int.MaxValue;
 				}
