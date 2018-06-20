@@ -46,7 +46,9 @@ namespace Tests.UserTests
 		}
 
 		[Test, Combinatorial]
-		public void TestAssociation([DataSources] string context)
+		public void TestAssociation(
+			[IncludeDataSources(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)] string context
+		)
 		{
 			using (var db = GetDataContext(context))
 			{
