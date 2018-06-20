@@ -224,9 +224,9 @@
 		<Compile Remove="Linq\FSharpTests.cs" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Reference Include="Oracle.ManagedDataAccess">
-			<HintPath>..\..\Redist\Oracle\Oracle.Core\Oracle.ManagedDataAccess.dll</HintPath>
-		</Reference>
+	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+	  <PackageReference Include="Oracle.ManagedDataAccess.Core">
+	    <Version>2.12.0-beta2</Version>
+	  </PackageReference>
 	</ItemGroup>
 </Project>
