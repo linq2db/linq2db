@@ -6,11 +6,11 @@ using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
-using Tests.UserTests;
 
 namespace Tests.Linq
 {
 	using Model;
+	using UserTests;
 
 	[TestFixture]
 	public class AsyncTests : TestBase

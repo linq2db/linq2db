@@ -33,6 +33,5 @@ namespace LinqToDB.Async
 		}
 
 		#endregion
-		
 	}
 }
