@@ -10,7 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	[ActiveIssue(975)]
+	[TestFixture]
 	public class Issue975Tests : TestBase
 	{
 		public static class SqlServer
@@ -67,7 +67,7 @@ namespace Tests.UserTests
 			[Column,     NotNull    ] public int       TargetId    { get; set; } // Int
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2012, ProviderName.SqlServer2014, ProviderName.SqlServer)]
 		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))
