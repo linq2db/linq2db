@@ -976,7 +976,7 @@ namespace LinqToDB.Data
 
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
-			if (queryHints != null && queryHints.Count > 0)
+			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder();
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);

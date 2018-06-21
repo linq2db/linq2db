@@ -3118,10 +3118,17 @@ namespace LinqToDB.SqlProvider
 
 		public string ApplyQueryHints(string sql, List<string> queryHints)
 		{
-			var sb = new StringBuilder(sql);
+			var sb = new StringBuilder();
 
 			foreach (var hint in queryHints)
-				sb.AppendLine(hint);
+				if (hint?.Length >= 2 && hint.StartsWith("**"))
+					sb.AppendLine(hint.Substring(2));
+
+			sb.Append(sql);
+
+			foreach (var hint in queryHints)
+				if (!(hint?.Length >= 2 && hint.StartsWith("**")))
+					sb.AppendLine(hint);
 
 			return sb.ToString();
 		}
