@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -61,7 +62,11 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "SqlServer2012"         :
 				case "SqlServer.2012"        : return _sqlServerDataProvider2012;
 				case "SqlServer2014"         :
-				case "SqlServer.2014"        : return _sqlServerDataProvider2012;
+				case "SqlServer.2014"        :
+				case "SqlServer2016"         :
+				case "SqlServer.2016"        :
+				case "SqlServer2017"         :
+				case "SqlServer.2017"        : return _sqlServerDataProvider2012;
 
 				case "SqlServer"             :
 				case "System.Data.SqlClient" :
@@ -71,6 +76,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (css.Name.Contains("2008")) return _sqlServerDataProvider2008;
 					if (css.Name.Contains("2012")) return _sqlServerDataProvider2012;
 					if (css.Name.Contains("2014")) return _sqlServerDataProvider2012;
+					if (css.Name.Contains("2016")) return _sqlServerDataProvider2012;
+					if (css.Name.Contains("2017")) return _sqlServerDataProvider2012;
 
 					if (AutoDetectProvider)
 					{
@@ -84,17 +91,20 @@ namespace LinqToDB.DataProvider.SqlServer
 
 								if (int.TryParse(conn.ServerVersion.Split('.')[0], out var version))
 								{
-									switch (version)
+									if (version == 8)
+										return _sqlServerDataProvider2000;
+
+									var cmd = conn.CreateCommand();
+									cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
+									var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
+
+									switch (level)
 									{
-										case  8 : return _sqlServerDataProvider2000;
-										case  9 : return _sqlServerDataProvider2005;
-										case 10 : return _sqlServerDataProvider2008;
-										case 11 : return _sqlServerDataProvider2012;
-										case 12 : return _sqlServerDataProvider2012;
-										default :
-											if (version > 12)
-												return _sqlServerDataProvider2012;
-											break;
+										case  80 : return _sqlServerDataProvider2000;
+										case  90 : return _sqlServerDataProvider2005;
+										case 100 : return _sqlServerDataProvider2008;
+										case 110 : return _sqlServerDataProvider2012;
+										default  : return _sqlServerDataProvider2012;
 									}
 								}
 							}
