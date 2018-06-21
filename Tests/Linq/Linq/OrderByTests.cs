@@ -403,7 +403,7 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.ParentID).Count());
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Count2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -421,7 +421,7 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.ParentID).Min(p => p.ParentID));
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Min2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -430,7 +430,7 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.ParentID).Take(3).Min(p => p.ParentID));
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public void Min3(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -2,7 +2,7 @@
 <#@ output extension=".generated.cs"                                              #>
 <#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.Access.ttinclude"      #>
 <#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net452\linq2db.dll"         #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"          #>
 <#
 	NamespaceName = "AccessDataContext";
 

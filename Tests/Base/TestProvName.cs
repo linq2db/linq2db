@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Tests
+﻿namespace Tests
 {
 	public static class TestProvName
 	{

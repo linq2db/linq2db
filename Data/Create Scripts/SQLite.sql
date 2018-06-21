@@ -262,3 +262,15 @@ CREATE TABLE TestMerge2
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL
 );
+
+DROP TABLE IF EXISTS TEST_T4_CASING;
+CREATE TABLE TEST_T4_CASING
+(
+	ALL_CAPS              INT    NOT NULL,
+	CAPS                  INT    NOT NULL,
+	PascalCase            INT    NOT NULL,
+	Pascal_Snake_Case     INT    NOT NULL,
+	PascalCase_Snake_Case INT    NOT NULL,
+	snake_case            INT    NOT NULL,
+	camelCase             INT    NOT NULL
+);

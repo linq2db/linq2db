@@ -1,1 +1,0 @@
-#addin Cake.AppVeyor

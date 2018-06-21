@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net452;netcoreapp2.0</TargetFrameworks>
+		<TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -120,12 +120,12 @@
 		</Compile>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' != 'net452'">
+	<ItemGroup Condition="'$(TargetFramework)' != 'net46'">
 		<None Remove="SqlServer.tt" />
 		<Compile Remove="SqlServer.generated.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net452'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net46'">
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 
 		<None Update="SqlServer.tt">

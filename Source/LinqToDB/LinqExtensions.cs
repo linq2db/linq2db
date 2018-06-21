@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Async;
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
@@ -1347,6 +1348,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		[Pure]
 		public static object InsertWithIdentity<T>([NotNull] this IValueInsertable<T> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2746,8 +2748,8 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(Join, source, joinType, predicate),
 					new[]
 					{
-						source.Expression, 
-						Expression.Constant(joinType), 
+						source.Expression,
+						Expression.Constant(joinType),
 						Expression.Quote(predicate)
 					}));
 		}
@@ -2784,10 +2786,10 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(Join, outer, inner, joinType, predicate, resultSelector),
 					new[]
 					{
-						outer.Expression, 
-						inner.Expression, 
+						outer.Expression,
+						inner.Expression,
 						Expression.Constant(joinType),
-						Expression.Quote(predicate), 
+						Expression.Quote(predicate),
 						Expression.Quote(resultSelector)
 					}));
 		}
@@ -2972,8 +2974,8 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(CrossJoin, outer, inner, resultSelector),
 					new[]
 					{
-						outer.Expression, 
-						inner.Expression, 
+						outer.Expression,
+						inner.Expression,
 						Expression.Quote(resultSelector)
 					}));
 		}
@@ -3052,9 +3054,9 @@ namespace LinqToDB
 		/// Gets or sets callback for preprocessing query before execution.
 		/// Useful for intercepting queries.
 		/// </summary>
-		public static Func<IQueryable, IQueryable> ProcessSourceQueryable { get; set; } 
+		public static Func<IQueryable, IQueryable> ProcessSourceQueryable { get; set; }
 
-		public static IExtensionsAdapter ExtensionsAdapter { get; set; } 
+		public static IExtensionsAdapter ExtensionsAdapter { get; set; }
 
 		#endregion
 	}

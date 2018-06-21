@@ -47,10 +47,10 @@ namespace Tests.Linq
 				nameof(ALLTYPE.TIMEDATATYPE)
 			)] string fieldName)
 		{
-			if (!UserProviders.Contains(ProviderName.SQLite))
+			if (!UserProviders.Contains(ProviderName.SQLiteClassic))
 				return;
 
-			using (var db = GetDataContext(ProviderName.SQLite))
+			using (var db = GetDataContext(ProviderName.SQLiteClassic))
 			{
 				var query =
 					from t in db.GetTable<ALLTYPE>()

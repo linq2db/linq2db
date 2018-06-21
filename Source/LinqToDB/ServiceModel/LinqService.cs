@@ -10,6 +10,7 @@ namespace LinqToDB.ServiceModel
 	using Common;
 	using Data;
 	using Linq;
+	using LinqToDB.Extensions;
 	using SqlQuery;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
@@ -174,7 +175,7 @@ namespace LinqToDB.ServiceModel
 							var codes = new TypeCode[rd.FieldCount];
 
 							for (var i = 0; i < ret.FieldCount; i++)
-								codes[i] = Type.GetTypeCode(ret.FieldTypes[i]);
+								codes[i] = Type.GetTypeCode(ret.FieldTypes[i].ToNullableUnderlying());
 
 							ret.RowCount++;
 

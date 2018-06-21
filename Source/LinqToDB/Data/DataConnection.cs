@@ -364,8 +364,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					WriteTraceLine(
 						info.RecordsAffected != null
-							? $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
-							: $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
+							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
+							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
 						TraceSwitch.DisplayName);
 					break;
 
@@ -640,6 +640,42 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Returns database provider associated with provider name, configuration and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="configurationString">Connection configuration name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string configurationString,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(configurationString, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
+		/// Returns database provider associated with provider name and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(providerName, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
 		/// Returns registered database providers.
 		/// </summary>
 		/// <returns>
@@ -668,7 +704,7 @@ namespace LinqToDB.Data
 			}
 
 			private string _connectionString;
-			public  string ConnectionString
+			public  string  ConnectionString
 			{
 				get => _connectionString;
 				set
@@ -696,7 +732,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
+			public static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
 				var configuration = css.Name;
 				var providerName  = css.ProviderName;
@@ -940,7 +976,7 @@ namespace LinqToDB.Data
 
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
-			if (queryHints != null && queryHints.Count > 0)
+			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder();
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);

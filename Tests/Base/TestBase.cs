@@ -279,6 +279,9 @@ namespace Tests
 			ProviderName.SqlCe,
 			ProviderName.SQLiteClassic,
 #endif
+#if !NETSTANDARD1_6
+			ProviderName.SybaseManaged,
+#endif
 			ProviderName.Firebird,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,

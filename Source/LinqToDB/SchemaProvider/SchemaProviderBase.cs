@@ -156,8 +156,11 @@ namespace LinqToDB.SchemaProvider
 					if (thisTable == null || otherTable == null)
 						continue;
 
-					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).Single();
-					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).Single();
+					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).SingleOrDefault();
+					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).SingleOrDefault();
+
+					if (thisColumn == null || otherColumn == null)
+						continue;
 
 					var key = thisTable.ForeignKeys.FirstOrDefault(f => f.KeyName == fk.Name);
 
@@ -483,6 +486,11 @@ namespace LinqToDB.SchemaProvider
 		{
 		}
 
+		/// <summary>
+		/// Returns list of database data types.
+		/// </summary>
+		/// <param name="dataConnection">Database connection instance.</param>
+		/// <returns>List of database data types.</returns>
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 #if !NETSTANDARD
@@ -673,7 +681,7 @@ namespace LinqToDB.SchemaProvider
 				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
 				{
 					name = key.ThisColumns[0].MemberName;
-					name = name.Substring(0, name.Length - "id".Length);
+					name = name.Substring(0, name.Length - "id".Length).TrimEnd('_');
 
 					if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
 						table.Columns.    Select(_ => _.MemberName)).Concat(

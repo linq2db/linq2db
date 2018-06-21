@@ -1,6 +1,6 @@
 # Joins
 
-Linq2DB supports full set of joins: INNER, LEFT, FULL, RIGHT, CROSS JOIN.
+`LINQ To DB` supports full set of joins: INNER, LEFT, FULL, RIGHT, CROSS JOIN.
 
 ## INNER JOIN
 

@@ -219,6 +219,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.T4.Linq", "Tests\T4.L
 		{0A1B1E37-2615-4387-B6F5-94F004814ED0} = {0A1B1E37-2615-4387-B6F5-94F004814ED0}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sybase.DataAction", "Sybase.DataAction", "{1FC89283-09FB-444B-BF70-F76B3E3A83BB}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\Sybase.DataAction\CopyMe.Sybase.DataAction.tt.txt = NuGet\Sybase.DataAction\CopyMe.Sybase.DataAction.tt.txt
+		NuGet\linq2db.Sybase.DataAction.nuspec = NuGet\linq2db.Sybase.DataAction.nuspec
+		NuGet\Sybase.DataAction\linq2db.Sybase.DataAction.props = NuGet\Sybase.DataAction\linq2db.Sybase.DataAction.props
+		NuGet\Sybase.DataAction\LinqToDB.Sybase.DataAction.Tools.ttinclude = NuGet\Sybase.DataAction\LinqToDB.Sybase.DataAction.Tools.ttinclude
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		AppVeyor|Any CPU = AppVeyor|Any CPU
@@ -399,6 +407,7 @@ Global
 		{6E1C2781-07C9-404B-96ED-6B14F714A7F6} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{54DD4B32-F267-4883-A227-1BE90662339E} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
+		{1FC89283-09FB-444B-BF70-F76B3E3A83BB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

@@ -388,7 +388,7 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: not supported by old Merge API
-		[Test, IdentityInsertMergeDataContextSource(ProviderName.Sybase)]
+		[Test, IdentityInsertMergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Issue1007OnOldAPIv2(string context)
 		{
 			using (var db = new TestDataConnection(context))

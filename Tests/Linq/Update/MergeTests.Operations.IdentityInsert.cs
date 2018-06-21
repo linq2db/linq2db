@@ -56,7 +56,7 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, IdentityInsertMergeDataContextSource(ProviderName.Sybase)]
+		[Test, IdentityInsertMergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void ExplicitIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -103,7 +103,7 @@ namespace Tests.xUpdate
 		}
 
 		// ASE: server dies
-		[Test, IdentityInsertMergeDataContextSource(ProviderName.Sybase)]
+		[Test, IdentityInsertMergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void ExplicitNoIdentityInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))

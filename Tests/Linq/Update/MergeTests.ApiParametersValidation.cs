@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using LinqToDB.Async;
 
 using NUnit.Framework;
 
@@ -158,6 +159,11 @@ namespace Tests.xUpdate
 			}
 
 			Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken token)
+			{
+				throw new NotImplementedException();
+			}
+
+			IAsyncEnumerable<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression)
 			{
 				throw new NotImplementedException();
 			}

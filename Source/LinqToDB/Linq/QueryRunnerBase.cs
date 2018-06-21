@@ -37,10 +37,8 @@ namespace LinqToDB.Linq
 		public abstract Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken);
 		public abstract Task<int>              ExecuteNonQueryAsync(CancellationToken cancellationToken);
 
-		public Func<int> SkipAction  { get; set; }
-		public Func<int> TakeAction  { get; set; }
-		public int       RowsCount   { get; set; }
-		public int       QueryNumber { get; set; }
+		public int RowsCount   { get; set; }
+		public int QueryNumber { get; set; }
 
 		public virtual void Dispose()
 		{

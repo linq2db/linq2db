@@ -36,9 +36,6 @@ namespace Tests.Linq
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string NString;
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
@@ -66,9 +63,6 @@ namespace Tests.Linq
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
 		// most of ending characters here trimmed by default by .net string TrimX methods
@@ -123,9 +117,6 @@ namespace Tests.Linq
 							|| context == TestProvName.Firebird3
 							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
-
-						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
-							query = query.Value(_ => _.ThisIsSYBASE, true);
 
 						query.Insert();
 					}
@@ -271,9 +262,6 @@ namespace Tests.Linq
 							|| context == TestProvName.Firebird3
 							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
-
-						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
-							query = query.Value(_ => _.ThisIsSYBASE, true);
 
 						query.Insert();
 					}
