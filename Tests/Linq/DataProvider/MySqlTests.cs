@@ -733,6 +733,7 @@ namespace Tests.DataProvider
 			throw new NotImplementedException();
 		}
 
+		[Description("https://stackoverflow.com/questions/50858172/linq2db-mysql-set-row-index/50958483")]
 		[Test, MySqlDataContext]
 		public void RowIndexTest(string context)
 		{
