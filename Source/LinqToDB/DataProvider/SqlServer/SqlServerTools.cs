@@ -94,17 +94,19 @@ namespace LinqToDB.DataProvider.SqlServer
 									if (version == 8)
 										return _sqlServerDataProvider2000;
 
-									var cmd = conn.CreateCommand();
-									cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
-									var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
-
-									switch (level)
+									using (var cmd = conn.CreateCommand())
 									{
-										case  80 : return _sqlServerDataProvider2000;
-										case  90 : return _sqlServerDataProvider2005;
-										case 100 : return _sqlServerDataProvider2008;
-										case 110 : return _sqlServerDataProvider2012;
-										default  : return _sqlServerDataProvider2012;
+										cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
+										var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
+
+										switch (level)
+										{
+											case  80 : return _sqlServerDataProvider2000;
+											case  90 : return _sqlServerDataProvider2005;
+											case 100 : return _sqlServerDataProvider2008;
+											case 110 : return _sqlServerDataProvider2012;
+											default  : return _sqlServerDataProvider2012;
+										}
 									}
 								}
 							}
