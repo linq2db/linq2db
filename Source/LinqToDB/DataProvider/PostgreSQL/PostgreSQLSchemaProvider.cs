@@ -375,9 +375,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							IsAggregateFunction = Converter.ChangeTypeTo<bool>(rd[6]),
 							IsDefaultSchema     = schema == "public",
 							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[4]),
-							// record-typed functions should specify result type on call
-							// it is known only for functions with output parameters and is set of those parameters
-							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && (isTableResult || Converter.ChangeTypeTo<int>(rd[9]) > 0)
+							// result of function has dynamic form and vary per call if function return type is 'record'
+							// only exception is function with out/inout parameters, where we know that record contains those parameters
+							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0
 						};
 					}, @"
 SELECT	r.ROUTINE_CATALOG,
@@ -422,7 +422,7 @@ SELECT	r.ROUTINE_CATALOG,
 							IsAggregateFunction = Converter.ChangeTypeTo<char>(rd[6]) == 'a',
 							IsDefaultSchema     = schema == "public",
 							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[4]),
-							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && (isTableResult || Converter.ChangeTypeTo<int>(rd[9]) > 0)
+							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0
 						};
 					}, @"
 SELECT	r.ROUTINE_CATALOG,
@@ -486,7 +486,7 @@ SELECT	r.ROUTINE_CATALOG,
 	FROM INFORMATION_SCHEMA.ROUTINES r
 		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
 		LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
-	WHERE r.DATA_TYPE <> 'void' AND p.proretset = false"))
+	WHERE r.DATA_TYPE <> 'record' AND r.DATA_TYPE <> 'void' AND p.proretset = false"))
 				.ToList();
 		}
 

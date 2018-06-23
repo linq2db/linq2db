@@ -547,8 +547,8 @@ CREATE OR REPLACE FUNCTION "TestScalarFunction"(param INT) RETURNS VARCHAR(10)
 AS $$ BEGIN RETURN 'done'; END $$ LANGUAGE PLPGSQL;
 GO
 
-DROP AGGREGATE IF EXISTS test_avg (float8)
-CREATE AGGREGATE test_avg (float8)
+DROP AGGREGATE IF EXISTS test_avg(float8)
+CREATE AGGREGATE test_avg(float8)
 (
 	sfunc = float8_accum,
 	stype = float8[],
