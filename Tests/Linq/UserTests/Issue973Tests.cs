@@ -57,16 +57,15 @@ namespace Tests.UserTests
 		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InExpressionItemBuilder), ServerSideOnly = true)]
 		public static bool In<T>(this Sql.ISqlExtension ext, [ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values)
 		{
-			throw new NotImplementedException();
+			return values.Contains(field);
 		}
 
 		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InExpressionItemBuilder), ServerSideOnly = true)]
 		public static bool In<T>(this Sql.ISqlExtension ext, [ExprParameter] T field, [SqlQueryDependent] params T[] values)
 		{
-			throw new NotImplementedException();
+			return values.Contains(field);
 		}
-
-    }
+	}
 
 	public class Issue973Tests : TestBase
 	{
@@ -107,6 +106,5 @@ namespace Tests.UserTests
 					GetParents(db, values2));
 			}
 		}
-
 	}
 }

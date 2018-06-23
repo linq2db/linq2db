@@ -49,8 +49,8 @@ namespace LinqToDB.Expressions
 
 		#region Caches
 
-		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]> _queryDependentMethods =
-			new ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[][]>();
+		static readonly ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[]> _queryDependentMethods =
+			new ConcurrentDictionary<MethodInfo,SqlQueryDependentAttribute[]>();
 
 		public static void ClearCaches()
 		{
@@ -237,8 +237,7 @@ namespace LinqToDB.Expressions
 			if (expr1.Bindings.Count != expr2.Bindings.Count || !expr1.NewExpression.EqualsTo(expr2.NewExpression, info))
 				return false;
 
-			Func<MemberBinding,MemberBinding,bool> compareBindings = null;
-			compareBindings = (b1, b2) =>
+			bool CompareBindings(MemberBinding b1, MemberBinding b2)
 			{
 				if (b1 == b2)
 					return true;
@@ -281,21 +280,21 @@ namespace LinqToDB.Expressions
 							return false;
 
 						for (var i = 0; i < mm1.Bindings.Count; i++)
-							if (!compareBindings(mm1.Bindings[i], mm2.Bindings[i]))
+							if (!CompareBindings(mm1.Bindings[i], mm2.Bindings[i]))
 								return false;
 
 						break;
 				}
 
 				return true;
-			};
+			}
 
 			for (var i = 0; i < expr1.Bindings.Count; i++)
 			{
 				var b1 = expr1.Bindings[i];
 				var b2 = expr2.Bindings[i];
 
-				if (!compareBindings(b1, b2))
+				if (!CompareBindings(b1, b2))
 					return false;
 			}
 
@@ -310,9 +309,7 @@ namespace LinqToDB.Expressions
 				{
 					if (info.QueryableAccessorDic.Count > 0)
 					{
-						QueryableAccessor qa;
-
-						if (info.QueryableAccessorDic.TryGetValue(expr1, out qa))
+						if (info.QueryableAccessorDic.TryGetValue(expr1, out var qa))
 							return
 								expr1.Expression.EqualsTo(expr2.Expression, info) &&
 								qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
@@ -410,11 +407,7 @@ namespace LinqToDB.Expressions
 				expr1.Method, mi =>
 				{
 					var arr = parameters
-						.Select(p =>
-						{
-							var attrs = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).OfType<SqlQueryDependentAttribute>().ToArray();
-							return attrs.Length > 0 ? attrs : null;
-						})
+						.Select(p => p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).OfType<SqlQueryDependentAttribute>().FirstOrDefault())
 						.ToArray();
 
 					return arr.Any(a => a != null) ? arr : null;
@@ -428,21 +421,19 @@ namespace LinqToDB.Expressions
 						return false;
 				}
 			}
-			else 
+			else
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
-					var dependentAttributes = dependentParameters[i];
-					if (dependentAttributes != null)
+					var dependentAttribute = dependentParameters[i];
+
+					if (dependentAttribute != null)
 					{
 						var obj1 = expr1.Arguments[i].EvaluateExpression();
 						var obj2 = expr2.Arguments[i].EvaluateExpression();
 
-						for (var ai = 0; ai < dependentAttributes.Length; ai++)
-						{
-							if (!dependentAttributes[ai].ObjectsEqual(obj1, obj2))
-								return false;
-						}
+						if (!dependentAttribute.ObjectsEqual(obj1, obj2))
+							return false;
 					}
 					else
 						if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i], info))
@@ -876,7 +867,8 @@ namespace LinqToDB.Expressions
 						if (e.Object != null)
 							return GetRootObject(e.Object, mapping);
 
-						if (e.Arguments != null && e.Arguments.Count > 0 && (e.IsQueryable() || e.IsAggregate(mapping) || e.IsAssociation(mapping) || e.Method.IsSqlPropertyMethodEx()))
+						if (e.Arguments?.Count > 0 &&
+						    (e.IsQueryable() || e.IsAggregate(mapping) || e.IsAssociation(mapping) || e.Method.IsSqlPropertyMethodEx()))
 							return GetRootObject(e.Arguments[0], mapping);
 
 						break;
@@ -911,7 +903,7 @@ namespace LinqToDB.Expressions
 
 						if (e.Object != null)
 							list = GetMembers(e.Object);
-						else if (e.Arguments != null && e.Arguments.Count > 0 && e.IsQueryable())
+						else if (e.Arguments?.Count > 0 && e.IsQueryable())
 							list = GetMembers(e.Arguments[0]);
 						else
 							list = new List<Expression>();

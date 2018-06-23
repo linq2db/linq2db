@@ -364,8 +364,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					WriteTraceLine(
 						info.RecordsAffected != null
-							? $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
-							: $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
+							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
+							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
 						TraceSwitch.DisplayName);
 					break;
 
@@ -976,7 +976,7 @@ namespace LinqToDB.Data
 
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
-			if (queryHints != null && queryHints.Count > 0)
+			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder();
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);

@@ -189,46 +189,43 @@ namespace LinqToDB.ServiceModel
 
 			class DataReaderAsync : IDataReaderAsync
 			{
-				public DataReaderAsync(RemoteDataContextBase dataContext, string result, Func<int> skipAction, Func<int> takeAction)
+				public DataReaderAsync(ServiceModelDataReader dataReader)
 				{
-					_dataContext = dataContext;
-					_result      = result;
-					_skipAction  = skipAction;
-					_takeAction  = takeAction;
+					DataReader = dataReader;
 				}
 
-				readonly RemoteDataContextBase _dataContext;
-				readonly string                _result;
-				readonly Func<int>             _skipAction;
-				readonly Func<int>             _takeAction;
+				public IDataReader DataReader { get; }
 
-				public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Func<T,bool> action, CancellationToken cancellationToken)
+				static Task<bool> _trueTask;
+				static Task<bool> _falseTask;
+
+				static Task<bool> TrueTask  => _trueTask  ?? (_trueTask  = Task.FromResult(true));
+				static Task<bool> FalseTask => _falseTask ?? (_falseTask = Task.FromResult(false));
+
+				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
-					_dataContext.ThrowOnDisposed();
-
-					await TaskEx.Run(() =>
+					if (cancellationToken.IsCancellationRequested)
 					{
-						var result = LinqServiceSerializer.DeserializeResult(_result);
+						var task = new TaskCompletionSource<bool>();
+						task.SetCanceled();
+						return task.Task;
+					}
 
-						using (var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result))
-						{
-							var skip = _skipAction?.Invoke() ?? 0;
+					try
+					{
+						return DataReader.Read() ? TrueTask : FalseTask;
+					}
+					catch (Exception ex)
+					{
+						var task = new TaskCompletionSource<bool>();
+						task.SetException(ex);
+						return task.Task;
+					}
+				}
 
-							while (skip-- > 0 && reader.Read())
-								if (cancellationToken.IsCancellationRequested)
-									return;
-
-							var take = _takeAction?.Invoke() ?? int.MaxValue;
-				
-							while (take-- > 0 && reader.Read())
-								if (cancellationToken.IsCancellationRequested)
-									return;
-								else
-									if (!action(objectReader(reader)))
-										return;
-						}
-					},
-					cancellationToken);
+				public void Dispose()
+				{
+					DataReader.Dispose();
 				}
 			}
 
@@ -251,7 +248,10 @@ namespace LinqToDB.ServiceModel
 						q.IsParameterDependent ? q.Parameters.ToArray() : queryContext.GetParameters(),
 						QueryHints));
 
-				return new DataReaderAsync(_dataContext, ret, SkipAction, TakeAction);
+				var result = LinqServiceSerializer.DeserializeResult(ret);
+				var reader = new ServiceModelDataReader(_dataContext.MappingSchema, result);
+
+				return new DataReaderAsync(reader);
 			}
 
 			public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)

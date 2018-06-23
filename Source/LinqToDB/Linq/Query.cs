@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Async;
 	using Builder;
 	using Data;
 	using Common;
@@ -165,7 +166,8 @@ namespace LinqToDB.Linq
 
 		public bool DoNotCache;
 
-		public Func<IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
+		public Func<IDataContext,Expression,object[],IEnumerable<T>>      GetIEnumerable;
+		public Func<IDataContext,Expression,object[],IAsyncEnumerable<T>> GetIAsyncEnumerable;
 		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
 
 		#endregion

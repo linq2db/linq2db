@@ -37,7 +37,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -51,7 +51,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -99,7 +99,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestDate(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -225,7 +225,7 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -237,7 +237,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -328,7 +328,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute, Ignore("It works too long.")]
+		[Test, MySqlDataContext, Ignore("It works too long.")]
 		public void BulkCopyMultipleRows(string context)
 		{
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
@@ -340,7 +340,7 @@ namespace Tests.DataProvider
 			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, MySqlDataContextAttribute, Ignore("It works too long.")]
+		[Test, MySqlDataContext, Ignore("It works too long.")]
 		public void BulkCopyProviderSpecific(string context)
 		{
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
@@ -352,7 +352,7 @@ namespace Tests.DataProvider
 			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void BulkCopyLinqTypes(string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
@@ -405,7 +405,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestTransaction1(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -424,7 +424,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestTransaction2(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -726,5 +726,32 @@ namespace Tests.DataProvider
 			}
 		}
 #endif
+
+		[Sql.Expression("@n:=@n+1", ServerSideOnly = true)]
+		static int IncrementIndex()
+		{
+			throw new NotImplementedException();
+		}
+
+		[Description("https://stackoverflow.com/questions/50858172/linq2db-mysql-set-row-index/50958483")]
+		[Test, MySqlDataContext]
+		public void RowIndexTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.NextQueryHints.Add("**/*(SELECT @n := 0) `rowcounter`*/");
+				db.NextQueryHints.Add(", (SELECT @n := 0) `rowcounter`");
+
+				var q =
+					from p in db.Person
+					select new
+					{
+						rank = IncrementIndex(),
+						id   = p.ID
+					};
+
+				var list = q.ToList();
+			}
+		}
 	}
 }

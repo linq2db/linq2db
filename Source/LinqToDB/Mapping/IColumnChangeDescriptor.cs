@@ -12,6 +12,7 @@
 		/// If column is mapped to a property or field of composite object, <see cref="MemberName"/> should contain a path to that
 		/// member using dot as separator.
 		/// <example>
+		/// <code>
 		/// public class Address
 		/// {
 		///     public string City     { get; set; }
@@ -29,6 +30,7 @@
 		///     [Column("building_number", MemberName = ".Building")]
 		///     public Address Residence { get; set; }
 		/// }
+		/// </code>
 		/// </example>
 		/// </summary>
 		string MemberName { get; }

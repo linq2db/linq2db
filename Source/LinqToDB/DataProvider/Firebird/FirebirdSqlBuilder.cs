@@ -51,6 +51,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override bool   SkipFirst  => false;
 		protected override string SkipFormat => "SKIP {0}";
+		protected override bool   IsRecursiveCteKeywordRequired => true;
 
 		protected override string FirstFormat(SelectQuery selectQuery)
 		{

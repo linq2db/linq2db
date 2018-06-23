@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Async;
 	using Expressions;
 	using Linq;
 	using Linq.Builder;

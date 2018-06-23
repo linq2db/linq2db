@@ -28,7 +28,7 @@ namespace LinqToDB
 		[Sql.Expression("*", ServerSideOnly = true)]
 		public static object[] AllColumns()
 		{
-			throw new LinqException("'FreeText' is only server-side method.");
+			throw new LinqException("'AllColumns' is only server-side method.");
 		}
 
 		[CLSCompliant(false)]

@@ -49,8 +49,6 @@ namespace LinqToDB.Linq
 		/// <returns>Query SQL text.</returns>
 		string                GetSqlText           ();
 
-		Func<int>      SkipAction       { get; set; }
-		Func<int>      TakeAction       { get; set; }
 		Expression     Expression       { get; set; }
 		IDataContext   DataContext      { get; set; }
 		object[]       Parameters       { get; set; }

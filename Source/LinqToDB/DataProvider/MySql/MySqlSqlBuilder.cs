@@ -21,6 +21,9 @@ namespace LinqToDB.DataProvider.MySql
 			ParameterSymbol = '@';
 		}
 
+		protected override bool IsRecursiveCteKeywordRequired   => true;
+		public    override bool IsNestedJoinParenthesisRequired => true;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity() ? 2 : 1;
@@ -40,8 +43,6 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return "LIMIT {0}";
 		}
-
-		public override bool IsNestedJoinParenthesisRequired { get { return true; } }
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
