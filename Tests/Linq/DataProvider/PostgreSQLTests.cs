@@ -1771,7 +1771,6 @@ namespace Tests.DataProvider
 				}
 			}
 		}
-#endif
 
 		[Test, Combinatorial]
 		public void XTODOX_TestVoidFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
@@ -1835,7 +1834,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = db.Select(() => TestPgFunctions.GetAllTypes()).ToList();
+				var result = new TestPgFunctions(db).GetAllTypes().ToList();
 
 				AreEqual(db.GetTable<AllTypes>().OrderBy(_ => _.ID), result.OrderBy(_ => _.ID));
 			}
@@ -1859,12 +1858,12 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = db.Select(() => TestPgFunctions.TestScalarTableFunction(4)).ToList();
+				var result = new TestPgFunctions(db).TestScalarTableFunction(4).ToList();
 
 				Assert.IsNotNull(result);
 				Assert.AreEqual(2, result.Count);
-				Assert.AreEqual(4, result[0]);
-				Assert.AreEqual(4, result[1]);
+				Assert.AreEqual(4, result[0].value);
+				Assert.AreEqual(4, result[1].value);
 
 			}
 		}
@@ -1874,14 +1873,14 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = db.Select(() => TestPgFunctions.TestRecordTableFunction(1, 2)).ToList();
+				var result = new TestPgFunctions(db).TestRecordTableFunction(1, 2).ToList();
 
 				Assert.IsNotNull(result);
-				Assert.AreEqual(2, result.Count);
-				Assert.AreEqual(1, result[0].param3);
-				Assert.AreEqual(23, result[0].param4);
-				Assert.AreEqual(333, result[0].param4);
-				Assert.AreEqual(2, result[1].param4);
+				Assert.AreEqual(2  , result.Count);
+				Assert.AreEqual(1  , result[0].param3);
+				Assert.AreEqual(23 , result[0].param4);
+				Assert.AreEqual(333, result[1].param3);
+				Assert.AreEqual(2  , result[1].param4);
 			}
 		}
 
@@ -1919,7 +1918,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
-				var result = db.Select(() => TestPgFunctions.DynamicTableFunction<TestPgFunctions.TestRecordTableFunctionResult>("[{param3:1, param4: 2},{param4: 3}]")).ToList();
+				var result = new TestPgFunctions(db).DynamicTableFunction<TestPgFunctions.TestRecordTableFunctionResult>("[{param3:1, param4: 2},{param4: 3}]").ToList();
 
 				Assert.IsNotNull(result);
 				Assert.AreEqual(2, result.Count);
@@ -1931,15 +1930,8 @@ namespace Tests.DataProvider
 		}
 	}
 
-	public static class TestPgFunctions
+	public static class TestPgAggregates
 	{
-		[Sql.Function("add_if_not_exists", ServerSideOnly = true)]
-		public static object AddIfNotExists(string value)
-		{
-			// this function has void return type in pg, but we use object in C# to make it usable
-			throw new InvalidOperationException();
-		}
-
 		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 0 })]
 		public static double CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double>> value)
 		{
@@ -1951,30 +1943,53 @@ namespace Tests.DataProvider
 		{
 			throw new InvalidOperationException();
 		}
+	}
 
-		// TODO: function names should be escaped by linq2db, but it is not implemented yet
-		[Sql.TableFunction("\"TestTableFunctionSchema\"")]
-		public static IQueryable<PostgreSQLTests.AllTypes> GetAllTypes()
+	public class TestPgFunctions
+	{
+		private readonly IDataContext _ctx;
+
+		public TestPgFunctions(IDataContext ctx)
 		{
+			_ctx = ctx;
+		}
+
+		[Sql.Function("add_if_not_exists", ServerSideOnly = true)]
+		public static object AddIfNotExists(string value)
+		{
+			// this function has void return type in pg, but we use object in C# to make it usable
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Function("\"TestFunctionParameters\"", ServerSideOnly = true)]
+		// TODO: function names should be escaped by linq2db, but it is not implemented yet
+		[Sql.TableFunction("\"TestTableFunctionSchema\"")]
+		public LinqToDB.ITable<PostgreSQLTests.AllTypes> GetAllTypes()
+		{
+			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", new Type[0]);
+
+			return _ctx.GetTable<PostgreSQLTests.AllTypes>(this, methodInfo);
+		}
+
+		[Sql.Expression("(\"TestFunctionParameters\"({0}, {1})).*", ServerSideOnly = true)]
 		public static TestParametersResult TestParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
 		}
 
 		[Sql.TableFunction("\"TestTableFunction\"")]
-		public static IQueryable<int> TestScalarTableFunction(int? param1)
+		public LinqToDB.ITable<TestScalarTableFunctionResult> TestScalarTableFunction(int? param1)
 		{
-			throw new InvalidOperationException();
+			var methodInfo = typeof(TestPgFunctions).GetMethod("TestScalarTableFunction", new[] { typeof(int?) });
+
+			return _ctx.GetTable<TestScalarTableFunctionResult>(this, methodInfo, param1);
 		}
 
 		[Sql.TableFunction("\"TestTableFunction1\"")]
-		public static IQueryable<TestRecordTableFunctionResult> TestRecordTableFunction(int? param1, int? param2)
+		public LinqToDB.ITable<TestRecordTableFunctionResult> TestRecordTableFunction(int? param1, int? param2)
 		{
-			throw new InvalidOperationException();
+			var methodInfo = typeof(TestPgFunctions).GetMethod("TestRecordTableFunction", new[] { typeof(int?), typeof(int?) });
+
+			return _ctx.GetTable<TestRecordTableFunctionResult>(this, methodInfo, param1, param2);
 		}
 
 		[Sql.Function("\"TestScalarFunction\"", ServerSideOnly = true)]
@@ -1990,15 +2005,18 @@ namespace Tests.DataProvider
 		}
 
 		[Sql.TableFunction("jsonb_to_recordset")]
-		public static IQueryable<TRecord> DynamicTableFunction<TRecord>(string json)
+		public LinqToDB.ITable<TRecord> DynamicTableFunction<TRecord>(string json)
+			where TRecord : class
 		{
-			throw new InvalidOperationException();
+			var methodInfo = typeof(TestPgFunctions).GetMethod("DynamicTableFunction", new [] { typeof(string) });
+
+			return _ctx.GetTable<TRecord>(this, methodInfo, json);
 		}
 
-		//public class TestScalarTableFunctionResult
-		//{
-		//	public int? value { get; set; }
-		//}
+		public class TestScalarTableFunctionResult
+		{
+			public int? value { get; set; }
+		}
 
 		public class TestRecordTableFunctionResult
 		{
@@ -2013,5 +2031,6 @@ namespace Tests.DataProvider
 
 			public int? param3 { get; set; }
 		}
+#endif
 	}
 }
