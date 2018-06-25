@@ -716,5 +716,26 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(1202)]
+		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
+		public void SelectNullPropagationTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = from p in db.Parent
+					select new
+					{
+						Info = p != null ? new { p.ParentID, p.Value1 } : null
+					};
+
+				var query2 = from q in query1
+					select new
+					{
+						q.Info.ParentID
+					};
+
+				var result = query2.ToArray();
+			}
+		}
 	}
 }
