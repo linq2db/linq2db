@@ -716,7 +716,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1202)]
 		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
 		public void SelectNullPropagationTest(string context)
 		{
