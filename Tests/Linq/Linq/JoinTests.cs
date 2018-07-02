@@ -1486,5 +1486,37 @@ namespace Tests.Linq
 				Assert.True(areEqual);
 			}
 		}
+
+		[Test]
+		[Combinatorial]
+		public void SqlFullJoinWithBothFilters([AllJoinsSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id1 = Parent.First().ParentID;
+				var id2 = Parent.Skip(1).First().ParentID;
+
+				var actual =
+					from left in db.Parent.Where(p => p.ParentID != id1)
+					from right in db.Parent.Where(p => p.ParentID != id2).FullJoin(p => p.ParentID == left.ParentID)
+					select new
+					{
+						Left = left != null ? (int?)left.ParentID : null,
+						Right = right != null ? (int?)right.ParentID : null,
+					};
+
+				var expected =
+					Parent.Where(p => p.ParentID != id1)
+						.SqlJoinInternal(
+							Parent.Where(p => p.ParentID != id2), SqlJoinType.Full, o => o.ParentID, i => i.ParentID, (left, right) => new
+							{
+								Left = left?.ParentID,
+								Right = right?.ParentID
+							});
+
+				AreEqual(expected.OrderBy(p => p.Left), actual.OrderBy(p => p.Left));
+			}
+		}
+
 	}
 }
