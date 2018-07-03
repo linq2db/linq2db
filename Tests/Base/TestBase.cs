@@ -141,6 +141,9 @@ namespace Tests
 				if (!Enum.TryParse(logLevel, true, out traceLevel))
 					traceLevel = TraceLevel.Info;
 
+			if (!string.IsNullOrEmpty(testSettings.NoLinqService))
+				BaseDataContextSourceAttribute.NoLinqService = ConvertTo<bool>.From(testSettings.NoLinqService);
+
 			DataConnection.TurnTraceSwitchOn(traceLevel);
 
 			Console.WriteLine("Connection strings:");

@@ -769,6 +769,28 @@ namespace Tests.Linq
 			}
 		}
 
-
+		[Test, DataContextSource]
+		public void SelectNullPropagationTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in Parent
+					join c in Child on p.Value1 equals c.ParentID into gr
+					from c in gr.DefaultIfEmpty()
+					select new
+					{
+						Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
+					}
+					,
+					from p in db.Parent
+					join c in db.Child on p.Value1 equals c.ParentID into gr
+					from c in gr.DefaultIfEmpty()
+					select new
+					{
+						Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
+					});
+			}
+		}
 	}
 }
