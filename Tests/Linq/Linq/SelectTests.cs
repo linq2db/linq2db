@@ -737,6 +737,61 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
+		public void SelectNullPropagationWhereTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = from p in db.Parent
+					from c in db.Child.InnerJoin(c => c.ParentID == p.ParentID)
+					select new
+					{
+						Info1 = p != null ? new { p.ParentID, p.Value1 } : null,
+						Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
+					};
+
+				var query2 = from q in query1
+					select new
+					{
+						InfoAll = q == null
+							? null
+							: new
+							{
+								ParentID = q.Info1 != null ? (int?)q.Info1.ParentID : (int?)null,
+								q.Info1.Value1,
+								Value2 = q.Info2.Value1
+							}
+					};
+
+				var query3 = query2.Where(p => p.InfoAll.ParentID.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0 );
+
+				var result = query3.ToArray();
+			}
+		}
+
+		[Test, DataContextSource]
+		public void SelectNullPropagationTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in Parent
+					join c in Child on p.Value1 equals c.ParentID into gr
+					from c in gr.DefaultIfEmpty()
+					select new
+					{
+						Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
+					}
+					,
+					from p in db.Parent
+					join c in db.Child on p.Value1 equals c.ParentID into gr
+					from c in gr.DefaultIfEmpty()
+					select new
+					{
+						Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
+					});
+			}
+		}
 
 		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
 		public void SelectNullProjectionTests(string context)
