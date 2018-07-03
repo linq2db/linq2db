@@ -792,5 +792,27 @@ namespace Tests.Linq
 					});
 			}
 		}
+
+		[Test, DataContextSource(ParallelScope = ParallelScope.None)]
+		public void SelectNullProjectionTests(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var actual = from p in db.Parent
+					select new
+					{
+						V1 = p.Value1.HasValue ? p.Value1 : null,
+					};
+
+				var expected = from p in Parent
+					select new
+					{
+						V1 = p.Value1.HasValue ? p.Value1 : null,
+					};
+
+				AreEqual(expected, actual);
+			}
+		}
+
 	}
 }
