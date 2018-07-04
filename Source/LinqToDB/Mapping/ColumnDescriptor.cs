@@ -314,7 +314,12 @@ namespace LinqToDB.Mapping
 
 				if (expr != null)
 				{
-					getterExpr = Expression.PropertyOrField(expr.GetBody(getterExpr), "Value");
+					var variable = Expression.Variable(typeof(DataParameter), "p");
+					getterExpr = Expression.Block(new[] { variable },
+						Expression.Assign(variable, expr.GetBody(getterExpr)),
+						Expression.Condition(Expression.NotEqual(variable, Expression.Constant(null)),
+							Expression.PropertyOrField(variable, "Value"), Expression.Constant(null))
+					);
 				}
 				else
 				{
