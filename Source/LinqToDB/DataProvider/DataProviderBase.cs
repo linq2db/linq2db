@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider
 				CanCombineParameters           = true,
 				MaxInListValuesCount           = int.MaxValue,
 				IsGroupByExpressionSupported   = true,
-				IsDistinctOrderBySupported     = true,
+				IsDistinctOrderBySupported     = false,
 				IsUpdateSetTableAliasSupported = true,
 				TakeHintsSupported             = null,
 				IsCrossJoinSupported           = true,

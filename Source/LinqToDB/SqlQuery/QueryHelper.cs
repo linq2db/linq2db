@@ -1,10 +1,10 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace LinqToDB.SqlQuery
 {
-	using System.Collections.Generic;
-	using System.Linq;
-
 	public static class QueryHelper
 	{
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement> ignore = null)
@@ -91,6 +91,91 @@ namespace LinqToDB.SqlQuery
 				else
 					where.SearchCondition.Conditions.AddRange(search.Conditions);
 			}
+		}
+
+		/// <summary>
+		/// Converts ORDER BY DISTINCT to GROUP BY equivalent
+		/// </summary>
+		/// <param name="select"></param>
+		/// <returns></returns>
+		public static bool TryConvertOrderedDistinctToGroupBy(SelectQuery select)
+		{
+			if (!select.Select.IsDistinct || select.OrderBy.IsEmpty)
+				return false;
+
+			var nonProjecting = select.Select.OrderBy.Items.Select(i => i.Expression)
+				.Except(select.Select.Columns.Select(c => c.Expression))
+				.ToList();
+
+			if (nonProjecting.Count > 0)
+			{
+				// converting to Group By
+
+				var newOrderItems = select.Select.OrderBy.Items
+					.Select(oi =>
+						!nonProjecting.Contains(oi.Expression)
+							? oi
+							: new SqlOrderByItem(
+								new SqlFunction(oi.Expression.SystemType, oi.IsDescending ? "Min" : "Max", true, oi.Expression),
+								oi.IsDescending))
+					.ToList();
+
+				select.Select.OrderBy.Items.Clear();
+				select.Select.OrderBy.Items.AddRange(newOrderItems);
+
+				// add only missing group items
+				var currentGroupItems = new HashSet<ISqlExpression>(select.Select.GroupBy.Items);
+				select.Select.GroupBy.Items.AddRange(
+					select.Select.Columns.Select(c => c.Expression)
+						.Where(e => !currentGroupItems.Contains(e))
+				);
+
+				select.Select.IsDistinct = false;
+
+				return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Detects when we can remove order
+		/// </summary>
+		/// <param name="selectQuery"></param>
+		/// <param name="information"></param>
+		/// <returns></returns>
+		public static bool CanRemoveOrderBy([NotNull] SelectQuery selectQuery, QueryInformation information)
+		{
+			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
+
+			if (selectQuery.OrderBy.IsEmpty || selectQuery.ParentSelect == null)
+				return false;
+
+			var current = selectQuery;
+			do
+			{
+				if (current.Select.SkipValue != null || current.Select.TakeValue != null)
+				{
+					return false;
+				}
+
+				if (information.GetUnionInvolving(selectQuery) != null)
+				{
+					// currently removing ordering for all UNION
+					return true;
+				}
+
+				if (current != selectQuery)
+				{
+					if (!current.OrderBy.IsEmpty || current.Select.IsDistinct)
+						return true;
+				}
+
+				current = information.GetParentQuery(current);
+
+			} while (current != null);
+
+			return false;
 		}
 	}
 }

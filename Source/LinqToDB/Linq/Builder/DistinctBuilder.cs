@@ -21,7 +21,6 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 
 			sequence.SelectQuery.Select.IsDistinct = true;
-			sequence.ConvertToIndex(null, 0, ConvertFlags.All);
 
 			return sequence;
 		}
