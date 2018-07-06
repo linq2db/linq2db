@@ -13,9 +13,9 @@ namespace LinqToDB.SqlProvider
 		public bool        IsTakeSupported                { get; set; }
 		public bool        IsSkipSupported                { get; set; }
 		public bool        IsSkipSupportedIfTake          { get; set; }
-		public bool        IsDistinctOrderBySupported     { get; set; }
 		public bool        IsSubQueryTakeSupported        { get; set; }
 		public bool        IsSubQueryColumnSupported      { get; set; }
+		public bool        IsSubQueryOrderBySupported     { get; set; }
 		public bool        IsCountSubQuerySupported       { get; set; }
 		public bool        IsIdentityParameterRequired    { get; set; }
 		public bool        IsApplyJoinSupported           { get; set; }
@@ -27,11 +27,13 @@ namespace LinqToDB.SqlProvider
 		public bool        IsSybaseBuggyGroupBy           { get; set; }
 		//public IsTakeHints GetIsTakeHintsSupported        { get; set; }
 		public TakeHints?  TakeHintsSupported             { get; set; }
+
 		/// <summary>
 		/// Provider supports:
 		/// CROSS JOIN a Supported
 		/// </summary>
 		public bool IsCrossJoinSupported                  { get; set; }
+
 		/// <summary>
 		/// Provider supports:
 		/// INNER JOIN a ON 1 = 1 
@@ -39,10 +41,16 @@ namespace LinqToDB.SqlProvider
 		public bool IsInnerJoinAsCrossSupported           { get; set; }
 
 		/// <summary>
-		/// Indicates that provider supports CTE expressions.
+		/// Provider supports CTE expressions.
 		/// If provider does not support CTE, unsuported exception will be thrown when using CTE.
 		/// </summary>
 		public bool IsCommonTableExpressionsSupported     { get; set; }
+
+		/// <summary>
+		/// Provider supports DISTINCT and ORDER BY with fields that are not in projection.
+		/// </summary>
+		public bool IsDistinctOrderBySupported            { get; set; }
+
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{

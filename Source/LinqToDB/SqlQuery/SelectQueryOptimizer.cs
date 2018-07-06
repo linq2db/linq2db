@@ -1077,7 +1077,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var query in information.GetQueriesParentFirst())
 			{
 				// removing sorting for subselects
-				if (QueryHelper.CanRemoveOrderBy(query, information))
+				if (QueryHelper.CanRemoveOrderBy(query, _flags, information))
 				{
 					query.OrderBy.Items.Clear();
 					continue;

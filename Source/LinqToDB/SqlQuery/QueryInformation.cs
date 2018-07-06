@@ -153,14 +153,17 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var item in items)
 			{
+				IQueryElement parent = null;
 				new QueryVisitor().VisitParentFirst(item, e =>
 				{
 					if (e is SelectQuery q)
 					{
-						RegisterHierachry(selectQuery, q, new HierarchyInfo(selectQuery, HierarchyType.InnerQuery, null));
+						RegisterHierachry(selectQuery, q, new HierarchyInfo(selectQuery, HierarchyType.InnerQuery, parent));
 						BuildParentHierarchy(q);
 						return false;
 					}
+
+					parent = e;
 
 					return true;
 				});

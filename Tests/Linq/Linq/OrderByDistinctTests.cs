@@ -267,7 +267,9 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void OrderByDistinctNoTransformTests([DataSources] string context)
+		public void OrderByDistinctNoTransformTests(
+			[DataSources(ProviderName.Firebird)]  // Firebird incorrectly sorts strings
+			string context)
 		{
 			var testData = GetTestData();
 
@@ -295,7 +297,9 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void OrderByDistinctPartialTransformTests([DataSources] string context)
+		public void OrderByDistinctPartialTransformTests(
+			[DataSources(ProviderName.Firebird)]  // Firebird incorrectly sorts strings
+			string context)
 		{
 			var testData = GetTestData();
 
@@ -338,7 +342,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(testData))
 			{
-				var actual = table
+				var actualQuery = table
 					.Where(x => x.Id.Between(1, 9))
 					.OrderBy(x => x.OrderData1)
 					.Concat(table
@@ -349,8 +353,17 @@ namespace Tests.Linq
 						.OrderBy(x => x.DuplicateData))
 					.OrderBy(x => x.DuplicateData)
 					.Select(x => x.Id)
-					.Distinct()
-					.ToArray();
+					.Distinct();
+
+				//TODO: There is issue with this distinct. It contain duplicate field. Looks like after call sequence.ConvertToIndex(null, 0, ConvertFlags.All) in DistinctBuilder we have introduced duplicate.
+
+				//var selectQuery = actualQuery.GetSelectQuery();
+				//if (selectQuery.Select.IsDistinct)
+				//{
+				//	Assert.That(selectQuery.Select.Columns.Count, Is.EqualTo(1));
+				//}
+
+				var actual = actualQuery.ToArray();
 
 				var expected = testData
 					.Where(x => x.Id.Between(1, 9))

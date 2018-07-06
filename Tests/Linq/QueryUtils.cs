@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
 using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 
@@ -12,6 +14,13 @@ namespace Tests
 			var expression = eq.Expression;
 			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
 			return info.Queries.Single().Statement.SelectQuery;
+		}
+
+		public static IEnumerable<SelectQuery> EnumQueries<T>([NoEnumeration] this IQueryable<T> query)
+		{
+			var selectQuery = query.GetSelectQuery();
+			var information = new QueryInformation(selectQuery);
+			return information.GetQueriesParentFirst();
 		}
 
 		public static SqlSearchCondition GetWhere<T>(this IQueryable<T> query)

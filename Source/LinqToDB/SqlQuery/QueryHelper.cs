@@ -5,6 +5,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.SqlQuery
 {
+	using SqlProvider;
+
 	public static class QueryHelper
 	{
 		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement> ignore = null)
@@ -142,9 +144,10 @@ namespace LinqToDB.SqlQuery
 		/// Detects when we can remove order
 		/// </summary>
 		/// <param name="selectQuery"></param>
+		/// <param name="flags"></param>
 		/// <param name="information"></param>
 		/// <returns></returns>
-		public static bool CanRemoveOrderBy([NotNull] SelectQuery selectQuery, QueryInformation information)
+		public static bool CanRemoveOrderBy([NotNull] SelectQuery selectQuery, SqlProviderFlags flags, QueryInformation information)
 		{
 			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
 
@@ -159,19 +162,33 @@ namespace LinqToDB.SqlQuery
 					return false;
 				}
 
-				if (information.GetUnionInvolving(selectQuery) != null)
-				{
-					// currently removing ordering for all UNION
-					return true;
-				}
-
 				if (current != selectQuery)
 				{
 					if (!current.OrderBy.IsEmpty || current.Select.IsDistinct)
 						return true;
 				}
 
-				current = information.GetParentQuery(current);
+				var info = information.GetHierarchyInfo(current);
+				if (info == null)
+					break;
+
+				switch (info.HierarchyType)
+				{
+					case QueryInformation.HierarchyType.From:
+						if (!flags.IsSubQueryOrderBySupported)
+							return true;
+						current = info.MasterQuery;
+						break;
+					case QueryInformation.HierarchyType.Join:
+						return true;
+					case QueryInformation.HierarchyType.Union:
+						// currently removing ordering for all UNION
+						return true;
+					case QueryInformation.HierarchyType.InnerQuery:
+						return true;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
 
 			} while (current != null);
 

@@ -22,6 +22,7 @@ namespace LinqToDB.DataProvider.MySql
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
