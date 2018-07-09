@@ -1083,6 +1083,11 @@ namespace LinqToDB.SqlQuery
 					continue;
 				}
 
+				if (query.Select.IsDistinct)
+				{
+					QueryHelper.TryRemoveDistinct(query, information);
+				}
+
 				if (query.Select.IsDistinct && !query.Select.OrderBy.IsEmpty)
 				{
 					// nothing to do - DISTINCT ORDER BY supported
@@ -1091,10 +1096,8 @@ namespace LinqToDB.SqlQuery
 
 					if (Common.Configuration.Linq.KeepDistinctOrdered)
 					{
-						if (!_flags.IsOrderByAggregateFunctionsSupported)
-							throw new LinqToDBException("Can not convert sequence to SQL. DISTINCT with ORDER BY not supported.");
 						// trying to convert to GROUP BY quivalent
-						QueryHelper.TryConvertOrderedDistinctToGroupBy(query);
+						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);
 					}
 					else
 					{

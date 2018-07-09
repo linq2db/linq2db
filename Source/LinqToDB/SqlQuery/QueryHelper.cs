@@ -99,8 +99,9 @@ namespace LinqToDB.SqlQuery
 		/// Converts ORDER BY DISTINCT to GROUP BY equivalent
 		/// </summary>
 		/// <param name="select"></param>
+		/// <param name="flags"></param>
 		/// <returns></returns>
-		public static bool TryConvertOrderedDistinctToGroupBy(SelectQuery select)
+		public static bool TryConvertOrderedDistinctToGroupBy(SelectQuery select, SqlProviderFlags flags)
 		{
 			if (!select.Select.IsDistinct || select.OrderBy.IsEmpty)
 				return false;
@@ -111,6 +112,9 @@ namespace LinqToDB.SqlQuery
 
 			if (nonProjecting.Count > 0)
 			{
+				if (!flags.IsOrderByAggregateFunctionsSupported)
+					throw new LinqToDBException("Can not convert sequence to SQL. DISTINCT with ORDER BY not supported.");
+
 				// converting to Group By
 
 				var newOrderItems = select.Select.OrderBy.Items
@@ -194,5 +198,45 @@ namespace LinqToDB.SqlQuery
 
 			return false;
 		}
+
+
+		/// <summary>
+		/// Detects when we can remove order
+		/// </summary>
+		/// <param name="selectQuery"></param>
+		/// <param name="information"></param>
+		/// <returns></returns>
+		public static bool TryRemoveDistinct([NotNull] SelectQuery selectQuery, QueryInformation information)
+		{
+			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
+
+			if (!selectQuery.Select.IsDistinct)
+				return false;
+
+			var info = information.GetHierarchyInfo(selectQuery);
+			switch (info?.HierarchyType)
+			{
+				case QueryInformation.HierarchyType.InnerQuery:
+					{
+						if (info.ParentElement is SqlFunction func && func.Name == "EXISTS")
+						{
+							// ORDER BY not needed for EXISTS function, even when Take and Skip specified
+							selectQuery.Select.OrderBy.Items.Clear();
+
+							if (selectQuery.Select.SkipValue == null && selectQuery.Select.TakeValue == null)
+							{
+								// we can sefely remove DISTINCT
+								selectQuery.Select.IsDistinct = false;
+								selectQuery.Select.Columns.Clear();
+								return true;
+							}
+						}
+					}
+					break;
+			}
+
+			return false;
+		}
+
 	}
 }
