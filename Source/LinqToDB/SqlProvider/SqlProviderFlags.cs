@@ -51,6 +51,11 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public bool IsDistinctOrderBySupported            { get; set; }
 
+		/// <summary>
+		/// Provider supports aggregate functions in ORDER BY statement.
+		/// </summary>
+		public bool IsOrderByAggregateFunctionsSupported  { get; set; }
+
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{

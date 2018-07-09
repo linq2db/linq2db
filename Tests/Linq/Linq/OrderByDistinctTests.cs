@@ -58,7 +58,9 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void OrderByDistinctTestOrdering([DataSources] string context)
+		public void OrderByDistinctTestOrdering(
+			[DataSources(ProviderName.SqlCe)] 
+			string context)
 		{
 			var testData = GetUniqueTestData();
 
@@ -178,7 +180,9 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void OrderByDistinctTest([DataSources] string context)
+		public void OrderByDistinctTest(
+			[DataSources(ProviderName.SqlCe)] 
+			string context)
 		{
 			var testData = GetTestData();
 
@@ -234,7 +238,32 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void OrderByExpressionDistinctTests([DataSources] string context)
+		public void OrderByDistinctFailTest(
+			[IncludeDataSources(ProviderName.SqlCe)] 
+			string context)
+		{
+			var testData = GetTestData();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(testData))
+			{
+				Assert.Throws<LinqToDBException>(() =>
+				{
+					table
+						.OrderBy(x => x.OrderData1)
+						.Select(x => x.DuplicateData)
+						.Distinct()
+						.Skip(0)
+						.Take(3)
+						.ToArray();
+				});
+			}
+		}
+
+		[Test, Combinatorial]
+		public void OrderByExpressionDistinctTests(
+			[DataSources(ProviderName.SqlCe)] 
+			string context)
 		{
 			var testData = GetTestData();
 
@@ -268,7 +297,7 @@ namespace Tests.Linq
 
 		[Test, Combinatorial]
 		public void OrderByDistinctNoTransformTests(
-			[DataSources(ProviderName.Firebird)]  // Firebird incorrectly sorts strings
+			[DataSources(ProviderName.Firebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();
@@ -298,7 +327,7 @@ namespace Tests.Linq
 
 		[Test, Combinatorial]
 		public void OrderByDistinctPartialTransformTests(
-			[DataSources(ProviderName.Firebird)]  // Firebird incorrectly sorts strings
+			[DataSources(ProviderName.Firebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
 			string context)
 		{
 			var testData = GetTestData();
@@ -335,7 +364,9 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void OrderByUnionOptimization([DataSources] string context)
+		public void OrderByUnionOptimization(
+			[DataSources(ProviderName.SqlCe)] 
+			string context)
 		{
 			var testData = GetTestData();
 
@@ -384,7 +415,9 @@ namespace Tests.Linq
 		}
 
 		[Test, Combinatorial]
-		public void OrderBySubQuery([DataSources] string context)
+		public void OrderBySubQuery(
+			[DataSources(ProviderName.SqlCe)] 
+			string context)
 		{
 			var testData = GetTestData();
 
