@@ -8,6 +8,7 @@ namespace Tests.UserTests
 	using LinqToDB;
 	using LinqToDB.Mapping;
 
+	[TestFixture]
 	public class Issue1225Tests : TestBase
 	{
 		[Table]
@@ -67,10 +68,10 @@ namespace Tests.UserTests
 			public LastInChain Container { get; set; }
 		}
 
-		[Test, IncludeDataContextSource("SqlServer")]
-		public void Test(string configuration)
+		[Test, Combinatorial]
+		public void Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(configuration))
+			using (var db = GetDataContext(context))
 			{
 				using (db.CreateLocalTable<Task>())
 				using (db.CreateLocalTable<TaskStage>())
