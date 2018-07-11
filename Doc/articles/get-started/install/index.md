@@ -21,8 +21,8 @@ There are two ways you can install the LINQ To DB database provider in your appl
 * Select the `linq2db.SqlServer` package and the desired version and confirm [list of supported databases](/articles/general/databases.html)
 
 > [!TIP]  
-> `linq2db` package contains all dataproviders in bundle. It dynamically loads specific dataprovider based on configuration.
-> For simplyfying usage LINQ To DB has many helper packages 'linq2db.*' that just references required libraries for specific database.
+> `linq2db` package contains all datap roviders in bundle. It dynamically loads specific data provider based on configuration.
+> For simplyfying usage LINQ To DB has many helper packages `linq2db.*` that just reference required libraries for specific database provider.
 
 
 #### Using NuGet's [Package Manager Console (PMC)](https://docs.microsoft.com/nuget/tools/package-manager-console)
