@@ -2,8 +2,6 @@
   href: releasenotes/toc.yml
 - name: Get Started
   href: get-started/toc.yml
-- name: Release Notes
-  href: releasenotes/toc.yml
 - name: General topics
   href: general/toc.yml
 - name: SQL
