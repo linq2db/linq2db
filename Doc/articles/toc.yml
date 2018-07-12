@@ -1,14 +1,7 @@
 - name: Release Notes
   href: releasenotes/toc.yml
 - name: Get Started
-  href: get-started/index.md
-  - name: Installing LINQ To DB
-    href: get-started/install/index.md
-  - name: .NET Framework (Console, WinForms, WPF, etc.)
-    href: get-started/full-dotnet/index.md
-  - name: .NET Framework - Existing Database
-    href: get-started/full-dotnet/existing-db.md
-
+  href: get-started/toc.yml
 - name: General topics
   href: general/toc.yml
 - name: SQL
