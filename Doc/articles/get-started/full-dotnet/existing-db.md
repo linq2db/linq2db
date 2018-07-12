@@ -2,7 +2,7 @@
 title: Getting Started on .NET Framework - Existing Database - LINQ To DB
 author: sdanyliv
 ---
-# Getting started with LINQ To DB on .NET Framework with a New Database
+# Getting started with LINQ To DB on .NET Framework with a Existing Database
 
 In this walkthrough, you will build a console application that performs basic data access against a Microsoft SQL Server database using LINQ To DB. You will use existing database to create your model.
 
