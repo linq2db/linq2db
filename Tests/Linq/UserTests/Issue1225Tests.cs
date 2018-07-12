@@ -95,7 +95,9 @@ namespace Tests.UserTests
 								Container = new LastInChain()
 								{
 									Name = "TotalId",
-									Value = it.AsQueryable().Sum(_ => (_.ActualStage == null)? null: (int?)_.ActualStage.Id)
+									Value = it
+										.AsQueryable()
+										.Sum(_ => (_.ActualStage == null)? null: (int?)_.ActualStage.Id)
 								}
 							});
 					var res = query.ToArray();

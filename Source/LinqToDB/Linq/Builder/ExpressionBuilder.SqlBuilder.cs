@@ -308,6 +308,9 @@ namespace LinqToDB.Linq.Builder
 					while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression)arg).Method.Name == "Select")
 						arg = ((MethodCallExpression)arg).Arguments[0];
 
+				while (arg is MethodCallExpression mce && mce.IsQueryable("AsQueryable"))
+					arg = mce.Arguments[0];
+
 				var mc = arg as MethodCallExpression;
 
 				while (mc != null)
@@ -334,8 +337,20 @@ namespace LinqToDB.Linq.Builder
 			if (ctx != null && ctx.IsExpression(expr, 0, RequestFor.Object).Result)
 				return true;
 
-			while (expr != null && expr.NodeType == ExpressionType.MemberAccess)
-				expr = ((MemberExpression)expr).Expression;
+			while (expr != null)
+			{
+				switch (expr)
+				{
+					case MemberExpression me:
+						expr = me.Expression;
+						continue;
+					case MethodCallExpression mc when mc.IsQueryable("AsQueryable"):
+						expr = mc.Arguments[0];
+						continue;
+				}
+
+				break;
+			}
 
 			return expr != null && expr.NodeType == ExpressionType.Constant;
 		}
@@ -2476,7 +2491,7 @@ namespace LinqToDB.Linq.Builder
 								conditions.Add(checkIsNullLocal ?? sqlCondition);
 								break;
 							}
-							else 
+							else
 							{
 								sqlCondition.Predicate = BasicSqlOptimizer.OptimizePredicate(sqlCondition.Predicate, ref isNot);
 								var checkIsNullLocal   = CheckIsNull(sqlCondition.Predicate, isNot);
