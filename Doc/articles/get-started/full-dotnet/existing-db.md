@@ -74,45 +74,14 @@ You can now use your model to perform data access.
 
 * Open *App.config*
 * Replace the contents of the file with the following XML (correct connection string based on your server location and credentials)
-``` xml
-<?xml version="1.0" encoding="utf-8"?>
 
-<configuration>
-  <connectionStrings>
-    <add name="MyDatabase" providerName="System.Data.SqlClient"
-         connectionString="Data Source=.;Database=Northwind;Integrated Security=SSPI;" />
-  </connectionStrings>
-</configuration>
-```
+[!code-xml[App.config](https://github.com/linq2db/examples/blob/master/SqlServer/GetStarted/App.config)]
 
 * Open *Program.cs*
 
 * Replace the contents of the file with the following code
 
-<!-- [!code-csharp[Main](samples/core/GetStarted/FullNet/ConsoleApp.NewDb/Program.cs)] -->
-``` csharp
-using System;
-using System.Linq;
-
-namespace GetStarted
-{
-	class Program
-	{
-		static void Main(string[] args)
-		{
-			using (var db = new DataModel.NorthwindDB())
-			{
-				var q =
-					from c in db.Customers
-					select c;
-
-				foreach (var c in q)
-					Console.WriteLine(c.ContactName);
-			}
-		}
-	}
-}
-```
+[!code-csharp[Main](https://github.com/linq2db/examples/blob/master/SqlServer/GetStarted/Program.cs)]
 
 * Debug > Start Without Debugging
 
