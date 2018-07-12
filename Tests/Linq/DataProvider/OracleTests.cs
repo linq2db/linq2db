@@ -93,7 +93,7 @@ namespace Tests.DataProvider
 		}
 
 		/* If this test fails for you with
-		 
+
 		 "ORA-22288: file or LOB operation FILEOPEN failed
 		 The system cannot find the path specified."
 
