@@ -308,8 +308,7 @@ namespace LinqToDB.Linq.Builder
 					while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression)arg).Method.Name == "Select")
 						arg = ((MethodCallExpression)arg).Arguments[0];
 
-				while (arg is MethodCallExpression mce && mce.IsQueryable("AsQueryable"))
-					arg = mce.Arguments[0];
+				arg = arg.SkipPathThrough();
 
 				var mc = arg as MethodCallExpression;
 
