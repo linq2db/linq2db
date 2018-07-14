@@ -1773,7 +1773,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, Combinatorial]
-		public void XTODOX_TestVoidFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestVoidFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1786,7 +1786,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, Combinatorial]
-		public void XTODOX_TestCustomAggregate([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestCustomAggregate([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1808,7 +1808,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, Combinatorial]
-		public void XTODOX_TestCustomAggregateNotNullable([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestCustomAggregateNotNullable([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1830,21 +1830,35 @@ namespace Tests.DataProvider
 		}
 
 		[Test, Combinatorial]
-		public void XTODOX_TestTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var result = new TestPgFunctions(db).GetAllTypes().ToList();
 
-				AreEqual(db.GetTable<AllTypes>().OrderBy(_ => _.ID), result.OrderBy(_ => _.ID));
+				var res1 = db.GetTable<AllTypes>().OrderBy(_ => _.ID).ToArray()[1];
+				var res2 = result.OrderBy(_ => _.ID).ToArray()[1];
+
+				var c1 = res1.binaryDataType.GetHashCode() == res2.binaryDataType.GetHashCode();
+				var c2 = res1.bitDataType.GetHashCode() == res2.bitDataType.GetHashCode();
+				var c3 = res1.varBitDataType.GetHashCode() == res2.varBitDataType.GetHashCode();
+
+				var e1 = res1.binaryDataType.Equals(res2.binaryDataType);
+				var e2 = res1.bitDataType.Equals(res2.bitDataType);
+				var e3 = res1.varBitDataType.Equals(res2.varBitDataType);
+
+				AreEqual(db.GetTable<AllTypes>().OrderBy(_ => _.ID), result.OrderBy(_ => _.ID), AllTypes.Comparer);
 			}
 		}
 
 		[Test, Combinatorial]
-		public void XTODOX_TestParametersFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestParametersFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
+				db.MappingSchema.SetConvertExpression<object[], TestPgFunctions.TestParametersResult>(
+					tuple => new TestPgFunctions.TestParametersResult() { param2 = (int?)tuple[0], param3 = (int?)tuple[1] });
+
 				var result = db.Select(() => TestPgFunctions.TestParameters(1, 2));
 
 				Assert.IsNotNull(result);
@@ -1854,7 +1868,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, Combinatorial]
-		public void XTODOX_TestScalarTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestScalarTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1862,14 +1876,14 @@ namespace Tests.DataProvider
 
 				Assert.IsNotNull(result);
 				Assert.AreEqual(2, result.Count);
-				Assert.AreEqual(4, result[0].value);
-				Assert.AreEqual(4, result[1].value);
+				Assert.AreEqual(4, result[0].param2);
+				Assert.AreEqual(4, result[1].param2);
 
 			}
 		}
 
 		[Test, Combinatorial]
-		public void XTODOX_TestRecordTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestRecordTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1885,7 +1899,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, Combinatorial]
-		public void XTODOX_TestScalarFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestScalarFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1895,8 +1909,9 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue("Functionality not implemented yet")]
 		[Test, Combinatorial]
-		public void XTODOX_TestDynamicRecordFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestDynamicRecordFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1913,8 +1928,9 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue("Functionality not implemented yet")]
 		[Test, Combinatorial]
-		public void XTODOX_TestDynamicTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		public void TestDynamicTableFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1970,7 +1986,7 @@ namespace Tests.DataProvider
 			return _ctx.GetTable<PostgreSQLTests.AllTypes>(this, methodInfo);
 		}
 
-		[Sql.Expression("(\"TestFunctionParameters\"({0}, {1})).*", ServerSideOnly = true)]
+		[Sql.Function("\"TestFunctionParameters\"", ServerSideOnly = true)]
 		public static TestParametersResult TestParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
@@ -2015,7 +2031,7 @@ namespace Tests.DataProvider
 
 		public class TestScalarTableFunctionResult
 		{
-			public int? value { get; set; }
+			public int? param2 { get; set; }
 		}
 
 		public class TestRecordTableFunctionResult
