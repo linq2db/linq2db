@@ -2786,6 +2786,45 @@ namespace LinqToDB.Linq.Builder
 			return sqlExpression;
 		}
 
+		bool IsNullConstant(Expression expr)
+		{
+			return expr.NodeType == ExpressionType.Constant && ((ConstantExpression)expr).Value == null;
+		}
+
+		Expression RemoveNullPropagation(Expression expr)
+		{
+			switch (expr.NodeType)
+			{
+				case ExpressionType.Conditional:
+					var conditional = (ConditionalExpression)expr;
+					if (conditional.Test.NodeType == ExpressionType.NotEqual)
+					{
+						var binary = (BinaryExpression)conditional.Test;
+						if (IsNullConstant(binary.Right))
+						{
+							if (IsNullConstant(conditional.IfFalse))
+							{
+								return conditional.IfTrue.Transform(e => RemoveNullPropagation(e));
+							}
+						}
+					}
+					else if (conditional.Test.NodeType == ExpressionType.Equal)
+					{
+						var binary = (BinaryExpression)conditional.Test;
+						if (IsNullConstant(binary.Right))
+						{
+							if (IsNullConstant(conditional.IfTrue))
+							{
+								return conditional.IfFalse.Transform(e => RemoveNullPropagation(e));
+							}
+						}
+					}
+					break;
+			}
+
+			return expr;
+		}
+
 		public bool ProcessProjection(Dictionary<MemberInfo,Expression> members, Expression expression)
 		{
 			switch (expression.NodeType)
@@ -2807,10 +2846,11 @@ namespace LinqToDB.Linq.Builder
 						{
 							var member = expr.Members[i];
 
-							members.Add(member, expr.Arguments[i]);
+							var converted = expr.Arguments[i].Transform(e => RemoveNullPropagation(e));
+							members.Add(member, converted);
 
 							if (member is MethodInfo info)
-								members.Add(info.GetPropertyInfo(), expr.Arguments[i]);
+								members.Add(info.GetPropertyInfo(), converted);
 						}
 
 						return true;
@@ -2827,10 +2867,11 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.ContainsKey(b.Member.Name) ? dic[b.Member.Name] : 1000000))
 						{
-							members.Add(binding.Member, binding.Expression);
+							var converted = binding.Expression.Transform(e => RemoveNullPropagation(e));
+							members.Add(binding.Member, converted);
 
 							if (binding.Member is MethodInfo info)
-								members.Add(info.GetPropertyInfo(), binding.Expression);
+								members.Add(info.GetPropertyInfo(), converted);
 						}
 
 						return true;
