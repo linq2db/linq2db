@@ -1593,6 +1593,43 @@ namespace Tests.DataProvider
 					}
 				};
 
+				// scalar function
+				yield return new ProcedureSchema()
+				{
+					CatalogName         = "SET_BY_TEST",
+					SchemaName          = "public",
+					ProcedureName       = "TestSingleOutParameterFunction",
+					MemberName          = "TestSingleOutParameterFunction",
+					IsFunction          = true,
+					IsTableFunction     = false,
+					IsAggregateFunction = false,
+					IsDefaultSchema     = true,
+					IsLoaded            = false,
+					Parameters          = new List<ParameterSchema>()
+					{
+						new ParameterSchema()
+						{
+							SchemaName    = "param1",
+							SchemaType    = "integer",
+							IsIn          = true,
+							ParameterName = "param1",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "param2",
+							SchemaType    = "integer",
+							IsOut         = true,
+							ParameterName = "param2",
+							ParameterType = "int?",
+							SystemType    = typeof(int),
+							DataType      = DataType.Int32
+						}
+					}
+				};
+
 				// custom aggregate
 				yield return new ProcedureSchema()
 				{
@@ -1909,6 +1946,17 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test, Combinatorial]
+		public void TestSingleOutParameterFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() => TestPgFunctions.TestSingleOutParameterFunction(1));
+
+				Assert.AreEqual(124, result);
+			}
+		}
+
 		[ActiveIssue("Functionality not implemented yet")]
 		[Test, Combinatorial]
 		public void TestDynamicRecordFunction([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
@@ -2010,6 +2058,12 @@ namespace Tests.DataProvider
 
 		[Sql.Function("\"TestScalarFunction\"", ServerSideOnly = true)]
 		public static string TestScalarFunction(int? param)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Sql.Function("\"TestSingleOutParameterFunction\"", ServerSideOnly = true)]
+		public static int? TestSingleOutParameterFunction(int? param)
 		{
 			throw new InvalidOperationException();
 		}

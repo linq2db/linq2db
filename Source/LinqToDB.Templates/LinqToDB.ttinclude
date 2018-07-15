@@ -42,6 +42,8 @@ static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, stri
 
 void GenerateTypesFromMetadata()
 {
+	DataContextObject.Members.Add(new Method("void", "InitMappingSchema"));
+
 	BeforeGenerateLinqToDBModel();
 
 	Model.Usings.Add("LinqToDB");
@@ -116,6 +118,7 @@ void GenerateTypesFromMetadata()
 				c.Body.Add("InitSchemas();");
 
 			c.Body.Add("InitDataContext();");
+			c.Body.Add("InitMappingSchema();");
 
 			DataContextObject.Members.Add(c);
 		}
@@ -609,6 +612,9 @@ void GenerateTypesFromMetadata()
 		if (Procedures.Values.Any(p => p.IsTableFunction))
 			Model.Usings.Add("System.Reflection");
 
+		if (Procedures.Values.Any(p => p.IsAggregateFunction))
+			Model.Usings.Add("System.Linq.Expressions");
+
 		var procs = new MemberGroup();
 		var funcs = new MemberGroup();
 		var tabfs = new MemberGroup { Region = "Table Functions" };
@@ -663,6 +669,18 @@ void GenerateTypesFromMetadata()
 
 				p.Type = "ITable<" + p.ResultTable.TypeName + ">";
 			}
+			else if (p.IsAggregateFunction)
+			{
+				p.IsStatic = true;
+				p.Type = p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + p.Schema + "."  + p.ProcedureName + "\"", "ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }"));
+				p.Parameters.Add("this IEnumerable<TSource> src");
+
+				foreach (var inp in p.ProcParameters.Where(pr => !pr.IsResult))
+					p.Parameters.Add($"Expression<Func<TSource, {inp.ParameterType}>> " + inp.ParameterName);
+
+				p.Name += "<TSource>";
+			}
 			else if (p.IsFunction)
 			{
 				p.IsStatic = true;
@@ -676,9 +694,10 @@ void GenerateTypesFromMetadata()
 				p.Parameters.Add("this DataConnection dataConnection");
 			}
 
-			foreach (var pr in p.ProcParameters.Where(par => !par.IsResult))
-				p.Parameters.Add(string.Format("{0}{1} {2}",
-					pr.IsOut ? pr.IsIn ? "ref " : "out " : "", pr.ParameterType, pr.ParameterName));
+			if (!p.IsAggregateFunction)
+				foreach (var pr in p.ProcParameters.Where(par => !par.IsResult))
+					p.Parameters.Add(string.Format("{0}{1} {2}",
+						pr.IsOut ? pr.IsIn ? "ref " : "out " : "", pr.ParameterType, pr.ParameterName));
 
 			if (p.IsTableFunction)
 			{

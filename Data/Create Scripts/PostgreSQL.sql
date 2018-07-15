@@ -547,6 +547,10 @@ CREATE OR REPLACE FUNCTION "TestScalarFunction"(param INT) RETURNS VARCHAR(10)
 AS $$ BEGIN RETURN 'done'; END $$ LANGUAGE PLPGSQL;
 GO
 
+CREATE OR REPLACE FUNCTION "TestSingleOutParameterFunction"(param1 INT, OUT param2 INT)
+AS $$ BEGIN param2 := param1 + 123; END $$ LANGUAGE PLPGSQL;
+GO
+
 DROP AGGREGATE IF EXISTS test_avg(float8)
 CREATE AGGREGATE test_avg(float8)
 (

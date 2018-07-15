@@ -257,14 +257,15 @@ void LoadServerMetadata(DataConnection dataConnection)
 			key = p.IsDefaultSchema ? p.ProcedureName : p.SchemaName + "." + p.ProcedureName,
 			proc = new Procedure
 			{
-				Schema          = (p.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(p.SchemaName)? null : p.SchemaName,
-				ProcedureName   = p.ProcedureName,
-				Name            = ToValidName(p.MemberName, true),
-				IsFunction      = p.IsFunction,
-				IsTableFunction = p.IsTableFunction,
-				IsDefaultSchema = p.IsDefaultSchema,
-				IsLoaded        = p.IsLoaded,
-				ResultTable     = p.ResultTable == null ? null :
+				Schema              = (p.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(p.SchemaName)? null : p.SchemaName,
+				ProcedureName       = p.ProcedureName,
+				Name                = ToValidName(p.MemberName, true),
+				IsFunction          = p.IsFunction,
+				IsTableFunction     = p.IsTableFunction,
+				IsAggregateFunction = p.IsAggregateFunction,
+				IsDefaultSchema     = p.IsDefaultSchema,
+				IsLoaded            = p.IsLoaded,
+				ResultTable         = p.ResultTable == null ? null :
 					new Table
 					{
 						TypeName = ToValidName(
@@ -765,12 +766,13 @@ public partial class ForeignKey : Property
 
 public partial class Procedure : Method
 {
-	public string Schema          { get; set; }
-	public string ProcedureName   { get; set; }
-	public bool   IsFunction      { get; set; }
-	public bool   IsTableFunction { get; set; }
-	public bool   IsDefaultSchema { get; set; }
-	public bool   IsLoaded        { get; set; }
+	public string Schema              { get; set; }
+	public string ProcedureName       { get; set; }
+	public bool   IsFunction          { get; set; }
+	public bool   IsTableFunction     { get; set; }
+	public bool   IsAggregateFunction { get; set; }
+	public bool   IsDefaultSchema     { get; set; }
+	public bool   IsLoaded            { get; set; }
 
 	public Table           ResultTable     { get; set; }
 	public Exception       ResultException { get; set; }

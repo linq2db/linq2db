@@ -5,6 +5,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Npgsql" Version="3.2.7" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
