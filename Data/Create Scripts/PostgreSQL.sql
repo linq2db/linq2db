@@ -560,3 +560,4 @@ CREATE AGGREGATE test_avg(float8)
 	initcond = '{0,0,0}'
 );
 
+GO
