@@ -245,10 +245,10 @@ namespace PostreSQLDataContext
 		#region JsonPopulateRecordset
 
 		[Sql.TableFunction(Schema="pg_catalog", Name="json_populate_recordset")]
-		public ITable<JsonPopulateRecordsetResult> JsonPopulateRecordset(object base, string from_json, bool? use_json_as_text)
+		public ITable<JsonPopulateRecordsetResult> JsonPopulateRecordset(object @base, string from_json, bool? use_json_as_text)
 		{
 			return this.GetTable<JsonPopulateRecordsetResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				base,
+				@base,
 				from_json,
 				use_json_as_text);
 		}
@@ -5711,7 +5711,7 @@ namespace PostreSQLDataContext
 
 		#region Count
 
-		[Sql.Function(Name="pg_catalog.count", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] {  })]
+		[Sql.Function(Name="pg_catalog.count", ServerSideOnly=true, IsAggregate = true)]
 		public static long? Count<TSource>(this IEnumerable<TSource> src)
 		{
 			throw new InvalidOperationException();
@@ -11902,7 +11902,7 @@ namespace PostreSQLDataContext
 		#region JsonPopulateRecord
 
 		[Sql.Function(Name="pg_catalog.json_populate_record", ServerSideOnly=true)]
-		public static object JsonPopulateRecord(object base, string from_json, bool? use_json_as_text)
+		public static object JsonPopulateRecord(object @base, string from_json, bool? use_json_as_text)
 		{
 			throw new InvalidOperationException();
 		}

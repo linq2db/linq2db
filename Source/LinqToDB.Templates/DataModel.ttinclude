@@ -437,6 +437,17 @@ void LoadMetadata(DataConnection dataConnection)
 			if (col.MemberName == t.TypeName)
 				col.MemberName += "_Column";
 		}
+
+		foreach (var fk in t.ForeignKeys.Values)
+		{
+			if (KeyWords.Contains(fk.MemberName))
+				fk.MemberName = "@" + fk.MemberName;
+
+			fk.MemberName = ConvertToCompilable(fk.MemberName, true);
+
+			if (fk.MemberName == t.TypeName)
+				fk.MemberName += "_FK";
+		}
 	}
 
 	foreach (var t in Tables.Values)
@@ -467,6 +478,15 @@ void LoadMetadata(DataConnection dataConnection)
 
 				col.MemberName = SuggestNoDuplicate(mayDuplicate, col.MemberName, null);
 			}
+		}
+	}
+
+	foreach (var proc in Procedures.Values)
+	{
+		foreach (var param in proc.ProcParameters)
+		{
+			if (KeyWords.Contains(param.ParameterName))
+				param.ParameterName = ConvertToCompilable("@" + param.ParameterName, true);
 		}
 	}
 
