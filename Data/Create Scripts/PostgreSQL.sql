@@ -552,6 +552,7 @@ AS $$ BEGIN param2 := param1 + 123; END $$ LANGUAGE PLPGSQL;
 GO
 
 DROP AGGREGATE IF EXISTS test_avg(float8)
+GO
 CREATE AGGREGATE test_avg(float8)
 (
 	sfunc = float8_accum,
