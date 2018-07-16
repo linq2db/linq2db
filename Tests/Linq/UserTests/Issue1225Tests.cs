@@ -102,7 +102,7 @@ namespace Tests.UserTests
 							});
 					var res = query.ToArray();
 
-					Assert.AreEqual(1, res.Length);
+					Assert.AreEqual(2, res.Length);
 					Assert.IsNotNull(res[0].Container);
 					Assert.AreEqual(2, res[0].Container.Value);
 				}

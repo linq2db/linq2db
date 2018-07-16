@@ -1866,17 +1866,10 @@ namespace LinqToDB.Linq.Builder
 
 				ISqlExpression rcol = null;
 
-				var mright = right;
-				for (int i = 1; i < lcol.Members.Count; i++)
-				{
-					var member = lcol.Members[i];
-					mright = Expression.MakeMemberAccess(mright, member);
-				}
-
 				var lmember = lcol.Members[lcol.Members.Count - 1];
 
 				if (sr)
-					rcol = ConvertToSql(rightContext, mright);
+					rcol = ConvertToSql(rightContext, Expression.MakeMemberAccess(right, lmember));
 				else if (rmembers.Count != 0)
 					rcol = ConvertToSql(rightContext, rmembers[lmember]);
 
