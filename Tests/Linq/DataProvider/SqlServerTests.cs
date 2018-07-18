@@ -7,6 +7,7 @@ using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -41,8 +42,8 @@ namespace Tests.DataProvider
 		[AttributeUsage(AttributeTargets.Method)]
 		class SqlServerDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public SqlServerDataContextAttribute()
-				: base(
+			public SqlServerDataContextAttribute(bool includeLinqService = true)
+				: base(includeLinqService,
 					ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 					ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)
 			{
@@ -1246,6 +1247,78 @@ namespace Tests.DataProvider
 			{
 				Assert.AreEqual(Person.Count(), db.Person.Set(_ => _.FirstName, _ => _.FirstName).Update());
 				Assert.AreEqual(Person.Count(), db.Person.With("TABLOCK").Set(_ => _.FirstName, _ => _.FirstName).Update());
+			}
+		}
+
+		[Test, SqlServerDataContext(false)]
+		public void InOutProcedureTest(string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var    inputID        = 1234;
+				var    inputStr       = "InputStr";
+				int?   outputID       = 5678;
+				int?   inputOutputID  = 9012;
+				string outputStr      = "OuputStr";
+				string inputOutputStr = "InputOutputStr";
+				
+				var parameters = new [] 
+				{
+					new DataParameter("@ID",             inputID,        DataType.Int32),
+					new DataParameter("@outputID",       outputID,       DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+					new DataParameter("@inputOutputID",  inputOutputID,  DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+					new DataParameter("@str",            inputStr,       DataType.VarChar),
+					new DataParameter("@outputStr",      outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
+					new DataParameter("@inputOutputStr", inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 }
+				};
+
+				var ret = db.ExecuteProc("[TestData]..[OutRefTest]", parameters);
+
+				outputID       = Converter.ChangeTypeTo<int?>  (parameters[1].Value);
+				inputOutputID  = Converter.ChangeTypeTo<int?>  (parameters[2].Value);
+				outputStr      = Converter.ChangeTypeTo<string>(parameters[4].Value);
+				inputOutputStr = Converter.ChangeTypeTo<string>(parameters[5].Value);
+
+				Assert.That(outputID,       Is.EqualTo(inputID));
+				Assert.That(inputOutputID,  Is.EqualTo(9012 + inputID));
+				Assert.That(outputStr,      Is.EqualTo(inputStr));
+				Assert.That(inputOutputStr, Is.EqualTo(inputStr + "InputOutputStr"));
+			}
+		}
+
+		[Test, SqlServerDataContext(false)]
+		public async Task InOutProcedureTestAsync(string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var    inputID        = 1234;
+				var    inputStr       = "InputStr";
+				int?   outputID       = 5678;
+				int?   inputOutputID  = 9012;
+				string outputStr      = "OuputStr";
+				string inputOutputStr = "InputOutputStr";
+				
+				var parameters = new [] 
+				{
+					new DataParameter("@ID",             inputID,        DataType.Int32),
+					new DataParameter("@outputID",       outputID,       DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+					new DataParameter("@inputOutputID",  inputOutputID,  DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+					new DataParameter("@str",            inputStr,       DataType.VarChar),
+					new DataParameter("@outputStr",      outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
+					new DataParameter("@inputOutputStr", inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 }
+				};
+
+				var ret = await db.ExecuteProcAsync("[TestData]..[OutRefTest]", parameters);
+
+				outputID       = Converter.ChangeTypeTo<int?>  (parameters[1].Value);
+				inputOutputID  = Converter.ChangeTypeTo<int?>  (parameters[2].Value);
+				outputStr      = Converter.ChangeTypeTo<string>(parameters[4].Value);
+				inputOutputStr = Converter.ChangeTypeTo<string>(parameters[5].Value);
+
+				Assert.That(outputID,       Is.EqualTo(inputID));
+				Assert.That(inputOutputID,  Is.EqualTo(9012 + inputID));
+				Assert.That(outputStr,      Is.EqualTo(inputStr));
+				Assert.That(inputOutputStr, Is.EqualTo(inputStr + "InputOutputStr"));
 			}
 		}
 

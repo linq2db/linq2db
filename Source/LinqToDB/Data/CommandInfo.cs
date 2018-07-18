@@ -518,10 +518,17 @@ namespace LinqToDB.Data
 
 			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
-			if (Parameters != null && Parameters.Length > 0)
+			var hasParameters = Parameters != null && Parameters.Length > 0;
+
+			if (hasParameters)
 				SetParameters(DataConnection, Parameters);
 
-			return await DataConnection.ExecuteNonQueryAsync(cancellationToken);
+			var commandResult = await DataConnection.ExecuteNonQueryAsync(cancellationToken);
+
+			if (hasParameters)
+				RebindParameters(DataConnection, Parameters);
+
+			return commandResult;
 		}
 
 		#endregion
