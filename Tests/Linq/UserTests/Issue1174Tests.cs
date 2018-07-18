@@ -15,13 +15,11 @@ namespace Tests.UserTests
 	{
 		public class MyDB : DataConnection
 		{
-			private static readonly IDataProvider _dataProvider = new SqlServerDataProvider("mssql", SqlServerVersion.v2012);
-
-			public static Func<MyDB> CreateFactory(string connectionString, int retryCount, TimeSpan delay)
+			public static Func<MyDB> CreateFactory(string configuration, int retryCount, TimeSpan delay)
 			{
 				return () =>
 				{
-					var db = new MyDB(_dataProvider, connectionString)
+					var db = new MyDB(configuration)
 					{
 						// No exception if policy removed
 						RetryPolicy = new SqlServerRetryPolicy(retryCount, delay, null)
@@ -50,18 +48,13 @@ namespace Tests.UserTests
 			[Column, Nullable] public string Name { get; set; }
 		}
 
-		private Func<MyDB> _dbFactory;
-
-		[OneTimeSetUp]
-		public void SetUp()
+		[Test, Combinatorial]
+		public void TestConcurrentSelect(
+			[IncludeDataSources(false, ProviderName.SqlServer,ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context
+		)
 		{
-			var dbConnStr = DataConnection.GetConnectionString(ProviderName.SqlServer2008);
-			_dbFactory = MyDB.CreateFactory(dbConnStr, 1, TimeSpan.FromSeconds(1));
-		}
+			var dbFactory = MyDB.CreateFactory(context, 1, TimeSpan.FromSeconds(1));
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]
-		public void TestConcurrentSelect(string context)
-		{
 			var users = new[]
 			{
 				new User { Id = Guid.NewGuid(), Name = "User1" },
@@ -69,11 +62,11 @@ namespace Tests.UserTests
 			};
 
 			// Ensures that concurrent async queries for multiple db instances are handled correctly
-			using (var db = GetDataContext(context))
+			using (var db = dbFactory())
 			using (db.CreateLocalTable(users))
 			{
-				using (var db1 = _dbFactory())
-				using (var db2 = _dbFactory())
+				using (var db1 = dbFactory())
+				using (var db2 = dbFactory())
 				{
 					var user1Task = db1.Users.FirstAsync();
 					var user2Task = db2.Users.FirstAsync();
