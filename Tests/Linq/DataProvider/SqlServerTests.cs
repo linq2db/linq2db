@@ -42,7 +42,7 @@ namespace Tests.DataProvider
 		[AttributeUsage(AttributeTargets.Method)]
 		class SqlServerDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public SqlServerDataContextAttribute(bool includeLinqService = true)
+			public SqlServerDataContextAttribute(bool includeLinqService = false)
 				: base(includeLinqService,
 					ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008,
 					ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)
