@@ -31,7 +31,8 @@ namespace LinqToDB.DataProvider.SapHana
 			//instead of replace with left join, in which case returns incorrect data
 			SqlProviderFlags.IsSubQueryColumnSupported = true;
 
-			SqlProviderFlags.IsTakeSupported = true;
+			SqlProviderFlags.IsTakeSupported            = true;
+			SqlProviderFlags.IsDistinctOrderBySupported = false;
 
 			//testing
 
