@@ -456,7 +456,9 @@ namespace Tests.Linq
 
 		
 		[Test, Combinatorial]
-		public void DoubleOrderBy([DataSources] string context)
+		public void DoubleOrderBy(
+			[DataSources(ProviderName.Sybase, ProviderName.SybaseManaged)] 
+			string context)
 		{
 			var testData = GetTestData();
 

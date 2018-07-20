@@ -31,6 +31,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.CanCombineParameters       = false;
 			SqlProviderFlags.IsSybaseBuggyGroupBy       = true;
 			SqlProviderFlags.IsCrossJoinSupported       = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported = false;
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
