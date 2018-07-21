@@ -14,6 +14,11 @@
 
 		<None Remove="bbb.txt" />
 		<Content Include="bbb.txt" />
+		<None Include="TypeScript.generated.ts">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>TypeScript.tt</DependentUpon>
+		</None>
 
 		<None Update="EditableModelTest.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -40,6 +45,11 @@
 		<None Update="MultipleFiles.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MultipleFiles.generated.cs</LastGenOutput>
+		</None>
+
+		<None Update="TypeScript.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>TypeScript.generated.ts</LastGenOutput>
 		</None>
 
 		<Compile Update="MultipleFiles.generated.cs">

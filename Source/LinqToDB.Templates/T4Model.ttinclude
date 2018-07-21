@@ -58,7 +58,7 @@ public partial class ModelSource : ITree
 {
 	public int CurrentNamespace = 0;
 
-	public List<string>    Usings     = new List<String>    { "System"        };
+	public List<string>    Usings     = new List<String>();
 	public List<Namespace> Namespaces = new List<Namespace> { new Namespace() };
 
 	public Namespace      Namespace { get { return Namespaces[CurrentNamespace];       } }
@@ -138,6 +138,13 @@ public partial class Class : TypeBase
 
 	public Class()
 	{
+	}
+
+	private bool _isAbstract = false;
+	public  bool IsAbstract
+	{
+		get { return _isAbstract || Members.OfType<Method>().Any(_ => _.IsAbstract); }
+		set { _isAbstract = value; }
 	}
 
 	public Class(string name, params IClassMember[] members)
@@ -502,8 +509,12 @@ public abstract class BaseRenderer : IRenderer
 
 	protected virtual void RenderUsings(List<string> usings)
 	{
+		Trim();
+
 		foreach (var u in usings.Distinct())
 			WriteLine(u);
+
+		WriteLine("");
 	}
 
 	protected virtual void RenderNamespace(Namespace ns)
@@ -657,7 +668,7 @@ public abstract class BaseRenderer : IRenderer
 	protected abstract void BeginAttributes();
 	protected abstract void EndAttributes  ();
 	protected abstract void SplitAttributes();
-	protected abstract void RenderAttribute(Attribute attributes);
+	protected abstract void RenderAttribute(Attribute attribute);
 
 	protected abstract void BeginClass(Class cl);
 	protected abstract void EndClass  (Class cl);
@@ -695,8 +706,10 @@ public abstract class BaseRenderer : IRenderer
 		_tt.WriteSpaces(count);
 	}
 
-	public virtual void WriteComment(string comment)
+	public virtual void WriteComment(string comment, params object[] args)
 	{
+		if (args.Length > 0) comment = string.Format(comment, args);
+
 		WriteLine("//{0}", comment);
 	}
 
@@ -739,6 +752,27 @@ public abstract class BaseRenderer : IRenderer
 		_tt.Error(error);
 	}
 
+	public void WriteEndLineComment(string comment)
+	{
+		if (!string.IsNullOrEmpty(comment))
+		{
+			RemoveSpace();
+			Write(" ");
+			WriteComment(" " + comment);
+		}
+		else
+			WriteLine("");
+
+	}
+
+	public void WriteLines(List<string> lines)
+	{
+		foreach (var line in lines)
+		{
+			WriteLine(line);
+		}
+	}
+
 	#endregion
 }
 
@@ -772,8 +806,9 @@ public class CSharpRenderer : BaseRenderer
 	public Action<BaseRenderer,Class> WriteBeginClass = (tt,cl) =>
 	{
 		tt.Write(cl.AccessModifier.ToString().ToLower() + " ");
-		if (cl.IsStatic)  tt.Write("static ");
-		if (cl.IsPartial) tt.Write("partial ", cl.Name);
+		if (cl.IsStatic)   tt.Write("static ");
+		if (cl.IsPartial)  tt.Write("partial ", cl.Name);
+		if (cl.IsAbstract) tt.Write("abstract ", cl.Name);
 		tt.Write("class {0}", cl.Name);
 
 		if (!string.IsNullOrEmpty(cl.BaseClass) || cl.Interfaces.Count > 0)
@@ -1115,6 +1150,13 @@ public class CSharpRenderer : BaseRenderer
 	{
 		_generateProcedureErrors = tt.GenerateProcedureErrors;
 	}
+
+	protected override void RenderModelSource(ModelSource model)
+	{
+		model.Usings.Insert(0, "System");
+		base.RenderModelSource(model);
+	}
+
 
 	protected override void RenderUsings(List<string> usings)
 	{
