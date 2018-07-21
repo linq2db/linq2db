@@ -37,6 +37,8 @@ static IRenderer CreateSharpRenderer(GeneratedTextTransformation tt)
 	renderer.WriteEvent          = WriteEvent          ?? renderer.WriteEvent;
 	renderer.WriteProperty       = WriteProperty       ?? renderer.WriteProperty;
 	renderer.WriteMethod         = WriteMethod         ?? renderer.WriteMethod;
+	renderer.BeginRegion         = BeginRegion         ?? renderer.BeginRegion;
+	renderer.EndRegion           = EndRegion           ?? renderer.EndRegion;
 
 	return renderer;
 }
@@ -178,10 +180,6 @@ public abstract partial class MemberBase : IClassMember
 	public int ParamLen;
 	public int BodyLen;
 
-	public virtual  int  CalcModifierLen() { return 0; }
-	public abstract int  CalcBodyLen    ();
-	public virtual  int  CalcParamLen   () { return 0; }
-
 	public         ITree              Parent     { get; set; }
 	public virtual IEnumerable<ITree> GetNodes() { return Enumerable.Empty<ITree>(); }
 	public virtual void               SetTree () {}
@@ -197,8 +195,6 @@ public partial class MemberGroup : MemberBase
 	public bool               IsPropertyGroup;
 	public List<IClassMember> Members = new List<IClassMember>();
 	public List<string>       Errors  = new List<string>();
-
-	public override int  CalcBodyLen() { return 0; }
 
 	public override IEnumerable<ITree> GetNodes() { return Members; }
 
@@ -229,15 +225,6 @@ public partial class Field : MemberBase
 		Type = type;
 		Name = name;
 	}
-
-	public override int CalcModifierLen()
-	{
-		return
-			(IsStatic   ? " static".  Length : 0) +
-			(IsReadonly ? " readonly".Length : 0) ;
-	}
-
-	public override int  CalcBodyLen() { return InitValue == null ? 1 : 4 + InitValue.Length; }
 }
 
 static Action<BaseRenderer, Event> WriteEvent;
@@ -256,16 +243,6 @@ public partial class Event : MemberBase
 		Type = type;
 		Name = name;
 	}
-
-	public override int CalcModifierLen()
-	{
-		return
-			(IsStatic  ? " static". Length : 0) +
-			(IsVirtual ? " virtual".Length : 0) +
-			" event".Length;
-	}
-
-	public override int CalcBodyLen() { return 1; }
 }
 
 static Action<BaseRenderer,Property,bool> WriteProperty;
@@ -296,39 +273,6 @@ public partial class Property : MemberBase
 		Name = name;
 
 		InitBody(getBody, setBody);
-	}
-
-	public override int CalcModifierLen()
-	{
-		return IsVirtual ? " virtual".Length : 0;
-	}
-
-	public override int CalcBodyLen()
-	{
-		if (IsAuto)
-			return 4 + GetterLen + SetterLen; // ' { get; set; }'
-
-		var len = " {".Length;
-
-		if (HasGetter)
-		{
-			len += " get {".Length;
-			foreach (var t in GetBody)
-				len += 1 + t.Length;
-			len += " }".Length;
-		}
-
-		if (HasSetter)
-		{
-			len += " set {".Length;
-			foreach (var t in SetBody)
-				len += 1 + t.Length;
-			len += " }".Length;
-		}
-
-		len += " }".Length;
-
-		return len;
 	}
 
 	public Property InitBody(IEnumerable<string> getBody = null, IEnumerable<string> setBody = null)
@@ -376,34 +320,6 @@ public partial class Method : MemberBase
 
 		if (parameters != null) Parameters.AddRange(parameters);
 		if (body       != null) Body.      AddRange(body);
-	}
-
-	public override int CalcModifierLen()
-	{
-		return
-			IsAbstract ? " abstract".Length :
-			IsVirtual  ? " virtual".Length  :
-			IsStatic   ? " static".Length   : 0;
-	}
-
-	public override int CalcBodyLen()
-	{
-		if (IsAbstract || AccessModifier == AccessModifier.Partial)
-			return 1;
-
-		var len = " {".Length;
-
-		foreach (var t in Body)
-			len += 1 + t.Length;
-
-		len += " }".Length;
-
-		return len;
-	}
-
-	public override int CalcParamLen()
-	{
-		return Parameters.Sum(p => p.Length + 2);
 	}
 }
 
@@ -1289,6 +1205,122 @@ public class CSharpRenderer : BaseRenderer
 		WriteProperty(this, pt, isCompact);
 	}
 
+	public int CalcModifierLen(MemberBase member)
+	{
+		if (member is Field)
+		{
+			var f = (Field)member;
+			return
+				(f.IsStatic   ? " static".  Length : 0) +
+				(f.IsReadonly ? " readonly".Length : 0) ;
+		}
+
+		if (member is Event)
+		{
+			var e = (Event)member;
+			return
+				(e.IsStatic  ? " static". Length : 0) +
+				(e.IsVirtual ? " virtual".Length : 0) +
+				" event".Length;
+		}
+
+		if (member is Property)
+		{
+			var p = (Property)member;
+			return p.IsVirtual ? " virtual".Length : 0;
+		}
+
+		if (member is Method)
+		{
+			var m = (Method)member;
+			return
+				m.IsAbstract ? " abstract".Length :
+				m.IsVirtual  ? " virtual".Length  :
+				m.IsStatic   ? " static".Length   : 0;
+		}
+
+		return 0;
+	}
+
+	public int CalcBodyLen(MemberBase member)
+	{
+		if (member is MemberGroup)
+			return 0;
+
+		if (member is Field)
+		{
+			var f = (Field)member;
+			return f.InitValue == null ? 1 : 4 + f.InitValue.Length;
+		}
+
+		if (member is Event)
+		{
+			return 1;
+		}
+
+		if (member is Property)
+		{
+			var p = (Property)member;
+
+			if (p.IsAuto)
+				return 4 + p.GetterLen + p.SetterLen; // ' { get; set; }'
+
+			var len = " {".Length;
+
+			if (p.HasGetter)
+			{
+				len += " get {".Length;
+				foreach (var t in p.GetBody)
+					len += 1 + t.Length;
+				len += " }".Length;
+			}
+
+			if (p.HasSetter)
+			{
+				len += " set {".Length;
+				foreach (var t in p.SetBody)
+					len += 1 + t.Length;
+				len += " }".Length;
+			}
+
+			len += " }".Length;
+
+			return len;
+
+		}
+
+		if (member is Method)
+		{
+			var m = (Method)member;
+			if (m.IsAbstract || m.AccessModifier == AccessModifier.Partial)
+				return 1;
+
+			var len = " {".Length;
+
+			foreach (var t in m.Body)
+				len += 1 + t.Length;
+
+			len += " }".Length;
+
+			return len;
+
+		}
+
+		throw new NotImplementedException(string.Format("CalcBodyLen is not implemented for {0}", member.GetType().Name));
+	}
+
+	public int CalcParamLen(MemberBase member)
+	{
+		
+		if (member is Method)
+		{
+			var m = (Method)member;
+			return m.Parameters.Sum(p => p.Length + 2);
+		}
+
+		return 0;
+	}
+
 	protected override void RenderMethod(Method mt, bool isCompact)
 	{
 		WriteMethod(this, mt, isCompact);
@@ -1340,7 +1372,7 @@ public class CSharpRenderer : BaseRenderer
 				foreach (var m in allMembers)
 					m.AccessModifierLen = max;
 
-				max = allMembers.Max(m => m.CalcModifierLen());
+				max = allMembers.Max(m => CalcModifierLen(m));
 				foreach (var m in allMembers)
 					m.ModifierLen = max;
 
@@ -1361,11 +1393,11 @@ public class CSharpRenderer : BaseRenderer
 				foreach (var m in allMembers)
 					m.NameLen = max;
 
-				max = allMembers.Max(m => m.CalcParamLen());
+				max = allMembers.Max(m => CalcParamLen(m));
 				foreach (var m in allMembers)
 					m.ParamLen = max;
 
-				max = allMembers.Max(m => m.CalcBodyLen());
+				max = allMembers.Max(m => CalcBodyLen(m));
 				foreach (var m in allMembers)
 					m.BodyLen = max;
 
