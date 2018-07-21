@@ -78,6 +78,33 @@ void GenerateTypesFromMetadata()
 		}
 	).ToDictionary(t => t.Name);
 
+	var procSchemas =
+	(
+		from p in Procedures.Values
+		where GenerateSchemaAsType && p.Schema != null && !p.IsDefaultSchema && !schemas.ContainsKey(p.Schema)
+		group p by p.Schema into gr
+		orderby gr.Key
+		let typeName = SchemaNameMapping.TryGetValue(gr.Key, out schemaName) ? schemaName : gr.Key
+		select new
+		{
+			Name            = gr.Key,
+			TypeName        = typeName + SchemaNameSuffix,
+			PropertyName    = typeName,
+			Props           = new MemberGroup { IsCompact = true },
+			Aliases         = new MemberGroup { IsCompact = true, Region = "Alias members" },
+			TableExtensions = new MemberGroup { Region = "Table Extensions" },
+			Type            = new Class(typeName + SchemaNameSuffix) { IsStatic = true },
+			Tables          = new List<Table>(),
+			DataContext     = new Class(SchemaDataContextTypeName),
+			Procedures      = new MemberGroup(),
+			Functions       = new MemberGroup(),
+			TableFunctions  = new MemberGroup { Region = "Table Functions" },
+		}
+	).ToDictionary(s => s.Name);
+
+	foreach(var schema in procSchemas)
+		schemas.Add(schema.Key, schema.Value);
+
 	var defProps           = new MemberGroup { IsCompact = true };
 	var defAliases         = new MemberGroup { IsCompact = true, Region = "Alias members" };
 	var defTableExtensions = new MemberGroup { };
@@ -675,7 +702,11 @@ void GenerateTypesFromMetadata()
 				p.Type = p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
 				var paramCount = p.ProcParameters.Count(pr => !pr.IsResult);
 				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + p.Schema + "."  + p.ProcedureName + "\"", "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
-				p.Parameters.Add("this IEnumerable<TSource> src");
+
+				if (p.IsDefaultSchema || !GenerateSchemaAsType)
+					p.Parameters.Add("this IEnumerable<TSource> src");
+				else // otherwise function will be generated in nested class, which doesn't support extension methods
+					p.Parameters.Add("IEnumerable<TSource> src");
 
 				foreach (var inp in p.ProcParameters.Where(pr => !pr.IsResult))
 					p.Parameters.Add($"Expression<Func<TSource, {inp.ParameterType}>> " + inp.ParameterName);
