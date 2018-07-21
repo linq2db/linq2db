@@ -11,15 +11,12 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-
-using NpgsqlTypes;
 
 namespace PostreSQLDataContext
 {
@@ -30,27 +27,30 @@ namespace PostreSQLDataContext
 	/// </summary>
 	public partial class Test96DB : LinqToDB.Data.DataConnection
 	{
-		public ITable<_testsamename>     _testsamename       { get { return this.GetTable<_testsamename>(); } }
-		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
-		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
-		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
-		public ITable<Entity>            Entities            { get { return this.GetTable<Entity>(); } }
-		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
-		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
-		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
-		public ITable<SequenceTest1>     SequenceTest1       { get { return this.GetTable<SequenceTest1>(); } }
-		public ITable<SequenceTest2>     SequenceTest2       { get { return this.GetTable<SequenceTest2>(); } }
-		public ITable<SequenceTest3>     SequenceTest3       { get { return this.GetTable<SequenceTest3>(); } }
-		public ITable<Test>              Tests               { get { return this.GetTable<Test>(); } }
-		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<Testmerge1>        Testmerge1          { get { return this.GetTable<Testmerge1>(); } }
-		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<Testmerge2>        Testmerge2          { get { return this.GetTable<Testmerge2>(); } }
-		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<_testsamename>      _testsamename        { get { return this.GetTable<_testsamename>(); } }
+		public ITable<AllType>            AllTypes             { get { return this.GetTable<AllType>(); } }
+		public ITable<Child>              Children             { get { return this.GetTable<Child>(); } }
+		public ITable<Doctor>             Doctors              { get { return this.GetTable<Doctor>(); } }
+		public ITable<Entity>             Entities             { get { return this.GetTable<Entity>(); } }
+		public ITable<GrandChild>         GrandChildren        { get { return this.GetTable<GrandChild>(); } }
+		public ITable<InheritanceChild>   InheritanceChildren  { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>  InheritanceParents   { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<LinqDataType>       LinqDataTypes        { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Parent>             Parents              { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>            Patients             { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>             People               { get { return this.GetTable<Person>(); } }
+		public ITable<SequenceTest1>      SequenceTest1        { get { return this.GetTable<SequenceTest1>(); } }
+		public ITable<SequenceTest2>      SequenceTest2        { get { return this.GetTable<SequenceTest2>(); } }
+		public ITable<SequenceTest3>      SequenceTest3        { get { return this.GetTable<SequenceTest3>(); } }
+		public ITable<Test>               Tests                { get { return this.GetTable<Test>(); } }
+		public ITable<TestIdentity>       TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<Testmerge1>         Testmerge1           { get { return this.GetTable<Testmerge1>(); } }
+		public ITable<TestMerge1>         TestMerge1           { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<Testmerge2>         Testmerge2           { get { return this.GetTable<Testmerge2>(); } }
+		public ITable<TestMerge2>         TestMerge2           { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<Testsamename>       Testsamenames        { get { return this.GetTable<Testsamename>(); } }
+		public ITable<TestSchemaIdentity> TestSchemaIdentities { get { return this.GetTable<TestSchemaIdentity>(); } }
+		public ITable<Testserialidentity> Testserialidentities { get { return this.GetTable<Testserialidentity>(); } }
 
 		public void InitMappingSchema()
 		{
@@ -69,7 +69,6 @@ namespace PostreSQLDataContext
 			MappingSchema.SetConvertExpression<object[], pg_stat_get_archiverResult>(tuple => new pg_stat_get_archiverResult() { archived_count = (long?)tuple[0], last_archived_wal = (string)tuple[1], last_archived_time = (object)tuple[2], failed_count = (long?)tuple[3], last_failed_wal = (string)tuple[4], last_failed_time = (object)tuple[5], stats_reset = (object)tuple[6] });
 			MappingSchema.SetConvertExpression<object[], pg_stat_get_wal_receiverResult>(tuple => new pg_stat_get_wal_receiverResult() { pid = (int?)tuple[0], status = (string)tuple[1], receive_start_lsn = (object)tuple[2], receive_start_tli = (int?)tuple[3], received_lsn = (object)tuple[4], received_tli = (int?)tuple[5], last_msg_send_time = (object)tuple[6], last_msg_receipt_time = (object)tuple[7], latest_end_lsn = (object)tuple[8], latest_end_time = (object)tuple[9], slot_name = (string)tuple[10], conninfo = (string)tuple[11] });
 			MappingSchema.SetConvertExpression<object[], pg_xlogfile_name_offsetResult>(tuple => new pg_xlogfile_name_offsetResult() { file_name = (string)tuple[0], file_offset = (int?)tuple[1] });
-			MappingSchema.SetConvertExpression<object[], TestFunctionParametersResult>(tuple => new TestFunctionParametersResult() { param2 = (int?)tuple[0], param3 = (int?)tuple[1] });
 		}
 
 		public Test96DB()
@@ -1158,91 +1157,6 @@ namespace PostreSQLDataContext
 
 		#endregion
 
-		#region TestTableFunction
-
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
-		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
-		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				param1);
-		}
-
-		public partial class TestTableFunctionResult
-		{
-			public int? param2 { get; set; }
-		}
-
-		#endregion
-
-		#region TestTableFunction1
-
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
-		public ITable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
-		{
-			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
-				param1,
-				param2);
-		}
-
-		public partial class TestTableFunction1Result
-		{
-			public int? param3 { get; set; }
-			public int? param4 { get; set; }
-		}
-
-		#endregion
-
-		#region TestTableFunctionSchema
-
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunctionSchema\"")]
-		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
-		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod());
-		}
-
-		public partial class TestTableFunctionSchemaResult
-		{
-			public int?            ID                  { get; set; }
-			public long?           bigintDataType      { get; set; }
-			public decimal?        numericDataType     { get; set; }
-			public short?          smallintDataType    { get; set; }
-			public int?            intDataType         { get; set; }
-			public decimal?        moneyDataType       { get; set; }
-			public double?         doubleDataType      { get; set; }
-			public float?          realDataType        { get; set; }
-			public DateTime?       timestampDataType   { get; set; }
-			public DateTimeOffset? timestampTZDataType { get; set; }
-			public DateTime?       dateDataType        { get; set; }
-			public TimeSpan?       timeDataType        { get; set; }
-			public DateTimeOffset? timeTZDataType      { get; set; }
-			public TimeSpan?       intervalDataType    { get; set; }
-			public char?           charDataType        { get; set; }
-			public string          char20DataType      { get; set; }
-			public string          varcharDataType     { get; set; }
-			public string          textDataType        { get; set; }
-			public byte[]          binaryDataType      { get; set; }
-			public Guid?           uuidDataType        { get; set; }
-			public BitArray        bitDataType         { get; set; }
-			public bool?           booleanDataType     { get; set; }
-			public string          colorDataType       { get; set; }
-			public NpgsqlPoint?    pointDataType       { get; set; }
-			public NpgsqlLSeg?     lsegDataType        { get; set; }
-			public NpgsqlBox?      boxDataType         { get; set; }
-			public NpgsqlPath?     pathDataType        { get; set; }
-			public NpgsqlPolygon?  polygonDataType     { get; set; }
-			public NpgsqlCircle?   circleDataType      { get; set; }
-			public NpgsqlLine?     lineDataType        { get; set; }
-			public IPAddress       inetDataType        { get; set; }
-			public NpgsqlInet?     cidrDataType        { get; set; }
-			public PhysicalAddress macaddrDataType     { get; set; }
-			public string          jsonDataType        { get; set; }
-			public string          jsonbDataType       { get; set; }
-			public string          xmlDataType         { get; set; }
-			public BitArray        varBitDataType      { get; set; }
-		}
-
-		#endregion
-
 		#endregion
 	}
 
@@ -1467,13 +1381,6 @@ namespace PostreSQLDataContext
 		public string file_name { get; set; }
 
 		public int? file_offset { get; set; }
-	}
-
-	public partial class TestFunctionParametersResult
-	{
-		public int? param2 { get; set; }
-
-		public int? param3 { get; set; }
 	}
 
 	[Table(Schema="public", Name="testsamename")]
@@ -1755,6 +1662,24 @@ namespace PostreSQLDataContext
 		[Column,        Nullable] public TimeSpan? FieldTime       { get; set; } // time (6) without time zone
 		[Column,        Nullable] public string    FieldEnumString { get; set; } // character varying(20)
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // integer
+	}
+
+	[Table(Schema="test_schema", Name="testsamename")]
+	public partial class Testsamename
+	{
+		[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
+	}
+
+	[Table(Schema="test_schema", Name="TestSchemaIdentity")]
+	public partial class TestSchemaIdentity
+	{
+		[PrimaryKey, Identity] public int ID { get; set; } // integer
+	}
+
+	[Table(Schema="test_schema", Name="testserialidentity")]
+	public partial class Testserialidentity
+	{
+		[PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 
 	public static partial class SqlFunctions
@@ -24532,7 +24457,7 @@ namespace PostreSQLDataContext
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string Reverse(string par7467)
+		public static string Reverse1(string par7467)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24543,56 +24468,6 @@ namespace PostreSQLDataContext
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
 		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par7469)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region TestFunctionParameters
-
-		[Sql.Function(Name="public.\"TestFunctionParameters\"", ServerSideOnly=true)]
-		public static TestFunctionParametersResult TestFunctionParameters(int? param1, int? param2)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region TestIt
-
-		[Sql.Function(Name="public.\"TestIt\"", ServerSideOnly=true)]
-		public static int? TestIt(int? param)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region TestIt2
-
-		[Sql.Function(Name="public.\"TestIt2\"", ServerSideOnly=true)]
-		public static int? TestIt2(int? param)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region TestScalarFunction
-
-		[Sql.Function(Name="public.\"TestScalarFunction\"", ServerSideOnly=true)]
-		public static string TestScalarFunction(int? param)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region TestSingleOutParameterFunction
-
-		[Sql.Function(Name="public.\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
-		public static int? TestSingleOutParameterFunction(int? param1)
 		{
 			throw new InvalidOperationException();
 		}
@@ -24691,6 +24566,23 @@ namespace PostreSQLDataContext
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
+
+		public static Testsamename Find(this ITable<Testsamename> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static TestSchemaIdentity Find(this ITable<TestSchemaIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static Testserialidentity Find(this ITable<Testserialidentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
 	}
 }
-

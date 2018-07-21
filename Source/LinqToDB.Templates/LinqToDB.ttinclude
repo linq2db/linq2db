@@ -880,13 +880,14 @@ void GenerateTypesFromMetadata()
 			Model.Types.Add(new Class(DataContextObject.Name + "StoredProcedures", procs) { IsStatic = true });
 
 		if (funcs.Members.Count > 0)
-		{
-			LinqToDB.Common.Utils.MakeUniqueNames(funcs.Members.OfType<MemberGroup>().SelectMany(g => g.Members.OfType<Procedure>()), null, f => f.Name, (f, newName) => f.Name = newName, "Function");
 			Model.Types.Add(new Class("SqlFunctions", funcs) { IsStatic = true });
-		}
 
 		if (tabfs.Members.Count > 0)
 			DataContextObject.Members.Add(tabfs);
+
+		MakeTypeMembersNamesUnique(DataContextObject);
+		foreach (var type in Model.Types.OfType<Class>())
+			MakeTypeMembersNamesUnique(type);
 
 		foreach (var schema in schemas.Values)
 		{
@@ -894,13 +895,14 @@ void GenerateTypesFromMetadata()
 				schema.Type.Members.Add(new Class(DataContextObject.Name + "StoredProcedures", schema.Procedures) { IsStatic = true });
 
 			if (schema.Functions.Members.Count > 0)
-			{
-				LinqToDB.Common.Utils.MakeUniqueNames(schema.Functions.Members.OfType<MemberGroup>().SelectMany(g => g.Members.OfType<Procedure>()), null, f => f.Name, (f, newName) => f.Name = newName, "Function");
 				schema.Type.Members.Add(new Class("SqlFunctions", schema.Functions) { IsStatic = true });
-			}
 
 			if (schema.TableFunctions.Members.Count > 0)
 				schema.DataContext.Members.Add(schema.TableFunctions);
+
+			MakeTypeMembersNamesUnique(schema.DataContext);
+			foreach (var type in schema.Type.Members.OfType<Class>())
+				MakeTypeMembersNamesUnique(type);
 		}
 	}
 
@@ -927,6 +929,37 @@ void GenerateTypesFromMetadata()
 	Model.SetTree();
 
 	AfterGenerateLinqToDBModel();
+}
+
+void MakeTypeMembersNamesUnique(Class type, string defaultName = "Member")
+{
+	LinqToDB.Common.Utils.MakeUniqueNames(
+		GetAllClassMembers(type.Members),
+		new [] { type.Name, "InitDataContext", "InitMappingSchema" },
+		m => m is TypeBase t ? t.Name : ((MemberBase)m).Name,
+		(m, newName) =>
+		{
+			if (m is TypeBase t)
+				t.Name = newName;
+			else
+				((MemberBase)m).Name = newName;
+		},
+		defaultName);
+}
+
+IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members)
+{
+	foreach (var member in members)
+	{
+		if (member is MemberGroup mg)
+			foreach (var m in GetAllClassMembers(mg.Members))
+				yield return m;
+		// constructors don't have own type/flag
+		else if (member is Method method && (method.Type == null || method.Name == "InitDataContext" || method.Name == "InitMappingSchema"))
+			continue;
+		else
+			yield return member;
+	}
 }
 
 string NormalizeStringName(string name)
