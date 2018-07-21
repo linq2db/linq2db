@@ -880,7 +880,10 @@ void GenerateTypesFromMetadata()
 			Model.Types.Add(new Class(DataContextObject.Name + "StoredProcedures", procs) { IsStatic = true });
 
 		if (funcs.Members.Count > 0)
+		{
+			LinqToDB.Common.Utils.MakeUniqueNames(funcs.Members.OfType<MemberGroup>().SelectMany(g => g.Members.OfType<Procedure>()), null, f => f.Name, (f, newName) => f.Name = newName, "Function");
 			Model.Types.Add(new Class("SqlFunctions", funcs) { IsStatic = true });
+		}
 
 		if (tabfs.Members.Count > 0)
 			DataContextObject.Members.Add(tabfs);
@@ -891,7 +894,10 @@ void GenerateTypesFromMetadata()
 				schema.Type.Members.Add(new Class(DataContextObject.Name + "StoredProcedures", schema.Procedures) { IsStatic = true });
 
 			if (schema.Functions.Members.Count > 0)
+			{
+				LinqToDB.Common.Utils.MakeUniqueNames(schema.Functions.Members.OfType<MemberGroup>().SelectMany(g => g.Members.OfType<Procedure>()), null, f => f.Name, (f, newName) => f.Name = newName, "Function");
 				schema.Type.Members.Add(new Class("SqlFunctions", schema.Functions) { IsStatic = true });
+			}
 
 			if (schema.TableFunctions.Members.Count > 0)
 				schema.DataContext.Members.Add(schema.TableFunctions);
