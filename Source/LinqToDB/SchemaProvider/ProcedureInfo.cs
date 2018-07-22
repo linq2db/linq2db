@@ -37,7 +37,7 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		public bool   IsAggregateFunction;
 		/// <summary>
-		/// Get or sets glag, indicating that procedure belongs to default schema/owner.
+		/// Get or sets flag, indicating that procedure belongs to default schema/owner.
 		/// </summary>
 		public bool   IsDefaultSchema;
 		/// <summary>
@@ -45,7 +45,7 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		public string ProcedureDefinition;
 		/// <summary>
-		/// Get or sets glag, indicating that procedure returns dynamic (generic) result.
+		/// Get or sets flag, indicating that procedure returns dynamic (generic) result.
 		/// </summary>
 		public bool IsResultDynamic;
 	}

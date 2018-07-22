@@ -39,7 +39,7 @@ namespace LinqToDB.SchemaProvider
 		public bool   IsTableFunction     { get; set; }
 
 		/// <summary>
-		/// Get or sets glag, indicating that procedure returns dynamic (generic) result.
+		/// Get or sets flag, indicating that procedure returns dynamic (generic) result.
 		/// </summary>
 		public bool IsResultDynamic       { get; set; }
 
