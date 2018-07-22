@@ -39,6 +39,11 @@ namespace LinqToDB.SchemaProvider
 		public bool   IsTableFunction     { get; set; }
 
 		/// <summary>
+		/// Get or sets glag, indicating that procedure returns dynamic (generic) result.
+		/// </summary>
+		public bool IsResultDynamic       { get; set; }
+
+		/// <summary>
 		/// Gets flag indicating that it is aggregate function or not.
 		/// </summary>
 		public bool   IsAggregateFunction { get; set; }
@@ -49,7 +54,7 @@ namespace LinqToDB.SchemaProvider
 		public bool   IsDefaultSchema     { get; set; }
 
 		/// <summary>
-		/// Gets flag indicating that procedure tabl result schema loaded. If it is <c>false</c>, procedure doesn't result
+		/// Gets flag indicating that procedure tabl result schema loaded. If it is <c>false</c>, procedure doesn't return
 		/// table-like results or schema loading failed. In latter case check <see cref="ResultException"/> property for
 		/// error.
 		/// </summary>

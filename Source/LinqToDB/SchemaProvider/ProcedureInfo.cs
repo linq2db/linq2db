@@ -8,7 +8,8 @@ namespace LinqToDB.SchemaProvider
 	public class ProcedureInfo
 	{
 		/// <summary>
-		/// Gets or sets fully-qualified procedure name.
+		/// Gets or sets unique procedure identifier.
+		/// NOTE: this is not fully-qualified procedure name (even if it used right now for some providers as procedure identifier).
 		/// </summary>
 		public string ProcedureID;
 		/// <summary>
@@ -43,5 +44,9 @@ namespace LinqToDB.SchemaProvider
 		/// Gets or sets procedure source code.
 		/// </summary>
 		public string ProcedureDefinition;
+		/// <summary>
+		/// Get or sets glag, indicating that procedure returns dynamic (generic) result.
+		/// </summary>
+		public bool IsResultDynamic;
 	}
 }

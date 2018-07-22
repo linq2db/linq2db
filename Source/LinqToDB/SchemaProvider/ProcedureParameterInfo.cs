@@ -8,7 +8,8 @@ namespace LinqToDB.SchemaProvider
 	public class ProcedureParameterInfo
 	{
 		/// <summary>
-		/// Gets or sets fully-qualified procedure name.
+		/// Gets or sets unique procedure identifier.
+		/// NOTE: this is not fully-qualified procedure name (even if it used right now for some providers as procedure identifier).
 		/// </summary>
 		public string ProcedureID;
 		/// <summary>

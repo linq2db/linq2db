@@ -1,0 +1,16 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                                 #>
+<#@ output extension=".generated.cs"                                                        #>
+<#@ include file="..\..\Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude"                #>
+<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude"           #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\AdoNetCore.AseClient.dll"       #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net46\linq2db.dll"                    #>
+
+<#
+	NamespaceName = "SybaseDataActionDataContext";
+
+	GenerateSybaseSystemTables = true;
+
+	LoadSybaseMetadata("DBHost", "5000", "TestDataCore", "sa", "TestPassword");
+	GenerateModel();
+
+#>

@@ -353,7 +353,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #if !NETSTANDARD1_6
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new PostgreSQLSchemaProvider();
+			return new PostgreSQLSchemaProvider(this);
 		}
 #endif
 
