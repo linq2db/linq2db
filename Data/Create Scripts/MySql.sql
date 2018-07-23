@@ -421,8 +421,8 @@ DROP FUNCTION IF EXISTS TestFunction
 GO
 CREATE PROCEDURE TestProcedure(IN param3 INT, INOUT param2 INT, OUT param1 INT)
 BEGIN
-	SELECT COUNT(*) INTO param2 FROM Person p WHERE p.PersonID <> param2;
-	SELECT COUNT(*) INTO param1 FROM Person p WHERE p.PersonID <> param3;
+	SELECT param2 + param2 INTO param2;
+	SELECT param3 + param2 INTO param1;
 	SELECT * FROM Person;
 END
 GO
@@ -437,5 +437,15 @@ GO
 CREATE PROCEDURE AddIssue792Record()
 BEGIN
 	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+END
+GO
+DROP PROCEDURE IF EXISTS `test_proc`
+GO
+CREATE PROCEDURE `test_proc`(
+	IN `aInParam` VARCHAR(256),
+	OUT `aOutParam` TINYINT(1)
+)
+BEGIN
+	SELECT 1 INTO aOutParam;
 END
 GO

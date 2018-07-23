@@ -19,6 +19,7 @@ namespace Tests.DataProvider
 	using LinqToDB.SchemaProvider;
 	using Model;
 	using System.Collections.Generic;
+	using System.Data;
 	using System.Diagnostics;
 
 	[TestFixture]
@@ -602,6 +603,38 @@ namespace Tests.DataProvider
 						}
 					}
 				};
+
+				// create function
+				yield return new ProcedureSchema()
+				{
+					CatalogName     = "SET_BY_TEST",
+					ProcedureName   = "test_proc",
+					MemberName      = "test_proc",
+					IsDefaultSchema = true,
+					Parameters      = new List<ParameterSchema>()
+					{
+						new ParameterSchema()
+						{
+							SchemaName    = "aInParam",
+							SchemaType    = "VARCHAR",
+							IsIn          = true,
+							ParameterName = "aInParam",
+							ParameterType = "string",
+							SystemType    = typeof(string),
+							DataType      = DataType.VarChar
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "aOutParam",
+							SchemaType    = "TINYINT",
+							IsOut         = true,
+							ParameterName = "aOutParam",
+							ParameterType = "sbyte",
+							SystemType    = typeof(sbyte),
+							DataType      = DataType.SByte
+						}
+					}
+				};
 			}
 		}
 
@@ -752,6 +785,59 @@ namespace Tests.DataProvider
 
 				var list = q.ToList();
 			}
+		}
+
+		[Test, MySqlDataContext(false)]
+		public void TestTestProcedure(string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				int? param2 = 5;
+				int? param1 = 11;
+
+				var res = db.TestProcedure(123, ref param2, out param1);
+
+				Assert.AreEqual(10, param2);
+				Assert.AreEqual(133, param1);
+				AreEqual(db.GetTable<Person>(), res);
+			}
+		}
+
+		//[Test, MySqlDataContext]
+		//public void TestSingleOutParameterFunction(string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//	{
+		//		db.TestProc("test", out var value);
+
+		//		Assert.AreEqual(1, value);
+		//	}
+		//}
+
+		//public static void TestProc(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		//{
+		//	var ret = dataConnection.QueryProc("`test_proc`",
+		//		new DataParameter("aInParam", aInParam, DataType.VarChar));
+
+		//	aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+
+		//	return ret;
+		//}
+	}
+
+	internal static class MySqlTestFunctions
+	{
+		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
+		{
+			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
+				new DataParameter("param3", param3, DataType.Int32),
+				new DataParameter("param2", param2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("param1", null, DataType.Int32) { Direction = ParameterDirection.Output }).ToList();
+
+			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
+			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
+
+			return ret;
 		}
 	}
 }
