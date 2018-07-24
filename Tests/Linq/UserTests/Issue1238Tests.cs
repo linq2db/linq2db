@@ -21,7 +21,8 @@ namespace Tests.UserTests
 			[Column("TypeDiscriminator")]                         public int?   Data;
 		}
 
-		[Test, DataContextSource(false)]
+		// PostgreSQL disabled because it needs real primary key on database side
+		[Test, DataContextSource(false, ProviderName.PostgreSQL)]
 		public void TestInsertOrUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -61,7 +62,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		// PostgreSQL disabled because it needs real primary key on database side
+		[Test, DataContextSource(false, ProviderName.PostgreSQL)]
 		public void TestInsertOrReplace(string context)
 		{
 			using (var db = new TestDataConnection(context))
