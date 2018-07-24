@@ -706,11 +706,27 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
+				if (key.Column.CanBeNull)
+				{
+					StringBuilder.Append("(");
+					//Target.Name IS NULL AND Source.c1 IS NULL OR
+
+					StringBuilder.Append(targetAlias).Append('.');
+					BuildExpression(key.Column, false, false);
+					StringBuilder.Append(" IS NULL AND ");
+					StringBuilder.Append(sourceAlias).Append('.');
+					BuildExpression(key.Column, false, false);
+					StringBuilder.Append(" IS NULL OR ");
+				}
+
 				StringBuilder.Append(targetAlias).Append('.');
 				BuildExpression(key.Column, false, false);
 
 				StringBuilder.Append(" = ").Append(sourceAlias).Append('.');
 				BuildExpression(key.Column, false, false);
+
+				if (key.Column.CanBeNull)
+					StringBuilder.Append(")");
 
 				if (i + 1 < keys.Count)
 					StringBuilder.Append(" AND");
