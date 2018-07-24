@@ -284,6 +284,20 @@ namespace LinqToDB.DataProvider.MySql
 				.ToList();
 		}
 
+		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		{
+			var rv = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+
+			// for no good reason if procedure doesn't return table data but have output parameters, MySql provider
+			// returns fake schema with output parameters as columns
+			// we can detect it by column name prefix
+			// https://github.com/mysql/mysql-connector-net/blob/5864e6b21a8b32f5154b53d1610278abb3cb1cee/Source/MySql.Data/StoredProcedure.cs#L42
+			if (rv != null && rv.AsEnumerable().Any(r => r.Field<string>("ColumnName").StartsWith("@_cnet_param_")))
+				rv = null;
+
+			return rv;
+		}
+
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
 		{
 #if !NETSTANDARD

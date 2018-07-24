@@ -439,13 +439,13 @@ BEGIN
 	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
 END
 GO
-DROP PROCEDURE IF EXISTS `test_proc`
+DROP PROCEDURE IF EXISTS `TestOutputParametersWithoutTableProcedure`
 GO
-CREATE PROCEDURE `test_proc`(
+CREATE PROCEDURE `TestOutputParametersWithoutTableProcedure`(
 	IN `aInParam` VARCHAR(256),
 	OUT `aOutParam` TINYINT(1)
 )
 BEGIN
-	SELECT 1 INTO aOutParam;
+	SELECT 123 INTO aOutParam;
 END
 GO

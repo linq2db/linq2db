@@ -608,9 +608,10 @@ namespace Tests.DataProvider
 				yield return new ProcedureSchema()
 				{
 					CatalogName     = "SET_BY_TEST",
-					ProcedureName   = "test_proc",
-					MemberName      = "test_proc",
+					ProcedureName   = "TestOutputParametersWithoutTableProcedure",
+					MemberName      = "TestOutputParametersWithoutTableProcedure",
 					IsDefaultSchema = true,
+					IsLoaded        = true,
 					Parameters      = new List<ParameterSchema>()
 					{
 						new ParameterSchema()
@@ -629,7 +630,7 @@ namespace Tests.DataProvider
 							SchemaType    = "TINYINT",
 							IsOut         = true,
 							ParameterName = "aOutParam",
-							ParameterType = "sbyte",
+							ParameterType = "sbyte?",
 							SystemType    = typeof(sbyte),
 							DataType      = DataType.SByte
 						}
@@ -803,30 +804,32 @@ namespace Tests.DataProvider
 			}
 		}
 
-		//[Test, MySqlDataContext]
-		//public void TestSingleOutParameterFunction(string context)
-		//{
-		//	using (var db = GetDataContext(context))
-		//	{
-		//		db.TestProc("test", out var value);
+		[Test, MySqlDataContext(false)]
+		public void TestTestOutputParametersWithoutTableProcedure(string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var res = db.TestOutputParametersWithoutTableProcedure("test", out var outParam);
 
-		//		Assert.AreEqual(1, value);
-		//	}
-		//}
-
-		//public static void TestProc(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
-		//{
-		//	var ret = dataConnection.QueryProc("`test_proc`",
-		//		new DataParameter("aInParam", aInParam, DataType.VarChar));
-
-		//	aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
-
-		//	return ret;
-		//}
+				Assert.AreEqual(123, outParam);
+				Assert.AreEqual(1, res);
+			}
+		}
 	}
 
 	internal static class MySqlTestFunctions
 	{
+		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		{
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
+				new DataParameter("aInParam", aInParam, DataType.VarChar),
+				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
+
+			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+
+			return ret;
+		}
+
 		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
 		{
 			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",

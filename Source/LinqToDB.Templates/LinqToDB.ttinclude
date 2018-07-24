@@ -835,7 +835,7 @@ void GenerateTypesFromMetadata()
 
 					// we need to call ToList(), because otherwise output parameters will not be updated
 					// with values. See https://msdn.microsoft.com/en-us/library/ms971497#gazoutas_topic6
-					str += i + 1 == inOrOutputParameters.Count ? (outputParameters.Count > 0 ? ").ToList();" : ");") : ",";
+					str += i + 1 == inOrOutputParameters.Count ? (outputParameters.Count > 0 && p.ResultTable != null ? ").ToList();" : ");") : ",";
 
 					p.Body.Add(str);
 				}

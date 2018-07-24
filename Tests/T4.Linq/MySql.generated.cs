@@ -327,6 +327,21 @@ namespace MySqlDataContext
 
 		#endregion
 
+		#region TestOutputParametersWithoutTableProcedure
+
+		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		{
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
+				new DataParameter("aInParam", aInParam, DataType.VarChar),
+				new DataParameter("aOutParam", null, DataType.SByte)   { Direction = ParameterDirection.Output });
+
+			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
 		#region TestProcedure
 
 		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
@@ -340,26 +355,6 @@ namespace MySqlDataContext
 			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
 
 			return ret;
-		}
-
-		#endregion
-
-		#region TestProc
-
-		public static IEnumerable<TestProcResult> TestProc(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
-		{
-			var ret = dataConnection.QueryProc<TestProcResult>("`test_proc`",
-				new DataParameter("aInParam", aInParam, DataType.VarChar),
-				new DataParameter("aOutParam", null, DataType.SByte)   { Direction = ParameterDirection.Output }).ToList();
-
-			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
-
-			return ret;
-		}
-
-		public partial class TestProcResult
-		{
-			public long? @_cnet_param_aOutParam { get; set; }
 		}
 
 		#endregion
