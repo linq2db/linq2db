@@ -559,6 +559,9 @@ namespace LinqToDB.DataProvider
 				ex = ex != null ? Expression.AndAlso(ex, expr) : expr;
 			}
 
+			if (ex == null)
+				throw new LinqToDBException("Method OnTargetKey() needs at least one primary key column");
+
 			var target = _connection.GetTable<TTarget>();
 			var source = _connection.GetTable<TSource>();
 
