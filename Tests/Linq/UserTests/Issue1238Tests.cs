@@ -22,6 +22,7 @@ namespace Tests.UserTests
 		}
 
 		// PostgreSQL disabled because it needs real primary key on database side
+		[ActiveIssue(1239, Configuration = ProviderName.DB2)]
 		[Test, DataContextSource(false, ProviderName.PostgreSQL)]
 		public void TestInsertOrUpdate(string context)
 		{
