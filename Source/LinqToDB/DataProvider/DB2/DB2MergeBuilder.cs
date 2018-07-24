@@ -1,4 +1,7 @@
 ﻿using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -11,13 +14,29 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
-		protected override bool ProviderUsesAlternativeUpdate
+		// DB2 doesn't support INSERT FROM (well, except latest DB2 LUW version, but linq2db doesn't support it yet)
+		protected override bool ProviderUsesAlternativeUpdate => true;
+
+		protected override void AddSourceValue(ValueToSqlConverter valueConverter, ColumnDescriptor column, SqlDataType columnType, object value, bool isFirstRow)
 		{
-			get
+			if (value == null)
 			{
-				// DB2 doesn't support INSERT FROM (well, except latest DB2 LUW version, but linq2db doesn't support it yet)
-				return true;
+				/* DB2 doesn't like NULLs without type information
+				 : ERROR [42610] [IBM][DB2/NT64] SQL0418N  The statement was not processed because the statement
+				 contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword
+				 , or a null value.
+
+				See https://stackoverflow.com/questions/13381898
+
+				Unfortunatelly, just use typed parameter doesn't help too
+				*/
+				Command.Append("CAST(NULL AS ");
+				BuildColumnType(column, columnType);
+				Command.Append(")");
+				return;
 			}
+
+			base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
 		}
 	}
 }

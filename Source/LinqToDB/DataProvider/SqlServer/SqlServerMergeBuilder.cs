@@ -88,11 +88,10 @@ namespace LinqToDB.DataProvider.SqlServer
 					? columnType.DataType
 					: DataContext.MappingSchema.GetDataType(column.MemberType).DataType;
 
-
 				if (dataType == DataType.Binary || dataType == DataType.VarBinary)
 				{
 					// don't generate binary literal in source, as it could lead to huge SQL
-					AddSourceValueAsParameter(column.DataType, value);
+					AddSourceValueAsParameter(dataType, value);
 					return;
 				}
 			}

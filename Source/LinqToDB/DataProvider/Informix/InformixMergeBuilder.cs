@@ -121,25 +121,9 @@ namespace LinqToDB.DataProvider.Informix
 		private void WriteTypeHint(ColumnDescriptor column, SqlDataType columnType)
 		{
 			Command.Append("::");
-
-			if (column.DbType != null)
-				Command.Append(column.DbType);
-			else
-			{
-				if (columnType.DataType == DataType.Undefined)
-				{
-					columnType = DataContext.MappingSchema.GetDataType(column.StorageType);
-
-					if (columnType.DataType == DataType.Undefined)
-					{
-						var canBeNull = column.CanBeNull;
-
-						columnType = DataContext.MappingSchema.GetUnderlyingDataType(column.StorageType, ref canBeNull);
-					}
-				}
-
-				SqlBuilder.BuildTypeName(Command, columnType);
-			}
+			BuildColumnType(column, columnType);
 		}
+
+		
 	}
 }
