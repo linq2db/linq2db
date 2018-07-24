@@ -170,33 +170,6 @@ namespace LinqToDB.DataProvider
 			return query.Where(newPredicate);
 		}
 
-		private void BuildDefaultMatchPredicate()
-		{
-			var first = true;
-			var targetAlias = (string)SqlBuilder.Convert(_targetAlias, ConvertType.NameToQueryTableAlias);
-			var sourceAlias = (string)SqlBuilder.Convert(SourceAlias, ConvertType.NameToQueryTableAlias);
-
-			foreach (var column in TargetDescriptor.Columns.Where(c => c.IsPrimaryKey))
-			{
-				if (!first)
-					Command
-						.AppendLine(" AND")
-						.Append('\t')
-						;
-				else
-					first = false;
-
-				Command
-					.AppendFormat(
-						"{0}.{1} = {2}.{3}",
-						targetAlias, SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField),
-						sourceAlias, GetEscapedSourceColumnAlias(column.ColumnName));
-			}
-
-			if (first)
-				throw new LinqToDBException("Method OnTargetKey() needs at least one primary key column");
-		}
-
 		private void SetSourceColumnAliases(IQueryElement query, ISqlTableSource sourceTable)
 		{
 			new QueryVisitor().Visit(query, expr =>
@@ -560,17 +533,36 @@ namespace LinqToDB.DataProvider
 		{
 			Command.Append("ON (");
 
-			if (Merge.MatchPredicate != null)
-				BuildPredicateByTargetAndSource(Merge.MatchPredicate);
-			else if (Merge.KeyType != null)
+			if (Merge.KeyType != null)
 				BuildPredicateByKeys(Merge.KeyType, Merge.TargetKey, Merge.SourceKey);
 			else
-				BuildDefaultMatchPredicate();
+				BuildPredicateByTargetAndSource(Merge.MatchPredicate ?? MakeDefaultMatchPredicate());
 
 			while (Command[Command.Length - 1] == ' ')
 				Command.Length--;
 
 			Command.AppendLine(")");
+		}
+
+		protected Expression<Func<TTarget, TSource, bool>> MakeDefaultMatchPredicate()
+		{
+			var pTarget = Expression.Parameter(typeof(TTarget), _targetAlias);
+			var pSource = Expression.Parameter(typeof(TSource), SourceAlias);
+
+			Expression ex = null;
+
+			foreach (var column in TargetDescriptor.Columns.Where(c => c.IsPrimaryKey))
+			{
+				var expr = Expression.Equal(
+					Expression.MakeMemberAccess(pTarget, column.MemberInfo),
+					Expression.MakeMemberAccess(pSource, column.MemberInfo));
+				ex = ex != null ? Expression.AndAlso(ex, expr) : expr;
+			}
+
+			var target = _connection.GetTable<TTarget>();
+			var source = _connection.GetTable<TSource>();
+
+			return Expression.Lambda<Func<TTarget, TSource, bool>>(ex, pTarget, pSource);
 		}
 
 		protected virtual void BuildMergeInto()

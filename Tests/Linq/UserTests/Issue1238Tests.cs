@@ -8,6 +8,7 @@ namespace Tests.UserTests
 	using LinqToDB;
 	using LinqToDB.Mapping;
 	using Tests.Model;
+	using Tests.xUpdate;
 
 	[TestFixture]
 	public class Issue1238Tests : TestBase
@@ -23,10 +24,9 @@ namespace Tests.UserTests
 		[Test, DataContextSource(false)]
 		public void TestInsertOrUpdate(string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.BeginTransaction();
-
 				db.GetTable<TestTable>().Delete();
 
 				db.GetTable<TestTable>()
@@ -64,10 +64,9 @@ namespace Tests.UserTests
 		[Test, DataContextSource(false)]
 		public void TestInsertOrReplace(string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.BeginTransaction();
-
 				db.GetTable<TestTable>().Delete();
 
 				var record = new TestTable()
@@ -87,13 +86,12 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, MergeTests.MergeDataContextSource]
 		public void TestMerge(string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.BeginTransaction();
-
 				db.GetTable<TestTable>().Delete();
 
 				var record = new TestTable()
@@ -107,8 +105,8 @@ namespace Tests.UserTests
 					.Merge()
 					.Using(new[] { record })
 					.OnTargetKey()
-					.InsertWhenNotMatched()
 					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
 					.Merge();
 
 				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
@@ -117,21 +115,20 @@ namespace Tests.UserTests
 					.Merge()
 					.Using(new[] { record })
 					.OnTargetKey()
-					.InsertWhenNotMatched()
 					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
 					.Merge();
 
 				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, MergeTests.MergeDataContextSource]
 		public void TestMergeOnExplicit(string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
 			{
-				db.BeginTransaction();
-
 				db.GetTable<TestTable>().Delete();
 
 				var record = new TestTable()
@@ -145,8 +142,8 @@ namespace Tests.UserTests
 					.Merge()
 					.Using(new[] { record })
 					.On((t, s) => t.Key1 == s.Key1 && t.Key2 == s.Key2)
-					.InsertWhenNotMatched()
 					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
 					.Merge();
 
 				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
@@ -155,8 +152,8 @@ namespace Tests.UserTests
 					.Merge()
 					.Using(new[] { record })
 					.On((t, s) => t.Key1 == s.Key1 && t.Key2 == s.Key2)
-					.InsertWhenNotMatched()
 					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
 					.Merge();
 
 				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
