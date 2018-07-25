@@ -19,8 +19,14 @@
 		</summary>
 		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="Oracle.ManagedDataAccess" version="12.2.1100"/>
-			<dependency id="linq2db"                  version="2.2.0-*"/>
+			<group targetFramework="net40">
+				<dependency id="linq2db"                  version="2.2.0"/>
+				<dependency id="Oracle.ManagedDataAccess" version="12.2.1100"/>
+			</group>
+			<group targetFramework="netstandard2.0">
+				<dependency id="linq2db"                       version="2.2.0"/>
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.12.0-beta2"/>
+			</group>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
