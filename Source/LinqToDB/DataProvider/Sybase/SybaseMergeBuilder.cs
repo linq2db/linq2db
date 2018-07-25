@@ -77,32 +77,33 @@ namespace LinqToDB.DataProvider.Sybase
 			ColumnDescriptor    column,
 			SqlDataType         columnType,
 			object              value,
-			bool                isFirstRow)
+			bool                isFirstRow,
+			bool                isLastRow)
 		{
 			// strange thing, that real type needs explicit typing only on some combinations of columns and values
 			// from other side, for Sybase it is not surprising
 			if (column.DataType == DataType.Single || (column.DataType == DataType.Undefined && column.MemberType.ToNullableUnderlying() == typeof(float)))
 			{
 				Command.Append("CAST(");
-				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
 				Command.Append(" AS REAL)");
 			}
 			else if (column.DataType == DataType.DateTime || column.DataType == DataType.DateTime2)
 			{
 				Command.Append("CAST(");
-				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
 				Command.Append(" AS DATETIME)");
 			}
 			else if (column.DataType == DataType.Date)
 			{
 				Command.Append("CAST(");
-				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
 				Command.Append(" AS DATE)");
 			}
 			else if (column.DataType == DataType.Time)
 			{
 				Command.Append("CAST(");
-				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
 				Command.Append(" AS TIME)");
 			}
 			else if (isFirstRow && value == null)
@@ -164,10 +165,10 @@ namespace LinqToDB.DataProvider.Sybase
 						;
 				}
 				else
-					base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
+					base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
 			}
 			else
-				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
 		}
 	}
 }

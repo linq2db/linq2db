@@ -1255,6 +1255,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
+				var dbName            = TestUtils.GetDatabaseName(db);
 				var    inputID        = 1234;
 				var    inputStr       = "InputStr";
 				int?   outputID       = 5678;
@@ -1272,7 +1273,7 @@ namespace Tests.DataProvider
 					new DataParameter("@inputOutputStr", inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 }
 				};
 
-				var ret = db.ExecuteProc("[TestData]..[OutRefTest]", parameters);
+				var ret = db.ExecuteProc($"[{dbName}]..[OutRefTest]", parameters);
 
 				outputID       = Converter.ChangeTypeTo<int?>  (parameters[1].Value);
 				inputOutputID  = Converter.ChangeTypeTo<int?>  (parameters[2].Value);
@@ -1291,6 +1292,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			{
+				var dbName            = TestUtils.GetDatabaseName(db);
 				var    inputID        = 1234;
 				var    inputStr       = "InputStr";
 				int?   outputID       = 5678;
@@ -1308,7 +1310,7 @@ namespace Tests.DataProvider
 					new DataParameter("@inputOutputStr", inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 }
 				};
 
-				var ret = await db.ExecuteProcAsync("[TestData]..[OutRefTest]", parameters);
+				var ret = await db.ExecuteProcAsync($"[{dbName}]..[OutRefTest]", parameters);
 
 				outputID       = Converter.ChangeTypeTo<int?>  (parameters[1].Value);
 				inputOutputID  = Converter.ChangeTypeTo<int?>  (parameters[2].Value);
