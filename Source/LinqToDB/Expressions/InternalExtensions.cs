@@ -808,6 +808,13 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
+		public static Expression SkipPathThrough(this Expression expr)
+		{
+			while (expr is MethodCallExpression mce && mce.IsQueryable("AsQueryable"))
+				expr = mce.Arguments[0];
+			return expr;
+		}
+
 		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
 		{
 			var accessors = new Dictionary<Expression,Expression>();

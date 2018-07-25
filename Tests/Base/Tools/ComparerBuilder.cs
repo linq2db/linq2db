@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -125,8 +126,7 @@ namespace Tests.Tools
 			{
 				var arg0 = RemoveCastToObject(me.GetBody(x));
 				var arg1 = RemoveCastToObject(me.GetBody(y));
-
-				var eq = typeof(EqualityComparer<>).MakeGenericType(arg1.Type);
+				var eq = GetEqualityComparer(arg1.Type);
 				var pi = eq.GetPropertyEx("Default");
 				var mi = eq.GetMethodsEx().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
 
@@ -143,6 +143,17 @@ namespace Tests.Tools
 				.Compile();
 		}
 
+		private static Type GetEqualityComparer(Type type)
+		{
+			if (type.IsArray)
+				return typeof(ArrayEqualityComparer<>).MakeGenericType(type.GetElementType());
+
+			if (type == typeof(BitArray))
+				return typeof(BitArrayEqualityComparer);
+
+			return typeof(EqualityComparer<>).MakeGenericType(type);
+		}
+
 		private static Func<T, int> CreateGetHashCodeFunc(IEnumerable<LambdaExpression> membersToEval)
 		{
 			var parameter = Expression.Parameter(typeof(T), "parameter");
@@ -151,7 +162,7 @@ namespace Tests.Tools
 				(e, me) =>
 				{
 					var ma = RemoveCastToObject(me.GetBody(parameter));
-					var eq = typeof(EqualityComparer<>).MakeGenericType(ma.Type);
+					var eq = GetEqualityComparer(ma.Type);
 					var pi = eq.GetPropertyEx("Default");
 					var mi = eq.GetMethodsEx().Single(m => m.IsPublic && m.Name == "GetHashCode" && m.GetParameters().Length == 1);
 

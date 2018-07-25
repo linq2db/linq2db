@@ -29,9 +29,17 @@ namespace LinqToDB.Linq.Builder
 				set { }
 			}
 
-			public AssociatedTableContext(ExpressionBuilder builder, TableContext parent, AssociationDescriptor association)
+			public AssociatedTableContext(
+				[JetBrains.Annotations.NotNull] ExpressionBuilder     builder, 
+				[JetBrains.Annotations.NotNull] TableContext          parent,
+				[JetBrains.Annotations.NotNull] AssociationDescriptor association
+			)
 				: base(builder, parent.SelectQuery)
 			{
+				if (builder     == null) throw new ArgumentNullException(nameof(builder));
+				if (parent      == null) throw new ArgumentNullException(nameof(parent));
+				if (association == null) throw new ArgumentNullException(nameof(association));
+
 				var type = association.MemberInfo.GetMemberType();
 				var left = association.CanBeNull;
 
@@ -91,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 					var expr = Builder.ConvertExpression(ExpressionPredicate.Body.Unwrap());
 
 					Builder.BuildSearchCondition(
-						new ExpressionContext(null, new IBuildContext[] { parent, this }, ExpressionPredicate),
+						new ExpressionContext(parent.Parent, new IBuildContext[] { parent, this }, ExpressionPredicate),
 						expr,
 						join.JoinedTable.Condition.Conditions);
 				}

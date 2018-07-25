@@ -172,5 +172,19 @@ namespace Tests.Linq
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob"));
 			}
 		}
+
+		[Test, DataContextSource]
+		public void Test1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var dt = DateTime.Now;
+
+				if (context.Contains("Informix"))
+					dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
+
+				var list = db.Types.Where(t => t.DateTimeValue == Sql.ToSql(dt)).ToList();
+			}
+		}
 	}
 }

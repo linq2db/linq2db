@@ -22,6 +22,7 @@ namespace Tests.Tools
 		public string[] Providers;
 		public string   TraceLevel;
 		public string   DefaultConfiguration;
+		public string   NoLinqService;
 		public Dictionary<string,TestConnection> Connections = new Dictionary<string,TestConnection>();
 	}
 
@@ -43,6 +44,9 @@ namespace Tests.Tools
 
 				if (settings1.DefaultConfiguration == null)
 					settings1.DefaultConfiguration = settings2.DefaultConfiguration;
+
+				if (settings1.NoLinqService == null)
+					settings1.NoLinqService = settings2.NoLinqService;
 			}
 
 			var defaultSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(defaultJson);

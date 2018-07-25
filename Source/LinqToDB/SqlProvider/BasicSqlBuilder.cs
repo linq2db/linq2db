@@ -706,11 +706,27 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
+				if (key.Column.CanBeNull)
+				{
+					StringBuilder.Append("(");
+
+					StringBuilder.Append(targetAlias).Append('.');
+					BuildExpression(key.Column, false, false);
+					StringBuilder.Append(" IS NULL AND ");
+
+					StringBuilder.Append(sourceAlias).Append('.');
+					BuildExpression(key.Column, false, false);
+					StringBuilder.Append(" IS NULL OR ");
+				}
+
 				StringBuilder.Append(targetAlias).Append('.');
 				BuildExpression(key.Column, false, false);
 
 				StringBuilder.Append(" = ").Append(sourceAlias).Append('.');
 				BuildExpression(key.Column, false, false);
+
+				if (key.Column.CanBeNull)
+					StringBuilder.Append(")");
 
 				if (i + 1 < keys.Count)
 					StringBuilder.Append(" AND");
@@ -813,11 +829,23 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
+				if (expr.Column.CanBeNull)
+				{
+					StringBuilder.Append("(");
+
+					StringBuilder.Append(alias).Append('.');
+					BuildExpression(expr.Column, false, false);
+					StringBuilder.Append(" IS NULL OR ");
+				}
+
 				StringBuilder.Append(alias).Append('.');
 				BuildExpression(expr.Column, false, false);
 
 				StringBuilder.Append(" = ");
 				BuildExpression(Precedence.Comparison, expr.Expression);
+
+				if (expr.Column.CanBeNull)
+					StringBuilder.Append(")");
 
 				if (i + 1 < exprs.Count)
 					StringBuilder.Append(" AND");
@@ -3118,10 +3146,17 @@ namespace LinqToDB.SqlProvider
 
 		public string ApplyQueryHints(string sql, List<string> queryHints)
 		{
-			var sb = new StringBuilder(sql);
+			var sb = new StringBuilder();
 
 			foreach (var hint in queryHints)
-				sb.AppendLine(hint);
+				if (hint?.Length >= 2 && hint.StartsWith("**"))
+					sb.AppendLine(hint.Substring(2));
+
+			sb.Append(sql);
+
+			foreach (var hint in queryHints)
+				if (!(hint?.Length >= 2 && hint.StartsWith("**")))
+					sb.AppendLine(hint);
 
 			return sb.ToString();
 		}

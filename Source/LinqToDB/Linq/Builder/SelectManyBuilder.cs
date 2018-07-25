@@ -24,10 +24,7 @@ namespace LinqToDB.Linq.Builder
 			var collectionSelector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
-			if (!sequence.SelectQuery.GroupBy.IsEmpty         ||
-				sequence.SelectQuery.Select.TakeValue != null ||
-				sequence.SelectQuery.Select.SkipValue != null ||
-				sequence.SelectQuery.Select.IsDistinct)
+			if (sequence.SelectQuery.HasUnion || !sequence.SelectQuery.IsSimple)
 			{
 				sequence = new SubQueryContext(sequence);
 			}
@@ -141,13 +138,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var joinType = collectionInfo.JoinType;
-
-			if (joinType == JoinType.Full || joinType == JoinType.Right)
-			{
-				// Subquery is needed for FULL and RIGHT joins.
-				if (!sequence.SelectQuery.Where.IsEmpty)
-					sequence = new SubQueryContext(sequence);
-			}
 
 			if (collection is TableBuilder.TableContext table)
 			{
