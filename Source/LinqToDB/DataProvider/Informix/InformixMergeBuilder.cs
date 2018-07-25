@@ -72,7 +72,8 @@ namespace LinqToDB.DataProvider.Informix
 			ColumnDescriptor    column,
 			SqlDataType         columnType,
 			object              value,
-			bool                isFirstRow)
+			bool                isFirstRow,
+			bool                isLastRow)
 		{
 			// informix have really hard times to recognize it's own types, so in source we need to specify type
 			// hint for most of types

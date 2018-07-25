@@ -202,7 +202,8 @@ namespace LinqToDB.DataProvider
 			ColumnDescriptor    column,
 			SqlDataType         columnType,
 			object              value,
-			bool                isFirstRow)
+			bool                isFirstRow,
+			bool                isLastRow)
 		{
 			// avoid parameters in source due to low limits for parameters number in providers
 			if (!valueConverter.TryConvert(Command, columnType, value))
@@ -273,7 +274,7 @@ namespace LinqToDB.DataProvider
 					DataContext.MappingSchema.ValueToSqlConverter,
 					_sourceDescriptor.Columns[i],
 					columnTypes[i],
-					null, true);
+					null, true, true);
 
 				Command
 					.Append(" ")
@@ -333,35 +334,17 @@ namespace LinqToDB.DataProvider
 			var columnTypes    = GetSourceColumnTypes();
 			var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
 
+			TSource next = null;
 			foreach (var item in source)
 			{
-				if (hasData)
-					Command.AppendLine(",");
-				else
-					Command
-						.AppendLine("(")
-						.AppendLine("\tVALUES");
+				if (next != null)
+					BuildValues(ref hasData, columnTypes, valueConverter, next, false);
 
-				Command.Append("\t(");
-
-				for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
-				{
-					if (i > 0)
-						Command.Append(",");
-
-					var column = _sourceDescriptor.Columns[i];
-					var value  = column.GetValue(DataContext.MappingSchema, item);
-
-					AddSourceValue(valueConverter, column, columnTypes[i], value, hasData == false);
-
-					if (!SupportsColumnAliasesInTableAlias)
-						Command.AppendFormat(" {0}", CreateSourceColumnAlias(column.ColumnName, true));
-				}
-
-				Command.Append(")");
-
-				hasData = true;
+				next = item;
 			}
+
+			if (next != null)
+				BuildValues(ref hasData, columnTypes, valueConverter, next, true);
 
 			if (hasData)
 				BuildAsSourceClause(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
@@ -369,6 +352,36 @@ namespace LinqToDB.DataProvider
 				BuildEmptySource();
 			else
 				NoopCommand = true;
+		}
+
+		private void BuildValues(ref bool hasData, SqlDataType[] columnTypes, ValueToSqlConverter valueConverter, TSource item, bool lastRecord)
+		{
+			if (hasData)
+				Command.AppendLine(",");
+			else
+				Command
+					.AppendLine("(")
+					.AppendLine("\tVALUES");
+
+			Command.Append("\t(");
+
+			for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
+			{
+				if (i > 0)
+					Command.Append(",");
+
+				var column = _sourceDescriptor.Columns[i];
+				var value = column.GetValue(DataContext.MappingSchema, item);
+
+				AddSourceValue(valueConverter, column, columnTypes[i], value, !hasData, lastRecord);
+
+				if (!SupportsColumnAliasesInTableAlias)
+					Command.AppendFormat(" {0}", CreateSourceColumnAlias(column.ColumnName, true));
+			}
+
+			Command.Append(")");
+
+			hasData = true;
 		}
 
 		private void BuildSourceSubQuery(IQueryable<TSource> queryableSource)
@@ -436,43 +449,17 @@ namespace LinqToDB.DataProvider
 			var columnTypes    = GetSourceColumnTypes();
 			var valueConverter = DataContext.MappingSchema.ValueToSqlConverter;
 
+			TSource next = null;
 			foreach (var item in source)
 			{
-				if (hasData)
-					Command
-						.AppendLine()
-						.AppendLine("\tUNION ALL");
-				else
-					Command
-						.AppendLine("(");
+				if (next != null)
+					BuildValuesAsSelect(ref hasData, columnTypes, valueConverter, next, false);
 
-				Command.Append("\tSELECT ");
-
-				for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
-				{
-					if (i > 0)
-						Command.Append(", ");
-
-					var column = _sourceDescriptor.Columns[i];
-					var value  = column.GetValue(DataContext.MappingSchema, item);
-
-					AddSourceValue(valueConverter, column, columnTypes[i], value, hasData == false);
-
-					if (!SupportsColumnAliasesInTableAlias)
-						Command
-							.Append(" ")
-							.Append(hasData ? GetEscapedSourceColumnAlias(column.ColumnName) : CreateSourceColumnAlias(column.ColumnName, true))
-							;
-				}
-
-				hasData = true;
-
-				if (FakeSourceTable != null)
-				{
-					Command.Append(" FROM ");
-					AddFakeSourceTableName();
-				}
+				next = item;
 			}
+
+			if (next != null)
+				BuildValuesAsSelect(ref hasData, columnTypes, valueConverter, next, true);
 
 			if (hasData)
 				BuildAsSourceClause(_sourceDescriptor.Columns.Select(_ => _.ColumnName));
@@ -480,6 +467,44 @@ namespace LinqToDB.DataProvider
 				BuildEmptySource();
 			else
 				NoopCommand = true;
+		}
+
+		private void BuildValuesAsSelect(ref bool hasData, SqlDataType[] columnTypes, ValueToSqlConverter valueConverter, TSource item, bool lastItem)
+		{
+			if (hasData)
+				Command
+					.AppendLine()
+					.AppendLine("\tUNION ALL");
+			else
+				Command
+					.AppendLine("(");
+
+			Command.Append("\tSELECT ");
+
+			for (var i = 0; i < _sourceDescriptor.Columns.Count; i++)
+			{
+				if (i > 0)
+					Command.Append(", ");
+
+				var column = _sourceDescriptor.Columns[i];
+				var value = column.GetValue(DataContext.MappingSchema, item);
+
+				AddSourceValue(valueConverter, column, columnTypes[i], value, !hasData, lastItem);
+
+				if (!SupportsColumnAliasesInTableAlias)
+					Command
+						.Append(" ")
+						.Append(hasData ? GetEscapedSourceColumnAlias(column.ColumnName) : CreateSourceColumnAlias(column.ColumnName, true))
+						;
+			}
+
+			hasData = true;
+
+			if (FakeSourceTable != null)
+			{
+				Command.Append(" FROM ");
+				AddFakeSourceTableName();
+			}
 		}
 
 		private string GetEscapedSourceColumnAlias(string columnName)
