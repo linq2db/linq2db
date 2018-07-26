@@ -437,5 +437,21 @@ namespace Tests.xUpdate
 			}
 		}
 		#endregion
+
+		[Test, IncludeDataContextSource(ProviderName.DB2)]
+		public void TestDB2NullsInSource(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.GetTable<MergeTypes>()
+					.TableName("TestMerge1")
+					.Merge()
+					.Using(new[] { new MergeTypes() { Id = 1 }, new MergeTypes() { Id = 2 } })
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
+			}
+		}
 	}
 }

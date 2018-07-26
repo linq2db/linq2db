@@ -180,6 +180,13 @@ namespace LinqToDB.Common
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// </summary>
 			public static bool PreferApply = true;
+
+			/// <summary>
+			/// Allows SQL generation to automatically transform
+			/// <code>SELECT DICTINCT value FROM Table ORDER BY date</code>
+			/// Into GROUP BY equivalent if syntax is not supported
+			/// </summary>
+			public static bool KeepDistinctOrdered = true;
 		}
 
 		/// <summary>

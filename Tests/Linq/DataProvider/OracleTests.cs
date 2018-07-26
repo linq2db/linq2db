@@ -23,6 +23,7 @@ using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
+	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]
@@ -2210,5 +2211,42 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table("AllTypes")]
+		public class TestIdentifiersTable1
+		{
+			[Column]
+			public int Id { get; set; }
+		}
+
+		[Table("ALLTYPES")]
+		public class TestIdentifiersTable2
+		{
+			[Column("ID")]
+			public int Id { get; set; }
+		}
+
+		[Test, OracleDataContext]
+		public void TestLowercaseIdentifiersQuotation(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var initial = OracleTools.DontEscapeLowercaseIdentifiers;
+				try
+				{
+					OracleTools.DontEscapeLowercaseIdentifiers = true;
+					db.GetTable<TestIdentifiersTable1>().ToList();
+					db.GetTable<TestIdentifiersTable2>().ToList();
+
+					Query.ClearCaches();
+					OracleTools.DontEscapeLowercaseIdentifiers = false;
+					Assert.Throws<OracleException>(() => db.GetTable<TestIdentifiersTable1>().ToList());
+					db.GetTable<TestIdentifiersTable2>().ToList();
+				}
+				finally
+				{
+					OracleTools.DontEscapeLowercaseIdentifiers = initial;
+				}
+			}
+		}
 	}
 }

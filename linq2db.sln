@@ -65,6 +65,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{6278F811
 		build.sh = build.sh
 		Clean.cmd = Clean.cmd
 		CONTRIBUTING.md = CONTRIBUTING.md
+		.github\ISSUE_TEMPLATE.md = .github\ISSUE_TEMPLATE.md
 		MIT-LICENSE.txt = MIT-LICENSE.txt
 	EndProjectSection
 EndProject

@@ -244,7 +244,10 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2014)] public void Sql2014          (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
 		[Test, IncludeDataContextSource(TestProvName.SqlAzure)]      public void SqlAzure2012     (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");                }
 		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]      public void SQLiteMS         (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction);   }
-		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]      public void SQLiteMSData     (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);   }
+		[Test, IncludeDataContextSource(ProviderName.SQLiteMS)]      public void SQLiteMSData     (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
+#if !NETSTANDARD1_6
+		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void Oracle           (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle"); }
+#endif
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0
 
@@ -254,7 +257,7 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.SybaseManaged)] public void SybaseManaged    (string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase",   null,          "TestDataCore"); }
 		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2              (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");                                     }
 		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix         (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction);                }
-		[Test, IncludeDataContextSource(ProviderName.OracleManaged)] public void Oracle           (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");                                  }
+		
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCe            (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");                                   }
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCeData        (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");                                   }
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access           (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction);                  }
