@@ -313,8 +313,9 @@ namespace LinqToDB.DataProvider.Oracle
 			// Also we should allow only uppercase letters:
 			// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
 			return !IsReserved(name) &&
-				(name[0] >= 'A' && name[0] <= 'Z') &&
+				((OracleTools.DontEscapeLowercaseIdentifiers && name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
 				name.All(c =>
+					(OracleTools.DontEscapeLowercaseIdentifiers && c >= 'a' && c <= 'z') ||
 					(c >= 'A' && c <= 'Z') ||
 					(c >= '0' && c <= '9') ||
 					c == '$' ||
