@@ -310,10 +310,12 @@ namespace LinqToDB.DataProvider.Oracle
 			// https://docs.oracle.com/cd/B28359_01/server.111/b28286/sql_elements008.htm#SQLRF00223
 			// TODO: "Nonquoted identifiers can contain only alphanumeric characters from your database character set"
 			// now we check only for latin letters
+			// Also we should allow only uppercase letters:
+			// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
 			return !IsReserved(name) &&
-				((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
+				((OracleTools.DontEscapeLowercaseIdentifiers && name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
 				name.All(c =>
-					(c >= 'a' && c <= 'z') ||
+					(OracleTools.DontEscapeLowercaseIdentifiers && c >= 'a' && c <= 'z') ||
 					(c >= 'A' && c <= 'Z') ||
 					(c >= '0' && c <= '9') ||
 					c == '$' ||
