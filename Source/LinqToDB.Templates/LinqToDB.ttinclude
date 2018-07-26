@@ -42,6 +42,8 @@ static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, stri
 
 void GenerateTypesFromMetadata()
 {
+	DataContextObject.Members.Add(new Method("void", "InitMappingSchema"));
+
 	BeforeGenerateLinqToDBModel();
 
 	Model.Usings.Add("LinqToDB");
@@ -75,6 +77,33 @@ void GenerateTypesFromMetadata()
 			TableFunctions  = new MemberGroup { Region = "Table Functions" },
 		}
 	).ToDictionary(t => t.Name);
+
+	var procSchemas =
+	(
+		from p in Procedures.Values
+		where GenerateSchemaAsType && p.Schema != null && !p.IsDefaultSchema && !schemas.ContainsKey(p.Schema)
+		group p by p.Schema into gr
+		orderby gr.Key
+		let typeName = SchemaNameMapping.TryGetValue(gr.Key, out schemaName) ? schemaName : gr.Key
+		select new
+		{
+			Name            = gr.Key,
+			TypeName        = typeName + SchemaNameSuffix,
+			PropertyName    = typeName,
+			Props           = new MemberGroup { IsCompact = true },
+			Aliases         = new MemberGroup { IsCompact = true, Region = "Alias members" },
+			TableExtensions = new MemberGroup { Region = "Table Extensions" },
+			Type            = new Class(typeName + SchemaNameSuffix) { IsStatic = true },
+			Tables          = new List<Table>(),
+			DataContext     = new Class(SchemaDataContextTypeName),
+			Procedures      = new MemberGroup(),
+			Functions       = new MemberGroup(),
+			TableFunctions  = new MemberGroup { Region = "Table Functions" },
+		}
+	).ToDictionary(s => s.Name);
+
+	foreach(var schema in procSchemas)
+		schemas.Add(schema.Key, schema.Value);
 
 	var defProps           = new MemberGroup { IsCompact = true };
 	var defAliases         = new MemberGroup { IsCompact = true, Region = "Alias members" };
@@ -116,6 +145,7 @@ void GenerateTypesFromMetadata()
 				c.Body.Add("InitSchemas();");
 
 			c.Body.Add("InitDataContext();");
+			c.Body.Add("InitMappingSchema();");
 
 			DataContextObject.Members.Add(c);
 		}
@@ -609,6 +639,9 @@ void GenerateTypesFromMetadata()
 		if (Procedures.Values.Any(p => p.IsTableFunction))
 			Model.Usings.Add("System.Reflection");
 
+		if (Procedures.Values.Any(p => p.IsAggregateFunction))
+			Model.Usings.Add("System.Linq.Expressions");
+
 		var procs = new MemberGroup();
 		var funcs = new MemberGroup();
 		var tabfs = new MemberGroup { Region = "Table Functions" };
@@ -663,11 +696,28 @@ void GenerateTypesFromMetadata()
 
 				p.Type = "ITable<" + p.ResultTable.TypeName + ">";
 			}
+			else if (p.IsAggregateFunction)
+			{
+				p.IsStatic = true;
+				p.Type = p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
+				var paramCount = p.ProcParameters.Count(pr => !pr.IsResult);
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + (p.Schema != null ? "." : null) + p.ProcedureName + "\"", "ServerSideOnly=true, IsAggregate = true" + (paramCount > 0 ? (", ArgIndices = new[] { " + string.Join(", ", Enumerable.Range(0, p.ProcParameters.Count(pr => !pr.IsResult))) + " }") : null)));
+
+				if (p.IsDefaultSchema || !GenerateSchemaAsType)
+					p.Parameters.Add("this IEnumerable<TSource> src");
+				else // otherwise function will be generated in nested class, which doesn't support extension methods
+					p.Parameters.Add("IEnumerable<TSource> src");
+
+				foreach (var inp in p.ProcParameters.Where(pr => !pr.IsResult))
+					p.Parameters.Add($"Expression<Func<TSource, {inp.ParameterType}>> " + inp.ParameterName);
+
+				p.Name += "<TSource>";
+			}
 			else if (p.IsFunction)
 			{
 				p.IsStatic = true;
 				p.Type = p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + p.Schema + "."  + p.ProcedureName + "\"", "ServerSideOnly=true"));
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + (p.Schema != null ? "." : null)  + p.ProcedureName + "\"", "ServerSideOnly=true"));
 			}
 			else
 			{
@@ -676,9 +726,10 @@ void GenerateTypesFromMetadata()
 				p.Parameters.Add("this DataConnection dataConnection");
 			}
 
-			foreach (var pr in p.ProcParameters.Where(par => !par.IsResult))
-				p.Parameters.Add(string.Format("{0}{1} {2}",
-					pr.IsOut ? pr.IsIn ? "ref " : "out " : "", pr.ParameterType, pr.ParameterName));
+			if (!p.IsAggregateFunction)
+				foreach (var pr in p.ProcParameters.Where(par => !par.IsResult))
+					p.Parameters.Add(string.Format("{0}{1} {2}",
+						pr.IsOut ? pr.IsIn ? "ref " : "out " : "", pr.ParameterType, pr.ParameterName));
 
 			if (p.IsTableFunction)
 			{
@@ -707,8 +758,9 @@ void GenerateTypesFromMetadata()
 
 				spName = "\"" + spName.Replace("\"", "\\\"") + "\"";
 
-				var inputParameters  = p.ProcParameters.Where(pp => pp.IsIn). ToList();
-				var outputParameters = p.ProcParameters.Where(pp => pp.IsOut).ToList();
+				var inputParameters      = p.ProcParameters.Where(pp => pp.IsIn).            ToList();
+				var outputParameters     = p.ProcParameters.Where(pp => pp.IsOut).           ToList();
+				var inOrOutputParameters = p.ProcParameters.Where(pp => pp.IsIn || pp.IsOut).ToList();
 
 				spName += inputParameters.Count == 0 ? ");" : ",";
 
@@ -756,11 +808,14 @@ void GenerateTypesFromMetadata()
 				var maxLenParam  = inputParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
 				var maxLenType   = inputParameters.Max(pr => (int?)("DataType." + pr.DataType).Length) ?? 0;
 
-				for (var i = 0; i < inputParameters.Count; i++)
+				for (var i = 0; i < inOrOutputParameters.Count; i++)
 				{
-					var pr = inputParameters[i];
+					var pr = inOrOutputParameters[i];
 
-					var str = string.Format("\tnew DataParameter(\"{0}\", {1}{2}, {3}{4})",
+					var str = string.Format(
+						!pr.IsIn && pr.IsOut
+							? "\tnew DataParameter(\"{0}\", null, {3}{4})"
+							: "\tnew DataParameter(\"{0}\", {1}{2}, {3}{4})",
 						pr.SchemaName,
 						LenDiff(maxLenSchema, pr.SchemaName),
 						pr.ParameterName,
@@ -778,7 +833,9 @@ void GenerateTypesFromMetadata()
 						str += " }";
 					}
 
-					str += i + 1 == inputParameters.Count ? ");" : ",";
+					// we need to call ToList(), because otherwise output parameters will not be updated
+					// with values. See https://msdn.microsoft.com/en-us/library/ms971497#gazoutas_topic6
+					str += i + 1 == inOrOutputParameters.Count ? (outputParameters.Count > 0 && p.ResultTable != null ? ").ToList();" : ");") : ",";
 
 					p.Body.Add(str);
 				}
@@ -834,6 +891,10 @@ void GenerateTypesFromMetadata()
 		if (tabfs.Members.Count > 0)
 			DataContextObject.Members.Add(tabfs);
 
+		MakeTypeMembersNamesUnique(DataContextObject);
+		foreach (var type in Model.Types.OfType<Class>())
+			MakeTypeMembersNamesUnique(type);
+
 		foreach (var schema in schemas.Values)
 		{
 			if (schema.Procedures.Members.Count > 0)
@@ -844,6 +905,10 @@ void GenerateTypesFromMetadata()
 
 			if (schema.TableFunctions.Members.Count > 0)
 				schema.DataContext.Members.Add(schema.TableFunctions);
+
+			MakeTypeMembersNamesUnique(schema.DataContext);
+			foreach (var type in schema.Type.Members.OfType<Class>())
+				MakeTypeMembersNamesUnique(type);
 		}
 	}
 
@@ -870,6 +935,37 @@ void GenerateTypesFromMetadata()
 	Model.SetTree();
 
 	AfterGenerateLinqToDBModel();
+}
+
+void MakeTypeMembersNamesUnique(Class type, string defaultName = "Member")
+{
+	LinqToDB.Common.Utils.MakeUniqueNames(
+		GetAllClassMembers(type.Members),
+		new [] { type.Name, "InitDataContext", "InitMappingSchema" },
+		m => m is TypeBase t ? t.Name : ((MemberBase)m).Name,
+		(m, newName) =>
+		{
+			if (m is TypeBase t)
+				t.Name = newName;
+			else
+				((MemberBase)m).Name = newName;
+		},
+		defaultName);
+}
+
+IEnumerable<IClassMember> GetAllClassMembers(IEnumerable<IClassMember> members)
+{
+	foreach (var member in members)
+	{
+		if (member is MemberGroup mg)
+			foreach (var m in GetAllClassMembers(mg.Members))
+				yield return m;
+		// constructors don't have own type/flag
+		else if (member is Method method && (method.Type == null || method.Name == "InitDataContext" || method.Name == "InitMappingSchema"))
+			continue;
+		else
+			yield return member;
+	}
 }
 
 string NormalizeStringName(string name)

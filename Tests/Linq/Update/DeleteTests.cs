@@ -383,7 +383,7 @@ namespace Tests.xUpdate
 			using (var table = db.CreateTempTable<Person>(tableName, schemaName: schemaName))
 			{
 				var iTable = (ITable<Person>)table;
-				Assert.AreEqual(tableName, iTable.TableName);
+				Assert.AreEqual(tableName,  iTable.TableName);
 				Assert.AreEqual(schemaName, iTable.SchemaName);
 
 				var person = new Person()

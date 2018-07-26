@@ -30,6 +30,8 @@ namespace LinqToDB.SchemaProvider
 			return null;
 		}
 
+		// TODO: get rid of list and use dictionary, because now we perform joins on this property and it will produce
+		// invalid results if list contains duplicates
 		protected List<DataTypeInfo> DataTypes;
 		protected HashSet<string>    IncludedSchemas;
 		protected HashSet<string>    ExcludedSchemas;
@@ -223,6 +225,7 @@ namespace LinqToDB.SchemaProvider
 							MemberName          = ToValidName(sp.ProcedureName),
 							IsFunction          = sp.IsFunction,
 							IsTableFunction     = sp.IsTableFunction,
+							IsResultDynamic     = sp.IsResultDynamic,
 							IsAggregateFunction = sp.IsAggregateFunction,
 							IsDefaultSchema     = sp.IsDefaultSchema,
 							Parameters          =
@@ -270,7 +273,7 @@ namespace LinqToDB.SchemaProvider
 					{
 						foreach (var procedure in procedures)
 						{
-							if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
+							if (!procedure.IsResultDynamic && (!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 							{
 								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
 									 procedure.CatalogName,
@@ -338,6 +341,25 @@ namespace LinqToDB.SchemaProvider
 			return null;
 		}
 
+		/// <summary>
+		/// Builds table function call command.
+		/// </summary>
+		protected virtual string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			commandText = "SELECT * FROM " + commandText + "(";
+
+			for (var i = 0; i < procedure.Parameters.Count; i++)
+			{
+				if (i != 0)
+					commandText += ",";
+				commandText += "NULL";
+			}
+
+			commandText += ")";
+
+			return commandText;
+		}
+
 		protected virtual void LoadProcedureTableSchema(
 			DataConnection dataConnection, ProcedureSchema procedure, string commandText, List<TableSchema> tables)
 		{
@@ -346,16 +368,7 @@ namespace LinqToDB.SchemaProvider
 
 			if (procedure.IsTableFunction)
 			{
-				commandText = "SELECT * FROM " + commandText + "(";
-
-				for (var i = 0; i < procedure.Parameters.Count; i++)
-				{
-					if (i != 0)
-						commandText += ",";
-					commandText += "NULL";
-				}
-
-				commandText += ")";
+				commandText = BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
 				commandType = CommandType.Text;
 				parameters  = new DataParameter[0];
 			}

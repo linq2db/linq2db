@@ -45,21 +45,21 @@ namespace Tests
 		[Sql.Expression("current_schema", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
 		[Sql.Expression("current server", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
-		[Sql.Function("DATABASE", ServerSideOnly = true, Configuration = ProviderName.MySql)]
-		[Sql.Function("DB_NAME", ServerSideOnly = true)]
+		[Sql.Function("DATABASE"        , ServerSideOnly = true, Configuration = ProviderName.MySql)]
+		[Sql.Function("DB_NAME"         , ServerSideOnly = true)]
 		private static string DbName()
 		{
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Expression("user", ServerSideOnly = true, Configuration = ProviderName.Informix)]
-		[Sql.Expression("user", ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
-		[Sql.Expression("user", ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
-		[Sql.Expression("current_user", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
+		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Informix)]
+		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
+		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
+		[Sql.Expression("current_user"  , ServerSideOnly = true, Configuration = ProviderName.SapHana)]
 		[Sql.Expression("current schema", ServerSideOnly = true, Configuration = ProviderName.DB2)]
-		[Sql.Function("current_schema", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
-		[Sql.Function("USER_NAME", ServerSideOnly = true, Configuration = ProviderName.Sybase)]
-		[Sql.Function("SCHEMA_NAME", ServerSideOnly = true)]
+		[Sql.Function("current_schema"  , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
+		[Sql.Function("USER_NAME"       , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
+		[Sql.Function("SCHEMA_NAME"     , ServerSideOnly = true)]
 		private static string SchemaName()
 		{
 			throw new InvalidOperationException();

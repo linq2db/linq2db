@@ -25,6 +25,8 @@ namespace Tests
 		readonly bool     _includeLinqService;
 		readonly string[] _providerNames;
 
+		public static bool NoLinqService;
+
 		internal const string ProviderProperty      = "linq2db.provider";
 		internal const string ConfigurationProperty = "linq2db.configuration";
 		internal const string IsLinqServiceProperty = "linq2db.is.wcf";
@@ -142,7 +144,7 @@ namespace Tests
 				}
 
 #if !NETSTANDARD1_6 && !NETSTANDARD2_0 && !MONO
-				if (!isIgnore && _includeLinqService)
+				if (!isIgnore && _includeLinqService && !NoLinqService)
 				{
 					var linqCaseNumber = 0;
 					var providerBase = provider;

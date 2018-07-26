@@ -8,7 +8,8 @@ namespace LinqToDB.SchemaProvider
 	public class ProcedureInfo
 	{
 		/// <summary>
-		/// Gets or sets fully-qualified procedure name.
+		/// Gets or sets unique procedure identifier.
+		/// NOTE: this is not fully-qualified procedure name (even if it used right now for some providers as procedure identifier).
 		/// </summary>
 		public string ProcedureID;
 		/// <summary>
@@ -36,12 +37,16 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		public bool   IsAggregateFunction;
 		/// <summary>
-		/// Get or sets glag, indicating that procedure belongs to default schema/owner.
+		/// Get or sets flag, indicating that procedure belongs to default schema/owner.
 		/// </summary>
 		public bool   IsDefaultSchema;
 		/// <summary>
 		/// Gets or sets procedure source code.
 		/// </summary>
 		public string ProcedureDefinition;
+		/// <summary>
+		/// Get or sets flag, indicating that procedure returns dynamic (generic) result.
+		/// </summary>
+		public bool IsResultDynamic;
 	}
 }

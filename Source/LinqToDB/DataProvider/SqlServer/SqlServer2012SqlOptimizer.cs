@@ -11,10 +11,10 @@
 
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
-			if (statement.SelectQuery != null)
-				CorrectSkip(statement.SelectQuery);
-
-			return base.Finalize(statement);
+			var result = base.Finalize(statement);
+			if (result.SelectQuery != null)
+				CorrectSkip(result.SelectQuery);
+			return result;
 		}
 
 		private void CorrectSkip(SelectQuery selectQuery)

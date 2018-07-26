@@ -301,7 +301,7 @@ namespace LinqToDB.Mapping
 		/// Extracts column value, converted to database type, from entity object.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema with conversion information.</param>
-		/// <param name="obj">Enity object to extract column value from.</param>
+		/// <param name="obj">Entity object to extract column value from.</param>
 		/// <returns>Returns column value, converted to database type.</returns>
 		public virtual object GetValue(MappingSchema mappingSchema, object obj)
 		{
@@ -314,7 +314,12 @@ namespace LinqToDB.Mapping
 
 				if (expr != null)
 				{
-					getterExpr = Expression.PropertyOrField(expr.GetBody(getterExpr), "Value");
+					var variable = Expression.Variable(typeof(DataParameter), "p");
+					getterExpr = Expression.Block(new[] { variable },
+						Expression.Assign(variable, expr.GetBody(getterExpr)),
+						Expression.Condition(Expression.NotEqual(variable, Expression.Constant(null)),
+							Expression.PropertyOrField(variable, "Value"), Expression.Constant(null))
+					);
 				}
 				else
 				{

@@ -10,8 +10,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.1.0
-  packageVersion: 2.1.0
+  assemblyVersion: 2.2.0
+  packageVersion: 2.2.0
   docfxuser: "ili"
   docfxmail: "docfx@linq2db.com"
   docfxsecret:

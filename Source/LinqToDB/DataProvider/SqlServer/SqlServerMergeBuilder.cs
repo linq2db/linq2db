@@ -77,10 +77,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void AddSourceValue(
 			ValueToSqlConverter valueConverter,
-			ColumnDescriptor column,
-			SqlDataType columnType,
-			object value,
-			bool isFirstRow)
+			ColumnDescriptor    column,
+			SqlDataType         columnType,
+			object              value,
+			bool                isFirstRow,
+			bool                isLastRow)
 		{
 			if (value != null)
 			{
@@ -88,16 +89,15 @@ namespace LinqToDB.DataProvider.SqlServer
 					? columnType.DataType
 					: DataContext.MappingSchema.GetDataType(column.MemberType).DataType;
 
-
 				if (dataType == DataType.Binary || dataType == DataType.VarBinary)
 				{
 					// don't generate binary literal in source, as it could lead to huge SQL
-					AddSourceValueAsParameter(column.DataType, value);
+					AddSourceValueAsParameter(dataType, value);
 					return;
 				}
 			}
 
-			base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
+			base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
 		}
 	}
 }

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.Firebird</id>
-		<version>2.1.0</version>
+		<version>2.2.0</version>
 		<title>LINQ to Firebird</title>
 		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
 		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
@@ -19,7 +19,7 @@
 		<tags>linq linq2db Firebird LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="FirebirdSql.Data.FirebirdClient" version="5.12.1"/>
-			<dependency id="linq2db"                         version="2.1.0-*"/>
+			<dependency id="linq2db"                         version="2.2.0-*"/>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>
