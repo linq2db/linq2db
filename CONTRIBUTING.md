@@ -268,13 +268,15 @@ If you want to skip building commit by CI (for example you have changed *.md fil
 
 ## Building releases
 
-1. Update `.\NuGet\Readme.txt` file (append release notes)
+1. Update [Release Notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap) and create empty entry for vNext release
 1. Create PR from `master` to `release` branch, in comments add [@testers](https://github.com/linq2db/linq2db/wiki/How-can-i-help#testing-how-to) to notify all testers that we are ready to release
 1. Wait few days for feedback from testers and approval from contributors
 1. Merge PR
 1. [Tag release](https://github.com/linq2db/linq2db/releases)
 1. Update versions in `master` branch (this will lead to publish all next `master` builds as new version RC):
    * in [.\appveyor.yml](https://github.com/linq2db/linq2db/blob/master/appveyor.yml) set `assemblyVersion` parameter
+   * in *.nuspec files update linq2db dependency version
+   * in issue template update default linq2db version
 
 ## Process
 
