@@ -133,8 +133,8 @@ namespace Tests
 				File.Copy(file, destination, true);
 			}
 
-			UserProviders  = new HashSet<string>(testSettings.Providers, StringComparer.OrdinalIgnoreCase);
-			SkipCategories = new HashSet<string>(testSettings.Skip,      StringComparer.OrdinalIgnoreCase);
+			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			SkipCategories = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 
 			var logLevel   = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
