@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
+	<metadata minClientVersion="3.3.0">
 		<id>linq2db.t4models</id>
 		<version>2.3.0</version>
 		<title>LINQ to DB T4 Models</title>
@@ -19,10 +19,16 @@
 		<dependencies>
 			<dependency id="linq2db" version="2.3.0"/>
 		</dependencies>
+		<contentFiles>
+			<files include="**\*" buildAction="None"/>
+		</contentFiles>
 	</metadata>
 	<files>
 		<file src="Init.ps1"                                         target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll" target="tools" />
+
+		<file src="..\Source\LinqToDB.Templates\*.*"                 target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="t4models\*.*"                                     target="contentFiles\any\any\LinqToDB.Templates" />
 
 		<file src="..\Source\LinqToDB.Templates\*.*"                 target="content\LinqToDB.Templates" />
 		<file src="t4models\*.*"                                     target="content\LinqToDB.Templates" />
