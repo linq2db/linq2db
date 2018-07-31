@@ -164,7 +164,15 @@ The `[User]DataProviders.json` is a regular JSON file:
             "Sybase",
             "Northwind",
             "TestNoopProvider"
-        ]
+        ],
+
+        // list of test skip categories, disabled for current test configuration
+	// to set test skip category, use SkipCategoryAttribute on test method, class or whole assembly
+        "Skip"                 :
+	[
+	    "Access.12"
+	]
+
     },
 
     // .net core 1.0 test configuration
