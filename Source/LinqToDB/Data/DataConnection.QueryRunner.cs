@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data
 {
 	using Linq;
+	using Common;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -242,7 +243,7 @@ namespace LinqToDB.Data
 							parm.SystemType).DataType;
 				}
 
-				dataConnection.DataProvider.SetParameter(p, name, dataType, parmValue);
+				dataConnection.DataProvider.SetParameter(p, name, new DbDataType(parm.SystemType, dataType, parm.DbType), parmValue);
 
 				parms.Add(p);
 			}

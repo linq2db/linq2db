@@ -127,16 +127,26 @@ namespace LinqToDB.Mapping
 
 		ConvertInfo _convertInfo;
 
-		public void SetConvertInfo(Type from, Type to, ConvertInfo.LambdaInfo expr)
+		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr)
 		{
 			if (_convertInfo == null)
 				_convertInfo = new ConvertInfo();
 			_convertInfo.Set(from, to, expr);
 		}
 
+		public void SetConvertInfo(Type from, Type to, ConvertInfo.LambdaInfo expr)
+		{
+			SetConvertInfo(new DbDataType(from), new DbDataType(to), expr);
+		}
+
 		public ConvertInfo.LambdaInfo GetConvertInfo(Type from, Type to)
 		{
-			return _convertInfo == null ? null : _convertInfo.Get(@from, to);
+			return _convertInfo == null ? null : _convertInfo.Get(from, to);
+		}
+
+		public ConvertInfo.LambdaInfo GetConvertInfo(DbDataType from, DbDataType to)
+		{
+			return _convertInfo == null ? null : _convertInfo.Get(from, to);
 		}
 
 		private ConcurrentDictionary<object,Func<object,object>> _converters;

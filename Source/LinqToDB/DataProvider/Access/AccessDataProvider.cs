@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 namespace LinqToDB.DataProvider.Access
 {
 	using Configuration;
+	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;
@@ -88,12 +89,12 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSchemaProvider();
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			// Do some magic to workaround 'Data type mismatch in criteria expression' error
 			// in JET for some european locales.
 			//
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				// OleDbType.Decimal is locale aware, OleDbType.Currency is locale neutral.
 				//

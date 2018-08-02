@@ -81,7 +81,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				if (!valueConverter.TryConvert(Command, columnType, value))
 				{
-					AddSourceValueAsParameter(column.DataType, value);
+					AddSourceValueAsParameter(column.DataType, column.DbType, value);
 
 					// even for parameters
 					WriteTypeHint(column, columnType);

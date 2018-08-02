@@ -30,6 +30,7 @@ namespace LinqToDB.SqlQuery
 		public Type     SystemType       { get; set; }
 		public bool     IsQueryParameter { get; set; }
 		public DataType DataType         { get; set; }
+		public string   DbType           { get; set; }
 		public int      DbSize           { get; set; }
 		public string   LikeStart        { get; set; }
 		public string   LikeEnd          { get; set; }

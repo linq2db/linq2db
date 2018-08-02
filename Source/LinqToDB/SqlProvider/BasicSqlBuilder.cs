@@ -2208,14 +2208,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlValue:
 					var sqlval = (SqlValue)expr;
-					var dt = sqlval.SystemType == null ? null : new SqlDataType(sqlval.SystemType);
-
-					if (sqlval.DataType != null)
-					{
-						dt = sqlval.SystemType == null
-							? new SqlDataType(sqlval.DataType.Value)
-							: new SqlDataType(sqlval.DataType.Value, sqlval.SystemType);
-					}
+					var dt     = new SqlDataType(sqlval.ValueType);
 
 					BuildValue(dt, sqlval.Value);
 					break;

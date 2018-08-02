@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Configuration;
+	using Common;
 	using Data;
 	using Expressions;
 	using Extensions;
@@ -481,9 +482,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.DateTimeOffset:
 					if (value is DateTimeOffset)
@@ -494,7 +495,7 @@ namespace LinqToDB.DataProvider.Oracle
 					}
 					break;
 				case DataType.Boolean:
-					dataType = DataType.Byte;
+					dataType = dataType.WithDataType(DataType.Byte);
 					if (value is bool)
 						value = (bool)value ? (byte)1 : (byte)0;
 					break;
@@ -506,24 +507,24 @@ namespace LinqToDB.DataProvider.Oracle
 					// Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
 					//
 					if (value is TimeSpan)
-						dataType = DataType.Undefined;
+						dataType = dataType.WithDataType(DataType.Undefined);
 					break;
 			}
 
-			if (dataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
+			if (dataType.DataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
 			{
-				dataType = DataType.NText;
+				dataType = dataType.WithDataType(DataType.NText);
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override Type ConvertParameterType(Type type, DataType dataType)
+		public override Type ConvertParameterType(Type type, DbDataType dataType)
 		{
 			if (type.IsNullable())
 				type = type.ToUnderlying();
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return _oracleTimeStampTZ; break;
 				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);       break;
@@ -549,12 +550,12 @@ namespace LinqToDB.DataProvider.Oracle
 		Action<IDbDataParameter> _setNVarchar2;
 		Action<IDbDataParameter> _setVarchar2;
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Byte           : parameter.DbType = DbType.Int16;            break;
 				case DataType.SByte          : parameter.DbType = DbType.Int16;            break;

@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
 	using Mapping;
+	using Common;
 	using SchemaProvider;
 	using SqlProvider;
 	using System.Collections.Concurrent;
@@ -126,12 +127,12 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 #endif
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.SByte      :
-					dataType = DataType.Int16;
+					dataType = dataType.WithDataType(DataType.Int16);
 					if (value is sbyte)
 						value = (short)(sbyte)value;
 					break;
@@ -141,7 +142,7 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 
 				case DataType.Xml        :
-					dataType = DataType.NVarChar;
+					dataType = dataType.WithDataType(DataType.NVarChar);
 						 if (value is XDocument)   value = value.ToString();
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
@@ -149,22 +150,22 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.Guid       :
 					if (value != null)
 						value = value.ToString();
-					dataType = DataType.Char;
+					dataType = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
 
 				case DataType.Undefined  :
 					if (value == null)
-						dataType = DataType.Char;
+						dataType = dataType.WithDataType(DataType.Char);
 					break;
 			}
 
 			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;          break;
 				case DataType.UInt16        : _setUInt16(parameter);                      break;
@@ -183,7 +184,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.SmallDateTime : _setSmallDateTime(parameter);               break;
 				case DataType.Timestamp     : _setTimestamp(parameter);                   break;
 				case DataType.DateTime2     :
-					base.SetParameterType(parameter, DataType.DateTime);
+					base.SetParameterType(parameter, dataType.WithDataType(DataType.DateTime));
 					                                                                      break;
 
 				default                     : base.SetParameterType(parameter, dataType); break;

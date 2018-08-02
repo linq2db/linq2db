@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Linq;
 using System.Globalization;
 using System.Linq;
@@ -365,9 +366,25 @@ namespace LinqToDB.Mapping
 		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
 		public LambdaExpression GetConvertExpression(Type from, Type to, bool checkNull = true, bool createDefault = true)
 		{
+			return GetConvertExpression(new DbDataType(from), new DbDataType(to), checkNull, createDefault);
+		}
+
+		/// <summary>
+		/// Returns conversion expression from <paramref name="from"/> type to <paramref name="to"/> type.
+		/// </summary>
+		/// <param name="from">Source type.</param>
+		/// <param name="to">Target type.</param>
+		/// <param name="checkNull">If <c>true</c>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
+		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
+		/// </param>
+		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
+		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
+		public LambdaExpression GetConvertExpression(DbDataType from, DbDataType to, bool checkNull = true, bool createDefault = true)
+		{
 			var li = GetConverter(from, to, createDefault);
 			return li == null ? null : (LambdaExpression)ReduceDefaultValue(checkNull ? li.CheckNullLambda : li.Lambda);
 		}
+
 
 		/// <summary>
 		/// Returns conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
@@ -377,7 +394,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Conversion delegate.</returns>
 		public Func<TFrom,TTo> GetConverter<TFrom,TTo>()
 		{
-			var li = GetConverter(typeof(TFrom), typeof(TTo), true);
+			var li = GetConverter(new DbDataType(typeof(TFrom)), new DbDataType(typeof(TTo)), true);
 
 			if (li.Delegate == null)
 			{
@@ -409,9 +426,35 @@ namespace LinqToDB.Mapping
 			[JetBrains.Annotations.NotNull] LambdaExpression expr,
 			bool addNullCheck = true)
 		{
-			if (fromType == null) throw new ArgumentNullException("fromType");
-			if (toType   == null) throw new ArgumentNullException("toType");
-			if (expr     == null) throw new ArgumentNullException("expr");
+			if (fromType == null) throw new ArgumentNullException(nameof(fromType));
+			if (toType   == null) throw new ArgumentNullException(nameof(toType));
+			if (expr     == null) throw new ArgumentNullException(nameof(expr));
+
+			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
+				AddNullCheck(expr) :
+				expr;
+
+			Schemas[0].SetConvertInfo(fromType, toType, new ConvertInfo.LambdaInfo(ex, expr, null, false));
+		}
+
+		/// <summary>
+		/// Specify conversion expression for conversion from <paramref name="fromType"/> type to <paramref name="toType"/> type.
+		/// </summary>
+		/// <param name="fromType">Source type.</param>
+		/// <param name="toType">Target type.</param>
+		/// <param name="expr">Conversion expression.</param>
+		/// <param name="addNullCheck">If <c>true</c>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
+		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
+		/// default value provider.
+		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
+		/// </param>
+		public void SetConvertExpression(
+			DbDataType                      fromType,
+			DbDataType                      toType,
+			[JetBrains.Annotations.NotNull] LambdaExpression expr,
+			bool addNullCheck = true)
+		{
+			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
 				AddNullCheck(expr) :
@@ -468,12 +511,37 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Conversion delegate.</param>
 		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func)
 		{
-			if (func == null) throw new ArgumentNullException("func");
+			if (func == null) throw new ArgumentNullException(nameof(func));
 
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
 
 			Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null, func, false));
+		}
+
+
+		/// <summary>
+		/// Specify conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
+		/// </summary>
+		/// <typeparam name="TFrom">Source type.</typeparam>
+		/// <typeparam name="TTo">Target type.</typeparam>
+		/// <param name="func">Conversion delegate.</param>
+		/// <param name="from">Source type detalization</param>
+		/// <param name="to">Target type detalization</param>
+		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func, DbDataType from, DbDataType to)
+		{
+			if (func == null) throw new ArgumentNullException(nameof(func));
+
+			if (from.SystemType != typeof(TFrom))
+				throw new ArgumentException($"'{nameof(from)}' parameter expects the same SystemType as in generic definition.", nameof(from));
+
+			if (to.SystemType != typeof(TTo))
+				throw new ArgumentException($"'{nameof(to)}' parameter expects the same SystemType as in generic definition.", nameof(to));
+
+			var p  = Expression.Parameter(typeof(TFrom), "p");
+			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
+
+			Schemas[0].SetConvertInfo(from, to, new ConvertInfo.LambdaInfo(ex, null, func, false));
 		}
 
 		LambdaExpression AddNullCheck(LambdaExpression expr)
@@ -499,24 +567,48 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		internal ConvertInfo.LambdaInfo GetConverter(Type from, Type to, bool create)
+		static bool IsSimple (ref DbDataType type) 
+			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType);
+
+		static DbDataType Simplify(ref DbDataType type)
 		{
-			for (var i = 0; i < Schemas.Length; i++)
+			if (!string.IsNullOrEmpty(type.DbType))
+				return type.WithDbType(null);
+
+			if (type.DataType != DataType.Undefined)
+				return type.WithDataType(DataType.Undefined);
+
+			return type;
+		}
+
+		internal ConvertInfo.LambdaInfo GetConverter(DbDataType from, DbDataType to, bool create)
+		{
+			do
 			{
-				var info = Schemas[i];
-				var li   = info.GetConvertInfo(@from, to);
+				for (var i = 0; i < Schemas.Length; i++)
+				{
+					var info = Schemas[i];
+					var li   = info.GetConvertInfo(from, to);
 
-				if (li != null && (i == 0 || !li.IsSchemaSpecific))
-					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
-			}
+					if (li != null && (i == 0 || !li.IsSchemaSpecific))
+						return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
+				}
 
-			var isFromGeneric = from.IsGenericTypeEx() && !from.IsGenericTypeDefinitionEx();
-			var isToGeneric   = to.  IsGenericTypeEx() && !to.  IsGenericTypeDefinitionEx();
+				if (!IsSimple(ref from))
+					from = Simplify(ref from);
+				else if (!IsSimple(ref to))
+					to = Simplify(ref to);
+				else break;
+
+			} while (true);
+
+			var isFromGeneric = from.SystemType.IsGenericTypeEx() && !from.SystemType.IsGenericTypeDefinitionEx();
+			var isToGeneric   = to.SystemType.  IsGenericTypeEx() && !to.SystemType.  IsGenericTypeDefinitionEx();
 
 			if (isFromGeneric || isToGeneric)
 			{
-				var fromGenericArgs = isFromGeneric ? from.GetGenericArgumentsEx() : Array<Type>.Empty;
-				var toGenericArgs   = isToGeneric   ? to.  GetGenericArgumentsEx() : Array<Type>.Empty;
+				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArgumentsEx() : Array<Type>.Empty;
+				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArgumentsEx() : Array<Type>.Empty;
 
 				var args = fromGenericArgs.SequenceEqual(toGenericArgs) ?
 					fromGenericArgs : fromGenericArgs.Concat(toGenericArgs).ToArray();
@@ -527,15 +619,15 @@ namespace LinqToDB.Mapping
 
 			if (create)
 			{
-				var ufrom = from.ToNullableUnderlying();
-				var uto   = to.  ToNullableUnderlying();
+				var ufrom = from.SystemType.ToNullableUnderlying();
+				var uto   = to.SystemType.  ToNullableUnderlying();
 
 				LambdaExpression ex;
 				bool             ss = false;
 
-				if (from != ufrom)
+				if (from.SystemType != ufrom)
 				{
-					var li = GetConverter(ufrom, to, false);
+					var li = GetConverter(new DbDataType(ufrom), to, false);
 
 					if (li != null)
 					{
@@ -544,16 +636,16 @@ namespace LinqToDB.Mapping
 
 						// For int? -> byte try to find int -> byte and convert int to int?
 						//
-						var p = Expression.Parameter(from, ps[0].Name);
+						var p = Expression.Parameter(from.SystemType, ps[0].Name);
 
 						ss = li.IsSchemaSpecific;
 						ex = Expression.Lambda(
 							b.Transform(e => e == ps[0] ? Expression.Convert(p, ufrom) : e),
 							p);
 					}
-					else if (to != uto)
+					else if (to.SystemType != uto)
 					{
-						li = GetConverter(ufrom, uto, false);
+						li = GetConverter(new DbDataType(ufrom), new DbDataType(uto), false);
 
 						if (li != null)
 						{
@@ -562,13 +654,13 @@ namespace LinqToDB.Mapping
 
 							// For int? -> byte? try to find int -> byte and convert int to int? and result to byte?
 							//
-							var p = Expression.Parameter(from, ps[0].Name);
+							var p = Expression.Parameter(from.SystemType, ps[0].Name);
 
 							ss = li.IsSchemaSpecific;
 							ex = Expression.Lambda(
 								Expression.Convert(
 									b.Transform(e => e == ps[0] ? Expression.Convert(p, ufrom) : e),
-									to),
+									to.SystemType),
 								p);
 						}
 						else
@@ -577,11 +669,11 @@ namespace LinqToDB.Mapping
 					else
 						ex = null;
 				}
-				else if (to != uto)
+				else if (to.SystemType != uto)
 				{
 					// For int? -> byte? try to find int -> byte and convert int to int? and result to byte?
 					//
-					var li = GetConverter(from, uto, false);
+					var li = GetConverter(from, new DbDataType(uto), false);
 
 					if (li != null)
 					{
@@ -589,7 +681,7 @@ namespace LinqToDB.Mapping
 						var ps = li.CheckNullLambda.Parameters;
 
 						ss = li.IsSchemaSpecific;
-						ex = Expression.Lambda(Expression.Convert(b, to), ps);
+						ex = Expression.Lambda(Expression.Convert(b, to.SystemType), ps);
 					}
 					else
 						ex = null;

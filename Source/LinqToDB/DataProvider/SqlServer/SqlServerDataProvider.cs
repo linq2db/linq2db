@@ -202,9 +202,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Udt        :
 					{
@@ -274,12 +274,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.SByte         : parameter.DbType = DbType.Int16;   break;
 				case DataType.UInt16        : parameter.DbType = DbType.Int32;   break;

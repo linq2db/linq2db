@@ -688,6 +688,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
 							Append((int)elem.DataType);
+							Append(elem.DbType);
 							Append(elem.DbSize);
 							Append(elem.LikeStart);
 							Append(elem.LikeEnd);
@@ -749,6 +750,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlDataType)e;
 
 							Append((int)elem.DataType);
+							Append(elem.DbType);
 							Append(elem.Type);
 							Append(elem.Length);
 							Append(elem.Precision);
@@ -1321,7 +1323,8 @@ namespace LinqToDB.ServiceModel
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
-							var dbType           = (DataType)ReadInt();
+							var dataType         = (DataType)ReadInt();
+							var dbType           = ReadString();
 							var dbSize           = ReadInt();
 							var likeStart        = ReadString();
 							var likeEnd          = ReadString();
@@ -1333,7 +1336,8 @@ namespace LinqToDB.ServiceModel
 							obj = new SqlParameter(systemType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
-								DataType         = dbType,
+								DataType         = dataType,
+								DbType           = dbType,
 								DbSize           = dbSize,
 								LikeStart        = likeStart,
 								LikeEnd          = likeEnd,
@@ -1380,13 +1384,14 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlDataType :
 						{
-							var dbType     = (DataType)ReadInt();
+							var dataType   = (DataType)ReadInt();
+							var dbType     = ReadString();
 							var systemType = Read<Type>();
 							var length     = ReadNullableInt();
 							var precision  = ReadNullableInt();
 							var scale      = ReadNullableInt();
 
-							obj = new SqlDataType(dbType, systemType, length, precision, scale);
+							obj = new SqlDataType(dataType, systemType, length, precision, scale, dbType);
 
 							break;
 						}

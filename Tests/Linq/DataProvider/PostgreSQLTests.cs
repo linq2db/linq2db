@@ -1992,6 +1992,114 @@ namespace Tests.DataProvider
 				Assert.AreEqual(4, result[1].param4);
 			}
 		}
+
+		public class SomeRange<T> where T: struct
+		{
+			public SomeRange(T? start, T? end)
+			{
+				Start = start;
+				End = end;
+			}
+
+			public T? Start { get; set; }
+			public T? End { get; set; }
+		}
+
+		public class TableWithDateRanges
+		{
+			[Column(DbType = "tsrange")]
+			public SomeRange<DateTime> SimpleRange { get; set; }
+
+			[Column(DbType = "tstzrange")]
+			public SomeRange<DateTime> RangeWithTimeZone { get; set; }
+		}
+
+		private static MappingSchema CreateRangesMapping()
+		{
+			NpgsqlRange<DateTime> ConvertToNpgSqlRange(SomeRange<DateTime> r)
+			{
+				var range = NpgsqlRange<DateTime>.Empty;
+					range = new NpgsqlRange<DateTime>(
+						r.Start ?? default, true,  r.Start == null,
+						r.End   ?? default, false, r.End == null);
+
+				return range;
+			}
+
+			var mapping = new MappingSchema();
+			mapping.SetConverter<NpgsqlRange<DateTime>, SomeRange<DateTime>>(r =>
+				{
+					if (r.IsEmpty)
+						return default;
+
+					return new SomeRange<DateTime>(
+						r.LowerBoundInfinite
+							? (DateTime?) null
+							: r.LowerBound,
+						r.UpperBoundInfinite
+							? (DateTime?) null
+							: r.UpperBound
+					);
+				}
+			);
+
+			mapping.SetConverter<SomeRange<DateTime>, DataParameter>(r =>
+			{
+				var range = ConvertToNpgSqlRange(r);
+				return new DataParameter("", range, "tstzrange");
+			}, new DbDataType(typeof(SomeRange<DateTime>)), new DbDataType(typeof(DataParameter), "tstzrange"));
+
+			mapping.SetConverter<SomeRange<DateTime>, DataParameter>(r =>
+			{
+				var range = ConvertToNpgSqlRange(r);
+				return new DataParameter("", range, "tsrange");
+			}, new DbDataType(typeof(SomeRange<DateTime>)), new DbDataType(typeof(DataParameter), "tsrange"));
+
+			return mapping;
+		}
+
+		[Test, Combinatorial]
+		public void TestCustomType([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context, CreateRangesMapping()))
+			using (var table = db.CreateLocalTable<TableWithDateRanges>())
+			{
+				var date = DateTime.UtcNow;
+				var range1 = new SomeRange<DateTime>(date, null);
+				var range2 = new SomeRange<DateTime>(date.AddDays(1), null);
+				db.Insert(new TableWithDateRanges
+				{
+					SimpleRange       = range1,
+					RangeWithTimeZone = range2,
+				});
+			}
+		}
+
+		[Test, Combinatorial]
+		public void TestCustomTypeBulkCopy([IncludeDataSources(false, ProviderName.PostgreSQL)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
+			using (var table = db.CreateLocalTable<TableWithDateRanges>())
+			{
+				var date = DateTime.UtcNow;
+
+				var items = Enumerable.Range(1, 100).Select(i =>
+				{
+					var range1 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
+					var range2 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
+					return new TableWithDateRanges
+					{
+						SimpleRange = range1,
+						RangeWithTimeZone = range2,
+					};
+				});
+
+				db.BulkCopy(items);
+
+				var loadedItems = table.ToArray();
+			}
+		}
+
 	}
 
 	public static class TestPgAggregates

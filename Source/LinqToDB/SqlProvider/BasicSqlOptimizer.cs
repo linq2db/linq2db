@@ -848,7 +848,10 @@ namespace LinqToDB.SqlProvider
 								innerExpr = c.Expression;
 
 							if (innerExpr is SqlField field)
+							{
 								parameterExpr2.DataType = field.DataType;
+								parameterExpr2.DbType   = field.DbType;
+							}
 						}
 
 						if (expr.Expr1 is SqlParameter parameterExpr1 && parameterExpr1.DataType == DataType.Undefined)
@@ -859,7 +862,10 @@ namespace LinqToDB.SqlProvider
 								innerExpr = c.Expression;
 
 							if (innerExpr is SqlField field)
+							{
 								parameterExpr1.DataType = field.DataType;
+								parameterExpr1.DbType   = field.DbType;
+							}
 						}
 
 						if (expr.Operator == SqlPredicate.Operator.Equal &&

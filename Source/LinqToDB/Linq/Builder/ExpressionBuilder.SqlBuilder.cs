@@ -204,6 +204,7 @@ namespace LinqToDB.Linq.Builder
 						ep.Expression,
 						ep.Accessor,
 						ep.DataTypeAccessor,
+						ep.DbTypeAccessor,
 						parm
 					);
 
@@ -1300,7 +1301,7 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
 			p = CreateParameterAccessor(
-				DataContext, newExpr.ValueExpression, newExpr.DataTypeExpression, expr, ExpressionParam, ParametersParam, name, buildParameterType);
+				DataContext, newExpr.ValueExpression, newExpr.DataTypeExpression, newExpr.DbTypeExpression, expr, ExpressionParam, ParametersParam, name, buildParameterType);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1312,11 +1313,16 @@ namespace LinqToDB.Linq.Builder
 		{
 			public Expression ValueExpression;
 			public Expression DataTypeExpression;
+			public Expression DbTypeExpression;
 		}
 
 		ValueTypeExpression ReplaceParameter(IDictionary<Expression,Expression> expressionAccessors, Expression expression, Action<string> setName)
 		{
-			var resullt = new ValueTypeExpression() { DataTypeExpression = Expression.Constant(DataType.Undefined) };
+			var resullt = new ValueTypeExpression
+			{
+				DataTypeExpression = Expression.Constant(DataType.Undefined),
+				DbTypeExpression   = Expression.Constant(null, typeof(string))
+			};
 
 			resullt.ValueExpression = expression.Transform(expr =>
 			{
@@ -1336,8 +1342,11 @@ namespace LinqToDB.Linq.Builder
 
 								var mt = GetMemberDataType(ma.Member);
 
-								if (mt != null)
-									resullt.DataTypeExpression = Expression.Constant(mt.Value);
+								if (mt.DataType != DataType.Undefined)
+									resullt.DataTypeExpression = Expression.Constant(mt.DataType);
+
+								if (mt.DbType != null)
+									resullt.DbTypeExpression = Expression.Constant(mt.DbType);
 
 								setName(ma.Member.Name);
 							}
@@ -1592,10 +1601,10 @@ namespace LinqToDB.Linq.Builder
 			var rValue = r as SqlValue;
 
 			if (lValue != null)
-				lValue.DataType = GetDataType(r);
+				lValue.ValueType = GetDataType(r);
 
 			if (rValue != null)
-				rValue.DataType = GetDataType(l);
+				rValue.ValueType = GetDataType(l);
 
 			switch (nodeType)
 			{
@@ -1711,7 +1720,7 @@ namespace LinqToDB.Linq.Builder
 						ISqlExpression l, r;
 
 						SqlValue sqlvalue;
-						var ce = MappingSchema.GetConverter(type, typeof(DataParameter), false);
+						var ce = MappingSchema.GetConverter(new DbDataType(type), new DbDataType(typeof(DataParameter)), false);
 
 						if (ce != null)
 						{
@@ -1949,7 +1958,7 @@ namespace LinqToDB.Linq.Builder
 			var vte  = ReplaceParameter(_expressionAccessors, ex, _ => { });
 			var par  = vte.ValueExpression;
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
-			var p    = CreateParameterAccessor(DataContext, expr, vte.DataTypeExpression, expr, ExpressionParam, ParametersParam, member.Name);
+			var p    = CreateParameterAccessor(DataContext, expr, vte.DataTypeExpression, vte.DbTypeExpression, expr, ExpressionParam, ParametersParam, member.Name);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1957,74 +1966,92 @@ namespace LinqToDB.Linq.Builder
 			return p.SqlParameter;
 		}
 
-		DataType? GetMemberDataType(MemberInfo member)
+		DbDataType GetMemberDataType(MemberInfo member)
 		{
+			var typeResult = new DbDataType(member.GetMemberType());
+
 			var dta      = MappingSchema.GetAttribute<DataTypeAttribute>(member.ReflectedTypeEx(), member);
 			var ca       = MappingSchema.GetAttribute<ColumnAttribute>  (member.ReflectedTypeEx(), member);
-			var dataType = null as DataType?;
 
-			if (ca != null)
-				dataType = ca.DataType;
+			var dataType = ca?.DataType ?? dta?.DataType;
 
-			if (dataType == null && dta?.DataType != null)
-				dataType = dta.DataType.Value;
+			if (dataType != null)
+				typeResult = typeResult.WithDataType(dataType.Value);
 
-			return dataType;
+			var dbType = ca?.DbType ?? dta?.DbType;
+			if (dbType != null)
+				typeResult = typeResult.WithDbType(dbType);
+
+			return typeResult;
 		}
 
-		static DataType? GetDataType(ISqlExpression expr)
+		static DbDataType GetDataType(ISqlExpression expr)
 		{
-			DataType? result = null;
+			var systemType = typeof(object);
+			var dataType   = DataType.Undefined;
+			string dbType  = null;
 
 			QueryVisitor.Find(expr, e =>
 			{
 				switch (e.ElementType)
 				{
 					case QueryElementType.SqlField:
-						result = ((SqlField)e).DataType;
+						dataType   = ((SqlField)e).DataType;
+						dbType     = ((SqlField)e).DbType;
+						systemType = ((SqlField)e).SystemType;
 						return true;
 					case QueryElementType.SqlParameter:
-						result = ((SqlParameter)e).DataType;
+						dataType   = ((SqlParameter)e).DataType;
+						dbType     = ((SqlParameter)e).DbType;
+						systemType = ((SqlParameter)e).SystemType;
 						return true;
 					case QueryElementType.SqlDataType:
-						result = ((SqlDataType)e).DataType;
+						dataType   = ((SqlDataType)e).DataType;
+						dbType     = ((SqlDataType)e).DbType;
+						systemType = ((SqlDataType)e).SystemType;
 						return true;
 					case QueryElementType.SqlValue:
-						result = ((SqlValue)e).DataType;
+						dataType   = ((SqlValue)e).ValueType.DataType;
+						dbType     = ((SqlValue)e).ValueType.DbType;
+						systemType = ((SqlValue)e).ValueType.SystemType;
 						return true;
 					default:
 						return false;
 				}
 			});
 
-			if (result == DataType.Undefined)
-				result = null;
-
-			return result;
+			return new DbDataType(systemType, dataType, dbType);
 		}
 
 		internal static ParameterAccessor CreateParameterAccessor(
 			IDataContext        dataContext,
 			Expression          accessorExpression,
 			Expression          dataTypeAccessorExpression,
+			Expression          dbTypeAccessorExpression,
 			Expression          expression,
 			ParameterExpression expressionParam,
 			ParameterExpression parametersParam,
 			string              name,
-			BuildParameterType  buildParameterType = BuildParameterType.Default)
+			BuildParameterType  buildParameterType = BuildParameterType.Default,
+			LambdaExpression    expr = null)
 		{
 			var type        = accessorExpression.Type;
 
-			LambdaExpression expr = null;
 			if (buildParameterType != BuildParameterType.InPredicate)
-				expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
+				expr = expr ?? dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
+			else
+				expr = null;
 
 			if (expr != null)
 			{
-				var body = expr.GetBody(accessorExpression);
+				if (accessorExpression == null || dataTypeAccessorExpression == null || dbTypeAccessorExpression == null)
+				{ 
+					var body = expr.GetBody(accessorExpression);
 
-				accessorExpression         = Expression.PropertyOrField(body, "Value");
-				dataTypeAccessorExpression = Expression.PropertyOrField(body, "DataType");
+					accessorExpression         = Expression.PropertyOrField(body, "Value");
+					dataTypeAccessorExpression = Expression.PropertyOrField(body, "DataType");
+					dbTypeAccessorExpression   = Expression.PropertyOrField(body, "DbType");
+				}
 			}
 			else
 			{
@@ -2079,11 +2106,16 @@ namespace LinqToDB.Linq.Builder
 				Expression.Convert(dataTypeAccessorExpression, typeof(DataType)),
 				new [] { expressionParam, parametersParam });
 
+			var dbTypeAccessor = Expression.Lambda<Func<Expression,object[],string>>(
+				Expression.Convert(dbTypeAccessorExpression, typeof(string)),
+				new [] { expressionParam, parametersParam });
+
 			return new ParameterAccessor
 			(
 				expression,
 				mapper.Compile(),
 				dataTypeAccessor.Compile(),
+				dbTypeAccessor.Compile(),
 				new SqlParameter(accessorExpression.Type, name, null) { IsQueryParameter = !(dataContext.InlineParameters && accessorExpression.Type.IsScalar(false)) }
 			);
 		}
@@ -2212,6 +2244,7 @@ namespace LinqToDB.Linq.Builder
 					ep.Expression,
 					ep.Accessor,
 					ep.DataTypeAccessor,
+					ep.DbTypeAccessor,
 					new SqlParameter(ep.Expression.Type, p.Name, p.Value)
 					{
 						LikeStart        = start,

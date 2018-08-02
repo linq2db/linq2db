@@ -79,6 +79,25 @@ namespace LinqToDB.DataProvider
 
 		#region Expression Helpers
 
+		protected Action<IDbDataParameter, TResult> GetSetParameter<TResult>(
+			Type connectionType,
+			string parameterTypeName, string propertyName, Type dbType)
+		{
+			var pType = connectionType.AssemblyEx().GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+
+			var p = Expression.Parameter(typeof(IDbDataParameter));
+			var v = Expression.Parameter(typeof(TResult));
+			var l = Expression.Lambda<Action<IDbDataParameter, TResult>>(
+				Expression.Assign(
+					Expression.PropertyOrField(
+						Expression.Convert(p, pType),
+						propertyName),
+					Expression.Convert(v, dbType)),
+				p, v);
+
+			return l.Compile();
+		}
+
 		protected Action<IDbDataParameter> GetSetParameter(
 			Type connectionType,
 			string parameterTypeName, string propertyName, Type dbType, string valueName)

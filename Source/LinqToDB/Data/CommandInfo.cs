@@ -832,7 +832,7 @@ namespace LinqToDB.Data
 				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
 				if (parameter.Size      != null) p.Size      = parameter.Size.     Value;
 
-				dataConnection.DataProvider.SetParameter(p, parameter.Name, dataType, value);
+				dataConnection.DataProvider.SetParameter(p, parameter.Name, new DbDataType(value != null ? value.GetType() : typeof(object), dataType, parameter.DbType), value);
 				dataConnection.Command.Parameters.Add(p);
 			}
 		}

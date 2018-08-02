@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
@@ -8,7 +9,13 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlValue(Type systemType, object value)
 		{
-			SystemType = systemType;
+			ValueType  = new DbDataType(systemType);
+			Value      = value;
+		}
+
+		public SqlValue(DbDataType valueType, object value)
+		{
+			ValueType  = valueType;
 			Value      = value;
 		}
 
@@ -17,18 +24,12 @@ namespace LinqToDB.SqlQuery
 			Value = value;
 
 			if (value != null)
-				SystemType = value.GetType();
+				ValueType = new DbDataType(value.GetType());
 		}
 
-		public   object    Value      { get; internal set; }
-		public   Type      SystemType { get; }
-
-		// TODO refactor this to make DataType required parameter for SqlValue
-		/// <summary>
-		/// This implementation is hack to fix <a href="https://github.com/linq2db/linq2db/issues/271">issue 271</a>
-		/// <a href="https://github.com/linq2db/linq2db/pull/608">PR</a>.
-		/// </summary>
-		internal DataType? DataType   { get; set; }
+		public   object     Value      { get; internal set; }
+		internal DbDataType ValueType  { get; set; }
+		public   Type       SystemType => ValueType.SystemType;
 
 		#region Overrides
 

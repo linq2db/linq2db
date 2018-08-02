@@ -8,6 +8,7 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Mapping;
 
 	public class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
@@ -19,13 +20,13 @@ namespace LinqToDB.DataProvider
 			_enumerator    = collection.GetEnumerator();
 			_mappingSchema = mappingSchema;
 			_columnTypes   = _columns
-				.Select(c => c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType).DataType : c.DataType)
+				.Select(c => new DbDataType(c.MemberType, c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType).DataType : c.DataType, c.DbType))
 				.ToArray();
 		}
 
 		public int Count;
 
-		readonly DataType[]             _columnTypes;
+		readonly DbDataType[]           _columnTypes;
 		readonly IDataProvider          _dataProvider;
 		readonly List<ColumnDescriptor> _columns;
 		readonly IEnumerator            _enumerator;

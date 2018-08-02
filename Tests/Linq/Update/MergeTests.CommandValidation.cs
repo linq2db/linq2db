@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
@@ -191,7 +192,7 @@ namespace Tests.xUpdate
 					throw new NotImplementedException();
 				}
 
-				Type IDataProvider.ConvertParameterType(Type type, DataType dataType)
+				Type IDataProvider.ConvertParameterType(Type type, DbDataType dataType)
 				{
 					throw new NotImplementedException();
 				}
@@ -278,7 +279,7 @@ namespace Tests.xUpdate
 					throw new NotImplementedException();
 				}
 
-				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 				{
 					throw new NotImplementedException();
 				}

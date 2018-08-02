@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SchemaProvider;
@@ -176,26 +177,26 @@ namespace LinqToDB.DataProvider.DB2
 
 		static Action<IDbDataParameter> _setBlob;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
 			if (value is sbyte)
 			{
 				value    = (short)(sbyte)value;
-				dataType = DataType.Int16;
+				dataType = dataType.WithDataType(DataType.Int16);
 			}
 			else if (value is byte)
 			{
 				value    = (short)(byte)value;
-				dataType = DataType.Int16;
+				dataType = dataType.WithDataType(DataType.Int16);
 			}
 
-			switch (dataType)
+			switch (dataType.DataType)
 			{
-				case DataType.UInt16     : dataType = DataType.Int32;    break;
-				case DataType.UInt32     : dataType = DataType.Int64;    break;
-				case DataType.UInt64     : dataType = DataType.Decimal;  break;
-				case DataType.VarNumeric : dataType = DataType.Decimal;  break;
-				case DataType.DateTime2  : dataType = DataType.DateTime; break;
+				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);    break;
+				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);    break;
+				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal);  break;
+				case DataType.DateTime2  : dataType = dataType.WithDataType(DataType.DateTime); break;
 				case DataType.Char       :
 				case DataType.VarChar    :
 				case DataType.NChar      :
@@ -209,17 +210,17 @@ namespace LinqToDB.DataProvider.DB2
 					if (value is bool)
 					{
 						value    = (bool)value ? 1 : 0;
-						dataType = DataType.Int16;
+						dataType = dataType.WithDataType(DataType.Int16);
 					}
 					break;
 				case DataType.Guid       :
 					if (value is Guid)
 					{
 						value    = ((Guid)value).ToByteArray();
-						dataType = DataType.VarBinary;
+						dataType = dataType.WithDataType(DataType.VarBinary);
 					}
 					if (value == null)
-						dataType = DataType.VarBinary;
+						dataType = dataType.WithDataType(DataType.VarBinary);
 					break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :

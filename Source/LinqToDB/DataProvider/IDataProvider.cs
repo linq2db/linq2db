@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider
 {
 	using Data;
 	using Mapping;
+	using Common;
 	using SchemaProvider;
 	using SqlProvider;
 
@@ -27,8 +28,8 @@ namespace LinqToDB.DataProvider
 		object             GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
-		void               SetParameter          (IDbDataParameter parameter, string name, DataType dataType, object value);
-		Type               ConvertParameterType  (Type type, DataType dataType);
+		void               SetParameter          (IDbDataParameter parameter, string name, DbDataType dataType, object value);
+		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		bool               IsCompatibleConnection(IDbConnection connection);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
 		/// <summary>

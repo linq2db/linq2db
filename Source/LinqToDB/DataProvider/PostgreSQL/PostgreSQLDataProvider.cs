@@ -9,6 +9,7 @@ using System.Net.NetworkInformation;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Data;
+	using Common;
 	using Expressions;
 	using Mapping;
 	using SqlProvider;
@@ -65,6 +66,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		internal Type NpgsqlMacAddressType;
 		internal Type NpgsqlDateType;
 		internal Type NpgsqlDateTimeType;
+		internal Type NpgsqlRange;
 
 		internal bool HasMacAddr8 { get; private set; }
 
@@ -243,6 +245,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_setJson      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Json");
 			_setJsonb     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType, "Jsonb");
 
+			_setNativeParameterType = GetSetParameter<object>(connectionType, "NpgsqlParameter", "NpgsqlDbType", NpgsqlDbType);
+
 			if (BitStringType        != null) MappingSchema.AddScalarType(BitStringType);
 			if (NpgsqlTimeType       != null) MappingSchema.AddScalarType(NpgsqlTimeType);
 			if (NpgsqlTimeTZType     != null) MappingSchema.AddScalarType(NpgsqlTimeTZType);
@@ -376,19 +380,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static Action<IDbDataParameter> _setJsonb;
 		static Action<IDbDataParameter> _setJson;
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		static Action<IDbDataParameter, object> _setNativeParameterType;
+
+		public override void SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value)
 		{
-			if (value is IDictionary && dataType == DataType.Undefined)
+			if (value is IDictionary && dataType.DataType == DataType.Undefined)
 			{
-				dataType = DataType.Dictionary;
+				dataType = dataType.WithDataType(DataType.Dictionary);
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DbDataType dataType)
 		{
-			switch (dataType)
+			switch (dataType.DataType)
 			{
 				case DataType.SByte      : parameter.DbType = DbType.Int16;            break;
 				case DataType.UInt16     : parameter.DbType = DbType.Int32;            break;
@@ -409,7 +415,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Dictionary : _setHstore(parameter);                      break;
 				case DataType.Json       : _setJson(parameter);                        break;
 				case DataType.BinaryJson : _setJsonb(parameter);                       break;
-				default                  : base.SetParameterType(parameter, dataType); break;
+				default :     
+				{
+					if (!string.IsNullOrEmpty(dataType.DbType))
+					{
+						var nativeType = GetNativeType(dataType.DbType);
+						if (nativeType != null)
+						{
+							_setNativeParameterType(parameter, nativeType);
+							break;
+						}
+					}
+
+					base.SetParameterType(parameter, dataType); break;
+				}
 			}
 		}
 
