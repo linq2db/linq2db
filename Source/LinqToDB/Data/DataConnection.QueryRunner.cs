@@ -231,19 +231,27 @@ namespace LinqToDB.Data
 
 			static void AddParameter(DataConnection dataConnection, ICollection<IDbDataParameter> parms, string name, SqlParameter parm)
 			{
-				var p         = dataConnection.Command.CreateParameter();
-				var dataType  = parm.DataType;
-				var parmValue = parm.Value;
+				var p          = dataConnection.Command.CreateParameter();
+				var systemType = parm.SystemType;
+				var dataType   = parm.DataType;
+				var paramValue = parm.Value;
+
+				if (systemType == null)
+				{
+					if (paramValue != null)
+						systemType = paramValue.GetType();
+				}
 
 				if (dataType == DataType.Undefined)
 				{
 					dataType = dataConnection.MappingSchema.GetDataType(
-						parm.SystemType == typeof(object) && parmValue != null ?
-							parmValue.GetType() :
-							parm.SystemType).DataType;
+						parm.SystemType == typeof(object) && paramValue != null ?
+							paramValue.GetType() :
+							systemType).DataType;
 				}
 
-				dataConnection.DataProvider.SetParameter(p, name, new DbDataType(parm.SystemType, dataType, parm.DbType), parmValue);
+
+				dataConnection.DataProvider.SetParameter(p, name, new DbDataType(systemType, dataType, parm.DbType), paramValue);
 
 				parms.Add(p);
 			}

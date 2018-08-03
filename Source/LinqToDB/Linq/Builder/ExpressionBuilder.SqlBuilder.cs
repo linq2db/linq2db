@@ -1300,8 +1300,21 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
+			var convertExpr = MappingSchema.GetConvertExpression( 
+				newExpr.DataType,
+				newExpr.DataType.WithSystemType(typeof(DataParameter)), createDefault: false);
+
+			if (convertExpr != null)
+			{
+				var body = convertExpr.GetBody(expr);
+
+				newExpr.ValueExpression    = Expression.PropertyOrField(body, "Value");
+				newExpr.DataTypeExpression = Expression.PropertyOrField(body, "DataType");
+				newExpr.DbTypeExpression   = Expression.PropertyOrField(body, "DbType");
+			}
+
 			p = CreateParameterAccessor(
-				DataContext, newExpr.ValueExpression, newExpr.DataTypeExpression, newExpr.DbTypeExpression, expr, ExpressionParam, ParametersParam, name, buildParameterType);
+				DataContext, newExpr.ValueExpression, newExpr.DataTypeExpression, newExpr.DbTypeExpression, expr, ExpressionParam, ParametersParam, name, buildParameterType, expr: convertExpr);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1314,17 +1327,20 @@ namespace LinqToDB.Linq.Builder
 			public Expression ValueExpression;
 			public Expression DataTypeExpression;
 			public Expression DbTypeExpression;
+
+			public DbDataType DataType;
 		}
 
 		ValueTypeExpression ReplaceParameter(IDictionary<Expression,Expression> expressionAccessors, Expression expression, Action<string> setName)
 		{
-			var resullt = new ValueTypeExpression
+			var result = new ValueTypeExpression
 			{
+				DataType           = new DbDataType(expression.Type),
 				DataTypeExpression = Expression.Constant(DataType.Undefined),
 				DbTypeExpression   = Expression.Constant(null, typeof(string))
 			};
 
-			resullt.ValueExpression = expression.Transform(expr =>
+			result.ValueExpression = expression.Transform(expr =>
 			{
 				if (expr.NodeType == ExpressionType.Constant)
 				{
@@ -1343,10 +1359,16 @@ namespace LinqToDB.Linq.Builder
 								var mt = GetMemberDataType(ma.Member);
 
 								if (mt.DataType != DataType.Undefined)
-									resullt.DataTypeExpression = Expression.Constant(mt.DataType);
+								{
+									result.DataType.WithDataType(mt.DataType);
+									result.DataTypeExpression = Expression.Constant(mt.DataType);
+								}
 
 								if (mt.DbType != null)
-									resullt.DbTypeExpression = Expression.Constant(mt.DbType);
+								{
+									result.DataType.WithDbType(mt.DbType);
+									result.DbTypeExpression = Expression.Constant(mt.DbType);
+								}
 
 								setName(ma.Member.Name);
 							}
@@ -1357,7 +1379,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			});
 
-			return resullt;
+			return result;
 		}
 
 		#endregion
@@ -2020,7 +2042,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			});
 
-			return new DbDataType(systemType, dataType, dbType);
+			return new DbDataType(systemType ?? typeof(object), dataType, dbType);
 		}
 
 		internal static ParameterAccessor CreateParameterAccessor(

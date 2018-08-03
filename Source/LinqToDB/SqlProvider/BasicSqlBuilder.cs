@@ -2259,7 +2259,7 @@ namespace LinqToDB.SqlProvider
 						}
 						else
 						{
-							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, 0, 0, 0), parm.Value);
+							BuildValue(new SqlDataType(parm.DataType, parm.SystemType, 0, 0, 0, parm.DbType), parm.Value);
 						}
 					}
 

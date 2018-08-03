@@ -394,14 +394,16 @@ namespace LinqToDB.Mapping
 		/// <returns>Conversion delegate.</returns>
 		public Func<TFrom,TTo> GetConverter<TFrom,TTo>()
 		{
-			var li = GetConverter(new DbDataType(typeof(TFrom)), new DbDataType(typeof(TTo)), true);
+			var from = new DbDataType(typeof(TFrom));
+			var to   = new DbDataType(typeof(TTo));
+			var li   = GetConverter(from, to, true);
 
 			if (li.Delegate == null)
 			{
 				var rex = (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.CheckNullLambda);
 				var l   = rex.Compile();
 
-				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(li.CheckNullLambda, null, l, li.IsSchemaSpecific));
+				Schemas[0].SetConvertInfo(from, to, new ConvertInfo.LambdaInfo(li.CheckNullLambda, null, l, li.IsSchemaSpecific));
 
 				return l;
 			}
@@ -434,7 +436,7 @@ namespace LinqToDB.Mapping
 				AddNullCheck(expr) :
 				expr;
 
-			Schemas[0].SetConvertInfo(fromType, toType, new ConvertInfo.LambdaInfo(ex, expr, null, false));
+			Schemas[0].SetConvertInfo(new DbDataType(fromType), new DbDataType(toType), new ConvertInfo.LambdaInfo(ex, expr, null, false));
 		}
 
 		/// <summary>
@@ -478,7 +480,7 @@ namespace LinqToDB.Mapping
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr,
 			bool addNullCheck = true)
 		{
-			if (expr == null) throw new ArgumentNullException("expr");
+			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
 				AddNullCheck(expr) :
@@ -498,7 +500,7 @@ namespace LinqToDB.Mapping
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> checkNullExpr,
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr)
 		{
-			if (expr == null) throw new ArgumentNullException("expr");
+			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(checkNullExpr, expr, null, false));
 		}

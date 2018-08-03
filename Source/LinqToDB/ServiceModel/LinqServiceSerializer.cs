@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -522,19 +523,35 @@ namespace LinqToDB.ServiceModel
 					if (str == "System.Data.Linq.Binary")
 						return typeof(System.Data.Linq.Binary);
 
-					type = LinqService.TypeResolver(str);
+					try
+					{
+						foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+						{
+							type = assembly.GetType(str);
+							if (type != null)
+								break;
+						}
+					}
+					catch 
+					{
+						// ignore errors
+					}
 
 					if (type == null)
 					{
-						if (Configuration.LinqService.ThrowUnresolvedTypeException)
-							throw new LinqToDBException(
-								$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
+						type = LinqService.TypeResolver(str);
+						if (type == null)
+						{
+							if (Configuration.LinqService.ThrowUnresolvedTypeException)
+								throw new LinqToDBException(
+									$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
-						UnresolvedTypes.Add(str);
+							UnresolvedTypes.Add(str);
 
-						Debug.WriteLine(
-							$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
-							"LinqServiceSerializer");
+							Debug.WriteLine(
+								$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.",
+								"LinqServiceSerializer");
+						}
 					}
 				}
 

@@ -4,15 +4,10 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-
 	public class SqlParameter : ISqlExpression, IValueContainer
 	{
 		public SqlParameter(Type systemType, string name, object value)
 		{
-			if (systemType.ToNullableUnderlying().IsEnumEx())
-				throw new ArgumentException();
-
 			IsQueryParameter = true;
 			Name             = name;
 			SystemType       = systemType;

@@ -139,11 +139,6 @@ namespace LinqToDB.Mapping
 			SetConvertInfo(new DbDataType(from), new DbDataType(to), expr);
 		}
 
-		public ConvertInfo.LambdaInfo GetConvertInfo(Type from, Type to)
-		{
-			return _convertInfo == null ? null : _convertInfo.Get(from, to);
-		}
-
 		public ConvertInfo.LambdaInfo GetConvertInfo(DbDataType from, DbDataType to)
 		{
 			return _convertInfo == null ? null : _convertInfo.Get(from, to);

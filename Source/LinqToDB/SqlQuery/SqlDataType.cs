@@ -361,6 +361,7 @@ namespace LinqToDB.SqlQuery
 			Length    = length;
 			Precision = precision;
 			Scale     = scale;
+			DbType    = dbType;
 		}
 
 		SqlDataType(DataType dataType, Type type, Func<DataType,int> length, int precision, int scale, string dbType = null)
