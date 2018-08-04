@@ -1,7 +1,11 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                       #>
-<#@ output extension=".generated.cs"                                              #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.ttinclude"             #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#@ template language="C#" debug="True" hostSpecific="True"                          #>
+<#@ output extension=".generated.cs"                                                 #>
+<#@ include file="$(LinqToDBT4TemplatesDirectory)LinqToDB.Tools.ttinclude"           #>
+<#@ include file="$(LinqToDBT4TemplatesDirectory)LinqToDB.ttinclude"                 #>
+<#@ include file="$(LinqToDBT4TemplatesDirectory)PluralizationService.ttinclude"     #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Tools.ttinclude"       #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.ttinclude"             #>
+<# //@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
 <#
 	/*
 		1. Copy this file to a folder where you would like to generate your data model,
@@ -38,7 +42,7 @@
 	NamespaceName = "DataModel";
 
 	var connectionString = "Data Source=.;Database=Northwind;Integrated Security=SSPI";
-	var dataConnection   = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection(connectionString);
+	var dataConnection   = LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString);
 
 	LoadMetadata(dataConnection);
 

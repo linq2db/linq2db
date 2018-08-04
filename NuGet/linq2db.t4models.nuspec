@@ -27,10 +27,12 @@
 		<file src="Init.ps1"                                         target="tools" />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll" target="tools" />
 
+		<file src="t4models\linq2db.t4models.props"                  target="build" />
+
 		<file src="..\Source\LinqToDB.Templates\*.*"                 target="contentFiles\any\any\LinqToDB.Templates" />
-		<file src="t4models\*.*"                                     target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="t4models\*.*"                                     target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
 
 		<file src="..\Source\LinqToDB.Templates\*.*"                 target="content\LinqToDB.Templates" />
-		<file src="t4models\*.*"                                     target="content\LinqToDB.Templates" />
+		<file src="t4models\*.*"                                     target="content\LinqToDB.Templates" exclude="**\*.props" />
 	</files>
 </package>
