@@ -15,7 +15,7 @@
 
 		<Configurations>Debug;Release</Configurations>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
-		<SourceLinkCreate Condition="'$(TRAVIS)' == true">false</SourceLinkCreate>
+		<EnableSourceLink Condition="'$(TRAVIS)' == true">false</EnableSourceLink>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
