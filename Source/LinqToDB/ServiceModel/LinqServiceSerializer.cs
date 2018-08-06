@@ -758,6 +758,10 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlValue :
 						{
 							var elem = (SqlValue)e;
+
+							Append((int)elem.ValueType.DataType);
+							Append(elem.ValueType.DbType);
+
 							Append(elem.SystemType, elem.Value);
 							break;
 						}
@@ -1391,10 +1395,13 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlValue :
 						{
+							var dataType   = (DataType)ReadInt();
+							var dbType     = ReadString();
+
 							var systemType = Read<Type>();
 							var value      = ReadValue(systemType);
 
-							obj = new SqlValue(systemType, value);
+							obj = new SqlValue(new DbDataType(systemType, dataType, dbType), value);
 
 							break;
 						}

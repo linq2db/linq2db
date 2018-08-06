@@ -201,6 +201,7 @@ namespace LinqToDB.SqlQuery
 				{
 					IsQueryParameter = IsQueryParameter,
 					DataType         = DataType,
+					DbType           = DbType,
 					DbSize           = DbSize,
 					LikeStart        = LikeStart,
 					LikeEnd          = LikeEnd,

@@ -520,7 +520,7 @@ namespace LinqToDB.SqlQuery
 				return this;
 
 			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlDataType(DataType, Type, Length, Precision, Scale));
+				objectTree.Add(this, clone = new SqlDataType(DataType, Type, Length, Precision, Scale, DbType));
 
 			return clone;
 		}

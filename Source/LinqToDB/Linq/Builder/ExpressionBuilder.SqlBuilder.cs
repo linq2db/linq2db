@@ -1623,10 +1623,10 @@ namespace LinqToDB.Linq.Builder
 			var rValue = r as SqlValue;
 
 			if (lValue != null)
-				lValue.ValueType = GetDataType(r);
+				lValue.ValueType = GetDataType(r, lValue.ValueType);
 
 			if (rValue != null)
-				rValue.ValueType = GetDataType(l);
+				rValue.ValueType = GetDataType(l, rValue.ValueType);
 
 			switch (nodeType)
 			{
@@ -2007,11 +2007,11 @@ namespace LinqToDB.Linq.Builder
 			return typeResult;
 		}
 
-		static DbDataType GetDataType(ISqlExpression expr)
+		static DbDataType GetDataType(ISqlExpression expr, DbDataType baseType)
 		{
-			var systemType = typeof(object);
-			var dataType   = DataType.Undefined;
-			string dbType  = null;
+			var systemType = baseType.SystemType;
+			var dataType   = baseType.DataType;
+			string dbType  = baseType.DbType;
 
 			QueryVisitor.Find(expr, e =>
 			{
@@ -2020,29 +2020,33 @@ namespace LinqToDB.Linq.Builder
 					case QueryElementType.SqlField:
 						dataType   = ((SqlField)e).DataType;
 						dbType     = ((SqlField)e).DbType;
-						systemType = ((SqlField)e).SystemType;
+						//systemType = ((SqlField)e).SystemType;
 						return true;
 					case QueryElementType.SqlParameter:
 						dataType   = ((SqlParameter)e).DataType;
 						dbType     = ((SqlParameter)e).DbType;
-						systemType = ((SqlParameter)e).SystemType;
+						//systemType = ((SqlParameter)e).SystemType;
 						return true;
 					case QueryElementType.SqlDataType:
 						dataType   = ((SqlDataType)e).DataType;
 						dbType     = ((SqlDataType)e).DbType;
-						systemType = ((SqlDataType)e).SystemType;
+						//systemType = ((SqlDataType)e).SystemType;
 						return true;
 					case QueryElementType.SqlValue:
 						dataType   = ((SqlValue)e).ValueType.DataType;
 						dbType     = ((SqlValue)e).ValueType.DbType;
-						systemType = ((SqlValue)e).ValueType.SystemType;
+						//systemType = ((SqlValue)e).ValueType.SystemType;
 						return true;
 					default:
 						return false;
 				}
 			});
 
-			return new DbDataType(systemType ?? typeof(object), dataType, dbType);
+			return new DbDataType(
+				systemType ?? baseType.SystemType,
+				dataType == DataType.Undefined ? baseType.DataType : dataType,
+				string.IsNullOrEmpty(dbType) ? baseType.DbType : dbType
+			);
 		}
 
 		internal static ParameterAccessor CreateParameterAccessor(

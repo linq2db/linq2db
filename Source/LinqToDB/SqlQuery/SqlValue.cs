@@ -28,7 +28,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public   object     Value      { get; internal set; }
-		internal DbDataType ValueType  { get; set; }
+		public   DbDataType ValueType  { get; set; }
 		public   Type       SystemType => ValueType.SystemType;
 
 		#region Overrides
@@ -93,7 +93,7 @@ namespace LinqToDB.SqlQuery
 				return this;
 
 			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlValue(SystemType, Value));
+				objectTree.Add(this, clone = new SqlValue(ValueType, Value));
 
 			return clone;
 		}
