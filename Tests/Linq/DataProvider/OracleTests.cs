@@ -1948,15 +1948,16 @@ namespace Tests.DataProvider
 		public void Issue723Test1(string context)
 		{
 			var ms = new MappingSchema();
-			using (var db = new TestDataConnection(context))
+			using (var db = (DataConnection)GetDataContext(context, ms))
 			{
-				db.AddMappingSchema(ms);
-
 				var currentUser = db.Execute<string>("SELECT user FROM dual");
 				db.Execute("GRANT CREATE ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT CREATE ANY SEQUENCE TO " + currentUser);
 				db.Execute("GRANT DROP ANY TRIGGER TO " + currentUser);
 				db.Execute("GRANT DROP ANY SEQUENCE TO " + currentUser);
+
+				try {db.Execute("DROP USER Issue723Schema CASCADE");} catch { }
+				
 				db.Execute("CREATE USER Issue723Schema IDENTIFIED BY password");
 
 				try

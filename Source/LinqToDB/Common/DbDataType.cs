@@ -9,7 +9,7 @@ namespace LinqToDB.Common
 		[DebuggerStepThrough]
 		public DbDataType([NotNull] Type systemType) : this()
 		{
-			SystemType = systemType ?? throw new ArgumentNullException(nameof(systemType));
+			SystemType = systemType;
 		}
 
 		public override string ToString()
