@@ -1300,17 +1300,22 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
-			var convertExpr = MappingSchema.GetConvertExpression( 
-				newExpr.DataType,
-				newExpr.DataType.WithSystemType(typeof(DataParameter)), createDefault: false);
+			LambdaExpression convertExpr = null;
 
-			if (convertExpr != null)
+			if (buildParameterType != BuildParameterType.InPredicate)
 			{
-				var body = convertExpr.GetBody(expr);
+				convertExpr = MappingSchema.GetConvertExpression(
+					newExpr.DataType,
+					newExpr.DataType.WithSystemType(typeof(DataParameter)), createDefault: false);
 
-				newExpr.ValueExpression    = Expression.PropertyOrField(body, "Value");
-				newExpr.DataTypeExpression = Expression.PropertyOrField(body, "DataType");
-				newExpr.DbTypeExpression   = Expression.PropertyOrField(body, "DbType");
+				if (convertExpr != null)
+				{
+					var body = convertExpr.GetBody(expr);
+
+					newExpr.ValueExpression    = Expression.PropertyOrField(body, "Value");
+					newExpr.DataTypeExpression = Expression.PropertyOrField(body, "DataType");
+					newExpr.DbTypeExpression   = Expression.PropertyOrField(body, "DbType");
+				}
 			}
 
 			p = CreateParameterAccessor(

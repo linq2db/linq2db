@@ -242,20 +242,19 @@ namespace LinqToDB.Linq
 			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
 			Expression dbTypeExpression   = Expression.Constant(null, typeof(string));
 
-			var expr = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType), 
+			var convertExpression = dataContext.MappingSchema.GetConvertExpression(new DbDataType(field.SystemType, field.DataType, field.DbType), 
 				new DbDataType(typeof(DataParameter), field.DataType, field.DbType), createDefault: false);
 
-			if (expr != null)
+			if (convertExpression != null)
 			{
-				var body = expr.GetBody(getter);
-
+				var body           = convertExpression.GetBody(getter);
 				getter             = Expression.PropertyOrField(body, "Value");
 				dataTypeExpression = Expression.PropertyOrField(body, "DataType");
 				dbTypeExpression   = Expression.PropertyOrField(body, "DbType");
 			}
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, getter, dataTypeExpression, dbTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'), expr: expr);
+				dataContext, getter, dataTypeExpression, dbTypeExpression, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'), expr: convertExpression);
 
 			return param;
 		}
