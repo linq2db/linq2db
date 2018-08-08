@@ -27,7 +27,16 @@ namespace LinqToDB.Linq.Builder
 		Expression         BuildExpression     (Expression expression, int level, bool enforceServerSide);
 		SqlInfo[]          ConvertToSql        (Expression expression, int level, ConvertFlags flags);
 		SqlInfo[]          ConvertToIndex      (Expression expression, int level, ConvertFlags flags);
+
+		/// <summary>
+		/// Returns information about expression according to <paramref name="requestFlag"/>. 
+		/// </summary>
+		/// <param name="expression">Analysed expression.</param>
+		/// <param name="level">Member level.</param>
+		/// <param name="requestFlag">Which test or request has to be performed.</param>
+		/// <returns><see cref="IsExpressionResult"/> instance.</returns>
 		IsExpressionResult IsExpression        (Expression expression, int level, RequestFor requestFlag);
+
 		IBuildContext      GetContext          (Expression expression, int level, BuildInfo buildInfo);
 		int                ConvertToParentIndex(int index, IBuildContext context);
 		void               SetAlias            (string alias);
