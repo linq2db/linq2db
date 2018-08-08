@@ -225,8 +225,11 @@ namespace LinqToDB.Linq
 
 			for (var i = 0; i < members.Length; i++)
 			{
-				var        member = members[i];
-				Expression pof    = Expression.PropertyOrField(getter, member);
+				var member     = members[i];
+				var descriptor = dataContext.MappingSchema.GetEntityDescriptor(getter.Type);
+				var column     = descriptor.Columns.First(c => c.MemberName == member);
+
+				Expression pof = column.MemberAccessor.GetterExpression.GetBody(getter);
 
 				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
 			}
