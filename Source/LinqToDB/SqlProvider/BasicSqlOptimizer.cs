@@ -1166,7 +1166,7 @@ namespace LinqToDB.SqlProvider
 				var newLength = maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength) : to.Length;
 
 				if (to.Length != newLength)
-					to = new SqlDataType(to.DataType, to.Type, newLength, null, null);
+					to = new SqlDataType(to.DataType, to.Type, newLength, null, null, to.DbType);
 			}
 			else if (from.Type == typeof(short) && to.Type == typeof(int))
 				return func.Parameters[2];

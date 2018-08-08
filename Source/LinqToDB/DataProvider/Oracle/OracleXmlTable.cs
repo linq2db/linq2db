@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.Oracle
 					case DataType.Boolean    : return "Bit";
 				}
 
-				var text = type.DataType.ToString();
+				var text = !string.IsNullOrEmpty(type.DbType) ? type.DbType : type.DataType.ToString();
 
 				if (type.Length > 0)
 					text += "(" + type.Length + ")";
@@ -145,7 +145,8 @@ namespace LinqToDB.DataProvider.Oracle
 									c.MemberType,
 									c.Length,
 									c.Precision,
-									c.Scale)) :
+									c.Scale,
+									c.DbType)) :
 							c.DbType,
 						i))
 					.Aggregate((s1,s2) => s1 + ", " +  s2);

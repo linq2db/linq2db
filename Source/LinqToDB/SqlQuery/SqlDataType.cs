@@ -535,6 +535,9 @@ namespace LinqToDB.SqlQuery
 		{
 			sb.Append(DataType);
 
+			if (!string.IsNullOrEmpty(DbType))
+				sb.Append($":\"{DbType}\"");
+
 			if (Length != 0)
 				sb.Append('(').Append(Length).Append(')');
 			else if (Precision != 0)

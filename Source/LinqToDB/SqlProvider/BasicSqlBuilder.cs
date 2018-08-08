@@ -2450,7 +2450,10 @@ namespace LinqToDB.SqlProvider
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
 			}
 
-			StringBuilder.Append(type.DataType);
+			if (!string.IsNullOrEmpty(type.DbType))
+				StringBuilder.Append(type.DbType);
+			else
+				StringBuilder.Append(type.DataType);
 
 			if (type.Length > 0)
 				StringBuilder.Append('(').Append(type.Length).Append(')');

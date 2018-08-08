@@ -234,6 +234,7 @@ namespace LinqToDB.Data
 				var p          = dataConnection.Command.CreateParameter();
 				var systemType = parm.SystemType;
 				var dataType   = parm.DataType;
+				var dbType     = parm.DbType;
 				var paramValue = parm.Value;
 
 				if (systemType == null)
@@ -251,7 +252,7 @@ namespace LinqToDB.Data
 				}
 
 
-				dataConnection.DataProvider.SetParameter(p, name, new DbDataType(systemType, dataType, parm.DbType), paramValue);
+				dataConnection.DataProvider.SetParameter(p, name, new DbDataType(systemType, dataType, dbType), paramValue);
 
 				parms.Add(p);
 			}
