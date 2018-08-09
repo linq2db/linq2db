@@ -207,14 +207,37 @@ namespace LinqToDB.Reflection
 				IsComplex = true;
 
 				if (TypeAccessor.DynamicColumnsStoreAccessor != null)
+				{
 					// get value via "Item" accessor; we're not null-checking
+
+					var storageType = TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo.GetMemberType();
+					var storedType  = storageType.GetGenericArguments()[1];
+					var outVar      = Expression.Variable(storedType, "outVar");
+					var resultVar   = Expression.Variable(Type, "result");
+
+					MethodInfo tryGetValueMethodInfo = storageType.GetMethod("TryGetValue");
+
+					if (tryGetValueMethodInfo == null)
+						throw new LinqToDBException("Storage property do not have method 'TryGetValue'");
+
 					GetterExpression =
 						Expression.Lambda(
-							Expression.Property(
-								Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
-								"Item",
-								Expression.Constant(memberInfo.Name)),
+							Expression.Block(
+								new[] { outVar, resultVar },
+								Expression.IfThenElse(
+									Expression.Call(
+										Expression.MakeMemberAccess(objParam,
+											TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
+										tryGetValueMethodInfo,
+										Expression.Constant(memberInfo.Name), outVar),
+									Expression.Assign(resultVar, Expression.Convert(outVar, Type)),
+									Expression.Assign(resultVar,
+										new DefaultValueExpression(MappingSchema.Default, Type))
+								),
+								resultVar
+							),
 							objParam);
+				}
 				else
 					// dynamic columns store was not provided, throw exception when accessed
 					GetterExpression = Expression.Lambda(

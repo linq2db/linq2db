@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+
     <ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
     <ProjectReference Include="..\Base\Tests.Base.csproj" />
     <ProjectReference Include="..\Model\Tests.Model.csproj" />
@@ -68,6 +73,16 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
     </Reference>
+
+
+    <None Include="..\..\Data\*">
+        <Link>Database/%(FileName)%(Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\Data\Create Scripts\*">
+        <Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
 
     <!--
     <PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />

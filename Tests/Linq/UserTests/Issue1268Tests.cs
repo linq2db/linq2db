@@ -41,13 +41,19 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<FullClass>())
 			{
-				var obj = new RepresentTable { Name = "Some" };
-				obj.Values.Add("IsDeleted", true);
-				db.InsertWithIdentity(obj);
+				var obj1 = new RepresentTable { Name = "Some1" };
+				obj1.Values.Add("IsDeleted", true);
+				db.InsertWithIdentity(obj1);
 
-				var loaded = db.GetTable<RepresentTable>().First();
+				var obj2 = new RepresentTable { Name = "Some2" };
+				db.InsertWithIdentity(obj2);
 
-				Assert.AreEqual(true, loaded.Values["IsDeleted"]);
+				var loaded1 = db.GetTable<RepresentTable>().First(e => e.Name == "Some1");
+				Assert.AreEqual(true, loaded1.Values["IsDeleted"]);
+
+
+				var loaded2 = db.GetTable<RepresentTable>().First(e => e.Name == "Some2");
+				Assert.AreEqual(false, loaded2.Values["IsDeleted"]);
 			}
 		}
 
