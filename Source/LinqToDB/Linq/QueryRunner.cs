@@ -220,16 +220,7 @@ namespace LinqToDB.Linq
 					ReflectionHelper.Constant.Value),
 				type);
 
-			var members  = field.Name.Split('.');
-			var defValue = Expression.Constant(dataContext.MappingSchema.GetDefaultValue(field.SystemType), field.SystemType);
-
-			for (var i = 0; i < members.Length; i++)
-			{
-				var        member = members[i];
-				Expression pof    = Expression.PropertyOrField(getter, member);
-
-				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
-			}
+			getter = field.ColumnDescriptor.MemberAccessor.GetterExpression.GetBody(getter);
 
 			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
 
