@@ -212,8 +212,8 @@ namespace LinqToDB.Reflection
 
 					var storageType = TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo.GetMemberType();
 					var storedType  = storageType.GetGenericArguments()[1];
-					var outVar      = Expression.Variable(storedType, "outVar");
-					var resultVar   = Expression.Variable(Type, "result");
+					var outVar      = Expression.Variable(storedType);
+					var resultVar   = Expression.Variable(Type);
 
 					MethodInfo tryGetValueMethodInfo = storageType.GetMethod("TryGetValue");
 
