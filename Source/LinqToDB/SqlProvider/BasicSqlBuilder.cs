@@ -1254,6 +1254,12 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
+		internal void BuildPhysicalTableHelper(ISqlTableSource table, string alias, StringBuilder sb)
+		{
+			StringBuilder = sb;
+			BuildPhysicalTable(table, alias);
+		}
+
 		protected void BuildPhysicalTable(ISqlTableSource table, string alias)
 		{
 			switch (table.ElementType)

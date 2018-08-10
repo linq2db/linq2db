@@ -298,7 +298,7 @@ namespace LinqToDB.DataProvider
 
 		private void BuildSource()
 		{
-			Command.AppendLine("USING");
+			Command.AppendLine(" USING");
 
 			if (Merge.QueryableSource != null && SupportsSourceSubQuery)
 				BuildSourceSubQuery(Merge.QueryableSource);
@@ -595,11 +595,13 @@ namespace LinqToDB.DataProvider
 
 		protected virtual void BuildMergeInto()
 		{
-			Command
-				.Append("MERGE INTO ")
-				.Append(TargetTableName)
-				.Append(" ")
-				.AppendLine((string)SqlBuilder.Convert(_targetAlias, ConvertType.NameToQueryTableAlias));
+			var ctx = Merge.Target.GetMergeContext();
+			
+			var target = ctx.GetResultStatement().SelectQuery.Select.From.Tables[0];
+
+			Command.Append("MERGE INTO ");
+
+			SqlBuilder.BuildPhysicalTableHelper(target, _targetAlias, Command);
 		}
 
 		protected virtual void BuildOperation(MergeDefinition<TTarget, TSource>.Operation operation)
@@ -1256,6 +1258,7 @@ namespace LinqToDB.DataProvider
 
 		/// <summary>
 		/// Target table name, ready for use in SQL. Could include database/schema names or/and escaping.
+		/// Doesn't include any hints.
 		/// </summary>
 		protected string TargetTableName { get; private set; }
 
