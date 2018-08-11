@@ -264,7 +264,7 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		///     <see cref="Array{Type}" />
 		/// </returns>
-		public Type[] GetEntites()
+		public Type[] GetEntities()
 		{
 			return _entityDescriptors.Keys.ToArray();
 		}
