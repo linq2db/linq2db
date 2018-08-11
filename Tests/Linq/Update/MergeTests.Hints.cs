@@ -10,7 +10,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test, IncludeDataContextSource(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void MergeIntoWithTargetHint(string context)
+		public void MergeIntoWithTargetHintSqlServer(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -19,12 +19,12 @@ namespace Tests.xUpdate
 				var table = GetTarget(db);
 
 				var rows = GetSource1(db)
-					.MergeInto(GetTarget(db).WithTableExpression("{0} WITH (HOLDLOCK) {1}"))
+					.MergeInto(GetTarget(db), "HOLDLOCK")
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH (HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -42,7 +42,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, IncludeDataContextSource(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void UsingTargetWithTargetHint(string context)
+		public void UsingTargetWithTargetHintSqlServer(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -50,8 +50,8 @@ namespace Tests.xUpdate
 
 				var table = GetTarget(db);
 
-				var rows = GetTarget(db).WithTableExpression("{0} WITH (HOLDLOCK) {1}")
-					.Merge()
+				var rows = GetTarget(db)
+					.Merge("HOLDLOCK")
 					.UsingTarget()
 					.OnTargetKey()
 					.UpdateWhenMatched((t, s) => new TestMapping1()
@@ -60,7 +60,7 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH (HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -99,7 +99,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, IncludeDataContextSource(false, TestProvName.SqlAzure, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
-		public void MergeWithTargetHint(string context)
+		public void MergeWithTargetHintSqlServer(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -107,8 +107,8 @@ namespace Tests.xUpdate
 
 				var table = GetTarget(db);
 
-				var rows = GetTarget(db).WithTableExpression("{0} WITH (HOLDLOCK) {1}")
-					.Merge()
+				var rows = GetTarget(db)
+					.Merge("HOLDLOCK")
 					.Using(GetSource1(db).Where(s => s.Field1 != null && s.Field2 != null))
 					.On(t => new { t.Field1, t.Field2 }, s => new { s.Field1, Field2 = (int?)6 })
 					.UpdateWhenMatched((t, s) => new TestMapping1()
@@ -117,7 +117,7 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH (HOLDLOCK) [Target]"));
+				Assert.True(db.LastQuery.Contains("MERGE INTO [TestMerge1] WITH(HOLDLOCK) [Target]"));
 
 				var result = table.OrderBy(_ => _.Id).ToList();
 
@@ -135,6 +135,70 @@ namespace Tests.xUpdate
 				Assert.AreEqual(321, result[3].Field3);
 				Assert.AreEqual(InitialTargetData[3].Field4, result[3].Field4);
 				Assert.IsNull(result[3].Field5);
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged)]
+		public void MergeIntoWithTargetHintOracle(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = GetSource1(db)
+					.MergeInto(GetTarget(db), "append")
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				Assert.True(db.LastQuery.Contains("MERGE /*+ append */ INTO TestMerge1 Target"));
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(6, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+				AssertRow(InitialSourceData[2], result[4], null, null);
+				AssertRow(InitialSourceData[3], result[5], null, 216);
+			}
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.Informix)]
+		public void MergeIntoWithTargetHintInformix(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var rows = GetSource1(db)
+					.MergeInto(GetTarget(db), "AVOID_STMT_CACHE")
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				Assert.True(db.LastQuery.Contains("MERGE {+ AVOID_STMT_CACHE } INTO TestMerge1 Target"));
+
+				var result = table.OrderBy(_ => _.Id).ToList();
+
+				AssertRowCount(2, rows, context);
+
+				Assert.AreEqual(6, result.Count);
+
+				AssertRow(InitialTargetData[0], result[0], null, null);
+				AssertRow(InitialTargetData[1], result[1], null, null);
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+				AssertRow(InitialTargetData[3], result[3], null, null);
+				AssertRow(InitialSourceData[2], result[4], null, null);
+				AssertRow(InitialSourceData[3], result[5], null, 216);
 			}
 		}
 	}

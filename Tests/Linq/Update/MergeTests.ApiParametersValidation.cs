@@ -26,8 +26,15 @@ namespace Tests.xUpdate
 				{
 					() => MergeExtensions.Merge<Child>(null),
 
+					() => MergeExtensions.Merge<Child>(null, "hint"),
+					() => MergeExtensions.Merge<Child>(new FakeTable<Child>(), null),
+
 					() => MergeExtensions.MergeInto<Child, Child>(null, new FakeTable<Child>()),
 					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null),
+
+					() => MergeExtensions.MergeInto<Child, Child>(null, new FakeTable<Child>(), "hint"),
+					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null, "hint"),
+					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), new FakeTable<Child>(), null),
 
 					() => MergeExtensions.Using<Child, Child>(null, new Child[0].AsQueryable()),
 					() => MergeExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null),
