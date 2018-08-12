@@ -1268,6 +1268,205 @@ namespace LinqToDB.SqlProvider
 			return deleteStatement;
 		}
 
+		SqlTableSource GetMainTableSource(SelectQuery selectQuery)
+		{
+			if (selectQuery.From.Tables.Count > 0 && selectQuery.From.Tables[0] is SqlTableSource tableSource)
+				return tableSource;
+			return null;
+		}
+
+		public SqlStatement GetAlternativeUpdateFrom(SqlUpdateStatement statement)
+		{
+			var tableSource = GetMainTableSource(statement.SelectQuery);
+
+			// we have to use common variant
+			//if (tableSource.Joins.Any(j => j.JoinType != JoinType.Inner))
+			//	return GetAlternativeUpdate(statement);
+
+			// removing joins
+			statement.SelectQuery.TransformInnerJoinsToWhere();
+
+			tableSource = GetMainTableSource(statement.SelectQuery);
+			if (tableSource == null)
+				throw new LinqToDBException("Invalid query");
+
+			// envelop query
+			if (tableSource.Source is SqlTable currentTable && statement.SelectQuery.Select.HasModifier)
+			{
+				var newQuery = new SelectQuery();
+				newQuery.Select.IsDistinct = false;
+				newQuery.ParentSelect = statement.SelectQuery.ParentSelect;
+				newQuery.Select.From.Table(statement.SelectQuery);
+
+				for (var i = 0; i < statement.Update.Items.Count; i++)
+				{
+					var item = statement.Update.Items[i];
+
+					if (null != QueryVisitor.Find(item.Expression, e => e is SqlField))
+					{
+						var idx = statement.SelectQuery.Select.Add(item.Expression);
+						item.Expression = statement.SelectQuery.Select.Columns[idx];
+					}
+				}
+
+				statement.SelectQuery = newQuery;
+				var alias = tableSource.Alias;
+				tableSource = GetMainTableSource(newQuery);
+				tableSource.Alias = alias;
+			}
+
+
+			SqlTable tableToUpdate = statement.Update.Table;
+			SqlTable tableToCompare = null;
+			SelectQuery queryToCompare = null;
+
+
+			switch (tableSource.Source)
+			{
+				case SqlTable table:
+					{
+						if (tableSource.Joins.Count == 0)
+						{
+							// remove table from FROM clause
+							statement.SelectQuery.From.Tables.RemoveAt(0);
+							if (tableToUpdate != null && tableToUpdate != table)
+							{
+								statement.Walk(false, e =>
+								{
+									if (e is SqlField field && field.Table == tableToUpdate)
+									{
+										return table.Fields[field.Name];
+									}
+
+									return e;
+								});
+							}
+							tableToUpdate = table;
+						}
+						else
+						{
+							if (tableToUpdate == null)
+							{
+								tableToUpdate = QueryHelper.EnumerateJoinedSources(statement.SelectQuery)
+									.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+									.FirstOrDefault(t => t != null);
+							}
+
+							if (tableToUpdate == null)
+								throw new LinqToDBException("Can no decide which table to update");
+
+							tableToCompare = QueryHelper.EnumerateJoinedSources(statement.SelectQuery)
+								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+								.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
+
+							if (ReferenceEquals(tableToUpdate, tableToCompare))
+							{
+								// we have to create clone
+								tableToUpdate = tableToUpdate.Clone();
+
+								for (var i = 0; i < statement.Update.Items.Count; i++)
+								{
+									var item = statement.Update.Items[i];
+									var newItem = new QueryVisitor().Convert(item, e =>
+									{
+										if (e is SqlField field && field.Table == tableToCompare)
+										{
+											return tableToUpdate.Fields[field.Name];
+										}
+
+										return e;
+									});
+
+									statement.Update.Items[i] = newItem;
+								}
+							}
+						}
+
+						break;
+					}
+				case SelectQuery query:
+					{
+						if (tableToUpdate == null)
+						{
+							tableToUpdate = QueryHelper.EnumerateJoinedSources(query)
+								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+								.FirstOrDefault(t => t != null);
+
+							if (tableToUpdate == null)
+								throw new LinqToDBException("Can no decide which table to update");
+
+							tableToUpdate = tableToUpdate.Clone();
+
+							foreach (var item in statement.Update.Items)
+							{
+								var setField = QueryHelper.GetUnderlyingField(item.Column);
+								if (setField == null)
+									throw new LinqToDBException($"Unexpected element in setter expression: {item.Column}");
+
+								item.Column = tableToUpdate.Fields[setField.Name];
+							}
+
+						}
+
+						// return first matched table
+						tableToCompare = QueryHelper.EnumerateJoinedSources(query)
+							.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+							.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
+
+						if (tableToCompare == null)
+							throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
+
+						queryToCompare = query;
+
+						break;
+					}
+			}
+
+			if (statement.SelectQuery.From.Tables.Count > 0 && tableToCompare != null)
+			{
+
+				var keys1 = tableToUpdate.GetKeys(true);
+
+				if (keys1.Count == 0)
+					throw new LinqToDBException($"Table {tableToUpdate.Name} do not have primary key. Update transformation is not availaible.");
+
+				IList<ISqlExpression> keys2;
+
+				if (queryToCompare != null)
+				{
+					var tableFields = tableToCompare.GetKeys(true);
+					keys2 = new List<ISqlExpression>();
+
+					foreach (var field in tableFields)
+					{
+						var column = queryToCompare.Select.Columns.FirstOrDefault(c => field.Equals(QueryHelper.GetUnderlyingField(c)));
+						if (column == null)
+						{
+							column = queryToCompare.Select.Columns[queryToCompare.Select.AddNew(field)];
+						}
+						keys2.Add(column);
+					}
+				}
+				else
+				{
+					keys2 = tableToCompare.GetKeys(true);
+				}
+
+				// consider to create additional where
+
+				for (int i = 0; i < keys1.Count; i++)
+				{
+					var compare = QueryHelper.GenerateEquality(keys1[i], keys2[i]);
+					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
+				}
+			}
+
+			statement.Update.Table = tableToUpdate;
+			statement.SetAliases();
+
+			return statement;
+		}
+
 		protected SqlStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
 			if (updateStatement.SelectQuery.From.Tables[0].Source is SqlTable || updateStatement.Update.Table != null)
@@ -1284,7 +1483,7 @@ namespace LinqToDB.SqlProvider
 					if (updateStatement.Update.Table != null)
 						if (QueryVisitor.Find(updateStatement.SelectQuery.From, t => t == table) == null)
 							table = (SqlTable)QueryVisitor.Find(updateStatement.SelectQuery.From,
-								ex => ex is SqlTable sqlTable && sqlTable.ObjectType == table.ObjectType) ?? table;
+								ex => ex is SqlTable sqlTable && QueryHelper.IsEqualTables(sqlTable, table)) ?? table;
 
 					var copy = new SqlTable(table);
 
@@ -1292,8 +1491,10 @@ namespace LinqToDB.SqlProvider
 					var copyKeys  = copy. GetKeys(true);
 
 					for (var i = 0; i < tableKeys.Count; i++)
-						updateStatement.SelectQuery.Where
-							.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
+					{
+						var compare = QueryHelper.GenerateEquality(copyKeys[i], tableKeys[i]);
+						updateStatement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
+					}
 
 					newUpdateStatement.SelectQuery.From.Table(copy).Where.Exists(updateStatement.SelectQuery);
 
@@ -1320,7 +1521,8 @@ namespace LinqToDB.SqlProvider
 					updateStatement = newUpdateStatement;
 				}
 
-				updateStatement.SelectQuery.From.Tables[0].Alias = "$";
+				var taleSource = GetMainTableSource(updateStatement.SelectQuery);
+				taleSource.Alias = "$F";
 			}
 
 			return updateStatement;

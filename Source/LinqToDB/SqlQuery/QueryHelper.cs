@@ -121,9 +121,9 @@ namespace LinqToDB.SqlQuery
 				yield return tableSource;
 				foreach (var join in tableSource.Joins)
 				{
-					yield return join.Table;
+					yield return @join.Table;
 
-					if (join.Table.Source is SelectQuery subquery)
+					if (@join.Table.Source is SelectQuery subquery)
 					{
 						foreach (var ts in EnumerateJoinedSources(subquery))
 						{
@@ -325,5 +325,20 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2)
+		{
+			var compare = new SqlCondition(false, new SqlPredicate.ExprExpr(field1, SqlPredicate.Operator.Equal, field2));
+
+			if (field1.CanBeNull && field2.CanBeNull)
+			{
+				var isNull1 = new SqlCondition(false, new SqlPredicate.IsNull(field1, false));
+				var isNull2 = new SqlCondition(false, new SqlPredicate.IsNull(field2, false));
+				var nulls = new SqlSearchCondition(isNull1, isNull2);
+				compare.IsOr = true;
+				compare = new SqlCondition(false, new SqlSearchCondition(compare, new SqlCondition(false, nulls)));
+			}
+
+			return compare;
+		}
 	}
 }

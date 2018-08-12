@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+    <Compile Include="..\Linq\Update\UpdateFromTests.cs" Link="UpdateFromTests.cs" />
+    <Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

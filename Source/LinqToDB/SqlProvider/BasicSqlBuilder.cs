@@ -1212,7 +1212,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (selectQuery.From.Tables.Count == 0)
+			if (selectQuery.From.Tables.Count == 0 || selectQuery.From.Tables[0].Alias == "$F")
 				return;
 
 			AppendIndent();
@@ -2865,7 +2865,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.TableSource:
 					var ts    = (SqlTableSource)table;
 					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
-					return alias != "$" ? alias : null;
+					return alias != "$" && alias != "$F" ? alias : null;
 
 				case QueryElementType.SqlTable:
 					return ((SqlTable)table).Alias;

@@ -24,6 +24,7 @@ namespace Tests.Model
 
 	public class Parent : IEquatable<Parent>, IComparable
 	{
+		[PrimaryKey]
 		public int  ParentID;
 		public int? Value1;
 
