@@ -59,10 +59,54 @@ namespace LinqToDB.SqlQuery
 
 		public override ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
-			if (_update?.Table == table)
-				return table;
+			var result = SelectQuery.GetTableSource(table);
+
+			if (result == null)
+				return _update?.Table;
+
+			//if (result == null)
+			//{
+			//	var updateTable = _update?.Table;
+			//	if (updateTable != null)
+			//	{
+			//		if (updateTable == table)
+			//			return table;
+
+			//		if (table is SelectQuery query)
+			//		{
+			//			if (QueryHelper.IsEqualTables(updateTable, updateTable))
+			//				var result = query.GetTableSource(table);
+			//			if (result != null)
+			//				return result;
+			//		}
+			//	}
+			//}
+
+
+			//if (updateTable != null)
+			//{
+
+			//}
+
 
 			return SelectQuery.GetTableSource(table);
+		}
+
+		public override bool IsDependedOn(SqlTable table)
+		{
+			// do not allow to optimize out Update table
+			if (Update == null)
+				return false;
+			return null != QueryVisitor.Find(Update, e =>
+			{
+				switch (e)
+				{
+					case SqlTable t: return QueryHelper.IsEqualTables(t, table);
+					case SqlField f: return QueryHelper.IsEqualTables(f.Table as SqlTable, table);
+				}
+
+				return false;
+			});
 		}
 
 	}

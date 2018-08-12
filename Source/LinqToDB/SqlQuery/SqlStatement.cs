@@ -455,5 +455,15 @@ namespace LinqToDB.SqlQuery
 				}
 			});
 		}
+
+		/// <summary>
+		/// Indicates when optimizer can not remove reference for particular table
+		/// </summary>
+		/// <param name="table"></param>
+		/// <returns></returns>
+		public virtual bool IsDependedOn(SqlTable table)
+		{
+			return false;
+		}
 	}
 }

@@ -92,14 +92,6 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public bool? GetUnionInvolving(SelectQuery selectQuery)
-		{
-			var info = GetHierarchyInfo(selectQuery);
-			if (info?.HierarchyType != HierarchyType.Union)
-				return null;
-			return ((SqlUnion)info.ParentElement).IsAll;
-		}
-
 		void RegisterHierachry(SelectQuery parent, SelectQuery child, HierarchyInfo info)
 		{
 			_parents[child] = info;

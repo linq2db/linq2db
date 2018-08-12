@@ -135,7 +135,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.PostgreSQL)]
 		public void Update4(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -310,7 +310,6 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged,
-			ProviderName.PostgreSQL,
 			ProviderName.MySql,
 			TestProvName.MariaDB,
 			TestProvName.MySql57,
@@ -354,7 +353,6 @@ namespace Tests.xUpdate
 			TestProvName.Firebird3,
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged,
-			ProviderName.PostgreSQL,
 			ProviderName.MySql,
 			TestProvName.MariaDB,
 			TestProvName.MySql57,
@@ -407,7 +405,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void Update12(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -424,7 +422,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public async Task Update12Async(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -441,7 +439,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.DB2, ProviderName.Informix,
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
+			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void Update13(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -763,7 +761,6 @@ namespace Tests.xUpdate
 			ProviderName.Informix,
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged,
-			ProviderName.PostgreSQL,
 			ProviderName.SqlCe,
 			ProviderName.SQLiteClassic,
 			ProviderName.SQLiteMS,
@@ -788,35 +785,6 @@ namespace Tests.xUpdate
 				idx = db.LastQuery.IndexOf("INNER JOIN", idx + 1);
 
 				Assert.That(idx, Is.EqualTo(-1));
-			}
-		}
-
-		[Test, DataContextSource(ProviderName.Informix)]
-		public void AsUpdatableTest(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				try
-				{
-					var id = 1001;
-
-					db.Child.Delete(c => c.ChildID > 1000);
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
-
-					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
-
-					var q  = db.Child.Where(c => c.ChildID == id && c.Parent.Value1 == 1);
-					var uq = q.AsUpdatable();
-
-					uq = uq.Set(c => c.ChildID, c => c.ChildID + 1);
-
-					Assert.AreEqual(1, uq.Update());
-					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
 			}
 		}
 
@@ -851,7 +819,6 @@ namespace Tests.xUpdate
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
 			ProviderName.Informix,
-			ProviderName.PostgreSQL,
 			ProviderName.SQLiteClassic,
 			ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
@@ -892,7 +859,6 @@ namespace Tests.xUpdate
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
 			ProviderName.Informix,
-			ProviderName.PostgreSQL,
 			ProviderName.SQLiteClassic,
 			ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
@@ -997,7 +963,6 @@ namespace Tests.xUpdate
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
 			ProviderName.Informix,
-			ProviderName.PostgreSQL,
 			ProviderName.SQLiteClassic,
 			ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
@@ -1060,7 +1025,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
+			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.Firebird3)]
 		public void UpdateIssue319Regression(string context)
 		{

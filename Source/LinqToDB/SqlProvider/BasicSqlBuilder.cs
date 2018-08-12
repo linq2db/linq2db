@@ -494,7 +494,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			if (updateClause.Table != null && updateClause.Table != selectQuery.From.Tables[0].Source)
+			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
 			{
 				BuildPhysicalTable(updateClause.Table, null);
 			}
@@ -2108,7 +2108,7 @@ namespace LinqToDB.SqlProvider
 						{
 							//TODO: looks like SqlBuilder is trying to fix issue with bad table mapping from Builder. Merge Tests fails.
 							var ts = Statement.SelectQuery?.GetTableSource(field.Table);
-							if (ts == null && throwExceptionIfTableNotFound)
+							if (ts == null)
 								ts = Statement.GetTableSource(field.Table);
 
 							if (ts == null)

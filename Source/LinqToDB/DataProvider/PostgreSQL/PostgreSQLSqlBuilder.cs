@@ -146,12 +146,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
-		}
-
 		protected sealed override bool IsReserved(string word)
 		{
 			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);

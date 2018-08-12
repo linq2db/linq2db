@@ -20,20 +20,6 @@ namespace LinqToDB.SqlProvider
 		SelectQuery                                                          _selectQuery;
 		SqlStatement                                                         _statement;
 
-		static bool IsEqualTables(SqlTable table1, SqlTable table2)
-		{
-			var result =
-				   table1              != null
-				&& table2              != null
-				&& table1.ObjectType   == table2.ObjectType
-				&& table1.Database     == table2.Database
-				&& table1.Schema       == table2.Schema
-				&& table1.Name         == table2.Name
-				&& table1.PhysicalName == table2.PhysicalName;
-
-			return result;
-		}
-
 		void FlattenJoins(SqlTableSource table)
 		{
 			for (var i = 0; i < table.Joins.Count; i++)
@@ -721,7 +707,7 @@ namespace LinqToDB.SqlProvider
 						continue;
 
 					// trying to remove join that is equal to FROM table
-					if (IsEqualTables(fromTable.Source as SqlTable, j1.Table.Source as SqlTable))
+					if (QueryHelper.IsEqualTables(fromTable.Source as SqlTable, j1.Table.Source as SqlTable))
 					{
 						var keys = GetKeys(j1.Table.Source);
 						if (keys != null && TryMergeWithTable(fromTable, j1, keys))
@@ -740,7 +726,7 @@ namespace LinqToDB.SqlProvider
 						if (j2.JoinType != JoinType.Inner && j2.JoinType != JoinType.Left)
 							continue;
 
-						if (!IsEqualTables(j1.Table.Source as SqlTable, j2.Table.Source as SqlTable))
+						if (!QueryHelper.IsEqualTables(j1.Table.Source as SqlTable, j2.Table.Source as SqlTable))
 							continue;
 
 						var keys = GetKeys(j2.Table.Source);
@@ -1098,6 +1084,13 @@ namespace LinqToDB.SqlProvider
 		{
 			if (join.JoinType == JoinType.Inner)
 				return false;
+
+			if (join.Table.Source is SqlTable table)
+			{
+				// do not allow to remove JOIN if table used in statement
+				if (_statement.IsDependedOn(table))
+					return false;
+			}
 
 			var found = SearchForFields(manySource, join);
 
