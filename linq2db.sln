@@ -103,6 +103,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "t4models", "t4models", "{32
 	ProjectSection(SolutionItems) = preProject
 		NuGet\t4models\CopyMe.tt.txt = NuGet\t4models\CopyMe.tt.txt
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
+		NuGet\t4models\linq2db.t4models.props = NuGet\t4models\linq2db.t4models.props
 		NuGet\t4models\LinqToDB.Tools.ttinclude = NuGet\t4models\LinqToDB.Tools.ttinclude
 	EndProjectSection
 EndProject
@@ -227,6 +228,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sybase.DataAction", "Sybase
 		NuGet\Sybase.DataAction\linq2db.Sybase.DataAction.props = NuGet\Sybase.DataAction\linq2db.Sybase.DataAction.props
 		NuGet\Sybase.DataAction\LinqToDB.Sybase.DataAction.Tools.ttinclude = NuGet\Sybase.DataAction\LinqToDB.Sybase.DataAction.Tools.ttinclude
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Playground", "Tests\Tests.Playground\Tests.Playground.csproj", "{4E3D4705-F037-4536-A45D-7AF52BB017DC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -379,6 +382,20 @@ Global
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Travis|Any CPU.ActiveCfg = Debug|Any CPU
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62}.Travis|Any CPU.Build.0 = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.AppVeyor|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.AppVeyor|Any CPU.Build.0 = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.CORE.1|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.CORE.1|Any CPU.Build.0 = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.CORE.2|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.CORE.2|Any CPU.Build.0 = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.NET.45|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.NET.45|Any CPU.Build.0 = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Travis|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC}.Travis|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -409,6 +426,7 @@ Global
 		{54DD4B32-F267-4883-A227-1BE90662339E} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{1FC89283-09FB-444B-BF70-F76B3E3A83BB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
+		{4E3D4705-F037-4536-A45D-7AF52BB017DC} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
