@@ -2615,7 +2615,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (nullableField != null)
 						{
-							var checkNullPredicate = new SqlPredicate.IsNull(nullableField, exprExpr.Operator == SqlPredicate.Operator.Equal);
+							var checkNullPredicate = new SqlPredicate.IsNull(nullableField, exprExpr != null && exprExpr.Operator == SqlPredicate.Operator.Equal);
 
 							var perdicateIsNot = isNot && inList == null;
 							predicate = BasicSqlOptimizer.OptimizePredicate(predicate, ref perdicateIsNot);
@@ -2624,7 +2624,7 @@ namespace LinqToDB.Linq.Builder
 								new SqlCondition(false,          checkNullPredicate),
 								new SqlCondition(perdicateIsNot, predicate));
 
-							orCondition.Conditions[0].IsOr = exprExpr.Operator == SqlPredicate.Operator.NotEqual;
+							orCondition.Conditions[0].IsOr = exprExpr == null || exprExpr.Operator == SqlPredicate.Operator.NotEqual;
 
 							return new SqlCondition(false, orCondition);
 						}
