@@ -103,6 +103,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "t4models", "t4models", "{32
 	ProjectSection(SolutionItems) = preProject
 		NuGet\t4models\CopyMe.tt.txt = NuGet\t4models\CopyMe.tt.txt
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
+		NuGet\t4models\linq2db.t4models.props = NuGet\t4models\linq2db.t4models.props
 		NuGet\t4models\LinqToDB.Tools.ttinclude = NuGet\t4models\LinqToDB.Tools.ttinclude
 	EndProjectSection
 EndProject
