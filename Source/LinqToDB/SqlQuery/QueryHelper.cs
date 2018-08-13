@@ -340,5 +340,33 @@ namespace LinqToDB.SqlQuery
 
 			return compare;
 		}
+
+		public static void GetUsedSources(ISqlExpression root, [NotNull] HashSet<ISqlTableSource> foundSorces)
+		{
+			if (foundSorces == null) throw new ArgumentNullException(nameof(foundSorces));
+
+			new QueryVisitor().Visit(root, e =>
+			{
+				if (e is ISqlTableSource source)
+					foundSorces.Add(source);
+				else
+					switch (e.ElementType)
+					{
+						case QueryElementType.Column:
+						{
+							var c = (SqlColumn) e;
+							foundSorces.Add(c.Parent);
+							break;
+						}
+						case QueryElementType.SqlField:
+						{
+							var f = (SqlField) e;
+							foundSorces.Add(f.Table);
+							break;
+						}
+					}
+			});
+		}
+
 	}
 }

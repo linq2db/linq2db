@@ -127,7 +127,9 @@ namespace Tests.Update
 
 		[Test, Combinatorial]
 		public void UpdateTestjoinSkip(
-			[DataSources()]
+			[IncludeDataSources(
+				ProviderName.SqlServer,
+				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)]
 			string context)
 		{
 			var data = GenerateData();
@@ -141,6 +143,52 @@ namespace Tests.Update
 					select new {c, t};
 
 				recordsToUpdate.Skip(2)
+					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1)
+					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2)
+					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3)
+					.Update();
+			}
+		}		
+
+		[Test, Combinatorial]
+		public void UpdateTestjoinSkipTake(
+			[DataSources()]
+			string context)
+		{
+			var data = GenerateData();
+			using (var db = GetDataContext(context))
+			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
+			using (var tempTable = db.CreateLocalTable("TempUpdateData", data))
+			{
+				var recordsToUpdate =
+					from c in forUpdates
+					from t in tempTable.InnerJoin(t => t.id == c.id)
+					select new {c, t};
+
+				recordsToUpdate.Skip(1).Take(2)
+					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1)
+					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2)
+					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3)
+					.Update();
+			}
+		}		
+
+		[Test, Combinatorial]
+		public void UpdateTestjoinTake(
+			[DataSources()]
+			string context)
+		{
+			var data = GenerateData();
+			using (var db = GetDataContext(context))
+			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
+			using (var tempTable = db.CreateLocalTable("TempUpdateData", data))
+			{
+				var recordsToUpdate =
+					from c in forUpdates
+					from t in tempTable.InnerJoin(t => t.id == c.id)
+					select new {c, t};
+
+				recordsToUpdate.Take(2)
 					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1)
 					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2)
 					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3)

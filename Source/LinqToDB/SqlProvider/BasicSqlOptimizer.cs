@@ -1485,6 +1485,11 @@ namespace LinqToDB.SqlProvider
 							table = (SqlTable)QueryVisitor.Find(updateStatement.SelectQuery.From,
 								ex => ex is SqlTable sqlTable && QueryHelper.IsEqualTables(sqlTable, table)) ?? table;
 
+					// we have to clone query but wo don't want to clone Parameters and original table
+					var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
+					var queryCopy = (SelectQuery) updateStatement.SelectQuery.Clone(objTree,
+						e => !(e is SqlParameter) && !(e is SqlTable));
+
 					var copy = new SqlTable(table);
 
 					var tableKeys = table.GetKeys(true);
@@ -1507,6 +1512,34 @@ namespace LinqToDB.SqlProvider
 					{
 						var ex = new QueryVisitor().Convert(item, expr =>
 							expr is SqlField fld && map.TryGetValue(fld, out fld) ? fld : expr);
+
+						var usedSources = new HashSet<ISqlTableSource>();
+						QueryHelper.GetUsedSources(ex.Expression, usedSources);
+						usedSources.Remove(copy);
+						if (usedSources.Count > 0)
+						{
+							// it means that update value column depends on other tables and we have to generate more complicated query
+
+							var objTreeInner = new Dictionary<ICloneableElement, ICloneableElement>();
+							//objTreeInner.Add(table, table);
+							var innerQuery = (SelectQuery) updateStatement.SelectQuery.Clone(objTreeInner,
+								e => !(e is SqlParameter) && !(e is SqlTable));
+
+							innerQuery.ParentSelect = newUpdateStatement.SelectQuery;
+
+							var innerKeys = table.GetKeys(true);
+
+							for (var i = 0; i < copyKeys.Count; i++)
+							{
+								var compare = QueryHelper.GenerateEquality(copyKeys[i], innerKeys[i]);
+								innerQuery.Where.SearchCondition.Conditions.Add(compare);
+							}
+
+							innerQuery.Select.Columns.Clear();
+
+							innerQuery.Select.AddNew(ex.Expression);
+							ex.Expression = innerQuery;
+						}
 
 						newUpdateStatement.Update.Items.Add(ex);
 					}
