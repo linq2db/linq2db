@@ -155,7 +155,7 @@
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.108" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.109.1" />
 	</ItemGroup>
 
 
