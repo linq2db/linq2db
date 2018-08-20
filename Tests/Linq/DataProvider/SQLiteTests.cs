@@ -16,6 +16,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Data.Common;
 	using System.Globalization;
 
 	using Model;
@@ -184,13 +185,20 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS), Category("WindowsOnly")]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestNumericsDouble(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
-				TestNumeric(conn, 1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				var versionParts = ((DbConnection)conn.Connection).ServerVersion.Split('.').Select(_ => int.Parse(_)).ToArray();
+				var version = versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2];
+
+				// https://system.data.sqlite.org/index.html/tktview?name=fb9e4b3087
+				// behavior change observed at 3.22.0-3.24.0, not observed at <= 3.19.3
+				var hasBug = version >= 32200;
+
+				TestNumeric(conn, hasBug ? -1.7900000000000002E+308d : -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn, hasBug ?  1.7900000000000002E+308d :  1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 			}
 		}
 

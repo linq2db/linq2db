@@ -189,6 +189,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.Data.SQLite" Version="2.1.0" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.109.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
