@@ -11,10 +11,13 @@ namespace LinqToDB.Common
 	using Expressions;
 	using Extensions;
 	using Mapping;
+	using System.Globalization;
 
 	static class ConvertBuilder
 	{
 		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null, typeof(int)));
+
+		static readonly PropertyInfo _invariantCultureProperty = typeof(CultureInfo).GetProperty(nameof(CultureInfo.InvariantCulture));
 
 		static object ConvertDefault(object value, Type conversionType)
 		{
@@ -110,7 +113,14 @@ namespace LinqToDB.Common
 		{
 			if (from == typeof(string))
 			{
-				var mi = to.GetMethodEx("Parse", from);
+				var mi = to.GetMethodEx("Parse", from, typeof(IFormatProvider));
+
+				if (mi != null)
+				{
+					return Expression.Call(mi, p, Expression.Property(null, _invariantCultureProperty));
+				}
+
+				mi = to.GetMethodEx("Parse", from);
 
 				if (mi != null)
 				{
