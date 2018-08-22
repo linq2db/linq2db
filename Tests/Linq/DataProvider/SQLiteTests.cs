@@ -89,9 +89,17 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Sql.Expression("CAST({0} as {1})", ServerSideOnly = true)]
+		static TValue Cast<TValue>(TValue value, string type)
+		{
+			throw new InvalidOperationException();
+		}
+
 		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
+
+			conn.InlineParameters = true;
 
 			foreach (var sqlType in new[]
 				{
@@ -108,14 +116,12 @@ namespace Tests.DataProvider
 					"real"
 				}.Except(skipTypes))
 			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+				var result = conn.Select(() => Cast(expectedValue, sqlType));
 
-				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
-
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
-				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
+				Assert.That(result, Is.EqualTo(expectedValue));
 			}
+
+			conn.InlineParameters = false;
 
 			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
@@ -147,12 +153,18 @@ namespace Tests.DataProvider
 				TestSimple<ushort> (conn, 1,    DataType.UInt16);
 				TestSimple<uint>   (conn, 1u,   DataType.UInt32);
 				TestSimple<ulong>  (conn, 1ul,  DataType.UInt64);
-				TestSimple<float>  (conn, 1,    DataType.Single);
+				TestSimple<float>  (conn, 1f,    DataType.Single);
+				TestSimple<float>  (conn, 1.1f,    DataType.Single);
 				TestSimple<double> (conn, 1d,   DataType.Double);
+				TestSimple<double> (conn, 1.1d,   DataType.Double);
 				TestSimple<decimal>(conn, 1m,   DataType.Decimal);
+				TestSimple<decimal>(conn, 1.1m,   DataType.Decimal);
 				TestSimple<decimal>(conn, 1m,   DataType.VarNumeric);
+				TestSimple<decimal>(conn, 1.1m,   DataType.VarNumeric);
 				TestSimple<decimal>(conn, 1m,   DataType.Money);
+				TestSimple<decimal>(conn, 1.1m,   DataType.Money);
 				TestSimple<decimal>(conn, 1m,   DataType.SmallMoney);
+				TestSimple<decimal>(conn, 1.1m,   DataType.SmallMoney);
 
 				TestNumeric(conn, sbyte.MinValue,    DataType.SByte);
 				TestNumeric(conn, sbyte.MaxValue,    DataType.SByte);
@@ -190,15 +202,17 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var versionParts = ((DbConnection)conn.Connection).ServerVersion.Split('.').Select(_ => int.Parse(_)).ToArray();
-				var version = versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2];
+				//var versionParts = ((DbConnection)conn.Connection).ServerVersion.Split('.').Select(_ => int.Parse(_)).ToArray();
+				//var version = versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2];
 
-				// https://system.data.sqlite.org/index.html/tktview?name=fb9e4b3087
-				// behavior change observed at 3.22.0-3.24.0, not observed at <= 3.19.3
-				var hasBug = version >= 32200;
+				//// https://system.data.sqlite.org/index.html/tktview?name=fb9e4b3087
+				//// behavior change observed at 3.22.0-3.24.0, not observed at <= 3.19.3
+				//var hasBug = version >= 32200;
 
-				TestNumeric(conn, hasBug ? -1.7900000000000002E+308d : -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
-				TestNumeric(conn, hasBug ?  1.7900000000000002E+308d :  1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn, -1.7900000000000002E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn, 1.7900000000000002E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn, 1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 			}
 		}
 

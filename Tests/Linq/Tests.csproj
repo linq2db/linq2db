@@ -155,7 +155,7 @@
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 		<PackageReference Include="MiniProfiler" Version="3.2.0.157" />
 		<PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.109.1" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.108" />
 	</ItemGroup>
 
 
@@ -189,7 +189,6 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
 		<PackageReference Include="Microsoft.Data.SQLite" Version="2.1.0" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.109.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
