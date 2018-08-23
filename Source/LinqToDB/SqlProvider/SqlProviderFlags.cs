@@ -56,6 +56,15 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public bool IsOrderByAggregateFunctionsSupported  { get; set; }
 
+		/// <summary>
+		/// Provider supports
+		/// <code>
+		/// UPDATE A
+		/// SET ...
+		/// FROM B
+		/// </code> syntax
+		/// </summary>
+		public bool IsUpdateFromSupported                 { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{

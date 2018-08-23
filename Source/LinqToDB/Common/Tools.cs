@@ -86,5 +86,33 @@ namespace LinqToDB.Common
 				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
 			}
 		}
+
+		public static string ToDebugDisplay(string str)
+		{
+			string RemoveDuplicates(string pattern, string input)
+			{
+				var toSearch = pattern + pattern;
+				do
+				{
+					var s = input.Replace(toSearch, pattern);
+					if (s == input)
+						break;
+					input = s;
+				} while (true);
+
+				return input;
+			}
+
+			str = RemoveDuplicates("\t",   str);
+			str = RemoveDuplicates("\r\n", str);
+			str = RemoveDuplicates("\n",   str);
+
+			str = str.Replace("\t",   " ");
+			str = str.Replace("\r\n", " ");
+			str = str.Replace("\n",   " ");
+
+			return str.Trim();
+		}
+			
 	}
 }

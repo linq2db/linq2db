@@ -47,6 +47,7 @@ namespace LinqToDB.DataProvider
 				IsCrossJoinSupported                 = true,
 				IsInnerJoinAsCrossSupported          = true,
 				IsOrderByAggregateFunctionsSupported = true,
+				IsUpdateFromSupported                = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));

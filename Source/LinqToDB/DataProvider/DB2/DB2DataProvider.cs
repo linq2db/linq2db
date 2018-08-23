@@ -24,6 +24,7 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip      = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));
 

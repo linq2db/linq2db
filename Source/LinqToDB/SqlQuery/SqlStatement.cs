@@ -3,18 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.SqlQuery
 {
 	using Mapping;
+	using Common;
+	using LinqToDB.Extensions;
 
-	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
+	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
 	public abstract class SqlStatement: IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{
 		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+			((IQueryElement) this)
+				.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
+				.ToString();
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		protected string DebugSqlText => Tools.ToDebugDisplay(SqlText);
 
 		public abstract QueryType QueryType { get; }
 
@@ -78,7 +83,7 @@ namespace LinqToDB.SqlQuery
 							return ConvertInListPredicate(mappingSchema, (SqlPredicate.InList)e);
 					}
 
-					return null;
+					return e;
 				});
 
 				if (statement != this)

@@ -55,12 +55,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool IsNestedJoinSupported { get { return false; } }
 
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
-		}
-
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)

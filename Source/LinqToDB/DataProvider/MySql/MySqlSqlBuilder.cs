@@ -115,12 +115,6 @@ namespace LinqToDB.DataProvider.MySql
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
-		}
-
 		public static char ParameterSymbol           { get; set; }
 		public static bool TryConvertParameterSymbol { get; set; }
 

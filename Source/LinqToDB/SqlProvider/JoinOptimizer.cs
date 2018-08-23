@@ -894,6 +894,10 @@ namespace LinqToDB.SqlProvider
 			if (join.Table.Joins.Count != 0)
 				return false;
 
+			// do not allow merging if table used in statement
+			if (join.Table.Source is SqlTable t && _statement.IsDependedOn(t))
+				return false;
+
 			var hasLeftJoin = join.JoinType == JoinType.Left;
 			var found       = SearchForFields(fromTable, join);
 
@@ -973,6 +977,10 @@ namespace LinqToDB.SqlProvider
 			SqlJoinedTable join1, SqlJoinedTable join2,
 			List<List<string>> uniqueKeys)
 		{
+			// do not allow merging if table used in statement
+			if (join2.Table.Source is SqlTable t && _statement.IsDependedOn(t))
+				return false;
+
 			var found1 = SearchForFields(manySource, join1);
 
 			if (found1 == null)

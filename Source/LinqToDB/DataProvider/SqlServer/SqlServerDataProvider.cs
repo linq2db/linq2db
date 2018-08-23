@@ -31,6 +31,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported = false;
+			SqlProviderFlags.IsUpdateFromSupported      = true;
 
 			if (version == SqlServerVersion.v2000)
 			{

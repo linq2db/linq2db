@@ -129,8 +129,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
 			if (selectQuery.From.Tables.Count == 0)
 				StringBuilder.Append("FROM DUMMY");
 		}

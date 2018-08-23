@@ -31,6 +31,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsCrossJoinSupported                 = true;
 			SqlProviderFlags.IsDistinctOrderBySupported           = false;
 			SqlProviderFlags.IsOrderByAggregateFunctionsSupported = false;
+			SqlProviderFlags.IsUpdateFromSupported                = false;
 
 			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
 

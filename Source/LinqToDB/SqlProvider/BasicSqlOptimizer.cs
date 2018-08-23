@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 // ReSharper disable InconsistentNaming
 
@@ -72,8 +74,14 @@ namespace LinqToDB.SqlProvider
 				OptimizeJoins(statement);
 
 //statement.EnsureFindTables();
+			statement = TransformStatement(statement);
 			statement.SetAliases();
 
+			return statement;
+		}
+
+		public virtual SqlStatement TransformStatement(SqlStatement statement)
+		{
 			return statement;
 		}
 
@@ -1277,49 +1285,21 @@ namespace LinqToDB.SqlProvider
 
 		public SqlStatement GetAlternativeUpdateFrom(SqlUpdateStatement statement)
 		{
-			var tableSource = GetMainTableSource(statement.SelectQuery);
-
-			// we have to use common variant
-			//if (tableSource.Joins.Any(j => j.JoinType != JoinType.Inner))
-			//	return GetAlternativeUpdate(statement);
+			if (statement.SelectQuery.Select.HasModifier)
+				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
 
 			// removing joins
 			statement.SelectQuery.TransformInnerJoinsToWhere();
 
-			tableSource = GetMainTableSource(statement.SelectQuery);
+			var tableSource = GetMainTableSource(statement.SelectQuery);
 			if (tableSource == null)
-				throw new LinqToDBException("Invalid query");
+				throw new LinqToDBException("Invalid query for Update.");
 
-			// envelop query
-			if (tableSource.Source is SqlTable currentTable && statement.SelectQuery.Select.HasModifier)
-			{
-				var newQuery = new SelectQuery();
-				newQuery.Select.IsDistinct = false;
-				newQuery.ParentSelect = statement.SelectQuery.ParentSelect;
-				newQuery.Select.From.Table(statement.SelectQuery);
+			if (statement.SelectQuery.Select.HasModifier)
+				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery);
 
-				for (var i = 0; i < statement.Update.Items.Count; i++)
-				{
-					var item = statement.Update.Items[i];
-
-					if (null != QueryVisitor.Find(item.Expression, e => e is SqlField))
-					{
-						var idx = statement.SelectQuery.Select.Add(item.Expression);
-						item.Expression = statement.SelectQuery.Select.Columns[idx];
-					}
-				}
-
-				statement.SelectQuery = newQuery;
-				var alias = tableSource.Alias;
-				tableSource = GetMainTableSource(newQuery);
-				tableSource.Alias = alias;
-			}
-
-
-			SqlTable tableToUpdate = statement.Update.Table;
+			SqlTable tableToUpdate  = statement.Update.Table;
 			SqlTable tableToCompare = null;
-			SelectQuery queryToCompare = null;
-
 
 			switch (tableSource.Source)
 			{
@@ -1347,15 +1327,15 @@ namespace LinqToDB.SqlProvider
 						{
 							if (tableToUpdate == null)
 							{
-								tableToUpdate = QueryHelper.EnumerateJoinedSources(statement.SelectQuery)
+								tableToUpdate = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
 									.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
 									.FirstOrDefault(t => t != null);
 							}
 
 							if (tableToUpdate == null)
-								throw new LinqToDBException("Can no decide which table to update");
+								throw new LinqToDBException("Can not decide which table to update");
 
-							tableToCompare = QueryHelper.EnumerateJoinedSources(statement.SelectQuery)
+							tableToCompare = QueryHelper.EnumerateAccessibleSources(statement.SelectQuery)
 								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
 								.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
 
@@ -1388,12 +1368,12 @@ namespace LinqToDB.SqlProvider
 					{
 						if (tableToUpdate == null)
 						{
-							tableToUpdate = QueryHelper.EnumerateJoinedSources(query)
+							tableToUpdate = QueryHelper.EnumerateAccessibleSources(query)
 								.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
 								.FirstOrDefault(t => t != null);
 
 							if (tableToUpdate == null)
-								throw new LinqToDBException("Can no decide which table to update");
+								throw new LinqToDBException("Can not decide which table to update");
 
 							tableToUpdate = tableToUpdate.Clone();
 
@@ -1409,14 +1389,12 @@ namespace LinqToDB.SqlProvider
 						}
 
 						// return first matched table
-						tableToCompare = QueryHelper.EnumerateJoinedSources(query)
+						tableToCompare = QueryHelper.EnumerateAccessibleSources(query)
 							.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
 							.FirstOrDefault(t => t != null && QueryHelper.IsEqualTables(t, tableToUpdate));
 
 						if (tableToCompare == null)
 							throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
-
-						queryToCompare = query;
 
 						break;
 					}
@@ -1425,38 +1403,19 @@ namespace LinqToDB.SqlProvider
 			if (statement.SelectQuery.From.Tables.Count > 0 && tableToCompare != null)
 			{
 
-				var keys1 = tableToUpdate.GetKeys(true);
+				var keys1 = tableToUpdate. GetKeys(true);
+				var keys2 = tableToCompare.GetKeys(true);
 
 				if (keys1.Count == 0)
-					throw new LinqToDBException($"Table {tableToUpdate.Name} do not have primary key. Update transformation is not availaible.");
-
-				IList<ISqlExpression> keys2;
-
-				if (queryToCompare != null)
-				{
-					var tableFields = tableToCompare.GetKeys(true);
-					keys2 = new List<ISqlExpression>();
-
-					foreach (var field in tableFields)
-					{
-						var column = queryToCompare.Select.Columns.FirstOrDefault(c => field.Equals(QueryHelper.GetUnderlyingField(c)));
-						if (column == null)
-						{
-							column = queryToCompare.Select.Columns[queryToCompare.Select.AddNew(field)];
-						}
-						keys2.Add(column);
-					}
-				}
-				else
-				{
-					keys2 = tableToCompare.GetKeys(true);
-				}
-
-				// consider to create additional where
+					throw new LinqToDBException($"Table {tableToUpdate.Name} do not have primary key. Update transformation is not available.");
 
 				for (int i = 0; i < keys1.Count; i++)
 				{
-					var compare = QueryHelper.GenerateEquality(keys1[i], keys2[i]);
+					var column = QueryHelper.NeedColumnForExpression(statement.SelectQuery, keys2[i], false);
+					if (column == null)
+						throw new LinqToDBException($"Can not create query column for expression '{keys2[i]}'.");
+
+					var compare = QueryHelper.GenerateEquality(keys1[i], column);
 					statement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
 				}
 			}
@@ -1467,95 +1426,169 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
+		public static bool IsAggregationFunction(IQueryElement expr)
+		{
+			if (expr is SqlFunction func)
+				return func.IsAggregate;
+
+			if (expr is SqlExpression expression)
+				return expression.IsAggregate;
+
+			return false;
+		}
+
+		protected bool NeedsEnvelopingForUpdate(SelectQuery query)
+		{
+			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
+				return true;
+
+			if (!query.Where.IsEmpty)
+			{
+				if (QueryVisitor.Find(query.Where, e => IsAggregationFunction(e)) != null)
+					return true;
+			}
+
+			return false;
+		}
+
 		protected SqlStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
-			if (updateStatement.SelectQuery.From.Tables[0].Source is SqlTable || updateStatement.Update.Table != null)
+			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Take(2).Count();
+
+			// It covers subqueries also. Simple subquery will have sourcesCount == 2
+			if (sourcesCount > 1)
 			{
-				if (updateStatement.SelectQuery.From.Tables.Count > 1 || updateStatement.SelectQuery.From.Tables[0].Joins.Count > 0)
+				if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
+					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery);
+
+				var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
+
+				var newUpdateStatement = new SqlUpdateStatement(sql);
+				updateStatement.SelectQuery.ParentSelect = sql;
+
+				var tableToUpdate = updateStatement.Update.Table;
+				if (tableToUpdate == null)
 				{
-					var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
-
-					var newUpdateStatement = new SqlUpdateStatement(sql);
-					updateStatement.SelectQuery.ParentSelect = sql;
-
-					var table = updateStatement.Update.Table ?? (SqlTable)updateStatement.SelectQuery.From.Tables[0].Source;
-
-					if (updateStatement.Update.Table != null)
-						if (QueryVisitor.Find(updateStatement.SelectQuery.From, t => t == table) == null)
-							table = (SqlTable)QueryVisitor.Find(updateStatement.SelectQuery.From,
-								ex => ex is SqlTable sqlTable && QueryHelper.IsEqualTables(sqlTable, table)) ?? table;
-
-					// we have to clone query but wo don't want to clone Parameters and original table
-					var objTree = new Dictionary<ICloneableElement, ICloneableElement>();
-					var queryCopy = (SelectQuery) updateStatement.SelectQuery.Clone(objTree,
-						e => !(e is SqlParameter) && !(e is SqlTable));
-
-					var copy = new SqlTable(table);
-
-					var tableKeys = table.GetKeys(true);
-					var copyKeys  = copy. GetKeys(true);
-
-					for (var i = 0; i < tableKeys.Count; i++)
-					{
-						var compare = QueryHelper.GenerateEquality(copyKeys[i], tableKeys[i]);
-						updateStatement.SelectQuery.Where.SearchCondition.Conditions.Add(compare);
-					}
-
-					newUpdateStatement.SelectQuery.From.Table(copy).Where.Exists(updateStatement.SelectQuery);
-
-					var map = new Dictionary<SqlField,SqlField>(table.Fields.Count);
-
-					foreach (var field in table.Fields.Values)
-						map.Add(field, copy[field.Name]);
-
-					foreach (var item in updateStatement.Update.Items)
-					{
-						var ex = new QueryVisitor().Convert(item, expr =>
-							expr is SqlField fld && map.TryGetValue(fld, out fld) ? fld : expr);
-
-						var usedSources = new HashSet<ISqlTableSource>();
-						QueryHelper.GetUsedSources(ex.Expression, usedSources);
-						usedSources.Remove(copy);
-						if (usedSources.Count > 0)
-						{
-							// it means that update value column depends on other tables and we have to generate more complicated query
-
-							var objTreeInner = new Dictionary<ICloneableElement, ICloneableElement>();
-							//objTreeInner.Add(table, table);
-							var innerQuery = (SelectQuery) updateStatement.SelectQuery.Clone(objTreeInner,
-								e => !(e is SqlParameter) && !(e is SqlTable));
-
-							innerQuery.ParentSelect = newUpdateStatement.SelectQuery;
-
-							var innerKeys = table.GetKeys(true);
-
-							for (var i = 0; i < copyKeys.Count; i++)
-							{
-								var compare = QueryHelper.GenerateEquality(copyKeys[i], innerKeys[i]);
-								innerQuery.Where.SearchCondition.Conditions.Add(compare);
-							}
-
-							innerQuery.Select.Columns.Clear();
-
-							innerQuery.Select.AddNew(ex.Expression);
-							ex.Expression = innerQuery;
-						}
-
-						newUpdateStatement.Update.Items.Add(ex);
-					}
-
-					newUpdateStatement.Parameters.AddRange(updateStatement.Parameters);
-					newUpdateStatement.Update.Table = updateStatement.Update.Table;
-					newUpdateStatement.With         = updateStatement.With;
-
-					updateStatement.Parameters.Clear();
-					updateStatement.Update.Items.Clear();
-
-					updateStatement = newUpdateStatement;
+					tableToUpdate = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery)
+						.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+						.FirstOrDefault(t => t != null);
 				}
 
-				var taleSource = GetMainTableSource(updateStatement.SelectQuery);
-				taleSource.Alias = "$F";
+				if (tableToUpdate == null)
+					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
+
+				// we have to ensure that clone do not contain tableToUpdate
+				var objectTree = new Dictionary<ICloneableElement, ICloneableElement>();
+				var clonedQuery = (SelectQuery)updateStatement.SelectQuery.Clone(
+					objectTree,
+					e => !(e is SqlParameter)
+				);
+
+				var tableToUpdateMapping = new Dictionary<ICloneableElement,ICloneableElement>(objectTree);
+				// remove mapping from updatable table
+				objectTree.Remove(tableToUpdate);
+				foreach (var field in tableToUpdate.Fields.Values)
+				{
+					objectTree.Remove(field);
+				} 
+			
+				var tableToCompare = QueryHelper.EnumerateAccessibleSources(clonedQuery)
+					.Select(ts => (ts as SqlTableSource)?.Source as SqlTable)
+					.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
+
+				if (tableToCompare == null)
+					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
+
+				var compareKeys = tableToCompare.GetKeys(true);
+				var tableKeys   = tableToUpdate.GetKeys(true);
+
+				clonedQuery.Where.EnsureConjunction();
+				for (var i = 0; i < tableKeys.Count; i++)
+				{
+					var column = QueryHelper.NeedColumnForExpression(clonedQuery, compareKeys[i], false);
+					if (column == null)
+						throw new LinqToDBException($"Can not create query column for expression '{compareKeys[i]}'.");
+					var compare = QueryHelper.GenerateEquality(tableKeys[i], column);
+					clonedQuery.Where.SearchCondition.Conditions.Add(compare);
+				}
+
+				clonedQuery.Select.Columns.Clear();
+				newUpdateStatement.SelectQuery.From.Table(tableToUpdate).Where.Exists(clonedQuery);
+
+				foreach (var item in updateStatement.Update.Items)
+				{
+					var ex = new QueryVisitor().Convert(item.Expression, expr =>
+						expr is ICloneableElement cloneable && objectTree.TryGetValue(cloneable, out var newValue)
+							? (ISqlExpression) newValue
+							: expr);
+
+					var usedSources = new HashSet<ISqlTableSource>();
+					QueryHelper.GetUsedSources(ex, usedSources);
+					usedSources.Remove(tableToUpdate);
+					if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+						usedSources.Remove((ISqlTableSource)replaced);
+
+					if (usedSources.Count > 0)
+					{
+						// it means that update value column depends on other tables and we have to generate more complicated query
+
+						var innerQuery = (SelectQuery) clonedQuery.Clone(
+							new Dictionary<ICloneableElement, ICloneableElement>(),
+							e => !(e is SqlParameter) && !(e is SqlTable));
+
+						innerQuery.ParentSelect = sql;
+
+						innerQuery.Select.Columns.Clear();
+
+
+						var remapped = new QueryVisitor().Convert(ex,
+							e =>
+							{
+								if (!(e is ICloneableElement c))
+									return e;
+
+								if (tableToUpdateMapping.TryGetValue(c, out var n))
+									e = (IQueryElement) n;
+
+								if (e is SqlColumn clmn && clmn.Parent != innerQuery || e is SqlField)
+								{
+									var column = QueryHelper.NeedColumnForExpression(innerQuery, (ISqlExpression)e, false);
+									if (column != null)
+										return column;
+								}
+
+								return e;
+
+							});
+
+						innerQuery.Select.AddNew(remapped);
+						ex = innerQuery;
+					}
+
+					item.Column = tableToUpdate.Fields[QueryHelper.GetUnderlyingField(item.Column).Name];
+					item.Expression = ex;
+					newUpdateStatement.Update.Items.Add(item);
+				}
+
+				newUpdateStatement.Parameters.AddRange(updateStatement.Parameters);
+				newUpdateStatement.Update.Table = updateStatement.Update.Table != null ? tableToUpdate : null;
+				newUpdateStatement.With         = updateStatement.With;
+
+				updateStatement.Parameters.Clear();
+				updateStatement.Update.Items.Clear();
+
+				updateStatement = newUpdateStatement;
+
+				var tableSource = GetMainTableSource(updateStatement.SelectQuery);
+				tableSource.Alias = "$F";
+			}
+			else
+			{
+				var tableSource = GetMainTableSource(updateStatement.SelectQuery);
+				if (tableSource.Source is SqlTable || updateStatement.Update.Table != null)
+				{
+					tableSource.Alias = "$F";
+				}
 			}
 
 			return updateStatement;
@@ -1692,5 +1725,184 @@ namespace LinqToDB.SqlProvider
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Moves Distinct query into another subquery. Useful when preserving ordering is required, because some providers do not support DISTINCT ORDER BY.
+		/// <code>
+		/// -- before
+		/// SELECT DISTINCT TAKE 10 c1, c2
+		/// FROM A
+		/// ORDER BY c1
+		/// -- after
+		/// SELECT TAKE 10 B.c1, B.c2
+		/// FROM
+		///   (
+		///     SELECT DISTINCT c1, c2
+		///     FROM A
+		///   ) B
+		/// ORDER BY B.c1
+		/// </code>
+		/// </summary>
+		/// <param name="statement">Statement which may contain take/skip and Distinct modifiers.</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
+		protected SqlStatement SeparateDistinctFromPagination(SqlStatement statement)
+		{
+			return QueryHelper.WrapQuery(statement,
+				q => q.Select.IsDistinct && (q.Select.TakeValue != null || q.Select.SkipValue != null),
+				(p, q) =>
+				{
+					p.Select.SkipValue = q.Select.SkipValue;
+					p.Select.Take(q.Select.TakeValue, q.Select.TakeHints);
+
+					q.Select.SkipValue = null;
+					q.Select.Take(null, null);
+
+					QueryHelper.MoveOrderByUp(p, q);
+				});
+		}
+
+		/// <summary>
+		/// Replaces pagination by Window function ROW_NUMBER().
+		/// </summary>
+		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
+		/// <param name="onlySubqueries">Indicates when transformation needed only for subqueries.</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
+		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool onlySubqueries)
+		{
+			return QueryHelper.WrapQuery(statement,
+				query =>
+				{
+					if ((query.Select.TakeValue == null || query.Select.TakeHints != null) && query.Select.SkipValue == null)
+						return 0;
+					if (onlySubqueries && query.ParentSelect == null)
+						return 0;
+					return 1;
+				}
+				, queries =>
+				{
+					var query = queries[queries.Length - 1];
+					var processingQuery = queries[queries.Length - 2];
+
+					SqlOrderByItem[] orderByItems = null;
+					if (!query.OrderBy.IsEmpty)
+						orderByItems = query.OrderBy.Items.ToArray();
+					//else if (query.Select.Columns.Count > 0)
+					//{
+					//	orderByItems = query.Select.Columns
+					//		.Select(c => QueryHelper.NeedColumnForExpression(query, c, false))
+					//		.Where(e => e != null)
+					//		.Take(1)
+					//		.Select(e => new SqlOrderByItem(e, false))
+					//		.ToArray();
+					//}
+
+					if (orderByItems == null || orderByItems.Length == 0)
+						orderByItems = new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
+
+					var orderBy = string.Join(", ",
+						orderByItems.Select((oi, i) => oi.IsDescending ? $"{{{i}}} DESC" : $"{{{i}}}"));
+
+					query.OrderBy.Items.Clear();
+
+					var parameters = orderByItems.Select(oi => oi.Expression).ToArray();
+
+					var rowNumberExpression = new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, true, parameters);
+
+					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
+					rowNumberColumn.Alias = "RN";
+
+					if (query.Select.SkipValue != null)
+					{
+						processingQuery.Where.EnsureConjunction().Expr(rowNumberColumn).Greater
+							.Expr(query.Select.SkipValue);
+
+						if (query.Select.TakeValue != null)
+							processingQuery.Where.Expr(rowNumberColumn).LessOrEqual.Expr(
+								new SqlBinaryExpression(query.Select.SkipValue.SystemType,
+									query.Select.SkipValue, "+", query.Select.TakeValue));
+					}
+					else
+					{
+						processingQuery.Where.EnsureConjunction().Expr(rowNumberColumn).LessOrEqual
+							.Expr(query.Select.TakeValue);
+					}
+
+					query.Select.SkipValue = null;
+					query.Select.Take(null, null);
+
+				});
+		}
+
+		/// <summary>
+		/// Alternative mechanism how to prevent loosing sorting in Distinct queries.
+		/// </summary>
+		/// <param name="statement">Statement which may contain Distinct queries.</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
+		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement)
+		{
+			return QueryHelper.WrapQuery(statement,
+				q => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
+				(p, q) =>
+				{
+					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToArray();
+					var orderItems   = q.Select.OrderBy.Items.Select(o => o.Expression).ToArray();
+
+					var projectionItems = columnItems.Union(orderItems).ToArray();
+					if (projectionItems.Length < columnItems.Length)
+					{
+						// Sort columns not in projection, transforming to 
+						/*
+							 SELECT {S.columnItems}, S.RN FROM 
+							 (
+								  SELECT {columnItems + orderItems}, RN = ROW_NUMBER() OVER (PARTITION BY {columnItems} ORDER BY {orderItems}) FROM T
+							 )
+							 WHERE S.RN = 1
+						*/
+
+						var orderByItems = q.Select.OrderBy.Items;
+
+						var partitionBy = string.Join(", ", columnItems.Select((oi, i) => $"{{{i}}}"));
+
+						var orderBy = string.Join(", ",
+							orderByItems.Select((oi, i) =>
+								oi.IsDescending
+									? $"{{{i + columnItems.Length}}} DESC"
+									: $"{{{i + columnItems.Length}}}"));
+
+						var parameters = columnItems.Concat(orderByItems.Select(oi => oi.Expression)).ToArray();
+
+						var rnExpr = new SqlExpression(typeof(long),
+							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
+							true, parameters);
+
+						var additionalProjection = orderItems.Except(columnItems).ToArray();
+						foreach (var expr in additionalProjection)
+						{
+							q.Select.AddNew(expr);
+						}
+
+						var rnColumn = q.Select.AddNewColumn(rnExpr);
+						rnColumn.Alias = "RN";
+
+						q.Select.IsDistinct = false;
+						q.OrderBy.Items.Clear();
+						p.Select.Where.EnsureConjunction().Expr(rnColumn).Equal.Value(1);
+					}
+					else
+					{
+						// All sorting columns in projection, transforming to 
+						/*
+							 SELECT {S.columnItems} FROM 
+							 (
+								  SELECT DISTINCT {columnItems} FROM T
+							 )
+							 ORDER BY {orderItems}
+
+						*/
+
+						QueryHelper.MoveOrderByUp(p, q);
+					}
+				});
+		}
 	}
 }

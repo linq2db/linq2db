@@ -32,8 +32,11 @@ namespace LinqToDB.DataProvider.Informix
 				return selectQuery;
 			});
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement);
+		}
 
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:

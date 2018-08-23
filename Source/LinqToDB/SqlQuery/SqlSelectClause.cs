@@ -156,6 +156,11 @@ namespace LinqToDB.SqlQuery
 			return Columns.Count - 1;
 		}
 
+		public SqlColumn AddNewColumn(ISqlExpression expr)
+		{
+			return Columns[AddNew(expr)];
+		}
+
 		public int Add(ISqlExpression expr, string alias)
 		{
 			return AddOrFindColumn(new SqlColumn(SelectQuery, expr, alias));

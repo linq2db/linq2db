@@ -87,18 +87,43 @@ namespace Tests.Update
 			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
 			using (var tempTable = db.CreateLocalTable(newData))
 			{
+				var someId = 100;
+
 				var recordsToUpdate =
 					from c in forUpdates
 					from t in tempTable
-					where t.id == c.id
+					where t.id == c.id && t.id != someId
 					select new {c, t};
+
+				var int1 = 11;
+				var int2 = 22;
+				var int3 = 33;
 
 				recordsToUpdate.Update(forUpdates, v => new UpdatedEntities()
 				{
-					Value1 = v.c.Value1 * v.t.Value1,
-					Value2 = v.c.Value1 * v.t.Value1,
-					Value3 = v.c.Value1 * v.t.Value1,
+					Value1 = v.c.Value1 * v.t.Value1 * int1,
+					Value2 = v.c.Value2 * v.t.Value2 * int2,
+					Value3 = v.c.Value3 * v.t.Value3 * int3,
 				});
+
+				var actual = forUpdates.Select(v => new
+				{
+					Id = v.id,
+					Value1 = v.Value1,
+					Value2 = v.Value2,
+					Value3 = v.Value3,
+				});
+
+				var expected = data.Join(newData, c => c.id, t => t.id, (c, t) => new { c, t })
+					.Select(v => new
+					{
+						Id = v.c.id,
+						Value1 = v.c.Value1 * v.t.Value1 * int1,
+						Value2 = v.c.Value2 * v.t.Value2 * int2,
+						Value3 = v.c.Value3 * v.t.Value3 * int3,
+					});
+
+				AreEqual(expected, actual);
 			}
 		}
 
@@ -108,20 +133,47 @@ namespace Tests.Update
 			string context)
 		{
 			var data = GenerateData();
+			var newData = GenerateNewData();
 			using (var db = GetDataContext(context))
-			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
-			using (var tempTable = db.CreateLocalTable("TempUpdateData", data))
+			using (var forUpdates = db.CreateLocalTable(data))
+			using (var tempTable = db.CreateLocalTable(newData))
 			{
+				var someId = 100;
+
 				var recordsToUpdate =
 					from c in forUpdates
 					from t in tempTable.InnerJoin(t => t.id == c.id)
+					where t.id != someId
 					select new {c, t};
 
+				var int1 = 11;
+				var int2 = 22;
+				var int3 = 33;
+
 				recordsToUpdate
-					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1)
-					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2)
-					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3)
+					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1 * int1)
+					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2 * int2)
+					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3 * int3)
 					.Update();
+
+				var actual = forUpdates.Select(v => new
+				{
+					Id = v.id,
+					Value1 = v.Value1,
+					Value2 = v.Value2,
+					Value3 = v.Value3,
+				});
+
+				var expected = data.Join(newData, c => c.id, t => t.id, (c, t) => new { c, t })
+					.Select(v => new
+					{
+						Id = v.c.id,
+						Value1 = v.c.Value1 * v.t.Value1 * int1,
+						Value2 = v.c.Value2 * v.t.Value2 * int2,
+						Value3 = v.c.Value3 * v.t.Value3 * int3,
+					});
+
+				AreEqual(expected, actual);
 			}
 		}		
 
@@ -129,24 +181,60 @@ namespace Tests.Update
 		public void UpdateTestjoinSkip(
 			[IncludeDataSources(
 				ProviderName.SqlServer,
-				ProviderName.PostgreSQL, ProviderName.PostgreSQL92, ProviderName.PostgreSQL93, ProviderName.PostgreSQL95)]
+				ProviderName.SqlServer2000,
+				ProviderName.SqlServer2005,
+				ProviderName.SqlServer2008,
+				ProviderName.SqlServer2012,
+				ProviderName.SqlServer2014,
+				ProviderName.PostgreSQL, 
+				ProviderName.PostgreSQL92, 
+				ProviderName.PostgreSQL93, 
+				ProviderName.PostgreSQL95)]
 			string context)
 		{
 			var data = GenerateData();
+			var newData = GenerateNewData();
 			using (var db = GetDataContext(context))
-			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
-			using (var tempTable = db.CreateLocalTable("TempUpdateData", data))
+			using (var forUpdates = db.CreateLocalTable(data))
+			using (var tempTable = db.CreateLocalTable(newData))
 			{
+				var someId = 100;
+
 				var recordsToUpdate =
 					from c in forUpdates
 					from t in tempTable.InnerJoin(t => t.id == c.id)
+					where t.id != someId
 					select new {c, t};
 
-				recordsToUpdate.Skip(2)
-					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1)
-					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2)
-					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3)
+				var int1 = 11;
+				var int2 = 22;
+				var int3 = 33;
+
+				recordsToUpdate.OrderBy(v => v.c.id).Skip(2)
+					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1 * int1)
+					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2 * int2)
+					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3 * int3)
 					.Update();
+
+				var actual = forUpdates.Select(v => new
+				{
+					Id = v.id,
+					Value1 = v.Value1,
+					Value2 = v.Value2,
+					Value3 = v.Value3,
+				});
+
+				var expected = data.Join(newData, c => c.id, t => t.id, (c, t) => new { c, t })
+					.Select(v => new
+					{
+						Id = v.c.id,
+						Value1 = v.c.id > 1 ? v.c.Value1 * v.t.Value1 * int1 : v.c.Value1,
+						Value2 = v.c.id > 1 ? v.c.Value2 * v.t.Value2 * int2 : v.c.Value2,
+						Value3 = v.c.id > 1 ? v.c.Value3 * v.t.Value3 * int3 : v.c.Value3,
+					});
+
+				AreEqual(expected, actual);
+
 			}
 		}		
 
@@ -156,20 +244,53 @@ namespace Tests.Update
 			string context)
 		{
 			var data = GenerateData();
-			using (var db = GetDataContext(context))
-			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
-			using (var tempTable = db.CreateLocalTable("TempUpdateData", data))
+			var newData = GenerateNewData();
+			//using (var db = GetDataContext(context))
+			//using (var forUpdates = db.CreateLocalTable(data))
+			//using (var tempTable = db.CreateLocalTable(newData))
+
+			var db = GetDataContext(context);
 			{
+				var forUpdates = db.CreateLocalTable(data);
+				var tempTable = db.CreateLocalTable(newData);
+
+				var someId = 100;
+
 				var recordsToUpdate =
 					from c in forUpdates
 					from t in tempTable.InnerJoin(t => t.id == c.id)
+					where t.id != someId
 					select new {c, t};
 
-				recordsToUpdate.Skip(1).Take(2)
-					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1)
-					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2)
-					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3)
+				var int1 = 11;
+				var int2 = 22;
+				var int3 = 33;
+
+				recordsToUpdate.OrderBy(v => v.c.id).Skip(1).Take(2)
+					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1 * int1)
+					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2 * int2)
+					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3 * int3)
 					.Update();
+
+				var actual = forUpdates.Select(v => new
+				{
+					Id = v.id,
+					Value1 = v.Value1,
+					Value2 = v.Value2,
+					Value3 = v.Value3,
+				});
+
+				var expected = data.Join(newData, c => c.id, t => t.id, (c, t) => new { c, t })
+					.Select(v => new
+					{
+						Id = v.c.id,
+						Value1 = v.c.id > 0 && v.c.id < 3 ? v.c.Value1 * v.t.Value1 * int1 : v.c.Value1,
+						Value2 = v.c.id > 0 && v.c.id < 3 ? v.c.Value2 * v.t.Value2 * int2 : v.c.Value2,
+						Value3 = v.c.id > 0 && v.c.id < 3 ? v.c.Value3 * v.t.Value3 * int3 : v.c.Value3,
+					});
+
+				AreEqual(expected, actual);
+
 			}
 		}		
 
@@ -179,20 +300,47 @@ namespace Tests.Update
 			string context)
 		{
 			var data = GenerateData();
+			var newData = GenerateNewData();
 			using (var db = GetDataContext(context))
-			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
-			using (var tempTable = db.CreateLocalTable("TempUpdateData", data))
+			using (var forUpdates = db.CreateLocalTable(data))
+			using (var tempTable = db.CreateLocalTable(newData))
 			{
+				var someId = 100;
+
 				var recordsToUpdate =
 					from c in forUpdates
 					from t in tempTable.InnerJoin(t => t.id == c.id)
+					where t.id != someId
 					select new {c, t};
 
+				var int1 = 11;
+				var int2 = 22;
+				var int3 = 33;
+
 				recordsToUpdate.Take(2)
-					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1)
-					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2)
-					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3)
+					.Set(v => v.c.Value1, v => v.c.Value1 * v.t.Value1 * int1)
+					.Set(v => v.c.Value2, v => v.c.Value2 * v.t.Value2 * int2)
+					.Set(v => v.c.Value3, v => v.c.Value3 * v.t.Value3 * int3)
 					.Update();
+
+				var actual = forUpdates.Select(v => new
+				{
+					Id = v.id,
+					Value1 = v.Value1,
+					Value2 = v.Value2,
+					Value3 = v.Value3,
+				});
+
+				var expected = data.Join(newData, c => c.id, t => t.id, (c, t) => new { c, t })
+					.Select(v => new
+					{
+						Id = v.c.id,
+						Value1 = v.c.id < 2 ? v.c.Value1 * v.t.Value1 * int1 : v.c.Value1,
+						Value2 = v.c.id < 2 ? v.c.Value2 * v.t.Value2 * int2 : v.c.Value2,
+						Value3 = v.c.id < 2 ? v.c.Value3 * v.t.Value3 * int3 : v.c.Value3,
+					});
+
+				AreEqual(expected, actual);
 			}
 		}		
 
@@ -203,7 +351,7 @@ namespace Tests.Update
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
-			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
+			using (var forUpdates = db.CreateLocalTable(data))
 			using (var relations = db.CreateLocalTable(GenerateRelationData()))
 			{
 

@@ -135,7 +135,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.PostgreSQL)]
+		[Test, DataContextSource(ProviderName.Informix)]
 		public void Update4(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -909,7 +909,6 @@ namespace Tests.xUpdate
 			ProviderName.Firebird,
 			TestProvName.Firebird3,
 			ProviderName.Informix,
-			ProviderName.PostgreSQL,
 			ProviderName.SQLiteClassic,
 			ProviderName.SQLiteMS,
 			ProviderName.SqlCe,
@@ -1025,7 +1024,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird,
+			ProviderName.Access, ProviderName.Informix, ProviderName.Firebird,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.Firebird3)]
 		public void UpdateIssue319Regression(string context)
 		{

@@ -862,10 +862,24 @@ namespace LinqToDB.DataProvider
 			var statement = qry.Queries[0].Statement;
 
 			if (ProviderUsesAlternativeUpdate)
-				BuildAlternativeUpdateQuery(statement);
+				statement = BuildAlternativeUpdateQuery(statement);
 			else
 			{
 				var tables = MoveJoinsToSubqueries(statement, _targetAlias, SourceAlias, QueryElement.UpdateSetter);
+
+				// My fix
+				//var targetTable = QueryHelper.EnumerateAccessibleTables(statement.SelectQuery).First(t => QueryHelper.IsEqualTables(t, tables.Item1.Source as SqlTable));
+				//var currentUpdateTable = statement.RequireUpdateClause().Table;
+				//if (targetTable != currentUpdateTable)
+				//{
+				//	statement = new QueryVisitor().ConvertImmutable(statement, e =>
+				//	{
+				//		if (e is SqlTable t && t == currentUpdateTable)
+				//			return targetTable;
+				//		return e;
+				//	});
+				//}
+
 				SetSourceColumnAliases(statement.RequireUpdateClause(), tables.Item2.Source);
 			}
 
@@ -875,7 +889,7 @@ namespace LinqToDB.DataProvider
 			SqlBuilder.BuildUpdateSetHelper((SqlUpdateStatement)statement, Command);
 		}
 
-		private void BuildAlternativeUpdateQuery(SqlStatement statement)
+		private SqlStatement BuildAlternativeUpdateQuery(SqlStatement statement)
 		{
 			var query    = statement.EnsureQuery();
 			var subQuery = (SelectQuery)QueryVisitor.Find(query.Where.SearchCondition, e => e.ElementType == QueryElementType.SqlQuery);
@@ -918,6 +932,7 @@ namespace LinqToDB.DataProvider
 			source.Alias = SourceAlias;
 
 			SetSourceColumnAliases(statement.RequireUpdateClause(), source.Source);
+			return statement;
 		}
 
 		protected void BuildDefaultUpdate()

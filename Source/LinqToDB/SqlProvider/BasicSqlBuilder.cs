@@ -202,7 +202,10 @@ namespace LinqToDB.SqlProvider
 		{
 			BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.UpdateClause;  BuildUpdateClause(Statement, selectQuery, updateClause);
-			BuildStep = Step.FromClause;    BuildFromClause(Statement, selectQuery);
+
+			if (SqlProviderFlags.IsUpdateFromSupported)
+				{BuildStep = Step.FromClause;    BuildFromClause(Statement, selectQuery);}
+
 			BuildStep = Step.WhereClause;   BuildWhereClause(selectQuery);
 			BuildStep = Step.GroupByClause; BuildGroupByClause(selectQuery);
 			BuildStep = Step.HavingClause;  BuildHavingClause(selectQuery);

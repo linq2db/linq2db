@@ -32,6 +32,7 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
 
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));

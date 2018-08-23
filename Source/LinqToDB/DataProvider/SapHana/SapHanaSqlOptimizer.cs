@@ -13,20 +13,13 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			statement = base.Finalize(statement);
-
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete:
-					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
-					break;
-				case QueryType.Update:
-					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
-					break;
+				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
+				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
 			}
-
 			return statement;
 		}
 

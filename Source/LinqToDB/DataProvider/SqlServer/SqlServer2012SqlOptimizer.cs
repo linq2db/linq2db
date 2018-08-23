@@ -9,43 +9,42 @@
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			var result = base.Finalize(statement);
-			if (result.SelectQuery != null)
-				CorrectSkip(result.SelectQuery);
-			return result;
+			if (statement.IsUpdate())
+				statement = ReplaceTakeSkipWithRowNumber(statement, false);
+			else
+			{
+				statement = ReplaceTakeSkipWithRowNumber(statement, true);
+				CorrectRootSkip(statement.SelectQuery);
+			}
+
+			return statement;
 		}
 
-		private void CorrectSkip(SelectQuery selectQuery)
+		private void CorrectRootSkip(SelectQuery selectQuery)
 		{
-			((ISqlExpressionWalkable)selectQuery).Walk(false, e =>
+			if (selectQuery != null && selectQuery.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery) && selectQuery.OrderBy.IsEmpty)
 			{
-				var q = e as SelectQuery;
-				if (q != null && q.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(q) && q.OrderBy.IsEmpty)
+				if (selectQuery.Select.Columns.Count == 0)
 				{
-					if (q.Select.Columns.Count == 0)
+					var source = selectQuery.Select.From.Tables[0].Source;
+					var keys = source.GetKeys(true);
+
+					foreach (var key in keys)
 					{
-						var source = q.Select.From.Tables[0].Source;
-						var keys = source.GetKeys(true);
-
-						foreach (var key in keys)
-						{
-							q.Select.AddNew(key);
-						}
-					}
-
-					for (var i = 0; i < q.Select.Columns.Count; i++)
-						q.OrderBy.ExprAsc(new SqlValue(i + 1));
-
-					if (q.OrderBy.IsEmpty)
-					{
-						throw new LinqToDBException("Order by required for Skip operation.");
+						selectQuery.Select.AddNew(key);
 					}
 				}
-				return e;
+
+				for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+					selectQuery.OrderBy.ExprAsc(new SqlValue(i + 1));
+
+				if (selectQuery.OrderBy.IsEmpty)
+				{
+					throw new LinqToDBException("Order by required for Skip operation.");
+				}
 			}
-			);
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		protected virtual  bool BuildAlternativeSql => true;
+		protected virtual  bool BuildAlternativeSql => false;
 
 		protected override string FirstFormat(SelectQuery selectQuery)
 		{

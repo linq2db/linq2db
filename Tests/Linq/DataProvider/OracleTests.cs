@@ -1504,74 +1504,6 @@ namespace Tests.DataProvider
 
 		#endregion
 
-		[Test, IncludeDataContextSource(false, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void TestOrderByFirst1(string context)
-		{
-			using (var db = new TestDataConnection(context))
-			{
-				var q =
-					from x in db.Parent
-					where x.Value1 == 1
-					orderby x.ParentID descending
-					select x;
-
-				var row = q.First();
-
-				var start = 0;
-				var n     = 0;
-
-				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
-					n++;
-
-				Assert.That(n, Is.EqualTo(2));
-			}
-		}
-
-		[Test, IncludeDataContextSource(false, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void TestOrderByFirst2(string context)
-		{
-			using (var db = new TestDataConnection(context))
-			{
-				var q =
-					from x in db.Parent
-					where x.Value1 == 1
-					select x;
-
-				var row = q.First();
-
-				var start = 0;
-				var n     = 0;
-
-				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
-					n++;
-
-				Assert.That(n, Is.EqualTo(1));
-			}
-		}
-
-		[Test, IncludeDataContextSource(false, ProviderName.OracleNative, ProviderName.OracleManaged)]
-		public void TestOrderByFirst3(string context)
-		{
-			using (var db = new TestDataConnection(context))
-			{
-				var q =
-					from x in db.Parent
-					where x.Value1 == 1
-					orderby x.ParentID descending
-					select x;
-
-				var row = q.Skip(1).First();
-
-				var start = 0;
-				var n     = 0;
-
-				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
-					n++;
-
-				Assert.That(n, Is.EqualTo(3));
-			}
-		}
-
 		[Table("DecimalOverflow")]
 		class DecimalOverflow
 		{
@@ -1943,7 +1875,7 @@ namespace Tests.DataProvider
 			public string StringValue;
 		}
 
-		[Test, OracleDataContext]
+		[Test, OracleDataContext, Ignore("Too slow")]
 		[SkipCategory("Oracle.Native.New", ProviderName.OracleNative)]
 		public void Issue723Test1(string context)
 		{

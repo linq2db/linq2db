@@ -90,113 +90,9 @@ namespace LinqToDB.DataProvider.Oracle
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
 		}
 
-		string _rowNumberAlias;
-
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
-		}
-
-		protected override void BuildSql()
-		{
-			var selectQuery = Statement.SelectQuery;
-
-			if (selectQuery == null)
-			{
-				base.BuildSql();
-				return;
-			}
-
-			if (NeedSkip(selectQuery))
-			{
-				var aliases = GetTempAliases(2, "t");
-
-				if (_rowNumberAlias == null)
-					_rowNumberAlias = GetTempAliases(1, "rn")[0];
-
-				AppendIndent().AppendFormat("SELECT {0}.*", aliases[1]).AppendLine();
-				AppendIndent().Append("FROM").    AppendLine();
-				AppendIndent().Append("(").       AppendLine();
-				Indent++;
-
-				AppendIndent().AppendFormat("SELECT {0}.*, ROWNUM as {1}", aliases[0], _rowNumberAlias).AppendLine();
-				AppendIndent().Append("FROM").    AppendLine();
-				AppendIndent().Append("(").       AppendLine();
-				Indent++;
-
-				base.BuildSql();
-
-				Indent--;
-				AppendIndent().Append(") ").Append(aliases[0]).AppendLine();
-
-				if (NeedTake(selectQuery))
-				{
-					AppendIndent().AppendLine("WHERE");
-					AppendIndent().Append("\tROWNUM <= ");
-					BuildExpression(Add<int>(selectQuery.Select.SkipValue, selectQuery.Select.TakeValue));
-					StringBuilder.AppendLine();
-				}
-
-				Indent--;
-				AppendIndent().Append(") ").Append(aliases[1]).AppendLine();
-				AppendIndent().Append("WHERE").AppendLine();
-
-				Indent++;
-
-				AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
-				BuildExpression(selectQuery.Select.SkipValue);
-
-				StringBuilder.AppendLine();
-				Indent--;
-			}
-			else if (NeedTake(selectQuery) && (!selectQuery.OrderBy.IsEmpty || !selectQuery.Having.IsEmpty))
-			{
-				var aliases = GetTempAliases(1, "t");
-
-				AppendIndent().AppendFormat("SELECT {0}.*", aliases[0]).AppendLine();
-				AppendIndent().Append("FROM").    AppendLine();
-				AppendIndent().Append("(").       AppendLine();
-				Indent++;
-
-				base.BuildSql();
-
-				Indent--;
-				AppendIndent().Append(") ").Append(aliases[0]).AppendLine();
-				AppendIndent().Append("WHERE").AppendLine();
-
-				Indent++;
-
-				AppendIndent().Append("ROWNUM <= ");
-				BuildExpression(selectQuery.Select.TakeValue);
-
-				StringBuilder.AppendLine();
-				Indent--;
-			}
-			else
-			{
-				base.BuildSql();
-			}
-		}
-
-		protected override void BuildWhereSearchCondition(SelectQuery selectQuery, SqlSearchCondition condition)
-		{
-			if (NeedTake(selectQuery) && !NeedSkip(selectQuery) && selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty)
-			{
-				BuildPredicate(
-					Precedence.LogicalConjunction,
-					new SqlPredicate.ExprExpr(
-						new SqlExpression(null, "ROWNUM", Precedence.Primary),
-						SqlPredicate.Operator.LessOrEqual,
-						selectQuery.Select.TakeValue));
-
-				if (base.BuildWhere(selectQuery))
-				{
-					StringBuilder.Append(" AND ");
-					BuildSearchCondition(Precedence.LogicalConjunction, condition);
-				}
-			}
-			else
-				BuildSearchCondition(Precedence.Unknown, condition);
 		}
 
 		protected override void BuildFunction(SqlFunction func)
@@ -260,12 +156,6 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				base.BuildInsertQuery(statement, insertClause, addAlias);
 			}
-		}
-
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
-		{
-			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
 		}
 
 		protected sealed override bool IsReserved(string word)

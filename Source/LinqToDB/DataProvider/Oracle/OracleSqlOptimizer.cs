@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -30,14 +31,22 @@ namespace LinqToDB.DataProvider.Oracle
 				});
 			}
 
-			statement = base.Finalize(statement);
+			return base.Finalize(statement);
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement)
+		{
+			statement = ReplaceTakeSkipWithRowNum(statement, false);
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete((SqlDeleteStatement) statement);
-				case QueryType.Update : return GetAlternativeUpdate((SqlUpdateStatement) statement);
-				default               : return statement;
+				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
+				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
 			}
+
+			statement = QueryHelper.OptimizeSubqueries(statement);
+
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
@@ -144,5 +153,65 @@ namespace LinqToDB.DataProvider.Oracle
 			return expr;
 		}
 
+		static ISqlExpression RowNumExpr = new SqlExpression(typeof(long), "ROWNUM", Precedence.Primary, true);
+
+		/// <summary>
+		/// Replaces Take/Skip by ROWNUM usage.
+		/// See <a href="https://blogs.oracle.com/oraclemagazine/on-rownum-and-limiting-results">'Pagination with ROWNUM'</a> for more information.
+		/// </summary>
+		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
+		/// <param name="onlySubqueries">Indicates when transformation needed only for subqueries.</param>
+		/// <returns>The same <paramref name="statement"/> or modified statement when optimization has been performed.</returns>
+		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
+		{
+			return QueryHelper.WrapQuery(statement,
+				query =>
+				{
+					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
+						return 0;
+					if (query.Select.SkipValue != null)
+						return 2;
+
+					if (query.Select.TakeValue != null && query.Select.OrderBy.IsEmpty)
+					{
+						query.Select.Where.EnsureConjunction().Expr(RowNumExpr)
+							.LessOrEqual.Expr(query.Select.TakeValue);
+
+						query.Select.Take(null, null);
+						return 0;
+					}
+						
+					return 1;
+				}
+				, queries =>
+				{
+					var query = queries[queries.Length - 1];
+					var processingQuery = queries[queries.Length - 2];
+
+					if (query.Select.SkipValue != null)
+					{
+						var rnColumn = processingQuery.Select.AddNewColumn(RowNumExpr);
+						rnColumn.Alias = "RN";
+
+						if (query.Select.TakeValue != null)
+						{
+							processingQuery.Where.EnsureConjunction().Expr(RowNumExpr)
+								.LessOrEqual.Expr(new SqlBinaryExpression(query.Select.SkipValue.SystemType,
+									query.Select.SkipValue, "+", query.Select.TakeValue));
+						}
+
+						queries[queries.Length - 3].Where.Expr(rnColumn).Greater.Expr(query.Select.SkipValue);
+					}
+					else
+					{
+						processingQuery.Where.EnsureConjunction().Expr(RowNumExpr)
+							.LessOrEqual.Expr(query.Select.TakeValue);
+					}
+
+					query.Select.SkipValue = null;
+					query.Select.Take(null, null);
+
+				});
+		}
 	}
 }

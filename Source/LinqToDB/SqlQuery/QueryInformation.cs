@@ -92,6 +92,33 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		public IEnumerable<SelectQuery> GetQueriesChildFirst()
+		{
+			return GetQueriesChildFirst(_rootQuery);
+		}
+
+		public IEnumerable<SelectQuery> GetQueriesChildFirst(SelectQuery root)
+		{
+			CheckInitialized();
+
+			if (_tree.TryGetValue(root, out var list))
+			{
+				foreach (var item in list)
+				foreach (var subItem in GetQueriesChildFirst(item))
+				{
+					yield return subItem;
+				}
+
+				// assuming that list at this stage is immutable
+				foreach (var item in list)
+				{
+					yield return item;
+				}
+			}
+
+			yield return root;
+		}
+
 		void RegisterHierachry(SelectQuery parent, SelectQuery child, HierarchyInfo info)
 		{
 			_parents[child] = info;

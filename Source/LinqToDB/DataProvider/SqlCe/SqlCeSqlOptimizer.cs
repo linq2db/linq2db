@@ -12,10 +12,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
-			statement = base.Finalize(statement);
-
 			var selectQuery = statement.SelectQuery;
 			if (selectQuery != null)
 				new QueryVisitor().Visit(selectQuery.Select, element =>
@@ -44,18 +42,19 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			if (selectQuery != null)
-				CorrectSkip(selectQuery);
+			statement = CorrectSkip(statement);
 
 			return statement;
 		}
 
-		private void CorrectSkip(SelectQuery selectQuery)
+		public static SqlStatement CorrectSkip(SqlStatement statement)
 		{
-			((ISqlExpressionWalkable)selectQuery).Walk(false, e =>
+			new QueryVisitor().Visit(statement, e =>
 			{
-				var q = e as SelectQuery;
-				if (q != null && q.Select.SkipValue != null && q.OrderBy.IsEmpty)
+				if (!(e is SelectQuery q))
+					return;
+
+				if (q.Select.SkipValue != null && q.OrderBy.IsEmpty)
 				{
 					if (q.Select.Columns.Count == 0)
 					{
@@ -76,9 +75,9 @@ namespace LinqToDB.DataProvider.SqlCe
 						throw new LinqToDBException("Order by required for Skip operation.");
 					}
 				}
-				return e;
-			}
-			);
+			});
+
+			return statement;
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

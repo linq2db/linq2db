@@ -188,10 +188,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (expr.ElementType == QueryElementType.SqlParameter)
 				{
-					var parm = (SqlParameter)expr;
-					var field = column[0].Sql is SqlField sqlField
-						? sqlField
-						: (SqlField)((SqlColumn)column[0].Sql).Expression;
+					var parm  = (SqlParameter)expr;
+					var field = QueryHelper.GetUnderlyingField(column[0].Sql);
 
 					if (parm.DataType == DataType.Undefined)
 						parm.DataType = field.DataType;
