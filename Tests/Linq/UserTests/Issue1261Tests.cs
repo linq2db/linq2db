@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	[TestFixture, ActiveIssue]
+	[TestFixture]
 	public class Issue1261Tests : TestBase
 	{
 		[Test, DataContextSource]
