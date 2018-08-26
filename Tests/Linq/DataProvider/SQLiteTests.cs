@@ -17,6 +17,8 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using Model;
+	using System.Globalization;
+	using System.Threading;
 
 	[TestFixture]
 	public class SQLiteTests : TestBase
@@ -118,6 +120,7 @@ namespace Tests.DataProvider
 				// sqlite floating point parser doesn't restore roundtrip values properly
 				// and also deviation could differ for different versions of engine
 				// see https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b
+				// and TestDoubleRoundTrip test
 				if (expectedValue is double doubleValue)
 					Assert.AreEqual(doubleValue, (double)(object)result, Math.Abs(doubleValue) * 1e-15);
 				else if (expectedValue is float floatValue)
@@ -201,6 +204,65 @@ namespace Tests.DataProvider
 				TestNumeric(conn, +214748m,          DataType.SmallMoney);
 			}
 		}
+
+		[ActiveIssue("https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b")]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+		public void TestDoubleRoundTrip(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var cmd = conn.CreateCommand();
+				var value = -1.7900000000000002E+308;
+				// SELECT CAST(-1.7900000000000002E+308 as real)
+				cmd.CommandText = FormattableString.Invariant($"SELECT CAST({value:G17} as real)");
+				using (var rd = cmd.ExecuteReader())
+				{
+					rd.Read();
+					var valueFromDB = rd.GetDouble(0);
+
+					// -1.790000000000001E+308d != -1.7900000000000002E+308
+					Assert.AreEqual(value, valueFromDB);
+				}
+			}
+		}
+
+#if !NETSTANDARD1_6
+		[ActiveIssue("https://system.data.sqlite.org/index.html/tktview/83949ee3dbe8256b0b7be543748704ba12bb271e", Configuration = ProviderName.SQLiteClassic)]
+		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
+		public void TestDecimalFormatting(string context)
+		{
+			var current = Thread.CurrentThread.CurrentCulture;
+			try
+			{
+				Thread.CurrentThread.CurrentCulture = new CultureInfo("nl-NL");
+
+				using (var conn = new DataConnection(context))
+				{
+					var cmd = conn.CreateCommand();
+					var value = 1.1m;
+					cmd.CommandText = "SELECT @p";
+
+					var p = cmd.CreateParameter();
+					p.DbType = System.Data.DbType.VarNumeric;
+					p.Value = value;
+					p.ParameterName = "@p";
+					cmd.Parameters.Add(p);
+
+					using (var rd = cmd.ExecuteReader())
+					{
+						rd.Read();
+						var valueFromDB = rd.GetValue(0);
+
+						Assert.AreEqual("1.1", valueFromDB);
+					}
+				}
+			}
+			finally
+			{
+				Thread.CurrentThread.CurrentCulture = current;
+			}
+		}
+#endif
 
 		[Test, IncludeDataContextSource(ProviderName.SQLiteClassic, ProviderName.SQLiteMS)]
 		public void TestNumericsDouble(string context)
