@@ -88,6 +88,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		// this adds type as string using single quotes, but sqlite understands such syntax
 		[Sql.Expression("CAST({0} as {1})", ServerSideOnly = true)]
 		static TValue Cast<TValue>(TValue value, string type)
 		{
