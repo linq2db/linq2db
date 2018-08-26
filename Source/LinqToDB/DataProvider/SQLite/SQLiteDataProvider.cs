@@ -8,7 +8,6 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	using Data;
 	using Extensions;
-	using LinqToDB.DataProvider.Informix;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;

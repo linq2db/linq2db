@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Threading;
 
-namespace LinqToDB.DataProvider.Informix
+namespace LinqToDB
 {
 	internal class InvariantCultureRegion : IDisposable
 	{
