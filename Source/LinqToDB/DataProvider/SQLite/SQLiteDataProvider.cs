@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override string ConnectionTypeName  => Name == ProviderName.SQLiteClassic
 			? "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"
 			: "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite";
-		protected override string DataReaderTypeName   =>Name == ProviderName.SQLiteClassic
+		protected override string DataReaderTypeName   => Name == ProviderName.SQLiteClassic
 			? "System.Data.SQLite.SQLiteDataReader, System.Data.SQLite"
 			: "Microsoft.Data.Sqlite.SqliteDataReader, Microsoft.Data.Sqlite";
 
@@ -65,6 +65,18 @@ namespace LinqToDB.DataProvider.SQLite
 				return "nchar";
 
 			return typeName;
+		}
+
+		public override IDisposable ExecuteScope()
+		{
+			if (Name == ProviderName.SQLiteClassic)
+			{
+				// SQLite classic provider use current culture to convert decimals to text
+				// which produce culture-dependent strings
+				return new InvariantCultureRegion();
+			}
+
+			return base.ExecuteScope();
 		}
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
