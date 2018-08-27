@@ -158,7 +158,7 @@ namespace LinqToDB.ServiceModel
 
 		static MethodInfo GetReaderMethodInfo(Type type)
 		{
-			switch (type.GetTypeCodeEx())
+			switch (type.ToNullableUnderlying().GetTypeCodeEx())
 			{
 				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataReader>(r => r.GetBoolean (0));
 				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataReader>(r => r.GetByte    (0));
