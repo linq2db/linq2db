@@ -2,18 +2,18 @@
 using System.Globalization;
 using System.Threading;
 
-namespace LinqToDB.DataProvider.Informix
+namespace LinqToDB
 {
-	internal class InformixCultureFixRegion : IDisposable
+	internal class InvariantCultureRegion : IDisposable
 	{
 #if !NETSTANDARD1_6
 		private readonly CultureInfo _original;
 #endif
 
-		public InformixCultureFixRegion()
+		public InvariantCultureRegion()
 		{
 #if !NETSTANDARD1_6
-			if (Thread.CurrentThread.CurrentCulture.NumberFormat.CurrencyDecimalSeparator != ".")
+			if (!Thread.CurrentThread.CurrentCulture.Equals(CultureInfo.InvariantCulture))
 			{
 				_original = Thread.CurrentThread.CurrentCulture;
 				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
