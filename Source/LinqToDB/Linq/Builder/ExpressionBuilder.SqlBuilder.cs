@@ -1512,7 +1512,9 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertCompare(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			if (left.NodeType == ExpressionType.Convert && left.Type == typeof(int) && (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Convert))
+			if (left.NodeType == ExpressionType.Convert
+				&& left.Type == typeof(int)
+				&& (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Convert))
 			{
 				var conv  = (UnaryExpression)left;
 
@@ -1525,7 +1527,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (left.NodeType == ExpressionType.Convert && left.Type == typeof(int?) && (right.NodeType == ExpressionType.Constant || (right.NodeType == ExpressionType.Convert && ((UnaryExpression)right).Operand.NodeType == ExpressionType.Convert)))
+			if (left.NodeType == ExpressionType.Convert
+				&& left.Type == typeof(int?)
+				&& (right.NodeType == ExpressionType.Constant
+					|| (right.NodeType == ExpressionType.Convert
+						&& ((UnaryExpression)right).Operand.NodeType == ExpressionType.Convert)))
 			{
 				var conv = (UnaryExpression)left;
 
@@ -1538,7 +1544,9 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (right.NodeType == ExpressionType.Convert && right.Type == typeof(int) && (left.NodeType == ExpressionType.Constant || left.NodeType == ExpressionType.Convert))
+			if (right.NodeType == ExpressionType.Convert
+				&& right.Type == typeof(int)
+				&& (left.NodeType == ExpressionType.Constant || left.NodeType == ExpressionType.Convert))
 			{
 				var conv = (UnaryExpression)right;
 
@@ -1551,7 +1559,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (right.NodeType == ExpressionType.Convert && right.Type == typeof(int?) && (left.NodeType == ExpressionType.Constant || (left.NodeType == ExpressionType.Convert && ((UnaryExpression)left).Operand.NodeType == ExpressionType.Convert)))
+			if (right.NodeType == ExpressionType.Convert
+				&& right.Type == typeof(int?)
+				&& (left.NodeType == ExpressionType.Constant
+					|| (left.NodeType == ExpressionType.Convert
+						&& ((UnaryExpression)left).Operand.NodeType == ExpressionType.Convert)))
 			{
 				var conv = (UnaryExpression)right;
 
