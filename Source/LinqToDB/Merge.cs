@@ -27,10 +27,25 @@ namespace LinqToDB
 		public static IMergeableUsing<TTarget> Merge<TTarget>(this ITable<TTarget> target)
 				where TTarget : class
 		{
-			if (target == null)
-				throw new ArgumentNullException(nameof(target));
+			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			return new MergeDefinition<TTarget, TTarget>(target);
+		}
+
+		/// <summary>
+		/// Starts merge operation definition from target table.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <param name="target">Target table.</param>
+		/// <param name="hint">Database-specific merge hint.</param>
+		/// <returns>Returns merge command builder, that contains only target.</returns>
+		public static IMergeableUsing<TTarget> Merge<TTarget>(this ITable<TTarget> target, string hint)
+				where TTarget : class
+		{
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (hint   == null) throw new ArgumentNullException(nameof(hint));
+
+			return new MergeDefinition<TTarget, TTarget>(target, hint);
 		}
 
 		/// <summary>
@@ -43,14 +58,37 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
 			this IQueryable<TSource> source,
-			ITable<TTarget> target)
+			ITable<TTarget>          target)
 				where TTarget : class
 				where TSource : class
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
-			return new MergeDefinition<TTarget, TSource>(target, source);
+			return new MergeDefinition<TTarget, TSource>(target, source, null);
+		}
+
+		/// <summary>
+		/// Starts merge operation definition from source query.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="hint">Database-specific merge hint.</param>
+		/// <returns>Returns merge command builder with source and target set.</returns>
+		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
+			this IQueryable<TSource> source,
+			ITable<TTarget>          target,
+			string                   hint)
+				where TTarget : class
+				where TSource : class
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (hint   == null) throw new ArgumentNullException(nameof(hint));
+
+			return new MergeDefinition<TTarget, TSource>(target, source, hint);
 		}
 
 		/// <summary>
@@ -63,7 +101,7 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
 			this IMergeableUsing<TTarget> merge,
-			IQueryable<TSource> source)
+			IQueryable<TSource>           source)
 				where TTarget : class
 				where TSource : class
 		{
@@ -83,7 +121,7 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source and target set.</returns>
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
 			this IMergeableUsing<TTarget> merge,
-			IEnumerable<TSource> source)
+			IEnumerable<TSource>          source)
 				where TTarget : class
 				where TSource : class
 		{
@@ -122,8 +160,8 @@ namespace LinqToDB
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource, TKey>(
 			this IMergeableOn<TTarget, TSource> merge,
-			Expression<Func<TTarget, TKey>> targetKey,
-			Expression<Func<TSource, TKey>> sourceKey)
+			Expression<Func<TTarget, TKey>>     targetKey,
+			Expression<Func<TSource, TKey>>     sourceKey)
 				where TTarget : class
 				where TSource : class
 		{
@@ -143,7 +181,7 @@ namespace LinqToDB
 		/// <param name="matchCondition">Rule to match/join target and source records.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource>(
-			this IMergeableOn<TTarget, TSource> merge,
+			this IMergeableOn<TTarget, TSource>      merge,
 			Expression<Func<TTarget, TSource, bool>> matchCondition)
 				where TTarget : class
 				where TSource : class
@@ -199,7 +237,7 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatchedAnd<TTarget>(
 			this IMergeableSource<TTarget, TTarget> merge,
-			Expression<Func<TTarget, bool>> searchCondition)
+			Expression<Func<TTarget, bool>>         searchCondition)
 				where TTarget : class
 		{
 			if (merge           == null) throw new ArgumentNullException(nameof(merge));
@@ -222,7 +260,7 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatched<TTarget, TSource>(
 			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TSource, TTarget>> setter)
+			Expression<Func<TSource, TTarget>>      setter)
 				where TTarget : class
 				where TSource : class
 		{
@@ -248,8 +286,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatchedAnd<TTarget, TSource>(
 			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TSource, bool>> searchCondition,
-			Expression<Func<TSource, TTarget>> setter)
+			Expression<Func<TSource, bool>>         searchCondition,
+			Expression<Func<TSource, TTarget>>      setter)
 				where TTarget : class
 				where TSource : class
 		{
@@ -291,7 +329,7 @@ namespace LinqToDB
 		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAnd<TTarget>(
-			this IMergeableSource<TTarget, TTarget> merge,
+			this IMergeableSource<TTarget, TTarget>  merge,
 			Expression<Func<TTarget, TTarget, bool>> searchCondition)
 				where TTarget : class
 		{
@@ -314,7 +352,7 @@ namespace LinqToDB
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> UpdateWhenMatched<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
+			this IMergeableSource<TTarget, TSource>     merge,
 			Expression<Func<TTarget, TSource, TTarget>> setter)
 				where TTarget : class
 				where TSource : class
@@ -340,8 +378,8 @@ namespace LinqToDB
 		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAnd<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TSource, bool>> searchCondition,
+			this IMergeableSource<TTarget, TSource>     merge,
+			Expression<Func<TTarget, TSource, bool>>    searchCondition,
 			Expression<Func<TTarget, TSource, TTarget>> setter)
 				where TTarget : class
 				where TSource : class
@@ -368,7 +406,7 @@ namespace LinqToDB
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedThenDelete<TTarget>(
-			this IMergeableSource<TTarget, TTarget> merge,
+			this IMergeableSource<TTarget, TTarget>  merge,
 			Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 				where TTarget : class
 		{
@@ -393,7 +431,7 @@ namespace LinqToDB
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAndThenDelete<TTarget>(
-			this IMergeableSource<TTarget, TTarget> merge,
+			this IMergeableSource<TTarget, TTarget>  merge,
 			Expression<Func<TTarget, TTarget, bool>> searchCondition,
 			Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 				where TTarget : class
@@ -421,9 +459,9 @@ namespace LinqToDB
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedThenDelete<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
+			this IMergeableSource<TTarget, TSource>     merge,
 			Expression<Func<TTarget, TSource, TTarget>> setter,
-			Expression<Func<TTarget, TSource, bool>> deleteCondition)
+			Expression<Func<TTarget, TSource, bool>>    deleteCondition)
 				where TTarget : class
 				where TSource : class
 		{
@@ -452,10 +490,10 @@ namespace LinqToDB
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAndThenDelete<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TSource, bool>> searchCondition,
+			this IMergeableSource<TTarget, TSource>     merge,
+			Expression<Func<TTarget, TSource, bool>>    searchCondition,
 			Expression<Func<TTarget, TSource, TTarget>> setter,
-			Expression<Func<TTarget, TSource, bool>> deleteCondition)
+			Expression<Func<TTarget, TSource, bool>>    deleteCondition)
 				where TTarget : class
 				where TSource : class
 		{
@@ -501,7 +539,7 @@ namespace LinqToDB
 		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> DeleteWhenMatchedAnd<TTarget, TSource>(
-			this IMergeableSource<TTarget, TSource> merge,
+			this IMergeableSource<TTarget, TSource>  merge,
 			Expression<Func<TTarget, TSource, bool>> searchCondition)
 				where TTarget : class
 				where TSource : class
@@ -529,7 +567,7 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySource<TTarget, TSource>(
 			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, TTarget>> setter)
+			Expression<Func<TTarget, TTarget>>      setter)
 				where TTarget : class
 				where TSource : class
 		{
@@ -556,8 +594,8 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySourceAnd<TTarget, TSource>(
 			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, bool>> searchCondition,
-			Expression<Func<TTarget, TTarget>> setter)
+			Expression<Func<TTarget, bool>>         searchCondition,
+			Expression<Func<TTarget, TTarget>>      setter)
 				where TTarget : class
 				where TSource : class
 		{
@@ -605,7 +643,7 @@ namespace LinqToDB
 		/// <returns>Returns new merge command builder with new operation.</returns>
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySourceAnd<TTarget, TSource>(
 			this IMergeableSource<TTarget, TSource> merge,
-			Expression<Func<TTarget, bool>> searchCondition)
+			Expression<Func<TTarget, bool>>         searchCondition)
 				where TTarget : class
 				where TSource : class
 		{
@@ -658,12 +696,11 @@ namespace LinqToDB
 		/// <returns>Returns number of target table records, affected by merge comand.</returns>
 		public static async Task<int> MergeAsync<TTarget, TSource>(
 			this IMergeable<TTarget, TSource> merge,
-			CancellationToken token = default)
+			CancellationToken                 token = default)
 				where TTarget : class
 				where TSource : class
 		{
-			if (merge == null)
-				throw new ArgumentNullException(nameof(merge));
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
 			var definition = (MergeDefinition<TTarget, TSource>)merge;
 
