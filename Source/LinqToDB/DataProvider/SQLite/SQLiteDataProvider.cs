@@ -107,8 +107,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			if (Name == ProviderName.SQLiteMS && value is char
-				&& (dataType == DataType.Char || dataType == DataType.NChar))
+			if (Name == ProviderName.SQLiteMS && value is char)
 			{
 				value = value.ToString();
 			}
