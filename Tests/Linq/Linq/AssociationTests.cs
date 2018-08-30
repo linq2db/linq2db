@@ -864,10 +864,41 @@ namespace Tests.Linq
 				db.Child.SelectMany(_ => AssociationExtension.QuerableParent(_, db)));
 			}
 		}
+
+		[Test, Combinatorial]
+		public void AssociationExpressionMethod([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var list = db.Parent.Select(p => p.ChildPredicate()).ToList();
+			}
+		}
 	}
 
 	public static class AssociationExtension
 	{
+		[Association(ExpressionPredicate = nameof(ChildPredicateImpl))]
+		public static Child ChildPredicate(this Parent parent)
+		{
+			throw new InvalidOperationException("Used only as Association helper");
+		}
+
+		static Expression<Func<Parent,Child,bool>> ChildPredicateImpl()
+		{
+			return (p,c) => p.ParentID == c.ParentID && c.ChildPredicateMethod();
+		}
+
+		[ExpressionMethod(nameof(ChildPredicateMethodImpl))]
+		public static bool ChildPredicateMethod(this Child child)
+		{
+			throw new NotImplementedException();
+		}
+
+		static Expression<Func<Child,bool>> ChildPredicateMethodImpl()
+		{
+			return c => c.ChildID > 1;
+		}
+
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public static IEnumerable<Child> Children(this Parent parent)
 		{

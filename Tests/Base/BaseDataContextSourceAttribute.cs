@@ -93,6 +93,10 @@ namespace Tests
 //				explic.Add(timeout ?? new TimeoutAttribute(10000));
 //#endif
 
+			var skipAttrs = method.GetCustomAttributes<SkipCategoryAttribute>(true)
+				.Where(a => a.ProviderName != null)
+				.ToDictionary(a => a.ProviderName, a => a.Category);
+
 			var builder = new NUnitTestCaseBuilder();
 
 			TestMethod test = null;
@@ -100,9 +104,13 @@ namespace Tests
 
 			foreach (var provider in _providerNames)
 			{
-				var isIgnore = !TestBase.UserProviders.Contains(provider);
-
+				var isIgnore   = !TestBase.UserProviders.Contains(provider);
 				var caseNumber = 0;
+
+				if (!isIgnore)
+					if (skipAttrs.TryGetValue(provider, out var category))
+						isIgnore = TestBase.SkipCategories.Contains(category);
+
 				foreach (var parameters in GetParameters(provider))
 				{
 					var data = new TestCaseParameters(parameters.Item1);

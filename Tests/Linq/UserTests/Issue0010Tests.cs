@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue0010Tests : TestBase
 	{
-		[Test, IncludeDataContextSource(false, ProviderName.Access)]
+		[Test, IncludeDataContextSource(false, ProviderName.Access), SkipCategory("Access.12")]
 		public void Test(string context)
 		{
 			using (var db = new DataConnection(new AccessDataProvider(), "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\issue_10_linqpad.accdb;"))

@@ -1,0 +1,118 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <PlatformTarget>x86</PlatformTarget>
+    <Platforms>AnyCPU;x86</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+
+    <ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+    <ProjectReference Include="..\Base\Tests.Base.csproj" />
+    <ProjectReference Include="..\Model\Tests.Model.csproj" />
+  
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Data.Services" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Windows.Forms" />
+
+    <None Update="SqlServerTypes\x64\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="SqlServerTypes\x86\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <None Update="x64\**\*">
+      <Link>x64/%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="x86\**\*">
+      <Link>x86/%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="x86\sqlite3.dll">
+      <Link>sqlite3.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <Reference Include="IBM.Data.DB2">
+      <HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
+    </Reference>
+    <Reference Include="IBM.Data.Informix">
+      <HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
+    </Reference>
+    <Reference Include="Sap.Data.Hana.v4.5">
+      <HintPath>..\..\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
+    </Reference>
+    <Reference Include="Sybase.AdoNet45.AseClient">
+      <HintPath>..\..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
+    </Reference>
+    <Reference Include="Oracle.DataAccess, Version=4.122.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
+    </Reference>
+
+
+    <None Include="..\..\Data\*">
+        <Link>Database/%(FileName)%(Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\Data\Create Scripts\*">
+        <Link>Database/Create Scripts/%(FileName)%(Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <!--
+    <PackageReference Include="Oracle.DataAccess.x86" Version="2.112.1.0" />
+    -->
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="12.2.1100" />
+    <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
+    <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
+    <PackageReference Include="MiniProfiler" Version="3.2.0.157" />
+    <PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.108" />
+    <PackageReference Include="Microsoft.Data.SQLite" Version="2.0.1" />
+
+    <PackageReference Include="AdoNetCore.AseClient" Version="0.10.1" />
+
+    <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
+    <PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" Condition=" '$(TargetFramework)' != 'net40' " />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="NUnit" Version="3.10.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
+    <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="5.12.1" />
+    <PackageReference Include="Npgsql" Version="3.2.7" />
+    <PackageReference Include="Mono.Cecil" Version="0.10.0" />
+    <PackageReference Include="MySql.Data" Version="6.10.6" />
+    <PackageReference Include="Humanizer.Core" Version="2.2.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
+
+
+  </ItemGroup>
+
+
+
+</Project>

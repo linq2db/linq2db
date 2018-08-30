@@ -55,19 +55,19 @@ namespace LinqToDB.DataProvider.Informix
 
 		static float GetFloat(IDataReader dr, int idx)
 		{
-			using (new InformixCultureFixRegion())
+			using (new InvariantCultureRegion())
 				return dr.GetFloat(idx);
 		}
 
 		static double GetDouble(IDataReader dr, int idx)
 		{
-			using (new InformixCultureFixRegion())
+			using (new InvariantCultureRegion())
 				return dr.GetDouble(idx);
 		}
 
 		static decimal GetDecimal(IDataReader dr, int idx)
 		{
-			using (new InformixCultureFixRegion())
+			using (new InvariantCultureRegion())
 				return dr.GetDecimal(idx);
 		}
 
@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override IDisposable ExecuteScope()
 		{
-			return new InformixCultureFixRegion();
+			return new InvariantCultureRegion();
 		}
 
 		protected override void OnConnectionTypeCreated(Type connectionType)

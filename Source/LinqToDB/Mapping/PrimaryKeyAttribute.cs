@@ -6,7 +6,7 @@ namespace LinqToDB.Mapping
 	/// Marks property or field as a member of primary key for current mapping type.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
-	public sealed class PrimaryKeyAttribute : Attribute
+	public class PrimaryKeyAttribute : Attribute
 	{
 		/// <summary>
 		/// Creates attribute instance.

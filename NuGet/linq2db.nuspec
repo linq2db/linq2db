@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db</id>
-		<version>2.2.0</version>
+		<version>2.3.0</version>
 		<title>LINQ to DB</title>
 		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
 		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
@@ -15,6 +15,7 @@
 		<tags>
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+		<repository type="git" url="https://github.com/linq2db/linq2db.git" />
 		<dependencies>
 			<group targetFramework=".NETFramework4.5" />
 			<group targetFramework=".NETStandard1.6">

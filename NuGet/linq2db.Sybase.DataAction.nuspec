@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.Sybase.DataAction</id>
-		<version>2.2.0</version>
+		<version>2.3.0</version>
 		<title>LINQ to SAP/Sybase ASE DataAction AdoNetCore.AseClient managed provider</title>
 		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
 		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
@@ -18,7 +18,7 @@
 		</summary>
 		<tags>linq linq2db SAP Sybase LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db" version="2.2.0-*"/>
+			<dependency id="linq2db" version="2.3.0"/>
 			<dependency id="AdoNetCore.AseClient" version="0.10.1"/>
 		</dependencies>
 		<contentFiles>

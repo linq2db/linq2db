@@ -65,8 +65,7 @@ namespace Tests
 
 		void IApplyToTest.ApplyToTest(Test test)
 		{
-			if (test.RunState != RunState.NotRunnable
-				&& test.RunState != RunState.Ignored)
+			if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Ignored)
 			{
 				var reason = string.IsNullOrWhiteSpace(_issue) ? "Active issue" : $"Issue {_issue}";
 

@@ -20,6 +20,7 @@ namespace Tests.Tools
 	{
 		public string   BasedOn;
 		public string[] Providers;
+		public string[] Skip;
 		public string   TraceLevel;
 		public string   DefaultConfiguration;
 		public string   NoLinqService;
@@ -38,6 +39,9 @@ namespace Tests.Tools
 
 				if (settings1.Providers == null)
 					settings1.Providers = settings2.Providers;
+
+				if (settings1.Skip == null)
+					settings1.Skip = settings2.Skip;
 
 				if (settings1.TraceLevel == null)
 					settings1.TraceLevel = settings2.TraceLevel;

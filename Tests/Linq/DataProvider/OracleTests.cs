@@ -1944,6 +1944,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, OracleDataContext]
+		[SkipCategory("Oracle.Native.New", ProviderName.OracleNative)]
 		public void Issue723Test1(string context)
 		{
 			var ms = new MappingSchema();
@@ -1994,6 +1995,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test, OracleDataContext]
+		[SkipCategory("Oracle.Native.New", ProviderName.OracleNative)]
 		public void Issue723Test2(string context)
 		{
 			using (var db = GetDataContext(context))
