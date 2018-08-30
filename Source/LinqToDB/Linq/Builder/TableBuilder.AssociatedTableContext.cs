@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public AssociatedTableContext(
-				[JetBrains.Annotations.NotNull] ExpressionBuilder     builder, 
+				[JetBrains.Annotations.NotNull] ExpressionBuilder     builder,
 				[JetBrains.Annotations.NotNull] TableContext          parent,
 				[JetBrains.Annotations.NotNull] AssociationDescriptor association
 			)
@@ -86,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 				if (ObjectType != OriginalType)
 				{
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
- 
+
 					if (predicate.GetType() != typeof(SqlPredicate.Expr))
 						join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, predicate));
 				}
@@ -96,6 +96,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (ExpressionPredicate != null)
 				{
+					ExpressionPredicate = (LambdaExpression)Builder.ConvertExpressionTree(ExpressionPredicate);
+
 					var expr = Builder.ConvertExpression(ExpressionPredicate.Body.Unwrap());
 
 					Builder.BuildSearchCondition(

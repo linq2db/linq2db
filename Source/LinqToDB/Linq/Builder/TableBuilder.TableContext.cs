@@ -1313,7 +1313,7 @@ namespace LinqToDB.Linq.Builder
 					).ToList();
 
 				AssociatedTableContext tableAssociation = null;
-						var isNew = false;
+				var isNew = false;
 
 				if (levelExpression.NodeType == ExpressionType.Call)
 				{
@@ -1322,17 +1322,17 @@ namespace LinqToDB.Linq.Builder
 
 					if (aa != null)
 						tableAssociation = new AssociatedTableContext(
-								Builder,
-								this,
-								new AssociationDescriptor(
-									EntityDescriptor.ObjectType,
-									mc.Method,
-									aa.GetThisKeys(),
-									aa.GetOtherKeys(),
-									aa.ExpressionPredicate,
-									aa.Predicate,
-									aa.Storage,
-									aa.CanBeNull))
+							Builder,
+							this,
+							new AssociationDescriptor(
+								EntityDescriptor.ObjectType,
+								mc.Method,
+								aa.GetThisKeys(),
+								aa.GetOtherKeys(),
+								aa.ExpressionPredicate,
+								aa.Predicate,
+								aa.Storage,
+								aa.CanBeNull))
 							{ Parent = Parent };
 
 					isNew = true;
