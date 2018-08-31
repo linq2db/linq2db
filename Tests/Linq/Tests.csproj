@@ -188,7 +188,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.Data.SQLite" Version="2.0.1" />
+		<PackageReference Include="Microsoft.Data.SQLite" Version="2.1.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">
@@ -224,9 +224,9 @@
 		<Compile Remove="Linq\FSharpTests.cs" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Reference Include="Oracle.ManagedDataAccess">
-			<HintPath>..\..\Redist\Oracle\Oracle.Core\Oracle.ManagedDataAccess.dll</HintPath>
-		</Reference>
+	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+	  <PackageReference Include="Oracle.ManagedDataAccess.Core">
+	    <Version>2.12.0-beta2</Version>
+	  </PackageReference>
 	</ItemGroup>
 </Project>

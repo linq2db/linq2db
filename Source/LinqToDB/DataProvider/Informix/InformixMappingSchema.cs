@@ -61,7 +61,9 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			string format;
 			if (value.Millisecond != 0)
-				format = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S.%F5')";
+				format = InformixConfiguration.ExplicitFractionalSecondsSeparator ? 
+					"TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S.%F5')" : 
+					"TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S%F5')";
 			else
 				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
 					? "TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')"

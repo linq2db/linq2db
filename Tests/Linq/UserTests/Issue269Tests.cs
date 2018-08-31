@@ -14,6 +14,7 @@ namespace Tests.UserTests
 				ProviderName.MySql, ProviderName.Sybase, ProviderName.SybaseManaged,
 				ProviderName.OracleNative, ProviderName.OracleManaged,
 				ProviderName.DB2,
+				ProviderName.SqlCe,
 				TestProvName.MySql57,
 				ProviderName.SQLiteMS, ProviderName.SqlServer2000, TestProvName.MariaDB)
 			{
@@ -57,6 +58,9 @@ namespace Tests.UserTests
 						.Select(c => c.Patient.Diagnosis)
 						.Distinct()
 						.Any(_ => _.Contains("with")));
+
+				// DISTINCT should be optimized out
+				Assert.That(q.EnumQueries().All(x => !x.Select.IsDistinct), Is.True);
 
 				var e = Patient
 					.Where(pat => Person

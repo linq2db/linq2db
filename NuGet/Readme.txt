@@ -1,4 +1,4 @@
-Release notes for newer versions moved to https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap
+Release notes moved to https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap
 
 LINQ to DB 1.10.1  Release Notes
 ---------------------------------

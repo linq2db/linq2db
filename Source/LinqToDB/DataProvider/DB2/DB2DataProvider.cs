@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			SqlProviderFlags.AcceptsTakeAsParameter            = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip      = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = version != DB2Version.zOS;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 
 			SetCharFieldToType<char>("CHAR", (r, i) => DataTools.GetChar(r, i));

@@ -16,51 +16,21 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		protected override bool ProviderUsesAlternativeUpdate
-		{
-			get
-			{
-				// Informix doesn't support INSERT FROM
-				return true;
-			}
-		}
+		// Informix doesn't support INSERT FROM
+		protected override bool ProviderUsesAlternativeUpdate => true;
 
-		protected override bool OperationPredicateSupported
-		{
-			get
-			{
-				// operation conditions not supported
-				return false;
-			}
-		}
+		// operation conditions not supported
+		protected override bool OperationPredicateSupported => false;
 
-		protected override bool SupportsSourceDirectValues
-		{
-			get
-			{
-				// VALUES(...) syntax not supported in MERGE source
-				return false;
-			}
-		}
+		// VALUES(...) syntax not supported in MERGE source
+		protected override bool SupportsSourceDirectValues => false;
 
-		protected override string FakeSourceTable
-		{
-			get
-			{
-				// or
-				// sysmaster:'informix'.sysdual
-				return "table(set{1})";
-			}
-		}
+		// or
+		// sysmaster:'informix'.sysdual
+		protected override string FakeSourceTable => "table(set{1})";
 
-		protected override bool SupportsParametersInSource
-		{
-			get
-			{
-				// parameters in source select list not supported
-				return false;
-			}
-		}
+		// parameters in source select list not supported
+		protected override bool SupportsParametersInSource => false;
 
 		protected override void AddFakeSourceTableName()
 		{
@@ -72,7 +42,8 @@ namespace LinqToDB.DataProvider.Informix
 			ColumnDescriptor    column,
 			SqlDataType         columnType,
 			object              value,
-			bool                isFirstRow)
+			bool                isFirstRow,
+			bool                isLastRow)
 		{
 			// informix have really hard times to recognize it's own types, so in source we need to specify type
 			// hint for most of types
@@ -121,25 +92,29 @@ namespace LinqToDB.DataProvider.Informix
 		private void WriteTypeHint(ColumnDescriptor column, SqlDataType columnType)
 		{
 			Command.Append("::");
+			BuildColumnType(column, columnType);
+		}
 
-			if (column.DbType != null)
-				Command.Append(column.DbType);
-			else
+		protected override bool MergeHintsSupported => true;
+
+		protected override void BuildMergeInto()
+		{
+			Command
+				.Append("MERGE ");
+
+			if (Merge.Hint != null)
 			{
-				if (columnType.DataType == DataType.Undefined)
-				{
-					columnType = DataContext.MappingSchema.GetDataType(column.StorageType);
-
-					if (columnType.DataType == DataType.Undefined)
-					{
-						var canBeNull = column.CanBeNull;
-
-						columnType = DataContext.MappingSchema.GetUnderlyingDataType(column.StorageType, ref canBeNull);
-					}
-				}
-
-				SqlBuilder.BuildTypeName(Command, columnType);
+				Command
+					.Append("{+ ")
+					.Append(Merge.Hint)
+					.Append(" } ");
 			}
+
+			Command
+				.Append("INTO ")
+				.Append(TargetTableName)
+				.Append(" ")
+				.AppendLine((string)SqlBuilder.Convert(TargetAlias, ConvertType.NameToQueryTableAlias));
 		}
 	}
 }
