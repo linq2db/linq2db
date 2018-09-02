@@ -316,38 +316,77 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),      Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),                       Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),                   Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),                   Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),                   Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),       Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),   Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),   Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),                    Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),                Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),                Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),          Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),                       Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),                       Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),         Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),     Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),     Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),                      Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),                  Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),                  Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"),  Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"),  Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),                   Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"),               Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"),               Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as unitext)"),       Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as unitext)"),       Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as unitext)"),                    Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as unitext)"),                    Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")),      Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")),      Is.EqualTo("123"));
 
-				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)),         Is.EqualTo(null));
+				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }),   Is.EqualTo("1"));
+			}
+		}
+
+		[ActiveIssue]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
+		public void TestUnicodeString(string context)
+		{
+			// some notes why unicode tests below doesn't work:
+			// - sybase reference driver replaces \u2000 with \u2002 in literals (but not in parameters without N prefix)
+			// - managed driver replaces \u2000 with \u2002 with spaces in literals
+			// - managed driver use latin1 encoding on read and return ? for non-latin1 characters
+			// - both drivers doesn't like \x0 in parameter value
+			using (var conn = new DataConnection(context))
+			{
+				var unicodeString = "\x00'\u2000\u2001\u2002\u2003\uabab\u03bctесt";
+				var unicodeLiteral = "u&'\\0000\'\\2000\\2001\\2002\\2003\\abab\\03bctесt'";
+				
+				// test raw literals queries
+				Assert.That(conn.Execute<string>($"SELECT Cast({unicodeLiteral} as char)"),                Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>($"SELECT Cast({unicodeLiteral} as varchar)"),             Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>($"SELECT Cast({unicodeLiteral} as text)"),                Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>($"SELECT Cast({unicodeLiteral} as nchar)"),               Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>($"SELECT Cast({unicodeLiteral} as nvarchar)"),            Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>($"SELECT Cast({unicodeLiteral} as unitext)"),             Is.EqualTo(unicodeString));
+
+				// test parameters
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", unicodeString)), Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", unicodeString)), Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", unicodeString)), Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", unicodeString)), Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", unicodeString)), Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", unicodeString)), Is.EqualTo(unicodeString));
+				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", unicodeString)), Is.EqualTo(unicodeString));
+
+				// test default linq2db behavior for parameter and literal
+				Assert.That(conn.Select(() => unicodeString), Is.EqualTo(unicodeString));
+				conn.InlineParameters = true;
+				Assert.That(conn.Select(() => unicodeString), Is.EqualTo(unicodeString));
 			}
 		}
 
