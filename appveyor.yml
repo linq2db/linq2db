@@ -108,7 +108,7 @@ after_build:
     cd ..
 
 test_script:
-  - ps: |
+- ps: |
     if ($env:APPVEYOR_REPO_BRANCH -ne "release")
     {
         .\Build\AppVeyor.NUnit.Tests.ps1
