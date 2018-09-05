@@ -316,11 +316,11 @@ namespace LinqToDB.Mapping
 		private int? _order;
 		/// <summary>
 		/// Specifies the order of the field in table creation.
-		/// Default value: <see cref="int.MaxValue"/>, unordered columns to be sorted after ordered.
+		/// Default value: 999, ensure unspecified order puts columns after low numbered orders
 		/// </summary>
 		public int Order
 		{
-			get => _order ?? int.MaxValue;
+			get => _order ?? 999;
 			set => _order = value;
 		}
 

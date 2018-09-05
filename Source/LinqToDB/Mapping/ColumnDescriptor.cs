@@ -292,7 +292,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Sort order for column list.
-		/// Default: <see cref="Int32.MaxValue"/>, unordered columns sort last.
+		/// Default value: 999, ensure unspecified order puts columns after low numbered orders
 		/// </summary>
 		public int            Order           { get; private set; }
 
