@@ -70,7 +70,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType   = objectType;
 			PhysicalName = physicalName ?? Name;
 
-			foreach (var column in ed.Columns)
+			foreach (var column in ed.Columns.OrderBy(_ => _.Order))
 			{
 				var field = new SqlField
 				{

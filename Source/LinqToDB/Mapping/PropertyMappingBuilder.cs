@@ -309,5 +309,15 @@ namespace LinqToDB.Mapping
 		{
 			return SetColumn(a => a.Scale = scale);
 		}
+
+		/// <summary>
+		/// Sets the Order of the database column.
+		/// </summary>
+		/// <param name="order">Column order</param>
+		/// <returns>Returns current column mapping builder</returns>
+		public PropertyMappingBuilder<T> HasOrder(int order)
+		{
+			return SetColumn(a => a.Order = order);
+		}
 	}
 }

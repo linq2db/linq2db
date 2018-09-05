@@ -46,6 +46,7 @@ namespace LinqToDB.Mapping
 			DataType        = columnAttribute.DataType;
 			DbType          = columnAttribute.DbType;
 			CreateFormat    = columnAttribute.CreateFormat;
+			Order           = columnAttribute.Order;
 
 			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
@@ -288,6 +289,12 @@ namespace LinqToDB.Mapping
 		/// - {3} - identity specification.
 		/// </summary>
 		public string         CreateFormat    { get; private set; }
+
+		/// <summary>
+		/// Sort order for column list.
+		/// Default: <see cref="Int32.MaxValue"/>, unordered columns sort last.
+		/// </summary>
+		public int            Order           { get; private set; }
 
 		/// <summary>
 		/// Gets sequence name for specified column.
