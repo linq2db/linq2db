@@ -24,93 +24,93 @@ namespace Tests.xUpdate
 			{
 				return new TestDelegate[]
 				{
-					() => MergeExtensions.Merge<Child>(null),
+					() => LinqExtensions.Merge<Child>(null),
 
-					() => MergeExtensions.Merge<Child>(null, "hint"),
-					() => MergeExtensions.Merge<Child>(new FakeTable<Child>(), null),
+					() => LinqExtensions.Merge<Child>(null, "hint"),
+					() => LinqExtensions.Merge<Child>(new FakeTable<Child>(), null),
 
-					() => MergeExtensions.MergeInto<Child, Child>(null, new FakeTable<Child>()),
-					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null),
+					() => LinqExtensions.MergeInto<Child, Child>(null, new FakeTable<Child>()),
+					() => LinqExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null),
 
-					() => MergeExtensions.MergeInto<Child, Child>(null, new FakeTable<Child>(), "hint"),
-					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null, "hint"),
-					() => MergeExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), new FakeTable<Child>(), null),
+					() => LinqExtensions.MergeInto<Child, Child>(null, new FakeTable<Child>(), "hint"),
+					() => LinqExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), null, "hint"),
+					() => LinqExtensions.MergeInto<Child, Child>(new Child[0].AsQueryable(), new FakeTable<Child>(), null),
 
-					() => MergeExtensions.Using<Child, Child>(null, new Child[0].AsQueryable()),
-					() => MergeExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null),
+					() => LinqExtensions.Using<Child, Child>(null, new Child[0].AsQueryable()),
+					() => LinqExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null),
 
-					() => MergeExtensions.Using<Child, Child>(null, new Child[0]),
-					() => MergeExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null),
+					() => LinqExtensions.Using<Child, Child>(null, new Child[0]),
+					() => LinqExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null),
 
-					() => MergeExtensions.UsingTarget<Child>(null),
+					() => LinqExtensions.UsingTarget<Child>(null),
 
-					() => MergeExtensions.On<Child, Child, int>(null, t => 1, s => 1),
-					() => MergeExtensions.On<Child, Child, int>(new FakeMergeOn<Child, Child>(), null, s => 1),
-					() => MergeExtensions.On<Child, Child, int>(new FakeMergeOn<Child, Child>(), t => 1, null),
+					() => LinqExtensions.On<Child, Child, int>(null, t => 1, s => 1),
+					() => LinqExtensions.On<Child, Child, int>(new FakeMergeOn<Child, Child>(), null, s => 1),
+					() => LinqExtensions.On<Child, Child, int>(new FakeMergeOn<Child, Child>(), t => 1, null),
 
-					() => MergeExtensions.On<Child, Child>(null, (t, s) => true),
-					() => MergeExtensions.On<Child, Child>(new FakeMergeOn<Child, Child>(), null),
+					() => LinqExtensions.On<Child, Child>(null, (t, s) => true),
+					() => LinqExtensions.On<Child, Child>(new FakeMergeOn<Child, Child>(), null),
 
-					() => MergeExtensions.OnTargetKey<Child>(null),
+					() => LinqExtensions.OnTargetKey<Child>(null),
 
-					() => MergeExtensions.InsertWhenNotMatched<Child>(null),
+					() => LinqExtensions.InsertWhenNotMatched<Child>(null),
 
-					() => MergeExtensions.InsertWhenNotMatchedAnd<Child>(null, c => true),
-					() => MergeExtensions.InsertWhenNotMatchedAnd<Child>(new FakeMergeSource<Child, Child>(), null),
+					() => LinqExtensions.InsertWhenNotMatchedAnd<Child>(null, c => true),
+					() => LinqExtensions.InsertWhenNotMatchedAnd<Child>(new FakeMergeSource<Child, Child>(), null),
 
-					() => MergeExtensions.InsertWhenNotMatched<Child, Child>(null, c => c),
-					() => MergeExtensions.InsertWhenNotMatched<Child, Child>(new FakeMergeSource<Child, Child>(), null),
+					() => LinqExtensions.InsertWhenNotMatched<Child, Child>(null, c => c),
+					() => LinqExtensions.InsertWhenNotMatched<Child, Child>(new FakeMergeSource<Child, Child>(), null),
 
-					() => MergeExtensions.InsertWhenNotMatchedAnd<Child, Child>(null, c => true, c => c),
-					() => MergeExtensions.InsertWhenNotMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null, c => c),
-					() => MergeExtensions.InsertWhenNotMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), c => true, null),
+					() => LinqExtensions.InsertWhenNotMatchedAnd<Child, Child>(null, c => true, c => c),
+					() => LinqExtensions.InsertWhenNotMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null, c => c),
+					() => LinqExtensions.InsertWhenNotMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), c => true, null),
 
-					() => MergeExtensions.UpdateWhenMatched<Child>(null),
+					() => LinqExtensions.UpdateWhenMatched<Child>(null),
 
-					() => MergeExtensions.UpdateWhenMatchedAnd<Child>(null, (t, s) => true),
-					() => MergeExtensions.UpdateWhenMatchedAnd<Child>(new FakeMergeSource<Child, Child>(), null),
+					() => LinqExtensions.UpdateWhenMatchedAnd<Child>(null, (t, s) => true),
+					() => LinqExtensions.UpdateWhenMatchedAnd<Child>(new FakeMergeSource<Child, Child>(), null),
 
-					() => MergeExtensions.UpdateWhenMatched<Child, Child>(null, (t, s) => t),
-					() => MergeExtensions.UpdateWhenMatched<Child, Child>(new FakeMergeSource<Child, Child>(), null),
+					() => LinqExtensions.UpdateWhenMatched<Child, Child>(null, (t, s) => t),
+					() => LinqExtensions.UpdateWhenMatched<Child, Child>(new FakeMergeSource<Child, Child>(), null),
 
-					() => MergeExtensions.UpdateWhenMatchedAnd<Child, Child>(null, (t, s) => true, (t, s) => t),
-					() => MergeExtensions.UpdateWhenMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t),
-					() => MergeExtensions.UpdateWhenMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null),
+					() => LinqExtensions.UpdateWhenMatchedAnd<Child, Child>(null, (t, s) => true, (t, s) => t),
+					() => LinqExtensions.UpdateWhenMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t),
+					() => LinqExtensions.UpdateWhenMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null),
 
-					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child>(null, (t, s) => true),
-					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child>(new FakeMergeSource<Child, Child>(), null),
+					() => LinqExtensions.UpdateWhenMatchedThenDelete<Child>(null, (t, s) => true),
+					() => LinqExtensions.UpdateWhenMatchedThenDelete<Child>(new FakeMergeSource<Child, Child>(), null),
 
-					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child>(null, (t, s) => true, (t, s) => true),
-					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => true),
-					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null),
+					() => LinqExtensions.UpdateWhenMatchedAndThenDelete<Child>(null, (t, s) => true, (t, s) => true),
+					() => LinqExtensions.UpdateWhenMatchedAndThenDelete<Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => true),
+					() => LinqExtensions.UpdateWhenMatchedAndThenDelete<Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null),
 
-					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child, Child>(null, (t, s) => t, (t, s) => true),
-					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => true),
-					() => MergeExtensions.UpdateWhenMatchedThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => t, null),
+					() => LinqExtensions.UpdateWhenMatchedThenDelete<Child, Child>(null, (t, s) => t, (t, s) => true),
+					() => LinqExtensions.UpdateWhenMatchedThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => true),
+					() => LinqExtensions.UpdateWhenMatchedThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => t, null),
 
-					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(null, (t, s) => true, (t, s) => t, (t, s) => true),
-					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t, (t, s) => true),
-					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null, (t, s) => true),
-					() => MergeExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, (t, s) => t, null),
+					() => LinqExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(null, (t, s) => true, (t, s) => t, (t, s) => true),
+					() => LinqExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), null, (t, s) => t, (t, s) => true),
+					() => LinqExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, null, (t, s) => true),
+					() => LinqExtensions.UpdateWhenMatchedAndThenDelete<Child, Child>(new FakeMergeSource<Child, Child>(), (t, s) => true, (t, s) => t, null),
 
-					() => MergeExtensions.DeleteWhenMatched<Child, Child>(null),
+					() => LinqExtensions.DeleteWhenMatched<Child, Child>(null),
 
-					() => MergeExtensions.DeleteWhenMatchedAnd<Child, Child>(null, (t, s) => true),
-					() => MergeExtensions.DeleteWhenMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null),
+					() => LinqExtensions.DeleteWhenMatchedAnd<Child, Child>(null, (t, s) => true),
+					() => LinqExtensions.DeleteWhenMatchedAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null),
 
-					() => MergeExtensions.UpdateWhenNotMatchedBySource<Child, Child>(null, t => t),
-					() => MergeExtensions.UpdateWhenNotMatchedBySource<Child, Child>(new FakeMergeSource<Child, Child>(), null),
+					() => LinqExtensions.UpdateWhenNotMatchedBySource<Child, Child>(null, t => t),
+					() => LinqExtensions.UpdateWhenNotMatchedBySource<Child, Child>(new FakeMergeSource<Child, Child>(), null),
 
-					() => MergeExtensions.UpdateWhenNotMatchedBySourceAnd<Child, Child>(null, t => true, t => t),
-					() => MergeExtensions.UpdateWhenNotMatchedBySourceAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null, t => t),
-					() => MergeExtensions.UpdateWhenNotMatchedBySourceAnd<Child, Child>(new FakeMergeSource<Child, Child>(), t => true, null),
+					() => LinqExtensions.UpdateWhenNotMatchedBySourceAnd<Child, Child>(null, t => true, t => t),
+					() => LinqExtensions.UpdateWhenNotMatchedBySourceAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null, t => t),
+					() => LinqExtensions.UpdateWhenNotMatchedBySourceAnd<Child, Child>(new FakeMergeSource<Child, Child>(), t => true, null),
 
-					() => MergeExtensions.DeleteWhenNotMatchedBySource<Child, Child>(null),
+					() => LinqExtensions.DeleteWhenNotMatchedBySource<Child, Child>(null),
 
-					() => MergeExtensions.DeleteWhenNotMatchedBySourceAnd<Child, Child>(null, t => true),
-					() => MergeExtensions.DeleteWhenNotMatchedBySourceAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null),
+					() => LinqExtensions.DeleteWhenNotMatchedBySourceAnd<Child, Child>(null, t => true),
+					() => LinqExtensions.DeleteWhenNotMatchedBySourceAnd<Child, Child>(new FakeMergeSource<Child, Child>(), null),
 
-					() => MergeExtensions.Merge<Child, Child>(null)
+					() => LinqExtensions.Merge<Child, Child>(null)
 				}.Select((data, i) => new TestCaseData(data).SetName($"Merge.API.Null Parameters.{i}"));
 			}
 		}
