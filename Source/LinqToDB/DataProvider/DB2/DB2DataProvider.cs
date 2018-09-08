@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;

@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Common;
 	using Data;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 

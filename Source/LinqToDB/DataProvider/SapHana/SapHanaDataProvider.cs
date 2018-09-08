@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Data;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 	using System.Data.Common;

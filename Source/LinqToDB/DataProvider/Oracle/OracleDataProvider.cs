@@ -13,6 +13,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Data;
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 	using Tools;

@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlProvider;
 	using SqlQuery;
 	using Extensions;
+	using LinqToDB.Linq;
 
 	class SybaseMergeBuilder<TTarget, TSource> : BasicMergeBuilder<TTarget, TSource>
 		where TTarget : class

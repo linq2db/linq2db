@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Data;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SqlProvider;
 

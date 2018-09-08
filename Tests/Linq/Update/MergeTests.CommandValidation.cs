@@ -17,6 +17,7 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
+	using LinqToDB.Linq;
 	using Model;
 
 	public partial class MergeTests

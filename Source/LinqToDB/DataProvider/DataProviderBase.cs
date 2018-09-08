@@ -16,6 +16,7 @@ namespace LinqToDB.DataProvider
 {
 	using Data;
 	using Expressions;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;

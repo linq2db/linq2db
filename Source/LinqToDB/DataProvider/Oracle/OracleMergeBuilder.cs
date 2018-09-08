@@ -1,4 +1,5 @@
 ﻿using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.SqlProvider;
 using System;
 using System.Linq.Expressions;

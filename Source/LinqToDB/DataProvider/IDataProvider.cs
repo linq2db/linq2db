@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using LinqToDB.Linq;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;

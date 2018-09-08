@@ -1,4 +1,5 @@
 ﻿using LinqToDB.Data;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {

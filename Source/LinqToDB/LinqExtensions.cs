@@ -18,7 +18,7 @@ namespace LinqToDB
 	/// Contains extension methods for LINQ queries.
 	/// </summary>
 	[PublicAPI]
-	public static class LinqExtensions
+	public static partial class LinqExtensions
 	{
 		#region Table Helpers
 
