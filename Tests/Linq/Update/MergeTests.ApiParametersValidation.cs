@@ -137,11 +137,11 @@ namespace Tests.xUpdate
 			string         IExpressionQuery.SqlText     => throw new NotImplementedException();
 			Type           IQueryable.      ElementType => throw new NotImplementedException();
 			Expression     IQueryable.      Expression  => throw new NotImplementedException();
-			IQueryProvider IQueryable.      Provider    => throw new NotImplementedException();
+			IQueryProvider IQueryable.      Provider    => new EnumerableQuery<TEntity>(Array.Empty<TEntity>());
 
 			Expression IExpressionQuery<TEntity>.Expression
 			{
-				get => throw new NotImplementedException();
+				get => Expression.Constant(this);
 				set => throw new NotImplementedException();
 			}
 

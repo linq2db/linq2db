@@ -77,7 +77,7 @@ namespace LinqToDB
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_mergeIntoMethodInfo1.MakeGenericMethod(typeof(TTarget)),
+					_mergeMethodInfo1.MakeGenericMethod(typeof(TTarget)),
 					new[] { target.Expression }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
@@ -101,7 +101,7 @@ namespace LinqToDB
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_mergeIntoMethodInfo2.MakeGenericMethod(typeof(TTarget)),
+					_mergeMethodInfo2.MakeGenericMethod(typeof(TTarget)),
 					new[] { target.Expression, Expression.Constant(hint) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
@@ -206,7 +206,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_usingMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					_usingMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, Expression.Constant(source) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
