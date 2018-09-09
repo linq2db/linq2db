@@ -313,8 +313,8 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Sets the Order of the database column.
 		/// </summary>
-		/// <param name="order">Column order</param>
-		/// <returns>Returns current column mapping builder</returns>
+		/// <param name="order">Column order.</param>
+		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<T> HasOrder(int order)
 		{
 			return SetColumn(a => a.Order = order);

@@ -292,7 +292,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Sort order for column list.
-		/// Default value: 999, ensure unspecified order puts columns after low numbered orders
+		/// Positive values first, then unspecified, then negative values.
 		/// </summary>
 		public int            Order           { get; private set; }
 

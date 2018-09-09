@@ -70,6 +70,7 @@ namespace LinqToDB.Mapping
 			PrimaryKeyOrder = ca.PrimaryKeyOrder;
 			IsColumn        = ca.IsColumn;
 			CreateFormat    = ca.CreateFormat;
+			Order           = ca.Order;
 
 			if (ca.HasSkipOnInsert()) SkipOnInsert = ca.SkipOnInsert;
 			if (ca.HasSkipOnUpdate()) SkipOnUpdate = ca.SkipOnUpdate;
@@ -79,7 +80,6 @@ namespace LinqToDB.Mapping
 			if (ca.HasLength())       Length       = ca.Length;
 			if (ca.HasPrecision())    Precision    = ca.Precision;
 			if (ca.HasScale())        Scale        = ca.Scale;
-			if (ca.HasOrder())        Order        = ca.Order;
 		}
 
 		/// <summary>
@@ -313,21 +313,13 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string CreateFormat { get; set; }
 
-		private int? _order;
 		/// <summary>
 		/// Specifies the order of the field in table creation.
-		/// Default value: 999, ensure unspecified order puts columns after low numbered orders
+		/// Positive values first, then unspecified, then negative values.
 		/// </summary>
-		public int Order
-		{
-			get => _order ?? 999;
-			set => _order = value;
-		}
-
-		/// <summary>
-		/// Returns <c>true</c> if <see cref="Order"/> was configured for current attribute
-		/// </summary>
-		/// <returns><c>true</c> if <see cref="Order"/> property was set in attribute.</returns>
-		public bool HasOrder() => _order.HasValue;
+		/// <remarks>
+		/// Ordering performed in <see cref="SqlTable.SqlTable(MappingSchema, Type, string)"/> constructor.
+		/// </remarks>
+		public int Order { get; set; } = int.MaxValue;
 	}
 }

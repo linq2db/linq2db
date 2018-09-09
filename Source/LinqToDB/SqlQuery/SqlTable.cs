@@ -70,7 +70,9 @@ namespace LinqToDB.SqlQuery
 			ObjectType   = objectType;
 			PhysicalName = physicalName ?? Name;
 
-			foreach (var column in ed.Columns.OrderBy(_ => _.Order))
+			// Order columns by the Order field.  Positive first then negative.
+			var columns = ed.Columns.OrderBy(_ => _.Order >= 0 ? 0 : 1).ThenBy(_ => _.Order);
+			foreach (var column in columns)
 			{
 				var field = new SqlField
 				{
