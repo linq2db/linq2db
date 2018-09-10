@@ -66,13 +66,17 @@ namespace Tests.UserTests
 				var table = s.Tables.FirstOrDefault(_ => _.TableName.Equals("ColumnOrderTest", StringComparison.OrdinalIgnoreCase));
 				Assert.IsNotNull(table);
 
+				// Confirm order of specified fields only
 				Assert.AreEqual("RecordID",			table.Columns[0].ColumnName);
 				Assert.AreEqual("EffectiveStart",   table.Columns[1].ColumnName);
 				Assert.AreEqual("EffectiveEnd",     table.Columns[2].ColumnName);
 				Assert.AreEqual("Key",              table.Columns[3].ColumnName);
-				Assert.AreEqual("Name",             table.Columns[4].ColumnName);
-				Assert.AreEqual("Code",             table.Columns[5].ColumnName);
 				Assert.AreEqual("AuditID",          table.Columns[6].ColumnName);
+
+				// Confirm that unordered fields are in the right range of positions
+				string[] unordered = new[] { "Name", "Code" };
+				Assert.Contains(table.Columns[4].ColumnName, unordered);
+				Assert.Contains(table.Columns[5].ColumnName, unordered);
 			}
 		}
 #endif
