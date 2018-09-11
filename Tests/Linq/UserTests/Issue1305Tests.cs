@@ -55,11 +55,8 @@ namespace Tests.UserTests
 		public void Test1(string context)
 		{
 			using (var db = new DataConnection(context))
+			using (var tbl = db.CreateLocalTable<ColumnOrderTest>())
 			{
-				// Force recreate table
-				db.DropTable<ColumnOrderTest>(throwExceptionIfNotExists: false);
-				db.CreateTable<ColumnOrderTest>();
-
 				// Get table schema
 				var sp = db.DataProvider.GetSchemaProvider();
 				var s = sp.GetSchema(db);
