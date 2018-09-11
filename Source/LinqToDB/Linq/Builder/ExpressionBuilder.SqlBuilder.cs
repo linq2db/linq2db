@@ -1310,7 +1310,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (convertExpr != null)
 				{
-					var body = convertExpr.GetBody(expr);
+					var body = convertExpr.GetBody(newExpr.ValueExpression);
 
 					newExpr.ValueExpression    = Expression.PropertyOrField(body, "Value");
 					newExpr.DataTypeExpression = Expression.PropertyOrField(body, "DataType");
