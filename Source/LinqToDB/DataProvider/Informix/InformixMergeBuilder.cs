@@ -16,51 +16,21 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		protected override bool ProviderUsesAlternativeUpdate
-		{
-			get
-			{
-				// Informix doesn't support INSERT FROM
-				return true;
-			}
-		}
+		// Informix doesn't support INSERT FROM
+		protected override bool ProviderUsesAlternativeUpdate => true;
 
-		protected override bool OperationPredicateSupported
-		{
-			get
-			{
-				// operation conditions not supported
-				return false;
-			}
-		}
+		// operation conditions not supported
+		protected override bool OperationPredicateSupported => false;
 
-		protected override bool SupportsSourceDirectValues
-		{
-			get
-			{
-				// VALUES(...) syntax not supported in MERGE source
-				return false;
-			}
-		}
+		// VALUES(...) syntax not supported in MERGE source
+		protected override bool SupportsSourceDirectValues => false;
 
-		protected override string FakeSourceTable
-		{
-			get
-			{
-				// or
-				// sysmaster:'informix'.sysdual
-				return "table(set{1})";
-			}
-		}
+		// or
+		// sysmaster:'informix'.sysdual
+		protected override string FakeSourceTable => "table(set{1})";
 
-		protected override bool SupportsParametersInSource
-		{
-			get
-			{
-				// parameters in source select list not supported
-				return false;
-			}
-		}
+		// parameters in source select list not supported
+		protected override bool SupportsParametersInSource => false;
 
 		protected override void AddFakeSourceTableName()
 		{
@@ -125,6 +95,26 @@ namespace LinqToDB.DataProvider.Informix
 			BuildColumnType(column, columnType);
 		}
 
-		
+		protected override bool MergeHintsSupported => true;
+
+		protected override void BuildMergeInto()
+		{
+			Command
+				.Append("MERGE ");
+
+			if (Merge.Hint != null)
+			{
+				Command
+					.Append("{+ ")
+					.Append(Merge.Hint)
+					.Append(" } ");
+			}
+
+			Command
+				.Append("INTO ")
+				.Append(TargetTableName)
+				.Append(" ")
+				.AppendLine((string)SqlBuilder.Convert(TargetAlias, ConvertType.NameToQueryTableAlias));
+		}
 	}
 }

@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Informix
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			using (new InformixCultureFixRegion())
+			using (new InvariantCultureRegion())
 				return base.MultipleRowsCopy(dataConnection, options, source);
 
 			//return MultipleRowsCopy3(dataConnection, options, source, " FROM table(set{1})");

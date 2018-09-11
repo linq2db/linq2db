@@ -10,8 +10,8 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.3.0
-  packageVersion: 2.3.0
+  assemblyVersion: 2.4.0
+  packageVersion: 2.4.0
   docfxuser: "ili"
   docfxmail: "docfx@linq2db.com"
   docfxsecret:
@@ -108,7 +108,11 @@ after_build:
     cd ..
 
 test_script:
-  - ps: .\Build\AppVeyor.NUnit.Tests.ps1
+- ps: |
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
+    {
+        .\Build\AppVeyor.NUnit.Tests.ps1
+    }
 
 artifacts:
 - path: \**\linq2db*.nupkg
@@ -125,7 +129,7 @@ deploy:
 
 - provider: NuGet
   api_key:
-    secure: oTYw2IwTnz4qMD8c/MR/6mo+Nx3wa5Pp8MYfsKBCKCVuU6QCHlj+6QMXpnQses8G
+    secure: Fr5riCMWr4uddudXmemI0L40G6iJhCGYQmt/Y/ky+EbvxMl9/nqwb6L3Y8P8lgrX
   on:
     branch: release
 

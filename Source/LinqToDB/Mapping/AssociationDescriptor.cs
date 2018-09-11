@@ -31,7 +31,7 @@ namespace LinqToDB.Mapping
 			           string[]   thisKey,
 			           string[]   otherKey,
 			           string     expressionPredicate,
-					   Expression predicate,
+			           Expression predicate,
 			           string     storage,
 			           bool       canBeNull)
 		{
@@ -117,7 +117,7 @@ namespace LinqToDB.Mapping
 				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
 			if (!string.IsNullOrEmpty(ExpressionPredicate))
-			{ 
+			{
 				var members = type.GetStaticMembersEx(ExpressionPredicate);
 
 				if (members.Length == 0)
@@ -158,7 +158,7 @@ namespace LinqToDB.Mapping
 					throw new LinqToDBException(
 						$"Member '{ExpressionPredicate}' for type '{type.Name}' should be static property or method");
 			}
-			else 
+			else
 				predicate = Predicate;
 
 			var lambda = predicate as LambdaExpression;

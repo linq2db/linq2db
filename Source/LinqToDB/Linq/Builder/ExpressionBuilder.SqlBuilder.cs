@@ -1548,7 +1548,9 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertCompare(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			if (left.NodeType == ExpressionType.Convert && left.Type == typeof(int) && (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Convert))
+			if (left.NodeType == ExpressionType.Convert
+				&& left.Type == typeof(int)
+				&& (right.NodeType == ExpressionType.Constant || right.NodeType == ExpressionType.Convert))
 			{
 				var conv  = (UnaryExpression)left;
 
@@ -1561,7 +1563,26 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (right.NodeType == ExpressionType.Convert && right.Type == typeof(int) && (left.NodeType == ExpressionType.Constant || left.NodeType == ExpressionType.Convert))
+			if (left.NodeType == ExpressionType.Convert
+				&& left.Type == typeof(int?)
+				&& (right.NodeType == ExpressionType.Constant
+					|| (right.NodeType == ExpressionType.Convert
+						&& ((UnaryExpression)right).Operand.NodeType == ExpressionType.Convert)))
+			{
+				var conv = (UnaryExpression)left;
+
+				if (conv.Operand.Type == typeof(char?))
+				{
+					left = conv.Operand;
+					right = right.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)right).Value))
+						: ((UnaryExpression)((UnaryExpression)right).Operand).Operand;
+				}
+			}
+
+			if (right.NodeType == ExpressionType.Convert
+				&& right.Type == typeof(int)
+				&& (left.NodeType == ExpressionType.Constant || left.NodeType == ExpressionType.Convert))
 			{
 				var conv = (UnaryExpression)right;
 
@@ -1571,6 +1592,23 @@ namespace LinqToDB.Linq.Builder
 					left  = left.NodeType == ExpressionType.Constant
 						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression) left).Value))
 						: ((UnaryExpression) left).Operand;
+				}
+			}
+
+			if (right.NodeType == ExpressionType.Convert
+				&& right.Type == typeof(int?)
+				&& (left.NodeType == ExpressionType.Constant
+					|| (left.NodeType == ExpressionType.Convert
+						&& ((UnaryExpression)left).Operand.NodeType == ExpressionType.Convert)))
+			{
+				var conv = (UnaryExpression)right;
+
+				if (conv.Operand.Type == typeof(char?))
+				{
+					right = conv.Operand;
+					left = left.NodeType == ExpressionType.Constant
+						? Expression.Constant(ConvertTo<char>.From(((ConstantExpression)left).Value))
+						: ((UnaryExpression)((UnaryExpression)left).Operand).Operand;
 				}
 			}
 
@@ -2537,28 +2575,35 @@ namespace LinqToDB.Linq.Builder
 						BuildSearchCondition(context, e.Operand, notCondition.Conditions);
 
 						var isNot = true;
-						var sqlCondition = notCondition.Conditions[0];
 						if (notCondition.Conditions.Count == 1)
 						{
+							var sqlCondition = notCondition.Conditions[0];
 							if (sqlCondition.Predicate is SqlPredicate.NotExpr p)
 							{
 								p.IsNot = !p.IsNot;
 								var checkIsNullLocal = CheckIsNull(sqlCondition.Predicate, true);
 								conditions.Add(checkIsNullLocal ?? sqlCondition);
-								break;
 							}
 							else
 							{
 								sqlCondition.Predicate = BasicSqlOptimizer.OptimizePredicate(sqlCondition.Predicate, ref isNot);
 								var checkIsNullLocal   = CheckIsNull(sqlCondition.Predicate, isNot);
 								conditions.Add(checkIsNullLocal ?? new SqlCondition(isNot, sqlCondition.Predicate));
-								break;
 							}
+
+							break;
 						}
 
-						var checkIsNull = CheckIsNull(sqlCondition.Predicate, true);
+						for (var i = 0; i < notCondition.Conditions.Count; i++)
+						{
+							var cond = notCondition.Conditions[i];
+							var checkIsNull = CheckIsNull(cond.Predicate, false);
+							if (checkIsNull != null)
+								cond = checkIsNull;
+							notCondition.Conditions[i] = cond;
+						}
 
-						conditions.Add(checkIsNull ?? new SqlCondition(true, notCondition));
+						conditions.Add(new SqlCondition(true, notCondition));
 
 						break;
 					}
@@ -2646,8 +2691,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (exprExpr != null &&
 					(
-						exprExpr.Operator == SqlPredicate.Operator.NotEqual && isNot == false ||
-						exprExpr.Operator == SqlPredicate.Operator.Equal    && isNot == true
+						exprExpr.Operator == SqlPredicate.Operator.NotEqual /*&& isNot == false*/ ||
+						exprExpr.Operator == SqlPredicate.Operator.Equal    /*&& isNot == true*/
 					) ||
 					inList != null && inList.IsNot || isNot)
 				{
@@ -2672,7 +2717,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (nullableField != null)
 						{
-							var checkNullPredicate = new SqlPredicate.IsNull(nullableField, false);
+							var checkNullPredicate = new SqlPredicate.IsNull(nullableField, exprExpr != null && exprExpr.Operator == SqlPredicate.Operator.Equal);
 
 							var perdicateIsNot = isNot && inList == null;
 							predicate = BasicSqlOptimizer.OptimizePredicate(predicate, ref perdicateIsNot);
@@ -2681,7 +2726,7 @@ namespace LinqToDB.Linq.Builder
 								new SqlCondition(false,          checkNullPredicate),
 								new SqlCondition(perdicateIsNot, predicate));
 
-							orCondition.Conditions[0].IsOr = true;
+							orCondition.Conditions[0].IsOr = exprExpr == null || exprExpr.Operator == SqlPredicate.Operator.NotEqual;
 
 							return new SqlCondition(false, orCondition);
 						}
