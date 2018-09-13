@@ -1316,9 +1316,9 @@ namespace LinqToDB.Linq.Builder
 
 		ValueTypeExpression ReplaceParameter(IDictionary<Expression,Expression> expressionAccessors, Expression expression, Action<string> setName)
 		{
-			var resullt = new ValueTypeExpression() { DataTypeExpression = Expression.Constant(DataType.Undefined) };
+			var result = new ValueTypeExpression() { DataTypeExpression = Expression.Constant(DataType.Undefined) };
 
-			resullt.ValueExpression = expression.Transform(expr =>
+			result.ValueExpression = expression.Transform(expr =>
 			{
 				if (expr.NodeType == ExpressionType.Constant)
 				{
@@ -1337,7 +1337,7 @@ namespace LinqToDB.Linq.Builder
 								var mt = GetMemberDataType(ma.Member);
 
 								if (mt != null)
-									resullt.DataTypeExpression = Expression.Constant(mt.Value);
+									result.DataTypeExpression = Expression.Constant(mt.Value);
 
 								setName(ma.Member.Name);
 							}
@@ -1348,7 +1348,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			});
 
-			return resullt;
+			return result;
 		}
 
 		#endregion
@@ -2051,7 +2051,7 @@ namespace LinqToDB.Linq.Builder
 			string              name,
 			BuildParameterType  buildParameterType = BuildParameterType.Default)
 		{
-			var type        = accessorExpression.Type;
+			var type = accessorExpression.Type;
 
 			LambdaExpression expr = null;
 			if (buildParameterType != BuildParameterType.InPredicate)
@@ -2105,9 +2105,7 @@ namespace LinqToDB.Linq.Builder
 					default:
 						return e;
 				}
-
 			});
-
 
 			var mapper = Expression.Lambda<Func<Expression,object[],object>>(
 				Expression.Convert(accessorExpression, typeof(object)),
