@@ -130,10 +130,10 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		public    override string ConnectionNamespace { get { return "IBM.Data.Informix"; } }
-		protected override string ConnectionTypeName  { get { return "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"; } }
-		protected override string DataReaderTypeName  { get { return "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix"; } }
-		
+		public    override string ConnectionNamespace => "IBM.Data.Informix";
+		protected override string ConnectionTypeName  => "IBM.Data.Informix.IfxConnection, IBM.Data.Informix";
+		protected override string DataReaderTypeName  => "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix";
+
 		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
@@ -164,8 +164,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			else if (value is Guid || value == null && dataType == DataType.Guid)
 			{
-				if (value != null)
-				value    = value.ToString();
+				value    = value?.ToString();
 				dataType = DataType.Char;
 			}
 			else if (value is bool)
