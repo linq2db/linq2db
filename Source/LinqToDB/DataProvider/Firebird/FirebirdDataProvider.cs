@@ -94,6 +94,11 @@ namespace LinqToDB.DataProvider.Firebird
 				dataType = DataType.Char;
 			}
 
+			if (FirebirdConfiguration.UsedDialect == FirebirdConfiguration.FbDialect.Dialect1 && (value is Int64 || value is UInt64))
+			{
+				value = Convert.ToInt32(value);
+				dataType = DataType.Int32;
+			}
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
