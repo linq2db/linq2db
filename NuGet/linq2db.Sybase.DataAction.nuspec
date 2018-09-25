@@ -19,7 +19,7 @@
 		<tags>linq linq2db SAP Sybase LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="linq2db"              version="2.4.0"  />
-			<dependency id="AdoNetCore.AseClient" version="0.10.1" />
+			<dependency id="AdoNetCore.AseClient" version="0.11.0" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None"/>

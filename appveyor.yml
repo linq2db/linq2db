@@ -108,7 +108,11 @@ after_build:
     cd ..
 
 test_script:
-  - ps: .\Build\AppVeyor.NUnit.Tests.ps1
+- ps: |
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
+    {
+        .\Build\AppVeyor.NUnit.Tests.ps1
+    }
 
 artifacts:
 - path: \**\linq2db*.nupkg
