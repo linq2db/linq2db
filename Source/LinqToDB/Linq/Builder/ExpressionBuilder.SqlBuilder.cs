@@ -2633,8 +2633,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (exprExpr != null &&
 					(
-						exprExpr.Operator == SqlPredicate.Operator.NotEqual /*&& isNot == false*/ ||
-						exprExpr.Operator == SqlPredicate.Operator.Equal    /*&& isNot == true*/
+						exprExpr.Operator == SqlPredicate.Operator.NotEqual && isNot == false ||
+						exprExpr.Operator == SqlPredicate.Operator.Equal    && isNot == true
 					) ||
 					inList != null && inList.IsNot || isNot)
 				{
@@ -2661,12 +2661,12 @@ namespace LinqToDB.Linq.Builder
 						{
 							var checkNullPredicate = new SqlPredicate.IsNull(nullableField, exprExpr != null && exprExpr.Operator == SqlPredicate.Operator.Equal);
 
-							var perdicateIsNot = isNot && inList == null;
-							predicate = BasicSqlOptimizer.OptimizePredicate(predicate, ref perdicateIsNot);
+							var predicateIsNot = isNot && inList == null;
+							predicate = BasicSqlOptimizer.OptimizePredicate(predicate, ref predicateIsNot);
 
 							var orCondition = new SqlSearchCondition(
 								new SqlCondition(false,          checkNullPredicate),
-								new SqlCondition(perdicateIsNot, predicate));
+								new SqlCondition(predicateIsNot, predicate));
 
 							orCondition.Conditions[0].IsOr = exprExpr == null || exprExpr.Operator == SqlPredicate.Operator.NotEqual;
 
@@ -2674,10 +2674,6 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 				}
-			}
-			else
-			{
-
 			}
 
 			return null;
