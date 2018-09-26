@@ -52,7 +52,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				using (db.CreateLocalTable<StLink>())
-				//using (db.CreateLocalTable<TaskStage>())
+				using (db.CreateLocalTable<StVersion>())
 				{
 					var parentId = 111;
 
