@@ -6,6 +6,7 @@
 		<NoWarn>$(NoWarn);CS0649;CS0429</NoWarn>
 		<AssemblyName>linq2db.Tests</AssemblyName>
 		<Configurations>Debug;Release;AppVeyor;NET.45;CORE.1;CORE.2</Configurations>
+		<AssemblyOriginatorKeyFile>..\..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'AppVeyor' ">
