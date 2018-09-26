@@ -51,6 +51,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 </Project>

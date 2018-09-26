@@ -401,7 +401,7 @@ namespace LinqToDB.DataProvider
 
 				foreach (var columnInfo in ctx.Columns)
 				{
-					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.Members[0]);
+					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.MemberChain[0]);
 					var column           = statement.SelectQuery.Select.Columns[columnInfo.Index];
 
 					SetColumnAlias(column.Alias, columnDescriptor.ColumnName);

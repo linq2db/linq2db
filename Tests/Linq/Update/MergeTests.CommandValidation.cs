@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
@@ -168,7 +169,7 @@ namespace Tests.xUpdate
 
 				BulkCopyRowsCopied IDataProvider.BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source) => throw new NotImplementedException();
 
-				Type IDataProvider.ConvertParameterType(Type type, DataType dataType) => throw new NotImplementedException();
+				Type IDataProvider.ConvertParameterType(Type type, DbDataType dataType) => throw new NotImplementedException();
 
 				IDbConnection IDataProvider.CreateConnection(string connectionString) => throw new NotImplementedException();
 
@@ -204,7 +205,7 @@ namespace Tests.xUpdate
 
 				Task<int> IDataProvider.MergeAsync<TTarget, TSource>(DataConnection dataConnection, IMergeable<TTarget, TSource> merge, CancellationToken token) => throw new NotImplementedException();
 
-				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value) => throw new NotImplementedException();
+				void IDataProvider.SetParameter(IDbDataParameter parameter, string name, DbDataType dataType, object value) => throw new NotImplementedException();
 			}
 
 			private bool _bySourceOperationsSupported = false;

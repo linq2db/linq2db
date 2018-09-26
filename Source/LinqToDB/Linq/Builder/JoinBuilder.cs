@@ -261,7 +261,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var n = SelectQuery.Select.Add(idx.Sql);
 
-						return new SqlInfo(idx.Members)
+						return new SqlInfo(idx.MemberChain)
 						{
 							Sql   = SelectQuery.Select.Columns[n],
 							Index = n
