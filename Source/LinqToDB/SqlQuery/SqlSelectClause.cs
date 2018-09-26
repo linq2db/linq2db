@@ -147,7 +147,7 @@ namespace LinqToDB.SqlQuery
 
 		public int Add(ISqlExpression expr)
 		{
-			if (expr is SqlColumn && ((SqlColumn)expr).Parent == SelectQuery)
+			if (expr is SqlColumn column && column.Parent == SelectQuery)
 				throw new InvalidOperationException();
 
 			return AddOrFindColumn(new SqlColumn(SelectQuery, expr));
@@ -155,7 +155,7 @@ namespace LinqToDB.SqlQuery
 
 		public int AddNew(ISqlExpression expr)
 		{
-			if (expr is SqlColumn && ((SqlColumn)expr).Parent == SelectQuery)
+			if (expr is SqlColumn column && column.Parent == SelectQuery)
 				throw new InvalidOperationException();
 
 			Columns.Add(new SqlColumn(SelectQuery, expr));
