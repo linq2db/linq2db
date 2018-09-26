@@ -1330,6 +1330,15 @@ namespace Tests.Linq
 				AreEqualLocal(local, table, t => !(t.NullableBoolValue != true) && t.Id > 0);
 				AreEqualLocal(local, table, t => t.NullableBoolValue == true && t.Id > 0);
 
+				if (context != ProviderName.Access)
+				{
+					AreEqualLocal(local, table, t => t.NullableBoolValue == null && t.Id > 0);
+					AreEqualLocal(local, table, t => t.NullableBoolValue != null && t.Id > 0);
+
+					AreEqualLocal(local, table, t => !(t.NullableBoolValue == null) && t.Id > 0);
+					AreEqualLocal(local, table, t => !(t.NullableBoolValue != null) && t.Id > 0);
+				}
+
 				AreEqualLocal(local, table, t => (!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
 				AreEqualLocal(local, table, t => !(!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
 
