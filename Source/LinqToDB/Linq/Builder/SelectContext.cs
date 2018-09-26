@@ -437,7 +437,7 @@ namespace LinqToDB.Linq.Builder
 						if (i.Query == SelectQuery)
 							return i;
 
-						return new SqlInfo(i.Members)
+						return new SqlInfo(i.MemberChain)
 						{
 							Query = SelectQuery,
 							Index = SelectQuery.Select.Add(i.Query.Select.Columns[i.Index])

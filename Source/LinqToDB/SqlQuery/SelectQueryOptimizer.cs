@@ -1103,7 +1103,7 @@ namespace LinqToDB.SqlQuery
 					{
 						// removing ordering if no select columns
 						var projection = new HashSet<ISqlExpression>(query.Select.Columns.Select(c => c.Expression));
-						for (int i = query.OrderBy.Items.Count - 1; i >= 0; i--)
+						for (var i = query.OrderBy.Items.Count - 1; i >= 0; i--)
 						{
 							if (!projection.Contains(query.OrderBy.Items[i].Expression))
 								query.OrderBy.Items.RemoveAt(i);

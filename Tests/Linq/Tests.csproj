@@ -62,7 +62,7 @@
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
-		<PackageReference Include="AdoNetCore.AseClient" Version="0.10.1" />
+		<PackageReference Include="AdoNetCore.AseClient" Version="0.11.0" />
 
 		<PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
 		<PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
@@ -188,7 +188,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-		<PackageReference Include="Microsoft.Data.SQLite" Version="2.0.1" />
+		<PackageReference Include="Microsoft.Data.SQLite" Version="2.1.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netcoreapp2.0' ">

@@ -61,21 +61,25 @@ namespace LinqToDB.Expressions
 
 		#region EqualsTo
 
-		internal static bool EqualsTo(this Expression expr1, Expression expr2, Dictionary<Expression,QueryableAccessor> queryableAccessorDic)
+		internal static bool EqualsTo(this Expression expr1, Expression expr2,
+			Dictionary<Expression,QueryableAccessor> queryableAccessorDic,
+			bool compareConstantValues = false)
 		{
-			return EqualsTo(expr1, expr2, new EqualsToInfo { QueryableAccessorDic = queryableAccessorDic });
+			return EqualsTo(expr1, expr2, new EqualsToInfo
+			{
+				QueryableAccessorDic  = queryableAccessorDic,
+				CompareConstantValues = compareConstantValues
+			});
 		}
 
 		class EqualsToInfo
 		{
 			public HashSet<Expression>                      Visited = new HashSet<Expression>();
 			public Dictionary<Expression,QueryableAccessor> QueryableAccessorDic;
+			public bool                                     CompareConstantValues;
 		}
 
-		static bool EqualsTo(
-			this Expression expr1,
-			Expression      expr2,
-			EqualsToInfo    info)
+		static bool EqualsTo(this Expression expr1, Expression expr2, EqualsToInfo info)
 		{
 			if (expr1 == expr2)
 				return true;
@@ -378,9 +382,9 @@ namespace LinqToDB.Expressions
 			if (expr1.Value == null || expr2.Value == null)
 				return false;
 
-			if (expr1.Value is IQueryable)
+			if (expr1.Value is IQueryable queryable)
 			{
-				var eq1 = ((IQueryable)expr1.Value).Expression;
+				var eq1 = queryable.Expression;
 				var eq2 = ((IQueryable)expr2.Value).Expression;
 
 				if (!info.Visited.Contains(eq1))
@@ -390,7 +394,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			return true;
+			return !info.CompareConstantValues || expr1.Value == expr2.Value;
 		}
 
 		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)

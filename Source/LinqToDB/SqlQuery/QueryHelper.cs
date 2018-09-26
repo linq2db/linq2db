@@ -66,20 +66,20 @@ namespace LinqToDB.SqlQuery
 
 		public static void ConcatSearchCondition(this SqlWhereClause where, SqlSearchCondition search)
 		{
-			if (@where.IsEmpty)
+			if (where.IsEmpty)
 			{
-				@where.SearchCondition.Conditions.AddRange(search.Conditions);
+				where.SearchCondition.Conditions.AddRange(search.Conditions);
 			}
 			else
 			{
-				if (@where.SearchCondition.Precedence < Precedence.LogicalConjunction)
+				if (where.SearchCondition.Precedence < Precedence.LogicalConjunction)
 				{
 					var sc1 = new SqlSearchCondition();
 
-					sc1.Conditions.AddRange(@where.SearchCondition.Conditions);
+					sc1.Conditions.AddRange(where.SearchCondition.Conditions);
 
-					@where.SearchCondition.Conditions.Clear();
-					@where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
+					where.SearchCondition.Conditions.Clear();
+					where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
 				}
 
 				if (search.Precedence < Precedence.LogicalConjunction)
@@ -88,10 +88,10 @@ namespace LinqToDB.SqlQuery
 
 					sc2.Conditions.AddRange(search.Conditions);
 
-					@where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
+					where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
 				}
 				else
-					@where.SearchCondition.Conditions.AddRange(search.Conditions);
+					where.SearchCondition.Conditions.AddRange(search.Conditions);
 			}
 		}
 
@@ -223,16 +223,16 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Converts ORDER BY DISTINCT to GROUP BY equivalent
 		/// </summary>
-		/// <param name="selectQuery"></param>
+		/// <param name="select"></param>
 		/// <param name="flags"></param>
 		/// <returns></returns>
-		public static bool TryConvertOrderedDistinctToGroupBy(SelectQuery selectQuery, SqlProviderFlags flags)
+		public static bool TryConvertOrderedDistinctToGroupBy(SelectQuery select, SqlProviderFlags flags)
 		{
-			if (!selectQuery.Select.IsDistinct || selectQuery.OrderBy.IsEmpty)
+			if (!select.Select.IsDistinct || select.OrderBy.IsEmpty)
 				return false;
 
-			var nonProjecting = selectQuery.Select.OrderBy.Items.Select(i => i.Expression)
-				.Except(selectQuery.Select.Columns.Select(c => c.Expression))
+			var nonProjecting = select.Select.OrderBy.Items.Select(i => i.Expression)
+				.Except(select.Select.Columns.Select(c => c.Expression))
 				.ToList();
 
 			if (nonProjecting.Count > 0)
@@ -242,7 +242,7 @@ namespace LinqToDB.SqlQuery
 
 				// converting to Group By
 
-				var newOrderItems = selectQuery.Select.OrderBy.Items
+				var newOrderItems = select.Select.OrderBy.Items
 					.Select(oi =>
 						!nonProjecting.Contains(oi.Expression)
 							? oi
@@ -251,17 +251,16 @@ namespace LinqToDB.SqlQuery
 								oi.IsDescending))
 					.ToList();
 
-				selectQuery.Select.OrderBy.Items.Clear();
-				selectQuery.Select.OrderBy.Items.AddRange(newOrderItems);
+				select.Select.OrderBy.Items.Clear();
+				select.Select.OrderBy.Items.AddRange(newOrderItems);
 
 				// add only missing group items
-				var currentGroupItems = new HashSet<ISqlExpression>(selectQuery.Select.GroupBy.Items);
-				selectQuery.Select.GroupBy.Items.AddRange(
-					selectQuery.Select.Columns.Select(c => c.Expression)
-						.Where(e => !currentGroupItems.Contains(e))
-				);
+				var currentGroupItems = new HashSet<ISqlExpression>(select.Select.GroupBy.Items);
+				select.Select.GroupBy.Items.AddRange(
+					select.Select.Columns.Select(c => c.Expression)
+						.Where(e => !currentGroupItems.Contains(e)));
 
-				selectQuery.Select.IsDistinct = false;
+				select.Select.IsDistinct = false;
 
 				return true;
 			}

@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 		public ISqlExpression   Sql;
 		public SelectQuery      Query;
 		public int              Index = -1;
-		public readonly List<MemberInfo> Members = new List<MemberInfo>();
+		public readonly List<MemberInfo> MemberChain = new List<MemberInfo>();
 
 		public SqlInfo()
 		{
@@ -21,39 +21,39 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo(MemberInfo mi)
 		{
-			Members.Add(mi);
+			MemberChain.Add(mi);
 		}
 
 		public SqlInfo(IEnumerable<MemberInfo> mi)
 		{
-			Members.AddRange(mi);
+			MemberChain.AddRange(mi);
 		}
 
 		public SqlInfo Clone()
 		{
-			return new SqlInfo(Members) { Sql = Sql, Query = Query, Index = Index };
+			return new SqlInfo(MemberChain) { Sql = Sql, Query = Query, Index = Index };
 		}
 
 		public SqlInfo Clone(MemberInfo mi)
 		{
 			var info = Clone();
 
-			if (Members.Count == 0 || Members[0] != mi)
-				info.Members.Insert(0, mi);
+			if (MemberChain.Count == 0 || MemberChain[0] != mi)
+				info.MemberChain.Insert(0, mi);
 
 			return info;
 		}
 
 		public bool CompareMembers(SqlInfo info)
 		{
-			return Members.Count == info.Members.Count && !Members.Where((t,i) => !t.EqualsTo(info.Members[i])).Any();
+			return MemberChain.Count == info.MemberChain.Count && !MemberChain.Where((t,i) => !t.EqualsTo(info.MemberChain[i])).Any();
 		}
 
 		public bool CompareLastMember(SqlInfo info)
 		{
 			return
-				Members.Count > 0 && info.Members.Count > 0 &&
-				Members[Members.Count - 1].EqualsTo(info.Members[info.Members.Count - 1]);
+				MemberChain.Count > 0 && info.MemberChain.Count > 0 &&
+				MemberChain[MemberChain.Count - 1].EqualsTo(info.MemberChain[info.MemberChain.Count - 1]);
 		}
 	}
 }

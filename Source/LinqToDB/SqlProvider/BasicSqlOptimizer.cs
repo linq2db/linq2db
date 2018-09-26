@@ -990,7 +990,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var newOperator = InvertOperator(expr.Operator, false);
 					if (newOperator != expr.Operator)
-					{ 
+					{
 						predicate = new SqlPredicate.ExprExpr(expr.Expr1, newOperator, expr.Expr2);
 						isNot     = false;
 					}

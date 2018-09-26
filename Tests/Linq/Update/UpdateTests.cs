@@ -737,21 +737,25 @@ namespace Tests.xUpdate
 		[Table("LinqDataTypes")]
 		class Table1
 		{
+#pragma warning disable 649
 			[Column] public int  ID;
 			[Column] public bool BoolValue;
 
 			[Association(ThisKey = "ID", OtherKey = "ParentID", CanBeNull = false)]
 			public List<Table2> Tables2;
+#pragma warning restore 649
 		}
 
 		[Table("Parent")]
 		class Table2
 		{
+#pragma warning disable 649
 			[Column] public int  ParentID;
 			[Column] public bool Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ID", CanBeNull = false)]
 			public Table1 Table1;
+#pragma warning restore 649
 		}
 
 		[Test, DataContextSource(false,

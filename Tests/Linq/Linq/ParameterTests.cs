@@ -20,7 +20,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void InlineParameter(string context)
 		{
-			using (var  db = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			{
 				db.InlineParameters = true;
 
@@ -184,6 +184,21 @@ namespace Tests.Linq
 					dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
 
 				var list = db.Types.Where(t => t.DateTimeValue == Sql.ToSql(dt)).ToList();
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Test2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				int id1 = 1, id2 = 10000;
+
+				var parent1 = db.Parent.FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+				id1++;
+				var parent2 = db.Parent.FirstOrDefault(p => p.ParentID == id1 || p.ParentID >= id1 || p.ParentID >= id2);
+
+				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}
 		}
 	}

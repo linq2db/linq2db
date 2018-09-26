@@ -128,6 +128,11 @@ namespace Tests.Data
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
 
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2005));
+
 					break;
 				}
 
@@ -138,6 +143,11 @@ namespace Tests.Data
 					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
+
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2008));
 
@@ -154,6 +164,11 @@ namespace Tests.Data
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+
 					break;
 				}
 
@@ -164,6 +179,11 @@ namespace Tests.Data
 					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
+
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+
+					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString);
+					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
 					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
 
