@@ -430,7 +430,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								// transform Sql.Property into member access
 								if (expr.Arguments[1].Type != typeof(string))
-									throw new ArgumentException("Only strings are alowed for member name in Sql.Property expressions.");
+									throw new ArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
 
 								var entity           = ConvertExpression(expr.Arguments[0]);
 								var memberName       = (string)expr.Arguments[1].EvaluateExpression();
@@ -1907,12 +1907,12 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var lcol in lcols)
 			{
-				if (lcol.Members.Count == 0)
+				if (lcol.MemberChain.Count == 0)
 					throw new InvalidOperationException();
 
 				ISqlExpression rcol = null;
 
-				var lmember = lcol.Members[lcol.Members.Count - 1];
+				var lmember = lcol.MemberChain[lcol.MemberChain.Count - 1];
 
 				if (sr)
 					rcol = ConvertToSql(rightContext, Expression.MakeMemberAccess(right, lmember));
@@ -2187,7 +2187,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql = ConvertExpressions(context, arg, ConvertFlags.Key);
 
-				if (sql.Length == 1 && sql[0].Members.Count == 0)
+				if (sql.Length == 1 && sql[0].MemberChain.Count == 0)
 					expr = sql[0].Sql;
 				else
 					expr = new ObjectSqlExpression(MappingSchema, sql);
