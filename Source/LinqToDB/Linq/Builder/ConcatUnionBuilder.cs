@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 						if (nctor != null)
 						{
 							var members = nctor.Members
-								.Select(m => m is MethodInfo mi ? mi.GetPropertyInfo() : m)
+								.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
 								.ToList();
 
 							expr = Expression.New(
@@ -336,9 +336,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var ma = (MemberExpression)expression;
 
-									Member member;
-
-									if (!_members.TryGetValue(ma.Member, out member))
+									if (!_members.TryGetValue(ma.Member, out var member))
 									{
 										var ed = Builder.MappingSchema.GetEntityDescriptor(_type);
 
@@ -357,8 +355,7 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									if (member == null)
-										throw new LinqToDBException(
-											string.Format("Expression '{0}' is not a field.", expression));
+										throw new LinqToDBException($"Expression '{expression}' is not a field.");
 
 									if (member.SqlQueryInfo == null)
 									{
