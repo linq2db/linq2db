@@ -372,7 +372,7 @@ namespace LinqToDB.SqlQuery
 				}
 
 				for (var i = sql.Select.Columns.Count; i < union.Select.Columns.Count; i++)
-					sql.Select.Expr(union.Select.Columns[i].Expression);
+					sql.Select.ExprNew(union.Select.Columns[i].Expression);
 
 				sql.From.Tables.Clear();
 				sql.From.Tables.AddRange(union.From.Tables);
