@@ -6,7 +6,7 @@
     <Platforms>AnyCPU;x86</Platforms>
     <AssemblyName>linq2db.Tests.Playground</AssemblyName>
     <SignAssembly>true</SignAssembly>
-	<AssemblyOriginatorKeyFile>..\..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\Build\linq2db.snk</AssemblyOriginatorKeyFile>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
