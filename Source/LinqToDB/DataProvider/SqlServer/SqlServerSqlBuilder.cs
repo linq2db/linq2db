@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildSql()
 		{
 			if (BuildAlternativeSql)
-				AlternativeBuildSql(true, base.BuildSql);
+				AlternativeBuildSql(true, base.BuildSql, "\t(SELECT NULL)");
 			else
 				base.BuildSql();
 		}
@@ -37,17 +37,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			return StringBuilder;
 		}
 
-		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClasuse)
+		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			if (insertClasuse.WithIdentity)
+			if (insertClause.WithIdentity)
 			{
-				var identityField = insertClasuse.Into.GetIdentityField();
+				var identityField = insertClause.Into.GetIdentityField();
 
 				if (identityField != null && (identityField.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
-					AppendOutputTableVariable(insertClasuse.Into)
+					AppendOutputTableVariable(insertClause.Into)
 						.Append(" TABLE (")
 						.Append(Convert(identityField.PhysicalName, ConvertType.NameToQueryField))
 						.Append(" ");
@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 			}
 
-			base.BuildInsertQuery(statement, insertClasuse);
+			base.BuildInsertQuery(statement, insertClause, addAlias);
 		}
 
 		protected override void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)

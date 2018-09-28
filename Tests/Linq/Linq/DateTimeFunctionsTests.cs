@@ -496,7 +496,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				AreEqual(Types.Select(t => t.DateTimeValue.AddDays(t.SmallIntValue)),
+				var needsFix = db.ProviderNeedsTimeFix(context);
+
+				AreEqual(Types.Select(t => TestUtils.FixTime(t.DateTimeValue.AddDays(t.SmallIntValue), needsFix)),
 					db.Types.Select(t => t.DateTimeValue.AddDays(t.SmallIntValue)));
 			}
 		}

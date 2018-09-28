@@ -1,8 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net452;netcoreapp2.0</TargetFrameworks>
+		<TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Npgsql" Version="3.2.7" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
@@ -17,6 +21,11 @@
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Access.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Sybase.DataAction.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Sybase.DataAction.tt</DependentUpon>
 		</Compile>
 
 		<None Update="DB2.tt">
@@ -98,6 +107,10 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>SQLite.tt</DependentUpon>
 		</Compile>
+		<None Update="Sybase.DataAction.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>Sybase.DataAction.generated.cs</LastGenOutput>
+		</None>
 
 		<None Update="Sybase.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -120,12 +133,12 @@
 		</Compile>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' != 'net452'">
+	<ItemGroup Condition="'$(TargetFramework)' != 'net46'">
 		<None Remove="SqlServer.tt" />
 		<Compile Remove="SqlServer.generated.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net452'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net46'">
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
 
 		<None Update="SqlServer.tt">

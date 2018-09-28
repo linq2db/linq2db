@@ -8,16 +8,18 @@ namespace LinqToDB.SqlQuery
 
 	class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, SqlStatement statement, SelectQuery selectQuery)
+		public SelectQueryOptimizer(SqlProviderFlags flags, SqlStatement statement, SelectQuery selectQuery, int level = 0)
 		{
 			_flags       = flags;
 			_selectQuery = selectQuery;
 			_statement   = statement;
+			_level       = level;
 		}
 
 		readonly SqlProviderFlags _flags;
 		readonly SelectQuery      _selectQuery;
 		readonly SqlStatement     _statement;
+		readonly int              _level;
 
 		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
 		{
@@ -370,7 +372,7 @@ namespace LinqToDB.SqlQuery
 				}
 
 				for (var i = sql.Select.Columns.Count; i < union.Select.Columns.Count; i++)
-					sql.Select.Expr(union.Select.Columns[i].Expression);
+					sql.Select.ExprNew(union.Select.Columns[i].Expression);
 
 				sql.From.Tables.Clear();
 				sql.From.Tables.AddRange(union.From.Tables);
@@ -403,7 +405,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql && sql != _selectQuery)
 				{
 					sql.ParentSelect = _selectQuery;
-					new SelectQueryOptimizer(_flags, _statement, sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
+					new SelectQueryOptimizer(_flags, _statement, sql, _level + 1).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
 
 					if (sql.IsParameterDependent)
 						_selectQuery.IsParameterDependent = true;
@@ -416,11 +418,7 @@ namespace LinqToDB.SqlQuery
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 
-			new QueryVisitor().Visit(_selectQuery, e =>
-			{
-				if (e is SelectQuery sql && sql != _selectQuery)
-					RemoveOrderBy(sql);
-			});
+			OptimizeDistinctOrderBy();
 		}
 
 		internal static void OptimizeSearchCondition(SqlSearchCondition searchCondition)
@@ -529,9 +527,8 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 				}
-				else if (cond.Predicate is SqlSearchCondition)
+				else if (cond.Predicate is SqlSearchCondition sc)
 				{
-					var sc = (SqlSearchCondition)cond.Predicate;
 					OptimizeSearchCondition(sc);
 					if (sc.Conditions.Count == 0)
 					{
@@ -545,12 +542,6 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 			}
-		}
-
-		static void RemoveOrderBy(SelectQuery selectQuery)
-		{
-			if (selectQuery.OrderBy.Items.Count > 0 && selectQuery.Select.SkipValue == null && selectQuery.Select.TakeValue == null)
-				selectQuery.OrderBy.Items.Clear();
 		}
 
 		internal void ResolveWeakJoins(List<ISqlTableSource> tables)
@@ -670,6 +661,18 @@ namespace LinqToDB.SqlQuery
 			if (source.Source is SelectQuery select)
 			{
 				var canRemove = !CorrectCrossJoinQuery(select);
+				if (canRemove)
+				{
+					if (source.Joins.Count > 0)
+					{
+						// We can not remove subquery that is left side for FULL and RIGHT joins and there is filter
+						var join = source.Joins[0];
+						if (join.JoinType == JoinType.Full ||
+						    join.JoinType == JoinType.Right
+							&& !select.Where.IsEmpty)
+						canRemove = false;
+					}
+				}
 				if (canRemove)
 					return RemoveSubQuery(source, optimizeWhere, allColumns && !isApplySupported, optimizeValues, optimizeColumns);
 			}
@@ -910,7 +913,7 @@ namespace LinqToDB.SqlQuery
 							}
 							else if (parentTableSources.Any(ts => ContainsTable(ts, condition)))
 							{
-								if (isApplySupported && Common.Configuration.Linq.PrefereApply)
+								if (isApplySupported && Common.Configuration.Linq.PreferApply)
 									return;
 
 								searchCondition.Insert(0, condition);
@@ -1061,5 +1064,55 @@ namespace LinqToDB.SqlQuery
 				return expr;
 			});
 		}
+
+		void OptimizeDistinctOrderBy()
+		{
+			// algorythm works with whole Query, so skipping sub optimizations
+
+			if (_level > 0)
+				return;
+
+			var information = new QueryInformation(_selectQuery);
+
+			foreach (var query in information.GetQueriesParentFirst())
+			{
+				// removing sorting for subselects
+				if (QueryHelper.CanRemoveOrderBy(query, _flags, information))
+				{
+					query.OrderBy.Items.Clear();
+					continue;
+				}
+
+				if (query.Select.IsDistinct)
+				{
+					QueryHelper.TryRemoveDistinct(query, information);
+				}
+
+				if (query.Select.IsDistinct && !query.Select.OrderBy.IsEmpty)
+				{
+					// nothing to do - DISTINCT ORDER BY supported
+					if (_flags.IsDistinctOrderBySupported)
+						continue;
+
+					if (Common.Configuration.Linq.KeepDistinctOrdered)
+					{
+						// trying to convert to GROUP BY quivalent
+						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);
+					}
+					else
+					{
+						// removing ordering if no select columns
+						var projection = new HashSet<ISqlExpression>(query.Select.Columns.Select(c => c.Expression));
+						for (var i = query.OrderBy.Items.Count - 1; i >= 0; i--)
+						{
+							if (!projection.Contains(query.OrderBy.Items[i].Expression))
+								query.OrderBy.Items.RemoveAt(i);
+						}
+					}
+				}
+			}
+
+		}
+
 	}
 }

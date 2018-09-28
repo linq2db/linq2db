@@ -181,7 +181,14 @@ namespace LinqToDB.Linq.Builder
 						var ctx = GetContext(context, expr);
 
 						if (ctx != null)
-							return new TransformInfo(ctx.BuildExpression(expr, 0, enforceServerSide));
+						{
+							var buildExpr = ctx.BuildExpression(expr, 0, enforceServerSide);
+							if (buildExpr.Type != expr.Type)
+							{
+								buildExpr = Expression.Convert(buildExpr, expr.Type);
+							}
+							return new TransformInfo(buildExpr);
+						}
 
 						break;
 					}
@@ -255,7 +262,7 @@ namespace LinqToDB.Linq.Builder
 							return new TransformInfo(GetSubQueryExpression(context, ce, enforceServerSide));
 						}
 
-						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide))
+						if (IsServerSideOnly(expr) || PreferServerSide(expr, enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
 							return new TransformInfo(BuildSql(context, expr));
 					}
 
@@ -470,7 +477,7 @@ namespace LinqToDB.Linq.Builder
 				expr = Expression.Convert(expr, type);
 
 			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object[],T>>(
-				BuildBlock(expr), new []
+				BuildBlock(expr), new[]
 				{
 					QueryRunnerParam,
 					DataContextParam,

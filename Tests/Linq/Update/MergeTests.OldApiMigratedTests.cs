@@ -16,7 +16,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		// ASE: just fails
-		[Test, MergeDataContextSource(ProviderName.Sybase)]
+		[Test, MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Merge(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -182,10 +182,9 @@ namespace Tests.xUpdate
 			public string nvarcharDataType;
 		}
 
-		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
-		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.Informix)]
+		[Test, MergeDataContextSource(ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix)]
 		public void MergeChar1(string context)
 		{
 			using (var db = new TestDataConnection(context))

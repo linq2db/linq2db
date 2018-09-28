@@ -161,7 +161,10 @@ namespace LinqToDB.Data.RetryPolicy
 		public async Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken())
 		{
 			if (Suspended)
+			{
 				await operation(cancellationToken);
+				return;
+			}
 
 			OnFirstExecution();
 			await ExecuteImplementationAsync(async ct => { await operation(ct); return 0; }, cancellationToken);

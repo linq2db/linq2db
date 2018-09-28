@@ -13,6 +13,7 @@ Where XXX is one of supported databases, for example:
 `Install-Package linq2db.SqlServer`
 
 This also will install needed linq2db packages:
+
 * linq2db.t4models
 * linq2db 
 
@@ -21,16 +22,18 @@ But **not** data provider packages (install them only if needed to compile your 
 ### .Net Core specific
 
 Because of .Net Core projects do not support NuGet content files all stuff is not copied into project's folder, so to run T4 templates you'll need:
+
 * open `$(SolutionDir).tools\linq2db.t4models` in Explorer 
 * copy `CopyMe.XXX.Core.tt.txt` to your project's folder or subfolder, then you should use it instead of `CopyMe.XXX.tt.txt`
 
-# Running
+## Running
 
 After package installing you will see new `LinqToDB.Templates` folder in your project, this folder contains all needed T4 stuff to generate your model. Also would be created new folder in tour solution: `$(SolutionDir).tools\linq2db.t4models`, it is used to store and link assemblies, needed for generation (linq2db.dll and data provider assemblies).
 
 To create a data model template take a look at one of the CopyMe.XXX.tt.txt file in your LinqToDB.Templates project folder. Copy this file to needed project location and rename it, like `MyModel.tt`
 
 There are few main steps in this file:
+
 1. Configuring generation process (read below)
 1. Loading metadata - this is a call to `LoadMatadata()` function - it connects to your database and fetches all needed metadata (table structure, views, and so on)
 1. Customizing generation process (read below)
@@ -85,6 +88,10 @@ GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines o
 GetSchemaOptions.ExcludedCatalogs = new[] { "TestUser", "SYSSTAT" }; // Defines excluded catalogs.
 GetSchemaOptions.IncludedCatalogs = new[] { "TestUser", "SYS" };     // Defines only included catalogs.
 
+GetSchemaOptions.GetAssociationMemberName = key => "Association_" + key.MemberName;     // Defines custom naming logic for generated associations.
+
+// check GetSchemaOptions class for more options
+
 Func<string, bool, string> ToValidName         = ToValidNameDefault;          // Defines function to convert names to valid (My_Table to MyTable) 
 Func<string, bool, string> ConvertToCompilable = ConvertToCompilableDefault;  // Converts name to c# compatible. By default removes uncompatible symbols and converts result with ToValidName
 
@@ -94,15 +101,21 @@ Func<ForeignKey, string> GetAssociationExtensionPluralName    = GetAssociationEx
 ```
 
 ## Provider specific configurations
+
 ### SQL Server
+
 ```cs
 bool GenerateSqlServerFreeText = true; // Defines wheather to generate extensions for Free Text search, or not
 ```
+
 ### PostgreSQL
+
 ```cs
 bool GenerateCaseSensitiveNames = false; // Defines whether to generate case sensitive or insensitive names 
 ```
+
 ### Sybase
+
 ```cs
 bool GenerateSybaseSystemTables = false; // Defines whether to generate Sybase sysobjects tables or not
 ```

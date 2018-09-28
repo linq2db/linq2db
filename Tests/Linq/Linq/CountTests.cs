@@ -513,7 +513,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Count = db.Parent.Where(p1 => p1.ParentID == p.ParentID).Count() });
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLiteClassic, ProviderName.SQLiteMS, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void SubQuery6(string context)
 		{
 			using (var db = GetDataContext(context))

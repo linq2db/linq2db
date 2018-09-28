@@ -99,7 +99,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
 					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))
-						return ProviderName.OracleManaged;;
+						return ProviderName.OracleManaged;
 			}
 			catch
 			{
@@ -179,5 +179,13 @@ namespace LinqToDB.DataProvider.Oracle
 		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 
 		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
+
+		/// <summary>
+		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
+		/// Default value: <c>true</c>.
+		/// This flag added for backward compatibility and will be removed later, so it is recommended to
+		/// set it to <c>false</c> and and fix mappings to use uppercase letters for non-quoted identifiers.
+		/// </summary>
+		public static bool DontEscapeLowercaseIdentifiers { get; set; } = true;
 	}
 }

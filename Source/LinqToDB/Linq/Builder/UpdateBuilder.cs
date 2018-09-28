@@ -177,32 +177,120 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items,
 			params IBuildContext[] sequences)
 		{
-			var path = Expression.Parameter(setter.Body.Type, "p");
-			var ctx  = new ExpressionContext(buildInfo.Parent, sequences, setter);
+			var ctx = new ExpressionContext(buildInfo.Parent, sequences, setter);
 
-			if (setter.Body.NodeType == ExpressionType.MemberInit)
+			void BuildSetter(MemberExpression memberExpression, Expression expression)
 			{
-				var ex = (MemberInitExpression)setter.Body;
+				var column = into.ConvertToSql(memberExpression, 1, ConvertFlags.Field);
+				var expr   = builder.ConvertToSqlExpression(ctx, expression);
+
+				if (expr.ElementType == QueryElementType.SqlParameter)
+				{
+					var parm = (SqlParameter)expr;
+					var field = column[0].Sql is SqlField sqlField
+						? sqlField
+						: (SqlField)((SqlColumn)column[0].Sql).Expression;
+
+					if (parm.DataType == DataType.Undefined)
+						parm.DataType = field.DataType;
+				}
+
+				items.Add(new SqlSetExpression(column[0].Sql, expr));
+			}
+
+			void BuildNew(NewExpression expression, Expression path)
+			{
+				for (var i = 0; i < expression.Members.Count; i++)
+				{
+					var member   = expression.Members[i];
+					var argument = expression.Arguments[i];
+
+					if (member is MethodInfo mi)
+						member = mi.GetPropertyInfo();
+
+					var pe = Expression.MakeMemberAccess(path, member);
+
+					if (argument is NewExpression newExpr && newExpr.Type.IsAnonymous())
+					{
+						BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
+					}
+					else if (argument is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
+					{
+						BuildMemberInit(initExpr, Expression.MakeMemberAccess(path, member));
+					}
+					else
+					{
+						BuildSetter(pe, argument);
+					}
+				}
+			}
+
+			void BuildMemberInit(MemberInitExpression expression, Expression path)
+			{
+				foreach (var binding in expression.Bindings)
+				{
+					var member = binding.Member;
+
+					if (member is MethodInfo mi)
+						member = mi.GetPropertyInfo();
+
+					if (binding is MemberAssignment ma)
+					{
+						var pe = Expression.MakeMemberAccess(path, member);
+
+						if (ma.Expression is NewExpression newExpr && newExpr.Type.IsAnonymous())
+						{
+							BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
+						}
+						else if (ma.Expression is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
+						{
+							BuildMemberInit(initExpr, Expression.MakeMemberAccess(path, member));
+						}
+						else
+						{
+							BuildSetter(pe, ma.Expression);
+						}
+					}
+					else
+						throw new InvalidOperationException();
+				}
+			}
+
+			var bodyPath = Expression.Parameter(setter.Body.Type, "p");
+			var bodyExpr = setter.Body;
+
+			if (bodyExpr.NodeType == ExpressionType.New && bodyExpr.Type.IsAnonymous())
+			{
+				var ex = (NewExpression)bodyExpr;
 				var p  = sequences[0].Parent;
 
-				BuildSetter(builder, into, items, ctx, ex, path);
+				BuildNew(ex, bodyPath);
+
+				builder.ReplaceParent(ctx, p);
+			}
+			else if (bodyExpr.NodeType == ExpressionType.MemberInit)
+			{
+				var ex = (MemberInitExpression)bodyExpr;
+				var p  = sequences[0].Parent;
+
+				BuildMemberInit(ex, bodyPath);
 
 				builder.ReplaceParent(ctx, p);
 			}
 			else
 			{
-				var sqlInfo = ctx.ConvertToSql(setter.Body, 0, ConvertFlags.All);
+				var sqlInfo = ctx.ConvertToSql(bodyExpr, 0, ConvertFlags.All);
 
 				foreach (var info in sqlInfo)
 				{
-					if (info.Members.Count == 0)
+					if (info.MemberChain.Count == 0)
 						throw new LinqException("Object initializer expected for insert statement.");
 
-					if (info.Members.Count != 1)
+					if (info.MemberChain.Count != 1)
 						throw new InvalidOperationException();
 
-					var member = info.Members[0];
-					var pe     = Expression.MakeMemberAccess(path, member);
+					var member = info.MemberChain[0];
+					var pe     = Expression.MakeMemberAccess(bodyPath, member);
 					var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 					var expr   = info.Sql;
 
@@ -221,24 +309,23 @@ namespace LinqToDB.Linq.Builder
 		{
 			foreach (var binding in expression.Bindings)
 			{
-				var member  = binding.Member;
+				var member = binding.Member;
 
-				if (member is MethodInfo)
-					member = ((MethodInfo)member).GetPropertyInfo();
+				if (member is MethodInfo mi)
+					member = mi.GetPropertyInfo();
 
-				if (binding is MemberAssignment)
+				if (binding is MemberAssignment ma)
 				{
-					var ma = binding as MemberAssignment;
 					var pe = Expression.MakeMemberAccess(path, member);
 
-					if (ma.Expression is MemberInitExpression && !into.IsExpression(pe, 1, RequestFor.Field).Result)
+					if (ma.Expression is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
 					{
 						BuildSetter(
 							builder,
 							into,
 							items,
 							ctx,
-							(MemberInitExpression)ma.Expression, Expression.MakeMemberAccess(path, member));
+							initExpr, Expression.MakeMemberAccess(path, member));
 					}
 					else
 					{
@@ -273,16 +360,19 @@ namespace LinqToDB.Linq.Builder
 			SqlTable                        table,
 			List<SqlSetExpression> items)
 		{
+			var member = MemberHelper.GetMemberInfo(extract.Body);
+
 			var ext = extract.Body;
 
 			while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)
 				ext = ((UnaryExpression)ext).Operand;
 
-			if (ext.NodeType != ExpressionType.MemberAccess || ext.GetRootObject(builder.MappingSchema) != extract.Parameters[0])
+			var rootObject = ext.GetRootObject(builder.MappingSchema);
+
+			if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
 				throw new LinqException("Member expression expected for the 'Set' statement.");
 
-			var body   = (MemberExpression)ext;
-			var member = body.Member;
+			var body = ext is MemberExpression mex ? mex : Expression.MakeMemberAccess(rootObject, member);
 
 			if (member is MethodInfo)
 				member = ((MethodInfo)member).GetPropertyInfo();

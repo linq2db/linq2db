@@ -1,14 +1,40 @@
 ﻿using LinqToDB;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using LinqToDB.Data;
+using System.Threading;
 using Tests.Model;
 
 namespace Tests
 {
-	public class TestUtils
+	public static class TestUtils
 	{
+		private static int _cnt;
+
+		/// <summary>
+		/// Returns unique per-testrun sequence number.
+		/// E.g. it can be used to generate unique table names for tests to workaround Firebird's
+		/// issues with DDL operations.
+		/// </summary>
+		public static int GetNext()
+		{
+			// Firebird issue details:
+			// https://stackoverflow.com/questions/44353607
+			// another solution with pools cleanup doesn't work well with Firebird3 and
+			// also breaks provider
+			return Interlocked.Increment(ref _cnt);
+		}
+
 		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
+
+		[Sql.Function("VERSION", ServerSideOnly = true)]
+		private static string MySqlVersion()
+		{
+			throw new InvalidOperationException();
+		}
 
 		[Sql.Function("DBINFO", ServerSideOnly = true)]
 		private static string DbInfo(string property)
@@ -19,21 +45,21 @@ namespace Tests
 		[Sql.Expression("current_schema", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
 		[Sql.Expression("current server", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
-		[Sql.Function("DATABASE", ServerSideOnly = true, Configuration = ProviderName.MySql)]
-		[Sql.Function("DB_NAME", ServerSideOnly = true)]
+		[Sql.Function("DATABASE"        , ServerSideOnly = true, Configuration = ProviderName.MySql)]
+		[Sql.Function("DB_NAME"         , ServerSideOnly = true)]
 		private static string DbName()
 		{
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Expression("user", ServerSideOnly = true, Configuration = ProviderName.Informix)]
-		[Sql.Expression("user", ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
-		[Sql.Expression("user", ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
-		[Sql.Expression("current_user", ServerSideOnly = true, Configuration = ProviderName.SapHana)]
+		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Informix)]
+		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
+		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
+		[Sql.Expression("current_user"  , ServerSideOnly = true, Configuration = ProviderName.SapHana)]
 		[Sql.Expression("current schema", ServerSideOnly = true, Configuration = ProviderName.DB2)]
-		[Sql.Function("current_schema", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
-		[Sql.Function("USER_NAME", ServerSideOnly = true, Configuration = ProviderName.Sybase)]
-		[Sql.Function("SCHEMA_NAME", ServerSideOnly = true)]
+		[Sql.Function("current_schema"  , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
+		[Sql.Function("USER_NAME"       , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
+		[Sql.Function("SCHEMA_NAME"     , ServerSideOnly = true)]
 		private static string SchemaName()
 		{
 			throw new InvalidOperationException();
@@ -55,6 +81,7 @@ namespace Tests
 				case ProviderName.PostgreSQL:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
+				case ProviderName.SybaseManaged:
 				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
@@ -100,6 +127,7 @@ namespace Tests
 				case ProviderName.PostgreSQL:
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
+				case ProviderName.SybaseManaged:
 				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
@@ -112,6 +140,67 @@ namespace Tests
 			}
 
 			return NO_DATABASE_NAME;
+		}
+
+		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
+		{
+			if (context == "MySql" || context == "MySql.LinqService")
+			{
+				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
+				// them from expected data too
+				var version = db.GetTable<LinqDataTypes>().Select(_ => MySqlVersion()).First();
+				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
+				if (match.Success)
+				{
+					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
+
+					return (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604);
+				}
+			}
+
+			return false;
+		}
+
+		// see ProviderNeedsTimeFix
+		public static DateTime FixTime(DateTime value, bool fix)
+		{
+			return fix ? value.AddMilliseconds(-value.Millisecond) : value;
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName = null)
+		{
+			try
+			{
+				return new TempTable<T>(db, tableName);
+			}
+			catch
+			{
+				db.DropTable<T>(tableName);
+				return new TempTable<T>(db, tableName);
+			}
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string tableName, IEnumerable<T> items)
+		{
+			var table = CreateLocalTable<T>(db, tableName);
+
+			if (db is DataConnection)
+				using (new DisableLogging())
+					table.Copy(items
+						, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows }
+						);
+			else
+				using (new DisableLogging())
+					foreach (var item in items)
+						db.Insert(item, table.TableName);
+
+
+			return table;
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items)
+		{
+			return CreateLocalTable(db, null, items);
 		}
 	}
 }

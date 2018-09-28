@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildSql()
 		{
-			AlternativeBuildSql(false, base.BuildSql);
+			AlternativeBuildSql(false, base.BuildSql, "\t0");
 		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
@@ -158,9 +158,11 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime  : StringBuilder.Append("timestamp");      break;
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");      break;
-				default                 : base.BuildDataType(type, createDbType); break;
+				case DataType.DateTime  : StringBuilder.Append("timestamp");             break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");             break;
+				case DataType.Boolean   : StringBuilder.Append("smallint");              break;
+				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); break;
+				default                 : base.BuildDataType(type, createDbType);        break;
 			}
 		}
 

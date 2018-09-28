@@ -10,9 +10,11 @@ branches:
     - /dev.*/
 
 environment:
-  assemblyVersion: 2.0.0
-  packageVersion: 2.0.0-beta4
-  access_token:
+  assemblyVersion: 2.4.0
+  packageVersion: 2.4.0
+  docfxuser: "ili"
+  docfxmail: "docfx@linq2db.com"
+  docfxsecret:
     secure: IlfmHXRdUK6v8dX/WqieXQ==
 ##  testfilter: TestCategory != FreeText & TestCategory != Ignored & TestCategory != Explicit
 ##  #testFilter: TestCategory=Create
@@ -21,7 +23,7 @@ environment:
 ##  testConfiguration: AppVeyor
 ##  matrix:
 ##    - target: Default
-##      testTargetFramework: net452
+##      testTargetFramework: net46
 ##    - target: Core1
 ##      testTargetFramework: netcoreapp1.0
 ##      testRunner: dotnet
@@ -51,7 +53,7 @@ nuget:
   project_feed: false
 
 build_script:
-  msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
+- cmd: msbuild linq2db.sln /p:Configuration=AppVeyor /t:Restore;Build /v:m
 ##- ps: .\build.ps1
 
 before_build:
@@ -81,6 +83,21 @@ before_build:
     $env:PGPASSWORD="Password12!"
     $cmd = '"C:\Program Files\PostgreSQL\9.5\bin\createdb" $dbName'
     iex "& $cmd"
+
+    # Access ACE provider
+    (New-Object Net.WebClient).DownloadFile("https://download.microsoft.com/download/f/d/8/fd8c20d8-e38a-48b6-8691-542403b91da1/AccessDatabaseEngine.exe", "$env:appveyor_build_folder\AccessDatabaseEngine.exe")
+    .\AccessDatabaseEngine.exe /quiet
+
+    # docfx build & deploy
+    if ($env:docfxsecret)
+    {
+      $gitDeploy = $env:APPVEYOR_REPO_BRANCH -eq "master"
+      .\Build\AppVeyor.DocFx.ps1 $env:docfxuser $env:docfxsecret $env:docfxmail $gitDeploy
+    }
+    else
+    {
+      Write-Host docfx build skipped... cosmic rays?...
+    }
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 - cmd: sqlcmd -U sa -P Password12! -S localhost\SQL2014 -i "Data\Create Scripts\Northwind.sql" > nul
 
@@ -91,7 +108,11 @@ after_build:
     cd ..
 
 test_script:
-  - ps: .\Build\AppVeyor.NUnit.Tests.ps1
+- ps: |
+    if ($env:APPVEYOR_REPO_BRANCH -ne "release")
+    {
+        .\Build\AppVeyor.NUnit.Tests.ps1
+    }
 
 artifacts:
 - path: \**\linq2db*.nupkg
@@ -108,7 +129,7 @@ deploy:
 
 - provider: NuGet
   api_key:
-    secure: oTYw2IwTnz4qMD8c/MR/6mo+Nx3wa5Pp8MYfsKBCKCVuU6QCHlj+6QMXpnQses8G
+    secure: Fr5riCMWr4uddudXmemI0L40G6iJhCGYQmt/Y/ky+EbvxMl9/nqwb6L3Y8P8lgrX
   on:
     branch: release
 

@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
@@ -32,6 +34,7 @@ namespace LinqToDB.Linq.Builder
 			new GroupByBuilder             (),
 			new JoinBuilder                (),
 			new AllJoinsBuilder            (),
+			new AllJoinsLinqBuilder        (),
 			new TakeSkipBuilder            (),
 			new DefaultIfEmptyBuilder      (),
 			new DistinctBuilder            (),
@@ -1336,9 +1339,7 @@ namespace LinqToDB.Linq.Builder
 				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), new [] { p });
 				var n    = _query.AddQueryableAccessors(expression, l);
 
-				Expression accessor;
-
-				_expressionAccessors.TryGetValue(expression, out accessor);
+				_expressionAccessors.TryGetValue(expression, out var accessor);
 
 				var path =
 					Expression.Call(
@@ -1403,7 +1404,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		MethodInfo GetQueriableMethodInfo(MethodCallExpression method, Func<MethodInfo,bool,bool> predicate)
+		MethodInfo GetQueriableMethodInfo(MethodCallExpression method, [InstantHandle] Func<MethodInfo,bool,bool> predicate)
 		{
 			return method.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods.FirstOrDefault(m => predicate(m, false)) ?? EnumerableMethods.First(m => predicate(m, true)):

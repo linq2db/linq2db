@@ -19,6 +19,7 @@ namespace Tests.DataProvider
 	using LinqToDB.SchemaProvider;
 	using Model;
 	using System.Collections.Generic;
+	using System.Data;
 	using System.Diagnostics;
 
 	[TestFixture]
@@ -37,7 +38,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -51,7 +52,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -99,7 +100,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestDate(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -225,7 +226,7 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -237,7 +238,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -328,7 +329,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute, Ignore("It works too long.")]
+		[Test, MySqlDataContext, Ignore("It works too long.")]
 		public void BulkCopyMultipleRows(string context)
 		{
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
@@ -340,7 +341,7 @@ namespace Tests.DataProvider
 			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, MySqlDataContextAttribute, Ignore("It works too long.")]
+		[Test, MySqlDataContext, Ignore("It works too long.")]
 		public void BulkCopyProviderSpecific(string context)
 		{
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
@@ -352,7 +353,7 @@ namespace Tests.DataProvider
 			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void BulkCopyLinqTypes(string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
@@ -405,7 +406,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestTransaction1(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -424,7 +425,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, MySqlDataContextAttribute]
+		[Test, MySqlDataContext]
 		public void TestTransaction2(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -602,6 +603,39 @@ namespace Tests.DataProvider
 						}
 					}
 				};
+
+				// create function
+				yield return new ProcedureSchema()
+				{
+					CatalogName     = "SET_BY_TEST",
+					ProcedureName   = "TestOutputParametersWithoutTableProcedure",
+					MemberName      = "TestOutputParametersWithoutTableProcedure",
+					IsDefaultSchema = true,
+					IsLoaded        = true,
+					Parameters      = new List<ParameterSchema>()
+					{
+						new ParameterSchema()
+						{
+							SchemaName    = "aInParam",
+							SchemaType    = "VARCHAR",
+							IsIn          = true,
+							ParameterName = "aInParam",
+							ParameterType = "string",
+							SystemType    = typeof(string),
+							DataType      = DataType.VarChar
+						},
+						new ParameterSchema()
+						{
+							SchemaName    = "aOutParam",
+							SchemaType    = "TINYINT",
+							IsOut         = true,
+							ParameterName = "aOutParam",
+							ParameterType = "sbyte?",
+							SystemType    = typeof(sbyte),
+							DataType      = DataType.SByte
+						}
+					}
+				};
 			}
 		}
 
@@ -726,5 +760,87 @@ namespace Tests.DataProvider
 			}
 		}
 #endif
+
+		[Sql.Expression("@n:=@n+1", ServerSideOnly = true)]
+		static int IncrementIndex()
+		{
+			throw new NotImplementedException();
+		}
+
+		[Description("https://stackoverflow.com/questions/50858172/linq2db-mysql-set-row-index/50958483")]
+		[Test, MySqlDataContext]
+		public void RowIndexTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.NextQueryHints.Add("**/*(SELECT @n := 0) `rowcounter`*/");
+				db.NextQueryHints.Add(", (SELECT @n := 0) `rowcounter`");
+
+				var q =
+					from p in db.Person
+					select new
+					{
+						rank = IncrementIndex(),
+						id   = p.ID
+					};
+
+				var list = q.ToList();
+			}
+		}
+
+		[Test, MySqlDataContext(false)]
+		public void TestTestProcedure(string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				int? param2 = 5;
+				int? param1 = 11;
+
+				var res = db.TestProcedure(123, ref param2, out param1);
+
+				Assert.AreEqual(10, param2);
+				Assert.AreEqual(133, param1);
+				AreEqual(db.GetTable<Person>(), res);
+			}
+		}
+
+		[Test, MySqlDataContext(false)]
+		public void TestTestOutputParametersWithoutTableProcedure(string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				var res = db.TestOutputParametersWithoutTableProcedure("test", out var outParam);
+
+				Assert.AreEqual(123, outParam);
+				Assert.AreEqual(1, res);
+			}
+		}
+	}
+
+	internal static class MySqlTestFunctions
+	{
+		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		{
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
+				new DataParameter("aInParam", aInParam, DataType.VarChar),
+				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
+
+			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+
+			return ret;
+		}
+
+		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
+		{
+			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
+				new DataParameter("param3", param3, DataType.Int32),
+				new DataParameter("param2", param2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
+				new DataParameter("param1", null, DataType.Int32) { Direction = ParameterDirection.Output }).ToList();
+
+			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
+			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
+
+			return ret;
+		}
 	}
 }

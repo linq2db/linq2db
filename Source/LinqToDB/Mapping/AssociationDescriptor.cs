@@ -31,7 +31,7 @@ namespace LinqToDB.Mapping
 			           string[]   thisKey,
 			           string[]   otherKey,
 			           string     expressionPredicate,
-					   Expression predicate,
+			           Expression predicate,
 			           string     storage,
 			           bool       canBeNull)
 		{
@@ -117,7 +117,7 @@ namespace LinqToDB.Mapping
 				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
 			if (!string.IsNullOrEmpty(ExpressionPredicate))
-			{ 
+			{
 				var members = type.GetStaticMembersEx(ExpressionPredicate);
 
 				if (members.Length == 0)
@@ -158,7 +158,7 @@ namespace LinqToDB.Mapping
 					throw new LinqToDBException(
 						$"Member '{ExpressionPredicate}' for type '{type.Name}' should be static property or method");
 			}
-			else 
+			else
 				predicate = Predicate;
 
 			var lambda = predicate as LambdaExpression;
@@ -170,7 +170,7 @@ namespace LinqToDB.Mapping
 					throw new LinqToDBException(
 						$"Invalid predicate expression in {type.Name}. Expected: Expression<Func<{parentType.Name}, {objectType.Name}, bool>>");
 
-			if (lambda.Parameters[0].Type != parentType)
+			if (!lambda.Parameters[0].Type.IsSameOrParentOf(parentType))
 				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
 
 			if (lambda.Parameters[1].Type != objectType)

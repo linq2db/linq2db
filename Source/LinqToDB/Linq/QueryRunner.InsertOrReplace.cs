@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,10 +16,10 @@ namespace LinqToDB.Linq
 		{
 			static readonly ConcurrentDictionary<object,Query<int>> _queryCache = new ConcurrentDictionary<object,Query<int>>();
 
-			static Query<int> CreateQuery(IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
+			static Query<int> CreateQuery(IDataContext dataContext, string tableName, string databaseName, string schemaName, Type type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
+				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
 
 				if (tableName    != null) sqlTable.PhysicalName = tableName;
 				if (databaseName != null) sqlTable.Database     = databaseName;
@@ -49,7 +50,7 @@ namespace LinqToDB.Linq
 					{
 						if (!supported || !fieldDic.TryGetValue(field, out param))
 						{
-							param = GetParameter(typeof(T), dataContext, field);
+							param = GetParameter(type, dataContext, field);
 							ei.Queries[0].Parameters.Add(param);
 
 							if (supported)
@@ -93,7 +94,7 @@ namespace LinqToDB.Linq
 				{
 					if (!supported || !fieldDic.TryGetValue(field, out param))
 					{
-						param = GetParameter(typeof(T), dataContext, field);
+						param = GetParameter(type, dataContext, field);
 						ei.Queries[0].Parameters.Add(param);
 
 						if (supported)
@@ -120,8 +121,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema));
+				var type = GetType<T>(obj, dataContext);
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, databaseName, schema, type));
 
 				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null);
 			}
@@ -131,8 +133,9 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var key = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema };
-				var ei = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName));
+				var type = GetType<T>(obj, dataContext);
+				var key  = new { dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, databaseName, schema, type };
+				var ei   = _queryCache.GetOrAdd(key, o => CreateQuery(dataContext, tableName, schema, databaseName, type));
 
 				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, token);
 

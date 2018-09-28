@@ -351,7 +351,7 @@ INSERT INTO "AllTypes"
 ) VALUES( 
 	123456789123456789, 12345, 1234.567, 123.456, 123456789, 123, 1234.567, 1234.567,
 	'2012-12-12', '12:12:12', '2012-12-12 12:12:12', '2012-12-12 12:12:12.123',	           
-	'a', 'bcd', 'abcdefgh', 'def', 'ą',  'ąčęėįš', 'qwert123QWE',
+	'1', 'bcd', 'abcdefgh', 'def', 'ą',  'ąčęėįš', 'qwert123QWE',
 	CAST( 'abcdefgh' AS BINARY), CAST( 'abcdefgh' AS VARBINARY),
 	'abcdefgh', 'qwertyuiop', 'ąčęėįšqwerty123456' );;
 
@@ -590,3 +590,11 @@ CREATE TABLE "TestMerge2"
 
 	PRIMARY KEY ("Id")
 );;
+
+CALL DROPEXISTINGPROCEDURE('AddIssue792Record', CURRENT_SCHEMA);;
+
+CREATE PROCEDURE "AddIssue792Record"()
+LANGUAGE SQLSCRIPT AS
+BEGIN
+	INSERT INTO "AllTypes"("char20DataType") VALUES('issue792');
+END;;

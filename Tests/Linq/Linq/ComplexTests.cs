@@ -201,7 +201,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Access, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Contains5(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -350,11 +350,11 @@ namespace Tests.Linq
 
 		[Table("GrandChild")]
 		[Column("GrandChildID", "Id")]
-		[Column("ChildID",      "InnerEnity.Id")]
+		[Column("ChildID",      "InnerEntity.Id")]
 		[Column("ParentID",     "InnerEntityType")]
 		public class LookupEntity : Entity
 		{
-			public Entity         InnerEnity      { get; set; }
+			public Entity         InnerEntity     { get; set; }
 			public TestEntityType InnerEntityType { get; set; }
 		}
 
@@ -429,7 +429,7 @@ namespace Tests.Linq
 			{
 				var res =
 					from rc in db.GetTable<TestEntity>()
-					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEnity.Id
+					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEntity.Id
 					where rc.EntityType == TestEntityType.Type1
 					select rc;
 

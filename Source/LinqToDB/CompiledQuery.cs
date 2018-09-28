@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB
 {
 	using Expressions;
@@ -12,6 +14,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Provides API for compilation and caching of queries for reuse.
 	/// </summary>
+	[PublicAPI]
 	public class CompiledQuery
 	{
 		protected CompiledQuery(LambdaExpression query)

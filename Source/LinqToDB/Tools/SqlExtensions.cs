@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Tools
 {
+	[PublicAPI]
 	public static class SqlExtensions
 	{
 		#region In/NotIn

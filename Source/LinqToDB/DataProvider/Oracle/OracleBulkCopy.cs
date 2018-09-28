@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						TraceAction(
 							dataConnection,
-							"INSERT BULK " + tableName + Environment.NewLine,
+							() => "INSERT BULK " + tableName + Environment.NewLine,
 							() => { dbc.WriteToServer(rd); return rd.Count; });
 					}
 
@@ -132,7 +132,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		BulkCopyRowsCopied MultipleRowsCopy1<T>(
+		new BulkCopyRowsCopied MultipleRowsCopy1<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			var helper = new MultipleRowsHelper<T>(dataConnection, options);

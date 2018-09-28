@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-	<metadata>
+	<metadata minClientVersion="3.3.0">
 		<id>linq2db.Sybase</id>
-		<version>2.0.0-rc</version>
-		<title>LINQ to Sybase ASE</title>
+		<version>2.4.0</version>
+		<title>LINQ to SAP/Sybase ASE</title>
 		<authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</authors>
 		<owners>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</owners>
 		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
@@ -14,17 +14,31 @@
 			LINQ to Sybase ASE is a data access technology that provides a run-time infrastructure for managing relational data as objects.
 		</description>
 		<summary>
-			This package includes a T4 template to generate data models for Sybase database and a reference to the linq2db nugets.
-			Sybase data provider for .NET will still need to be installed on the production or development machine in order to connect to Sybase.
+			This package includes a T4 template to generate data models for SAP/Sybase ASE database and a reference to the linq2db nugets.
+			Sybase data provider for .NET will still need to be installed on the production or development machine in order to connect to ASE.
 		</summary>
-		<tags>linq linq2db Sybase LinqToDB ORM database DB SQL</tags>
+		<tags>linq linq2db SAP/Sybase LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db.t4models" version="2.0.0-rc" />
+			<dependency id="linq2db" version="2.4.0"/>
 		</dependencies>
+		<contentFiles>
+			<files include="**\*" buildAction="None"/>
+		</contentFiles>
 	</metadata>
 	<files>
-		<file src="Init.ps1"                                       target="tools" />
-		<file src="..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll" target="tools" />
-		<file src="Sybase\*.*"                                     target="content\LinqToDB.Templates" />
+		<file src="..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll"     target="tools" />
+		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"   target="tools" />
+		
+		<file src="Sybase\linq2db.Sybase.props"                        target="build" />
+		
+		<file src="Sybase\*.*"                                         target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="t4models\*.ttinclude"                               target="contentFiles\any\any\LinqToDB.Templates"/>
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"           target="contentFiles\any\any\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
+		<file src="..\Source\LinqToDB.Templates\*.Sybase.ttinclude"    target="contentFiles\any\any\LinqToDB.Templates" />
+		
+		<file src="Sybase\*.*"                                         target="content\LinqToDB.Templates" exclude="**\*.props" />
+		<file src="t4models\*.ttinclude"                               target="content\LinqToDB.Templates"/>
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"           target="content\LinqToDB.Templates" exclude="**\LinqToDB.*.ttinclude"/>
+		<file src="..\Source\LinqToDB.Templates\*.Sybase.ttinclude"    target="content\LinqToDB.Templates" />
 	</files>
 </package>

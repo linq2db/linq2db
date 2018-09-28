@@ -14,7 +14,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity column descriptor.
 	/// </summary>
-	public class ColumnDescriptor
+	public class ColumnDescriptor : IColumnChangeDescriptor
 	{
 		/// <summary>
 		/// Creates descriptor instance.
@@ -164,6 +164,7 @@ namespace LinqToDB.Mapping
 		/// If column is mapped to a property or field of composite object, <see cref="MemberName"/> should contain a path to that
 		/// member using dot as separator.
 		/// <example>
+		/// <code>
 		/// public class Address
 		/// {
 		///     public string City     { get; set; }
@@ -181,15 +182,24 @@ namespace LinqToDB.Mapping
 		///     [Column("building_number", MemberName = ".Building")]
 		///     public Address Residence { get; set; }
 		/// }
+		/// </code>
 		/// </example>
 		/// </summary>
 		public string         MemberName      { get; private set; }
+
+		string IColumnChangeDescriptor.MemberName => MemberName;
 
 		/// <summary>
 		/// Gets the name of a column in database.
 		/// If not specified, <see cref="MemberName"/> value will be used.
 		/// </summary>
 		public string         ColumnName      { get; private set; }
+
+		string IColumnChangeDescriptor.ColumnName
+		{
+			get => ColumnName;
+			set => ColumnName = value;
+		}
 
 		/// <summary>
 		/// Gets storage property or field to hold the value from a column.
@@ -291,7 +301,7 @@ namespace LinqToDB.Mapping
 		/// Extracts column value, converted to database type, from entity object.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema with conversion information.</param>
-		/// <param name="obj">Enity object to extract column value from.</param>
+		/// <param name="obj">Entity object to extract column value from.</param>
 		/// <returns>Returns column value, converted to database type.</returns>
 		public virtual object GetValue(MappingSchema mappingSchema, object obj)
 		{
@@ -304,7 +314,12 @@ namespace LinqToDB.Mapping
 
 				if (expr != null)
 				{
-					getterExpr = Expression.PropertyOrField(expr.GetBody(getterExpr), "Value");
+					var variable = Expression.Variable(typeof(DataParameter), "p");
+					getterExpr = Expression.Block(new[] { variable },
+						Expression.Assign(variable, expr.GetBody(getterExpr)),
+						Expression.Condition(Expression.NotEqual(variable, Expression.Constant(null)),
+							Expression.PropertyOrField(variable, "Value"), Expression.Constant(null))
+					);
 				}
 				else
 				{

@@ -30,11 +30,11 @@ namespace LinqToDB.DataProvider.Oracle
 			return ((dynamic)Proxy.GetUnderlyingObject(dbConnection)).DatabaseName;
 		}
 
-		string _currentUser;
+		private string _currentUser;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			_currentUser = dataConnection.Execute<string>("select user from dual");
+			LoadCurrentUser(dataConnection);
 
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.Oracle
 							d.NAME  = tc.TABLE_NAME
 					ORDER BY TableID, isView
 					",
-					new { CurrentUser = _currentUser })
+					new DataParameter("CurrentUser", _currentUser, DataType.VarChar))
 				.ToList();
 			}
 			else
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Oracle
 							d.NAME = tc.TABLE_NAME
 					ORDER BY TableID, isView
 					",
-					new { CurrentUser = _currentUser })
+					new DataParameter("CurrentUser", _currentUser, DataType.VarChar))
 				.ToList();
 			}
 		}
@@ -224,13 +224,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
+			LoadCurrentUser(dataConnection);
+
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 
 			return
 			(
 				from p in ps.AsEnumerable()
-				let schema  = p.Field<string>("OWNER")
-				let name    = p.Field<string>("OBJECT_NAME")
+				let schema = p.Field<string>("OWNER")
+				let name   = p.Field<string>("OBJECT_NAME")
 				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureInfo
 				{
@@ -240,6 +242,12 @@ namespace LinqToDB.DataProvider.Oracle
 					IsDefaultSchema = schema == _currentUser,
 				}
 			).ToList();
+		}
+
+		private void LoadCurrentUser(DataConnection dataConnection)
+		{
+			if (_currentUser == null)
+				_currentUser = dataConnection.Execute<string>("select user from dual");
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)

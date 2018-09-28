@@ -148,16 +148,16 @@ INSERT INTO AllTypes
 	objectDataType
 )
 SELECT
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,  NULL,   NULL,  NULL, NULL,
-	     NULL,
-	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
-	     NULL
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,  NULL,   NULL,  NULL, NULL,
+		 NULL,
+		 NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
+		 NULL
 UNION ALL
 SELECT
 	 1000000,    9999999,     1,   25555, 2222222, 7777777,  100, 100000, 20.31, 16.2,
 	'2012-12-12 12:12:12',
-	      '1',     '234', '567', '23233',  '3323',  '111',
-	       10
+		  '1',     '234', '567', '23233',  '3323',  '111',
+		   10
 
 GO
 
@@ -198,14 +198,14 @@ GO
 
 CREATE TABLE FKTestPosition
 (
-    Company      integer      NOT NULL,
-    Department   integer      NOT NULL,
-    PositionID   integer      NOT NULL,
-    Name         nvarchar(50) NOT NULL,
-    PRIMARY KEY(Company, Department, PositionID),
-    -- Test: one level deeper, this should link to both fields in the 
-    -- primary key of the FKTestDepartment table
-    CONSTRAINT FK_Position_Department FOREIGN KEY(Company, Department) REFERENCES FKTestDepartment ON DELETE CASCADE
+	Company      integer      NOT NULL,
+	Department   integer      NOT NULL,
+	PositionID   integer      NOT NULL,
+	Name         nvarchar(50) NOT NULL,
+	PRIMARY KEY(Company, Department, PositionID),
+	-- Test: one level deeper, this should link to both fields in the 
+	-- primary key of the FKTestDepartment table
+	CONSTRAINT FK_Position_Department FOREIGN KEY(Company, Department) REFERENCES FKTestDepartment ON DELETE CASCADE
 	-- A simpler foreign key for the above would be:
 	--    FOREIGN KEY(Department) REFERENCES FKTestDepartment(DepartmentID) ON DELETE CASCADE
 )
@@ -261,4 +261,16 @@ CREATE TABLE TestMerge2
 	FieldDate       DATE              NULL,
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL
+);
+
+DROP TABLE IF EXISTS TEST_T4_CASING;
+CREATE TABLE TEST_T4_CASING
+(
+	ALL_CAPS              INT    NOT NULL,
+	CAPS                  INT    NOT NULL,
+	PascalCase            INT    NOT NULL,
+	Pascal_Snake_Case     INT    NOT NULL,
+	PascalCase_Snake_Case INT    NOT NULL,
+	snake_case            INT    NOT NULL,
+	camelCase             INT    NOT NULL
 );

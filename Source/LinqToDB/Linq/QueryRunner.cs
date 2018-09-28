@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Async;
 	using Builder;
 	using Common;
 	using Data;
@@ -219,16 +220,7 @@ namespace LinqToDB.Linq
 					ReflectionHelper.Constant.Value),
 				type);
 
-			var members  = field.Name.Split('.');
-			var defValue = Expression.Constant(dataContext.MappingSchema.GetDefaultValue(field.SystemType), field.SystemType);
-
-			for (var i = 0; i < members.Length; i++)
-			{
-				var        member = members[i];
-				Expression pof    = Expression.PropertyOrField(getter, member);
-
-				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
-			}
+			getter = field.ColumnDescriptor.MemberAccessor.GetterExpression.GetBody(getter);
 
 			Expression dataTypeExpression = Expression.Constant(DataType.Undefined);
 
@@ -247,6 +239,11 @@ namespace LinqToDB.Linq
 
 			return param;
 		}
+
+		private static Type GetType<T>(T obj, IDataContext db)
+			//=> typeof(T);
+			//=> obj.GetType();
+			=> db.MappingSchema.GetEntityDescriptor(typeof(T)).InheritanceMapping?.Count > 0 ? obj.GetType() : typeof(T);
 
 		#endregion
 
@@ -359,28 +356,163 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps))
 			{
-				Func<IDataReader,T> m = dr => mapper.Map(runner, dr);
-
-				runner.SkipAction = skipAction != null ? () => skipAction(expression, ps) : null as Func<int>;
-				runner.TakeAction = takeAction != null ? () => takeAction(expression, ps) : null as Func<int>;
-
 				try
 				{
 					mapper.QueryRunner = runner;
 
-					var dr = await runner.ExecuteReaderAsync(cancellationToken);
-					await dr.QueryForEachAsync(m, r =>
+					using (var dr = await runner.ExecuteReaderAsync(cancellationToken))
 					{
-						var b = func(r);
-						runner.RowsCount++;
-						return b;
-					}, cancellationToken);
+						var skip = skipAction?.Invoke(expression, ps) ?? 0;
+
+						while (skip-- > 0 && await dr.ReadAsync(cancellationToken))
+							{}
+
+						var take = takeAction?.Invoke(expression, ps) ?? int.MaxValue;
+
+						while (take-- > 0 && await dr.ReadAsync(cancellationToken))
+						{
+							runner.RowsCount++;
+							if (!func(mapper.Map(runner, dr.DataReader)))
+								break;
+						}
+					}
 				}
 				finally
 				{
 					mapper.QueryRunner = null;
 				}
 			}
+		}
+
+		class AsyncEnumeratorImpl<T> : IAsyncEnumerator<T>
+		{
+			readonly Query                         _query;
+			readonly IDataContext                  _dataContext;
+			readonly Mapper<T>                     _mapper;
+			readonly Expression                    _expression;
+			readonly object[]                      _ps;
+			readonly int                           _queryNumber;
+			readonly Func<Expression,object[],int> _skipAction;
+			readonly Func<Expression,object[],int> _takeAction;
+
+			IQueryRunner     _queryRunner;
+			IDataReaderAsync _dataReader;
+			int              _take;
+
+			public AsyncEnumeratorImpl(
+				Query                         query,
+				IDataContext                  dataContext,
+				Mapper<T>                     mapper,
+				Expression                    expression,
+				object[]                      ps,
+				int                           queryNumber,
+				Func<Expression,object[],int> skipAction,
+				Func<Expression,object[],int> takeAction)
+			{
+				_query       = query;
+				_dataContext = dataContext;
+				_mapper      = mapper;
+				_expression  = expression;
+				_ps          = ps;
+				_queryNumber = queryNumber;
+				_skipAction  = skipAction;
+				_takeAction  = takeAction;
+			}
+
+			public T Current { get; set; }
+
+			public async Task<bool> MoveNext(CancellationToken cancellationToken)
+			{
+				if (_queryRunner == null)
+				{
+					_queryRunner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _ps);
+
+					_mapper.QueryRunner = _queryRunner;
+
+					_dataReader = await _queryRunner.ExecuteReaderAsync(cancellationToken);
+
+					var skip = _skipAction?.Invoke(_expression, _ps) ?? 0;
+
+					while (skip-- > 0)
+					{
+						if (!await _dataReader.ReadAsync(cancellationToken))
+							return false;
+					}
+
+					_take = _takeAction?.Invoke(_expression, _ps) ?? int.MaxValue;
+				}
+
+				if (_take-- > 0 && await _dataReader.ReadAsync(cancellationToken))
+				{
+					_queryRunner.RowsCount++;
+
+					Current = _mapper.Map(_queryRunner, _dataReader.DataReader);
+
+					return true;
+				}
+
+				return false;
+			}
+
+			public void Dispose()
+			{
+				_queryRunner?.Dispose();
+				_dataReader ?.Dispose();
+
+				_mapper.QueryRunner = _queryRunner = null;
+			}
+		}
+
+		class AsyncEnumerableImpl<T> : IAsyncEnumerable<T>
+		{
+			readonly Query                         _query;
+			readonly IDataContext                  _dataContext;
+			readonly Mapper<T>                     _mapper;
+			readonly Expression                    _expression;
+			readonly object[]                      _ps;
+			readonly int                           _queryNumber;
+			readonly Func<Expression,object[],int> _skipAction;
+			readonly Func<Expression,object[],int> _takeAction;
+
+			public AsyncEnumerableImpl(
+				Query                         query,
+				IDataContext                  dataContext,
+				Mapper<T>                     mapper,
+				Expression                    expression,
+				object[]                      ps,
+				int                           queryNumber,
+				Func<Expression,object[],int> skipAction,
+				Func<Expression,object[],int> takeAction)
+			{
+				_query       = query;
+				_dataContext = dataContext;
+				_mapper      = mapper;
+				_expression  = expression;
+				_ps          = ps;
+				_queryNumber = queryNumber;
+				_skipAction  = skipAction;
+				_takeAction  = takeAction;
+			}
+
+			public IAsyncEnumerator<T> GetEnumerator()
+			{
+				return new AsyncEnumeratorImpl<T>(
+					_query, _dataContext, _mapper, _expression, _ps, _queryNumber, _skipAction, _takeAction);
+			}
+		}
+
+		static IAsyncEnumerable<T> ExecuteQueryAsync<T>(
+			Query                         query,
+			IDataContext                  dataContext,
+			Mapper<T>                     mapper,
+			Expression                    expression,
+			object[]                      ps,
+			int                           queryNumber,
+			Func<Expression,object[],int> skipAction,
+			Func<Expression,object[],int> takeAction)
+		{
+			return new AsyncEnumerableImpl<T>(
+				query, dataContext, mapper, expression, ps, queryNumber, skipAction, takeAction);
 		}
 
 		static void SetRunQuery<T>(
@@ -401,6 +533,9 @@ namespace LinqToDB.Linq
 
 			query.GetForEachAsync = (db, expr, ps, action, token) =>
 				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, action, skipAction, takeAction, token);
+
+			query.GetIAsyncEnumerable = (db, expr, ps) =>
+				ExecuteQueryAsync(query, db, mapper, expr, ps, 0, skipAction, takeAction);
 		}
 
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>( p => p.DataContext);
@@ -533,32 +668,23 @@ namespace LinqToDB.Linq
 		{
 			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps))
 			{
-				Func<IDataReader,object> m = dr => mapper.Map(runner, dr);
-
 				try
 				{
 					mapper.QueryRunner = runner;
 
-					var dr = await runner.ExecuteReaderAsync(cancellationToken);
-
-					var item = default(T);
-					var read = false;
-
-					await dr.QueryForEachAsync(
-						m,
-						r =>
+					using (var dr = await runner.ExecuteReaderAsync(cancellationToken))
+					{
+						if (await dr.ReadAsync(cancellationToken))
 						{
-							read = true;
-							item = dataContext.MappingSchema.ChangeTypeTo<T>(r);
 							runner.RowsCount++;
-							return false;
-						},
-						cancellationToken);
 
-					if (read)
-						return item;
+							var item = mapper.Map(runner, dr.DataReader);
 
-					return Array<T>.Empty.First();
+							return dataContext.MappingSchema.ChangeTypeTo<T>(item);
+						}
+
+						return Array<T>.Empty.First();
+					}
 				}
 				finally
 				{

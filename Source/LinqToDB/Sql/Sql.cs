@@ -28,7 +28,7 @@ namespace LinqToDB
 		[Sql.Expression("*", ServerSideOnly = true)]
 		public static object[] AllColumns()
 		{
-			throw new LinqException("'FreeText' is only server-side method.");
+			throw new LinqException("'AllColumns' is only server-side method.");
 		}
 
 		[CLSCompliant(false)]
@@ -125,6 +125,19 @@ namespace LinqToDB
 			where T : struct, IComparable
 		{
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
+		}
+
+		/// <summary>
+		/// Allows access to entity property via name. Property can be dynamic or non-dynamic.
+		/// </summary>
+		/// <typeparam name="T">Property type.</typeparam>
+		/// <param name="entity">The entity.</param>
+		/// <param name="propertyName">Name of the property.</param>
+		/// <returns></returns>
+		/// <exception cref="LinqException">'Property' is only server-side method.</exception>
+		public static T Property<T>(object entity, [SqlQueryDependent] string propertyName)
+		{
+			throw new LinqException("'Property' is only server-side method.");
 		}
 
 		#endregion

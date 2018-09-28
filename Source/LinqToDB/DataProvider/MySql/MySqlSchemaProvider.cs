@@ -34,6 +34,9 @@ namespace LinqToDB.DataProvider.MySql
 				.ToList();
 		}
 
+		// mysql provider will execute procedure
+		protected override bool GetProcedureSchemaExecutesProcedure => true;
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var restrictions = string.IsNullOrEmpty(dataConnection.Connection.Database) ? new [] { (string)null} : new[] { null, dataConnection.Connection.Database };
@@ -279,6 +282,20 @@ namespace LinqToDB.DataProvider.MySql
 					};
 				}, "SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE FROM INFORMATION_SCHEMA.parameters WHERE SPECIFIC_SCHEMA = database()")
 				.ToList();
+		}
+
+		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		{
+			var rv = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+
+			// for no good reason if procedure doesn't return table data but have output parameters, MySql provider
+			// returns fake schema with output parameters as columns
+			// we can detect it by column name prefix
+			// https://github.com/mysql/mysql-connector-net/blob/5864e6b21a8b32f5154b53d1610278abb3cb1cee/Source/MySql.Data/StoredProcedure.cs#L42
+			if (rv != null && rv.AsEnumerable().Any(r => r.Field<string>("ColumnName").StartsWith("@_cnet_param_")))
+				rv = null;
+
+			return rv;
 		}
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)

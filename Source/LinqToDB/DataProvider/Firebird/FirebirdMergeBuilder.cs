@@ -1,5 +1,4 @@
 ﻿using LinqToDB.Data;
-using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
@@ -63,7 +62,8 @@ namespace LinqToDB.DataProvider.Firebird
 			ColumnDescriptor    column,
 			SqlDataType         columnType,
 			object              value,
-			bool                isFirstRow)
+			bool                isFirstRow,
+			bool                isLastRow)
 		{
 			if (value is string)
 			{
@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.Firebird
 				Command.AppendFormat(" AS VARCHAR({0}))", length.ToString(CultureInfo.InvariantCulture));
 			}
 			else
-				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow);
+				base.AddSourceValue(valueConverter, column, columnType, value, isFirstRow, isLastRow);
 		}
 	}
 }

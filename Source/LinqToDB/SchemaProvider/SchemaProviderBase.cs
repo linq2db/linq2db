@@ -30,6 +30,8 @@ namespace LinqToDB.SchemaProvider
 			return null;
 		}
 
+		// TODO: get rid of list and use dictionary, because now we perform joins on this property and it will produce
+		// invalid results if list contains duplicates
 		protected List<DataTypeInfo> DataTypes;
 		protected HashSet<string>    IncludedSchemas;
 		protected HashSet<string>    ExcludedSchemas;
@@ -39,6 +41,11 @@ namespace LinqToDB.SchemaProvider
 		protected DataTable          DataTypesSchema;
 
 		protected Dictionary<string,DataTypeInfo> DataTypesDic;
+
+		/// <summary>
+		/// If true, provider doesn't support schema-only procedure execution and will execute procedure for real.
+		/// </summary>
+		protected virtual bool GetProcedureSchemaExecutesProcedure => false;
 
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
 		{
@@ -128,7 +135,7 @@ namespace LinqToDB.SchemaProvider
 						SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
 						SkipOnUpdate         = column.c.SkipOnUpdate || column.c.IsIdentity,
 						IsPrimaryKey         = column.pk != null,
-						PrimaryKeyOrder      = column.pk != null ? column.pk.Ordinal : -1,
+						PrimaryKeyOrder      = column.pk?.Ordinal ?? -1,
 						IsIdentity           = column.c.IsIdentity,
 						Description          = column.c.Description,
 						Length               = column.c.Length,
@@ -151,8 +158,11 @@ namespace LinqToDB.SchemaProvider
 					if (thisTable == null || otherTable == null)
 						continue;
 
-					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).Single();
-					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).Single();
+					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).SingleOrDefault();
+					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).SingleOrDefault();
+
+					if (thisColumn == null || otherColumn == null)
+						continue;
 
 					var key = thisTable.ForeignKeys.FirstOrDefault(f => f.KeyName == fk.Name);
 
@@ -190,11 +200,6 @@ namespace LinqToDB.SchemaProvider
 			{
 				#region Procedures
 
-				var isActiveTransaction = dataConnection.Transaction != null;
-
-				if (!isActiveTransaction)
-					dataConnection.BeginTransaction();
-
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
 				var procs       = GetProcedures(dataConnection);
 				var procPparams = GetProcedureParameters(dataConnection);
@@ -220,6 +225,7 @@ namespace LinqToDB.SchemaProvider
 							MemberName          = ToValidName(sp.ProcedureName),
 							IsFunction          = sp.IsFunction,
 							IsTableFunction     = sp.IsTableFunction,
+							IsResultDynamic     = sp.IsResultDynamic,
 							IsAggregateFunction = sp.IsAggregateFunction,
 							IsDefaultSchema     = sp.IsDefaultSchema,
 							Parameters          =
@@ -255,21 +261,36 @@ namespace LinqToDB.SchemaProvider
 
 					var current = 1;
 
-					foreach (var procedure in procedures)
+					var isActiveTransaction = dataConnection.Transaction != null;
+
+					if (GetProcedureSchemaExecutesProcedure && isActiveTransaction)
+						throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+
+					if (!isActiveTransaction)
+						dataConnection.BeginTransaction();
+
+					try
 					{
-						if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
+						foreach (var procedure in procedures)
 						{
-							var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
-								 procedure.CatalogName,
-								 procedure.SchemaName,
-								 procedure.ProcedureName).ToString();
+							if (!procedure.IsResultDynamic && (!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
+							{
+								var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
+									 procedure.CatalogName,
+									 procedure.SchemaName,
+									 procedure.ProcedureName).ToString();
 
-							LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
+								LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
+							}
+
+							options.ProcedureLoadingProgress(procedures.Count, current++);
 						}
-
-						options.ProcedureLoadingProgress(procedures.Count, current++);
 					}
-
+					finally
+					{
+						if (!isActiveTransaction)
+							dataConnection.RollbackTransaction();
+					}
 				}
 				else
 					procedures = new List<ProcedureSchema>();
@@ -278,9 +299,6 @@ namespace LinqToDB.SchemaProvider
 
 				if (psp != null)
 					procedures.AddRange(psp);
-
-				if (!isActiveTransaction)
-					dataConnection.RollbackTransaction();
 
 				#endregion
 			}
@@ -323,6 +341,25 @@ namespace LinqToDB.SchemaProvider
 			return null;
 		}
 
+		/// <summary>
+		/// Builds table function call command.
+		/// </summary>
+		protected virtual string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
+		{
+			commandText = "SELECT * FROM " + commandText + "(";
+
+			for (var i = 0; i < procedure.Parameters.Count; i++)
+			{
+				if (i != 0)
+					commandText += ",";
+				commandText += "NULL";
+			}
+
+			commandText += ")";
+
+			return commandText;
+		}
+
 		protected virtual void LoadProcedureTableSchema(
 			DataConnection dataConnection, ProcedureSchema procedure, string commandText, List<TableSchema> tables)
 		{
@@ -331,16 +368,7 @@ namespace LinqToDB.SchemaProvider
 
 			if (procedure.IsTableFunction)
 			{
-				commandText = "SELECT * FROM " + commandText + "(";
-
-				for (var i = 0; i < procedure.Parameters.Count; i++)
-				{
-					if (i != 0)
-						commandText += ",";
-					commandText += "NULL";
-				}
-
-				commandText += ")";
+				commandText = BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
 				commandType = CommandType.Text;
 				parameters  = new DataParameter[0];
 			}
@@ -408,8 +436,7 @@ namespace LinqToDB.SchemaProvider
 
 		protected DataTypeInfo GetDataType(string typeName)
 		{
-			DataTypeInfo dt;
-			return DataTypesDic.TryGetValue(typeName, out dt) ? dt : null;
+			return DataTypesDic.TryGetValue(typeName, out var dt) ? dt : null;
 		}
 
 		protected virtual DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
@@ -472,6 +499,11 @@ namespace LinqToDB.SchemaProvider
 		{
 		}
 
+		/// <summary>
+		/// Returns list of database data types.
+		/// </summary>
+		/// <param name="dataConnection">Database connection instance.</param>
+		/// <returns>List of database data types.</returns>
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 #if !NETSTANDARD
@@ -634,10 +666,6 @@ namespace LinqToDB.SchemaProvider
 					}
 				}
 
-if (t.TableName == "Employees")
-{
-}
-
 				foreach (var key in t.ForeignKeys)
 				{
 					SetForeignKeyMemberName(schemaOptions, t, key);
@@ -666,7 +694,7 @@ if (t.TableName == "Employees")
 				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
 				{
 					name = key.ThisColumns[0].MemberName;
-					name = name.Substring(0, name.Length - "id".Length);
+					name = name.Substring(0, name.Length - "id".Length).TrimEnd('_');
 
 					if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
 						table.Columns.    Select(_ => _.MemberName)).Concat(

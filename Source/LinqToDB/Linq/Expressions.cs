@@ -393,6 +393,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".Replace    ("","")   ), N(() => L<String,String,String,String>    ((String obj,String p0,String p1)          => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Replace    (' ',' ') ), N(() => L<String,Char,Char,String>        ((String obj,Char   p0,Char   p1)          => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Trim     (obj))) },
+
 #if NETSTANDARD2_0
 			{ M(() => "".TrimEnd    ()        ), N(() => L<String,String>                  ((String obj)                              =>     TrimRight(obj))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<String,String>                  ((String obj)                              =>     TrimLeft (obj))) },
@@ -655,6 +656,25 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToDouble((UInt16)  0)  ), N(() => L<UInt16,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble((UInt32)  0)  ), N(() => L<UInt32,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
 			{ M(() => Convert.ToDouble((UInt64)  0)  ), N(() => L<UInt64,  Double>(p0 => Sql.ConvertTo<Double>.From(p0))) },
+
+			#endregion
+
+			#region HasValue
+
+			{ M(() => ((Boolean?)  null).HasValue ), N(() => L<Boolean?,  bool>  ((Boolean?  v)  => v != null)) },
+			{ M(() => ((Byte?)     null).HasValue ), N(() => L<Byte?,     bool>  ((Byte?     v)  => v != null)) },
+			{ M(() => ((Char?)     null).HasValue ), N(() => L<Char?,     bool>  ((Char?     v)  => v != null)) },
+			{ M(() => ((DateTime?) null).HasValue ), N(() => L<DateTime?, bool>  ((DateTime? v)  => v != null)) },
+			{ M(() => ((Decimal?)  null).HasValue ), N(() => L<Decimal?,  bool>  ((Decimal?  v)  => v != null)) },
+			{ M(() => ((Double?)   null).HasValue ), N(() => L<Double?,   bool>  ((Double?   v)  => v != null)) },
+			{ M(() => ((Int16?)    null).HasValue ), N(() => L<Int16?,    bool>  ((Int16?    v)  => v != null)) },
+			{ M(() => ((Int32?)    null).HasValue ), N(() => L<Int32?,    bool>  ((Int32?    v)  => v != null)) },
+			{ M(() => ((Int64?)    null).HasValue ), N(() => L<Int64?,    bool>  ((Int64?    v)  => v != null)) },
+			{ M(() => ((SByte?)    null).HasValue ), N(() => L<SByte?,    bool>  ((SByte?    v)  => v != null)) },
+			{ M(() => ((Single?)   null).HasValue ), N(() => L<Single?,   bool>  ((Single?   v)  => v != null)) },
+			{ M(() => ((UInt16?)   null).HasValue ), N(() => L<UInt16?,   bool>  ((UInt16?   v)  => v != null)) },
+			{ M(() => ((UInt32?)   null).HasValue ), N(() => L<UInt32?,   bool>  ((UInt32?   v)  => v != null)) },
+			{ M(() => ((UInt64?)   null).HasValue ), N(() => L<UInt64?,   bool>  ((UInt64?   v)  => v != null)) },
 
 			#endregion
 

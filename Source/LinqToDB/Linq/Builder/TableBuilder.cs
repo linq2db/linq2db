@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 						switch (mc.Method.Name)
 						{
 							case "GetTable":
-								if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
+							if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 									return BuildContextType.GetTableMethod;
 								break;
 

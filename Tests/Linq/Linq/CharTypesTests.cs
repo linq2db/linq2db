@@ -12,12 +12,10 @@ namespace Tests.Linq
 	public class CharTypesTests : TestBase
 	{
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class StringTestTable
 		{
 			[Column("ID")]
-			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int Id;
 
 			[Column("char20DataType")]
@@ -32,24 +30,19 @@ namespace Tests.Linq
 			[Column("ncharDataType")]
 			[Column("nchar20DataType", Configuration = ProviderName.SapHana)]
 			[Column("CHAR20DATATYPE" , Configuration = ProviderName.DB2)]
-			[Column("char20datatype" , Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType" , Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , Configuration = ProviderName.MySql)]
 			[Column("char20DataType" , Configuration = TestProvName.MySql57)]
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string NString;
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		[Table("alltypes", Configuration = ProviderName.PostgreSQL)]
 		[Table("AllTypes")]
 		public class CharTestTable
 		{
 			[Column("ID")]
-			[Column("id", Configuration = ProviderName.PostgreSQL)]
 			public int Id;
 
 			[Column("char20DataType")]
@@ -64,15 +57,12 @@ namespace Tests.Linq
 			[Column("ncharDataType"  , DataType = DataType.NChar)]
 			[Column("nchar20DataType", DataType = DataType.NChar, Configuration = ProviderName.SapHana)]
 			[Column("CHAR20DATATYPE" , DataType = DataType.NChar, Configuration = ProviderName.DB2)]
-			[Column("char20datatype" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
+			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql57)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
-
-			[Column("bitDataType", Configuration = ProviderName.Sybase)]
-			public bool ThisIsSYBASE;
 		}
 
 		// most of ending characters here trimmed by default by .net string TrimX methods
@@ -127,9 +117,6 @@ namespace Tests.Linq
 							|| context == TestProvName.Firebird3
 							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
-
-						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
-							query = query.Value(_ => _.ThisIsSYBASE, true);
 
 						query.Insert();
 					}
@@ -275,9 +262,6 @@ namespace Tests.Linq
 							|| context == TestProvName.Firebird3
 							|| context == TestProvName.Firebird3 + ".LinqService")
 							query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
-
-						if (context == ProviderName.Sybase || context == ProviderName.Sybase + ".LinqService")
-							query = query.Value(_ => _.ThisIsSYBASE, true);
 
 						query.Insert();
 					}

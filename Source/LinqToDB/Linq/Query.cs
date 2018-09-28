@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Async;
 	using Builder;
 	using Data;
 	using Common;
@@ -32,6 +33,7 @@ namespace LinqToDB.Linq
 		protected Query(IDataContext dataContext, Expression expression)
 		{
 			ContextID        = dataContext.ContextID;
+			ContextType      = dataContext.GetType();
 			Expression       = expression;
 			MappingSchema    = dataContext.MappingSchema;
 			ConfigurationID  = dataContext.MappingSchema.ConfigurationID;
@@ -45,6 +47,7 @@ namespace LinqToDB.Linq
 		#region Compare
 
 		internal readonly string           ContextID;
+		internal readonly Type             ContextType;
 		internal readonly Expression       Expression;
 		internal readonly MappingSchema    MappingSchema;
 		internal readonly string           ConfigurationID;
@@ -60,6 +63,7 @@ namespace LinqToDB.Linq
 				ConfigurationID.Length == dataContext.MappingSchema.ConfigurationID.Length &&
 				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
 				InlineParameters       == dataContext.InlineParameters &&
+				ContextType            == dataContext.GetType()        &&
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
@@ -125,6 +129,8 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static void ClearCaches()
 		{
+			InternalExtensions.ClearCaches();
+
 			// ConcurrentBag has thread safe enumerator
 			foreach (var cleaner in CacheCleaners)
 			{
@@ -160,7 +166,8 @@ namespace LinqToDB.Linq
 
 		public bool DoNotCache;
 
-		public Func<IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
+		public Func<IDataContext,Expression,object[],IEnumerable<T>>      GetIEnumerable;
+		public Func<IDataContext,Expression,object[],IAsyncEnumerable<T>> GetIAsyncEnumerable;
 		public Func<IDataContext,Expression,object[],Func<T,bool>,CancellationToken,Task> GetForEachAsync;
 
 		#endregion

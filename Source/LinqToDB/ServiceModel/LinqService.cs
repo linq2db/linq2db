@@ -10,6 +10,7 @@ namespace LinqToDB.ServiceModel
 	using Common;
 	using Data;
 	using Linq;
+	using Extensions;
 	using SqlQuery;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
@@ -77,6 +78,7 @@ namespace LinqToDB.ServiceModel
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
+				using (db.DataProvider.ExecuteScope())
 				{
 					return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
@@ -103,12 +105,13 @@ namespace LinqToDB.ServiceModel
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
+				using (db.DataProvider.ExecuteScope())
 				{
 					return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 					{
-						Statement = query.Statement,
-						Parameters  = query.Parameters,
-						QueryHints  = query.QueryHints
+						Statement  = query.Statement,
+						Parameters = query.Parameters,
+						QueryHints = query.QueryHints
 					});
 				}
 			}
@@ -129,6 +132,7 @@ namespace LinqToDB.ServiceModel
 				ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
+				using (db.DataProvider.ExecuteScope())
 				{
 					using (var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 					{
@@ -174,7 +178,7 @@ namespace LinqToDB.ServiceModel
 							var codes = new TypeCode[rd.FieldCount];
 
 							for (var i = 0; i < ret.FieldCount; i++)
-								codes[i] = Type.GetTypeCode(ret.FieldTypes[i]);
+								codes[i] = Type.GetTypeCode(ret.FieldTypes[i].ToNullableUnderlying());
 
 							ret.RowCount++;
 
@@ -259,6 +263,7 @@ namespace LinqToDB.ServiceModel
 					ValidateQuery(query);
 
 				using (var db = CreateDataContext(configuration))
+				using (db.DataProvider.ExecuteScope())
 				{
 					db.BeginTransaction();
 

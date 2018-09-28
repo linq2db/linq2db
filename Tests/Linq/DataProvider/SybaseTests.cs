@@ -21,9 +21,10 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SybaseTests : TestBase
 	{
-		const string CurrentProvider = ProviderName.Sybase;
+		const string CurrentProvider     = ProviderName.Sybase;
+		const string CurrentProviderCore = ProviderName.SybaseManaged;
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -54,7 +55,7 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -150,7 +151,7 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType, "bit");
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -204,7 +205,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestDate(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -218,7 +219,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestSmallDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -233,7 +234,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -249,7 +250,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestTimeSpan(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -266,7 +267,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -310,7 +311,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -350,7 +351,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 57, 48        };
@@ -381,7 +382,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -401,7 +402,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestTimestamp(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -413,7 +414,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -439,7 +440,7 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -451,7 +452,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -465,7 +466,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, IncludeDataContextSource(CurrentProvider, CurrentProviderCore)]
 		public void BulkCopyLinqTypes(string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })

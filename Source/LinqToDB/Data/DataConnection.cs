@@ -26,7 +26,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : ICloneable
+	public partial class DataConnection : ICloneable, IEntityServices
 	{
 		#region .ctor
 
@@ -281,9 +281,8 @@ namespace LinqToDB.Data
 				if (!_id.HasValue)
 				{
 					var key = MappingSchema.ConfigurationID + "." + (ConfigurationString ?? ConnectionString ?? Connection.ConnectionString);
-					int id;
 
-					if (!_configurationIDs.TryGetValue(key, out id))
+					if (!_configurationIDs.TryGetValue(key, out var id))
 						_configurationIDs[key] = id = Interlocked.Increment(ref _maxID);
 
 					_id = id;
@@ -365,8 +364,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					WriteTraceLine(
 						info.RecordsAffected != null
-							? $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
-							: $"Query Execution Time ({info.TraceInfoStep}) {(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
+							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
+							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
 						TraceSwitch.DisplayName);
 					break;
 
@@ -640,6 +639,51 @@ namespace LinqToDB.Data
 			return GetConfigurationInfo(configurationString).DataProvider;
 		}
 
+		/// <summary>
+		/// Returns database provider associated with provider name, configuration and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="configurationString">Connection configuration name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string configurationString,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(configurationString, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
+		/// Returns database provider associated with provider name and connection string.
+		/// </summary>
+		/// <param name="providerName">Provider name.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <returns>Database provider.</returns>
+		public static IDataProvider GetDataProvider(
+			[JetBrains.Annotations.NotNull] string providerName,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			InitConfig();
+
+			return ConfigurationInfo.GetDataProvider(
+				new ConnectionStringSettings(providerName, connectionString, providerName),
+				connectionString);
+		}
+
+		/// <summary>
+		/// Returns registered database providers.
+		/// </summary>
+		/// <returns>
+		/// Returns copy of registered providers"
+		/// </returns>
+		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
+			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
+
 		class ConfigurationInfo
 		{
 			private readonly bool   _dataProviderSetted;
@@ -660,7 +704,7 @@ namespace LinqToDB.Data
 			}
 
 			private string _connectionString;
-			public  string ConnectionString
+			public  string  ConnectionString
 			{
 				get => _connectionString;
 				set
@@ -688,7 +732,7 @@ namespace LinqToDB.Data
 				}
 			}
 
-			static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
+			public static IDataProvider GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
 				var configuration = css.Name;
 				var providerName  = css.ProviderName;
@@ -773,10 +817,12 @@ namespace LinqToDB.Data
 			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
 			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-			_configurations[configuration] = new ConfigurationInfo(
+			var info = new ConfigurationInfo(
 				configuration,
 				connectionString,
 				dataProvider ?? FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]));
+
+			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
 		}
 
 		class ConnectionStringSettings : IConnectionStringSettings
@@ -887,6 +933,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		public event EventHandler OnClosed;
 
+		/// <inheritdoc />
+		public Action<EntityCreatedEventArgs> OnEntityCreated { get; set; }
+
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
 		/// </summary>
@@ -927,7 +976,7 @@ namespace LinqToDB.Data
 
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
-			if (queryHints != null && queryHints.Count > 0)
+			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder();
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
@@ -1179,8 +1228,7 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (Transaction != null)
-				Transaction.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -1205,8 +1253,7 @@ namespace LinqToDB.Data
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			if (Transaction != null)
-				Transaction.Dispose();
+			Transaction?.Dispose();
 
 			// Create new transaction object.
 			//
@@ -1322,9 +1369,9 @@ namespace LinqToDB.Data
 		public object Clone()
 		{
 			var connection =
-				_connection == null       ? null :
-				_connection is ICloneable ? (IDbConnection)((ICloneable)_connection).Clone() :
-				                            null;
+				_connection == null                 ? null :
+				_connection is ICloneable cloneable ? (IDbConnection)cloneable.Clone() :
+				                                      null;
 
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}

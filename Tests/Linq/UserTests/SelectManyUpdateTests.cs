@@ -46,7 +46,7 @@ namespace Tests.UserTests
 					.Update();
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix, ProviderName.Sybase, ProviderName.SybaseManaged)]
 		public void Test2(string context)
 		{
 			var harnessIds = new int[0];

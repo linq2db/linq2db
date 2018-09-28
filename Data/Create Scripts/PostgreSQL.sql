@@ -4,6 +4,8 @@ GO
 DROP TABLE IF EXISTS "Patient"
 GO
 
+DROP FUNCTION IF EXISTS "TestTableFunctionSchema"()
+GO
 DROP TABLE IF EXISTS "Person"
 GO
 
@@ -217,6 +219,8 @@ GO
 
 DROP TABLE IF EXISTS AllTypes
 GO
+DROP TABLE IF EXISTS "AllTypes"
+GO
 
 DROP TYPE IF EXISTS color
 GO
@@ -224,92 +228,99 @@ GO
 CREATE TYPE color AS ENUM ('Red', 'Green', 'Blue');
 GO
 
-CREATE TABLE AllTypes
+CREATE TABLE "AllTypes"
 (
-	ID                  serial               NOT NULL PRIMARY KEY,
+	"ID"                  serial               NOT NULL PRIMARY KEY,
 
-	bigintDataType      bigint                   NULL,
-	numericDataType     numeric                  NULL,
-	smallintDataType    smallint                 NULL,
-	intDataType         int                      NULL,
-	moneyDataType       money                    NULL,
-	doubleDataType      double precision         NULL,
-	realDataType        real                     NULL,
+	"bigintDataType"      bigint                   NULL,
+	"numericDataType"     numeric                  NULL,
+	"smallintDataType"    smallint                 NULL,
+	"intDataType"         int                      NULL,
+	"moneyDataType"       money                    NULL,
+	"doubleDataType"      double precision         NULL,
+	"realDataType"        real                     NULL,
 
-	timestampDataType   timestamp                NULL,
-	timestampTZDataType timestamp with time zone NULL,
-	dateDataType        date                     NULL,
-	timeDataType        time                     NULL,
-	timeTZDataType      time with time zone      NULL,
-	intervalDataType    interval                 NULL,
+	"timestampDataType"   timestamp                NULL,
+	"timestampTZDataType" timestamp with time zone NULL,
+	"dateDataType"        date                     NULL,
+	"timeDataType"        time                     NULL,
+	"timeTZDataType"      time with time zone      NULL,
+	"intervalDataType"    interval                 NULL,
 
-	charDataType        char(1)                  NULL,
-	char20DataType      char(20)                 NULL,
-	varcharDataType     varchar(20)              NULL,
-	textDataType        text                     NULL,
+	"charDataType"        char(1)                  NULL,
+	"char20DataType"      char(20)                 NULL,
+	"varcharDataType"     varchar(20)              NULL,
+	"textDataType"        text                     NULL,
 
-	binaryDataType      bytea                    NULL,
+	"binaryDataType"      bytea                    NULL,
 
-	uuidDataType        uuid                     NULL,
-	bitDataType         bit(3)                   NULL,
-	booleanDataType     boolean                  NULL,
-	colorDataType       color                    NULL,
+	"uuidDataType"        uuid                     NULL,
+	"bitDataType"         bit(3)                   NULL,
+	"booleanDataType"     boolean                  NULL,
+	"colorDataType"       color                    NULL,
 
-	pointDataType       point                    NULL,
-	lsegDataType        lseg                     NULL,
-	boxDataType         box                      NULL,
-	pathDataType        path                     NULL,
-	polygonDataType     polygon                  NULL,
-	circleDataType      circle                   NULL,
+	"pointDataType"       point                    NULL,
+	"lsegDataType"        lseg                     NULL,
+	"boxDataType"         box                      NULL,
+	"pathDataType"        path                     NULL,
+	"polygonDataType"     polygon                  NULL,
+	"circleDataType"      circle                   NULL,
+	"lineDataType"        line                     NULL,
 
-	inetDataType        inet                     NULL,
-	macaddrDataType     macaddr                  NULL,
+	"inetDataType"        inet                     NULL,
+	"cidrDataType"        cidr                     NULL,
+	"macaddrDataType"     macaddr                  NULL,
+	--PGSQL 10+
+	--"macaddr8DataType"  macaddr8                 NULL,
 
-	xmlDataType         xml                      NULL,
-	varBitDataType      varbit                   NULL
+	"jsonDataType"        json                     NULL,
+	"jsonbDataType"       jsonb                    NULL,
+
+	"xmlDataType"         xml                      NULL,
+	"varBitDataType"      varbit                   NULL
 )
 GO
 
-INSERT INTO AllTypes
+INSERT INTO "AllTypes"
 (
-	bigintDataType,
-	numericDataType,
-	smallintDataType,
-	intDataType,
-	moneyDataType,
-	doubleDataType,
-	realDataType,
+	"bigintDataType",
+	"numericDataType",
+	"smallintDataType",
+	"intDataType",
+	"moneyDataType",
+	"doubleDataType",
+	"realDataType",
 
-	timestampDataType,
-	timestampTZDataType,
-	dateDataType,
-	timeDataType,
-	timeTZDataType,
-	intervalDataType,
+	"timestampDataType",
+	"timestampTZDataType",
+	"dateDataType",
+	"timeDataType",
+	"timeTZDataType",
+	"intervalDataType",
 
-	charDataType,
-	varcharDataType,
-	textDataType,
+	"charDataType",
+	"varcharDataType",
+	"textDataType",
 
-	binaryDataType,
+	"binaryDataType",
 
-	uuidDataType,
-	bitDataType,
-	booleanDataType,
-	colorDataType,
+	"uuidDataType",
+	"bitDataType",
+	"booleanDataType",
+	"colorDataType",
 
-	pointDataType,
-	lsegDataType,
-	boxDataType,
-	pathDataType,
-	polygonDataType,
-	circleDataType,
+	"pointDataType",
+	"lsegDataType",
+	"boxDataType",
+	"pathDataType",
+	"polygonDataType",
+	"circleDataType",
 
-	inetDataType,
-	macaddrDataType,
+	"inetDataType",
+	"macaddrDataType",
 
-	xmlDataType,
-	varBitDataType
+	"xmlDataType",
+	"varBitDataType"
 )
 SELECT
 	NULL,
@@ -504,4 +515,50 @@ CREATE TABLE "TestMerge2"
 	"FieldEnumString" VARCHAR(20)              NULL,
 	"FieldEnumNumber" INT                      NULL
 )
+GO
+
+CREATE OR REPLACE FUNCTION AddIssue792Record()
+	RETURNS void AS
+$BODY$
+BEGIN
+	INSERT INTO dbo.AllTypes(char20DataType) VALUES('issue792');
+END;
+$BODY$
+	LANGUAGE PLPGSQL;
+GO
+
+CREATE OR REPLACE FUNCTION "TestTableFunctionSchema"() RETURNS SETOF "AllTypes"
+AS $$ SELECT * FROM "AllTypes" $$ LANGUAGE SQL;
+GO
+
+CREATE OR REPLACE FUNCTION "TestFunctionParameters"(param1 INT, INOUT param2 INT, OUT param3 INT)
+AS $$ SELECT param1, param2 $$ LANGUAGE SQL;
+GO
+
+CREATE OR REPLACE FUNCTION "TestTableFunction"(param1 INT) RETURNS TABLE(param2 INT)
+AS $$ SELECT param1 UNION ALL SELECT param1 $$ LANGUAGE SQL;
+GO
+
+CREATE OR REPLACE FUNCTION "TestTableFunction1"(param1 INT, param2 INT) RETURNS TABLE(param3 INT, param4 INT)
+AS $$ SELECT param1, 23 UNION ALL SELECT 333, param2 $$ LANGUAGE SQL;
+GO
+
+CREATE OR REPLACE FUNCTION "TestScalarFunction"(param INT) RETURNS VARCHAR(10)
+AS $$ BEGIN RETURN 'done'; END $$ LANGUAGE PLPGSQL;
+GO
+
+CREATE OR REPLACE FUNCTION "TestSingleOutParameterFunction"(param1 INT, OUT param2 INT)
+AS $$ BEGIN param2 := param1 + 123; END $$ LANGUAGE PLPGSQL;
+GO
+
+DROP AGGREGATE IF EXISTS test_avg(float8)
+GO
+CREATE AGGREGATE test_avg(float8)
+(
+	sfunc = float8_accum,
+	stype = float8[],
+	finalfunc = float8_avg,
+	initcond = '{0,0,0}'
+);
+
 GO

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Linq;
+using LinqToDB.Common;
 
 namespace LinqToDB.Reflection
 {
@@ -12,6 +13,9 @@ namespace LinqToDB.Reflection
 
 	public class MemberAccessor
 	{
+		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
+					            throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
+
 		internal MemberAccessor(TypeAccessor typeAccessor, string memberName)
 		{
 			TypeAccessor = typeAccessor;
@@ -28,7 +32,7 @@ namespace LinqToDB.Reflection
 
 				var members  = memberName.Split('.');
 				var objParam = Expression.Parameter(TypeAccessor.Type, "obj");
-				var expr     = objParam as Expression;
+				var expr     = (Expression)objParam;
 				var infos    = members.Select(m =>
 				{
 					expr = Expression.PropertyOrField(expr, m);
@@ -53,12 +57,12 @@ namespace LinqToDB.Reflection
 					{
 						var ret = Expression.Variable(Type, "ret");
 
-						Func<Expression,int,Expression> makeGetter = null; makeGetter = (ex, i) =>
+						Expression MakeGetter(Expression ex, int i)
 						{
 							var info = infos[i];
 							var next = Expression.MakeMemberAccess(ex, info.member);
 
-							if (i == infos.Length - 1)
+							if (i == infos.Length - 1) 
 								return Expression.Assign(ret, next);
 
 							if (next.Type.IsClassEx() || next.Type.IsNullable())
@@ -66,27 +70,21 @@ namespace LinqToDB.Reflection
 								var local = Expression.Variable(next.Type);
 
 								return Expression.Block(
-									new[] { local },
-									new[]
-									{
-										Expression.Assign(local, next) as Expression,
-										Expression.IfThen(
-											Expression.NotEqual(local, Expression.Constant(null)),
-											makeGetter(local, i + 1))
-									});
+									new[] { local }, 
+									Expression.Assign(local, next) as Expression,
+									Expression.IfThen(
+										Expression.NotEqual(local, Expression.Constant(null)), 
+										MakeGetter(local, i + 1)));
 							}
 
-							return makeGetter(next, i + 1);
-						};
+							return MakeGetter(next, i + 1);
+						}
 
 						expr = Expression.Block(
 							new[] { ret },
-							new[]
-							{
-								Expression.Assign(ret, new DefaultValueExpression(MappingSchema.Default, Type)),
-								makeGetter(objParam, 0),
-								ret
-							});
+							Expression.Assign(ret, new DefaultValueExpression(MappingSchema.Default, Type)),
+							MakeGetter(objParam, 0),
+							ret);
 					}
 					else
 					{
@@ -112,7 +110,7 @@ namespace LinqToDB.Reflection
 							var vars  = new List<ParameterExpression>();
 							var exprs = new List<Expression>();
 
-							Action<Expression,int> makeSetter = null; makeSetter = (ex, i) =>
+							void MakeSetter(Expression ex, int i)
 							{
 								var info = infos[i];
 								var next = Expression.MakeMemberAccess(ex, info.member);
@@ -137,16 +135,16 @@ namespace LinqToDB.Reflection
 													Expression.Assign(local, Expression.New(local.Type)),
 													Expression.Assign(next, local))));
 
-										makeSetter(local, i + 1);
+										MakeSetter(local, i + 1);
 									}
 									else
 									{
-										makeSetter(next, i + 1);
+										MakeSetter(next, i + 1);
 									}
 								}
-							};
+							}
 
-							makeSetter(objParam, 0);
+							MakeSetter(objParam, 0);
 
 							expr = Expression.Block(vars, exprs);
 						}
@@ -166,8 +164,8 @@ namespace LinqToDB.Reflection
 
 						SetterExpression = Expression.Lambda(
 							Expression.Block(
-								new[] { fakeParam },
-								new Expression[] { Expression.Assign(fakeParam, Expression.Constant(0)) }),
+								new[] { fakeParam }, 
+								Expression.Assign(fakeParam, Expression.Constant(0))),
 							objParam,
 							valueParam);
 					}
@@ -188,12 +186,12 @@ namespace LinqToDB.Reflection
 		void SetSimple(MemberInfo memberInfo)
 		{
 			MemberInfo = memberInfo;
-			Type       = MemberInfo is PropertyInfo ? ((PropertyInfo)MemberInfo).PropertyType : ((FieldInfo)MemberInfo).FieldType;
+			Type       = MemberInfo is PropertyInfo propertyInfo ? propertyInfo.PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
-			if (memberInfo is PropertyInfo)
+			if (memberInfo is PropertyInfo info)
 			{
-				HasGetter = ((PropertyInfo)memberInfo).GetGetMethodEx(true) != null;
-				HasSetter = ((PropertyInfo)memberInfo).GetSetMethodEx(true) != null;
+				HasGetter = info.GetGetMethodEx(true) != null;
+				HasSetter = info.GetSetMethodEx(true) != null;
 			}
 			else
 			{
@@ -204,7 +202,52 @@ namespace LinqToDB.Reflection
 			var objParam   = Expression.Parameter(TypeAccessor.Type, "obj");
 			var valueParam = Expression.Parameter(Type, "value");
 
-			if (HasGetter)
+			if (HasGetter && memberInfo.IsDynamicColumnPropertyEx())
+			{
+				IsComplex = true;
+
+				if (TypeAccessor.DynamicColumnsStoreAccessor != null)
+				{
+					// get value via "Item" accessor; we're not null-checking
+
+					var storageType = TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo.GetMemberType();
+					var storedType  = storageType.GetGenericArguments()[1];
+					var outVar      = Expression.Variable(storedType);
+					var resultVar   = Expression.Variable(Type);
+
+					MethodInfo tryGetValueMethodInfo = storageType.GetMethod("TryGetValue");
+
+					if (tryGetValueMethodInfo == null)
+						throw new LinqToDBException("Storage property do not have method 'TryGetValue'");
+
+					GetterExpression =
+						Expression.Lambda(
+							Expression.Block(
+								new[] { outVar, resultVar },
+								Expression.IfThenElse(
+									Expression.Call(
+										Expression.MakeMemberAccess(objParam,
+											TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
+										tryGetValueMethodInfo,
+										Expression.Constant(memberInfo.Name), outVar),
+									Expression.Assign(resultVar, Expression.Convert(outVar, Type)),
+									Expression.Assign(resultVar,
+										new DefaultValueExpression(MappingSchema.Default, Type))
+								),
+								resultVar
+							),
+							objParam);
+				}
+				else
+					// dynamic columns store was not provided, throw exception when accessed
+					GetterExpression = Expression.Lambda(
+						Expression.Throw(
+							Expression.New(
+								ArgumentExceptionConstructorInfo,
+								Expression.Constant("Tried getting dynamic column value, without setting dynamic column store on type."))),
+						objParam);
+			}
+			else if (HasGetter)
 			{
 				GetterExpression = Expression.Lambda(Expression.MakeMemberAccess(objParam, memberInfo), objParam);
 			}
@@ -213,7 +256,45 @@ namespace LinqToDB.Reflection
 				GetterExpression = Expression.Lambda(new DefaultValueExpression(MappingSchema.Default, Type), objParam);
 			}
 
-			if (HasSetter)
+			if (HasSetter && memberInfo.IsDynamicColumnPropertyEx())
+			{
+				IsComplex = true;
+
+				if (TypeAccessor.DynamicColumnsStoreAccessor != null)
+					// if null, create new dictionary; then assign value
+					SetterExpression =
+						Expression.Lambda(
+							Expression.Block(
+								Expression.IfThen(
+									Expression.ReferenceEqual(
+										Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
+										Expression.Constant(null)),
+									Expression.Assign(
+										Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
+										Expression.New(typeof(Dictionary<string, object>)))),
+								Expression.Assign(
+									Expression.Property(
+										Expression.MakeMemberAccess(objParam, TypeAccessor.DynamicColumnsStoreAccessor.MemberInfo),
+										"Item",
+										Expression.Constant(memberInfo.Name)),
+									Expression.Convert(valueParam, typeof(object)))),
+							objParam,
+							valueParam);
+				else
+					// dynamic columns store was not provided, throw exception when accessed
+					GetterExpression = Expression.Lambda(
+						Expression.Block(
+							Expression.Throw(
+								Expression.New(
+									ArgumentExceptionConstructorInfo,
+									Expression.Constant("Tried setting dynamic column value, without setting dynamic column store on type."))),
+							Expression.Constant(DefaultValue.GetValue(valueParam.Type), valueParam.Type)
+						),
+						objParam,
+						valueParam);
+
+			}
+			else if (HasSetter)
 			{
 				SetterExpression = Expression.Lambda(
 					Expression.Assign(Expression.MakeMemberAccess(objParam, memberInfo), valueParam),
@@ -242,12 +323,16 @@ namespace LinqToDB.Reflection
 			Getter = getter.Compile();
 
 			var valueParam = Expression.Parameter(typeof(object), "value");
-			var setterExpr = SetterExpression.GetBody(
-				Expression.Convert(objParam,   TypeAccessor.Type),
-				Expression.Convert(valueParam, Type));
-			var setter = Expression.Lambda<Action<object,object>>(setterExpr, objParam, valueParam);
 
-			Setter = setter.Compile();
+			if (SetterExpression != null)
+			{
+				var setterExpr = SetterExpression.GetBody(
+					Expression.Convert(objParam, TypeAccessor.Type),
+					Expression.Convert(valueParam, Type));
+				var setter = Expression.Lambda<Action<object, object>>(setterExpr, objParam, valueParam);
+
+				Setter = setter.Compile();
+			}
 		}
 
 		#region Public Properties

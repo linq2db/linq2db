@@ -22,7 +22,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 		readonly SapHanaDataProvider _dataProvider;
 		readonly Type _connectionType;
-		private readonly Type bulkCopyOptionType;
 		Func<IDbConnection,int,IDbTransaction,IDisposable> _bulkCopyCreator;
 		Type                                               _bulkCopyOptionType;
 		Func<int,string,object>                            _columnMappingCreator;
@@ -117,7 +116,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				TraceAction(
 					dataConnection,
-					"INSERT BULK " + tableName + Environment.NewLine,
+					() => "INSERT BULK " + tableName + Environment.NewLine,
 					() => { dbc.WriteToServer(rd); return rd.Count; });
 
 				if (rc.RowsCopied != rd.Count)

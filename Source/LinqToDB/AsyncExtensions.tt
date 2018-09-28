@@ -119,6 +119,9 @@ namespace LinqToDB
 					token);
 			}
 
+			if (LinqExtensions.ExtensionsAdapter != null)
+				return LinqExtensions.ExtensionsAdapter.<#= info.Method #>Async<#= info.GParams #>(source<#= paramName #>, token);
+
 			return GetTask(<#= info.Lambda #>, token);
 		}
 

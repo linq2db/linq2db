@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void UpdateWithConditionDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -367,7 +367,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteWithConditionUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -426,7 +426,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleNative, ProviderName.OracleManaged,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void InsertUpdateWithConditionDeleteWithCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -491,7 +491,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void InsertDeleteWithConditionUpdate(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -525,7 +525,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void UpdateWithConditionInsertDeleteWithCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -559,7 +559,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void UpdateWithConditionDeleteWithConditionInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -593,7 +593,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteWithConditionUpdateWithConditionInsert(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -627,7 +627,7 @@ namespace Tests.xUpdate
 
 		// ASE: just fails
 		[Test, MergeDataContextSource(ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative,
-			ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
+			ProviderName.Sybase, ProviderName.SybaseManaged, ProviderName.Informix, ProviderName.SapHana, ProviderName.Firebird)]
 		public void DeleteWithConditionInsertUpdateWithCondition(string context)
 		{
 			using (var db = new TestDataConnection(context))

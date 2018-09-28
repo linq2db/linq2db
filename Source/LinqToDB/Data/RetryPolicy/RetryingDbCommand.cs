@@ -25,49 +25,46 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public override string CommandText
 		{
-			get { return _command.CommandText;  }
-			set { _command.CommandText = value; }
+			get => _command.CommandText;
+			set => _command.CommandText = value;
 		}
 
 		public override int CommandTimeout
 		{
-			get { return _command.CommandTimeout;  }
-			set { _command.CommandTimeout = value; }
+			get => _command.CommandTimeout;
+			set => _command.CommandTimeout = value;
 		}
 
 		public override CommandType CommandType
 		{
-			get { return _command.CommandType;  }
-			set { _command.CommandType = value; }
+			get => _command.CommandType;
+			set => _command.CommandType = value;
 		}
 
 		public override UpdateRowSource UpdatedRowSource
 		{
-			get { return _command.UpdatedRowSource;  }
-			set { _command.UpdatedRowSource = value; }
+			get => _command.UpdatedRowSource;
+			set => _command.UpdatedRowSource = value;
 		}
 
 		protected override DbConnection DbConnection
 		{
-			get { return _command.Connection;  }
-			set { _command.Connection = value; }
+			get => _command.Connection;
+			set => _command.Connection = value;
 		}
 
-		protected override DbParameterCollection DbParameterCollection
-		{
-			get { return _command.Parameters; }
-		}
+		protected override DbParameterCollection DbParameterCollection => _command.Parameters;
 
 		protected override DbTransaction DbTransaction
 		{
-			get { return _command.Transaction;  }
-			set { _command.Transaction = value; }
+			get => _command.Transaction;
+			set => _command.Transaction = value;
 		}
 
 		public override bool DesignTimeVisible
 		{
-			get { return _command.DesignTimeVisible;  }
-			set { _command.DesignTimeVisible = value; }
+			get => _command.DesignTimeVisible;
+			set => _command.DesignTimeVisible = value;
 		}
 
 		public override void Cancel()
@@ -114,9 +111,6 @@ namespace LinqToDB.Data.RetryPolicy
 
 #endif
 
-		public DbCommand UnderlyingObject
-		{
-			get { return _command; }
-		}
+		public DbCommand UnderlyingObject => _command;
 	}
 }

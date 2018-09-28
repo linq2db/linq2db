@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
@@ -12,28 +13,28 @@ namespace LinqToDB.Common
 			if (items      == null) throw new ArgumentNullException(nameof(items));
 			if (nameFunc   == null) throw new ArgumentNullException(nameof(nameFunc));
 			if (nameSetter == null) throw new ArgumentNullException(nameof(nameSetter));
-			
+
 			MakeUniqueNames(items, null, nameFunc, nameSetter, t =>
 			{
 				var name = nameFunc(t);
 				return string.IsNullOrEmpty(name) ? defaultName : name;
 			});
 		}
-		
+
 		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, IEnumerable<string> staticNames, [NotNull] Func<T, string> nameFunc,
 			[NotNull] Action<T, string> nameSetter, string defaultName = "t")
 		{
 			if (items      == null) throw new ArgumentNullException(nameof(items));
 			if (nameFunc   == null) throw new ArgumentNullException(nameof(nameFunc));
 			if (nameSetter == null) throw new ArgumentNullException(nameof(nameSetter));
-			
+
 			MakeUniqueNames(items, staticNames, nameFunc, nameSetter, t =>
 			{
 				var name = nameFunc(t);
 				return string.IsNullOrEmpty(name) ? defaultName : name;
 			});
 		}
-		
+
 		public static void MakeUniqueNames<T>([NotNull] IEnumerable<T> items, IEnumerable<string> staticNames, [NotNull] Func<T, string> nameFunc,
 			[NotNull] Action<T, string> nameSetter, [NotNull] Func<T, string> defaultName)
 		{
@@ -44,6 +45,7 @@ namespace LinqToDB.Common
 
 			var currentNames = staticNames != null ? new HashSet<string>(staticNames) : new HashSet<string>();
 			List<T> conflicted = null;
+
 			foreach (var item in items)
 			{
 				var name = nameFunc(item);
@@ -70,7 +72,7 @@ namespace LinqToDB.Common
 						name = "t";
 
 					var newName = name;
-					
+
 					if (currentNames.Contains(newName))
 					{
 						var digitCount = 0;
@@ -78,12 +80,12 @@ namespace LinqToDB.Common
 						{
 							++digitCount;
 						}
-						
+
 						var startDigit = 0;
 						if (digitCount > 0)
 						{
 							digitCount = Math.Min(6, digitCount);
-							startDigit = int.Parse(name.Substring(name.Length - digitCount, digitCount)); 
+							startDigit = int.Parse(name.Substring(name.Length - digitCount, digitCount));
 							name = name.Remove(digitCount);
 						}
 
@@ -93,7 +95,7 @@ namespace LinqToDB.Common
 							newName = name + startDigit;
 						} while (currentNames.Contains(newName));
 					}
-					
+
 					nameSetter(item, newName);
 					currentNames.Add(newName);
 				}

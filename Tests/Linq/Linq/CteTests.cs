@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
@@ -13,26 +12,42 @@ namespace Tests.Linq
 
 	public class CteTests : TestBase
 	{
-		class CteContextSourceAttribute : IncludeDataContextSourceAttribute
+		public static string[] CteSupportedProviders = new[]
+		{
+			ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
+			ProviderName.Firebird,
+			ProviderName.PostgreSQL,
+			ProviderName.DB2,
+			ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
+			ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative
+			//ProviderName.Informix,
+			// Will be supported in SQL 8.0 - ProviderName.MySql
+		};
+
+		class CteContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public CteContextSourceAttribute() : this(true)
 			{
 			}
 
-			public CteContextSourceAttribute(bool includeLinqService) : base(includeLinqService,
-				ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014,
-				ProviderName.Firebird,
-				ProviderName.SQLite, ProviderName.SQLiteClassic, ProviderName.SQLiteMS,
-				ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative
-				//ProviderName.Informix,
-				// Will be supported in SQL 8.0 - ProviderName.MySql
-				)
+			public CteContextSourceAttribute(bool includeLinqService)
+				: base(includeLinqService, CteSupportedProviders)
+			{
+			}
+
+			public CteContextSourceAttribute(params string[] excludedProviders)
+				: base(CteSupportedProviders.Except(excludedProviders).ToArray())
+			{
+			}
+
+			public CteContextSourceAttribute(bool includeLinqService, params string[] excludedProviders)
+				: base(includeLinqService, CteSupportedProviders.Except(excludedProviders).ToArray())
 			{
 			}
 		}
 
-		[Test, CteContextSource, Ignore("Error")]
-		public void Test1(string context)
+		[Test, Combinatorial]
+		public void Test1([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -42,10 +57,10 @@ namespace Tests.Linq
 					join c2 in cte1 on p.ParentID equals c2.ParentID
 					select p;
 
-				var cte1_ = Child.Where(c => c.ParentID > 1).ToArray();
+				var cte1_ = db.GetTable<Child>().Where(c => c.ParentID > 1);
 
 				var expected =
-					from p in Parent
+					from p in db.Parent
 					join c in cte1_ on p.ParentID equals c.ParentID
 					join c2 in cte1_ on p.ParentID equals c2.ParentID
 					select p;
@@ -54,8 +69,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, CteContextSource, Ignore("Error")]
-		public void Test2(string context)
+		[Test, Combinatorial]
+		public void Test2([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -87,6 +102,17 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, Combinatorial]
+		public void TestAsTable([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var cte1 = db.GetTable<Child>().AsCte("CTE1_");
+				var expected = db.GetTable<Child>();
+
+				AreEqual(expected, cte1);
+			}
+		}
 
 		static IQueryable<TSource> RemoveCte<TSource>(IQueryable<TSource> source)
 		{
@@ -100,7 +126,7 @@ namespace Tests.Linq
 			return source.Provider.CreateQuery<TSource>(newExpr);
 		}
 
-		[Test, NorthwindDataContext, Ignore("Error")]
+		[Test, NorthwindDataContext]
 		public void ProductAndCategoryNamesOverTenDollars(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -132,7 +158,49 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NorthwindDataContext, Ignore("Error")]
+		[Test, NorthwindDataContext]
+		public void ProductAndCategoryNamesOverTenDollars2(string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var cteQuery =
+					from p in db.Product
+					where p.UnitPrice.Value > 10
+					select new
+					{
+						p.ProductName,
+						p.Category.CategoryName,
+						p.UnitPrice
+					};
+
+				var result =
+					from p in cteQuery.AsCte("ProductAndCategoryNamesOverTenDollars")
+					orderby p.CategoryName, p.UnitPrice, p.ProductName
+					select new
+					{
+						p.ProductName,
+						p.CategoryName,
+						p.UnitPrice
+					};
+
+				var expected =
+					from p in cteQuery
+					orderby p.CategoryName, p.UnitPrice, p.ProductName
+					select new
+					{
+						p.ProductName,
+						p.CategoryName,
+						p.UnitPrice
+					};
+
+				var expectedStr = expected.ToString();
+				var resultdStr  = result.ToString();
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, NorthwindDataContext]
 		public void ProductsOverTenDollars(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -183,7 +251,7 @@ namespace Tests.Linq
 		}
 
 
-		[Test, NorthwindDataContext, Ignore("Error")]
+		[Test, NorthwindDataContext]
 		public void EmployeeSubordinatesReport(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -243,7 +311,7 @@ namespace Tests.Linq
 			public int HierarchyLevel;
 		}
 
-		[Test, NorthwindDataContext(true), Ignore("Error")]
+		[Test, NorthwindDataContext(true)]
 		public void EmployeeHierarchy(string context)
 		{
 			using (var db = new NorthwindDB(context))
@@ -285,23 +353,134 @@ namespace Tests.Linq
 
 				var resultdStr  = result.ToString();
 
-
-				// UNION ALL should be on top of query
 				var data = result.ToArray();
 			}
 		}
 
-		[Test, CteContextSource, Ignore("Error")]
-		public void Test4(string context)
+		[Test, Combinatorial]
+		public void Test4([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
-				var query = from p in cte1
+				var result = from p in cte1
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
 					select c4;
 
-				var str = query.ToString();
+				var _cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
+				var expected = from p in _cte1
+					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
+					select c4;
+
+				var expectedStr = expected.ToString();
+				var resultdStr  = result.ToString();
+
+				AreEqual(expected, result);
+			}
+		}
+
+		private class CteDMLTests
+		{
+			protected bool Equals(CteDMLTests other)
+			{
+				return ChildID == other.ChildID && ParentID == other.ParentID;
+			}
+
+			public override bool Equals(object obj)
+			{
+				if (ReferenceEquals(null, obj)) return false;
+				if (ReferenceEquals(this, obj)) return true;
+				if (obj.GetType() != this.GetType()) return false;
+				return Equals((CteDMLTests)obj);
+			}
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					return (ChildID * 397) ^ ParentID;
+				}
+			}
+
+			public int ChildID  { get; set; }
+			public int ParentID { get; set; }
+		}
+
+		[Test, Combinatorial]
+		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
+			{
+				var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
+				var toInsert = from p in cte1
+					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
+					select new CteDMLTests
+					{
+						ChildID = c4.ChildID,
+						ParentID = c4.ParentID
+					};
+
+				var affected = toInsert.Insert(testTable, c => c);
+
+				var _cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
+				var expected = from p in _cte1
+					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
+					select new CteDMLTests
+					{
+						ChildID = c4.ChildID,
+						ParentID = c4.ParentID
+					};
+
+				var result = testTable.OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
+				expected   = expected. OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test, Combinatorial]
+		public void TestDelete([CteContextSource(ProviderName.Firebird, ProviderName.DB2)] string context)
+		{
+			using (var db  = GetDataContext(context))
+			using (var tmp = db.CreateLocalTable("CteChild",
+				Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i })))
+			{
+				var cte = tmp.Where(c => c.ParentID % 2 == 0).AsCte();
+
+				var toDelete =
+					from c in tmp
+					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
+					select c;
+
+				var recordsAffected = toDelete.Delete();
+				Assert.AreEqual(5, recordsAffected);
+			}
+		}
+
+		[Test, Combinatorial]
+		public void TestUpdate(
+			[CteContextSource(ProviderName.Firebird, ProviderName.DB2, ProviderName.Oracle, ProviderName.OracleManaged, ProviderName.OracleNative)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var testTable = db.CreateLocalTable("CteChild",
+				Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i })))
+			{
+				var cte = testTable.Where(c => c.ParentID % 2 == 0).AsCte();
+				var toUpdate =
+					from c in testTable
+					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
+					select c;
+
+				toUpdate.Update(prev => new CteDMLTests {ParentID = prev.ChildID});
+
+				var expected = testTable.Where(c => c.ParentID % 2 == 0)
+					.Select(c => new CteDMLTests { ParentID = c.ChildID, ChildID = c.ChildID });
+
+				var result = testTable.Where(c => c.ParentID % 2 == 0);
+
+				AreEqual(expected, result);
 			}
 		}
 
@@ -312,40 +491,40 @@ namespace Tests.Linq
 			public int? GrandChildID;
 		}
 
-		[Test, IncludeDataContextSource(true, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014), Ignore("Error")]
-		public void RecursiveTest(string context)
+		[Test, Combinatorial]
+		public void RecursiveTest([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var cteRecursive = db.GetCte<RecursiveCTE>(cte =>
-				(
-					from gc1 in db.GrandChild
-					select new RecursiveCTE
-					{
-						ChildID      = gc1.ChildID,
-						GrandChildID = gc1.GrandChildID,
-						ParentID     = gc1.GrandChildID
-					}
-				)
-				.Concat
-				(
-					from gc in db.GrandChild
-					//from p  in db.Parent.InnerJoin(p => p.ParentID == gc.ParentID)
-					from ct in cte//.InnerJoin(ct => ct.ChildID == gc.ChildID)
-					select new RecursiveCTE
-					{
-						ParentID     = ct.ParentID,
-						ChildID      = ct.ChildID,
-						GrandChildID = ct.ChildID + 1
-					}
-				)
-				, "MY_CTE");
+						(
+							from gc1 in db.GrandChild
+							select new RecursiveCTE
+							{
+								ChildID = gc1.ChildID,
+								ParentID = gc1.GrandChildID,
+								GrandChildID = gc1.GrandChildID,
+							}
+						)
+						.Concat
+						(
+							from gc in db.GrandChild
+							from p in db.Parent.InnerJoin(p => p.ParentID == gc.ParentID)
+							from ct in cte.InnerJoin(ct => Sql.AsNotNull(ct.ChildID) == gc.ChildID)
+							where ct.GrandChildID <= 10
+							select new RecursiveCTE
+							{
+								ChildID = ct.ChildID,
+								ParentID = ct.ParentID,
+								GrandChildID = ct.ChildID + 1
+							}
+						)
+					, "MY_CTE");
 
 				var str = cteRecursive.ToString();
-				// UNION otimized out
-				Assert.That(str, Contains.Substring( "UNION" ) );
 				var result = cteRecursive.ToArray();
 			}
 		}
+
 	}
 }

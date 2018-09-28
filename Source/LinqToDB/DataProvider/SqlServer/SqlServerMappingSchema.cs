@@ -155,9 +155,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var format =
 				value.Millisecond == 0
-					? value.Hour == 0 && value.Minute == 0 && value.Second == 0
-						? "yyyy-MM-dd"
-						: "yyyy-MM-ddTHH:mm:ss"
+					? "yyyy-MM-ddTHH:mm:ss"
 					: dt == null || dt.DataType != DataType.DateTime2
 						? "yyyy-MM-ddTHH:mm:ss.fff"
 						: dt.Precision == 0

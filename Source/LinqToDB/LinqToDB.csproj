@@ -15,6 +15,7 @@
 
 		<Configurations>Debug;Release</Configurations>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+		<EnableSourceLink Condition="'$(TRAVIS)' == true">false</EnableSourceLink>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -32,11 +33,16 @@
 		<EmbeddedResource Include="**\*.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
+		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
 
 		<Compile Remove="Compatibility\**\*.cs" />
 
+		<None Remove="SqlQuery\ReservedWordsFirebird.txt" />
+
 		<Compile Include="Compatibility\System\Threading\Tasks\TaskEx.cs" />
+
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" />
 
 		<Compile Update="AsyncExtensions.generated.cs">
 			<DesignTime>True</DesignTime>
