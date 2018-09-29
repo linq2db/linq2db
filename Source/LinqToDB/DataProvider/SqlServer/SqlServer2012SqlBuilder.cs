@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlQuery;
 	using SqlProvider;
 
-	class SqlServer2012SqlBuilder : SqlServerSqlBuilder
+	partial class SqlServer2012SqlBuilder : SqlServerSqlBuilder
 	{
 		public SqlServer2012SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)

@@ -16,35 +16,22 @@ namespace LinqToDB
 	public static partial class LinqExtensions
 	{
 		#region MethodInfo
-		private static readonly MethodInfo _mergeMethodInfo1                          = MemberHelper.MethodOf(() => Merge<int>(null))                                                .GetGenericMethodDefinition();
-		private static readonly MethodInfo _mergeMethodInfo2                          = MemberHelper.MethodOf(() => Merge<int>(null, null))                                          .GetGenericMethodDefinition();
-		private static readonly MethodInfo _mergeIntoMethodInfo1                      = MemberHelper.MethodOf(() => MergeInto<int, int>(null, null))                                 .GetGenericMethodDefinition();
-		private static readonly MethodInfo _mergeIntoMethodInfo2                      = MemberHelper.MethodOf(() => MergeInto<int, int>(null, null, null))                           .GetGenericMethodDefinition();
-		private static readonly MethodInfo _usingMethodInfo1                          = MemberHelper.MethodOf(() => Using<int, int>(null, (IQueryable<int>)null))                    .GetGenericMethodDefinition();
-		private static readonly MethodInfo _usingMethodInfo2                          = MemberHelper.MethodOf(() => Using<int, int>(null, (IEnumerable<int>)null))                   .GetGenericMethodDefinition();
-		private static readonly MethodInfo _usingTargetMethodInfo                     = MemberHelper.MethodOf(() => UsingTarget<int>(null))                                          .GetGenericMethodDefinition();
-		private static readonly MethodInfo _onMethodInfo1                             = MemberHelper.MethodOf(() => On<int, int, int>(null, null, null))                             .GetGenericMethodDefinition();
-		private static readonly MethodInfo _onMethodInfo2                             = MemberHelper.MethodOf(() => On<int, int>(null, null))                                        .GetGenericMethodDefinition();
-		private static readonly MethodInfo _onTargetKeyMethodInfo                     = MemberHelper.MethodOf(() => OnTargetKey<int>(null))                                          .GetGenericMethodDefinition();
-		private static readonly MethodInfo _insertWhenNotMatchedMethodInfo1           = MemberHelper.MethodOf(() => InsertWhenNotMatched<int>(null))                                 .GetGenericMethodDefinition();
-		private static readonly MethodInfo _insertWhenNotMatchedMethodInfo2           = MemberHelper.MethodOf(() => InsertWhenNotMatched<int, int>(null, null))                      .GetGenericMethodDefinition();
-		private static readonly MethodInfo _insertWhenNotMatchedAndMethodInfo1        = MemberHelper.MethodOf(() => InsertWhenNotMatchedAnd<int>(null, null))                        .GetGenericMethodDefinition();
-		private static readonly MethodInfo _insertWhenNotMatchedAndMethodInfo2        = MemberHelper.MethodOf(() => InsertWhenNotMatchedAnd<int, int>(null, null, null))             .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenMatchedMethodInfo1              = MemberHelper.MethodOf(() => UpdateWhenMatched<int>(null))                                    .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenMatchedMethodInfo2              = MemberHelper.MethodOf(() => UpdateWhenMatched<int, int>(null, null))                         .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenMatchedAndMethodInfo1           = MemberHelper.MethodOf(() => UpdateWhenMatchedAnd<int>(null, null))                           .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenMatchedAndMethodInfo2           = MemberHelper.MethodOf(() => UpdateWhenMatchedAnd<int, int>(null, null, null))                .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenMatchedThenDeleteMethodInfo1    = MemberHelper.MethodOf(() => UpdateWhenMatchedThenDelete<int>(null, null))                    .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenMatchedThenDeleteMethodInfo2    = MemberHelper.MethodOf(() => UpdateWhenMatchedThenDelete<int, int>(null, null, null))         .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenMatchedAndThenDeleteMethodInfo1 = MemberHelper.MethodOf(() => UpdateWhenMatchedAndThenDelete<int>(null, null, null))           .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenMatchedAndThenDeleteMethodInfo2 = MemberHelper.MethodOf(() => UpdateWhenMatchedAndThenDelete<int, int>(null, null, null, null)).GetGenericMethodDefinition();
-		private static readonly MethodInfo _deleteWhenMatchedMethodInfo               = MemberHelper.MethodOf(() => DeleteWhenMatched<int, int>(null))                               .GetGenericMethodDefinition();
-		private static readonly MethodInfo _deleteWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => DeleteWhenMatchedAnd<int, int>(null, null))                      .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenNotMatchedBySourceMethodInfo    = MemberHelper.MethodOf(() => UpdateWhenNotMatchedBySource<int, int>(null, null))              .GetGenericMethodDefinition();
-		private static readonly MethodInfo _updateWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => UpdateWhenNotMatchedBySourceAnd<int, int>(null, null, null))     .GetGenericMethodDefinition();
-		private static readonly MethodInfo _deleteWhenNotMatchedBySourceMethodInfo    = MemberHelper.MethodOf(() => DeleteWhenNotMatchedBySource<int, int>(null))                    .GetGenericMethodDefinition();
-		private static readonly MethodInfo _deleteWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => DeleteWhenNotMatchedBySourceAnd<int, int>(null, null))           .GetGenericMethodDefinition();
-		private static readonly MethodInfo _executeMergeMethodInfo                    = MemberHelper.MethodOf(() => Merge<int, int>(null))                                           .GetGenericMethodDefinition();
+		internal static readonly MethodInfo MergeMethodInfo                           = MemberHelper.MethodOf(() => Merge<int>(null, null))                                          .GetGenericMethodDefinition();
+		internal static readonly MethodInfo MergeIntoMethodInfo                       = MemberHelper.MethodOf(() => MergeInto<int, int>(null, null, null))                           .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UsingMethodInfo1                          = MemberHelper.MethodOf(() => Using<int, int>(null, (IQueryable<int>)null))                    .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UsingMethodInfo2                          = MemberHelper.MethodOf(() => Using<int, int>(null, (IEnumerable<int>)null))                   .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UsingTargetMethodInfo                     = MemberHelper.MethodOf(() => UsingTarget<int>(null))                                          .GetGenericMethodDefinition();
+		internal static readonly MethodInfo OnMethodInfo1                             = MemberHelper.MethodOf(() => On<int, int, int>(null, null, null))                             .GetGenericMethodDefinition();
+		internal static readonly MethodInfo OnMethodInfo2                             = MemberHelper.MethodOf(() => On<int, int>(null, null))                                        .GetGenericMethodDefinition();
+		internal static readonly MethodInfo OnTargetKeyMethodInfo                     = MemberHelper.MethodOf(() => OnTargetKey<int>(null))                                          .GetGenericMethodDefinition();
+		internal static readonly MethodInfo InsertWhenNotMatchedAndMethodInfo         = MemberHelper.MethodOf(() => InsertWhenNotMatchedAnd<int, int>(null, null, null))             .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => UpdateWhenMatchedAnd<int, int>(null, null, null))                .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateWhenMatchedAndThenDeleteMethodInfo  = MemberHelper.MethodOf(() => UpdateWhenMatchedAndThenDelete<int, int>(null, null, null, null)).GetGenericMethodDefinition();
+		internal static readonly MethodInfo DeleteWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => DeleteWhenMatchedAnd<int, int>(null, null))                      .GetGenericMethodDefinition();
+		internal static readonly MethodInfo UpdateWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => UpdateWhenNotMatchedBySourceAnd<int, int>(null, null, null))     .GetGenericMethodDefinition();
+		internal static readonly MethodInfo DeleteWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => DeleteWhenNotMatchedBySourceAnd<int, int>(null, null))           .GetGenericMethodDefinition();
+		internal static readonly MethodInfo ExecuteMergeMethodInfo                    = MemberHelper.MethodOf(() => Merge<int, int>(null))                                           .GetGenericMethodDefinition();
+
 		#endregion
 
 		private class MergeQuery<TTarget, TSource> :
@@ -77,8 +64,8 @@ namespace LinqToDB
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_mergeMethodInfo1.MakeGenericMethod(typeof(TTarget)),
-					new[] { target.Expression }));
+					MergeMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					new[] { target.Expression, Expression.Constant(null, typeof(string)) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -101,7 +88,7 @@ namespace LinqToDB
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_mergeMethodInfo2.MakeGenericMethod(typeof(TTarget)),
+					MergeMethodInfo.MakeGenericMethod(typeof(TTarget)),
 					new[] { target.Expression, Expression.Constant(hint) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
@@ -126,8 +113,8 @@ namespace LinqToDB
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_mergeIntoMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { source.Expression, target.Expression }));
+					MergeIntoMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { source.Expression, target.Expression, Expression.Constant(null, typeof(string)) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -154,7 +141,7 @@ namespace LinqToDB
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_mergeIntoMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					MergeIntoMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { source.Expression, target.Expression, Expression.Constant(hint) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -180,7 +167,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_usingMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					UsingMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, source.Expression }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -206,7 +193,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_usingMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					UsingMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, Expression.Constant(source) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -228,7 +215,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_usingTargetMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					UsingTargetMethodInfo.MakeGenericMethod(typeof(TTarget)),
 					new[] { mergeQuery.Expression }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
@@ -260,7 +247,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_onMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TKey)),
+					OnMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TKey)),
 					new[] { mergeQuery.Expression, Expression.Quote(targetKey), Expression.Quote(sourceKey) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -286,7 +273,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_onMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					OnMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, Expression.Quote(matchCondition) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -308,7 +295,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_onTargetKeyMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					OnTargetKeyMethodInfo.MakeGenericMethod(typeof(TTarget)),
 					new[] { mergeQuery.Expression }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
@@ -334,8 +321,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_insertWhenNotMatchedMethodInfo1.MakeGenericMethod(typeof(TTarget)),
-					new[] { mergeQuery.Expression }));
+					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget>>)) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -362,8 +349,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_insertWhenNotMatchedAndMethodInfo1.MakeGenericMethod(typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition) }));
+					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget>>)) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -391,8 +378,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_insertWhenNotMatchedMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(setter) }));
+					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TSource, bool>>)), Expression.Quote(setter) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -424,7 +411,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_insertWhenNotMatchedAndMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -450,8 +437,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenMatchedMethodInfo1.MakeGenericMethod(typeof(TTarget)),
-					new[] { mergeQuery.Expression }));
+					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -478,8 +465,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenMatchedAndMethodInfo1.MakeGenericMethod(typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition) }));
+					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -507,8 +494,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenMatchedMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(setter) }));
+					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)), Expression.Quote(setter) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -540,7 +527,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenMatchedAndMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -571,8 +558,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenMatchedThenDeleteMethodInfo1.MakeGenericMethod(typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Quote(deleteCondition) }));
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, bool>>)), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -604,8 +591,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenMatchedAndThenDeleteMethodInfo1.MakeGenericMethod(typeof(TTarget)),
-					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(deleteCondition) }));
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Constant(null, typeof(Expression<Func<TTarget, TTarget, TTarget>>)), Expression.Quote(deleteCondition) }));
 
 			return new MergeQuery<TTarget, TTarget>(query);
 		}
@@ -638,8 +625,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenMatchedThenDeleteMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(setter), Expression.Quote(deleteCondition) }));
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)), Expression.Quote(setter), Expression.Quote(deleteCondition) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -676,7 +663,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenMatchedAndThenDeleteMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					UpdateWhenMatchedAndThenDeleteMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter), Expression.Quote(deleteCondition) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -703,8 +690,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_deleteWhenMatchedMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression }));
+					DeleteWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, TSource, bool>>)) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -731,7 +718,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_deleteWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					DeleteWhenMatchedAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, Expression.Quote(searchCondition) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -763,8 +750,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenNotMatchedBySourceMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression, Expression.Quote(setter) }));
+					UpdateWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)), Expression.Quote(setter) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -797,7 +784,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_updateWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					UpdateWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, Expression.Quote(searchCondition), Expression.Quote(setter) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -825,8 +812,8 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_deleteWhenNotMatchedBySourceMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					new[] { mergeQuery.Expression }));
+					DeleteWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					new[] { mergeQuery.Expression, Expression.Constant(null, typeof(Expression<Func<TTarget, bool>>)) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
@@ -854,7 +841,7 @@ namespace LinqToDB
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					_deleteWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					DeleteWhenNotMatchedBySourceAndMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					new[] { mergeQuery.Expression, Expression.Quote(searchCondition) }));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -881,7 +868,7 @@ namespace LinqToDB
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					_executeMergeMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					ExecuteMergeMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					currentQuery.Expression));
 		}
 		#endregion
@@ -907,7 +894,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				_executeMergeMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+				ExecuteMergeMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 				currentQuery.Expression);
 
 			if (currentQuery is IQueryProviderAsync query)

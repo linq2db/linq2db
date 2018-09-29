@@ -130,6 +130,62 @@ namespace Tests.xUpdate
 		class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>
 		{ }
 
+		private class FakeMergeQuery<TTarget, TSource> :
+			IMergeableUsing<TTarget>,
+			IMergeableOn<TTarget, TSource>,
+			IMergeableSource<TTarget, TSource>,
+			IMergeable<TTarget, TSource>,
+			IQueryable<TTarget>
+		{
+			private readonly Expression _expression;
+
+			public FakeMergeQuery(Expression expression)
+			{
+				_expression = expression;
+			}
+
+			public IQueryable<TTarget> Query => this;
+
+			public Expression Expression => _expression;
+
+			public Type ElementType => throw new NotImplementedException();
+
+			public IQueryProvider Provider => new FakeQueryProvider();
+
+			public IEnumerator<TTarget> GetEnumerator()
+			{
+				throw new NotImplementedException();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		class FakeQueryProvider : IQueryProvider
+		{
+			IQueryable IQueryProvider.CreateQuery(Expression expression)
+			{
+				throw new NotImplementedException();
+			}
+
+			IQueryable<TElement> IQueryProvider.CreateQuery<TElement>(Expression expression)
+			{
+				return new FakeMergeQuery<TElement, TElement>(expression);
+			}
+
+			object IQueryProvider.Execute(Expression expression)
+			{
+				throw new NotImplementedException();
+			}
+
+			TResult IQueryProvider.Execute<TResult>(Expression expression)
+			{
+				throw new NotImplementedException();
+			}
+		}
+
 		class FakeTable<TEntity> : ITable<TEntity>
 		{
 			IDataContext   IExpressionQuery.DataContext => throw new NotImplementedException();
@@ -137,11 +193,11 @@ namespace Tests.xUpdate
 			string         IExpressionQuery.SqlText     => throw new NotImplementedException();
 			Type           IQueryable.      ElementType => throw new NotImplementedException();
 			Expression     IQueryable.      Expression  => throw new NotImplementedException();
-			IQueryProvider IQueryable.      Provider    => new EnumerableQuery<TEntity>(Array.Empty<TEntity>());
+			IQueryProvider IQueryable.      Provider    => new FakeQueryProvider();
 
 			Expression IExpressionQuery<TEntity>.Expression
 			{
-				get => Expression.Constant(this);
+				get => Expression.Constant((ITable<TEntity>)this);
 				set => throw new NotImplementedException();
 			}
 

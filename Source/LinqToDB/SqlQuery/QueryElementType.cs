@@ -50,6 +50,7 @@ namespace LinqToDB.SqlQuery
 		InsertOrUpdateStatement,
 		UpdateStatement,
 		DeleteStatement,
+		MergeStatement,
 
 		CreateTableStatement,
 		DropTableStatement,

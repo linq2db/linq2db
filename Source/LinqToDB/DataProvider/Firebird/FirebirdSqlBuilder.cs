@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using SqlProvider;
 	using System.Text;
 
-	public class FirebirdSqlBuilder : BasicSqlBuilder
+	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
 		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)

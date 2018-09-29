@@ -12,7 +12,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using SqlQuery;
 
-	public abstract class BasicSqlBuilder : ISqlBuilder
+	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
 		#region Init
 
@@ -152,15 +152,16 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (Statement.QueryType)
 			{
-				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                     break;
-				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                     break;
+				case QueryType.Select        : BuildSelectQuery           ((SqlSelectStatement)Statement);                                            break;
+				case QueryType.Delete        : BuildDeleteQuery           ((SqlDeleteStatement)Statement);                                            break;
 				case QueryType.Update        : BuildUpdateQuery           (Statement, Statement.SelectQuery, ((SqlUpdateStatement)Statement).Update); break;
-				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert, false); break;
-				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);             break;
-				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                break;
-				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                  break;
-				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);              break;
-				default                      : BuildUnknownQuery();        break;
+				case QueryType.Insert        : BuildInsertQuery           (Statement, ((SqlInsertStatement)Statement).Insert, false);                 break;
+				case QueryType.InsertOrUpdate: BuildInsertOrUpdateQuery   ((SqlInsertOrUpdateStatement)Statement);                                    break;
+				case QueryType.CreateTable   : BuildCreateTableStatement  ((SqlCreateTableStatement)Statement);                                       break;
+				case QueryType.DropTable     : BuildDropTableStatement    ((SqlDropTableStatement)Statement);                                         break;
+				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                     break;
+				case QueryType.Merge         : BuildMergeStatement        ((SqlMergeStatement)Statement);                                             break;
+				default                      : BuildUnknownQuery();                                                                                   break;
 			}
 		}
 

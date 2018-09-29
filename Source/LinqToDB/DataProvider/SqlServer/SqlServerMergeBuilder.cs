@@ -30,16 +30,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		// all operations should have different types
 		protected override bool SameTypeOperationsAllowed => false;
 
-		protected override void BuildTerminator()
-		{
-			// merge command must be terminated with semicolon
-			Command.AppendLine(";");
-
-			// disable explicit identity insert
-			if (_hasIdentityInsert)
-				Command.AppendFormat("SET IDENTITY_INSERT {0} OFF", TargetTableName).AppendLine();
-		}
-
 		protected override void OnInsertWithIdentity()
 		{
 			// enable explicit identity insert
@@ -78,23 +68,5 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override bool MergeHintsSupported => true;
-
-		protected override void BuildMergeInto()
-		{
-			Command
-				.Append("MERGE INTO ")
-				.Append(TargetTableName)
-				.Append(" ");
-
-			if (Merge.Hint != null)
-			{
-				Command
-					.Append("WITH(")
-					.Append(Merge.Hint)
-					.Append(") ");
-			}
-
-			Command.AppendLine((string)SqlBuilder.Convert(TargetAlias, ConvertType.NameToQueryTableAlias));
-		}
 	}
 }

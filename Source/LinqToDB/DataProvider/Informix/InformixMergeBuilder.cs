@@ -30,9 +30,6 @@ namespace LinqToDB.DataProvider.Informix
 		// sysmaster:'informix'.sysdual
 		protected override string FakeSourceTable => "table(set{1})";
 
-		// parameters in source select list not supported
-		protected override bool SupportsParametersInSource => false;
-
 		protected override void AddFakeSourceTableName()
 		{
 			Command.Append(FakeSourceTable);
@@ -98,24 +95,5 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override bool MergeHintsSupported => true;
 
-		protected override void BuildMergeInto()
-		{
-			Command
-				.Append("MERGE ");
-
-			if (Merge.Hint != null)
-			{
-				Command
-					.Append("{+ ")
-					.Append(Merge.Hint)
-					.Append(" } ");
-			}
-
-			Command
-				.Append("INTO ")
-				.Append(TargetTableName)
-				.Append(" ")
-				.AppendLine((string)SqlBuilder.Convert(TargetAlias, ConvertType.NameToQueryTableAlias));
-		}
 	}
 }

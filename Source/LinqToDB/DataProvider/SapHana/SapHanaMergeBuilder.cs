@@ -58,15 +58,6 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override bool SupportsColumnAliasesInTableAlias
-		{
-			get
-			{
-				// TABLE_ALIAS(COLUMN_ALIAS, ...) syntax not supported
-				return false;
-			}
-		}
-
 		protected override bool EmptySourceSupported
 		{
 			get

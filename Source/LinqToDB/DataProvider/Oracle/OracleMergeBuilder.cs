@@ -37,9 +37,6 @@ namespace LinqToDB.DataProvider.Oracle
 		// dual table owner
 		protected override string FakeSourceTableSchema => "sys";
 
-		// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
-		protected override bool SupportsColumnAliasesInTableAlias => false;
-
 		// oracle doesn't support INSERT FROM
 		protected override bool ProviderUsesAlternativeUpdate => true;
 
@@ -121,25 +118,5 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		protected override bool MergeHintsSupported => true;
-
-		protected override void BuildMergeInto()
-		{
-			Command
-				.Append("MERGE ");
-
-			if (Merge.Hint != null)
-			{
-				Command
-					.Append("/*+ ")
-					.Append(Merge.Hint)
-					.Append(" */ ");
-			}
-
-			Command
-				.Append("INTO ")
-				.Append(TargetTableName)
-				.Append(" ")
-				.AppendLine((string)SqlBuilder.Convert(TargetAlias, ConvertType.NameToQueryTableAlias));
-		}
 	}
 }

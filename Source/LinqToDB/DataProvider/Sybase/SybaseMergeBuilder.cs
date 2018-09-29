@@ -48,12 +48,6 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		protected override void BuildTerminator()
-		{
-			if (_hasIdentityInsert)
-				Command.AppendFormat("SET IDENTITY_INSERT {0} OFF", TargetTableName).AppendLine();
-		}
-
 		protected override void OnInsertWithIdentity()
 		{
 			if (!_hasIdentityInsert)

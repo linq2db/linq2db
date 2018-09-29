@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	struct IsExpressionResult
 	{
 		/// <summary>
-		/// Indicates when test or request was successfull.
+		/// Indicates when test or request was successful.
 		/// </summary>
 		public readonly bool          Result;
 

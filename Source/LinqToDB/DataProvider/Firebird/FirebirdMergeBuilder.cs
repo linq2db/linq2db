@@ -44,20 +44,6 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		protected override bool SupportsParametersInSource
-		{
-			get
-			{
-				// source subquery select list shouldn't contain parameters otherwise following error will be
-				// generated:
-				//
-				// FirebirdSql.Data.Common.IscException : Dynamic SQL Error
-				// SQL error code = -804
-				//Data type unknown
-				return false;
-			}
-		}
-
 		protected override void AddSourceValue(
 			ValueToSqlConverter valueConverter,
 			ColumnDescriptor    column,

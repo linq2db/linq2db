@@ -300,8 +300,10 @@ namespace LinqToDB.DataProvider
 		{
 			Command.AppendLine("USING");
 
-			if (Merge.QueryableSource != null && SupportsSourceSubQuery)
-				BuildSourceSubQuery(Merge.QueryableSource);
+			if (Merge.QueryableSource != null)
+			{
+				//BuildSourceSubQuery(Merge.QueryableSource);
+			}
 			else
 			{
 				var source = Merge.EnumerableSource ?? Merge.QueryableSource;
@@ -384,64 +386,64 @@ namespace LinqToDB.DataProvider
 			hasData = true;
 		}
 
-		private void BuildSourceSubQuery(IQueryable<TSource> queryableSource)
-		{
-			Command.AppendLine("(");
+		//private void BuildSourceSubQuery(IQueryable<TSource> queryableSource)
+		//{
+		//	Command.AppendLine("(");
 
-			var inlineParameters = _connection.InlineParameters;
-			try
-			{
-				_connection.InlineParameters = !SupportsParametersInSource;
+		//	var inlineParameters = _connection.InlineParameters;
+		//	try
+		//	{
+		//		_connection.InlineParameters = !SupportsParametersInSource;
 
-				var ctx = queryableSource.GetMergeContext();
+		//		var ctx = queryableSource.GetMergeContext();
 
-				ctx.UpdateParameters();
+		//		ctx.UpdateParameters();
 
-				var statement = ctx.GetResultStatement();
+		//		var statement = ctx.GetResultStatement();
 
-				foreach (var columnInfo in ctx.Columns)
-				{
-					var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.Members[0]);
-					var column           = statement.SelectQuery.Select.Columns[columnInfo.Index];
+		//		foreach (var columnInfo in ctx.Columns)
+		//		{
+		//			var columnDescriptor = _sourceDescriptor.Columns.Single(_ => _.MemberInfo == columnInfo.Members[0]);
+		//			var column           = statement.SelectQuery.Select.Columns[columnInfo.Index];
 
-					SetColumnAlias(column.Alias, columnDescriptor.ColumnName);
-				}
+		//			SetColumnAlias(column.Alias, columnDescriptor.ColumnName);
+		//		}
 
-				// bind parameters
-				statement.Parameters.Clear();
-				new QueryVisitor().VisitAll(ctx.SelectQuery, expr =>
-				{
-					switch (expr.ElementType)
-					{
-						case QueryElementType.SqlParameter:
-							{
-								var p = (SqlParameter)expr;
-								if (p.IsQueryParameter)
-									statement.Parameters.Add(p);
+		//		// bind parameters
+		//		statement.Parameters.Clear();
+		//		new QueryVisitor().VisitAll(ctx.SelectQuery, expr =>
+		//		{
+		//			switch (expr.ElementType)
+		//			{
+		//				case QueryElementType.SqlParameter:
+		//					{
+		//						var p = (SqlParameter)expr;
+		//						if (p.IsQueryParameter)
+		//							statement.Parameters.Add(p);
 
-								break;
-							}
-					}
-				});
+		//						break;
+		//					}
+		//			}
+		//		});
 
-				ctx.SetParameters();
+		//		ctx.SetParameters();
 
-				SaveParameters(statement.Parameters);
+		//		SaveParameters(statement.Parameters);
 
-				SqlBuilder.BuildSql(0, statement, Command, startIndent : 1);
+		//		SqlBuilder.BuildSql(0, statement, Command, startIndent : 1);
 
-				var cs = new [] { ' ', '\t', '\r', '\n' };
+		//		var cs = new [] { ' ', '\t', '\r', '\n' };
 
-				while (cs.Contains(Command[Command.Length - 1]))
-					Command.Length--;
-			}
-			finally
-			{
-				_connection.InlineParameters = inlineParameters;
-			}
+		//		while (cs.Contains(Command[Command.Length - 1]))
+		//			Command.Length--;
+		//	}
+		//	finally
+		//	{
+		//		_connection.InlineParameters = inlineParameters;
+		//	}
 
-			BuildAsSourceClause(null);
-		}
+		//	BuildAsSourceClause(null);
+		//}
 
 		private void BuildSourceSubQueryValues(IEnumerable<TSource> source)
 		{
@@ -554,20 +556,6 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region MERGE Generation
-		protected virtual void BuildMatch()
-		{
-			Command.Append("ON (");
-
-			if (Merge.KeyType != null)
-				BuildPredicateByKeys(Merge.KeyType, Merge.TargetKey, Merge.SourceKey);
-			else
-				BuildPredicateByTargetAndSource(Merge.MatchPredicate ?? MakeDefaultMatchPredicate());
-
-			while (Command[Command.Length - 1] == ' ')
-				Command.Length--;
-
-			Command.AppendLine(")");
-		}
 
 		protected Expression<Func<TTarget, TSource, bool>> MakeDefaultMatchPredicate()
 		{
@@ -593,56 +581,6 @@ namespace LinqToDB.DataProvider
 			return Expression.Lambda<Func<TTarget, TSource, bool>>(ex, pTarget, pSource);
 		}
 
-		protected virtual void BuildMergeInto()
-		{
-			Command
-				.Append("MERGE INTO ")
-				.Append(TargetTableName)
-				.Append(" ")
-				.AppendLine((string)SqlBuilder.Convert(TargetAlias, ConvertType.NameToQueryTableAlias));
-		}
-
-		protected virtual void BuildOperation(MergeDefinition<TTarget, TSource>.Operation operation)
-		{
-			switch (operation.Type)
-			{
-				case MergeOperationType.Update:
-					BuildUpdate(operation.MatchedPredicate, operation.UpdateExpression);
-					break;
-				case MergeOperationType.Delete:
-					BuildDelete(operation.MatchedPredicate);
-					break;
-				case MergeOperationType.Insert:
-					BuildInsert(operation.NotMatchedPredicate, operation.CreateExpression);
-					break;
-				case MergeOperationType.UpdateWithDelete:
-					BuildUpdateWithDelete(operation.MatchedPredicate, operation.UpdateExpression, operation.MatchedPredicate2);
-					break;
-				case MergeOperationType.DeleteBySource:
-					BuildDeleteBySource(operation.BySourcePredicate);
-					break;
-				case MergeOperationType.UpdateBySource:
-					BuildUpdateBySource(operation.BySourcePredicate, operation.UpdateBySourceExpression);
-					break;
-				default:
-					throw new InvalidOperationException();
-			}
-		}
-
-		/// <summary>
-		/// Allows to add text before generated merge command.
-		/// </summary>
-		protected virtual void BuildPreambule()
-		{
-		}
-
-		/// <summary>
-		/// Allows to add text after generated merge command. E.g. to specify command terminator if provider requires it.
-		/// </summary>
-		protected virtual void BuildTerminator()
-		{
-		}
-
 		protected virtual void BuildUpdateWithDelete(
 			Expression<Func<TTarget, TSource, bool>>    updatePredicate,
 			Expression<Func<TTarget, TSource, TTarget>> updateExpression,
@@ -654,23 +592,17 @@ namespace LinqToDB.DataProvider
 
 		private void BuildCommandText()
 		{
-			BuildPreambule();
-
-			BuildMergeInto();
-
 			BuildSource();
 
 			if (NoopCommand)
 				return;
 
-			BuildMatch();
+			//BuildMatch();
 
-			foreach (var operation in Merge.Operations)
-			{
-				BuildOperation(operation);
-			}
+			//foreach (var operation in Merge.Operations)
+			//	BuildOperation(operation);
 
-			BuildTerminator();
+			//BuildTerminator();
 		}
 		#endregion
 
@@ -685,26 +617,6 @@ namespace LinqToDB.DataProvider
 			{
 				Command.Append("AND ");
 				BuildPredicateByTargetAndSource(predicate);
-			}
-
-			Command
-				.AppendLine("THEN")
-				.AppendLine("DELETE")
-				;
-		}
-		#endregion
-
-		#region Operations: DELETE BY SOURCE
-		private void BuildDeleteBySource(Expression<Func<TTarget, bool>> predicate)
-		{
-			Command
-				.AppendLine()
-				.Append("WHEN NOT MATCHED By Source ");
-
-			if (predicate != null)
-			{
-				Command.Append("AND ");
-				BuildSingleTablePredicate(predicate, TargetAlias, false);
 			}
 
 			Command
@@ -1229,11 +1141,6 @@ namespace LinqToDB.DataProvider
 		protected BasicSqlBuilder SqlBuilder { get; private set;  }
 
 		/// <summary>
-		/// If true, provider allows to generate subquery as a source element of merge command.
-		/// </summary>
-		protected virtual bool SupportsSourceSubQuery => true;
-
-		/// <summary>
 		/// If true, provider supports column aliases specification after table alias.
 		/// E.g. as table_alias (column_alias1, column_alias2).
 		/// </summary>
@@ -1244,10 +1151,6 @@ namespace LinqToDB.DataProvider
 		/// </summary>
 		protected virtual bool SupportsSourceDirectValues => true;
 
-		/// <summary>
-		/// If false, parameters in source subquery select list must have type.
-		/// </summary>
-		protected virtual bool SupportsParametersInSource => true;
 
 		protected EntityDescriptor TargetDescriptor { get; private set; }
 

@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 					var arg1 = new1.Arguments[i];
 					var arg2 = new2.Arguments[i];
 
-					BuildJoin(builder, join, outerKeyContext, arg1, innerKeyContext, arg2);
+					BuildJoin(builder, join.JoinedTable.Condition, outerKeyContext, arg1, innerKeyContext, arg2);
 				}
 			}
 			else if (outerKeySelector.NodeType == ExpressionType.MemberInit)
@@ -97,12 +97,12 @@ namespace LinqToDB.Linq.Builder
 					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
 					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;
 
-					BuildJoin(builder, join, outerKeyContext, arg1, innerKeyContext, arg2);
+					BuildJoin(builder, join.JoinedTable.Condition, outerKeyContext, arg1, innerKeyContext, arg2);
 				}
 			}
 			else
 			{
-				BuildJoin(builder, join, outerKeyContext, outerKeySelector, innerKeyContext, innerKeySelector);
+				BuildJoin(builder, join.JoinedTable.Condition, outerKeyContext, outerKeySelector, innerKeyContext, innerKeySelector);
 			}
 
 			builder.ReplaceParent(outerKeyContext, outerParent);
@@ -198,9 +198,9 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		static void BuildJoin(
+		internal static void BuildJoin(
 			ExpressionBuilder builder,
-			SqlFromClause.Join join,
+			SqlSearchCondition condition,
 			IBuildContext outerKeyContext, Expression outerKeySelector,
 			IBuildContext innerKeyContext, Expression innerKeySelector)
 		{
@@ -219,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 				predicate = builder.Convert(outerKeyContext, predicate);
 			}
 
-			join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, predicate));
+			condition.Conditions.Add(new SqlCondition(false, predicate));
 		}
 
 		static void BuildSubQueryJoin(
@@ -246,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 			subQuerySelect.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
 		}
 
-		class InnerKeyContext : ExpressionContext
+		internal class InnerKeyContext : ExpressionContext
 		{
 			public InnerKeyContext(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)
 				: base(parent, sequence, lambda)

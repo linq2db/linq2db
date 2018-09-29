@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlQuery;
 	using SqlProvider;
 
-	class SapHanaSqlBuilder : BasicSqlBuilder
+	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
 		public SapHanaSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)

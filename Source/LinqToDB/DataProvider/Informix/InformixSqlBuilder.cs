@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlProvider;
 	using System.Globalization;
 
-	class InformixSqlBuilder : BasicSqlBuilder
+	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
 		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)

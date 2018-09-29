@@ -141,13 +141,13 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[TestCaseSource(nameof(_validationNegativeCases))]
+		//[TestCaseSource(nameof(_validationNegativeCases))]
 		public void MergeOperationsValidationNegative(ValidationTestMergeBuilder validator, string error)
 		{
 			Assert.That(() => validator.Validate(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(error));
 		}
 
-		[TestCaseSource(nameof(_validationPositiveCases))]
+		//[TestCaseSource(nameof(_validationPositiveCases))]
 		public void MergeOperationsValidationPositive(ValidationTestMergeBuilder validator)
 		{
 			validator.Validate();

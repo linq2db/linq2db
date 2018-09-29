@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using System.Text;
 
-	class OracleSqlBuilder : BasicSqlBuilder
+	partial class OracleSqlBuilder : BasicSqlBuilder
 	{
 		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
