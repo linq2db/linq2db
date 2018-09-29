@@ -133,8 +133,7 @@ namespace LinqToDB.SqlQuery
 				var currentGroupItems = new HashSet<ISqlExpression>(select.Select.GroupBy.Items);
 				select.Select.GroupBy.Items.AddRange(
 					select.Select.Columns.Select(c => c.Expression)
-						.Where(e => !currentGroupItems.Contains(e))
-				);
+						.Where(e => !currentGroupItems.Contains(e)));
 
 				select.Select.IsDistinct = false;
 

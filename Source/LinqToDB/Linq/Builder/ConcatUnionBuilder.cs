@@ -95,14 +95,14 @@ namespace LinqToDB.Linq.Builder
 				if (!_isObject)
 					return;
 
-				var members = new List<UnionMember>();
+				var unionMembers = new List<UnionMember>();
 
 				foreach (var info in info1)
 				{
-					if (info.Members.Count == 0)
+					if (info.MemberChain.Count == 0)
 						throw new InvalidOperationException();
 
-					var mi = info.Members.First(m => m.DeclaringType.IsSameOrParentOf(_unionParameter.Type));
+					var mi = info.MemberChain.First(m => m.DeclaringType.IsSameOrParentOf(_unionParameter.Type));
 
 					var member = new Member
 					{
@@ -110,22 +110,22 @@ namespace LinqToDB.Linq.Builder
 						MemberExpression = Expression.MakeMemberAccess(_unionParameter, mi)
 					};
 
-					members.Add(new UnionMember { Member = member, Info1 = info });
+					unionMembers.Add(new UnionMember { Member = member, Info1 = info });
 				}
 
 				foreach (var info in info2)
 				{
-					if (info.Members.Count == 0)
+					if (info.MemberChain.Count == 0)
 						throw new InvalidOperationException();
 
-					var em = members.FirstOrDefault(m =>
+					var em = unionMembers.FirstOrDefault(m =>
 						m.Member.SequenceInfo != null &&
 						m.Info2 == null &&
 						m.Member.SequenceInfo.CompareMembers(info));
 
 					if (em == null)
 					{
-						em = members.FirstOrDefault(m =>
+						em = unionMembers.FirstOrDefault(m =>
 							m.Member.SequenceInfo != null &&
 							m.Info2 == null &&
 							m.Member.SequenceInfo.CompareLastMember(info));
@@ -133,12 +133,12 @@ namespace LinqToDB.Linq.Builder
 
 					if (em == null)
 					{
-						var member = new Member { MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.Members[0]) };
+						var member = new Member { MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.MemberChain[0]) };
 
 						if (_sequence2.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
 							throw new LinqException("Types in {0} are constructed incompatibly.", _methodCall.Method.Name);
 
-						members.Add(new UnionMember { Member = member, Info2 = info });
+						unionMembers.Add(new UnionMember { Member = member, Info2 = info });
 					}
 					else
 					{
@@ -149,14 +149,14 @@ namespace LinqToDB.Linq.Builder
 				_sequence1.SelectQuery.Select.Columns.Clear();
 				_sequence2.SelectQuery.Select.Columns.Clear();
 
-				for (var i = 0; i < members.Count; i++)
+				for (var i = 0; i < unionMembers.Count; i++)
 				{
-					var member = members[i];
+					var member = unionMembers[i];
 
 					if (member.Info1 == null)
 					{
-						var type = members.First(m => m.Info1 != null).Info1.Members.First().GetMemberType();
-						member.Info1 = new SqlInfo(member.Info2.Members)
+						var type = unionMembers.First(m => m.Info1 != null).Info1.MemberChain.First().GetMemberType();
+						member.Info1 = new SqlInfo(member.Info2.MemberChain)
 						{
 							Sql   = new SqlValue(type, null),
 							Query = _sequence1.SelectQuery,
@@ -167,10 +167,10 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info2 == null)
 					{
-						var spam = members.First(m => m.Info2 != null).Info2.Members.First();
+						var spam = unionMembers.First(m => m.Info2 != null).Info2.MemberChain.First();
 						var type = spam.GetMemberType();
 
-						member.Info2 = new SqlInfo(member.Info1.Members)
+						member.Info2 = new SqlInfo(member.Info1.MemberChain)
 						{
 							Sql   = new SqlValue(type, null),
 							Query = _sequence2.SelectQuery,
@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 						if (nctor != null)
 						{
 							var members = nctor.Members
-								.Select(m => m is MethodInfo ? ((MethodInfo)m).GetPropertyInfo() : m)
+								.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
 								.ToList();
 
 							expr = Expression.New(
@@ -325,9 +325,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var ma = (MemberExpression)expression;
 
-									Member member;
-
-									if (!_members.TryGetValue(ma.Member, out member))
+									if (!_members.TryGetValue(ma.Member, out var member))
 									{
 										var ed = Builder.MappingSchema.GetEntityDescriptor(_type);
 
@@ -346,8 +344,7 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									if (member == null)
-										throw new LinqToDBException(
-											string.Format("Expression '{0}' is not a field.", expression));
+										throw new LinqToDBException($"Expression '{expression}' is not a field.");
 
 									if (member.SqlQueryInfo == null)
 									{

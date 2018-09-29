@@ -21,8 +21,7 @@
 		{
 			((ISqlExpressionWalkable)selectQuery).Walk(false, e =>
 			{
-				var q = e as SelectQuery;
-				if (q != null && q.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(q) && q.OrderBy.IsEmpty)
+				if (e is SelectQuery q && q.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(q) && q.OrderBy.IsEmpty)
 				{
 					if (q.Select.Columns.Count == 0)
 					{

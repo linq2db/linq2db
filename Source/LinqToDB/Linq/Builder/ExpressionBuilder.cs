@@ -1338,9 +1338,7 @@ namespace LinqToDB.Linq.Builder
 				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), new [] { p });
 				var n    = _query.AddQueryableAccessors(expression, l);
 
-				Expression accessor;
-
-				_expressionAccessors.TryGetValue(expression, out accessor);
+				_expressionAccessors.TryGetValue(expression, out var accessor);
 
 				var path =
 					Expression.Call(

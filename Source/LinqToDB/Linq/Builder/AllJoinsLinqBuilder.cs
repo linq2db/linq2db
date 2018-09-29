@@ -11,6 +11,9 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			if (methodCall.Method.DeclaringType != typeof(LinqExtensions))
+				return false;
+
 			return
 				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 5 ||
 				methodCall.IsQueryable("InnerJoin", "LeftJoin", "RightJoin", "FullJoin") && methodCall.Arguments.Count == 4 ||
@@ -70,7 +73,8 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildSearchCondition(
 					new ExpressionContext(null, new[] {outerContext, innerContext}, condition),
 					conditionExpr,
-					join.JoinedTable.Condition.Conditions);
+					join.JoinedTable.Condition.Conditions,
+					false);
 			}
 			else
 			{

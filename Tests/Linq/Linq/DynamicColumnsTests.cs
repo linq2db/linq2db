@@ -102,7 +102,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, result.Single().ID);
 			}
 		}
-		
+
 		[Test, DataContextSource]
 		public void SqlPropertyWithDynamicAssociation(string context)
 		{
@@ -277,7 +277,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, ConfigureDynamicClass()))
 			{
-				var expected = 
+				var expected =
 					from p in Person
 					join pa in Patient on p.FirstName equals pa.Diagnosis
 					select p;
@@ -380,13 +380,13 @@ namespace Tests.Linq
 				{
 					db.Insert(new DynamicTablePrototype { NotIdentifier = 77 });
 
-					var query = 
+					var query =
 						from d in db.GetTable<DynamicTable>()
 						select new
 						{
 							NI = Sql.Property<int>(d, "Not Identifier")
 						};
-					
+
 					var result = query.ToArray();
 
 					Assert.AreEqual(77, result[0].NI);
@@ -470,7 +470,7 @@ namespace Tests.Linq
 		{
 			[Column, Identity, PrimaryKey]
 			public int ID { get; set; }
-			
+
 			[Column("Not Identifier")]
 			public int NotIdentifier { get; set; }
 

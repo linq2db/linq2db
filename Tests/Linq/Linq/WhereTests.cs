@@ -1278,7 +1278,6 @@ namespace Tests.Linq
 				var act = actual.  Where(predicate);
 				AreEqual(exp, act, WhereCases.Comparer);
 
-
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 
@@ -1291,13 +1290,13 @@ namespace Tests.Linq
 			{
 				AreEqual(expected.Where(localPredicate.Compile()), actual.Where(predicate), WhereCases.Comparer);
 
-				var notlocalPredicate = Expression.Lambda<Func<WhereCases, bool>>(
+				var notLocalPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(localPredicate.Body), localPredicate.Parameters);
 
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 
-				AreEqual(expected.Where(notlocalPredicate.Compile()), actual.Where(notPredicate), WhereCases.Comparer);
+				AreEqual(expected.Where(notLocalPredicate.Compile()), actual.Where(notPredicate), WhereCases.Comparer);
 			}
 
 			using (var db = GetDataContext(context))
@@ -1330,6 +1329,15 @@ namespace Tests.Linq
 
 				AreEqualLocal(local, table, t => !(t.NullableBoolValue != true) && t.Id > 0);
 				AreEqualLocal(local, table, t => t.NullableBoolValue == true && t.Id > 0);
+
+				if (!context.StartsWith(ProviderName.Access))
+				{
+					AreEqualLocal(local, table, t => t.NullableBoolValue == null && t.Id > 0);
+					AreEqualLocal(local, table, t => t.NullableBoolValue != null && t.Id > 0);
+
+					AreEqualLocal(local, table, t => !(t.NullableBoolValue == null) && t.Id > 0);
+					AreEqualLocal(local, table, t => !(t.NullableBoolValue != null) && t.Id > 0);
+				}
 
 				AreEqualLocal(local, table, t => (!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
 				AreEqualLocal(local, table, t => !(!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
