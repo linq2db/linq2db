@@ -51,18 +51,12 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			string startPrefix = null;
-
-			if (value.Any(ch => ch > 127))
-				startPrefix = "N";
-
-			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversion, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			var start = value > 127 ? "N'" : "'";
-			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
 		}
 
 		internal static readonly SybaseMappingSchema Instance = new SybaseMappingSchema();
