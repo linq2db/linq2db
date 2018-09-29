@@ -257,7 +257,7 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.SybaseManaged)] public void SybaseManaged    (string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase",   null,          "TestDataCore"); }
 		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2              (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");                                     }
 		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix         (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction);                }
-		
+
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCe            (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");                                   }
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCeData        (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");                                   }
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access           (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction);                  }
