@@ -46,11 +46,11 @@ namespace LinqToDB.Mapping
 			DataType        = columnAttribute.DataType;
 			DbType          = columnAttribute.DbType;
 			CreateFormat    = columnAttribute.CreateFormat;
-			Order           = columnAttribute.Order;
 
 			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
 			if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
+			if (columnAttribute.HasOrder    ()) Order     = columnAttribute.Order;
 
 			if (Storage == null)
 			{
@@ -292,9 +292,9 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Sort order for column list.
-		/// Positive values first, then unspecified, then negative values.
+		/// Positive values first, then unspecified (null), then negative values.
 		/// </summary>
-		public int            Order           { get; private set; }
+		public int?           Order           { get; private set; }
 
 		/// <summary>
 		/// Gets sequence name for specified column.
