@@ -62,7 +62,7 @@ namespace Tests.UserTests
 		/// Confirm that tables creation uses the <see cref="ColumnAttribute.Order"/> field correctly.
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
 		public void TestAttributeMapping(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -75,17 +75,17 @@ namespace Tests.UserTests
 				Assert.IsNotNull(table);
 
 				// Confirm order of specified fields only
-				Assert.AreEqual("RecordID",         table.Columns[0].ColumnName);
-				Assert.AreEqual("EffectiveStart",   table.Columns[1].ColumnName);
-				Assert.AreEqual("EffectiveEnd",     table.Columns[2].ColumnName);
-				Assert.AreEqual("Key",              table.Columns[3].ColumnName);
-				Assert.AreEqual("Audit1ID",         table.Columns[6].ColumnName);
-				Assert.AreEqual("Audit2ID",         table.Columns[7].ColumnName);
+				Assert.AreEqual("recordid",         table.Columns[0].ColumnName.ToLower());
+				Assert.AreEqual("effectivestart",   table.Columns[1].ColumnName.ToLower());
+				Assert.AreEqual("effectiveend",     table.Columns[2].ColumnName.ToLower());
+				Assert.AreEqual("key",              table.Columns[3].ColumnName.ToLower());
+				Assert.AreEqual("audit1id",         table.Columns[6].ColumnName.ToLower());
+				Assert.AreEqual("audit2id",         table.Columns[7].ColumnName.ToLower());
 
 				// Confirm that unordered fields are in the right range of positions
-				string[] unordered = new[] { "Name", "Code" };
-				Assert.Contains(table.Columns[4].ColumnName, unordered);
-				Assert.Contains(table.Columns[5].ColumnName, unordered);
+				string[] unordered = new[] { "name", "code" };
+				Assert.Contains(table.Columns[4].ColumnName.ToLower(), unordered);
+				Assert.Contains(table.Columns[5].ColumnName.ToLower(), unordered);
 			}
 		}
 
@@ -93,7 +93,7 @@ namespace Tests.UserTests
 		/// Confirm that tables creation uses the <see cref="ColumnAttribute.Order"/> field correctly.
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource(false, ProviderName.SQLiteMS)]
 		public void TestFluentMapping(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -118,17 +118,17 @@ namespace Tests.UserTests
 					Assert.IsNotNull(table);
 
 					// Confirm order of specified fields only
-					Assert.AreEqual("RecordID"      , table.Columns[0].ColumnName);
-					Assert.AreEqual("EffectiveStart", table.Columns[1].ColumnName);
-					Assert.AreEqual("EffectiveEnd"  , table.Columns[2].ColumnName);
-					Assert.AreEqual("Key"           , table.Columns[3].ColumnName);
-					Assert.AreEqual("Audit1ID"      , table.Columns[6].ColumnName);
-					Assert.AreEqual("Audit2ID"      , table.Columns[7].ColumnName);
+					Assert.AreEqual("recordid"      , table.Columns[0].ColumnName.ToLower());
+					Assert.AreEqual("effectivestart", table.Columns[1].ColumnName.ToLower());
+					Assert.AreEqual("effectiveend"  , table.Columns[2].ColumnName.ToLower());
+					Assert.AreEqual("key"           , table.Columns[3].ColumnName.ToLower());
+					Assert.AreEqual("audit1id"      , table.Columns[6].ColumnName.ToLower());
+					Assert.AreEqual("audit2id"      , table.Columns[7].ColumnName.ToLower());
 
 					// Confirm that unordered fields are in the right range of positions
-					string[] unordered = new[] { "Unordered1", "Unordered2" };
-					Assert.Contains(table.Columns[4].ColumnName, unordered);
-					Assert.Contains(table.Columns[5].ColumnName, unordered);
+					string[] unordered = new[] { "unordered1", "unordered2" };
+					Assert.Contains(table.Columns[4].ColumnName.ToLower(), unordered);
+					Assert.Contains(table.Columns[5].ColumnName.ToLower(), unordered);
 				}
 			}
 		}
