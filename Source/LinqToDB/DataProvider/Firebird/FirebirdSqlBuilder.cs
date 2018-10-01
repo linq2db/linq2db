@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
 
 #region ReSharper disable
@@ -16,9 +15,12 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public class FirebirdSqlBuilder : BasicSqlBuilder
 	{
+		private readonly FirebirdDialect _dialect;
+
 		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
+			_dialect = sqlProviderFlags.GetDialect();
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -95,7 +97,7 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
 				case DataType.Int64:
 				case DataType.UInt64:
-					if (FirebirdConfiguration.UsedDialect == FirebirdConfiguration.FbDialect.Dialect1)
+					if (_dialect == FirebirdDialect.Dialect1)
 					{
 						StringBuilder.Append("Int");
 					}

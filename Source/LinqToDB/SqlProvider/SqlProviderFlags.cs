@@ -79,5 +79,18 @@ namespace LinqToDB.SqlProvider
 		/// Flags for use by external providers.
 		/// </summary>
 		public List<string> CustomFlags { get; } = new List<string>();
+
+		/// <summary>
+		/// Provider-specific options.
+		/// </summary>
+		internal IDictionary<string, object> ProviderOptions { get; } = new Dictionary<string, object>();
+
+		internal TValue GetProviderOption<TValue>(string name, TValue defaultValue = default)
+		{
+			if (ProviderOptions.TryGetValue(name, out var value) && value is TValue typedValue)
+				return typedValue;
+
+			return defaultValue;
+		}
 	}
 }

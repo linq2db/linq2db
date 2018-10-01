@@ -9,11 +9,29 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Data;
+	using LinqToDB.Extensions;
 	using Mapping;
 	using SqlProvider;
 
 	public class FirebirdDataProvider : DynamicDataProviderBase
 	{
+		static FirebirdDataProvider()
+		{
+			var p = Expression.Parameter(typeof(string));
+			var l = Expression.Lambda<Func<string, FirebirdDialect>>(
+				Expression.Convert(
+					Expression.Property(
+						Expression.New(
+							Type.GetType("FirebirdSql.Data.FirebirdClient.FbConnectionString, FirebirdSql.Data.FirebirdClient")
+								.GetConstructorEx(new[] { typeof(string) }),
+							p),
+						"Dialect"),
+					typeof(FirebirdDialect)),
+				p);
+
+			_getDialect = l.Compile();
+		}
+
 		public FirebirdDataProvider()
 			: this(ProviderName.Firebird, new FirebirdMappingSchema(), null)
 		{
@@ -67,6 +85,14 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
+		private static Func<string, FirebirdDialect> _getDialect;
+
+		protected override IDbConnection CreateConnectionInternal(string connectionString)
+		{
+			SqlProviderFlags.SetDialect(_getDialect(connectionString));
+			return base.CreateConnectionInternal(connectionString);
+		}
+
 		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
@@ -94,11 +120,12 @@ namespace LinqToDB.DataProvider.Firebird
 				dataType = DataType.Char;
 			}
 
-			if (FirebirdConfiguration.UsedDialect == FirebirdConfiguration.FbDialect.Dialect1 && (value is Int64 || value is UInt64))
+			if (SqlProviderFlags.GetDialect() == FirebirdDialect.Dialect1 && (value is long || value is ulong))
 			{
-				value = Convert.ToInt32(value);
+				value    = Convert.ToInt32(value);
 				dataType = DataType.Int32;
 			}
+
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
