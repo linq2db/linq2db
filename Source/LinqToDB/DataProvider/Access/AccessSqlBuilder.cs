@@ -67,18 +67,12 @@ namespace LinqToDB.DataProvider.Access
 
 				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)
 				{
-					if (selectQuery.Select.Columns[0].Expression is SqlFunction)
+					if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
 					{
-						var func = (SqlFunction) selectQuery.Select.Columns[0].Expression;
-
-						if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SqlSearchCondition)
+						if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SqlSearchCondition sc)
 						{
-							var sc = (SqlSearchCondition) func.Parameters[0];
-
-							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike)
+							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
 							{
-								var p = (SqlPredicate.FuncLike) sc.Conditions[0].Predicate;
-
 								if (p.Function.Name == "EXISTS")
 								{
 									BuildAnyAsCount(selectQuery);
@@ -87,14 +81,10 @@ namespace LinqToDB.DataProvider.Access
 							}
 						}
 					}
-					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition)
+					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition sc)
 					{
-						var sc = (SqlSearchCondition) selectQuery.Select.Columns[0].Expression;
-
-						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike)
+						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
 						{
-							var p = (SqlPredicate.FuncLike) sc.Conditions[0].Predicate;
-
 							if (p.Function.Name == "EXISTS")
 							{
 								BuildAnyAsCount(selectQuery);
@@ -114,9 +104,8 @@ namespace LinqToDB.DataProvider.Access
 		{
 			SqlSearchCondition cond;
 
-			if (selectQuery.Select.Columns[0].Expression is SqlFunction)
+			if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
 			{
-				var func  = (SqlFunction)selectQuery.Select.Columns[0].Expression;
 				cond  = (SqlSearchCondition)func.Parameters[0];
 			}
 			else

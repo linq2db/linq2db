@@ -103,7 +103,8 @@ namespace LinqToDB.Linq.Builder
 					Builder.BuildSearchCondition(
 						new ExpressionContext(parent.Parent, new IBuildContext[] { parent, this }, ExpressionPredicate),
 						expr,
-						join.JoinedTable.Condition.Conditions);
+						join.JoinedTable.Condition.Conditions,
+						false);
 				}
 
 				Init(false);
