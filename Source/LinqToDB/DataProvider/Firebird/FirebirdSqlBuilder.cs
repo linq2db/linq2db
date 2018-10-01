@@ -93,6 +93,17 @@ namespace LinqToDB.DataProvider.Firebird
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
+				case DataType.Int64:
+				case DataType.UInt64:
+					if (FirebirdConfiguration.UsedDialect == FirebirdConfiguration.FbDialect.Dialect1)
+					{
+						StringBuilder.Append("Int");
+					}
+					else
+					{
+						base.BuildDataType(type, createDbType);
+					}
+					break;
 				case DataType.Money         : StringBuilder.Append("Decimal(18,4)");   break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
 				case DataType.DateTime2     :
