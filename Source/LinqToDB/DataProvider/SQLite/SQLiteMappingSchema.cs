@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	using Mapping;
 	using SqlQuery;
+	using System.Data.Linq;
 
 	public class SQLiteMappingSchema : MappingSchema
 	{
@@ -21,8 +22,20 @@ namespace LinqToDB.DataProvider.SQLite
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+		}
+
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("X'");
+
+			foreach (var b in value)
+				stringBuilder.Append(b.ToString("X2"));
+
+			stringBuilder.Append("'");
 		}
 
 		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)

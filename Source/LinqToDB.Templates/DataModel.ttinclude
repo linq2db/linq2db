@@ -308,7 +308,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						IsOut         = pr.IsOut,
 						IsResult      = pr.IsResult,
 						Size          = pr.Size,
-						ParameterName = CheckParameterName(pr.ParameterName),
+						ParameterName = CheckParameterName(CheckType(pr.SystemType, pr.ParameterName)),
 						ParameterType = pr.ParameterType,
 						SystemType    = pr.SystemType,
 						DataType      = pr.DataType.ToString(),
@@ -483,6 +483,9 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var proc in Procedures.Values)
 	{
+		if (KeyWords.Contains(proc.Name))
+			proc.Name = "@" + proc.Name;
+
 		foreach (var param in proc.ProcParameters)
 		{
 			if (KeyWords.Contains(param.ParameterName))

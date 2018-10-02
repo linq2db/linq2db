@@ -115,7 +115,10 @@ namespace LinqToDB.DataProvider.Firebird
 						StringBuilder.Append('(').Append(type.Length).Append(')');
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					break;
-				default                      : base.BuildDataType(type, createDbType); break;
+				case DataType.VarBinary     :
+					StringBuilder.Append("BLOB");
+					break;
+				default: base.BuildDataType(type, createDbType); break;
 			}
 		}
 
