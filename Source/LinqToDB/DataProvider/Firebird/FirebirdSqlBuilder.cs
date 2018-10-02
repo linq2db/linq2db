@@ -98,12 +98,12 @@ namespace LinqToDB.DataProvider.Firebird
 				//	else
 				//		base.BuildDataType(type, createDbType);
 				//	break;
-				case DataType.UInt32:
-					if (SqlProviderFlags.GetDialect() == FirebirdDialect.Dialect1)
-						StringBuilder.Append("Int");
-					else
-						base.BuildDataType(type, createDbType);
-					break;
+				//case DataType.UInt32:
+				//	if (SqlProviderFlags.GetDialect() == FirebirdDialect.Dialect1)
+				//		StringBuilder.Append("Int");
+				//	else
+				//		base.BuildDataType(type, createDbType);
+				//	break;
 				case DataType.Money         : StringBuilder.Append("Decimal(18,4)");   break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
 				case DataType.DateTime2     :

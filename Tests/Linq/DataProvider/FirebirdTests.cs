@@ -17,7 +17,10 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Data;
 	using System.Globalization;
+	using System.Linq.Expressions;
+	using LinqToDB.DataProvider;
 	using LinqToDB.Linq;
 	using Model;
 
@@ -571,27 +574,41 @@ namespace Tests.DataProvider
 				DataConnection.AddOrSetConfiguration(newContext, cs, ProviderName.Firebird);
 
 				using (var db = GetDataContext(newContext))
-				using (var tbl = db.CreateLocalTable<DialectTestTable>())
 				{
-					db.Insert(       new DialectTestTable() { UINT32 = 1u,            /*INT64 = uint.MaxValue,     UINT64 = uint.MaxValue*/     });
-					tbl.Insert(() => new DialectTestTable() { UINT32 = 2u,            /*INT64 = uint.MaxValue - 1, UINT64 = uint.MaxValue - 1*/ });
-					tbl.Insert(() => new DialectTestTable() { UINT32 = uint.MinValue, /*INT64 = uint.MaxValue - 2, UINT64 = uint.MaxValue - 2*/ });
-					tbl.Insert(() => new DialectTestTable() { UINT32 = uint.MaxValue, /*INT64 = uint.MaxValue - 3, UINT64 = uint.MaxValue - 3*/ });
+					db.MappingSchema.SetDataType(typeof(uint), DataType.Int32);
+					db.MappingSchema.SetValueToSqlConverter(
+						typeof(uint),
+						(sb, dt, v) => sb.Append(unchecked((int)(uint)v).ToString(NumberFormatInfo.InvariantInfo)));
+					var provider = (DataProviderBase)((DataConnection)db).DataProvider;
 
-					tbl.Single(_ => _.UINT32 == 1u);
-					tbl.Single(_ => _.UINT32 == 2u);
-					tbl.Single(_ => _.UINT32 == uint.MinValue);
-					tbl.Single(_ => _.UINT32 == uint.MaxValue);
+					Expression<Func<IDataReader, int, uint>> expr = (r, i) => unchecked((uint)r.GetInt32(i));
+					provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(int), ToType = typeof(uint) }] = expr;
 
-					//tbl.Single(_ => _.INT64 == uint.MaxValue);
-					//tbl.Single(_ => _.INT64 == uint.MaxValue - 1);
-					//tbl.Single(_ => _.INT64 == uint.MaxValue - 2);
-					//tbl.Single(_ => _.INT64 == uint.MaxValue - 3);
 
-					//tbl.Single(_ => _.UINT64 == uint.MaxValue);
-					//tbl.Single(_ => _.UINT64 == uint.MaxValue - 1);
-					//tbl.Single(_ => _.UINT64 == uint.MaxValue - 2);
-					//tbl.Single(_ => _.UINT64 == uint.MaxValue - 3);
+					//db.MappingSchema.SetDataType(typeof(uint), DataType.Decimal);
+					//db.MappingSchema.SetValueToSqlConverter(typeof(uint), (sb, dt, v) => sb.AppendFormat("decimal_fake", (uint)v));
+					using (var tbl = db.CreateLocalTable<DialectTestTable>())
+					{
+						db.Insert(new DialectTestTable() { UINT32 = 1u,            /*INT64 = uint.MaxValue,     UINT64 = uint.MaxValue*/     });
+						tbl.Insert(() => new DialectTestTable() { UINT32 = 2u,            /*INT64 = uint.MaxValue - 1, UINT64 = uint.MaxValue - 1*/ });
+						tbl.Insert(() => new DialectTestTable() { UINT32 = uint.MinValue, /*INT64 = uint.MaxValue - 2, UINT64 = uint.MaxValue - 2*/ });
+						tbl.Insert(() => new DialectTestTable() { UINT32 = uint.MaxValue, /*INT64 = uint.MaxValue - 3, UINT64 = uint.MaxValue - 3*/ });
+
+						tbl.Single(_ => _.UINT32 == 1u);
+						tbl.Single(_ => _.UINT32 == 2u);
+						tbl.Single(_ => _.UINT32 == uint.MinValue);
+						tbl.Single(_ => _.UINT32 == uint.MaxValue);
+
+						//tbl.Single(_ => _.INT64 == uint.MaxValue);
+						//tbl.Single(_ => _.INT64 == uint.MaxValue - 1);
+						//tbl.Single(_ => _.INT64 == uint.MaxValue - 2);
+						//tbl.Single(_ => _.INT64 == uint.MaxValue - 3);
+
+						//tbl.Single(_ => _.UINT64 == uint.MaxValue);
+						//tbl.Single(_ => _.UINT64 == uint.MaxValue - 1);
+						//tbl.Single(_ => _.UINT64 == uint.MaxValue - 2);
+						//tbl.Single(_ => _.UINT64 == uint.MaxValue - 3);
+					}
 				}
 			}
 			finally
