@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Common;
 	using Mapping;
 	using SqlQuery;
+	using System.Data.Linq;
 
 	public class SqlCeMappingSchema : MappingSchema
 	{
@@ -43,6 +44,16 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, dt, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, dt, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+		}
+
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("0x");
+
+			foreach (var b in value)
+				stringBuilder.Append(b.ToString("X2"));
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
