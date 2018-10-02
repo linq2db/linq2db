@@ -18,11 +18,11 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	using System.Globalization;
-
+	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]
-	public class FirebirdTests : DataProviderTestBase
+	internal class FirebirdTests : DataProviderTestBase
 	{
 		[Test, IncludeDataContextSource(ProviderName.Firebird, TestProvName.Firebird3)]
 		public void TestParameters(string context)
@@ -545,6 +545,59 @@ namespace Tests.DataProvider
 					db.CreateTable<TTable>();
 					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
 				}
+			}
+		}
+
+		[Table]
+		public class DialectTestTable
+		{
+			[Column] public uint  UINT32 { get; set; }
+			//[Column] public ulong UINT64 { get; set; }
+			//[Column] public long  INT64  { get; set; }
+		}
+
+		[Test, Combinatorial, Explicit("Mess with query caches")]
+		public void TestDialects(
+			[IncludeDataSources(ProviderName.Firebird, TestProvName.Firebird3)] string context,
+			[Values] FirebirdDialect dialect)
+		{
+			try
+			{
+				FirebirdConfiguration.Dialect = dialect;
+
+				// connection string shouldn't have dialect set
+				var cs = DataConnection.GetConnectionString(context.Replace(".LinqService", string.Empty)) + $";Dialect={(byte)dialect};";
+				var newContext = $"{context}.dialect.{dialect}";
+				DataConnection.AddOrSetConfiguration(newContext, cs, ProviderName.Firebird);
+
+				using (var db = GetDataContext(newContext))
+				using (var tbl = db.CreateLocalTable<DialectTestTable>())
+				{
+					db.Insert(       new DialectTestTable() { UINT32 = 1u,            /*INT64 = uint.MaxValue,     UINT64 = uint.MaxValue*/     });
+					tbl.Insert(() => new DialectTestTable() { UINT32 = 2u,            /*INT64 = uint.MaxValue - 1, UINT64 = uint.MaxValue - 1*/ });
+					tbl.Insert(() => new DialectTestTable() { UINT32 = uint.MinValue, /*INT64 = uint.MaxValue - 2, UINT64 = uint.MaxValue - 2*/ });
+					tbl.Insert(() => new DialectTestTable() { UINT32 = uint.MaxValue, /*INT64 = uint.MaxValue - 3, UINT64 = uint.MaxValue - 3*/ });
+
+					tbl.Single(_ => _.UINT32 == 1u);
+					tbl.Single(_ => _.UINT32 == 2u);
+					tbl.Single(_ => _.UINT32 == uint.MinValue);
+					tbl.Single(_ => _.UINT32 == uint.MaxValue);
+
+					//tbl.Single(_ => _.INT64 == uint.MaxValue);
+					//tbl.Single(_ => _.INT64 == uint.MaxValue - 1);
+					//tbl.Single(_ => _.INT64 == uint.MaxValue - 2);
+					//tbl.Single(_ => _.INT64 == uint.MaxValue - 3);
+
+					//tbl.Single(_ => _.UINT64 == uint.MaxValue);
+					//tbl.Single(_ => _.UINT64 == uint.MaxValue - 1);
+					//tbl.Single(_ => _.UINT64 == uint.MaxValue - 2);
+					//tbl.Single(_ => _.UINT64 == uint.MaxValue - 3);
+				}
+			}
+			finally
+			{
+				FirebirdConfiguration.Dialect = FirebirdDialect.Dialect3;
+				//Query.ClearCaches();
 			}
 		}
 	}

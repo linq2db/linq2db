@@ -15,12 +15,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public class FirebirdSqlBuilder : BasicSqlBuilder
 	{
-		private readonly FirebirdDialect _dialect;
-
 		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
-			_dialect = sqlProviderFlags.GetDialect();
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -95,16 +92,17 @@ namespace LinqToDB.DataProvider.Firebird
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
-				case DataType.Int64:
-				case DataType.UInt64:
-					if (_dialect == FirebirdDialect.Dialect1)
-					{
+				//case DataType.Int64:
+				//	if (SqlProviderFlags.GetDialect() == FirebirdDialect.Dialect1)
+				//		StringBuilder.Append("Decimal");
+				//	else
+				//		base.BuildDataType(type, createDbType);
+				//	break;
+				case DataType.UInt32:
+					if (SqlProviderFlags.GetDialect() == FirebirdDialect.Dialect1)
 						StringBuilder.Append("Int");
-					}
 					else
-					{
 						base.BuildDataType(type, createDbType);
-					}
 					break;
 				case DataType.Money         : StringBuilder.Append("Decimal(18,4)");   break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;

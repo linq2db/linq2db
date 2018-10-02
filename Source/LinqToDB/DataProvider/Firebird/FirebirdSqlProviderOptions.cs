@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public static FirebirdDialect GetDialect(this SqlProviderFlags flags)
 		{
-			return flags.GetProviderOption(DialectOptionName, DefaultDialect);
+			return flags.GetProviderOption(DialectOptionName, FirebirdConfiguration.Dialect);
 		}
 
 		public static void SetDialect(this SqlProviderFlags flags, FirebirdDialect value)

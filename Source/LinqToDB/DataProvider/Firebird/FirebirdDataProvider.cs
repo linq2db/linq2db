@@ -120,9 +120,10 @@ namespace LinqToDB.DataProvider.Firebird
 				dataType = DataType.Char;
 			}
 
-			if (SqlProviderFlags.GetDialect() == FirebirdDialect.Dialect1 && (value is long || value is ulong))
+			if (SqlProviderFlags.GetDialect() == FirebirdDialect.Dialect1
+				&& (value is uint))
 			{
-				value    = Convert.ToInt32(value);
+				value = Convert.ToInt32(value);
 				dataType = DataType.Int32;
 			}
 

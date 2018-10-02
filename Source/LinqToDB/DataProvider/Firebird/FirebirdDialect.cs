@@ -4,7 +4,7 @@
 	/// Firebird SQL dialect versions.
 	/// More details: <a href="https://www.firebirdsql.org/pdfmanual/html/isql-dialects.html">https://www.firebirdsql.org/pdfmanual/html/isql-dialects.html</a>
 	/// </summary>
-	internal enum FirebirdDialect : byte
+	public enum FirebirdDialect : byte
 	{
 		/// <summary>
 		/// Dialect 1.
