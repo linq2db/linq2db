@@ -221,19 +221,30 @@ namespace LinqToDB.Linq.Builder
 								nctor.Constructor,
 								members.Select(m => Expression.PropertyOrField(_unionParameter, m.Name)),
 								members);
+
+							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
+							return ex;
 						}
-						else
+
+						var isNew = Expression.Find(e => e is NewExpression && e.Type == type) != null;
+						if (isNew)
 						{
 							var ta = TypeAccessor.GetAccessor(type);
 
 							expr = Expression.MemberInit(
 								Expression.New(ta.Type),
-								_members.Select(m => Expression.Bind(m.Value.MemberExpression.Member, m.Value.MemberExpression)));
+								_members.Select(m =>
+									Expression.Bind(m.Value.MemberExpression.Member, m.Value.MemberExpression)));
+							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
+							return ex;
 						}
-
-						var ex = Builder.BuildExpression(this, expr, enforceServerSide);
-
-						return ex;
+						else
+						{
+							var tableContext = new TableBuilder.TableContext(Builder,
+								new BuildInfo(Parent, Expression, new SelectQuery()), type);
+							var ex = tableContext.BuildExpression(null, 0, enforceServerSide);
+							return ex;
+						}
 					}
 
 					if (level == 0 || level == 1)
