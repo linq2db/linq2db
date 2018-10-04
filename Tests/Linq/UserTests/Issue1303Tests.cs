@@ -26,6 +26,10 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			using (var tbl = db.CreateLocalTable<Issue1303>())
 			{
+				// Informix: apply inlining to insert to test binary parameters
+				if (context.StartsWith("Informix"))
+					db.InlineParameters = inlineParameters;
+
 				tbl.Insert(() => new Issue1303()
 				{
 					ID     = 1,
