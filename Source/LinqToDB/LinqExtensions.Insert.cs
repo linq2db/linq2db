@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -329,8 +330,9 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Enumeration of records.</returns>
-		public static IQueryable<TOutput> InsertWithOutput<TSource,TTarget,TOutput>(
+		/// <returns>Array of records.</returns>
+		[Pure]
+ 		public static TOutput[] InsertWithOutput<TSource,TTarget,TOutput>(
 			[NotNull]                this IQueryable<TSource>          source,
 			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -342,10 +344,45 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			return source.Provider.CreateQuery<TOutput>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter, outputExpression),
-					source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter), Expression.Quote(outputExpression)));
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter, outputExpression),
+						source.Expression, ((IQueryable<TTarget>) target).Expression, Expression.Quote(setter),
+						Expression.Quote(outputExpression)))
+				.ToArray();
+		}
+
+		/// <summary>
+		/// Inserts records from source query into target table asynchronously and returns newly created records.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="source">Source query, that returns data for insert operation.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Inserted record constructor expression.
+		/// Expression supports only target table record new expression with field initializers.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <returns>Array of records.</returns>
+		public static Task<TOutput[]> InsertWithOutputAsync<TSource,TTarget,TOutput>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull]                ITable<TTarget>                   target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter,
+			[NotNull]                Expression<Func<TTarget,TOutput>> outputExpression)
+		{
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+
+			return source.Provider.CreateQuery<TOutput>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(InsertWithOutputAsync, source, target, setter, outputExpression),
+						source.Expression, ((IQueryable<TTarget>) target).Expression, Expression.Quote(setter),
+						Expression.Quote(outputExpression)))
+				.ToArrayAsync();
 		}
 
 		/// <summary>

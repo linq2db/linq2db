@@ -3,6 +3,7 @@ using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
+using Tests.Tools;
 
 namespace Tests.Playground
 {
@@ -10,104 +11,95 @@ namespace Tests.Playground
 	public class InsertWithOutputTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		class TableWithData
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
+			[Column(Length = 50)] public string ValueStr { get; set; }
+		}
+
+		[Table]
+		class DestinationTable
+		{
+			[Column] public int Id    { get; set; }
+			[Column] public int Value { get; set; }
+			[Column(Length = 50)] public string ValueStr { get; set; }
+		}
+
+		static TableWithData[] GetSourceData()
+		{
+			return Enumerable.Range(1, 10).Select(i =>
+					new TableWithData { Id = i, Value = -i, ValueStr = "Str" + i.ToString() })
+				.ToArray();
 		}
 
 		[Test, Combinatorial]
-		public void SampleSelectTest([DataSources] string context)
+		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(ProviderName.SqlServer)] string context)
 		{
+			var sourceData = GetSourceData();
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable<DestinationTable>())
 			{
-				var result = table.ToArray();
-			}
-		}
-
-		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
-		public void InsertWithOutputTest1(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				const int idsLimit = 1000;
-
-				try
-				{
-					var id = idsLimit + 1;
-
-					db.Child.Delete(c => c.ChildID > idsLimit);
-
-					var output = db.Child
-						.Where(c => c.ChildID == 11)
-						.InsertWithOutput(
-							db.Child,
-							c => new Child
-							{
-								ParentID = c.ParentID,
-								ChildID  = id
-							},
-							inserted => new
-							{
-								inserted.ChildID,
-								inserted.ParentID
-							})
-						.ToArray();
-
-						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new
-							{
-								c.ChildID,
-								c.ParentID,
-							}),
-							output);
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
-			}
-		}
-
-		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
-		public void InsertWithOutputTest2(string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				const int idsLimit = 1000;
-
-				try
-				{
-					var id = idsLimit + 1;
-
-					db.Child.Delete(c => c.ChildID > idsLimit);
-
-					var output =
-						db.Child
-							.Where(c => c.ChildID == 11)
-							.InsertWithOutput(db.Child, c => new Child
-							{
-								ChildID  = id,
-								ParentID = c.ParentID
-							}).ToArray();
-
-					AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
+				var output = source
+					.Where(s => s.Id > 3)
+					.InsertWithOutput(
+						target,
+						s => new DestinationTable
 						{
-							ChildID = c.ChildID,
-							ParentID = c.ParentID,
-						}),
-						output);
+							Id = s.Id + 100,
+							Value = s.Value + 100,
+							ValueStr = s.ValueStr + 100
+						},
+						inserted => new
+						{
+							Id = Sql.AsSql(inserted.Id + 1),
+							ValueStr = Sql.AsSql(inserted.ValueStr + 1),
+						}).ToArray();
 
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+				var zz = target.ToArray();
+
+				AreEqual(target.Select(t => new
+					{
+						Id = t.Id + 1,
+						ValueStr = t.ValueStr + 1,
+					}),
+					output);
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
-		public void InsertWithOutputTest3(string context)
+		[Test, Combinatorial]
+		public void InsertWithOutputFromQueryTest([IncludeDataSources(ProviderName.SqlServer)] string context)
+		{
+			var sourceData = GetSourceData();
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable<DestinationTable>())
+			{
+				var output = source
+					.Where(s => s.Id > 3)
+					.InsertWithOutput(
+						target,
+						s => new DestinationTable
+						{
+							Id = s.Id + 100,
+							Value = s.Value + 100,
+							ValueStr = s.ValueStr + 100
+						})
+					.ToArray();
+
+				AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
+					{
+						Id = s.Id + 100,
+						Value = s.Value + 100,
+						ValueStr = s.ValueStr + 100,
+					}),
+					output, ComparerBuilder<DestinationTable>.GetEqualityComparer());
+			}
+		}
+
+		[Test, Combinatorial]
+		public void InsertWithOutputTest3([IncludeDataSources(ProviderName.SqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -145,8 +137,8 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
-		public void InsertWithOutputTest4(string context)
+		[Test, Combinatorial]
+		public void InsertWithOutputTest4([IncludeDataSources(ProviderName.SqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -180,8 +172,8 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
-		public void InsertWithOutputObjTest1(string context)
+		[Test, Combinatorial]
+		public void InsertWithOutputObjTest1([IncludeDataSources(ProviderName.SqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -208,8 +200,8 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
-		public void InsertWithOutputIntoTest1(string context)
+		[Test, Combinatorial]
+		public void InsertWithOutputIntoTest1([IncludeDataSources(ProviderName.SqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -264,8 +256,8 @@ namespace Tests.Playground
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
-		public void InsertWithOutputIntoTest2(string context)
+		[Test, Combinatorial]
+		public void InsertWithOutputIntoTest2([IncludeDataSources(ProviderName.SqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

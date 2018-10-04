@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Insert", "InsertWithIdentity", "InsertWithOutput", "InsertWithOutputInto");
+			return methodCall.IsQueryable("Insert", "InsertWithIdentity", "InsertWithOutput", "InsertWithOutputAsync", "InsertWithOutputInto");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -37,10 +37,11 @@ namespace LinqToDB.Linq.Builder
 
 			switch (methodCall.Method.Name)
 			{
-				case "Insert"               : insertType = InsertContext.InsertType.Insert;             break;
-				case "InsertWithIdentity"   : insertType = InsertContext.InsertType.InsertWithIdentity; break;
-				case "InsertWithOutput"     : insertType = InsertContext.InsertType.InsertOutput;       break;
-				case "InsertWithOutputInto" : insertType = InsertContext.InsertType.InsertOutputInto;   break;
+				case "Insert"                : insertType = InsertContext.InsertType.Insert;             break;
+				case "InsertWithIdentity"    : insertType = InsertContext.InsertType.InsertWithIdentity; break;
+				case "InsertWithOutput"      : insertType = InsertContext.InsertType.InsertOutput;       break;
+				case "InsertWithOutputAsync" : insertType = InsertContext.InsertType.InsertOutput;       break;
+				case "InsertWithOutputInto"  : insertType = InsertContext.InsertType.InsertOutputInto;   break;
 			}
 
 			var indexedParameters
