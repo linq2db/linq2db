@@ -1518,5 +1518,33 @@ namespace Tests.Linq
 			}
 		}
 
+		/// <summary>
+		/// Tests that AllJoinsBuilder do not handle standard Joins
+		/// </summary>
+		/// <param name="context"></param>
+		[Test]
+		[Combinatorial]
+		public void JoinBuildersConflicts([IncludeDataSources(false, ProviderName.SQLiteClassic)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = db.Parent.Join(db.Child, SqlJoinType.Inner,
+						(p, c) => p.ParentID == c.ChildID,
+						(p, c) => new { p, c });
+
+				var result1 = query1.ToArray();
+
+				var query2 = from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ChildID
+					select new
+					{
+						p,
+						c
+					};
+
+				var result2 = query2.ToArray();
+			}
+		}
+
 	}
 }

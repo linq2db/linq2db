@@ -99,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return SubQuery
 				.ConvertToIndex(expression, level, flags)
-				.Select(idx => new SqlInfo(idx.Members) { Sql = SubQuery.SelectQuery.Select.Columns[idx.Index] })
+				.Select(idx => new SqlInfo(idx.MemberChain) { Sql = SubQuery.SelectQuery.Select.Columns[idx.Index] })
 				.ToArray();
 		}
 
@@ -132,9 +132,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected virtual int GetIndex(SqlColumn column)
 		{
-			int idx;
-
-			if (!ColumnIndexes.TryGetValue(column, out idx))
+			if (!ColumnIndexes.TryGetValue(column, out var idx))
 			{
 				idx = SelectQuery.Select.Add(column);
 				ColumnIndexes.Add(column, idx);
@@ -146,7 +144,7 @@ namespace LinqToDB.Linq.Builder
 		public override int ConvertToParentIndex(int index, IBuildContext context)
 		{
 			var idx = GetIndex(context.SelectQuery.Select.Columns[index]);
-			return Parent == null ? idx : Parent.ConvertToParentIndex(idx, this);
+			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
 		}
 
 		public override void SetAlias(string alias)

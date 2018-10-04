@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using System.Data.Linq;
 
 	class InformixSqlOptimizer : BasicSqlOptimizer
 	{
@@ -22,6 +23,16 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
+		static void EnforceBinaryParameters(IQueryElement element)
+		{
+			if (element.ElementType == QueryElementType.SqlParameter)
+			{
+				var p = (SqlParameter)element;
+				if (p.SystemType == typeof(byte[]) || p.SystemType == typeof(Binary))
+					p.IsQueryParameter = true;
+			}
+		}
+
 		public override SqlStatement Finalize(SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
@@ -31,6 +42,8 @@ namespace LinqToDB.DataProvider.Informix
 				new QueryVisitor().Visit(selectQuery, SetQueryParameter);
 				return selectQuery;
 			});
+
+			new QueryVisitor().VisitAll(statement, EnforceBinaryParameters);
 
 			statement = base.Finalize(statement);
 
