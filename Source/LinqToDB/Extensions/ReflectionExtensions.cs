@@ -821,6 +821,9 @@ namespace LinqToDB.Extensions
 		/// and, therefore, can be treated as scalar types.</remarks>
 		public static bool IsScalar(this Type type, bool checkArrayElementType = true)
 		{
+			if (type == typeof(byte[]))
+				return true;
+
 			while (checkArrayElementType && type.IsArray)
 				type = type.GetElementType();
 
